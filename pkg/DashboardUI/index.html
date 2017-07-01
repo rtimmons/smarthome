@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Bootstrap 101 Template</title>
+    <title>Dashboard</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -26,16 +26,17 @@ UI Mockup:
       ▶️ ⏸ ⏭   👍🏽 👎🏽
 -->
 
-    <table>
+    <table id="ui">
       <tr>
-        <td id="b-0-0" data-urls="http://retropie.local:5005/Kitchen/volume/+5">🔊</td>
-        <td id="b-0-1" data-urls="http://retropie.local:5005/Kitchen/volume/-5">🔈</td>
+        <td action="Music.VolumeUp">🔊</td>
+        <td action="Music.VolumeDown">🔈</td>
       </tr>
     </table>
 
 
     <script src="js/jquery.js"></script>
     <script src="js/bootstrap.min.js"></script>
+    <script src="js/app.js"></script>
     <script src="js/main.js"></script>
   </body>
 </html>

@@ -1,11 +1,35 @@
+var config = {
+  Rooms: [
+    'Bathroom',
+    'Bedroom',
+    'Kitchen',
+    'Living'
+  ],
+
+  Actions: [
+    'Music.Join',
+    'Music.VolumeUp',
+    'Music.VolumeDown',
+    'Music.Mute',
+
+    'Music.Resume',
+    'Music.Pause',
+    'Music.Skip',
+    'Music.ThumbsUp',
+    'Music.ThumbsDown',
+
+    'Music.PlayDespacito',
+    'Music.PlayNPR',
+    'Music.PlayMusic',
+
+    'Light.On',
+    'Light.Dim',
+    'Light.Off',
+    'Light.Scene1',
+  ]
+};
+
+// Main
 $(() => {
-  $('td[data-urls]').click(function(e) {
-    var t = $(this);
-    var old = t.clone(true);
-    t.html('🤔')
-    var urls = t.data('urls').split(/\s+/)
-    urls.forEach((url) => {
-      $.get(url, {}, (resp) => { console.log(url, resp); t.replaceWith(old) });
-    });
-  });
+  new App(window.location.href, $('#ui')).run()
 });
