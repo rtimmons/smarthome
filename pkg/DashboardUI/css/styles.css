@@ -1,0 +1,22 @@
+html, body, table {
+  height: 100%;
+}
+
+table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+table td {
+    text-align: center;
+    font-size: 10em;
+}
+table td {
+    cursor: pointer;
+    border: 1px solid black;
+    height: 100%;
+    background-color: lime;
+}
+table td:hover {
+    background-color: #8FFF7D;
+}
