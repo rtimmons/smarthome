@@ -1,7 +1,11 @@
+var log = console.log;
+
 class App {
   constructor(url, $elt) {
     this.url = url;
     this.$ = $elt;
+    this.room = 'Kitchen'; // TODO pass in config and use DefaultRoom
+    log('Initialized for room', this.room);
   }
 
   run() {
@@ -9,13 +13,15 @@ class App {
   }
 
   request(url) {
-    return $.ajax()
+    return $.ajax(url).then(resp => console.log(resp));
   }
 
   onPress($elt) {
     var action = $elt.attr('action');
     switch(action) {
     case 'Music.VolumeUp':
+      // TODO: use this.room or some indirection
+      this.request('http://retropie:5005/Kitchen/volume/+5')
     }
 
     var old = $elt.clone(true);
