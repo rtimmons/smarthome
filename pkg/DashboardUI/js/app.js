@@ -13,15 +13,19 @@ class App {
   }
 
   request(url) {
-    return $.ajax(url).then(resp => console.log(resp));
+    log('Request ', url);
+    return $.ajax(url)
+      .done(resp => console.log(url, resp))
+      .fail(err  => console.log(url, err));
   }
 
   onPress($elt) {
     var action = $elt.attr('action');
+    log('Action', action);
     switch(action) {
     case 'Music.VolumeUp':
       // TODO: use this.room or some indirection
-      this.request('http://retropie:5005/Kitchen/volume/+5')
+      this.request('http://retropie.local:5005/Kitchen/volume/+5')
     }
 
     var old = $elt.clone(true);

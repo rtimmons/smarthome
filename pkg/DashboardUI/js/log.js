@@ -4,12 +4,11 @@
     var old = console.log;
     var logger = document.getElementById('log');
     console.log = function () {
-      var args = Array.prototype.slice.call(arguments);
-        if (typeof args[0] == 'object') {
-            logger.innerHTML += (JSON && JSON.stringify ? JSON.stringify(args[0]) : arguments) + '<br />';
-        } else {
-            logger.innerHTML += args.join(' ') + '<br />';
-        }
+        var args = Array.prototype.slice.call(arguments);
+        args = args.map(x => typeof x == 'object'
+            ? JSON.stringify(x) : new String(x)
+        );
+        logger.innerHTML = args.join(' ');
         old(arguments);
     }
 })();
