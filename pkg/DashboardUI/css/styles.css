@@ -1,22 +1,31 @@
 html, body, table {
-  height: 100%;
+  text-align: center;
+  align: center;
 }
 
 table {
-    width: 100%;
-    table-layout: fixed;
+    margin: 0 auto;
+/*    width: 1000px;*/
+/*    height: 700px;*/
 }
 
 table td {
+    margin: 0;
+    padding: 0;
+
     text-align: center;
-    font-size: 10em;
-}
-table td {
     cursor: pointer;
     border: 1px solid black;
-    height: 100%;
     background-color: lime;
 }
+/*table tr {
+    height: 10px;
+}*/
+table td {
+    height:40px;
+    width: 40px;
+}
+
 table td:hover {
     background-color: #8FFF7D;
 }
