@@ -26,6 +26,11 @@ class App {
     case 'Music.VolumeUp':
       // TODO: use this.room or some indirection
       this.request('http://retropie.local:5005/Kitchen/volume/+5')
+      break;
+    case 'Music.VolumeDown':
+      // TODO: use this.room or some indirection
+      this.request('http://retropie.local:5005/Kitchen/volume/-5')
+      break;
     }
 
     var old = $elt.clone(true);
