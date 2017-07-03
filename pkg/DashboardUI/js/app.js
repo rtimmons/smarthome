@@ -25,12 +25,24 @@ class App {
       .fail(err  => console.log(url, err));
   }
 
+  getState() {
+    $.ajax(
+      'http://retropie.local:5005/' + this.room + '/state'
+    ).done(resp => {
+      var title = resp.currentTrack.title;
+      this.$.find('#state-Music').html(title);
+    });
+  }
+
   onPress($elt) {
     var action = $elt.attr('action');
     log('Action', action);
     switch(action) {
     case 'ChangeRoom':
       this.changeRoom($elt.attr('toRoom'));
+      break;
+    case 'Music.GetState':
+      this.getState();
       break;
     case 'Music.VolumeUp':
       this.request(
