@@ -19,6 +19,10 @@ table {
 /*    height: 700px;*/
 }
 
+table td.active {
+    background-color: #73C6B6;
+}
+
 table td {
     margin: 0;
     padding: 0;

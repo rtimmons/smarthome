@@ -4,8 +4,14 @@ class App {
   constructor(url, $elt) {
     this.url = url;
     this.$ = $elt;
-    this.room = 'Kitchen'; // TODO pass in config and use DefaultRoom
-    log('Initialized for room', this.room);
+    this.changeRoom('Kitchen');
+  }
+
+  changeRoom(toRoom) {
+    this.$.find('.room-' + this.room).removeClass('active');
+    this.room = toRoom;
+    this.$.find('.room-' + this.room).addClass('active');
+    log('Switched to room', this.room);
   }
 
   run() {
@@ -23,19 +29,23 @@ class App {
     var action = $elt.attr('action');
     log('Action', action);
     switch(action) {
+    case 'ChangeRoom':
+      this.changeRoom($elt.attr('toRoom'));
+      break;
     case 'Music.VolumeUp':
-      // TODO: use this.room or some indirection
-      this.request('http://retropie.local:5005/Kitchen/volume/+5')
+      this.request(
+        'http://retropie.local:5005/' + this.room + '/volume/+5'
+      )
       break;
     case 'Music.VolumeDown':
-      // TODO: use this.room or some indirection
-      this.request('http://retropie.local:5005/Kitchen/volume/-5')
-      break;
+      this.request(
+        'http://retropie.local:5005/' + this.room + '/volume/-5'
+      )
     }
 
-    var old = $elt.clone(true);
-    $elt.html('🤔');
-    setTimeout(() => $elt.replaceWith(old),1000);    
+    // var old = $elt.clone(true);
+    // $elt.html('🤔');
+    // setTimeout(() => $elt.replaceWith(old),1000);
   }
 
   init() {

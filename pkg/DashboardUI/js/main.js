@@ -7,6 +7,8 @@ var config = {
   ],
 
   Actions: [
+    'ChangeRoom',
+
     'Music.Join',
     'Music.VolumeUp',
     'Music.VolumeDown',
