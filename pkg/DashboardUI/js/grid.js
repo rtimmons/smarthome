@@ -1,7 +1,7 @@
 $(function(){
   // TODO: max rows/cols based on config
-  var cols = 12;
-  var rows = 9;
+  var cols = config.cols;
+  var rows = config.rows;
   var win = $(window);
 
   var grid = $('#grid');

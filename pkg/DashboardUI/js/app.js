@@ -6,15 +6,6 @@ class App {
     this.changeRoom('Kitchen');
   }
 
-  cell(row, col) {
-    return this.$.find('#cell-'+row+'-'+col);
-  }
-
-  assign(row, col, emoji, action, params) {
-    params = params || [];
-    this.cell(row,col).html(emoji).click(() => this.onAction(action, params));
-  }
-
   changeRoom(toRoom) {
     this.$.find('.room-' + this.room).removeClass('active');
     this.room = toRoom;
@@ -39,9 +30,18 @@ class App {
     });
   }
 
+  cell(row, col) {
+    return this.$.find('#cell-'+row+'-'+col);
+  }
+
+  assign(row, col, emoji, action, args) {
+    args = args || [];
+    this.cell(row,col).html(emoji).click(() => this.onAction(action, args));
+  }
+
   configure(conf) {
-    conf.buttons.forEach(b => {
-      this.assign(b[0], b[1], conf.emojis[b[2]], b[3], b[4]);
+    conf.cells.forEach(b => {
+      this.assign(b.y, b.x, conf.emojis[b.icon], b.onPress.action, b.onPress.args)
     });
   }
 
