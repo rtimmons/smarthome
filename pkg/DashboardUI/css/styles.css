@@ -2,48 +2,24 @@ body {
     background-color: #212F3C;
     font-family: Monoid, monospace;
 }
-html, body, table {
-  text-align: center;
-  align: center;
-}
 
-marquee {
-    z-index: 100;
-    margin: 0;
-    padding: 0;
-}
-
-table, div.grid {
-    margin: 0 auto;
-/*    width: 1000px;*/
-/*    height: 700px;*/
-}
-
-table td.active, div.cell.active {
+div.cell.active {
+    /* TODO bring back current-room state */
     background-color: #73C6B6;
 }
 
-table td, div.cell {
+div.cell {
     margin: 0;
     padding: 0;
 
     text-align: center;
     cursor: pointer;
-/*    border: 1px solid #212F3C;*/
+
     background-color: #283747;
-}
-
-table td, div.cell {
     color: #aaa;
-/*    height:75px;
-    width: 75px;
-*/    padding: 0;
-/*    font-size: 50px;
-    line-height: 50px;
-*/
 }
 
-table td:hover, div.cell:hover {
+div.cell:hover {
     background-color: #566573;
 }
 
@@ -51,13 +27,10 @@ div#grid {
     margin: 0 auto;
     width: 100%;
     height: 100%;
-/*    position: absolute;*/
 
     display: flex;
     justify-content: center;
     align-content: flex-start;
     align-items: center;
     flex-flow: row wrap;
-}
-div.cell {
 }

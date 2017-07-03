@@ -1,37 +1,33 @@
-var config = {
-  Rooms: [
-    'Bathroom',
-    'Bedroom',
-    'Kitchen',
-    'Living'
-  ],
-
-  Actions: [
-    'ChangeRoom',
-
-    'Music.Join',
-    'Music.VolumeUp',
-    'Music.VolumeDown',
-    'Music.Mute',
-
-    'Music.Resume',
-    'Music.Pause',
-    'Music.Skip',
-    'Music.ThumbsUp',
-    'Music.ThumbsDown',
-
-    'Music.PlayDespacito',
-    'Music.PlayNPR',
-    'Music.PlayMusic',
-
-    'Light.On',
-    'Light.Dim',
-    'Light.Off',
-    'Light.Scene1',
-  ]
-};
-
-// Main
 $(() => {
-  new App(window.location.href, $('#ui')).run()
+  var $h = $('#grid');
+  var emojis = {
+    'TV':       '📺' ,
+    'Bed':      '🛏'  ,
+    'Rice':     '🍚' ,
+    'Toilet':   '🚽' ,
+    'Earth':    '🌍' ,
+    'Up':       '🔼' ,
+    'Down':     '🔽' ,
+  };
+  
+  var buttons = [
+    [0, 2, 'TV',      'ChangeRoom', ['Living']],
+    [0, 3, 'Bed',     'ChangeRoom', ['Bedroom']],
+    [0, 4, 'Rice',    'ChangeRoom', ['Kitchen']],
+    [0, 5, 'Toilet',  'ChangeRoom', ['Bathroom']],
+
+    [0, 7, 'Earth',  'ChangeRoom', ['All']],
+    
+
+    [4, 1, 'Up',      'Music.VolumeUp',   []],
+    [5, 1, 'Down',    'Music.VolumeDown', []],
+  ];
+
+  var app = new App($h);
+  app.configure({
+    // TODO: rows/cols in here
+    // TODO: grid.js into app
+    emojis: emojis,
+    buttons: buttons,
+  })
 });

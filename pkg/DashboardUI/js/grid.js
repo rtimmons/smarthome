@@ -1,4 +1,5 @@
 $(function(){
+  // TODO: max rows/cols based on config
   var cols = 12;
   var rows = 9;
   var win = $(window);
@@ -11,6 +12,7 @@ $(function(){
       cell.addClass('col-'+col);
       cell.attr('id', 'cell-'+row+'-'+col);
       grid.append(cell);
+      cell.dblclick(function() { console.log($(this).attr('id')) });
     }
   }
 
@@ -20,8 +22,10 @@ $(function(){
 
     var square = Math.min(width/cols, height/rows);
     $('.cell').css({
-      height: square,
-      width: square,
+      height: (square) + 'px',
+      width: (square) + 'px',
+      fontSize: (square * 2 / 3) + 'px',
+      lineHeight: (square) + 'px',
     });
 
     $('#grid').width((square + 2) * cols);
