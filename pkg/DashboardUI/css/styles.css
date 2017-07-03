@@ -13,35 +13,51 @@ marquee {
     padding: 0;
 }
 
-table {
+table, div.grid {
     margin: 0 auto;
 /*    width: 1000px;*/
 /*    height: 700px;*/
 }
 
-table td.active {
+table td.active, div.cell.active {
     background-color: #73C6B6;
 }
 
-table td {
+table td, div.cell {
     margin: 0;
     padding: 0;
 
     text-align: center;
     cursor: pointer;
-    border: 1px solid #212F3C;
+/*    border: 1px solid #212F3C;*/
     background-color: #283747;
 }
 
-table td {
+table td, div.cell {
     color: #aaa;
-    height:75px;
+/*    height:75px;
     width: 75px;
-    padding: 0;
-    font-size: 50px;
+*/    padding: 0;
+/*    font-size: 50px;
     line-height: 50px;
+*/
 }
 
-table td:hover {
+table td:hover, div.cell:hover {
     background-color: #566573;
+}
+
+div#grid {
+    margin: 0 auto;
+    width: 100%;
+    height: 100%;
+/*    position: absolute;*/
+
+    display: flex;
+    justify-content: center;
+    align-content: flex-start;
+    align-items: center;
+    flex-flow: row wrap;
+}
+div.cell {
 }
