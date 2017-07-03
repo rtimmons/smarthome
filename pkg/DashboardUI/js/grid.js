@@ -1,26 +1,25 @@
-$(function(){
-  // TODO: max rows/cols based on config
-  var cols = config.cols;
-  var rows = config.rows;
-  var win = $(window);
-
-  var grid = $('#grid');
-  for(var row=0; row<rows; row++) {
-    for(var col=0; col<cols; col++) {
-      var cell = $('<div class="cell">');
-      cell.addClass('row-'+row);
-      cell.addClass('col-'+col);
-      cell.attr('id', 'cell-'+row+'-'+col);
-      grid.append(cell);
-      cell.dblclick(function() { console.log($(this).attr('id')) });
+class Grid {
+  constructor($element, config) {
+    this.$element = $element;
+    this.cols = config.cols;
+    this.rows = config.rows;
+  }
+  render() {
+    for(var row=0; row<this.rows; row++) {
+      for(var col=0; col<this.cols; col++) {
+        var cell = $('<div class="cell">');
+        cell.addClass('row-'+row);
+        cell.addClass('col-'+col);
+        cell.attr('id', 'cell-'+row+'-'+col);
+        this.$element.append(cell);
+        cell.dblclick(function() { console.log($(this).attr('id')) });
+      }
     }
   }
 
-  var onResize = function() {
-    var width = win.width();
-    var height = win.height();
-
-    var square = Math.min(width/cols, height/rows);
+  resize(width, height) {
+    var square = Math.min(width/this.cols, height/this.rows);
+    this.square = square;
     $('.cell').css({
       height: (square) + 'px',
       width: (square) + 'px',
@@ -28,10 +27,18 @@ $(function(){
       lineHeight: (square) + 'px',
     });
 
-    $('#grid').width((square + 2) * cols);
-  };
+    this.$element.width((square + 2) * this.cols);
+  }
+}
 
-  win.resize(onResize);
-  onResize();
+$(function(){
+  var grid = new Grid($('#grid'), config);
+  grid.render();
+
+  var win = $(window);
+  win.resize(function(){
+    grid.resize(win.width(), win.height());
+  })
+  .resize();
 });
 
