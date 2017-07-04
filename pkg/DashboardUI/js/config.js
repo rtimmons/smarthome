@@ -11,6 +11,7 @@ var config = {
       'Monkey':   '🙉',
       'Yell':     '🗣',
       'Ear':      '👂🏽',
+      'Taco':     '🌮',
   },
   rows: 9,
   cols: 12,
@@ -48,23 +49,8 @@ var config = {
     },
 
     { w:1, h:1,
-      y:1, x:2,
-      icon: 'Ear',
-      activeWhenMode: 'Listen', // TODO support setting to active
-      onPress: {action: 'Music.StartListen', args: []}
-    },
-    { w:1, h:1,
-      y:1, x:3,
-      icon: 'Yell',
-      activeWhenMode: 'Broadcast',
-      onPress: {action: 'Music.StartBroadcast', args: []}
-    },
-
-
-    { w:1, h:1,
       y:7, x:0,
-      icon: 'Notes',
-      onPress: {action: 'Music.GetState', args: []},
+      icon: 'Notes'
     },
     { w:10, h:1,
       y:7, x:1,
@@ -80,22 +66,21 @@ var config = {
     { y:7, x:8, w:0 },
     { y:7, x:9, w:0 },
     { y:7, x:10, w:0 },
-    
+
     { w:1, h:1,
       y:7, x:11,
-      icon: 'Notes',
-      onPress: {action: 'Music.GetState', args: []},
+      icon: 'Notes'
     },
 
     { w:1, h:1,
       y:4, x:1,
       icon: 'Up',
-      onPress: {action: 'Music.VolumeUp', args: ['All']},
+      onPress: {action: 'Music.VolumeUp', args: []},
     },
     { w:1, h:1,
       y:5, x:1,
       icon: 'Down',
-      onPress: {action: 'Music.VolumeDown', args: ['All']},
+      onPress: {action: 'Music.VolumeDown', args: []},
     },
   ],
   poll: [
