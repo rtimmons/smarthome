@@ -2,13 +2,15 @@
 
 (function () {
     var old = console.log;
-    var logger = document.getElementById('log');
+    var logger = $('#log');
+    logger.hide();
     console.log = function () {
         var args = Array.prototype.slice.call(arguments);
+        old(args);
         args = args.map(x => typeof x == 'object'
             ? JSON.stringify(x) : new String(x)
         );
-        logger.innerHTML = args.join(' ');
-        old(arguments);
+        logger.html(args.join(' '));
+        logger.fadeIn(20).promise().then(() => logger.fadeOut(1500));
     }
 })();

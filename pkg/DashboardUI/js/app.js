@@ -28,7 +28,6 @@ class App {
   changeRoom(toRoom) {
     this.$.find('.whenRoom').removeClass('active');
     this.room = toRoom;
-    console.log(this.$.find('.whenRoom' + '.room-' + toRoom).addClass('active'));
     log('Switched to room', this.room);
   }
 
