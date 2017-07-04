@@ -43,13 +43,17 @@ class App {
       else {
         $('body').css({backgroundImage: ''});
       }
-    })
+      var title = track.title;
+      if (title) {
+          this.$.find('.state-Music').html(title.substr(0,21));
+      }
+    });
   }
 
   changeRoom(toRoom) {
-    this.$.find('.whenRoom').removeClass('active');
+    var oldRoom = this.room;
     this.room = toRoom;
-    log('Switched to room', this.room);
+    this.submit('Room.Changed', {FromRoom: oldRoom, ToRoom: toRoom})
   }
 
   request(url) {
@@ -64,8 +68,6 @@ class App {
       this.submit('Room.StateObserved', {
         State: resp,
       });
-      var title = resp.currentTrack.title;
-      this.$.find('.state-Music').html(title.substr(0,21));
     });
   }
 
