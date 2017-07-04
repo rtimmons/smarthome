@@ -13,7 +13,11 @@ class App {
   run() {
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
-      this.assign(b.y, b.x, this.config.emojis[b.icon], b.onPress.action, b.onPress.args)
+      this.grid.assign(
+        b.y, b.x,
+        this.config.emojis[b.icon], 
+        () => this.onAction(b.onPress.action, b.onPress.args),
+      )
     });
   }
 
@@ -39,15 +43,6 @@ class App {
       // TODO: bring back display state
       this.$.find('#state-Music').html(title);
     });
-  }
-
-  cell(row, col) {
-    return this.$.find('#cell-'+row+'-'+col);
-  }
-
-  assign(row, col, emoji, action, args) {
-    args = args || [];
-    this.cell(row,col).html(emoji).click(() => this.onAction(action, args));
   }
 
     // TODO: support these actions?

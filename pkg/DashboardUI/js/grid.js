@@ -21,6 +21,16 @@ class Grid {
     this.$element.width((square + 2) * this.cols);
   }
 
+  cell(row, col) {
+    return this.$element.find('#cell-'+row+'-'+col);
+  }
+
+  assign(row, col, emoji, callback) {
+    this.cell(row,col)
+        .html(emoji)
+        .click(() => callback());
+  }
+
   init($win) {
     var grid = this;
 
