@@ -8,14 +8,29 @@ body {
     background-color: #73C6B6;
 }
 
+
+div#black {
+    position: fixed;
+    height: 100%;
+    width: 100%;
+    z-index: -1;
+    background: black;
+    opacity: 0.7;
+}
+#grid {
+    background-color: #283747;
+    opacity: 0.9;
+}
 .cell {
     margin: 0;
     padding: 0;
+    opacity: 90%;
 
     text-align: center;
     cursor: pointer;
 
-    background-color: #283747;
+    opacity: 0.95;
+    
     color: #aaa;
 }
 
