@@ -1,23 +1,14 @@
 class Grid {
-  constructor($element, config) {
-    this.$element = $element;
+  constructor(args) {
+    this.$element = args.container;
+    var config = args.config;
+
+    this.cells = [];
     this.cols = config.cols;
     this.rows = config.rows;
   }
-  render() {
-    for(var row=0; row<this.rows; row++) {
-      for(var col=0; col<this.cols; col++) {
-        var cell = $('<div class="cell">');
-        cell.addClass('row-'+row);
-        cell.addClass('col-'+col);
-        cell.attr('id', 'cell-'+row+'-'+col);
-        this.$element.append(cell);
-        cell.dblclick(function() { console.log($(this).attr('id')) });
-      }
-    }
-  }
 
-  resize(width, height) {
+  onResize(width, height) {
     var square = Math.min(width/this.cols, height/this.rows);
     this.square = square;
     $('.cell').css({
@@ -29,16 +20,24 @@ class Grid {
 
     this.$element.width((square + 2) * this.cols);
   }
+
+  init($win) {
+    var grid = this;
+
+    for(var row=0; row<this.rows; row++) {
+      for(var col=0; col<this.cols; col++) {
+        var cell = $('<div class="cell">');
+        cell.addClass('row-'+row);
+        cell.addClass('col-'+col);
+        cell.attr('id', 'cell-'+row+'-'+col);
+        this.$element.append(cell);
+        cell.dblclick(function() { console.log($(this).attr('id')) });
+        this.cells.push(cell);
+      }
+    }
+
+    $win.resize(function(){
+      grid.onResize($win.width(), $win.height());
+    }).resize();
+  }
 }
-
-$(function(){
-  var grid = new Grid($('#grid'), config);
-  grid.render();
-
-  var win = $(window);
-  win.resize(function(){
-    grid.resize(win.width(), win.height());
-  })
-  .resize();
-});
-

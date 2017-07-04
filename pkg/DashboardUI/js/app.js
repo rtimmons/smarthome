@@ -1,9 +1,20 @@
 var log = console.log;
 
 class App {
-  constructor($elt) {
-    this.$ = $elt;
+  constructor(args) {
+    this.window = args.window;
+    this.$ = args.container;
+    this.grid = args.grid;
+    this.config = args.config;
+
     this.changeRoom('Kitchen');
+  }
+
+  run() {
+    this.grid.init($(this.window));
+    this.config.cells.forEach(b => {
+      this.assign(b.y, b.x, this.config.emojis[b.icon], b.onPress.action, b.onPress.args)
+    });
   }
 
   changeRoom(toRoom) {
@@ -37,12 +48,6 @@ class App {
   assign(row, col, emoji, action, args) {
     args = args || [];
     this.cell(row,col).html(emoji).click(() => this.onAction(action, args));
-  }
-
-  configure(conf) {
-    conf.cells.forEach(b => {
-      this.assign(b.y, b.x, conf.emojis[b.icon], b.onPress.action, b.onPress.args)
-    });
   }
 
     // TODO: support these actions?
