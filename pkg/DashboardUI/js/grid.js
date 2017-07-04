@@ -24,6 +24,10 @@ class Grid {
     this.$element.width((square + 2) * this.cols);
   }
 
+  allCells() {
+    return this.cells;
+  }
+
   cell(size) {
     var cell = this.$element.find('#cell-'+size.y+'-'+size.x)
 
@@ -34,6 +38,7 @@ class Grid {
       cell.attr('colspan', size.w);
     }
 
+    this.cells.push(cell);
     return cell;
   }
 

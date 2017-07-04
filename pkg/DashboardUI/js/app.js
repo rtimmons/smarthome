@@ -25,6 +25,7 @@ class App {
       cell.html(this.config.emojis[b.icon]);
       cell.click(() => this.onAction(b.onPress.action, b.onPress.args));
       cell.addClass(b.claz);
+      cell.data('config', b);
     });
 
     this.config.poll.forEach(p => {
@@ -48,6 +49,20 @@ class App {
           this.$.find('.state-Music').html(title.substr(0,21));
       }
     });
+
+    this.listen('Room.Changed', (e) => {
+      var cells = this.grid.allCells();
+      cells.forEach(c => {
+        var d = c.data('config');
+        if(d && d.activeWhenRoom) {
+          if (e.ToRoom == d.activeWhenRoom) {
+            c.addClass('active');
+          } else {
+            c.removeClass('active');
+          }
+        }
+      })
+    })
   }
 
   changeRoom(toRoom) {
