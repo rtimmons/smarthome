@@ -16,12 +16,20 @@ var config = {
   },
   rows: 9,
   cols: 12,
+  rooms: [
+    'Living',
+    'Bedroom',
+    'Kitchen',
+    'Bathroom',
+  ],
   cells: [
     { w:1, h:1,
       y:0, x:3,
       icon: 'TV',
+      // TODO: rename onPress to onClick, onDblPress to onDblClick
       activeWhenRoom: 'Living',
       onPress: {action: 'ChangeRoom', args: ['Living']},
+      onDblPress: {action: 'AllJoin', args: ['Living']},
     },
     { w:1, h:1,
       y:0, x:4,

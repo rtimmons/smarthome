@@ -53,7 +53,6 @@ class Grid {
         cell.addClass('col-'+col);
         cell.attr('id', 'cell-'+row+'-'+col);
         tr.append(cell);
-        cell.dblclick(function() { console.log($(this).attr('id')) });
         this.cells.push(cell);
       }
       this.$element.append(tr);

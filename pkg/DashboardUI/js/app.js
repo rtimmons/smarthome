@@ -6,6 +6,7 @@ class App {
     this.$ = args.container;
     this.grid = args.grid;
     this.config = args.config;
+    this.rooms = args.config.rooms;
     this.listeners = {};
   }
 
@@ -26,7 +27,8 @@ class App {
       cell.html(this.config.emojis[b.icon]);
       cell.addClass(b.claz);
 
-      cell.click(() => this.submit('Cell.Press', {Cell: cell}));
+      cell.click(() => this.submit('Cell.Click', {Cell: cell}));
+      cell.dblclick(() => this.submit('Cell.Dblclick', {Cell: cell}));
     });
 
     this.config.poll.forEach(p => {
@@ -34,9 +36,18 @@ class App {
       setInterval(f, p.period);
     });
 
-    this.listen('Cell.Press', (e) => {
+    this.listen('Cell.Click', (e) => {
       var b = e.Cell.data('config');
       this.onAction(b.onPress.action, b.onPress.args)
+    });
+
+    this.listen('Cell.Dblclick', (e) => {
+      this.grid.allCells().forEach(c => {
+        var d = c.data('config');
+        if(d && d.onDblPress) {
+          this.onAction(d.onDblPress.action, d.onDblPress.args);
+        }
+      });
     });
 
     this.listen('Room.StateObserved', (e) => {
@@ -53,8 +64,7 @@ class App {
     });
 
     this.listen('Room.Changed', (e) => {
-      var cells = this.grid.allCells();
-      cells.forEach(c => {
+      this.grid.allCells().forEach(c => {
         var d = c.data('config');
         if(d && d.activeWhenRoom) {
           if (e.ToRoom == d.activeWhenRoom) {
@@ -74,6 +84,16 @@ class App {
     })
 
     this.submit('App.Started', {});
+  }
+
+  allJoin(room) {
+    // TODO: could be more clever about getting all room names from `/zones`
+    // it's in .members.roomName
+    log('allJoin ' + room)
+    this.config.rooms.filter( x => x != room ).forEach( other => {
+      this.request('http://retropie.local:5005/' + other + '/join/' + room)
+      
+    });
   }
 
   changeRoom(toRoom) {
@@ -100,6 +120,9 @@ class App {
   onAction(action, params) {
 
     switch(action) {
+    case 'AllJoin':
+      this.allJoin.apply(this, params);
+      break;
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);
       break;
