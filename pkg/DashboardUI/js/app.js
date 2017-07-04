@@ -119,6 +119,9 @@ class App {
     case 'Music.GetState':
       this.getState();
       break;
+    case 'Lights.SceneX':
+      this.request('http://maker.ifttt.com/trigger/kitchen_switch_on/with/key/cLNpbWpb3jYP550-Mna27W');
+      break;
     case 'Music.VolumeUp':
       this.request(
         'http://retropie.local:5005/' + this.room + '/volume/+5'

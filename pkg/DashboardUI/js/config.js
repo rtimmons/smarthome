@@ -12,6 +12,7 @@ var config = {
       'Yell':     '🗣',
       'Ear':      '👂🏽',
       'Taco':     '🌮',
+      'Sun':      '🌕',
   },
   rows: 9,
   cols: 12,
@@ -72,6 +73,12 @@ var config = {
       icon: 'Notes'
     },
 
+
+    { w:1, h:1,
+      y:4, x:6,
+      icon: 'Sun',
+      onPress: {action: 'Lights.SceneX', args: []},
+    },
     { w:1, h:1,
       y:4, x:1,
       icon: 'Up',
