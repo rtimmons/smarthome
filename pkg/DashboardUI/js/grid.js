@@ -28,8 +28,18 @@ class Grid {
     return this.$element.find('#cell-'+row+'-'+col);
   }
 
-  assign(size, emoji, callback) {
+  assign(size, emoji, claz, callback) {
     var cell = this.cell(size.y,size.x);
+
+    if(claz) {
+      cell.addClass(claz);
+    }
+    if(size.w == 0 || size.h == 0) {
+      cell.remove();
+    }
+    else {
+      cell.attr('colspan', size.w);
+    }
     cell.html(emoji);
     cell.click(() => callback());
   }

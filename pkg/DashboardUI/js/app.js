@@ -16,6 +16,7 @@ class App {
       this.grid.assign(
         {y: b.y, x: b.x, w: b.w},
         this.config.emojis[b.icon], 
+        b.claz,
         () => this.onAction(b.onPress.action, b.onPress.args),
       )
     });
@@ -41,7 +42,7 @@ class App {
     ).done(resp => {
       var title = resp.currentTrack.title;
       // TODO: bring back display state
-      this.$.find('#state-Music').html(title);
+      this.$.find('.state-Music').html(title);
     });
   }
 
