@@ -35,7 +35,14 @@ class App {
     this.changeRoom('Kitchen');
 
     this.listen('Room.StateObserved', (e) => {
-      console.log(e);
+      var track = e.State.currentTrack;
+      var artUrl = track.albumArtUri;
+      if(artUrl) {
+        $('body').css({backgroundImage: 'url("' + artUrl + '")'});
+      }
+      else {
+        $('body').css({backgroundImage: ''});
+      }
     })
   }
 
