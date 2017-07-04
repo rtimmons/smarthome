@@ -16,9 +16,9 @@ class App {
       this.grid.assign(
         {y: b.y, x: b.x, w: b.w},
         this.config.emojis[b.icon], 
-        b.claz,
+        b.claz, b.activeWhenRoom,
         () => this.onAction(b.onPress.action, b.onPress.args),
-      )
+      );
     });
     this.config.poll.forEach(p => {
       setInterval(() => this.onAction(p.action, p.args), p.period);
@@ -26,16 +26,16 @@ class App {
   }
 
   changeRoom(toRoom) {
-    this.$.find('.room-' + this.room).removeClass('active');
+    
+    this.$.find('.whenRoom').removeClass('active');
     this.room = toRoom;
-    this.$.find('.room-' + this.room).addClass('active');
+    console.log(this.$.find('.whenRoom' + '.room-' + toRoom).addClass('active'));
     log('Switched to room', this.room);
   }
 
   request(url) {
     log('Request ', url);
     return $.ajax(url)
-      .done(resp => console.log(url, resp))
       .fail(err  => console.log(url, err));
   }
 
@@ -70,7 +70,6 @@ class App {
     // 'Light.Scene',  (params with what to play)
 
   onAction(action, params) {
-    log('Action', action, params);
     switch(action) {
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);

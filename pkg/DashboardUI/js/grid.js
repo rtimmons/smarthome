@@ -28,7 +28,7 @@ class Grid {
     return this.$element.find('#cell-'+row+'-'+col);
   }
 
-  assign(size, emoji, claz, callback) {
+  assign(size, emoji, claz, activeWhenRoom, callback) {
     var cell = this.cell(size.y,size.x);
 
     if(claz) {
@@ -40,6 +40,12 @@ class Grid {
     else {
       cell.attr('colspan', size.w);
     }
+
+    if(activeWhenRoom) {
+      cell.addClass('whenRoom');
+      cell.addClass('room-'+activeWhenRoom);
+    }
+
     cell.html(emoji);
     cell.click(() => callback());
   }
