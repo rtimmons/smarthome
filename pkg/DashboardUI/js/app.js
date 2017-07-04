@@ -6,6 +6,16 @@ class App {
     this.$ = args.container;
     this.grid = args.grid;
     this.config = args.config;
+    this.listeners = {};
+  }
+
+  submit(topic, event) {
+    (this.listeners[topic] || []).forEach(l => l(event));
+  }
+
+  listen(topic, callback) {
+    this.listeners[topic] = this.listeners[topic] || [];
+    this.listeners[topic].push(callback);
   }
 
   run() {
@@ -23,6 +33,10 @@ class App {
     });
 
     this.changeRoom('Kitchen');
+
+    this.listen('Room.StateObserved', (e) => {
+      console.log(e);
+    })
   }
 
   changeRoom(toRoom) {
@@ -40,6 +54,9 @@ class App {
     $.ajax(
       'http://retropie.local:5005/' + this.room + '/state'
     ).done(resp => {
+      this.submit('Room.StateObserved', {
+        State: resp,
+      });
       var title = resp.currentTrack.title;
       this.$.find('.state-Music').html(title.substr(0,21));
     });

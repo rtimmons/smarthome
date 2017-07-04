@@ -84,6 +84,6 @@ var config = {
     },
   ],
   poll: [
-    {action: 'Music.GetState', args: [], period: 500},
+    {action: 'Music.GetState', args: [], period: 3000},
   ]
 };
