@@ -32,10 +32,6 @@ class App {
     log('Switched to room', this.room);
   }
 
-  listen(toRoom) {
-    this.request('http://retropie.local:5005/' + this.room + '/join/' + toRoom);
-  }
-
   request(url) {
     return $.ajax(url)
       .fail(err  => console.log(url, err));
@@ -73,9 +69,12 @@ class App {
 
   onAction(action, params) {
     if(this.mode == 'Listen' && action == 'ChangeRoom') {
-      this.listen(this.room, params[0]);
+      log(this.room + ' joins ' + params[0]);
+      this.request('http://retropie.local:5005/' + this.room + '/join/' + params[0]);
       delete this.mode;
+      return;
     }
+
     switch(action) {
     case 'Music.StartListen':
       this.mode = 'Listen';
