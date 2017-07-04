@@ -50,9 +50,16 @@ var config = {
     { w:1, h:1,
       y:1, x:2,
       icon: 'Ear',
-      activeWhenMode: 'Listen',
+      activeWhenMode: 'Listen', // TODO support setting to active
       onPress: {action: 'Music.StartListen', args: []}
     },
+    { w:1, h:1,
+      y:1, x:3,
+      icon: 'Yell',
+      activeWhenMode: 'Broadcast',
+      onPress: {action: 'Music.StartBroadcast', args: []}
+    },
+
 
     { w:1, h:1,
       y:7, x:0,

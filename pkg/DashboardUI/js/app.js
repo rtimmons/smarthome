@@ -75,9 +75,19 @@ class App {
       return;
     }
 
+    if(this.mode == 'Broadcast' && action == 'ChangeRoom') {
+      log(this.room + ' broadcasts to ' + params[0]);
+      this.request('http://retropie.local:5005/' + params[0] + '/join/' + this.room);
+      delete this.mode;
+      return;
+    }
+
     switch(action) {
     case 'Music.StartListen':
       this.mode = 'Listen';
+      break;
+    case 'Music.StartBroadcast':
+      this.mode = 'Broadcast';
       break;
 
     case 'ChangeRoom':
