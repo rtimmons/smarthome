@@ -33,8 +33,6 @@ class App {
       setInterval(f, p.period);
     });
 
-    this.changeRoom('Kitchen');
-
     this.listen('Room.StateObserved', (e) => {
       var track = e.State.currentTrack;
       var artUrl = track.albumArtUri;
@@ -45,9 +43,7 @@ class App {
         $('body').css({backgroundImage: ''});
       }
       var title = track.title;
-      if (title) {
-          this.$.find('.state-Music').html(title.substr(0,21));
-      }
+      this.$.find('.state-Music').html(title ? title.substr(0,21) : '');
     });
 
     this.listen('Room.Changed', (e) => {
@@ -62,7 +58,16 @@ class App {
           }
         }
       })
+    });
+    this.listen('Room.Changed', (e) => {
+      this.getState();
+    });
+
+    this.listen('App.Started', (e) => {
+      this.changeRoom('Kitchen');
     })
+
+    this.submit('App.Started', {});
   }
 
   changeRoom(toRoom) {
