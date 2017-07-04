@@ -25,10 +25,10 @@ class Grid {
     return this.$element.find('#cell-'+row+'-'+col);
   }
 
-  assign(row, col, emoji, callback) {
-    this.cell(row,col)
-        .html(emoji)
-        .click(() => callback());
+  assign(size, emoji, callback) {
+    var cell = this.cell(size.y,size.x);
+    cell.html(emoji);
+    cell.click(() => callback());
   }
 
   init($win) {

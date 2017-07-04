@@ -14,7 +14,7 @@ class App {
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
       this.grid.assign(
-        b.y, b.x,
+        {y: b.y, x: b.x, w: b.w},
         this.config.emojis[b.icon], 
         () => this.onAction(b.onPress.action, b.onPress.args),
       )
