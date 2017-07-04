@@ -21,16 +21,22 @@ class App {
   run() {
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
-      var cell = this.grid.cell({y: b.y, x: b.x, w: b.w});
-      cell.html(this.config.emojis[b.icon]);
-      cell.click(() => this.onAction(b.onPress.action, b.onPress.args));
-      cell.addClass(b.claz);
+      var cell = this.grid.cell(b);
       cell.data('config', b);
+      cell.html(this.config.emojis[b.icon]);
+      cell.addClass(b.claz);
+
+      cell.click(() => this.submit('Cell.Press', {Cell: cell}));
     });
 
     this.config.poll.forEach(p => {
       var f = () => this.onAction(p.action, p.args)
       setInterval(f, p.period);
+    });
+
+    this.listen('Cell.Press', (e) => {
+      var b = e.Cell.data('config');
+      this.onAction(b.onPress.action, b.onPress.args)
     });
 
     this.listen('Room.StateObserved', (e) => {
@@ -91,50 +97,9 @@ class App {
     });
   }
 
-    // TODO: support these actions?
-    // 'ChangeRoom',
-    //
-    // 'Music.Join',
-    // 'Music.VolumeUp',
-    // 'Music.VolumeDown',
-    // 'Music.Mute',
-    //
-    // 'Music.Resume',
-    // 'Music.Pause',
-    // 'Music.Skip',
-    // 'Music.ThumbsUp',
-    // 'Music.ThumbsDown',
-    //
-    // 'Music.PlayX', (params with what to play)
-    //
-    // 'Light.On',
-    // 'Light.Dim',
-    // 'Light.Off',
-    // 'Light.Scene',  (params with what to play)
-
   onAction(action, params) {
-    if(this.mode == 'Listen' && action == 'ChangeRoom') {
-      log(this.room + ' joins ' + params[0]);
-      this.request('http://retropie.local:5005/' + this.room + '/join/' + params[0]);
-      delete this.mode;
-      return;
-    }
-
-    if(this.mode == 'Broadcast' && action == 'ChangeRoom') {
-      log(this.room + ' broadcasts to ' + params[0]);
-      this.request('http://retropie.local:5005/' + params[0] + '/join/' + this.room);
-      delete this.mode;
-      return;
-    }
 
     switch(action) {
-    case 'Music.StartListen':
-      this.mode = 'Listen';
-      break;
-    case 'Music.StartBroadcast':
-      this.mode = 'Broadcast';
-      break;
-
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);
       break;
