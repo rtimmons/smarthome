@@ -29,6 +29,7 @@ class App {
 
       cell.click(() => this.submit('Cell.Click', {Cell: cell}));
       cell.dblclick(() => this.submit('Cell.Dblclick', {Cell: cell}));
+      cell.on('doubletap', () => this.submit('Cell.Dblclick', {Cell: cell}));
     });
 
     this.config.poll.forEach(p => {
