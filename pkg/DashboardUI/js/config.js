@@ -76,5 +76,8 @@ var config = {
       icon: 'Down',
       onPress: {action: 'Music.VolumeDown', args: ['All']},
     },
+  ],
+  poll: [
+    {action: 'Music.GetState', args: [], period: 500},
   ]
 };

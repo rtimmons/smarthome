@@ -20,6 +20,9 @@ class App {
         () => this.onAction(b.onPress.action, b.onPress.args),
       )
     });
+    this.config.poll.forEach(p => {
+      setInterval(() => this.onAction(p.action, p.args), p.period);
+    });
   }
 
   changeRoom(toRoom) {
@@ -41,8 +44,7 @@ class App {
       'http://retropie.local:5005/' + this.room + '/state'
     ).done(resp => {
       var title = resp.currentTrack.title;
-      // TODO: bring back display state
-      this.$.find('.state-Music').html(title);
+      this.$.find('.state-Music').html(title.substr(0,21));
     });
   }
 
