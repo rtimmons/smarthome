@@ -11,11 +11,14 @@ class Grid {
   onResize(width, height) {
     var square = Math.min(width/this.cols, height/this.rows);
     this.square = square;
-    $('.cell').css({
-      height: (square) + 'px',
-      width: (square) + 'px',
-      fontSize: (square * 2 / 3) + 'px',
-      lineHeight: (square) + 'px',
+    $('.cell').each(function() {
+      var t =$(this);
+      t.css({
+        height: ((t.attr('rowspan') || 1) * square) + 'px',
+        width:  ((t.attr('colspan') || 1) * square) + 'px',
+        fontSize: (square * 2 / 3) + 'px',
+        lineHeight: (square) + 'px',
+      });
     });
 
     this.$element.width((square + 2) * this.cols);
@@ -35,15 +38,17 @@ class Grid {
     var grid = this;
 
     for(var row=0; row<this.rows; row++) {
+      var tr = $('<tr>');
       for(var col=0; col<this.cols; col++) {
-        var cell = $('<div class="cell">');
+        var cell = $('<td class="cell">');
         cell.addClass('row-'+row);
         cell.addClass('col-'+col);
         cell.attr('id', 'cell-'+row+'-'+col);
-        this.$element.append(cell);
+        tr.append(cell);
         cell.dblclick(function() { console.log($(this).attr('id')) });
         this.cells.push(cell);
       }
+      this.$element.append(tr);
     }
 
     $win.resize(function(){

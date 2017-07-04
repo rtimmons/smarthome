@@ -3,12 +3,12 @@ body {
     font-family: Monoid, monospace;
 }
 
-div.cell.active {
+.cell.active {
     /* TODO bring back current-room state */
     background-color: #73C6B6;
 }
 
-div.cell {
+.cell {
     margin: 0;
     padding: 0;
 
@@ -19,18 +19,12 @@ div.cell {
     color: #aaa;
 }
 
-div.cell:hover {
+.cell:hover {
     background-color: #566573;
 }
 
-div#grid {
+#grid {
     margin: 0 auto;
     width: 100%;
     height: 100%;
-
-    display: flex;
-    justify-content: center;
-    align-content: flex-start;
-    align-items: center;
-    flex-flow: row wrap;
 }
