@@ -21,15 +21,15 @@ class App {
   run() {
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
-      this.grid.assign(
-        {y: b.y, x: b.x, w: b.w},
-        this.config.emojis[b.icon], 
-        b.claz, b.activeWhenRoom,
-        () => this.onAction(b.onPress.action, b.onPress.args),
-      );
+      var cell = this.grid.cell({y: b.y, x: b.x, w: b.w});
+      cell.html(this.config.emojis[b.icon]);
+      cell.click(() => this.onAction(b.onPress.action, b.onPress.args));
+      cell.addClass(b.claz);
     });
+
     this.config.poll.forEach(p => {
-      setInterval(() => this.onAction(p.action, p.args), p.period);
+      var f = () => this.onAction(p.action, p.args)
+      setInterval(f, p.period);
     });
 
     this.changeRoom('Kitchen');

@@ -24,16 +24,9 @@ class Grid {
     this.$element.width((square + 2) * this.cols);
   }
 
-  cell(row, col) {
-    return this.$element.find('#cell-'+row+'-'+col);
-  }
+  cell(size) {
+    var cell = this.$element.find('#cell-'+size.y+'-'+size.x)
 
-  assign(size, emoji, claz, activeWhenRoom, callback) {
-    var cell = this.cell(size.y,size.x);
-
-    if(claz) {
-      cell.addClass(claz);
-    }
     if(size.w == 0 || size.h == 0) {
       cell.remove();
     }
@@ -41,13 +34,7 @@ class Grid {
       cell.attr('colspan', size.w);
     }
 
-    if(activeWhenRoom) {
-      cell.addClass('whenRoom');
-      cell.addClass('room-'+activeWhenRoom);
-    }
-
-    cell.html(emoji);
-    cell.click(() => callback());
+    return cell;
   }
 
   init($win) {
