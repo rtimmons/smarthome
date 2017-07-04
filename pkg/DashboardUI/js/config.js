@@ -48,6 +48,13 @@ var config = {
     },
 
     { w:1, h:1,
+      y:1, x:2,
+      icon: 'Ear',
+      activeWhenMode: 'Listen',
+      onPress: {action: 'Music.StartListen', args: []}
+    },
+
+    { w:1, h:1,
       y:7, x:0,
       icon: 'Notes',
       onPress: {action: 'Music.GetState', args: []},
