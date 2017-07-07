@@ -4,7 +4,19 @@
 	- install heatsink, put in case, plug in to tv
 
 apt-cache
+
+sudo apt-get update
+sudo apt-get upgrade
+sudo /sbin/reboot
+sudo apt-get install apache2 apache2-doc apache2-utils
+
+https://retropie.org.uk/docs/Manual-Installation/
+
 apt-get install apache2
+
+```
+cat ./id_rsa.pub | ssh pi@rypi.local 'mkdir .ssh; cat >> .ssh/authorized_keys'
+```
 
 # Graveyard
 
