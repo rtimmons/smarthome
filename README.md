@@ -3,11 +3,13 @@
 - Buy 🍓pi and sd card
 	- install heatsink, put in case, plug in to tv
 
-- [Download etcher][etcher] `brew cask install etcher`
-
- [etcher]: https://etcher.io/
+apt-cache
+apt-get install apache2
 
 # Graveyard
+
+[Download etcher][etcher] `brew cask install etcher` 
+[etcher]: https://etcher.io/
 
 install FUSE
 https://downloads.sourceforge.net/project/osxfuse/osxfuse-2.8.3/osxfuse-2.8.3.dmg?r=https%3A%2F%2Fsourceforge.net%2Fprojects%2Fosxfuse%2Ffiles%2Fosxfuse-3.x%2F&ts=1499394374&use_mirror=superb-dca2
