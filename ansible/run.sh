@@ -1,3 +1,5 @@
 #!/usr/bin/env bash
 
-ansible-playbook
+# TODO: cd dirname script
+
+ansible-playbook -vvv -i inventory provision.yml
