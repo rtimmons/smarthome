@@ -204,6 +204,11 @@ class App {
         'http://retropie.local:5005/' + this.room + '/volume/-5'
       );
       break;
+    case 'Music.Next':
+      this.request(
+        'http://retropie.local:5005/' + this.room + '/next'
+      );
+      break;
     case 'App.Refresh':
       this.refresh();
       break;

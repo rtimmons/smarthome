@@ -9,6 +9,7 @@ var config = {
       'Play':     '▶️',
       'Up':       '🔼' ,
       'Down':     '🔽' ,
+      'Skip':     '⏭',
       'Notes':    '🎶',
       'Monkey':   '🙉',
       'Yell':     '🗣',
@@ -90,7 +91,6 @@ var config = {
       icon: 'Notes'
     },
 
-
     { w:1, h:1,
       y:3, x:6,
       icon: 'Sun',
@@ -135,6 +135,11 @@ var config = {
       y:8, x:1,
       icon: 'Play',
       onPress: {action: 'Music.PlayPause', args: []},
+    },
+    { w:1, h:1,
+      y:8, x:2,
+      icon: 'Skip',
+      onPress: {action: 'Music.Next', args: []},
     },
   ],
   poll: [
