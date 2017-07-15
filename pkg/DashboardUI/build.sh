@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
+brew bundle exec -- npm install
 
 test() {
-    npm test
+    brew bundle exec -- npm test
 }
 
 

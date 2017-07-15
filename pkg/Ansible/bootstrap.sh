@@ -3,3 +3,5 @@
 if [ ! -e "/Applications/Docker.app" ]; then
     brew cask install docker
 fi
+
+docker build . >/dev/null

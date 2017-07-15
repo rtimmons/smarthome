@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
-docker build -t rtimmons-dashboardui-ansible .
+cat inventory.template \
+    | sed -E "s,PWD,$PWD,g" \
+    >  inventory.ini
 
-docker run rtimmons-dashboardui-ansible
+
+
+docker build -t     rtimmons-dashboardui-ansible .
+docker run          rtimmons-dashboardui-ansible
