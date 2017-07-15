@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO: cd dirname script
+docker build -t rtimmons-dashboardui-ansible .
 
-ansible-playbook -vvv -i inventory provision.yml
+docker run rtimmons-dashboardui-ansible
