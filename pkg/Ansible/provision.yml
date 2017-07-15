@@ -1,0 +1,4 @@
+- name: apply roles
+  hosts: rypi
+  roles:
+  - { name: rypi, become: True, become_user: root }
