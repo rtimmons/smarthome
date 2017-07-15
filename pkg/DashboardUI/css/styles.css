@@ -1,6 +1,7 @@
 body {
     background-color: #212F3C;
     font-family: Monoid, monospace;
+    background-size: cover;
 }
 
 .cell.active {
