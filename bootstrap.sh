@@ -6,6 +6,8 @@ if [ ! $? ]; then
     exit 1
 fi
 
+brew tap Homebrew/bundle
+
 for P in pkg/*; do
     if [ -e "$P/bootstrap.sh" ]; then
         echo "👢 Package $(basename $P)"
