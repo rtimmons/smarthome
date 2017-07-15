@@ -123,6 +123,10 @@ class App {
     this.request('http://retropie.local:5005/reindex')
   }
 
+  refresh() {
+    window.location.reload();
+  }
+
   changeRoom(toRoom) {
     var oldRoom = this.room;
     this.room = toRoom;
@@ -198,7 +202,11 @@ class App {
     case 'Music.VolumeDown':
       this.request(
         'http://retropie.local:5005/' + this.room + '/volume/-5'
-      )
+      );
+      break;
+    case 'App.Refresh':
+      this.refresh();
+      break;
     }
   }
 }
