@@ -1,3 +1,9 @@
+// fastclick hook
+$(() => {
+  FastClick.attach(document.body);
+});
+
+// app.js hook
 $(() => {
   var container = $('#grid');
 
