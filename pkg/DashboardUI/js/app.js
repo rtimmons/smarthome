@@ -108,8 +108,10 @@ class App {
     // TODO: could be more clever about getting all room names from `/zones`
     // it's in .members.roomName
     log('allJoin ' + room)
+    var delay = 100;
     this.config.rooms.filter( x => x != room ).forEach( other => {
-      this.request('http://retropie.local:5005/' + other + '/join/' + room)
+      setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
+      delay += 750;
     });
   }
 
