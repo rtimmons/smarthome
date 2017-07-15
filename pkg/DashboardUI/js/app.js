@@ -56,16 +56,16 @@ class App {
 
     this.listen('Cell.Click', (e) => {
       var b = e.Cell.data('config');
-      this.onAction(b.onPress.action, b.onPress.args)
+      if(b && b.onPress) {
+        this.onAction(b.onPress.action, b.onPress.args)
+      }
     });
 
     this.listen('Cell.Dblclick', (e) => {
-      this.grid.allCells().forEach(c => {
-        var d = c.data('config');
-        if(d && d.onDblPress) {
-          this.onAction(d.onDblPress.action, d.onDblPress.args);
-        }
-      });
+      var d = e.Cell.data('config');
+      if(d && d.onDblPress) {
+        this.onAction(d.onDblPress.action, d.onDblPress.args);
+      }
     });
 
     this.listen('Room.StateObserved', (e) => {
@@ -110,7 +110,6 @@ class App {
     log('allJoin ' + room)
     this.config.rooms.filter( x => x != room ).forEach( other => {
       this.request('http://retropie.local:5005/' + other + '/join/' + room)
-      
     });
   }
 
@@ -121,6 +120,9 @@ class App {
   }
 
   request(url) {
+    if(window.location.href.match(/.*debug.*/)) {
+      alert('fake request '+url);
+    }
     return $.ajax(url)
       .fail(err  => console.log(url, err));
   }
