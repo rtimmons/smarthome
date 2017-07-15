@@ -172,6 +172,11 @@ class App {
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/cLNpbWpb3jYP550-Mna27W');
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
+    case 'Music.PlayPause':
+        this.request(
+          'http://retropie.local:5005/' + this.room + '/playpause'
+        )
+        break;
     case 'Music.VolumeUp':
       this.request(
         'http://retropie.local:5005/' + this.room + '/volume/+5'
