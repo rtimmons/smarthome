@@ -27,6 +27,23 @@ class App {
       cell.html(this.config.emojis[b.icon]);
       cell.addClass(b.claz);
 
+      var tapped = false;
+      var app = this;
+      // hacky thing to bind double-tap
+      cell.on("touchstart",function(e){
+        if(!tapped){
+          tapped=setTimeout(function(){
+            tapped=null;
+            cell.click();
+          },300);
+        } else {
+          clearTimeout(tapped);
+          tapped=null;
+          cell.dblclick();
+        }
+        e.preventDefault();
+      });
+
       cell.click(() => this.submit('Cell.Click', {Cell: cell}));
       cell.dblclick(() => this.submit('Cell.Dblclick', {Cell: cell}));
       cell.on('doubletap', () => this.submit('Cell.Dblclick', {Cell: cell}));
