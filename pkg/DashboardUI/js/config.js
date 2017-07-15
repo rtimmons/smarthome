@@ -139,7 +139,5 @@ var config = {
   ],
   poll: [
     {action: 'Music.GetState', args: [], period: 3000},
-    // refresh every 15 seconds
-    {action: 'App.Refresh', args: [], period: 15000},
   ]
 };
