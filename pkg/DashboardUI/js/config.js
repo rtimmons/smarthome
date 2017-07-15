@@ -129,7 +129,7 @@ var config = {
     { w:1, h:1,
       y:4, x:2,
       icon: 'Taco',
-      onPress: {action: 'Music.Preset', args: ['radio.depacito']},
+      onPress: {action: 'Music.Preset', args: ['radio.despacito']},
     },
     { w:1, h:1,
       y:8, x:1,
