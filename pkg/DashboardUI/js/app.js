@@ -6,6 +6,7 @@ class App {
     this.$ = args.container;
     this.grid = args.grid;
     this.config = args.config;
+    this.rooms = args.config.rooms;
     this.listeners = {};
   }
 
@@ -21,18 +22,34 @@ class App {
   run() {
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
-      this.grid.assign(
-        {y: b.y, x: b.x, w: b.w},
-        this.config.emojis[b.icon], 
-        b.claz, b.activeWhenRoom,
-        () => this.onAction(b.onPress.action, b.onPress.args),
-      );
-    });
-    this.config.poll.forEach(p => {
-      setInterval(() => this.onAction(p.action, p.args), p.period);
+      var cell = this.grid.cell(b);
+      cell.data('config', b);
+      cell.html(this.config.emojis[b.icon]);
+      cell.addClass(b.claz);
+
+      cell.click(() => this.submit('Cell.Click', {Cell: cell}));
+      cell.dblclick(() => this.submit('Cell.Dblclick', {Cell: cell}));
+      cell.on('doubletap', () => this.submit('Cell.Dblclick', {Cell: cell}));
     });
 
-    this.changeRoom('Kitchen');
+    this.config.poll.forEach(p => {
+      var f = () => this.onAction(p.action, p.args)
+      setInterval(f, p.period);
+    });
+
+    this.listen('Cell.Click', (e) => {
+      var b = e.Cell.data('config');
+      this.onAction(b.onPress.action, b.onPress.args)
+    });
+
+    this.listen('Cell.Dblclick', (e) => {
+      this.grid.allCells().forEach(c => {
+        var d = c.data('config');
+        if(d && d.onDblPress) {
+          this.onAction(d.onDblPress.action, d.onDblPress.args);
+        }
+      });
+    });
 
     this.listen('Room.StateObserved', (e) => {
       var track = e.State.currentTrack;
@@ -43,13 +60,47 @@ class App {
       else {
         $('body').css({backgroundImage: ''});
       }
+      var title = track.title;
+      this.$.find('.state-Music').html(title ? title.substr(0,21) : '');
+    });
+
+    this.listen('Room.Changed', (e) => {
+      this.grid.allCells().forEach(c => {
+        var d = c.data('config');
+        if(d && d.activeWhenRoom) {
+          if (e.ToRoom == d.activeWhenRoom) {
+            c.addClass('active');
+          } else {
+            c.removeClass('active');
+          }
+        }
+      })
+    });
+    this.listen('Room.Changed', (e) => {
+      this.getState();
+    });
+
+    this.listen('App.Started', (e) => {
+      this.changeRoom('Kitchen');
     })
+
+    this.submit('App.Started', {});
+  }
+
+  allJoin(room) {
+    // TODO: could be more clever about getting all room names from `/zones`
+    // it's in .members.roomName
+    log('allJoin ' + room)
+    this.config.rooms.filter( x => x != room ).forEach( other => {
+      this.request('http://retropie.local:5005/' + other + '/join/' + room)
+      
+    });
   }
 
   changeRoom(toRoom) {
-    this.$.find('.whenRoom').removeClass('active');
+    var oldRoom = this.room;
     this.room = toRoom;
-    log('Switched to room', this.room);
+    this.submit('Room.Changed', {FromRoom: oldRoom, ToRoom: toRoom})
   }
 
   request(url) {
@@ -64,55 +115,15 @@ class App {
       this.submit('Room.StateObserved', {
         State: resp,
       });
-      var title = resp.currentTrack.title;
-      this.$.find('.state-Music').html(title.substr(0,21));
     });
   }
 
-    // TODO: support these actions?
-    // 'ChangeRoom',
-    //
-    // 'Music.Join',
-    // 'Music.VolumeUp',
-    // 'Music.VolumeDown',
-    // 'Music.Mute',
-    //
-    // 'Music.Resume',
-    // 'Music.Pause',
-    // 'Music.Skip',
-    // 'Music.ThumbsUp',
-    // 'Music.ThumbsDown',
-    //
-    // 'Music.PlayX', (params with what to play)
-    //
-    // 'Light.On',
-    // 'Light.Dim',
-    // 'Light.Off',
-    // 'Light.Scene',  (params with what to play)
-
   onAction(action, params) {
-    if(this.mode == 'Listen' && action == 'ChangeRoom') {
-      log(this.room + ' joins ' + params[0]);
-      this.request('http://retropie.local:5005/' + this.room + '/join/' + params[0]);
-      delete this.mode;
-      return;
-    }
-
-    if(this.mode == 'Broadcast' && action == 'ChangeRoom') {
-      log(this.room + ' broadcasts to ' + params[0]);
-      this.request('http://retropie.local:5005/' + params[0] + '/join/' + this.room);
-      delete this.mode;
-      return;
-    }
 
     switch(action) {
-    case 'Music.StartListen':
-      this.mode = 'Listen';
+    case 'AllJoin':
+      this.allJoin.apply(this, params);
       break;
-    case 'Music.StartBroadcast':
-      this.mode = 'Broadcast';
-      break;
-
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);
       break;

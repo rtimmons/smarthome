@@ -24,16 +24,13 @@ class Grid {
     this.$element.width((square + 2) * this.cols);
   }
 
-  cell(row, col) {
-    return this.$element.find('#cell-'+row+'-'+col);
+  allCells() {
+    return this.cells;
   }
 
-  assign(size, emoji, claz, activeWhenRoom, callback) {
-    var cell = this.cell(size.y,size.x);
+  cell(size) {
+    var cell = this.$element.find('#cell-'+size.y+'-'+size.x)
 
-    if(claz) {
-      cell.addClass(claz);
-    }
     if(size.w == 0 || size.h == 0) {
       cell.remove();
     }
@@ -41,13 +38,8 @@ class Grid {
       cell.attr('colspan', size.w);
     }
 
-    if(activeWhenRoom) {
-      cell.addClass('whenRoom');
-      cell.addClass('room-'+activeWhenRoom);
-    }
-
-    cell.html(emoji);
-    cell.click(() => callback());
+    this.cells.push(cell);
+    return cell;
   }
 
   init($win) {
@@ -61,7 +53,6 @@ class Grid {
         cell.addClass('col-'+col);
         cell.attr('id', 'cell-'+row+'-'+col);
         tr.append(cell);
-        cell.dblclick(function() { console.log($(this).attr('id')) });
         this.cells.push(cell);
       }
       this.$element.append(tr);
