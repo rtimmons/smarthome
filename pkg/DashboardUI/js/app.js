@@ -124,6 +124,7 @@ class App {
   request(url) {
     if(window.location.href.match(/.*debug.*/)) {
       alert('fake request '+url);
+      return {};
     }
     return $.ajax(url)
       .fail(err  => console.log(url, err));
