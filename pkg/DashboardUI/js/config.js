@@ -1,3 +1,4 @@
+
 var config = {
   emojis: {
       'TV':       '📺' ,
@@ -13,6 +14,7 @@ var config = {
       'Yell':     '🗣',
       'Ear':      '👂🏽',
       'Taco':     '🌮',
+      'News':     '📰',
       'Sun':      '🌕',
       'Moon':     '🌑',
       'Dim':      '🌘',
@@ -118,6 +120,16 @@ var config = {
       y:5, x:1,
       icon: 'Down',
       onPress: {action: 'Music.VolumeDown', args: []},
+    },
+    { w:1, h:1,
+      y:5, x:2,
+      icon: 'News',
+      onPress: {action: 'Music.Preset', args: ['playnpr']},
+    },
+    { w:1, h:1,
+      y:4, x:2,
+      icon: 'Taco',
+      onPress: {action: 'Music.Preset', args: ['radio.depacito']},
     },
     { w:1, h:1,
       y:8, x:1,

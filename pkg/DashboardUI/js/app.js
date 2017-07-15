@@ -108,10 +108,10 @@ class App {
     // TODO: could be more clever about getting all room names from `/zones`
     // it's in .members.roomName
     log('allJoin ' + room)
-    var delay = 100;
+    var delay = 0;
     this.config.rooms.filter( x => x != room ).forEach( other => {
       setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
-      delay += 750;
+      delay += 1000; // only 1 request/second
     });
   }
 
@@ -177,6 +177,11 @@ class App {
           'http://retropie.local:5005/' + this.room + '/playpause'
         )
         break;
+    case 'Music.Preset':
+      this.request(
+        'http://retropie.local:5005/' + this.room + '/preset/' + params[0]
+      );
+      break;  
     case 'Music.VolumeUp':
       this.request(
         'http://retropie.local:5005/' + this.room + '/volume/+5'

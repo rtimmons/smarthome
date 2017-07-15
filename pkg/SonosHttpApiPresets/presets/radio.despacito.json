@@ -1,0 +1,21 @@
+{
+  "players": [
+    {
+      "roomName": "Bathroom",
+      "volume": 30
+    },
+    {
+      "roomName": "Kitchen",
+      "volume": 30
+    },
+    {
+      "roomName": "Bedroom",
+      "volume": 30
+    },
+    {
+      "roomName": "Living",
+      "volume": 30
+    }
+  ],
+  "favorite": "Despacito (Feat. Daddy Yankee) Radio"
+}
