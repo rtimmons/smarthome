@@ -1,53 +1,31 @@
-WIP
+So WIP I can't even tell you
 
 RyMike Smart House Dashboard
 ============================
 
 - http://retropie.local/d
 - Deply with `./deploy`
-  
-## tasks/ideas.todo
+ 
+## Refocusing...
 
-- music
-	- "Play all from" join button
-	- Preset music
-	- mute
-	- pause
-	- global pause
+**Goal**: `./bootstrap.sh` downloads everything needed to build a complete functioning image *without an internet connection*
 
-- all to TV
-- all to music
+- https://askubuntu.com/questions/974/how-can-i-install-software-or-packages-without-internet-offline
+- https://launchpad.net/keryxproject for bootstrapping deb installs (t)
+- run everything thru docker?
+- https://docs.resin.io/raspberrypi/nodejs/getting-started/
+- http://elinux.org/RPi_Easy_SD_Card_Setup
+- http://p7zip.sourceforge.net/
+- `deb apt-cacher-ng`
+- resin.io
+- http://elinux.org/RPi_Easy_SD_Card_Setup
+- https://github.com/RPi-Distro/pi-gen
+- crib the interesting stuff from davidferguson's cool [pibakery](https://github.com/davidferguson/pibakery)
 
-- pandora
-	- thumbs-up
-	- skip
-	- thumbs-down
 
-- lights
-	- control any hue lights
-	- control any smartthings lights
+# Graveyard
 
-- routing
-	- preset room based on `#!/${room}`
-	- store secrets in url to avoid checking them in
-
-- state management
-	- periodically update track
-	- periodically update volume %age
-
-- ui foo
-	- automatically compute/maximize height/width of cells based on screen size
-	- why is the `<marquee>` for the status not clipping and scrolling?
-
-- code foo
-	- don't do fixed html table, just let code generate grid. Assign `x,y` values and then listeners?
-	- pull hook or something to update cache.manifest since mobile safari doesn't refresh very well
-
-# Overview
-
-- Buy 🍓pi and sd card
-	- install heatsink, put in case, plug in to tv
-
+```
 apt-cache
 
 sudo apt-get update
@@ -59,11 +37,9 @@ https://retropie.org.uk/docs/Manual-Installation/
 
 apt-get install apache2
 
-```
 cat ./id_rsa.pub | ssh pi@rypi.local 'mkdir .ssh; cat >> .ssh/authorized_keys'
 ```
 
-# Graveyard
 
 [Download etcher][etcher] `brew cask install etcher` 
 [etcher]: https://etcher.io/
@@ -82,14 +58,3 @@ https://github.com/RetroPie/RetroPie-Setup/releases/download/4.2/retropie-4.2-rp
 STEP
 Download
 http://downloads.raspberrypi.org/NOOBS_latest
-
-# Foo
-
-```
-ansible/
-	roles/
-		sonos-server
-		httpd
-		n64
-```
-
