@@ -6,7 +6,7 @@ pkg() {
     pushd vendor/pi-gen >/dev/null
         echo "IMG_NAME=rypi" > config
         touch stage{3,4,5}/SKIP
-        rm stage2/EXPORT*
+        rm stage2/EXPORT* || echo ""
         ./build-docker.sh
     popd >/dev/null
 }
