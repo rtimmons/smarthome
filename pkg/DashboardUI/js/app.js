@@ -70,7 +70,7 @@ class App {
 
     this.listen('Room.StateObserved', (e) => {
       var track = e.State.currentTrack;
-      var artUrl = track.albumArtUri;
+      var artUrl = track.absoluteAlbumArtUri || track.albumArtUri;
       if(artUrl) {
         $('body').css({backgroundImage: 'url("' + artUrl + '")'});
       }
