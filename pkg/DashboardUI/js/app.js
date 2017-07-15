@@ -152,22 +152,22 @@ class App {
     case 'Lights.On':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_bright/with/key/cLNpbWpb3jYP550-Mna27W');
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_on/with/key/cLNpbWpb3jYP550-Mna27W');
-        this.request('http://retropie:5005/' + this.room + '/say/on/en-gb')
+        // this.request('http://retropie:5005/' + this.room + '/say/on/en-gb')
         break;
     case 'Lights.Scene.Dim':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_dim/with/key/cLNpbWpb3jYP550-Mna27W');
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/cLNpbWpb3jYP550-Mna27W');
-        this.request('http://retropie:5005/' + this.room + '/say/dimmed/en-gb')
+        // this.request('http://retropie:5005/' + this.room + '/say/dimmed/en-gb')
         break;
     case 'Lights.Off':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_off/with/key/cLNpbWpb3jYP550-Mna27W');
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/cLNpbWpb3jYP550-Mna27W');
-        this.request('http://retropie:5005/' + this.room + '/say/off/en-gb')
+        // this.request('http://retropie:5005/' + this.room + '/say/off/en-gb')
         break;
     case 'Lights.Scene.Savana':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_savanna/with/key/cLNpbWpb3jYP550-Mna27W');
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/cLNpbWpb3jYP550-Mna27W');
-        this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
+        // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
     case 'Music.VolumeUp':
       this.request(
