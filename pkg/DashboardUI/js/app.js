@@ -78,7 +78,7 @@ class App {
         $('body').css({backgroundImage: ''});
       }
       var title = track.title;
-      this.$.find('.state-Music').html(title ? title.substr(0,21) : '');
+      this.$.find('.state-Music').html(title ? title.substr(0,19) : '');
     });
 
     this.listen('Room.Changed', (e) => {
