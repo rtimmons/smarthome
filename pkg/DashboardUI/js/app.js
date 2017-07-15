@@ -101,6 +101,10 @@ class App {
       this.changeRoom('Kitchen');
     })
 
+    this.listen('App.Started', (e) => {
+      this.reindex();
+    });
+
     this.submit('App.Started', {});
   }
 
@@ -113,6 +117,10 @@ class App {
       setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
       delay += 1000; // only 1 request/second
     });
+  }
+
+  reindex() {
+    this.request('http://retropie.local:5005/reindex')
   }
 
   changeRoom(toRoom) {
