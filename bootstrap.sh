@@ -8,7 +8,7 @@ fi
 
 brew tap Homebrew/bundle
 
-for P in pkg/*; do
+for P in *; do
     if [ -e "$P/bootstrap.sh" ]; then
         echo "👢 Package $(basename $P)"
         pushd "$P" >/dev/null
