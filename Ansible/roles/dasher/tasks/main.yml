@@ -14,6 +14,8 @@
       version: ef9d486996ea4eb196ca20098748f8504f2a807f
 
 - name: Install dasher node.js package
+  become_user: smarthome
+  become: yes
   shell: npm install
   args:
     chdir: /home/smarthome/dasher
