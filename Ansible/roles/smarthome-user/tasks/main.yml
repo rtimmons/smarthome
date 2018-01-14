@@ -14,11 +14,6 @@
     ssh_key_file: id_rsa
     generate_ssh_key: yes
 
-- name: install git
-  apt:
-      name: git
-      state: present
-
 - name: clone smarthome repo
   become_user: smarthome
   become: yes
