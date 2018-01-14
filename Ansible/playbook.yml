@@ -2,3 +2,9 @@
   hosts: rypi
   roles:
   - { name: smarthome, become: True, become_user: root }
+
+  pre_tasks:
+  - name: import secret vars
+    include_vars: secret
+  - name: import vars
+    include_vars: main

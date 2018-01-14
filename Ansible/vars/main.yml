@@ -1,0 +1,4 @@
+smarthome:
+    wpa2:
+        network: "{{ secret.wpa2.network }}"
+        key: "{{ secret.wpa2.network }}"

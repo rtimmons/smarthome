@@ -1,0 +1,4 @@
+- name: enable ssh by default
+  file:
+    path: /Volumes/boot/ssh
+    state: present
