@@ -23,6 +23,12 @@
     group: root
     mode: 0664
 
+- name: copy node-sonos-http-api config
+  copy:
+    src: presets
+    dest: /home/smarthome/node-sonos-http-api/presets
+    owner: smarthome
+
 - name: start node-sonos-http-api service
   service:
     name: node-sonos-http-api
