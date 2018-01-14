@@ -1,2 +1,3 @@
-./**/*.retry
+*.retry
 /root
+venv

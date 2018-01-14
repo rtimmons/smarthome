@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
 
-docker build -t     dashboardui-ansible .
-docker run          dashboardui-ansible ./ansible.sh
+virtualenv venv
+source ./venv/bin/activate
+pip install ansible
+source ./ansible.sh
