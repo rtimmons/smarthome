@@ -1,0 +1,29 @@
+- name: clone node-sonos-http-api repo
+  become_user: smarthome
+  become: yes
+  git:
+      repo: https://github.com/jishi/node-sonos-http-api.git
+      clone: yes
+      dest: /home/smarthome/node-sonos-http-api
+      # TODO: vars?
+      version: 148bc518435f9519a1fac133073f7f27c3f87e17
+
+- name: Install node-sonos-http-api node.js package
+  become_user: smarthome
+  become: yes
+  shell: npm install
+  args:
+    chdir: /home/smarthome/node-sonos-http-api
+
+- name: copy node-sonos-http-api systemd unit file
+  copy:
+    src: node-sonos-http-api.service
+    dest: /etc/systemd/system/node-sonos-http-api.service
+    owner: root
+    group: root
+    mode: 0664
+
+- name: start node-sonos-http-api service
+  service:
+    name: node-sonos-http-api
+    state: restarted
