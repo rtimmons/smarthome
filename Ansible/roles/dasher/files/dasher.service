@@ -1,0 +1,18 @@
+# https://github.com/maddox/dasher/wiki/Running-Dasher-on-a-Raspberry-Pi-at-startup
+[Unit]
+Description=Dasher
+After=network.target
+
+[Service]
+Type=simple
+#user with access to dasher files
+User=smarthome
+WorkingDirectory=/home/smarthome/dasher
+#use command "which npm" to determine correct location of NPM
+ExecStart=/usr/bin/npm run start
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target

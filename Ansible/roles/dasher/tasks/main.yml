@@ -19,3 +19,24 @@
   shell: npm install
   args:
     chdir: /home/smarthome/dasher
+
+- name: copy dasher config
+  copy:
+    src: config.js
+    dest: /home/smarthome/dasher/config/config.json
+    owner: smarthome
+
+- name: copy systemd unit file
+  copy:
+    src: dasher.service
+    dest: /etc/systemd/system/dasher.service
+    owner: root
+    group: root
+    mode: 0664
+
+- name: start dasher service
+  service:
+    name: dasher
+    state: restarted
+
+# use `sudo journalctl` to look at logs
