@@ -1,0 +1,8 @@
+- name: install npm packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    -  libpcap-dev
+    -  build-essential
+    -  nodejs
