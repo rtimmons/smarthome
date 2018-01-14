@@ -1,0 +1,19 @@
+
+- name: install httpd
+  apt:
+    name: apache2
+    state: present
+
+- name: setup /d web root
+  file:
+    src:    /home/pi/smarthome/DashboardUI
+    dest:   /var/www/html/d
+    owner:  root
+    group:  root
+    state:  link
+
+- name: enable service httpd and ensure it is not masked
+  systemd:
+    name: apache2
+    enabled: yes
+    masked: no

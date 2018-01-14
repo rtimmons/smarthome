@@ -1,5 +1,0 @@
-- name: debug
-  debug: msg="Hello, World!"
-
-- name: apt-get update
-  shell: apt-get update
