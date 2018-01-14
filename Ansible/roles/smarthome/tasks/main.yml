@@ -1,7 +1,6 @@
 - name: debug
   debug: msg="Hello, World!"
 
-- name: Upgrade all packages to the latest version
+- name: Update all packages to the latest version
   apt:
-    name: "*"
-    state: latest
+    upgrade: dist
