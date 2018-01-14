@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
 ansible-playbook \
-    -vvv \
+    -v \
     -i inventory.ini \
     "$PWD"/playbook.yml

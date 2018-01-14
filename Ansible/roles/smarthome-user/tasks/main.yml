@@ -1,0 +1,28 @@
+- name: create smarthome user
+  user:
+    name: smarthome
+    # 'raspberry' (no quotes)
+    # http://docs.ansible.com/ansible/latest/faq.html#how-do-i-generate-crypted-passwords-for-the-user-module
+    password: "$6$6VIlRBuIyDYg.Gir$FMb0P..wVv0O1zpH2nZat7uGXukYWJ9UobYRbn/vDs.TrsTjoTJQ2d9xzgV6QOof0eG7x.fM.v/rWPFd3lmau."
+    state: present
+    system: yes
+    comment: "Smarthome (managed by ansible)"
+    uid: 1040
+    group: sudo
+    shell: /bin/bash
+    createhome: yes
+    ssh_key_file: id_rsa
+    generate_ssh_key: yes
+
+- name: install git
+  apt:
+      name: git
+      state: present
+
+- name: clone smarthome repo
+  become_user: smarthome
+  become: yes
+  git:
+      repo: https://github.com/rtimmons/smarthome.git
+      clone: yes
+      dest: /home/smarthome/repo
