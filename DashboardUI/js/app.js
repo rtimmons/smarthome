@@ -20,35 +20,21 @@ class App {
     this.listeners[topic].push(callback);
   }
 
+  emojiWithName(name) {
+    return this.config.emojis[name];
+  }
+
   // This is the one method called from main.js
   run() {
+    const self = this;
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
       var $cell = this.grid.cell(b);
-      $cell.data('config', b);
-      $cell.html(this.config.emojis[b.emoji]);
-      $cell.addClass(b.claz);
-
-      var tapped = false;
-      var app = this;
-      // hacky thing to bind double-tap
-      $cell.on("touchstart",function(e){
-        if(!tapped){
-          tapped=setTimeout(function(){
-            tapped=null;
-            $cell.click();
-          },300);
-        } else {
-          clearTimeout(tapped);
-          tapped=null;
-          $cell.doubleClick();
-        }
-        e.preventDefault();
+      var cell = new Cell({
+        app: self,
+        $element: $cell,
+        config: b,
       });
-
-      $cell.click(() => this.submit('Cell.Click', {Cell: $cell}));
-      $cell.dblclick(() => this.submit('Cell.DoubleClick', {Cell: $cell}));
-      $cell.on('doubletap', () => this.submit('Cell.DoubleClick', {Cell: $cell}));
     });
 
     this.config.poll.forEach(p => {
