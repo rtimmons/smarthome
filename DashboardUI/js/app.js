@@ -20,34 +20,35 @@ class App {
     this.listeners[topic].push(callback);
   }
 
+  // This is the one method called from main.js
   run() {
     this.grid.init($(this.window));
     this.config.cells.forEach(b => {
-      var cell = this.grid.cell(b);
-      cell.data('config', b);
-      cell.html(this.config.emojis[b.emoji]);
-      cell.addClass(b.claz);
+      var $cell = this.grid.cell(b);
+      $cell.data('config', b);
+      $cell.html(this.config.emojis[b.emoji]);
+      $cell.addClass(b.claz);
 
       var tapped = false;
       var app = this;
       // hacky thing to bind double-tap
-      cell.on("touchstart",function(e){
+      $cell.on("touchstart",function(e){
         if(!tapped){
           tapped=setTimeout(function(){
             tapped=null;
-            cell.click();
+            $cell.click();
           },300);
         } else {
           clearTimeout(tapped);
           tapped=null;
-          cell.dblclick();
+          $cell.doubleClick();
         }
         e.preventDefault();
       });
 
-      cell.click(() => this.submit('Cell.Click', {Cell: cell}));
-      cell.dblclick(() => this.submit('Cell.Dblclick', {Cell: cell}));
-      cell.on('doubletap', () => this.submit('Cell.Dblclick', {Cell: cell}));
+      $cell.click(() => this.submit('Cell.Click', {Cell: cell}));
+      $cell.dblclick(() => this.submit('Cell.DoubleClick', {Cell: cell}));
+      $cell.on('doubletap', () => this.submit('Cell.DoubleClick', {Cell: cell}));
     });
 
     this.config.poll.forEach(p => {
@@ -62,7 +63,7 @@ class App {
       }
     });
 
-    this.listen('Cell.Dblclick', (e) => {
+    this.listen('Cell.DoubleClick', (e) => {
       var d = e.Cell.data('config');
       if(d && d.onDoublePress) {
         this.onAction(d.onDoublePress.action, d.onDoublePress.args);
