@@ -37,6 +37,24 @@ class BackgroundChanger {
   }
 }
 
+class ZoneUpdater {
+  simplify(zones) {
+    return zones.map(zone => {
+      return {
+        members: zone.members.map(m => m.roomName)
+      };
+    });
+  }
+
+  onMessage(e) {
+    if (e.Name != 'Room.ZonesObserved') {
+      return;
+    }
+    var zones = this.simplify(e.Zones);
+    e.app.updateZones(zones);
+  }
+}
+
 class GenericOnPress {
   onMessage(e) {
     if (e.Name != 'Cell.Press') {

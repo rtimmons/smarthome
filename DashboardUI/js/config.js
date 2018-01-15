@@ -98,7 +98,7 @@ var config = {
     { w:1, h:1,
       y:1, x:4,
       emoji: '?',
-      togglesRoom: 'Bed',
+      togglesRoom: 'Bedroom',
       onPress: {action: 'ToggleRoom', args: []},
     },
 

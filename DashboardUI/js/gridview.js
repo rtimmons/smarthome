@@ -7,6 +7,7 @@ class GridView {
     this.cells = [];
     this.cols = config.cols;
     this.rows = config.rows;
+    this.zoneCells = {};
   }
 
   allCells() {
@@ -27,6 +28,19 @@ class GridView {
     });
 
     this.$element.width((square + 2) * this.cols);
+  }
+
+  updateZones(onoff) {
+    // could optimize in the future
+    this.allCells().forEach(c => {
+      var room = c.togglesRoom();
+      if (!room) {
+        return;
+      }
+      c.setActive(
+        onoff.on.indexOf(c.togglesRoom()) >= 0
+      );
+    });
   }
 
   _createElement(size) {

@@ -34,16 +34,25 @@ class CellView {
     $element.on('doubletap', () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
   }
 
+  togglesRoom() {
+    return this.config.togglesRoom;
+  }
+
   isActiveForRoom(room) {
     return this.config.activeWhenRoom === room;
   }
 
   setActive(isActive) {
+    var existing = this.active;
+    if (isActive == existing) {
+      return;
+    }
     if (isActive) {
       this.$element.addClass('active');
     }
     else {
       this.$element.removeClass('active');
     }
+    this.active = isActive;
   }
 }

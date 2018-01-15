@@ -69,6 +69,19 @@ class App {
     this.backgroundImage = url;
   }
 
+  /**
+   * zones is like
+   * [ {members: [list string room names]} ]
+   */
+  updateZones(zones) {
+    var sameZone = zones.filter(z => z.members.indexOf(this.room) >= 0)[0].members;
+    var arg = {
+      on: sameZone,
+      off: this.rooms.filter(r => sameZone.indexOf(r) < 0),
+    };
+    this.grid.updateZones(arg);
+  }
+
   currentRoom() {
     return this.room;
   }

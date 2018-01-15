@@ -25,6 +25,7 @@ $(() => {
   app.subscribe(new GenericOnPress());
   app.subscribe(new GenericOnDoublePress());
   app.subscribe(new FetchStateOnRoomChange());
+  app.subscribe(new ZoneUpdater());
 
   app.run()
 
