@@ -13,7 +13,9 @@ class App {
 
   submit(event) {
     event.app = this;
-    this.listeners.forEach(l => l.onMessage(event));
+    this.listeners.forEach(l => {
+      setTimeout(() => l.onMessage(event), 0);
+    });
   }
 
   subscribe(listener) {
