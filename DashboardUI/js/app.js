@@ -38,54 +38,19 @@ class App {
       setInterval(f, p.period);
     });
 
-    // this.listen('Cell.Click', (e) => {
-    //   var b = e.Cell.data('config');
-    //   if(b && b.onPress) {
-    //     this.onAction(b.onPress.action, b.onPress.args)
-    //   }
-    // });
-    //
-    // this.listen('Cell.DoubleClick', (e) => {
-    //   var d = e.Cell.data('config');
-    //   if(d && d.onDoublePress) {
-    //     this.onAction(d.onDoublePress.action, d.onDoublePress.args);
-    //   }
-    // });
-
-    // this.listen('Room.Changed', (e) => {
-    //   this.getState();
-    // });
-    //
-    // this.listen('App.Started', (e) => {
-    //   this.changeRoom('Kitchen');
-    // })
-    //
-    // this.listen('App.Started', (e) => {
-    //   this.reindex();
-    // });
-    //
-    // this.submit('App.Started', {});
     this.changeRoom('Kitchen');
   }
 
-  // allJoin(room) {
-  //   // TODO: could be more clever about getting all room names from `/zones`
-  //   // it's in .members.roomName
-  //   log('allJoin ' + room)
-  //   var delay = 0;
-  //   this.config.rooms.filter( x => x != room ).forEach( other => {
-  //     setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
-  //     delay += 1000; // only 1 request/second
-  //   });
-  // }
-
-  // reindex() {
-  //   this.request('http://retropie.local:5005/reindex')
-  // }
-  //
-  // refresh() {
-  //   window.location.reload();
-  // }
+  allJoin(room) {
+    // TODO: could be more clever about getting all room names from `/zones`
+    // it's in .members.roomName
+    log('allJoin ' + room)
+    var delay = 0;
+    this.config.rooms.filter( x => x != room ).forEach( other => {
+      setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
+      delay += 1000; // only 1 request/second
+    });
+  }
 
   setBanner(msg) {
     this.$.find('.state-Music').html(msg ? msg.substr(0,19) : '');
@@ -118,7 +83,7 @@ class App {
       .fail(err  => console.log(url, err));
   }
 
-  getState() {
+  fetchState() {
     $.ajax(
       'http://retropie.local:5005/' + this.room + '/state'
     ).done(resp => {
@@ -137,9 +102,6 @@ class App {
       break;
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);
-      break;
-    case 'Music.GetState':
-      this.getState();
       break;
     case 'Lights.On':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_bright/with/key/' + this.secret.ifttt.key);
@@ -185,9 +147,6 @@ class App {
       this.request(
         'http://retropie.local:5005/' + this.room + '/next'
       );
-      break;
-    case 'App.Refresh':
-      this.refresh();
       break;
     }
   }

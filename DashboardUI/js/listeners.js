@@ -12,6 +12,15 @@ class ActiveCells {
   }
 }
 
+class FetchStateOnRoomChange {
+  onMessage(e) {
+    if (e.Name != 'Room.Changed') {
+      return;
+    }
+    e.app.fetchState();
+  }
+}
+
 class BackgroundChanger {
   onMessage(e) {
     if (e.Name != 'Room.StateObserved') {

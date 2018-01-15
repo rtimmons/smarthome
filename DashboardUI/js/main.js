@@ -24,6 +24,7 @@ $(() => {
   app.subscribe(new ActiveCells());
   app.subscribe(new GenericOnPress());
   app.subscribe(new GenericOnDoublePress());
+  app.subscribe(new FetchStateOnRoomChange());
 
   app.run()
 
