@@ -47,6 +47,7 @@ class App {
       }
     });
 
+    // move to another class
     this.listen('Room.StateObserved', (e) => {
       var track = e.State.currentTrack;
       var artUrl = track.absoluteAlbumArtUri || track.albumArtUri;
@@ -60,6 +61,7 @@ class App {
       this.$.find('.state-Music').html(title ? title.substr(0,19) : '');
     });
 
+    // move to Cell class
     this.listen('Room.Changed', (e) => {
       this.grid.allCells().forEach(c => {
         var d = c.data('config');
@@ -72,6 +74,7 @@ class App {
         }
       })
     });
+
     this.listen('Room.Changed', (e) => {
       this.getState();
     });

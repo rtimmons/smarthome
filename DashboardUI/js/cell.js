@@ -15,25 +15,25 @@ class Cell {
 
     var $cell = this.$element;
 
-    var tapped = false;
-    var app = this.app;
     // hacky thing to bind double-tap
-    $cell.on("touchstart",function(e){
+    var tapped = false;
+    $cell.on('touchstart', function(e) {
       if(!tapped){
-        tapped=setTimeout(function(){
-          tapped=null;
-          $cell.click();
-        },300);
+        tapped = setTimeout(function(){
+          tapped = null;
+          $cell.trigger('click');
+        }, 300);
       } else {
         clearTimeout(tapped);
-        tapped=null;
-        $cell.doubleClick();
+        tapped = null;
+        $cell.trigger('dblclick');
       }
       e.preventDefault();
     });
 
-    $cell.click(() => app.submit('Cell.Click', {Cell: $cell}));
-    $cell.dblclick(() => app.submit('Cell.DoubleClick', {Cell: $cell}));
+    var app = this.app;
+    $cell.on('click',     () => app.submit('Cell.Click',       {Cell: $cell}));
+    $cell.on('dblclick',  () => app.submit('Cell.DoubleClick', {Cell: $cell}));
     $cell.on('doubletap', () => app.submit('Cell.DoubleClick', {Cell: $cell}));
   }
 }
