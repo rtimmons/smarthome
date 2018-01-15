@@ -68,7 +68,7 @@ class GenericOnPress {
 
     var action = onPress.action;
     var args   = onPress.args;
-    e.app.onAction(action, args);
+    e.app.onAction(action, args, e);
   }
 }
 
@@ -85,6 +85,6 @@ class GenericOnDoublePress {
 
     var action = onPress.action;
     var args   = onPress.args;
-    e.app.onAction(action, args);
+    e.app.onAction(action, args, e);
   }
 }

@@ -9,6 +9,11 @@ class MusicController {
     var parts = [this.root, this.app.currentRoom()].concat(args);
     return parts.join('/');
   }
+  _noroom(args) {
+    args = Array.prototype.slice.call(arguments);
+    var parts = [this.root].concat(args);
+    return parts.join('/');
+  }
 
   request() {
     var args = Array.prototype.slice.call(arguments);
@@ -32,6 +37,18 @@ class MusicController {
       setTimeout(() => this.requester.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
       delay += 1000; // only 1 request/second
     });
+  }
+
+  // /Kitchen/join/Office This will join the Kitchen player to the group that Office currently belong to.
+  joinRoom(a,b) {
+    console.log('joinRoom', a, b);
+    var url = this._noroom(a, 'join', b);
+    console.log(url);
+    this.requester.request(url);
+  }
+
+  leaveRoom(room) {
+    this.request('leave');
   }
 
   fetchState() {

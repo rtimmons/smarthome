@@ -86,7 +86,7 @@ var config = {
       y:1, x:3,
       emoji: 'Speaker',
       togglesRoom: 'Living',
-      onPress: {action: 'ToggleRoom', args: []},
+      onPress: {action: 'Music.ToggleRoom', args: ['Living']},
     },
 
     { w:1, h:1,
@@ -100,7 +100,7 @@ var config = {
       y:1, x:4,
       emoji: 'Speaker',
       togglesRoom: 'Bedroom',
-      onPress: {action: 'ToggleRoom', args: []},
+      onPress: {action: 'Music.ToggleRoom', args: ['Bedroom']},
     },
 
     { w:1, h:1,
@@ -114,7 +114,7 @@ var config = {
       y:1, x:5,
       emoji: 'Speaker',
       togglesRoom: 'Kitchen',
-      onPress: {action: 'ToggleRoom', args: []},
+      onPress: {action: 'Music.ToggleRoom', args: ['Kitchen']},
     },
 
     { w:1, h:1,
@@ -122,13 +122,13 @@ var config = {
       emoji: 'Shower',
       activeWhenRoom: 'Bathroom',
       onPress: {action: 'ChangeRoom', args: ['Bathroom']},
-      onDoublePress: {action: 'AllJoin', args: ['Bathroom']},
+      onDoublePress: {action: 'Music.AllJoin', args: ['Bathroom']},
     },
     { w:1, h:1,
       y:1, x:6,
       emoji: 'Speaker',
       togglesRoom: 'Bathroom',
-      onPress: {action: 'ToggleRoom', args: []},
+      onPress: {action: 'Music.ToggleRoom', args: ['Bathroom']},
     },
 
     // { w:1, h:1,

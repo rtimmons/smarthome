@@ -105,8 +105,7 @@ class App {
     this.musicController.fetchState();
   }
 
-  onAction(action, params) {
-
+  onAction(action, params, evt) {
     switch(action) {
     case 'AllJoin':
       this.musicController.allJoin(params[0]);
@@ -135,6 +134,14 @@ class App {
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
 
+    case 'Music.ToggleRoom':
+        if (evt.Cell.isActive()) {
+          this.musicController.leaveRoom(params[0]);
+        }
+        else {
+          this.musicController.joinRoom(params[0], this.room);
+        }
+        break;
     case 'Music.FetchState':
         this.fetchState();
         break;
@@ -153,6 +160,8 @@ class App {
     case 'Music.Next':
       this.musicController.next();
       break;
+
+    consle.error('Unknown action ' + action);
     }
   }
 }

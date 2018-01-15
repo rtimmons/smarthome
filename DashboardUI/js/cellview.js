@@ -42,6 +42,10 @@ class CellView {
     return this.config.activeWhenRoom === room;
   }
 
+  isActive() {
+    return this.active;
+  }
+
   setActive(isActive) {
     var existing = this.active;
     if (isActive == existing) {
