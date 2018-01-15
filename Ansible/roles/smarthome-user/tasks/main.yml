@@ -13,14 +13,3 @@
     createhome: yes
     ssh_key_file: id_rsa
     generate_ssh_key: yes
-
-- name: clone smarthome repo
-  become_user: smarthome
-  become: yes
-  git:
-      repo: https://github.com/rtimmons/smarthome.git
-      clone: yes
-      dest: /home/smarthome/repo
-      update: yes
-      force: yes
-      refspec: ansible-ize

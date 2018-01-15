@@ -1,0 +1,25 @@
+- name: copy smarthome repo
+  become_user: smarthome
+  become: yes
+  synchronize:
+      group: no
+      checksum: yes
+      copy_links: yes
+      links: yes
+      partial: yes
+      perms: yes
+      recursive: yes
+      times: yes
+      delete: yes
+      src: "{{ playbook_dir }}/.."
+      dest: /home/smarthome/repo
+
+- name: what version are we at
+  become_user: smarthome
+  become: yes
+  shell: git status; git rev-parse HEAD
+  register: smarthome_user_git_stdout
+  args:
+    chdir: /home/smarthome/repo
+
+- debug: msg="Git info {{smarthome_user_git_stdout}}"
