@@ -21,4 +21,6 @@ $(() => {
   });
 
   app.run()
+
+  window.app = app;
 });
