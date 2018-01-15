@@ -76,7 +76,6 @@ var config = {
      - unselect selected indicators
 
     TODO:
-    - implement ↑ 😘
     - icon above volume that matches active room.
       Active => volume controls just that room
       Inactive => volume controls whole group
@@ -297,6 +296,6 @@ var config = {
 
   ],
   poll: [
-    {action: 'Music.FetchState', args: [], period: 3000},
+    {action: 'Music.FetchState', args: [], period: 750},
   ]
 };

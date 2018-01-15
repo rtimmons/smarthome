@@ -5,50 +5,30 @@ class MusicController {
     this.app = args.app;
   }
 
-  _url(args) {
-    var parts = [this.root, this.app.currentRoom()].concat(args);
-    return parts.join('/');
-  }
-  _noroom(args) {
-    args = Array.prototype.slice.call(arguments);
-    var parts = [this.root].concat(args);
-    return parts.join('/');
-  }
-
   request() {
     var args = Array.prototype.slice.call(arguments);
-    return this.requester.request(
-      this._url(args)
-    );
+    args = args.map(a => a == '$room' ? this.app.currentRoom() : a);
+    args = [this.root].concat(args);
+    var url = args.join('/');
+
+    return this.requester.request(url);
   }
 
-  playPause()   { this.request('playpause'); }
-  preset(name)  { this.request('preset', name); }
-  volumeUp()    { this.request('volume','+5'); }
-  volumeDown()  { this.request('volume', '-5'); }
-  next()        { this.request('next'); }
+  playPause()   { this.request('$room', 'playpause'   ); }
+  preset(name)  { this.request('$room', 'preset', name); }
+  volumeUp()    { this.request('$room', 'volume','+5' ); }
+  volumeDown()  { this.request('$room', 'volume', '-5'); }
+  next()        { this.request('$room', 'next'        ); }
+  leaveRoom(r)  { this.request('$room', 'leave'       ); }
+  joinRoom(a,b) { this.request(a, 'join', b);            }
+
 
   allJoin(room) {
-    // TODO: could be more clever about getting all room names from `/zones`
-    // it's in .members.roomName
-    log('allJoin ' + room)
     var delay = 0;
     this.app.config.rooms.filter( x => x != room ).forEach( other => {
       setTimeout(() => this.requester.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
       delay += 1000; // only 1 request/second
     });
-  }
-
-  // /Kitchen/join/Office This will join the Kitchen player to the group that Office currently belong to.
-  joinRoom(a,b) {
-    console.log('joinRoom', a, b);
-    var url = this._noroom(a, 'join', b);
-    console.log(url);
-    this.requester.request(url);
-  }
-
-  leaveRoom(room) {
-    this.request('leave');
   }
 
   fetchState() {
