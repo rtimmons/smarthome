@@ -1,0 +1,300 @@
+[
+    {
+        "uuid": "RINCON_949F3E8FBCEE01400",
+        "coordinator": {
+            "uuid": "RINCON_949F3E8FBCEE01400",
+            "state": {
+                "volume": 30,
+                "mute": false,
+                "equalizer": {
+                    "bass": 0,
+                    "treble": 0,
+                    "loudness": true
+                },
+                "currentTrack": {
+                    "artist": "",
+                    "title": "",
+                    "album": "",
+                    "albumArtUri": "",
+                    "duration": 0,
+                    "uri": "x-sonosapi-radio:ST:3616609136161696571?sid=236&flags=8300&sn=5",
+                    "type": "radio"
+                },
+                "nextTrack": {
+                    "artist": "",
+                    "title": "",
+                    "album": "",
+                    "albumArtUri": "",
+                    "duration": 0,
+                    "uri": ""
+                },
+                "trackNo": 0,
+                "elapsedTime": 0,
+                "elapsedTimeFormatted": "00:00:00",
+                "playbackState": "STOPPED",
+                "playMode": {
+                    "repeat": "none",
+                    "shuffle": false,
+                    "crossfade": false
+                }
+            },
+            "roomName": "Bathroom",
+            "coordinator": "RINCON_949F3E8FBCEE01400",
+            "groupState": {
+                "volume": 36,
+                "mute": false
+            }
+        },
+        "members": [
+            {
+                "uuid": "RINCON_949F3E8FBCEE01400",
+                "state": {
+                    "volume": 30,
+                    "mute": false,
+                    "equalizer": {
+                        "bass": 0,
+                        "treble": 0,
+                        "loudness": true
+                    },
+                    "currentTrack": {
+                        "artist": "",
+                        "title": "",
+                        "album": "",
+                        "albumArtUri": "",
+                        "duration": 0,
+                        "uri": "x-sonosapi-radio:ST:3616609136161696571?sid=236&flags=8300&sn=5",
+                        "type": "radio"
+                    },
+                    "nextTrack": {
+                        "artist": "",
+                        "title": "",
+                        "album": "",
+                        "albumArtUri": "",
+                        "duration": 0,
+                        "uri": ""
+                    },
+                    "trackNo": 0,
+                    "elapsedTime": 0,
+                    "elapsedTimeFormatted": "00:00:00",
+                    "playbackState": "STOPPED",
+                    "playMode": {
+                        "repeat": "none",
+                        "shuffle": false,
+                        "crossfade": false
+                    }
+                },
+                "roomName": "Bathroom",
+                "coordinator": "RINCON_949F3E8FBCEE01400",
+                "groupState": {
+                    "volume": 36,
+                    "mute": false
+                }
+            }
+        ]
+    },
+    {
+        "uuid": "RINCON_949F3E629E5F01400",
+        "coordinator": {
+            "uuid": "RINCON_949F3E629E5F01400",
+            "state": {
+                "volume": 25,
+                "mute": false,
+                "equalizer": {
+                    "bass": 0,
+                    "treble": 0,
+                    "loudness": false,
+                    "speechEnhancement": false,
+                    "nightMode": false
+                },
+                "currentTrack": {
+                    "artist": "Luis Fonsi",
+                    "title": "Imagíname Sin Ti",
+                    "album": "Eterno",
+                    "albumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg",
+                    "duration": 247,
+                    "uri": "x-sonosapi-radio:ST:3616609136161696571?sid=236&flags=8300&sn=5",
+                    "type": "radio",
+                    "stationName": "Despacito (Feat. Daddy Yankee) Radio",
+                    "absoluteAlbumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg"
+                },
+                "nextTrack": {
+                    "artist": "",
+                    "title": "",
+                    "album": "",
+                    "albumArtUri": "",
+                    "duration": 0,
+                    "uri": ""
+                },
+                "trackNo": 1,
+                "elapsedTime": 212,
+                "elapsedTimeFormatted": "00:03:32",
+                "playbackState": "PLAYING",
+                "playMode": {
+                    "repeat": "none",
+                    "shuffle": false,
+                    "crossfade": false
+                },
+                "sub": {
+                    "gain": 10,
+                    "crossover": 0,
+                    "polarity": 0,
+                    "enabled": true
+                }
+            },
+            "roomName": "Living",
+            "coordinator": "RINCON_949F3E629E5F01400",
+            "groupState": {
+                "volume": 30,
+                "mute": false
+            }
+        },
+        "members": [
+            {
+                "uuid": "RINCON_5CAAFDF5ABE401400",
+                "state": {
+                    "volume": 30,
+                    "mute": false,
+                    "equalizer": {
+                        "bass": 5,
+                        "treble": -3,
+                        "loudness": true
+                    },
+                    "currentTrack": {
+                        "artist": "Luis Fonsi",
+                        "title": "Imagíname Sin Ti",
+                        "album": "Eterno",
+                        "albumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg",
+                        "duration": 247,
+                        "uri": "x-sonosapi-radio:ST:3616609136161696571?sid=236&flags=8300&sn=5",
+                        "type": "radio",
+                        "stationName": "Despacito (Feat. Daddy Yankee) Radio",
+                        "absoluteAlbumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg"
+                    },
+                    "nextTrack": {
+                        "artist": "",
+                        "title": "",
+                        "album": "",
+                        "albumArtUri": "",
+                        "duration": 0,
+                        "uri": ""
+                    },
+                    "trackNo": 1,
+                    "elapsedTime": 212,
+                    "elapsedTimeFormatted": "00:03:32",
+                    "playbackState": "PLAYING",
+                    "playMode": {
+                        "repeat": "none",
+                        "shuffle": false,
+                        "crossfade": false
+                    }
+                },
+                "roomName": "Bedroom",
+                "coordinator": "RINCON_949F3E629E5F01400",
+                "groupState": {
+                    "volume": 30,
+                    "mute": false
+                }
+            },
+            {
+                "uuid": "RINCON_5CAAFD5938F001400",
+                "state": {
+                    "volume": 60,
+                    "mute": false,
+                    "equalizer": {
+                        "bass": 0,
+                        "treble": 0,
+                        "loudness": true
+                    },
+                    "currentTrack": {
+                        "artist": "Luis Fonsi",
+                        "title": "Imagíname Sin Ti",
+                        "album": "Eterno",
+                        "albumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg",
+                        "duration": 247,
+                        "uri": "x-sonosapi-radio:ST:3616609136161696571?sid=236&flags=8300&sn=5",
+                        "type": "radio",
+                        "stationName": "Despacito (Feat. Daddy Yankee) Radio",
+                        "absoluteAlbumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg"
+                    },
+                    "nextTrack": {
+                        "artist": "",
+                        "title": "",
+                        "album": "",
+                        "albumArtUri": "",
+                        "duration": 0,
+                        "uri": ""
+                    },
+                    "trackNo": 1,
+                    "elapsedTime": 212,
+                    "elapsedTimeFormatted": "00:03:32",
+                    "playbackState": "PLAYING",
+                    "playMode": {
+                        "repeat": "none",
+                        "shuffle": false,
+                        "crossfade": false
+                    }
+                },
+                "roomName": "Kitchen",
+                "coordinator": "RINCON_949F3E629E5F01400",
+                "groupState": {
+                    "volume": 30,
+                    "mute": false
+                }
+            },
+            {
+                "uuid": "RINCON_949F3E629E5F01400",
+                "state": {
+                    "volume": 25,
+                    "mute": false,
+                    "equalizer": {
+                        "bass": 0,
+                        "treble": 0,
+                        "loudness": false,
+                        "speechEnhancement": false,
+                        "nightMode": false
+                    },
+                    "currentTrack": {
+                        "artist": "Luis Fonsi",
+                        "title": "Imagíname Sin Ti",
+                        "album": "Eterno",
+                        "albumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg",
+                        "duration": 247,
+                        "uri": "x-sonosapi-radio:ST:3616609136161696571?sid=236&flags=8300&sn=5",
+                        "type": "radio",
+                        "stationName": "Despacito (Feat. Daddy Yankee) Radio",
+                        "absoluteAlbumArtUri": "https://mediaserver-cont-dc6-1-v4v6.pandora.com/images/public/int/1/2/4/7/00601215907421_500W_500H.jpg"
+                    },
+                    "nextTrack": {
+                        "artist": "",
+                        "title": "",
+                        "album": "",
+                        "albumArtUri": "",
+                        "duration": 0,
+                        "uri": ""
+                    },
+                    "trackNo": 1,
+                    "elapsedTime": 212,
+                    "elapsedTimeFormatted": "00:03:32",
+                    "playbackState": "PLAYING",
+                    "playMode": {
+                        "repeat": "none",
+                        "shuffle": false,
+                        "crossfade": false
+                    },
+                    "sub": {
+                        "gain": 10,
+                        "crossover": 0,
+                        "polarity": 0,
+                        "enabled": true
+                    }
+                },
+                "roomName": "Living",
+                "coordinator": "RINCON_949F3E629E5F01400",
+                "groupState": {
+                    "volume": 30,
+                    "mute": false
+                }
+            }
+        ]
+    }
+]

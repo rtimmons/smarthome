@@ -11,6 +11,8 @@ var config = {
       'Up':       '🔼' ,
       'Down':     '🔽' ,
       'Skip':     '⏭',
+      'Time15':   '🕘',
+      'Time30':   '🕕',
       'Notes':    '🎶',
       'Monkey':   '🙉',
       'Dancers':  '👯‍♀️',
@@ -25,6 +27,10 @@ var config = {
       'Check':    '✅',
       'X':        '❌',
       '?':        '❓',
+      'Box':      '✳️',
+      'Empty':    '⬜️',
+      'ThumbsUp': '👍🏽',
+      'ThumbsDown': '👎🏽',
   },
   rows: 8,
   cols: 11,
@@ -35,8 +41,6 @@ var config = {
     'Bathroom',
   ],
   cells: [
-
-
     { w:1, h:1,
       y:0, x:3,
       icon: 'TV',
@@ -52,6 +56,9 @@ var config = {
       same group as the active room.
     So if all rooms are playing the same thing, clicking
       any of the room icons will leave all the indicators checked.
+    Double-click to all join or all leave.
+    A room is *always* a part of its own group.
+
 
     Click a room to see what's playing in it.
     -> The indicators for the rooms in the same group change
@@ -176,6 +183,12 @@ var config = {
       icon: 'Sunset',
       onPress: {action: 'Lights.Scene.Savana', args: ["savana"]},
     },
+
+    { w:1, h:1,
+      y:2, x:1,
+      icon: 'Rice',
+      activeWhenRoom: 'Kitchen',
+    },
     { w:1, h:1,
       y:3, x:1,
       icon: 'Up',
@@ -186,11 +199,57 @@ var config = {
       icon: 'Down',
       onPress: {action: 'Music.VolumeDown', args: []},
     },
+
+    // TODO: in column 0, have volume absolute numbers. Bottom is mute.
+    //       The number of "lit up" rows corresponds to the volume
+    //       of the current group associated with active room. Click once
+    //       to change for the active room; double click to change for 
+    //       whole group.
+    //
+    // TODO: 0 is top of screen, so volumeLevel vals
+    //       need to be reversed (volumeLevel = 6 - y)
+    { w:1, h:1,
+      y:6, x:0,
+      icon: 'Monkey',
+      volumeLevel: 6, 
+    },
+    { w:1, h:1,
+      y:5, x:0,
+      icon: 'Box',
+      volumeLevel: 5,
+    },
+    { w:1, h:1,
+      y:4, x:0,
+      icon: 'Box',
+      volumeLevel: 4,
+    },
+    { w:1, h:1,
+      y:3, x:0,
+      icon: 'Empty',
+      volumeLevel: 3,
+    },
+    { w:1, h:1,
+      y:2, x:0,
+      icon: 'Empty',
+      volumeLevel: 2,
+    },
+    { w:1, h:1,
+      y:1, x:0,
+      icon: 'Empty',
+      volumeLevel: 1,
+    },
+    { w:1, h:1,
+      y:0, x:0,
+      icon: 'Empty',
+      volumeLevel: 0,
+    },
+
     { w:1, h:1,
       y:4, x:3,
       icon: 'News',
       onPress: {action: 'Music.Preset', args: ['playnpr']},
     },
+    // TODO: maybe just use built-in pandora support?
     { w:1, h:1,
       y:3, x:3,
       icon: 'Taco',
@@ -201,9 +260,20 @@ var config = {
       icon: 'Film',
       onPress: {action: 'Music.Preset', args: ['all-tv']},
     },
+
+    { w:1, h:1,
+      y:6, x:3,
+      icon: 'ThumbsUp',
+    },
+    { w:1, h:1,
+      y:6, x:6,
+      icon: 'ThumbsDown',
+    },
+
+    // TODO: toggle play/pause icon
     { w:1, h:1,
       y:6, x:4,
-      icon: 'Play', // TODO: toggle play/pause icon
+      icon: 'Play',
       onPress: {action: 'Music.PlayPause', args: []},
     },
     { w:1, h:1,
@@ -211,6 +281,9 @@ var config = {
       icon: 'Skip',
       onPress: {action: 'Music.Next', args: []},
     },
+
+    // TODO: sleep timer buttons - sonos http API has it built in
+
   ],
   poll: [
     {action: 'Music.GetState', args: [], period: 3000},
