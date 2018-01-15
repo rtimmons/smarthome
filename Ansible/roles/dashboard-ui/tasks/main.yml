@@ -17,3 +17,8 @@
     name: apache2
     enabled: yes
     masked: no
+
+- name: install secrets
+  template:
+    src: secret.js.j2
+    dest: /home/smarthome/repo/DashboardUI/js/secret.js

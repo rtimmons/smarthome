@@ -16,7 +16,8 @@ $(() => {
     window:    window,
     container: container,
     grid:      grid,
-    config:    config
+    config:    config,
+    secret:    secret,
   });
 
   app.run()

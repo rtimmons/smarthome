@@ -8,8 +8,3 @@ if [ ! -d "venv" ]; then
 fi
 
 source ./venv/bin/activate
-
-ansible-playbook \
-    -v \
-    -i inventory.ini \
-    "$PWD"/playbook.yml
