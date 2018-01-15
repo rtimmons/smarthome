@@ -27,3 +27,37 @@ class BackgroundChanger {
     e.app.setBanner(title);
   }
 }
+
+class GenericOnPress {
+  onMessage(e) {
+    if (e.Name != 'Cell.Press') {
+      return;
+    }
+
+    var onPress = e.Cell.config.onPress;
+    if (!onPress) {
+      return;
+    }
+
+    var action = onPress.action;
+    var args   = onPress.args;
+    e.app.onAction(action, args);
+  }
+}
+
+class GenericOnDoublePress {
+  onMessage(e) {
+    if (e.Name != 'Cell.DoublePress') {
+      return;
+    }
+
+    var onPress = e.Cell.config.onDoublePress;
+    if (!onPress) {
+      return;
+    }
+
+    var action = onPress.action;
+    var args   = onPress.args;
+    e.app.onAction(action, args);
+  }
+}

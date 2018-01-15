@@ -29,9 +29,9 @@ class CellView {
     });
 
     var app = this.app;
-    $element.on('click',     () => app.submit({Name: 'Cell.Click',       Cell: this }));
-    $element.on('dblclick',  () => app.submit({Name: 'Cell.DoubleClick', Cell: this }));
-    $element.on('doubletap', () => app.submit({Name: 'Cell.DoubleClick', Cell: this }));
+    $element.on('click',     () => app.submit({Name: 'Cell.Press',       Cell: this }));
+    $element.on('dblclick',  () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
+    $element.on('doubletap', () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
   }
 
   isActiveForRoom(room) {
