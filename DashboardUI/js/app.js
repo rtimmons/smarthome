@@ -9,6 +9,12 @@ class App {
     this.rooms = args.config.rooms;
     this.secret = args.secret;
     this.listeners = [];
+
+    this.musicController = new MusicController({
+      requester: this,
+      root: 'http://retropie.local:5005',
+      app: this,
+    });
   }
 
   submit(event) {
@@ -43,17 +49,6 @@ class App {
     this.changeRoom('Kitchen');
   }
 
-  allJoin(room) {
-    // TODO: could be more clever about getting all room names from `/zones`
-    // it's in .members.roomName
-    log('allJoin ' + room)
-    var delay = 0;
-    this.config.rooms.filter( x => x != room ).forEach( other => {
-      setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
-      delay += 1000; // only 1 request/second
-    });
-  }
-
   setBanner(msg) {
     this.$.find('.state-Music').html(msg ? msg.substr(0,19) : '');
   }
@@ -64,6 +59,10 @@ class App {
     else {
       $('body').css({backgroundImage: ''});
     }
+  }
+
+  currentRoom() {
+    return this.room;
   }
 
   changeRoom(toRoom) {
@@ -100,7 +99,7 @@ class App {
 
     switch(action) {
     case 'AllJoin':
-      this.allJoin.apply(this, params);
+      this.musicController.allJoin(params[0]);
       break;
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);
@@ -125,30 +124,21 @@ class App {
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/' + this.secret.ifttt.key);
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
+
     case 'Music.PlayPause':
-        this.request(
-          'http://retropie.local:5005/' + this.room + '/playpause'
-        )
+        this.musicController.playPause();
         break;
     case 'Music.Preset':
-      this.request(
-        'http://retropie.local:5005/' + this.room + '/preset/' + params[0]
-      );
+      this.musicController.preset(params[0]);
       break;
     case 'Music.VolumeUp':
-      this.request(
-        'http://retropie.local:5005/' + this.room + '/volume/+5'
-      )
+      this.musicController.volumeUp();
       break;
     case 'Music.VolumeDown':
-      this.request(
-        'http://retropie.local:5005/' + this.room + '/volume/-5'
-      );
+      this.musicController.volumeDown();
       break;
     case 'Music.Next':
-      this.request(
-        'http://retropie.local:5005/' + this.room + '/next'
-      );
+      this.musicController.next();
       break;
     }
   }
