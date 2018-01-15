@@ -19,8 +19,9 @@ class MusicController {
   volumeUp()    { this.request('$room', 'volume','+5' ); }
   volumeDown()  { this.request('$room', 'volume', '-5'); }
   next()        { this.request('$room', 'next'        ); }
-  leaveRoom(r)  { this.request('$room', 'leave'       ); }
-  joinRoom(a,b) { this.request(a, 'join', b);            }
+
+  leaveRoom(r)  { this.request(r, 'leave');   }
+  joinRoom(a,b) { this.request(a, 'join', b); }
 
 
   allJoin(room) {
