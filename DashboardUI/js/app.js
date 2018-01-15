@@ -12,6 +12,7 @@ class App {
   }
 
   submit(event) {
+    event.app = this;
     this.listeners.forEach(l => l.onMessage(event));
   }
 
@@ -47,20 +48,6 @@ class App {
     //   }
     // });
 
-    // move to another class
-    this.listen('Room.StateObserved', (e) => {
-      var track = e.State.currentTrack;
-      var artUrl = track.absoluteAlbumArtUri || track.albumArtUri;
-      if(artUrl) {
-        $('body').css({backgroundImage: 'url("' + artUrl + '")'});
-      }
-      else {
-        $('body').css({backgroundImage: ''});
-      }
-      var title = track.title;
-      this.$.find('.state-Music').html(title ? title.substr(0,19) : '');
-    });
-
     // // move to Cell class
     // this.listen('Room.Changed', (e) => {
     //   this.grid.allCells().forEach(c => {
@@ -75,19 +62,20 @@ class App {
     //   })
     // });
 
-    this.listen('Room.Changed', (e) => {
-      this.getState();
-    });
-
-    this.listen('App.Started', (e) => {
-      this.changeRoom('Kitchen');
-    })
-
-    this.listen('App.Started', (e) => {
-      this.reindex();
-    });
-
-    this.submit('App.Started', {});
+    // this.listen('Room.Changed', (e) => {
+    //   this.getState();
+    // });
+    //
+    // this.listen('App.Started', (e) => {
+    //   this.changeRoom('Kitchen');
+    // })
+    //
+    // this.listen('App.Started', (e) => {
+    //   this.reindex();
+    // });
+    //
+    // this.submit('App.Started', {});
+    this.changeRoom('Kitchen');
   }
 
   // allJoin(room) {
@@ -109,10 +97,26 @@ class App {
   //   window.location.reload();
   // }
 
+  setBanner(msg) {
+    this.$.find('.state-Music').html(msg ? msg.substr(0,19) : '');
+  }
+  setBackgroundImage(url) {
+    if(url) {
+      $('body').css({backgroundImage: 'url("' + url + '")'});
+    }
+    else {
+      $('body').css({backgroundImage: ''});
+    }
+  }
+
   changeRoom(toRoom) {
     var oldRoom = this.room;
     this.room = toRoom;
-    this.submit('Room.Changed', {FromRoom: oldRoom, ToRoom: toRoom})
+    this.submit({
+      Name:     'Room.Changed',
+      FromRoom: oldRoom,
+      ToRoom:   toRoom
+    });
   }
 
   request(url) {
@@ -128,7 +132,8 @@ class App {
     $.ajax(
       'http://retropie.local:5005/' + this.room + '/state'
     ).done(resp => {
-      this.submit('Room.StateObserved', {
+      this.submit({
+        Name: 'Room.StateObserved',
         State: resp,
       });
     });

@@ -7,7 +7,7 @@ $(() => {
 $(() => {
   var container = $('#grid');
 
-  var grid = new Grid({
+  var grid = new GridView({
     container:  container,
     config:     config,
   });
@@ -19,6 +19,8 @@ $(() => {
     config:    config,
     secret:    secret,
   });
+
+  app.subscribe(new BackgroundChanger());
 
   app.run()
 

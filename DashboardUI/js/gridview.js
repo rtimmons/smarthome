@@ -1,4 +1,4 @@
-class Grid {
+class GridView {
   constructor(args) {
     this.$element = args.container;
     var config = args.config;
@@ -25,10 +25,6 @@ class Grid {
     this.$element.width((square + 2) * this.cols);
   }
 
-  allCells() {
-    return this.cells;
-  }
-
   _createElement(size) {
     var cell = this.$element.find('#cell-'+size.y+'-'+size.x)
 
@@ -38,8 +34,6 @@ class Grid {
     else {
       cell.attr('colspan', size.w);
     }
-
-    this.cells.push(cell);
     return cell;
   }
 
@@ -55,21 +49,22 @@ class Grid {
         // cell.addClass('col-'+col);
         cell.attr('id', 'cell-'+row+'-'+col);
         tr.append(cell);
-        this.cells.push(cell);
       }
       this.$element.append(tr);
     }
 
-    $win.resize(function(){
-      grid.onResize($win.width(), $win.height());
-    }).resize();
-
     this.config.cells.forEach(b => {
-      var cell = new Cell({
+      var cell = new CellView({
+        grid: grid,
         app: this.app,
         $element: this._createElement(b),
         config: b,
       });
+      this.cells.push(cell);
     });
+
+    $win.resize(function(){
+      grid.onResize($win.width(), $win.height());
+    }).resize();
   }
 }
