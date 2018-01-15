@@ -34,6 +34,9 @@ class CellView {
     $element.on('doubletap', () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
   }
 
+  onMessage(e) {
+  }
+
   togglesRoom() {
     return this.config.togglesRoom;
   }

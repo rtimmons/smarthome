@@ -15,6 +15,11 @@ class App {
       root: 'http://retropie.local:5005',
       app: this,
     });
+
+    this.subscribe({onMessage: e => {
+      this.eachCell(c => c.onMessage(e));
+      this.musicController.onMessage(e);
+    }})
   }
 
   submit(event) {

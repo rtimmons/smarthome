@@ -23,6 +23,8 @@ class MusicController {
   leaveRoom(r)  { this.request(r, 'leave');   }
   joinRoom(a,b) { this.request(a, 'join', b); }
 
+  onMessage(e) {
+  }
 
   allJoin(room) {
     var delay = 0;
