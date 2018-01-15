@@ -21,6 +21,7 @@ $(() => {
   });
 
   app.subscribe(new BackgroundChanger());
+  app.subscribe(new ActiveCells());
 
   app.run()
 

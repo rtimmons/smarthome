@@ -9,6 +9,10 @@ class GridView {
     this.rows = config.rows;
   }
 
+  allCells() {
+    return this.cells;
+  }
+
   onResize(width, height) {
     var square = Math.min(width/this.cols, height/this.rows);
     this.square = square;

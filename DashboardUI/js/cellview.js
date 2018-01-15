@@ -34,5 +34,16 @@ class CellView {
     $element.on('doubletap', () => app.submit({Name: 'Cell.DoubleClick', Cell: this }));
   }
 
+  isActiveForRoom(room) {
+    return this.config.activeWhenRoom === room;
+  }
 
+  setActive(isActive) {
+    if (isActive) {
+      this.$element.addClass('active');
+    }
+    else {
+      this.$element.removeClass('active');
+    }
+  }
 }

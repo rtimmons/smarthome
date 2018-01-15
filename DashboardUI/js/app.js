@@ -24,6 +24,10 @@ class App {
     return this.config.emojis[name];
   }
 
+  eachCell(f) {
+    return this.grid.allCells().map(c => f(c));
+  }
+
   // This is the one method called from main.js
   run() {
     this.grid.init($(this.window), this);
@@ -46,20 +50,6 @@ class App {
     //   if(d && d.onDoublePress) {
     //     this.onAction(d.onDoublePress.action, d.onDoublePress.args);
     //   }
-    // });
-
-    // // move to Cell class
-    // this.listen('Room.Changed', (e) => {
-    //   this.grid.allCells().forEach(c => {
-    //     var d = c.data('config');
-    //     if(d && d.activeWhenRoom) {
-    //       if (e.ToRoom == d.activeWhenRoom) {
-    //         c.addClass('active');
-    //       } else {
-    //         c.removeClass('active');
-    //       }
-    //     }
-    //   })
     // });
 
     // this.listen('Room.Changed', (e) => {
