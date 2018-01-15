@@ -23,15 +23,24 @@ class MusicController {
   volumeDown()  { this.request('volume', '-5'); }
   next()        { this.request('next'); }
 
-
   allJoin(room) {
     // TODO: could be more clever about getting all room names from `/zones`
     // it's in .members.roomName
     log('allJoin ' + room)
     var delay = 0;
-    this.config.rooms.filter( x => x != room ).forEach( other => {
-      setTimeout(() => this.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
+    this.app.config.rooms.filter( x => x != room ).forEach( other => {
+      setTimeout(() => this.requester.request('http://retropie.local:5005/' + other + '/join/' + room), delay)
       delay += 1000; // only 1 request/second
     });
   }
+
+  fetchState() {
+    this.request('state').done(resp => {
+      this.app.submit({
+        Name: 'Room.StateObserved',
+        State: resp,
+      });
+    });
+  }
+
 }

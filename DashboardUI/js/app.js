@@ -76,23 +76,12 @@ class App {
   }
 
   request(url) {
-    if(window.location.href.match(/.*debug.*/)) {
-      alert('fake request '+url);
-      return {};
-    }
     return $.ajax(url)
       .fail(err  => console.log(url, err));
   }
 
   fetchState() {
-    $.ajax(
-      'http://retropie.local:5005/' + this.room + '/state'
-    ).done(resp => {
-      this.submit({
-        Name: 'Room.StateObserved',
-        State: resp,
-      });
-    });
+    this.musicController.fetchState();
   }
 
   onAction(action, params) {
@@ -125,6 +114,9 @@ class App {
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
 
+    case 'Music.FetchState':
+        this.fetchState();
+        break;
     case 'Music.PlayPause':
         this.musicController.playPause();
         break;

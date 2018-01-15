@@ -142,10 +142,10 @@ var config = {
       y:7, x:0,
       emoji: 'Notes'
     },
-    { w:9, h:1,
+    { w:9, h:1, // banner
       y:7, x:1,
       claz: 'state-Music',
-      onPress: {action: 'Music.GetState', args: []},
+      onPress: {action: 'Music.FetchState', args: []},
     },
     { y:7, x:2, w:0 },
     { y:7, x:3, w:0 },
@@ -296,6 +296,6 @@ var config = {
 
   ],
   poll: [
-    {action: 'Music.GetState', args: [], period: 3000},
+    {action: 'Music.FetchState', args: [], period: 3000},
   ]
 };
