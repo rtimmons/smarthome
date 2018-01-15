@@ -43,10 +43,9 @@ var config = {
     { w:1, h:1,
       y:0, x:3,
       emoji: 'TV',
-      // TODO: rename onPress to onClick, onDblPress to onDblClick
       activeWhenRoom: 'Living',
       onPress: {action: 'ChangeRoom', args: ['Living']},
-      onDblPress: {action: 'AllJoin', args: ['Living']},
+      onDoublePress: {action: 'AllJoin', args: ['Living']},
     },
     /*
     Only one room can be "active" at a time.
@@ -94,7 +93,7 @@ var config = {
       emoji: 'Bed',
       activeWhenRoom: 'Bedroom',
       onPress: {action: 'ChangeRoom', args: ['Bedroom']},
-      onDblPress: {action: 'AllJoin', args: ['Bedroom']},
+      onDoublePress: {action: 'AllJoin', args: ['Bedroom']},
     },
     { w:1, h:1,
       y:1, x:4,
@@ -108,7 +107,7 @@ var config = {
       emoji: 'Rice',
       activeWhenRoom: 'Kitchen',
       onPress: {action: 'ChangeRoom', args: ['Kitchen']},
-      onDblPress: {action: 'AllJoin', args: ['Kitchen']},
+      onDoublePress: {action: 'AllJoin', args: ['Kitchen']},
     },
     { w:1, h:1,
       y:1, x:5,
@@ -122,7 +121,7 @@ var config = {
       emoji: 'Shower',
       activeWhenRoom: 'Bathroom',
       onPress: {action: 'ChangeRoom', args: ['Bathroom']},
-      onDblPress: {action: 'AllJoin', args: ['Bathroom']},
+      onDoublePress: {action: 'AllJoin', args: ['Bathroom']},
     },
     { w:1, h:1,
       y:1, x:6,

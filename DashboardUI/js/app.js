@@ -64,8 +64,8 @@ class App {
 
     this.listen('Cell.Dblclick', (e) => {
       var d = e.Cell.data('config');
-      if(d && d.onDblPress) {
-        this.onAction(d.onDblPress.action, d.onDblPress.args);
+      if(d && d.onDoublePress) {
+        this.onAction(d.onDoublePress.action, d.onDoublePress.args);
       }
     });
 
