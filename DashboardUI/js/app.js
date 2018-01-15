@@ -8,16 +8,15 @@ class App {
     this.config = args.config;
     this.rooms = args.config.rooms;
     this.secret = args.secret;
-    this.listeners = {};
+    this.listeners = [];
   }
 
-  submit(topic, event) {
-    (this.listeners[topic] || []).forEach(l => l(event));
+  submit(event) {
+    this.listeners.forEach(l => l.onMessage(event));
   }
 
-  listen(topic, callback) {
-    this.listeners[topic] = this.listeners[topic] || [];
-    this.listeners[topic].push(callback);
+  subscribe(listener) {
+    this.listeners.push(listener);
   }
 
   emojiWithName(name) {
@@ -28,24 +27,25 @@ class App {
   run() {
     this.grid.init($(this.window), this);
 
+    // TODO: instead perioically send messages
     this.config.poll.forEach(p => {
       var f = () => this.onAction(p.action, p.args)
       setInterval(f, p.period);
     });
 
-    this.listen('Cell.Click', (e) => {
-      var b = e.Cell.data('config');
-      if(b && b.onPress) {
-        this.onAction(b.onPress.action, b.onPress.args)
-      }
-    });
-
-    this.listen('Cell.DoubleClick', (e) => {
-      var d = e.Cell.data('config');
-      if(d && d.onDoublePress) {
-        this.onAction(d.onDoublePress.action, d.onDoublePress.args);
-      }
-    });
+    // this.listen('Cell.Click', (e) => {
+    //   var b = e.Cell.data('config');
+    //   if(b && b.onPress) {
+    //     this.onAction(b.onPress.action, b.onPress.args)
+    //   }
+    // });
+    //
+    // this.listen('Cell.DoubleClick', (e) => {
+    //   var d = e.Cell.data('config');
+    //   if(d && d.onDoublePress) {
+    //     this.onAction(d.onDoublePress.action, d.onDoublePress.args);
+    //   }
+    // });
 
     // move to another class
     this.listen('Room.StateObserved', (e) => {
@@ -61,19 +61,19 @@ class App {
       this.$.find('.state-Music').html(title ? title.substr(0,19) : '');
     });
 
-    // move to Cell class
-    this.listen('Room.Changed', (e) => {
-      this.grid.allCells().forEach(c => {
-        var d = c.data('config');
-        if(d && d.activeWhenRoom) {
-          if (e.ToRoom == d.activeWhenRoom) {
-            c.addClass('active');
-          } else {
-            c.removeClass('active');
-          }
-        }
-      })
-    });
+    // // move to Cell class
+    // this.listen('Room.Changed', (e) => {
+    //   this.grid.allCells().forEach(c => {
+    //     var d = c.data('config');
+    //     if(d && d.activeWhenRoom) {
+    //       if (e.ToRoom == d.activeWhenRoom) {
+    //         c.addClass('active');
+    //       } else {
+    //         c.removeClass('active');
+    //       }
+    //     }
+    //   })
+    // });
 
     this.listen('Room.Changed', (e) => {
       this.getState();
@@ -101,13 +101,13 @@ class App {
   //   });
   // }
 
-  reindex() {
-    this.request('http://retropie.local:5005/reindex')
-  }
-
-  refresh() {
-    window.location.reload();
-  }
+  // reindex() {
+  //   this.request('http://retropie.local:5005/reindex')
+  // }
+  //
+  // refresh() {
+  //   window.location.reload();
+  // }
 
   changeRoom(toRoom) {
     var oldRoom = this.room;

@@ -8,8 +8,6 @@ class Cell {
 
     // console.log('args', args);
 
-    // TODO: do we need .data if we have this as a separate class now?
-    this.$element.data('config', this.config);
     this.$element.html(this.app.emojiWithName(this.config.emoji));
     this.$element.addClass(this.config.claz || '');
 
@@ -32,8 +30,8 @@ class Cell {
     });
 
     var app = this.app;
-    $cell.on('click',     () => app.submit('Cell.Click',       {Cell: $cell}));
-    $cell.on('dblclick',  () => app.submit('Cell.DoubleClick', {Cell: $cell}));
-    $cell.on('doubletap', () => app.submit('Cell.DoubleClick', {Cell: $cell}));
+    $cell.on('click',     () => app.submit({Name: 'Cell.Click',       Cell: this }));
+    $cell.on('dblclick',  () => app.submit({Name: 'Cell.DoubleClick', Cell: this }));
+    $cell.on('doubletap', () => app.submit({Name: 'Cell.DoubleClick', Cell: this }));
   }
 }
