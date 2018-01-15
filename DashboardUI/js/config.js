@@ -78,7 +78,7 @@ var config = {
 
     TODO:
     - implement ↑ 😘
-    - icon above volume that matches active room. 
+    - icon above volume that matches active room.
       Active => volume controls just that room
       Inactive => volume controls whole group
 
@@ -157,7 +157,7 @@ var config = {
     { y:7, x:7, w:0 },
     { y:7, x:8, w:0 },
     { y:7, x:9, w:0 },
-
+    // TODO: display music cover art instead of notes
     { w:1, h:1,
       y:7, x:10,
       icon: 'Notes'
@@ -184,11 +184,12 @@ var config = {
       onPress: {action: 'Lights.Scene.Savana', args: ["savana"]},
     },
 
-    { w:1, h:1,
-      y:2, x:1,
-      icon: 'Rice',
-      activeWhenRoom: 'Kitchen',
-    },
+    // Room/Global volume toggle
+    // { w:1, h:1,
+    //   y:2, x:1,
+    //   icon: 'Rice',
+    //   activeWhenRoom: 'Kitchen',
+    // },
     { w:1, h:1,
       y:3, x:1,
       icon: 'Up',
@@ -200,50 +201,57 @@ var config = {
       onPress: {action: 'Music.VolumeDown', args: []},
     },
 
+    ////
+    // volume "slider"
+    ////
     // TODO: in column 0, have volume absolute numbers. Bottom is mute.
     //       The number of "lit up" rows corresponds to the volume
     //       of the current group associated with active room. Click once
-    //       to change for the active room; double click to change for 
+    //       to change for the active room; double click to change for
     //       whole group.
     //
     // TODO: 0 is top of screen, so volumeLevel vals
     //       need to be reversed (volumeLevel = 6 - y)
-    { w:1, h:1,
-      y:6, x:0,
-      icon: 'Monkey',
-      volumeLevel: 6, 
-    },
-    { w:1, h:1,
-      y:5, x:0,
-      icon: 'Box',
-      volumeLevel: 5,
-    },
-    { w:1, h:1,
-      y:4, x:0,
-      icon: 'Box',
-      volumeLevel: 4,
-    },
-    { w:1, h:1,
-      y:3, x:0,
-      icon: 'Empty',
-      volumeLevel: 3,
-    },
-    { w:1, h:1,
-      y:2, x:0,
-      icon: 'Empty',
-      volumeLevel: 2,
-    },
-    { w:1, h:1,
-      y:1, x:0,
-      icon: 'Empty',
-      volumeLevel: 1,
-    },
-    { w:1, h:1,
-      y:0, x:0,
-      icon: 'Empty',
-      volumeLevel: 0,
-    },
+    // { w:1, h:1,
+    //   y:6, x:0,
+    //   icon: 'Monkey',
+    //   volumeLevel: 6,
+    // },
+    // { w:1, h:1,
+    //   y:5, x:0,
+    //   icon: 'Box',
+    //   volumeLevel: 5,
+    // },
+    // { w:1, h:1,
+    //   y:4, x:0,
+    //   icon: 'Box',
+    //   volumeLevel: 4,
+    // },
+    // { w:1, h:1,
+    //   y:3, x:0,
+    //   icon: 'Empty',
+    //   volumeLevel: 3,
+    // },
+    // { w:1, h:1,
+    //   y:2, x:0,
+    //   icon: 'Empty',
+    //   volumeLevel: 2,
+    // },
+    // { w:1, h:1,
+    //   y:1, x:0,
+    //   icon: 'Empty',
+    //   volumeLevel: 1,
+    // },
+    // { w:1, h:1,
+    //   y:0, x:0,
+    //   icon: 'Empty',
+    //   volumeLevel: 0,
+    // },
+    ////
 
+    /////
+    // Presets
+    /////
     { w:1, h:1,
       y:4, x:3,
       icon: 'News',
@@ -261,14 +269,18 @@ var config = {
       onPress: {action: 'Music.Preset', args: ['all-tv']},
     },
 
-    { w:1, h:1,
-      y:6, x:3,
-      icon: 'ThumbsUp',
-    },
-    { w:1, h:1,
-      y:6, x:6,
-      icon: 'ThumbsDown',
-    },
+    ////
+    // Pandora ThumbsUp/ThumbsDown
+    //
+    // TODO: implement
+    // { w:1, h:1,
+    //   y:6, x:3,
+    //   icon: 'ThumbsUp',
+    // },
+    // { w:1, h:1,
+    //   y:6, x:6,
+    //   icon: 'ThumbsDown',
+    // },
 
     // TODO: toggle play/pause icon
     { w:1, h:1,
