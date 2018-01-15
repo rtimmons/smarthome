@@ -2,6 +2,7 @@ class Grid {
   constructor(args) {
     this.$element = args.container;
     var config = args.config;
+    this.config = config;
 
     this.cells = [];
     this.cols = config.cols;
@@ -28,7 +29,7 @@ class Grid {
     return this.cells;
   }
 
-  cell(size) {
+  _createElement(size) {
     var cell = this.$element.find('#cell-'+size.y+'-'+size.x)
 
     if(size.w == 0 || size.h == 0) {
@@ -42,7 +43,8 @@ class Grid {
     return cell;
   }
 
-  init($win) {
+  init($win, app) {
+    this.app = app;
     var grid = this;
 
     for(var row=0; row<this.rows; row++) {
@@ -61,5 +63,13 @@ class Grid {
     $win.resize(function(){
       grid.onResize($win.width(), $win.height());
     }).resize();
+
+    this.config.cells.forEach(b => {
+      var cell = new Cell({
+        app: this.app,
+        $element: this._createElement(b),
+        config: b,
+      });
+    });
   }
 }

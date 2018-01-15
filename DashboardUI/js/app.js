@@ -26,16 +26,7 @@ class App {
 
   // This is the one method called from main.js
   run() {
-    const self = this;
-    this.grid.init($(this.window));
-    this.config.cells.forEach(b => {
-      var $cell = this.grid.cell(b);
-      var cell = new Cell({
-        app: self,
-        $element: $cell,
-        config: b,
-      });
-    });
+    this.grid.init($(this.window), this);
 
     this.config.poll.forEach(p => {
       var f = () => this.onAction(p.action, p.args)
