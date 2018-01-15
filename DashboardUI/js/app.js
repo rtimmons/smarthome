@@ -50,15 +50,23 @@ class App {
   }
 
   setBanner(msg) {
+    if (msg == this.banner) {
+      return;
+    }
     this.$.find('.state-Music').html(msg ? msg.substr(0,19) : '');
+    this.banner = msg;
   }
   setBackgroundImage(url) {
+    if (url == this.backgroundImage) {
+      return;
+    }
     if(url) {
       $('body').css({backgroundImage: 'url("' + url + '")'});
     }
     else {
       $('body').css({backgroundImage: ''});
     }
+    this.backgroundImage = url;
   }
 
   currentRoom() {
