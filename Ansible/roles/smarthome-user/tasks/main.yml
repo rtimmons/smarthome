@@ -21,3 +21,4 @@
       repo: https://github.com/rtimmons/smarthome.git
       clone: yes
       dest: /home/smarthome/repo
+      refspec: ansible-ize
