@@ -49,8 +49,8 @@ class Grid {
       var tr = $('<tr>');
       for(var col=0; col<this.cols; col++) {
         var cell = $('<td class="cell">');
-        cell.addClass('row-'+row);
-        cell.addClass('col-'+col);
+        // cell.addClass('row-'+row);
+        // cell.addClass('col-'+col);
         cell.attr('id', 'cell-'+row+'-'+col);
         tr.append(cell);
         this.cells.push(cell);
