@@ -25,7 +25,7 @@ class App {
     this.config.cells.forEach(b => {
       var cell = this.grid.cell(b);
       cell.data('config', b);
-      cell.html(this.config.emojis[b.icon]);
+      cell.html(this.config.emojis[b.emoji]);
       cell.addClass(b.claz);
 
       var tapped = false;
