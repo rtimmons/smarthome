@@ -46,9 +46,9 @@ class App {
         e.preventDefault();
       });
 
-      $cell.click(() => this.submit('Cell.Click', {Cell: cell}));
-      $cell.dblclick(() => this.submit('Cell.DoubleClick', {Cell: cell}));
-      $cell.on('doubletap', () => this.submit('Cell.DoubleClick', {Cell: cell}));
+      $cell.click(() => this.submit('Cell.Click', {Cell: $cell}));
+      $cell.dblclick(() => this.submit('Cell.DoubleClick', {Cell: $cell}));
+      $cell.on('doubletap', () => this.submit('Cell.DoubleClick', {Cell: $cell}));
     });
 
     this.config.poll.forEach(p => {
