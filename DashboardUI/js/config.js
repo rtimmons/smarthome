@@ -2,6 +2,7 @@
 var config = {
   emojis: {
       'TV':       '📺' ,
+      'Film':     '🎬',
       'Bed':      '🛏'  ,
       'Rice':     '🍙' ,
       'Shower':   '🛀' ,
@@ -12,6 +13,7 @@ var config = {
       'Skip':     '⏭',
       'Notes':    '🎶',
       'Monkey':   '🙉',
+      'Dancers':  '👯‍♀️',
       'Yell':     '🗣',
       'Ear':      '👂🏽',
       'Taco':     '🌮',
@@ -20,6 +22,9 @@ var config = {
       'Moon':     '🌑',
       'Dim':      '🌘',
       'Sunset':   '🌆',
+      'Check':    '✅',
+      'X':        '❌',
+      '?':        '❓',
   },
   rows: 8,
   cols: 11,
@@ -30,6 +35,8 @@ var config = {
     'Bathroom',
   ],
   cells: [
+
+
     { w:1, h:1,
       y:0, x:3,
       icon: 'TV',
@@ -38,6 +45,44 @@ var config = {
       onPress: {action: 'ChangeRoom', args: ['Living']},
       onDblPress: {action: 'AllJoin', args: ['Living']},
     },
+    /*
+    Only one room can be "active" at a time.
+    The Check/?/X below each room is its indicator. These
+      indicate if the room that's above it is part of the
+      same group as the active room.
+    So if all rooms are playing the same thing, clicking
+      any of the room icons will leave all the indicators checked.
+
+    Click a room to see what's playing in it.
+    -> The indicators for the rooms in the same group change
+    -> Click the indicator to leave/join the group
+
+    How to silence a room X:
+      - click icon for X
+      - click its indicator to leave its group
+
+    How to play everywhere:
+     - click room you want to duplicate
+     - select the unselected indicators
+
+    How to play only in one room X:
+     - click icon for X
+     - unselect selected indicators
+
+    TODO:
+    - implement ↑ 😘
+    - icon above volume that matches active room. 
+      Active => volume controls just that room
+      Inactive => volume controls whole group
+
+    */
+    { w:1, h:1,
+      y:1, x:3,
+      icon: '?',
+      togglesRoom: 'Living',
+      onPress: {action: 'ToggleRoom', args: []},
+    },
+
     { w:1, h:1,
       y:0, x:4,
       icon: 'Bed',
@@ -46,6 +91,13 @@ var config = {
       onDblPress: {action: 'AllJoin', args: ['Bedroom']},
     },
     { w:1, h:1,
+      y:1, x:4,
+      icon: '?',
+      togglesRoom: 'Bed',
+      onPress: {action: 'ToggleRoom', args: []},
+    },
+
+    { w:1, h:1,
       y:0, x:5,
       icon: 'Rice',
       activeWhenRoom: 'Kitchen',
@@ -53,11 +105,24 @@ var config = {
       onDblPress: {action: 'AllJoin', args: ['Kitchen']},
     },
     { w:1, h:1,
+      y:1, x:5,
+      icon: '?',
+      togglesRoom: 'Kitchen',
+      onPress: {action: 'ToggleRoom', args: []},
+    },
+
+    { w:1, h:1,
       y:0, x:6,
       icon: 'Shower',
       activeWhenRoom: 'Bathroom',
       onPress: {action: 'ChangeRoom', args: ['Bathroom']},
       onDblPress: {action: 'AllJoin', args: ['Bathroom']},
+    },
+    { w:1, h:1,
+      y:1, x:6,
+      icon: '?',
+      togglesRoom: 'Bathroom',
+      onPress: {action: 'ToggleRoom', args: []},
     },
 
     // { w:1, h:1,
@@ -67,6 +132,7 @@ var config = {
     //   onPress: {action: 'ChangeRoom', args: ['All']},
     // },
 
+    // TODO: display music cover art instead of notes
     { w:1, h:1,
       y:7, x:0,
       icon: 'Notes'
@@ -132,12 +198,12 @@ var config = {
     },
     { w:1, h:1,
       y:3, x:4,
-      icon: 'TV',
+      icon: 'Film',
       onPress: {action: 'Music.Preset', args: ['all-tv']},
     },
     { w:1, h:1,
       y:6, x:4,
-      icon: 'Play',
+      icon: 'Play', // TODO: toggle play/pause icon
       onPress: {action: 'Music.PlayPause', args: []},
     },
     { w:1, h:1,
