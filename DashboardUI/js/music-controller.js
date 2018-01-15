@@ -41,6 +41,13 @@ class MusicController {
         State: resp,
       });
     });
+
+    this.request('zones').done(resp => {
+      this.app.submit({
+        Name: 'Room.ZonesObserved',
+        Zones: resp,
+      })
+    });
   }
 
 }
