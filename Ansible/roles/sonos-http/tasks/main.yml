@@ -11,7 +11,15 @@
   args:
     chdir: /home/pi/node-sonos-http-api
 
+- name: copy node-sonos-http-api config
+  copy:
+    src: presets
+    dest: /home/pi/node-sonos-http-api/presets
+    owner: pi
+
 - name: copy node-sonos-http-api systemd unit file
+  become_user: root
+  become: true
   copy:
     src: node-sonos-http-api.service
     dest: /etc/systemd/system/node-sonos-http-api.service
@@ -19,13 +27,9 @@
     group: root
     mode: 0664
 
-- name: copy node-sonos-http-api config
-  copy:
-    src: presets
-    dest: /home/pi/node-sonos-http-api/presets
-    owner: pi
-
 - name: start node-sonos-http-api service
+  become_user: root
+  become: true
   service:
     name: node-sonos-http-api
     state: restarted

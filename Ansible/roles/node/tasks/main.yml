@@ -1,4 +1,6 @@
 - name: install curl
+  become_user: root
+  become: yes
   apt:
     name: curl
     state: present
@@ -13,6 +15,8 @@
     creates: /tmp/nodesource
 
 - name: install npm packages
+  become_user: root
+  become: yes
   apt:
     name: "{{ item }}"
     state: present

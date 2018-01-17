@@ -1,6 +1,8 @@
 # TODO: standardize yaml to 2 spaces
 
 - name: install dependency packages
+  become_user: root
+  become: true
   apt:
       name: libpcap-dev
       state: latest
@@ -19,15 +21,14 @@
     chdir: /home/pi/dasher
 
 - name: copy dasher config
-  # TODO this is annoying
-  become_user: root
-  become: yes
   copy:
     src: config.js
     dest: /home/pi/dasher/config/config.json
-    owner: smarthome
+    owner: pi
 
 - name: copy systemd unit file
+  become_user: root
+  become: true
   copy:
     src: dasher.service
     dest: /etc/systemd/system/dasher.service
@@ -36,6 +37,8 @@
     mode: 0664
 
 - name: start dasher service
+  become_user: root
+  become: true
   service:
     name: dasher
     state: restarted

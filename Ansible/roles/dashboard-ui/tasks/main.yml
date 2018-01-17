@@ -1,10 +1,14 @@
 
 - name: install httpd
+  become_user: root
+  become: yes
   apt:
     name: apache2
     state: present
 
 - name: setup /d web root
+  become_user: root
+  become: yes
   file:
     src:    /home/pi/repo/DashboardUI
     dest:   /var/www/html/d

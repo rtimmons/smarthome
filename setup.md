@@ -27,5 +27,10 @@ Takes about 30 seconds to boot up.
 
 Then modify secret.yml
 Then `./setup-wifi.yml`
-Then restart without ethernet plugged in.
+Then restart without ethernet plugged in. 
+    Just unplug the thing violently from power. Then more gently unplug ethernet.
+    This restart takes about 45 seconds since it checks the filesystem after your senseless violence.
 Then `./deploy.sh`
+
+todo:
+- user specify hostname and pi user's password to set during wifi-setup to facilitate multiple instances
