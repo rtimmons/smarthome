@@ -3,6 +3,6 @@
 source ./ansible-env.sh
 
 ansible-playbook \
-    -v \
+    -vv \
     -i inventory.ini \
-    "$PWD"/playbook.yml
+    "$PWD"/deploy.yml \

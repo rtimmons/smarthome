@@ -6,8 +6,6 @@
       state: latest
 
 - name: clone dasher repo
-  become_user: smarthome
-  become: yes
   git:
       repo: https://github.com/maddox/dasher
       clone: yes
@@ -16,13 +14,14 @@
       version: ef9d486996ea4eb196ca20098748f8504f2a807f
 
 - name: Install dasher node.js package
-  become_user: smarthome
-  become: yes
   shell: npm install
   args:
     chdir: /home/smarthome/dasher
 
 - name: copy dasher config
+  # TODO this is annoying
+  become_user: root
+  become: yes
   copy:
     src: config.js
     dest: /home/smarthome/dasher/config/config.json
