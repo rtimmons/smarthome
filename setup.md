@@ -28,3 +28,4 @@ Takes about 30 seconds to boot up.
 Then modify secret.yml
 Then `./setup-wifi.yml`
 Then restart without ethernet plugged in.
+Then `./deploy.sh`

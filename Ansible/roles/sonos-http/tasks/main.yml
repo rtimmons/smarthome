@@ -1,6 +1,4 @@
 - name: clone node-sonos-http-api repo
-  become_user: smarthome
-  become: yes
   git:
       repo: https://github.com/jishi/node-sonos-http-api.git
       clone: yes
@@ -9,8 +7,6 @@
       version: 148bc518435f9519a1fac133073f7f27c3f87e17
 
 - name: Install node-sonos-http-api node.js package
-  become_user: smarthome
-  become: yes
   shell: npm install
   args:
     chdir: /home/pi/node-sonos-http-api
@@ -27,7 +23,7 @@
   copy:
     src: presets
     dest: /home/pi/node-sonos-http-api/presets
-    owner: smarthome
+    owner: pi
 
 - name: start node-sonos-http-api service
   service:

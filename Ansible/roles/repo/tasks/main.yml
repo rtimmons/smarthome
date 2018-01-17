@@ -1,6 +1,4 @@
 - name: copy smarthome repo
-  become_user: smarthome
-  become: yes
   synchronize:
       group: no
       checksum: yes

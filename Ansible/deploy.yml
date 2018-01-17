@@ -1,7 +1,7 @@
 - name: apply roles
   hosts: rypi
   roles:
-  - { name: smarthome, become: True, become_user: root }
+  - { name: smarthome }
 
   pre_tasks:
   - name: import secret vars
