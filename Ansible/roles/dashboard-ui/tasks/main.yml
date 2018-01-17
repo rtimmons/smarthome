@@ -6,7 +6,7 @@
 
 - name: setup /d web root
   file:
-    src:    /home/smarthome/repo/DashboardUI
+    src:    /home/pi/repo/DashboardUI
     dest:   /var/www/html/d
     owner:  root
     group:  root
@@ -21,4 +21,4 @@
 - name: install secrets
   template:
     src: secret.js.j2
-    dest: /home/smarthome/repo/DashboardUI/js/secret.js
+    dest: /home/pi/repo/DashboardUI/js/secret.js

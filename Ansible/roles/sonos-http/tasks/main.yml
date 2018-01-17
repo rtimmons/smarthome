@@ -4,7 +4,7 @@
   git:
       repo: https://github.com/jishi/node-sonos-http-api.git
       clone: yes
-      dest: /home/smarthome/node-sonos-http-api
+      dest: /home/pi/node-sonos-http-api
       # TODO: vars?
       version: 148bc518435f9519a1fac133073f7f27c3f87e17
 
@@ -13,7 +13,7 @@
   become: yes
   shell: npm install
   args:
-    chdir: /home/smarthome/node-sonos-http-api
+    chdir: /home/pi/node-sonos-http-api
 
 - name: copy node-sonos-http-api systemd unit file
   copy:
@@ -26,7 +26,7 @@
 - name: copy node-sonos-http-api config
   copy:
     src: presets
-    dest: /home/smarthome/node-sonos-http-api/presets
+    dest: /home/pi/node-sonos-http-api/presets
     owner: smarthome
 
 - name: start node-sonos-http-api service

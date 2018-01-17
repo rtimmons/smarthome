@@ -7,7 +7,7 @@ After=network.target
 Type=simple
 #user with access to dasher files
 User=smarthome
-WorkingDirectory=/home/smarthome/node-sonos-http-api
+WorkingDirectory=/home/pi/node-sonos-http-api
 #use command "which npm" to determine correct location of NPM
 ExecStart=/usr/bin/npm run start
 Restart=on-failure

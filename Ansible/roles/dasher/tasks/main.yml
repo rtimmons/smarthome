@@ -9,14 +9,14 @@
   git:
       repo: https://github.com/maddox/dasher
       clone: yes
-      dest: /home/smarthome/dasher
+      dest: /home/pi/dasher
       # TODO: vars?
       version: ef9d486996ea4eb196ca20098748f8504f2a807f
 
 - name: Install dasher node.js package
   shell: npm install
   args:
-    chdir: /home/smarthome/dasher
+    chdir: /home/pi/dasher
 
 - name: copy dasher config
   # TODO this is annoying
@@ -24,7 +24,7 @@
   become: yes
   copy:
     src: config.js
-    dest: /home/smarthome/dasher/config/config.json
+    dest: /home/pi/dasher/config/config.json
     owner: smarthome
 
 - name: copy systemd unit file

@@ -1,6 +1,5 @@
 ---
 dependencies:
-  - { role: smarthome-user }
   - { role: dashboard-ui }
   - { role: dasher }
   - { role: sonos-http }
