@@ -14,7 +14,7 @@
 - name: copy node-sonos-http-api config
   copy:
     src: presets
-    dest: /home/pi/node-sonos-http-api/presets
+    dest: /home/pi/node-sonos-http-api
     owner: pi
 
 - name: copy node-sonos-http-api systemd unit file
