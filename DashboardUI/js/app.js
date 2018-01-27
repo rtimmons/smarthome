@@ -12,7 +12,7 @@ class App {
 
     this.musicController = new MusicController({
       requester: this,
-      root: 'http://retropie.local:5005',
+      root: 'http://' + window.location.host + ':5005',
       app: this,
     });
 
