@@ -4,5 +4,5 @@ source ./ansible-env.sh
 
 ansible-playbook \
     -vv \
-    -i inventory.ini \
+    -i post_init.ini \
     "$PWD"/deploy.yml \

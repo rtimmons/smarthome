@@ -1,5 +1,5 @@
 - name: apply roles
-  hosts: rypi
+  hosts: post_init
   roles:
   - { name: smarthome }
 

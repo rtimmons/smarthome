@@ -4,5 +4,5 @@ source ./ansible-env.sh
 
 ansible-playbook \
     -v \
-    -i inventory.ini \
+    -i pre_init.ini \
     "$PWD"/setup-wifi.yml
