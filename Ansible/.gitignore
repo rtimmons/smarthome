@@ -1,3 +1,4 @@
 *.retry
 /root
 venv
+post_init.ini
