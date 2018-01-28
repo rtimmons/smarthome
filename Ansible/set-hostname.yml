@@ -1,7 +1,7 @@
 - name: apply roles
-  hosts: post_init
+  hosts: pre_init
   roles:
-  - { name: wifi, become: True, become_user: root }
+  - { name: hostname, become: True, become_user: root }
 
   pre_tasks:
   - name: import secret vars

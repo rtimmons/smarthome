@@ -1,13 +1,20 @@
-- name: set hostname
-  hostname:
-    name: "{{ secret.host.hostname }}"
-
 - name: replace /etc/hosts
   template:
     src: etc_hosts.j2
     dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0664
 
-- name: create new inventory file
+- name: replace /etc/hostname
+  template:
+    src: hostname.j2
+    dest: /etc/hostname
+    owner: root
+    group: root
+    mode: 0664
+
+- name: create new inventory file on local machine
   become: False
   local_action:
     module: template
