@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # https://github.com/maddox/dasher/wiki/Running-Dasher-on-a-Raspberry-Pi-at-startup
 [Unit]
 Description=node-sonos-http-api
