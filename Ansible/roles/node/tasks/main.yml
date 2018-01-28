@@ -10,9 +10,10 @@
   become: yes
   shell:
     curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -;
-    touch /tmp/nodesource
+    touch /root/nodesource
+    chmod a+r /root/nodesource
   args:
-    creates: /tmp/nodesource
+    creates: /root/nodesource
 
 - name: install npm packages
   become_user: root
