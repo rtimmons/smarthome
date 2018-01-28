@@ -22,21 +22,22 @@ Run this:
 Unmount, plug card into rpi, and connect to your computer using ethernet cable.
 Takes about 30 seconds to boot up.
 
-Then ssh in once to add to your known_hosts
-
-    ssh pi@raspberrypi.local
-    # default password is raspberry
-    # just exit after logging in
-    
 Then enable passwordless SSH:
 
     ssh-copy-id pi@raspberrypi.local
 
-Then copy`vars/secret-example.yml` to `vars/secret.yml`.
+This will ask you to confirm adding to your `known_hosts` file.
+
+Then `cd Ansible`
+
+Then copy `vars/secret-example.yml` to `vars/secret.yml`.
+
 Then `./setup-wifi.sh`
+
 Then restart without ethernet plugged in. 
     Just unplug the thing violently from power. Then more gently unplug ethernet.
     This restart takes about 45 seconds since it checks the filesystem after your senseless violence.
+
 Then `./deploy.sh`
 
 todo:
