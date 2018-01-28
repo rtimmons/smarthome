@@ -36,7 +36,7 @@ class MusicController {
   }
 
   fetchState() {
-    this.request('state').done(resp => {
+    this.request('$room', 'state').done(resp => {
       this.app.submit({
         Name: 'Room.StateObserved',
         State: resp,
