@@ -27,6 +27,8 @@ Then enable passwordless SSH:
     ssh-copy-id pi@raspberrypi.local
 
 This will ask you to confirm adding to your `known_hosts` file.
+Default password is `raspberry`.
+
 
 Then `cd Ansible`
 
