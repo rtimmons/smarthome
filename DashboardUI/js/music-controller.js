@@ -16,8 +16,8 @@ class MusicController {
 
   playPause()   { this.request('$room', 'playpause'   ); }
   preset(name)  { this.request('$room', 'preset', name); }
-  volumeUp()    { this.request('$room', 'volume','+5' ); }
-  volumeDown()  { this.request('$room', 'volume', '-5'); }
+  volumeUp()    { this.request('$room', 'groupVolume','+2' ); }
+  volumeDown()  { this.request('$room', 'groupVolume', '-2'); }
   next()        { this.request('$room', 'next'        ); }
 
   leaveRoom(r)  { this.request(r, 'leave');   }
