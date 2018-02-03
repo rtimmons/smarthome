@@ -3,7 +3,7 @@
        "name": "Play NPR",
        "address": "74:c2:46:96:37:75",
         "protocol": "arp",	
-        "url": "http://retropie:5005/preset/playnpr",
+        "url": "http://localhost:5005/preset/playnpr",
         "method": "GET"
     },
     {
@@ -11,7 +11,7 @@
 	"address": "34:d2:70:cd:b0:37",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://retropie:5005/preset/all-tv",
+	"url": "http://localhost:5005/preset/all-tv",
 	"method": "GET"
     },
     {
@@ -19,7 +19,7 @@
 	"address": "0c:47:c9:22:ef:aa",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://retropie:5005/preset/all-tv",
+	"url": "http://localhost:5005/preset/all-tv",
 	"method": "GET"
     },
     {
@@ -35,7 +35,7 @@
 	"address": "00:fc:8b:9f:90:c2",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://retropie:5005/preset/michaelwork",
+	"url": "http://localhost:5005/preset/michaelwork",
 	"method": "GET"
     },
     {
@@ -43,7 +43,7 @@
 	"address": "00:fc:8b:5c:43:40",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://retropie:5005/pauseall",
+	"url": "http://localhost:5005/pauseall",
 	"method": "GET"
     },
     {
@@ -67,7 +67,7 @@
 	"address": "00:fc:8b:17:3d:27",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://retropie:5005/pauseall",
+	"url": "http://localhost:5005/pauseall",
 	"method": "GET"
     }
 ]}

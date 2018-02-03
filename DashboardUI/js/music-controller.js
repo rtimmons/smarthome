@@ -19,6 +19,7 @@ class MusicController {
   volumeUp()    { this.request('$room', 'groupVolume','+2' ); }
   volumeDown()  { this.request('$room', 'groupVolume', '-2'); }
   next()        { this.request('$room', 'next'        ); }
+  favorite(name){ this.request('$room', 'favorite', name); }
 
   leaveRoom(r)  { this.request(r, 'leave');   }
   joinRoom(a,b) { this.request(a, 'join', b); }
@@ -35,7 +36,7 @@ class MusicController {
   }
 
   fetchState() {
-    this.request('state').done(resp => {
+    this.request('$room', 'state').done(resp => {
       this.app.submit({
         Name: 'Room.StateObserved',
         State: resp,

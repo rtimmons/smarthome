@@ -42,5 +42,6 @@
   service:
     name: dasher
     state: restarted
+    enabled: yes
 
 # use `sudo journalctl` to look at logs

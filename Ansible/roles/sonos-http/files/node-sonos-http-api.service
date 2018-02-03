@@ -3,7 +3,6 @@
 # https://github.com/maddox/dasher/wiki/Running-Dasher-on-a-Raspberry-Pi-at-startup
 [Unit]
 Description=node-sonos-http-api
-After=network.target
 
 [Service]
 Type=simple
@@ -12,9 +11,9 @@ User=pi
 WorkingDirectory=/home/pi/node-sonos-http-api
 #use command "which npm" to determine correct location of NPM
 ExecStart=/usr/bin/npm run start
-Restart=on-failure
+Restart=always
 RestartSec=10
 KillMode=process
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

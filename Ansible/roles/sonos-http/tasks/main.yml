@@ -33,3 +33,4 @@
   service:
     name: node-sonos-http-api
     state: restarted
+    enabled: yes

@@ -112,6 +112,10 @@ class App {
 
   onAction(action, params, evt) {
     switch(action) {
+    case 'App.Refresh':
+      console.log('Reloading');
+      this.window.location.reload(true);
+      break;
     case 'AllJoin':
       this.musicController.allJoin(params[0]);
       break;
@@ -153,6 +157,9 @@ class App {
     case 'Music.PlayPause':
         this.musicController.playPause();
         break;
+    case 'Music.Favorite':
+      this.musicController.favorite(params[0]);
+      break;
     case 'Music.Preset':
       this.musicController.preset(params[0]);
       break;
