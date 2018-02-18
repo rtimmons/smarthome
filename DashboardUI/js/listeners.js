@@ -72,6 +72,17 @@ class GenericOnPress {
   }
 }
 
+class EmojiState {
+  onMessage(e) {
+    if (e.Name != 'Room.StateObserved') {
+      return;
+    }
+    var state = e.State.playbackState;
+    app.setPlaybackState(state);
+  }
+}
+
+
 class GenericOnDoublePress {
   onMessage(e) {
     if (e.Name != 'Cell.DoublePress') {

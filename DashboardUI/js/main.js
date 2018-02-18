@@ -26,6 +26,7 @@ $(() => {
   app.subscribe(new GenericOnDoublePress());
   app.subscribe(new FetchStateOnRoomChange());
   app.subscribe(new ZoneUpdater());
+  app.subscribe(new EmojiState());
 
   app.run()
 

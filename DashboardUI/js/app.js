@@ -110,6 +110,10 @@ class App {
     this.musicController.fetchState();
   }
 
+  setPlaybackState(toState) {
+    this.grid.setPlaybackState(toState);
+  }
+
   onAction(action, params, evt) {
     switch(action) {
     case 'App.Refresh':

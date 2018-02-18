@@ -43,6 +43,12 @@ class GridView {
     });
   }
 
+  setPlaybackState(toState) {
+    this.allCells().forEach(c => {
+      c.setEmojiToState(toState);
+    });
+  }
+
   _createElement(size) {
     var cell = this.$element.find('#cell-'+size.y+'-'+size.x)
 

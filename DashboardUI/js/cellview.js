@@ -41,6 +41,18 @@ class CellView {
     return this.config.togglesRoom;
   }
 
+  setEmojiToState(toState) {
+    var es = this.config.stateEmoji;
+    if (!es) {
+      return;
+    }
+    
+    if (es[toState]) {
+      var emoji = this.app.emojiWithName(es[toState]);
+      this.$element.html(emoji);
+    }
+  }
+
   isActiveForRoom(room) {
     return this.config.activeWhenRoom === room;
   }

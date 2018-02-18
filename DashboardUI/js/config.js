@@ -8,6 +8,8 @@ var config = {
       'Shower':   '🛀',
       'Earth':    '🌍',
       'Play':     '▶️',
+      'Pause':    '⏸',
+      'PlayPause':'⏯',
       'Up':       '🔼',
       'Down':     '🔽',
       'Skip':     '⏭',
@@ -294,9 +296,12 @@ var config = {
     //   emoji: 'ThumbsDown',
     // },
 
-    // TODO: toggle play/pause icon
     { w:1, h:1,
       y:6, x:4,
+      stateEmoji: {
+        'PLAYING': 'Pause',
+        'PAUSED':  'Play',
+      },
       emoji: 'Play',
       onPress: {action: 'Music.PlayPause', args: []},
     },
