@@ -14,6 +14,7 @@ class MusicController {
     return this.requester.request(url);
   }
 
+  pause()       { this.request('$room', 'pause'       ); }
   playPause()   { this.request('$room', 'playpause'   ); }
   preset(name)  { this.request('$room', 'preset', name); }
   volumeUp()    { this.request('$room', 'groupVolume','+2' ); }

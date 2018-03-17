@@ -157,6 +157,9 @@ class App {
     case 'Music.PlayPause':
         this.musicController.playPause();
         break;
+    case 'Music.Pause':
+        this.musicController.pause();
+        break;
     case 'Music.Favorite':
       this.musicController.favorite(params[0]);
       break;
