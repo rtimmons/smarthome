@@ -10,6 +10,7 @@
         args = args.map(x => typeof x == 'object'
             ? JSON.stringify(x) : new String(x)
         );
+        logger.stop();
         logger.html(args.join(' '));
         logger.fadeIn(20).promise().then(() => logger.fadeOut(1500));
     }
