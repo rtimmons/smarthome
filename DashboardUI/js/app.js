@@ -2,12 +2,12 @@ var log = console.log;
 
 class App {
   constructor(args) {
-    this.window = args.window;
-    this.$ = args.container;
-    this.grid = args.grid;
-    this.config = args.config;
-    this.rooms = args.config.rooms;
-    this.secret = args.secret;
+    this.window    = args.window;
+    this.$         = args.container;
+    this.grid      = args.grid;
+    this.config    = args.config;
+    this.rooms     = args.config.rooms;
+    this.secret    = args.secret;
     this.listeners = [];
 
     this.musicController = new MusicController({
