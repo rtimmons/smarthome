@@ -10,18 +10,21 @@ class App {
     this.secret    = args.secret;
     this.listeners = [];
 
+    // TODO: move to object-factory
     this.musicController = new MusicController({
       requester: this,
       root: 'http://' + this.secret.host.hostname + ':5005',
       app: this,
     });
 
+    // TODO: move to pubsub class
     this.subscribe({onMessage: e => {
       this.eachCell(c => c.onMessage(e));
       this.musicController.onMessage(e);
     }})
   }
 
+  // TODO: move to pubsub class
   submit(event) {
     event.app = this;
     this.listeners.forEach(l => {
@@ -29,14 +32,17 @@ class App {
     });
   }
 
+  // TODO: move to pubsub class
   subscribe(listener) {
     this.listeners.push(listener);
   }
 
+  // TODO: move to config class
   emojiWithName(name) {
     return this.config.emojis[name];
   }
 
+  // TODO: move to grid view
   eachCell(f) {
     return this.grid.allCells().map(c => f(c));
   }
@@ -46,14 +52,18 @@ class App {
     this.grid.init($(this.window), this);
 
     // TODO: instead perioically send messages
+    // TODO: move to config class
     this.config.poll.forEach(p => {
       var f = () => this.onAction(p.action, p.args)
       setInterval(f, p.period);
     });
 
-    this.changeRoom('Kitchen');
+    this.submit({
+      Name: 'App.Initialized'
+    });
   }
 
+  // TODO: move to gridview?
   setBanner(msg) {
     if (msg == this.banner) {
       return;
@@ -61,6 +71,8 @@ class App {
     this.$.find('.state-Music').html(msg ? msg.substr(0,19) : '');
     this.banner = msg;
   }
+
+  // TODO: move to gridview?
   setBackgroundImage(url) {
     if (url == this.backgroundImage) {
       return;
@@ -101,15 +113,18 @@ class App {
     });
   }
 
+  // TODO: move to request class?
   request(url) {
     return $.ajax(url)
       .fail(err  => console.log(url, err));
   }
 
+  // TODO: don't call directly/ expose musicController?
   fetchState() {
     this.musicController.fetchState();
   }
 
+  // TODO: move to action listeners
   onAction(action, params, evt) {
     switch(action) {
     case 'App.Refresh':

@@ -21,6 +21,22 @@ class FetchStateOnRoomChange {
   }
 }
 
+class RoomSaver {
+  onMessage(e) {
+
+    if (e.Name == 'App.Initialized') {
+      var room = window.cookies.get('Room') || 'Kitchen';
+      e.app.changeRoom(room);
+    }
+
+    if (e.Name != 'Room.Changed') {
+      return;
+    }
+
+    window.cookies.set('Room', e.ToRoom);
+  }
+}
+
 class BackgroundChanger {
   onMessage(e) {
     if (e.Name != 'Room.StateObserved') {
