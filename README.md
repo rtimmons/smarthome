@@ -44,6 +44,8 @@ Smarthome Dashboard
 	- don't do fixed html table, just let code generate grid. Assign `x,y` values and then listeners?
 	- pull hook or something to update cache.manifest since mobile safari doesn't refresh very well
 
-- Incorporate [mozilla open gateway][moz].
+- Incorporate [mozilla open gateway][moz]. OR: [node-red][nr]?
 
  [moz]: https://techcrunch.com/2018/02/06/mozilla-announces-an-open-framework-for-the-internet-of-things/
+ [nr]:  https://nodered.org/
+
