@@ -10,6 +10,10 @@ const API_CONFIG = {
   description: 'SmartHomeDashboard',
 };
 
+const light_config = {
+  
+};
+
 var displayResult = function(result) {
     console.log(JSON.stringify(result, null, 2));
 };
