@@ -49,3 +49,10 @@ Smarthome Dashboard
  [moz]: https://techcrunch.com/2018/02/06/mozilla-announces-an-open-framework-for-the-internet-of-things/
  [nr]:  https://nodered.org/
 
+Scrub for ideas <https://news.ycombinator.com/item?id=16874208>:
+
+> I basically followed this guide for the web camera parts: https://pimylifeup.com/raspberry-pi-webcam-server/
+
+> I setup my pi without keyboard and monitor (ssh only), and used this guide to set it up itself: https://www.losant.com/blog/getting-started-with-the-raspber...
+
+> Here's the list of my hardware: https://www.canakit.com/raspberry-pi-zero-wireless.html https://www.canakit.com/raspberry-pi-camera-v2-8mp.html
