@@ -19,7 +19,7 @@
         }
         lastLog = args;
 
-        logger.stop();
+        logger.stop(true, true);
         logger.html(args);
         logger.fadeIn(20).promise().then(() => logger.fadeOut(1500));
     }
