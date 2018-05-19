@@ -1,8 +1,1 @@
-- name: debug
-  debug: msg="Hello, World!"
 
-- name: Update all packages to the latest version
-  become_user: root
-  become: yes
-  apt:
-    upgrade: dist

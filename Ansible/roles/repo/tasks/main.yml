@@ -11,11 +11,3 @@
       delete: yes
       src: "{{ playbook_dir }}/.."
       dest: /home/pi/repo
-
-- name: what version are we at
-  shell: git status; git rev-parse HEAD
-  register: smarthome_user_git_stdout
-  args:
-    chdir: /home/pi/repo
-
-- debug: msg="Git info {{smarthome_user_git_stdout}}"
