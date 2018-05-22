@@ -6,6 +6,35 @@
     name: apache2
     state: present
 
+- name: install smarthome apache config
+  become_user: root
+  become: true
+  copy:
+    src: 001-smarthome.conf
+    dest: /etc/apache2/sites-available/001-smarthome.conf
+    owner: root
+    group: root
+    mode: 0664
+
+- name: enable smarthome apache config
+  become_user: root
+  become: true
+  command: a2ensite 001-smarthome
+
+- name: enable mod_headers
+  become_user: root
+  become: yes
+  apache2_module:
+    name: headers
+    state: present
+
+- name: enable mod_status
+  become_user: root
+  become: yes
+  apache2_module:
+    name: status
+    state: present
+
 - name: setup /d web root
   become_user: root
   become: yes

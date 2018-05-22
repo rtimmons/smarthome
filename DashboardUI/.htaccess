@@ -1,0 +1,13 @@
+# Requires mod_headers
+<filesMatch ".*">
+  FileETag None
+  Header unset ETag
+  Header set Cache-Control "max-age=0, no-cache, no-store, must-revalidate"
+  Header set Pragma "no-cache"
+  Header set Expires "Sun, 05 Apr 1987 17:00:00 GMT"
+</filesMatch>
+
+# Requires mod_status
+<files status>
+    SetHandler server-status
+</Files>
