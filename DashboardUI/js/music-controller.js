@@ -32,7 +32,7 @@ class MusicController {
     var delay = 0;
     this.app.config.rooms.filter( x => x != room ).forEach( other => {
       setTimeout(() => this.requester.request('http://' +  + window.location.host + ':5005/' + other + '/join/' + room), delay)
-      delay += 1000; // only 1 request/second
+      delay += 250; // only 1 request/quarter-second
     });
   }
 

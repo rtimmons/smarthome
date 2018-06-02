@@ -5,19 +5,21 @@
     var logger = $('#log');
     logger.hide();
 
-    var lastLog = null;
+    var lastLog = new Date().getTime();
     console.log = function () {
         var args = Array.prototype.slice.call(arguments);
         old(args);
-        args = args.map(x => typeof x == 'object'
-            ? JSON.stringify(x) : new String(x)
-        ).join(' ');
+        try {
+          args = args.map(x => typeof x == 'object'
+              ? JSON.stringify(x) : new String(x)
+          ).join(' ');
+        } catch(e) { }
 
-        // don't warn the same thing multiple times
-        if (args == lastLog) {
+        // don't write to screen too often
+        if (new Date().getTime() - 2000 < lastLog) {
             return;
         }
-        lastLog = args;
+        lastLog = new Date().getTime();
 
         logger.stop(true, true);
         logger.html(args);
