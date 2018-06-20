@@ -4,12 +4,13 @@
   "description": "api for smarterhome",
   "main": "index.js",
   "scripts": {
-      "start": "node index.js",
-      "stop": "pkill smhexprsrv"
+    "start": "node index.js",
+    "stop": "pkill smhexprsrv"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "request": "^2.87.0"
   }
 }

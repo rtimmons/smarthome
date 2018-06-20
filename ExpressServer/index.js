@@ -1,17 +1,21 @@
 ;process.title = "smhexprsrv" // name can't be much longer; matches with stop in package.json
 
 var express = require('express');
+var request = require('request');
+
 var app = express();
 
 var redirs = {
-  'npr':   'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
-  'zero':  'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
-  'up':    'http://smarterhome.local:5005/Bedroom/volume/+1',
-  'down':  'http://smarterhome.local:5005/Bedroom/volume/-1'
+  '1up':    'http://smarterhome.local:5005/Bedroom/volume/+2',
+  '1down':  'http://smarterhome.local:5005/Bedroom/volume/-2',
+  '1left':  'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
+  '1right': 'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
 };
 
-app.get('/x/:to', function(req, res){
-  res.redirect(300, redirs[req.params.to]);
+app.get('/b/:to', function(req, res){
+  var url = redirs[req.params.to];
+  console.log(url);
+  req.pipe(request(url)).pipe(res);
 });
 
 app.get('/', function(req, res){
