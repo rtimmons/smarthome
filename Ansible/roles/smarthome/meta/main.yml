@@ -3,4 +3,6 @@ dependencies:
   - { role: dashboard-ui }
   - { role: dasher }
   - { role: sonos-http }
+  - { role: express-server }
   - { role: print-server }
+

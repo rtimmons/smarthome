@@ -1,0 +1,19 @@
+#!/bin/sh
+
+# https://github.com/maddox/dasher/wiki/Running-Dasher-on-a-Raspberry-Pi-at-startup
+[Unit]
+Description=express-server
+
+[Service]
+Type=simple
+#user with access to node-sonos-http-api files
+User=pi
+WorkingDirectory=/home/pi/repo/ExpressServer
+#use command "which npm" to determine correct location of NPM
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,22 @@
+- name: Install express-server node.js package
+  shell: npm install
+  args:
+    chdir: /home/pi/repo/ExpressServer
+
+- name: copy express-server systemd unit file
+  become_user: root
+  become: true
+  copy:
+    src: express-server.service
+    dest: /etc/systemd/system/express-server.service
+    owner: root
+    group: root
+    mode: 0664
+
+- name: start express-server service
+  become_user: root
+  become: true
+  service:
+    name: express-server
+    state: restarted
+    enabled: yes
