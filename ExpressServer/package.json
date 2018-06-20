@@ -1,10 +1,11 @@
 {
-  "name": "expressserver",
+  "name": "express-server",
   "version": "1.0.0",
   "description": "api for smarterhome",
   "main": "index.js",
   "scripts": {
-      "start": "node index.js"
+      "start": "node index.js",
+      "stop": "pkill smhexprsrv"
   },
   "author": "",
   "license": "ISC",

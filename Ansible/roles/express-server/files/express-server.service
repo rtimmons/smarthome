@@ -1,16 +1,18 @@
 #!/bin/sh
 
 # https://github.com/maddox/dasher/wiki/Running-Dasher-on-a-Raspberry-Pi-at-startup
+# https://expressjs.com/en/starter/hello-world.html
 [Unit]
 Description=express-server
 
 [Service]
 Type=simple
-#user with access to node-sonos-http-api files
 User=pi
 WorkingDirectory=/home/pi/repo/ExpressServer
-#use command "which npm" to determine correct location of NPM
+Environment=NODE_ENV=production
+LimitNOFILE=infinity
 ExecStart=/usr/bin/npm run start
+ExecStop=/usr/bin/npm run stop
 Restart=always
 RestartSec=10
 KillMode=process
