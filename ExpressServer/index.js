@@ -4,18 +4,15 @@ var express = require('express');
 var app = express();
 
 var redirs = {
-  '/npr':   'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
-  '/zero':  'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
-  '/up':    'http://smarterhome.local:5005/Bedroom/volume/+1',
-  '/down':  'http://smarterhome.local:5005/Bedroom/volume/-1'
+  'npr':   'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
+  'zero':  'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
+  'up':    'http://smarterhome.local:5005/Bedroom/volume/+1',
+  'down':  'http://smarterhome.local:5005/Bedroom/volume/-1'
 };
 
-for(var path in redirs) {
-  var dest = redirs[path];
-  app.get(path, function(req, res) {
-    res.redirect(301, dest);
-  });
-}
+app.get('/x/:to', function(req, res){
+  res.redirect(300, redirs[req.params.to]);
+});
 
 app.get('/', function(req, res){
   res.send(JSON.stringify(redirs));
