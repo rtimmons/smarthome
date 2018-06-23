@@ -2,8 +2,18 @@
 
 var express = require('express');
 var request = require('request');
+var cors = require('cors')
 
 var app = express();
+
+// https://scotch.io/tutorials/use-expressjs-to-get-url-and-post-parameters
+var bodyParser = require('body-parser');
+app.use(bodyParser.json()); // support json encoded bodies
+app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+
+app.use(cors());
+
+////////////////////////////////////////////////////////////////////
 
 var redirs = {
   '1up':    'http://smarterhome.local:5005/Bedroom/volume/+2',
@@ -14,14 +24,23 @@ var redirs = {
 
 var pretty = `<html><body><pre>${JSON.stringify(redirs, null, 2)}</pre></body></html>`;
 
+////////////////////////////////////////////////////////////////
+
 app.get('/b/:to', function(req, res){
   var url = redirs[req.params.to];
   console.log(url);
   req.pipe(request(url)).pipe(res);
 });
 
+app.post('/report', function(req, res){
+  console.log(new Date(), req.body);
+  res.send('OK');
+});
+
 app.get('/', function(req, res){
   res.send(pretty);
 });
+
+/////////////////////////////////////////////////////////////////////
 
 app.listen(3000, () => console.log('Listening on port 3000!'));
