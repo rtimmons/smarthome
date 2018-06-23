@@ -47,8 +47,7 @@ class CellView {
     if (!url) { return; }
     var self = this;
     var data = this.app.request(url).done(function(resp){
-      self.$element.html(resp);
-      console.log('Data is ', resp);
+      self.setContent(resp);
     });
   }
 

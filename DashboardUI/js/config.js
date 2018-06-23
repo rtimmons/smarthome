@@ -292,7 +292,7 @@ var config = {
       y:3, x:9,
       // TODO: use same claz:state-* thing that the banner uses
       getValues: {
-        url: 'http://localhost:3000/temp',
+        url: `http://${window.secret.host.hostname}:3000/temp`,
       }
     },
     {y:3, x:10, w:0},
