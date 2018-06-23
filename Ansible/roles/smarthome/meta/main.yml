@@ -5,4 +5,4 @@ dependencies:
   - { role: sonos-http }
   - { role: express-server }
   - { role: print-server }
-
+  - { role: systemd-journal-remote }
