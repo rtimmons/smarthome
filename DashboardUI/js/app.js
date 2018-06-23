@@ -116,7 +116,7 @@ class App {
   // TODO: move to request class?
   request(url) {
     return $.ajax(url)
-      .fail(err  => console.log(url, err));
+      .fail(err  => console.error(url, err));
   }
 
   // TODO: don't call directly/ expose musicController?
