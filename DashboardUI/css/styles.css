@@ -47,6 +47,10 @@ div#black {
 }
 
 
+.cell {
+    white-space: nowrap;
+    overflow: hidden;
+}
 .cell div.scroll {
     animation: marq 7s cubic-bezier(0.1, 0.7, 1.0, 0.1) infinite;
 }

@@ -19,9 +19,11 @@ class GridView {
     this.square = square;
     $('.cell').each(function() {
       var t =$(this);
+      var width = ((t.attr('colspan') || 1) * square) + 'px';
       t.css({
         height: ((t.attr('rowspan') || 1) * square) + 'px',
-        width:  ((t.attr('colspan') || 1) * square) + 'px',
+        width:  width,
+        maxWidth: width,
         fontSize: (square * 2 / 3) + 'px',
         lineHeight: (square) + 'px',
       });
