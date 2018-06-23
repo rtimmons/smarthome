@@ -33,7 +33,7 @@ app.get('/b/:to', function(req, res){
 });
 
 app.post('/report', function(req, res){
-  console.log(new Date(), req.body);
+  console.log('REPORT', req.body);
   res.send('OK');
 });
 
