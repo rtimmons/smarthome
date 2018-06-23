@@ -36,7 +36,9 @@ touch /Volumes/boot/ssh
 # echo "dtoverlay=dwc2" >> /Volumes/boot/config.txt
 ```
 
-Unmount, plug card into rpi, and connect to your router using the handy ethernet cable. Then plug in power to rpi. Takes about 30 seconds to boot up. There's no obvious indicator when it's done booting other than that the next step doesn't timeout trying to find the host.
+Unmount, plug card into rpi, and connect to your router using an ethernet cable. 
+
+Then plug in power to rpi. Takes about 30 seconds to boot up. There's no obvious indicator when it's done booting other than that the next step doesn't timeout trying to find the host.
 
 Then enable passwordless SSH:
 
@@ -55,7 +57,9 @@ If you've re-burned the image (starting over) or have otherwise connected to ano
 
 Then `cd Ansible`
 
-Then copy `vars/secret-example.yml` to `vars/secret.yml` and modify the secrets.
+Then `cp vars/secret-example.yml vars/secret.yml`.
+
+Then modify `vars/secret.yml` with your wifi network info the rpi should use and with a unique hostname. The hostname should end with `.local` and should be unique on your network. Your local machine will use this hostname to connect with your rpi once its on your wifi.
 
 Then `./setup-wifi.sh`
 
