@@ -6,3 +6,5 @@ dependencies:
   - { role: express-server }
   - { role: print-server }
   - { role: systemd-journal-remote }
+  - { role: emacs }
+  - { role: grovepi }
