@@ -332,7 +332,7 @@ var config = {
 
   ],
   poll: [
-    {action: 'Music.FetchState', args: [], period: 750},
+    {action: 'Music.FetchState', args: [], period: 2000},
     {action: 'GetValues', args: [], period: 5000},
   ]
 };
