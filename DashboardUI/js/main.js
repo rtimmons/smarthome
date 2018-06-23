@@ -7,13 +7,17 @@ $(() => {
 $(() => {
   var container = $('#grid');
 
+  var pubsub = new PubSub();
+
   var grid = new GridView({
     container:  container,
     config:     config,
+    pubsub:     pubsub,
   });
 
   var app = new App({
     window:    window,
+    pubsub:    pubsub,
     container: container,
     grid:      grid,
     config:    config,

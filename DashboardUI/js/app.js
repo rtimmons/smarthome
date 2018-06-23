@@ -8,7 +8,7 @@ class App {
     this.config    = args.config;
     this.rooms     = args.config.rooms;
     this.secret    = args.secret;
-    this.listeners = [];
+    this.pubsub    = args.pubsub;
 
     // TODO: move to object-factory
     this.musicController = new MusicController({
@@ -27,14 +27,12 @@ class App {
   // TODO: move to pubsub class
   submit(event) {
     event.app = this;
-    this.listeners.forEach(l => {
-      setTimeout(() => l.onMessage(event), 0);
-    });
+    this.pubsub.submit('*', event);
   }
 
   // TODO: move to pubsub class
   subscribe(listener) {
-    this.listeners.push(listener);
+    this.pubsub.subscribe('*', listener);
   }
 
   // TODO: move to config class
