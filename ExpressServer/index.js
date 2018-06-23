@@ -39,7 +39,7 @@ app.post('/report', function(req, res){
 
 app.get('/temp', function(req, res){
   var temp = Math.floor(Math.random() * 30) + 90
-  res.send(200, new String(temp));
+  res.status(200).send(new String(temp));
 })
 
 app.get('/', function(req, res){
