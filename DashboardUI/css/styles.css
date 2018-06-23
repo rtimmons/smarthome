@@ -27,10 +27,11 @@ div#black {
     padding: 0;
     opacity: 90%;
 
+    overflow: hidden;
+    position: relative;
+
     text-align: center;
     cursor: pointer;
-
-    opacity: 0.95;
     
     color: #aaa;
 }
@@ -43,4 +44,13 @@ div#black {
     margin: 0 auto;
     width: 100%;
     height: 100%;
+}
+
+
+.cell div.scroll {
+    animation: marq 7s cubic-bezier(0.1, 0.7, 1.0, 0.1) infinite;
+}
+@keyframes marq {
+    0%   { transform: translateX(100%);  }
+    100% { transform: translateX(-100%); }
 }

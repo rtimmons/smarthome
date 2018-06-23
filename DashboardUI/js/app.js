@@ -68,7 +68,14 @@ class App {
     if (msg == this.banner) {
       return;
     }
-    this.$.find('.state-Music').html(msg ? msg.substr(0,19) : '');
+    var banner = this.$.find('.state-Music div');
+    if (msg.length >= 19) {
+      banner.addClass('scroll');
+    }
+    else {
+      banner.removeClass('scroll');
+    }
+    banner.html(msg);
     this.banner = msg;
   }
 

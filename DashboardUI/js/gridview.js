@@ -70,6 +70,8 @@ class GridView {
         // cell.addClass('row-'+row);
         // cell.addClass('col-'+col);
         cell.attr('id', 'cell-'+row+'-'+col);
+        var span = $('<div class="content"></div>');
+        cell.append(span);
         tr.append(cell);
       }
       this.$element.append(tr);

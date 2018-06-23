@@ -8,7 +8,7 @@ class CellView {
 
     // console.log('args', args);
 
-    this.$element.html(this.app.emojiWithName(this.config.emoji));
+    this.setContent(this.app.emojiWithName(this.config.emoji));
     this.$element.addClass(this.config.claz || '');
 
     // hacky thing to bind double-tap
@@ -32,6 +32,10 @@ class CellView {
     $element.on('click',     () => app.submit({Name: 'Cell.Press',       Cell: this }));
     $element.on('dblclick',  () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
     $element.on('doubletap', () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
+  }
+
+  setContent(c) {
+    this.$element.children('.content').html(c);
   }
 
   onMessage(e) {
