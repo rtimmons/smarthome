@@ -12,6 +12,8 @@ var redirs = {
   '1right': 'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
 };
 
+var pretty = `<html><body><pre>${JSON.stringify(redirs, null, 2)}</pre></body></html>`;
+
 app.get('/b/:to', function(req, res){
   var url = redirs[req.params.to];
   console.log(url);
@@ -19,7 +21,7 @@ app.get('/b/:to', function(req, res){
 });
 
 app.get('/', function(req, res){
-  res.send(JSON.stringify(redirs));
+  res.send(pretty);
 });
 
 app.listen(3000, () => console.log('Listening on port 3000!'));
