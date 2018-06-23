@@ -1,10 +1,10 @@
 - name: clone node-sonos-http-api repo
   git:
-      repo: https://github.com/jishi/node-sonos-http-api.git
+      repo: https://github.com/rtimmons/node-sonos-http-api.git
       clone: yes
       dest: /home/pi/node-sonos-http-api
       # TODO: vars?
-      version: 148bc518435f9519a1fac133073f7f27c3f87e17
+      version: 876a47a68881ae555b9a3200188df77d25e20a0c
 
 - name: Install node-sonos-http-api node.js package
   shell: npm install
