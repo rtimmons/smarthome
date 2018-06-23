@@ -1,5 +1,5 @@
 - name: Install express-server node.js package
-  shell: npm install
+  shell: npm install --no-save
   args:
     chdir: /home/pi/repo/ExpressServer
 

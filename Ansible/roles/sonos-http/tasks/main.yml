@@ -7,7 +7,7 @@
       version: 876a47a68881ae555b9a3200188df77d25e20a0c
 
 - name: Install node-sonos-http-api node.js package
-  shell: npm install
+  shell: npm install --no-save
   args:
     chdir: /home/pi/node-sonos-http-api
 
