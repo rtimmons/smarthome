@@ -1,3 +1,5 @@
+// TODO: get rid of e.Name checks and just subscribe to the topics by name
+
 class ActiveCells {
   onMessage(e) {
     if (e.Name != 'Room.Changed') {

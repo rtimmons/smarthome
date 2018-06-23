@@ -5,6 +5,7 @@ class CellView {
     this.$element = args.$element;
     this.config = args.config;
     this.app = args.app;
+    this.active = false;
 
     // console.log('args', args);
 

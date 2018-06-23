@@ -36,6 +36,7 @@ class GridView {
     this.allCells().forEach(c => c.getValues());
   }
 
+  // TODO: each cell is a listener
   updateZones(onoff) {
     // could optimize in the future
     this.allCells().forEach(c => {

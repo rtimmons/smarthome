@@ -134,16 +134,23 @@ class App {
   // TODO: move to action listeners
   onAction(action, params, evt) {
     switch(action) {
+
+    // TODO: BrowserController
     case 'App.Refresh':
       console.log('Reloading');
       this.window.location.reload(true);
       break;
+    
+    // TODO: is this used?
     case 'AllJoin':
       this.musicController.allJoin(params[0]);
       break;
+
     case 'ChangeRoom':
       this.changeRoom.apply(this, params);
       break;
+
+    // TODO: lights controller?
     case 'Lights.On':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_bright/with/key/' + this.secret.ifttt.key);
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_on/with/key/' + this.secret.ifttt.key);
@@ -165,10 +172,12 @@ class App {
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
 
+    // TODO: grid can listen for this
     case 'GetValues':
       this.grid.getValues();
       break;
 
+    // TODO: move to Music.* listeners to MusicController
     case 'Music.ToggleRoom':
         if (evt.Cell.isActive()) {
           this.musicController.leaveRoom(params[0]);
