@@ -37,6 +37,11 @@ app.post('/report', function(req, res){
   res.send('OK');
 });
 
+app.get('/journal', function(req, res){
+  var host = req.headers.host.replace(/:\d+$/,''); // remove port
+  res.redirect(301, `http://${host}:19531/browse`);
+});
+
 app.get('/temp', function(req, res){
   var temp = Math.floor(Math.random() * 30) + 90
   res.status(200).send(new String(temp));
