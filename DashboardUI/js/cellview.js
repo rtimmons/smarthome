@@ -37,6 +37,17 @@ class CellView {
   onMessage(e) {
   }
 
+  getValues() {
+    if (!this.config.getValues) { return; }
+    var url = this.config.getValues.url;
+    if (!url) { return; }
+    var self = this;
+    var data = this.app.request(url).done(function(resp){
+      self.$element.html(resp);
+      console.log('Data is ', resp);
+    });
+  }
+
   togglesRoom() {
     return this.config.togglesRoom;
   }

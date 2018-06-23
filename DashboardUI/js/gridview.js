@@ -30,6 +30,10 @@ class GridView {
     this.$element.width((square + 2) * this.cols);
   }
 
+  getValues() {
+    this.allCells().forEach(c => c.getValues());
+  }
+
   updateZones(onoff) {
     // could optimize in the future
     this.allCells().forEach(c => {

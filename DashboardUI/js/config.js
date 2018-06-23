@@ -287,6 +287,17 @@ var config = {
       onPress: {action: 'Music.Preset', args: ['all-tv']},
     },
 
+  
+    { w:2, h:1, 
+      y:3, x:9,
+      // TODO: use same claz:state-* thing that the banner uses
+      getValues: {
+        url: 'http://localhost:3000/temp',
+      }
+    },
+    {y:3, x:10, w:0},
+    {y:3, x:11, w:0},
+
     ////
     // Pandora ThumbsUp/ThumbsDown
     //
@@ -322,5 +333,6 @@ var config = {
   ],
   poll: [
     {action: 'Music.FetchState', args: [], period: 750},
+    {action: 'GetValues', args: [], period: 5000},
   ]
 };

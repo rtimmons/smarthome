@@ -158,6 +158,10 @@ class App {
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
 
+    case 'GetValues':
+      this.grid.getValues();
+      break;
+
     case 'Music.ToggleRoom':
         if (evt.Cell.isActive()) {
           this.musicController.leaveRoom(params[0]);
