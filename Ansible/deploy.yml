@@ -1,7 +1,8 @@
 - name: apply roles
   hosts: post_init
   roles:
-  - { name: smarthome }
+   # - { name: repo }
+   - { name: smarthome }
 
   pre_tasks:
   - name: import secret vars
