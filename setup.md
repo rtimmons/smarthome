@@ -10,7 +10,7 @@ Goal is for the rpi to be [cattle not a pet](https://www.theregister.co.uk/2013/
 You will need 
 
 1. to plug your rpi into your router's ethernet so your computer and the rpi can be on the same network (same subnet I think for the `.local` thing to work).
-2. You also cannot have any existing hosts with the `raspberrypi.local` hostname since this whole process assumes that this is the hostname for the machine it's going to provision.
+2. You also cannot have any existing hosts with the `raspberrypi.local` hostname since this whole process assumes that this is the hostname for the machine it's going to provision. The first step will change the hostname to whatever you want though so you can have multiple rpis on your network if they all have distinct hostnames.
 3. The setup isn't in any way "offline" - your rpi will need to connect to the internet to download dependencies. I tried without luck to get the apt packages it needs pre-burned onto the SD card, but my linux-foo isn't up to par.
 4. I've written/tested/designed to have this work from a mac. There's nothing inherently mac-specific here, though. Replace `brew` with whatever you use to install things and I think that's it. (Oh and whatever it takes to mount SD cards...I assume you can mount an sd card at `/Volumes/boot` which is what the mac's default behavior is here)
 
