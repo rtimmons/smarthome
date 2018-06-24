@@ -4,6 +4,9 @@ var express = require('express');
 var request = require('request');
 var cors = require('cors')
 
+const NodeCache = require( "node-cache" );
+
+const cache = new NodeCache({ stdTTL: 60, checkperiod: 120 });
 var app = express();
 
 // https://scotch.io/tutorials/use-expressjs-to-get-url-and-post-parameters
@@ -28,7 +31,6 @@ var pretty = `<html><body><pre>${JSON.stringify(redirs, null, 2)}</pre></body></
 
 app.get('/b/:to', function(req, res){
   var url = redirs[req.params.to];
-  console.log(url);
   req.pipe(request(url)).pipe(res);
 });
 
@@ -42,9 +44,22 @@ app.get('/journal', function(req, res){
   res.redirect(301, `http://${host}:19531/browse`);
 });
 
-app.get('/temp', function(req, res){
-  var temp = Math.floor(Math.random() * 30) + 90
-  res.status(200).send(new String(temp));
+app.get('/temp', function(areq, ares){
+  var url = "http://grovepi2.local/GrovePi/cgi-bin/temp.py";
+  var temp = cache.get( "temp" ); // way to do this as .get(k, () => 7) => 7 if not found?
+  if ( temp == undefined ){
+    request(url, (err, res, body) => {
+      body = body.trim();
+      console.log("Refreshing temp value to ", body);
+      cache.set("temp", body);
+      ares.write(body);
+      ares.end();
+      return;
+    });
+  } else {
+    ares.write(temp);
+    ares.end();
+  }
 })
 
 app.get('/', function(req, res){
