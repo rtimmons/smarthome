@@ -15,24 +15,14 @@ class App {
       requester: this,
       root: 'http://' + this.secret.host.hostname + ':5005',
       app: this,
+      pubsub: this.pubsub,
     });
 
     // TODO: move to pubsub class
-    this.subscribe({onMessage: e => {
+    this.pubsub.subscribe('*', {onMessage: e => {
       this.eachCell(c => c.onMessage(e));
       this.musicController.onMessage(e);
-    }})
-  }
-
-  // TODO: move to pubsub class
-  submit(event) {
-    event.app = this;
-    this.pubsub.submit('*', event);
-  }
-
-  // TODO: move to pubsub class
-  subscribe(listener) {
-    this.pubsub.subscribe('*', listener);
+    }});
   }
 
   // TODO: move to config class
@@ -49,15 +39,14 @@ class App {
   run() {
     this.grid.init($(this.window), this);
 
+    this.pubsub.setGlobal('App', this);
+    this.pubsub.submit('App.Initialized', {});
+
     // TODO: instead perioically send messages
     // TODO: move to config class
     this.config.poll.forEach(p => {
       var f = () => this.onAction(p.action, p.args)
       setInterval(f, p.period);
-    });
-
-    this.submit({
-      Name: 'App.Initialized'
     });
   }
 
@@ -111,8 +100,7 @@ class App {
   changeRoom(toRoom) {
     var oldRoom = this.room;
     this.room = toRoom;
-    this.submit({
-      Name:     'Room.Changed',
+    this.pubsub.submit('Room.Changed', {
       FromRoom: oldRoom,
       ToRoom:   toRoom
     });
@@ -177,7 +165,7 @@ class App {
 
     // TODO: move to Music.* listeners to MusicController
     case 'Music.ToggleRoom':
-        if (evt.Cell.isActive()) {
+        if (evt.Event.Cell.isActive()) {
           this.musicController.leaveRoom(params[0]);
         }
         else {

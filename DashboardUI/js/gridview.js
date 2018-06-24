@@ -4,6 +4,7 @@ class GridView {
     var config = args.config;
     this.config = config;
 
+    this.pubsub = args.pubsub;
     this.cells = [];
     this.cols = config.cols;
     this.rows = config.rows;
@@ -84,6 +85,7 @@ class GridView {
       var cell = new CellView({
         grid: grid,
         app: this.app,
+        pubsub: this.pubsub,
         $element: this._createElement(b),
         config: b,
       });

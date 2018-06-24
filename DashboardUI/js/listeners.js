@@ -1,14 +1,9 @@
-// TODO: get rid of e.Name checks and just subscribe to the topics by name
-
 class ActiveCells {
   onMessage(e) {
-    if (e.Name != 'Room.Changed') {
-      return;
-    }
-
-    e.app.eachCell(cell => {
+    // TODO: move to onMessage for each cell
+    e.Globals.App.eachCell(cell => {
       cell.setActive(
-        cell.isActiveForRoom(e.ToRoom)
+        cell.isActiveForRoom(e.Event.ToRoom)
       );
     });
   }
@@ -16,46 +11,40 @@ class ActiveCells {
 
 class FetchStateOnRoomChange {
   onMessage(e) {
-    if (e.Name != 'Room.Changed') {
-      return;
-    }
-    e.app.fetchState();
+    // TODO: move to App
+    e.Globals.App.fetchState();
   }
 }
 
 class RoomSaver {
   onMessage(e) {
-
-    if (e.Name == 'App.Initialized') {
+    if (e.Topic == 'App.Initialized') {
       var room = window.cookies.get('Room') || 'Kitchen';
-      e.app.changeRoom(room);
+      e.Globals.App.changeRoom(room);
     }
 
-    if (e.Name != 'Room.Changed') {
+    if (e.Topic != 'Room.Changed') {
       return;
     }
 
-    window.cookies.set('Room', e.ToRoom);
+    window.cookies.set('Room', e.Event.ToRoom);
   }
 }
 
 class BackgroundChanger {
   onMessage(e) {
-    if (e.Name != 'Room.StateObserved') {
-      return;
-    }
-
-    var track = e.State.currentTrack;
+    var track = e.Event.State.currentTrack;
 
     var artUrl = track.absoluteAlbumArtUri || track.albumArtUri;
-    e.app.setBackgroundImage(artUrl);
+    e.Globals.App.setBackgroundImage(artUrl);
 
     var title = track.title;
-    e.app.setBanner(title);
+    e.Globals.App.setBanner(title);
   }
 }
 
 class ZoneUpdater {
+  // TODO: move to MusicController
   simplify(zones) {
     return zones.map(zone => {
       return {
@@ -65,44 +54,35 @@ class ZoneUpdater {
   }
 
   onMessage(e) {
-    if (e.Name != 'Room.ZonesObserved') {
-      return;
-    }
-    var zones = this.simplify(e.Zones);
-    e.app.updateZones(zones);
+    var zones = this.simplify(e.Event.Zones);
+    e.Globals.App.updateZones(zones);
   }
 }
 
 class GenericOnPress {
+  // TODO: move to Cell
   onMessage(e) {
-    if (e.Name != 'Cell.Press') {
-      return;
-    }
-
-    var onPress = e.Cell.config.onPress;
+    var onPress = e.Event.Cell.config.onPress;
     if (!onPress) {
       return;
     }
 
     var action = onPress.action;
     var args   = onPress.args;
-    e.app.onAction(action, args, e);
+    e.Globals.App.onAction(action, args, e);
   }
 }
 
 class GenericOnDoublePress {
+  // TODO: move to Cell
   onMessage(e) {
-    if (e.Name != 'Cell.DoublePress') {
-      return;
-    }
-
-    var onPress = e.Cell.config.onDoublePress;
+    var onPress = e.Event.Cell.config.onDoublePress;
     if (!onPress) {
       return;
     }
 
     var action = onPress.action;
     var args   = onPress.args;
-    e.app.onAction(action, args, e);
+    e.Globals.App.onAction(action, args, e);
   }
 }

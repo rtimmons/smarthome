@@ -24,13 +24,13 @@ $(() => {
     secret:    secret,
   });
 
-  app.subscribe(new BackgroundChanger());
-  app.subscribe(new ActiveCells());
-  app.subscribe(new GenericOnPress());
-  app.subscribe(new GenericOnDoublePress());
-  app.subscribe(new FetchStateOnRoomChange());
-  app.subscribe(new ZoneUpdater());
-  app.subscribe(new RoomSaver());
+  pubsub.subscribe('Room.StateObserved',  new BackgroundChanger());
+  pubsub.subscribe('Room.Changed',        new ActiveCells());
+  pubsub.subscribe('Cell.Press',          new GenericOnPress());
+  pubsub.subscribe('Cell.DoublePress',    new GenericOnDoublePress());
+  pubsub.subscribe('Room.Changed',        new FetchStateOnRoomChange());
+  pubsub.subscribe('Room.ZonesObserved',  new ZoneUpdater());
+  pubsub.subscribe(['App.Initialized', 'Room.Changed'], new RoomSaver());
 
   app.run()
 

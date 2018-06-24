@@ -33,13 +33,12 @@ class PubSub {
       listeners.concat(this.topics['*']);
     }
     for(let k in listeners) {
-      let toSubmit = event;
       let listener = listeners[k];
-      // var toSubmit = {
-      //   Topic: topic,
-      //   Event: event,
-      //   Globals: this.globals,
-      // };
+      var toSubmit = {
+        Topic: topic,
+        Event: event,
+        Globals: this.globals,
+      };
       setTimeout(function(){
         listener.onMessage(toSubmit);
       }, 0); 

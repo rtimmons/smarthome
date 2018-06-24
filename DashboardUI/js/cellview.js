@@ -6,6 +6,7 @@ class CellView {
     this.config = args.config;
     this.app = args.app;
     this.active = false;
+    this.pubsub = args.pubsub;
 
     // console.log('args', args);
 
@@ -30,9 +31,9 @@ class CellView {
     });
 
     var app = this.app;
-    $element.on('click',     () => app.submit({Name: 'Cell.Press',       Cell: this }));
-    $element.on('dblclick',  () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
-    $element.on('doubletap', () => app.submit({Name: 'Cell.DoublePress', Cell: this }));
+    $element.on('click',     () => this.pubsub.submit('Cell.Press',       {Cell: this}));
+    $element.on('dblclick',  () => this.pubsub.submit('Cell.DoublePress', {Cell: this}));
+    $element.on('doubletap', () => this.pubsub.submit('Cell.DoublePress', {Cell: this}));
   }
 
   setContent(c) {

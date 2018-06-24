@@ -3,6 +3,7 @@ class MusicController {
     this.requester = args.requester;
     this.root = args.root;
     this.app = args.app;
+    this.pubsub = args.pubsub;
   }
 
   request() {
@@ -38,15 +39,13 @@ class MusicController {
 
   fetchState() {
     this.request('$room', 'state').done(resp => {
-      this.app.submit({
-        Name: 'Room.StateObserved',
+      this.pubsub.submit('Room.StateObserved', {
         State: resp,
       });
     });
 
     this.request('zones').done(resp => {
-      this.app.submit({
-        Name: 'Room.ZonesObserved',
+      this.pubsub.submit('Room.ZonesObserved', {
         Zones: resp,
       })
     });
