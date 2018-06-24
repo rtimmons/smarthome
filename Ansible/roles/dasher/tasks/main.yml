@@ -16,6 +16,8 @@
       version: ef9d486996ea4eb196ca20098748f8504f2a807f
 
 - name: Install dasher node.js package
+  retries: 5
+  delay: 5
   shell: npm install --no-save
   args:
     chdir: /home/pi/dasher
