@@ -49,6 +49,13 @@ app.get('/temp', function(areq, ares){
   var temp = cache.get( "temp" ); // way to do this as .get(k, () => 7) => 7 if not found?
   if ( temp == undefined ){
     request(url, (err, res, body) => {
+      if (err) {
+        console.log("Error fetching temp", err);
+        cache.set("temp", "0");
+        ares.write("0");
+        ares.end();
+        return;
+      }
       body = body.trim();
       console.log("Refreshing temp value to ", body);
       cache.set("temp", body);
