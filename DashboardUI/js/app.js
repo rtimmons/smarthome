@@ -72,10 +72,10 @@ class App {
       return;
     }
     if(url) {
-      $('body').css({backgroundImage: 'url("' + url + '")'});
+      $('#grid-container').css({backgroundImage: 'url("' + url + '")'});
     }
     else {
-      $('body').css({backgroundImage: ''});
+      $('#grid-container').css({backgroundImage: ''});
     }
     this.backgroundImage = url;
   }
