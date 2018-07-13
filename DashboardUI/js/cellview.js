@@ -48,7 +48,7 @@ class CellView {
     var url = this.config.getValues.url;
     if (!url) { return; }
     var self = this;
-    var data = this.app.request(url).done(function(resp){
+    var data = this.app.request({url: url, dataType:'text'}).done(function(resp){
       self.setContent(resp);
     });
   }

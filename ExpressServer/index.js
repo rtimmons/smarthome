@@ -47,6 +47,7 @@ app.get('/journal', function(req, res){
 app.get('/temp', function(areq, ares){
   var url = "http://grovepi.local/GrovePi/cgi-bin/temp.py";
   var temp = cache.get( "temp" ); // way to do this as .get(k, () => 7) => 7 if not found?
+  ares.set('Content-Type', "text/plain");
   if ( temp == undefined ){
     request(url, (err, res, body) => {
       if (err) {
