@@ -49,7 +49,7 @@ body {
     overflow: hidden;
 }
 .cell div.scroll {
-    animation: marq 7s cubic-bezier(0.1, 0.7, 1.0, 0.1) infinite;
+    animation: marq 5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
 }
 @keyframes marq {
     0%   { transform: translateX(100%);  }
