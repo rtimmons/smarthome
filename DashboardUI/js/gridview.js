@@ -16,13 +16,13 @@ class GridView {
   }
 
   onResize(width, height) {
-    var square = Math.min(width/this.cols, height/this.rows);
+    var square = Math.min(Math.ceil(width/this.cols), Math.ceil(height/this.rows));
     this.square = square;
     $('.cell').each(function() {
       var t =$(this);
       var width = ((t.attr('colspan') || 1) * square) + 'px';
       t.css({
-        height: ((t.attr('rowspan') || 1) * square) + 'px',
+        height: (((t.attr('rowspan') || 1) * square) + 0) + 'px',
         width:  width,
         maxWidth: width,
         fontSize: (square * 2 / 3) + 'px',

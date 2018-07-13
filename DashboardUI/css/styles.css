@@ -1,12 +1,9 @@
 body {
     font-family: Monoid, monospace;
+    /* no scrolling */
+    overflow-y: hide;
+    box-sizing: content-box;
 }
-
-.cell.active {
-    /* TODO bring back current-room state */
-    background-color: #73C6B6;
-}
-
 
 .cell {
     margin: 0;
@@ -21,8 +18,16 @@ body {
     color: #aaa;
 }
 
+.cell.active {
+    /* TODO bring back current-room state */
+    background-color: rgba(115,198,182, 0.7);
+}
+.cell.active:hover {
+    background-color: rgba(136,151,165, 0.7);
+}
+
 .cell:hover {
-    background-color: #566573;
+    background-color: rgba(86,101,115, 0.7);
 }
 
 #grid-container {
