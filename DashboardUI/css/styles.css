@@ -1,5 +1,7 @@
 body {
     font-family: Monoid, monospace;
+    background-color: rgb(40,55,71);
+
     /* no scrolling */
     overflow-y: hide;
     box-sizing: content-box;
@@ -22,12 +24,10 @@ body {
     /* TODO bring back current-room state */
     background-color: rgba(115,198,182, 0.7);
 }
-.cell.active:hover {
-    background-color: rgba(136,151,165, 0.7);
-}
 
 .cell:hover {
-    background-color: rgba(86,101,115, 0.7);
+    border: 0.5px solid rgba(115,198,182, 0.7);
+/*    background-color: rgba(86,101,115, 0.7);*/
 }
 
 #grid-container {
@@ -50,7 +50,11 @@ body {
 }
 .cell div.scroll {
     animation: marq 5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+    /*
+    font-family: Futura;
+    */
 }
+
 @keyframes marq {
     0%   { transform: translateX(100%);  }
     100% { transform: translateX(-100%); }
