@@ -19,8 +19,8 @@ app.use(cors());
 ////////////////////////////////////////////////////////////////////
 
 var redirs = {
-  '1up':    'http://smarterhome.local:5005/Bedroom/volume/+2',
-  '1down':  'http://smarterhome.local:5005/Bedroom/volume/-2',
+  '1up':    'http://smarterhome.local:5005/Bedroom/groupVolume/+1',
+  '1down':  'http://smarterhome.local:5005/Bedroom/groupVolume/-1',
   '1left':  'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
   '1right': 'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
 };
