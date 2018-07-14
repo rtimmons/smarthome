@@ -19,10 +19,13 @@ app.use(cors());
 ////////////////////////////////////////////////////////////////////
 
 var redirs = {
+  // 1 is up
   '1up':    'http://smarterhome.local:5005/Bedroom/groupVolume/+1',
   '1down':  'http://smarterhome.local:5005/Bedroom/groupVolume/-1',
   '1left':  'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
   '1right': 'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
+  // 2 is right
+  '2right': 'http://smarterhome.local:5005/Bedroom/next',
 };
 
 var pretty = `<html><body><pre>${JSON.stringify(redirs, null, 2)}</pre></body></html>`;
