@@ -3,7 +3,8 @@
 var express = require('express');
 
 var Promise = require('promise');
-var request = Promise.denodeify(require('request'));
+var request = require('request');
+var requestDenoded = Promise.denodeify(require('request'));
 var cors = require('cors')
 var Cache = require('./cache.js');
 
@@ -53,7 +54,7 @@ app.get('/temp', function(areq, ares){
   var url = "http://grovepi.local/GrovePi/cgi-bin/temp.py";
   ares.set('Content-Type', "text/plain");
   return cache
-  .get('temp', request(url))
+  .get('temp', requestDenoded(url))
   .then(res => Promise.resolve(res.body.trim()))
   .catch(err => {
     console.log("Error fetching temp", err);
