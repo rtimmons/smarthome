@@ -56,6 +56,10 @@ app.get('/temp', function(areq, ares){
   return cache
   .get('temp', requestDenoded(url))
   .then(res => Promise.resolve(res.body.trim()))
+  .then(res => {
+    var i = parseInt(res);
+    return Promise.resolve(Number.isNaN(i) ? 0 : i);
+  })
   .catch(err => {
     console.log("Error fetching temp", err);
     return Promise.resolve(0);
