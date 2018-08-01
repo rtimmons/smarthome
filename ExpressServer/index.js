@@ -38,6 +38,50 @@ app.get('/b/:to', function(req, res){
   req.pipe(request(url)).pipe(res);
 });
 
+
+app.get('/down', function(areq, ares){
+  var host = areq.headers.host.replace(/:\d+$/,''); // remove port
+  ares.set('Content-Type', "application/json");
+  requestDenoded('http://smarterhome.local:5005/state')
+    .then(res => {
+      var j = JSON.parse(res.body);
+      return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
+    })
+    .then(state => {
+      var url = `http://${host}:5005/` + (
+        (state.playbackState == 'PLAYING' && state.volume <= 2) ?
+          'pause' : 'groupVolume/-1');
+      console.log(url);
+      return requestDenoded(url);
+    })
+    .then(res => ares.send(res.body))
+    .catch(err => {
+      console.error(error);
+    });
+});
+
+// probably refactor /up and /down; they're copy/pasta
+app.get('/up', function(areq, ares){
+  var host = areq.headers.host.replace(/:\d+$/,''); // remove port
+  ares.set('Content-Type', "application/json");
+  requestDenoded('http://smarterhome.local:5005/state')
+    .then(res => {
+      var j = JSON.parse(res.body);
+      return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
+    })
+    .then(state => {
+      var url = `http://${host}:5005/` + (
+        (state.playbackState == 'PAUSED_PLAYBACK') ?
+          'play' : 'groupVolume/+1');
+      console.log(url);
+      return requestDenoded(url);
+    })
+    .then(res => ares.send(res.body))
+    .catch(err => {
+      console.error(error);
+    });
+});
+
 app.post('/report', function(req, res){
   console.log('REPORT', req.body);
   res.send('OK');
