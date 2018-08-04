@@ -63,15 +63,15 @@ app.get('/b/:to', function(req, res){
 
 app.get('/down', function(areq, ares){
   ares.set('Content-Type', "application/json");
-  requestDenoded(`${sonosUrl}/state`)
+  requestDenoded(`${sonosUrl}/Bedroom/state`)
     .then(res => {
       var j = JSON.parse(res.body);
       return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
     })
     .then(state => {
       var url = sonosUrl + (
-        (state.playbackState == 'PLAYING' && state.volume <= 2) ?
-          '/pause' : '/groupVolume/-1');
+        (state.playbackState == 'PLAYING' && state.volume <= 3) ?
+          '/Bedroom/pause' : '/Bedroom/groupVolume/-1');
       console.log(url);
       return requestDenoded(url);
     })
@@ -84,7 +84,7 @@ app.get('/down', function(areq, ares){
 // probably refactor /up and /down; they're copy/pasta
 app.get('/up', function(areq, ares){
   ares.set('Content-Type', "application/json");
-  requestDenoded(`${sonosUrl}/state`)
+  requestDenoded(`${sonosUrl}/Bedroom/state`)
     .then(res => {
       var j = JSON.parse(res.body);
       return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
@@ -92,7 +92,7 @@ app.get('/up', function(areq, ares){
     .then(state => {
       var url = sonosUrl + (
         (state.playbackState == 'PAUSED_PLAYBACK') ?
-          '/play' : '/groupVolume/+1');
+          '/Bedroom/play' : '/Bedroom/groupVolume/+1');
       console.log(url);
       return requestDenoded(url);
     })
