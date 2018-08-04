@@ -1,23 +1,44 @@
-;process.title = "smhexprsrv" // name can't be much longer; matches with stop in package.json
+// Simple API for things that are hard or can't be implemented
+// within the font-end.
 
-var express = require('express');
+// name can't be much longer; matches with stop in package.json
+;process.title = "smhexprsrv" 
 
-var Promise = require('promise');
-var request = require('request');
-var requestDenoded = Promise.denodeify(require('request'));
-var cors = require('cors')
-var Cache = require('./cache.js');
+///////////////////////////////////////////////////////////////////
+// Requires
+
+const bodyParser     = require('body-parser');
+const cors           = require('cors')
+const express        = require('express');
+const Promise        = require('promise');
+const request        = require('request');
+const requestDenoded = Promise.denodeify(require('request'));
+
+const Cache          = require('./cache.js');
+
+///////////////////////////////////////////////////////////////////
+// build app
 
 var app = express();
 
-// https://scotch.io/tutorials/use-expressjs-to-get-url-and-post-parameters
-var bodyParser = require('body-parser');
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+// support json encoded bodies
+app.use(bodyParser.json());
+
+// support encoded bodies
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
 
+///////////////////////////////////////////////////////////////////
+// helpers
+
+// removes port
+const host = (req) => req.headers.host.replace(/:\d+$/,'');
+
+var cache = new Cache();
+
 ////////////////////////////////////////////////////////////////////
+// configs
 
 var redirs = {
   // 1 is up
@@ -32,6 +53,7 @@ var redirs = {
 var pretty = `<html><body><pre>${JSON.stringify(redirs, null, 2)}</pre></body></html>`;
 
 ////////////////////////////////////////////////////////////////
+// routes
 
 app.get('/b/:to', function(req, res){
   var url = redirs[req.params.to];
@@ -40,7 +62,6 @@ app.get('/b/:to', function(req, res){
 
 
 app.get('/down', function(areq, ares){
-  var host = areq.headers.host.replace(/:\d+$/,''); // remove port
   ares.set('Content-Type', "application/json");
   requestDenoded('http://smarterhome.local:5005/state')
     .then(res => {
@@ -48,7 +69,7 @@ app.get('/down', function(areq, ares){
       return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
     })
     .then(state => {
-      var url = `http://${host}:5005/` + (
+      var url = `http://${host(areq)}:5005/` + (
         (state.playbackState == 'PLAYING' && state.volume <= 2) ?
           'pause' : 'groupVolume/-1');
       console.log(url);
@@ -62,7 +83,6 @@ app.get('/down', function(areq, ares){
 
 // probably refactor /up and /down; they're copy/pasta
 app.get('/up', function(areq, ares){
-  var host = areq.headers.host.replace(/:\d+$/,''); // remove port
   ares.set('Content-Type', "application/json");
   requestDenoded('http://smarterhome.local:5005/state')
     .then(res => {
@@ -70,7 +90,7 @@ app.get('/up', function(areq, ares){
       return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
     })
     .then(state => {
-      var url = `http://${host}:5005/` + (
+      var url = `http://${host(areq)}:5005/` + (
         (state.playbackState == 'PAUSED_PLAYBACK') ?
           'play' : 'groupVolume/+1');
       console.log(url);
@@ -88,11 +108,9 @@ app.post('/report', function(req, res){
 });
 
 app.get('/journal', function(req, res){
-  var host = req.headers.host.replace(/:\d+$/,''); // remove port
-  res.redirect(301, `http://${host}:19531/browse`);
+  res.redirect(301, `http://${host(req)}:19531/browse`);
 });
 
-var cache = new Cache();
 
 app.get('/temp', function(areq, ares){
   var url = "http://grovepi.local/GrovePi/cgi-bin/temp.py";
@@ -119,5 +137,6 @@ app.get('/', function(req, res){
 });
 
 /////////////////////////////////////////////////////////////////////
+// actually run the thing
 
 app.listen(3000, () => console.log('Listening on port 3000!'));
