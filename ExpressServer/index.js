@@ -44,8 +44,8 @@ const sonosUrl = 'http://smarterhome.local:5005';
 
 var redirs = {
   // 1 is up
-  '1up':    (req, res) => `${sonosUrl}/Bedroom/groupVolume/+1`,
-  '1down':  (req, res) => `${sonosUrl}/Bedroom/groupVolume/-1`,
+  '1up':    (req, res) => `http://${req.headers.host}/up`,
+  '1down':  (req, res) => `http://${req.headers.host}/down`,
   '1left':  (req, res) => `${sonosUrl}/Bedroom/favorite/Play%20NPR%20One`,
   '1right': (req, res) => `${sonosUrl}/Bedroom/favorite/Zero%207%20Radio`,
   // 2 is right
