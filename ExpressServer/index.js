@@ -37,41 +37,41 @@ const host = (req) => req.headers.host.replace(/:\d+$/,'');
 
 var cache = new Cache();
 
+const sonosUrl = 'http://smarterhome.local:5005';
+
 ////////////////////////////////////////////////////////////////////
 // configs
 
 var redirs = {
   // 1 is up
-  '1up':    'http://smarterhome.local:5005/Bedroom/groupVolume/+1',
-  '1down':  'http://smarterhome.local:5005/Bedroom/groupVolume/-1',
-  '1left':  'http://smarterhome.local:5005/Bedroom/favorite/Play%20NPR%20One',
-  '1right': 'http://smarterhome.local:5005/Bedroom/favorite/Zero%207%20Radio',
+  '1up':    (req, res) => `${sonosUrl}/Bedroom/groupVolume/+1`,
+  '1down':  (req, res) => `${sonosUrl}/Bedroom/groupVolume/-1`,
+  '1left':  (req, res) => `${sonosUrl}/Bedroom/favorite/Play%20NPR%20One`,
+  '1right': (req, res) => `${sonosUrl}/Bedroom/favorite/Zero%207%20Radio`,
   // 2 is right
-  '2right': 'http://smarterhome.local:5005/Bedroom/next',
+  '2right': (req, res) => `${sonosUrl}/Bedroom/next`,
 };
-
-var pretty = `<html><body><pre>${JSON.stringify(redirs, null, 2)}</pre></body></html>`;
 
 ////////////////////////////////////////////////////////////////
 // routes
 
 app.get('/b/:to', function(req, res){
-  var url = redirs[req.params.to];
+  var url = redirs[req.params.to](req, res);
   req.pipe(request(url)).pipe(res);
 });
 
 
 app.get('/down', function(areq, ares){
   ares.set('Content-Type', "application/json");
-  requestDenoded('http://smarterhome.local:5005/state')
+  requestDenoded(`${sonosUrl}/state`)
     .then(res => {
       var j = JSON.parse(res.body);
       return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
     })
     .then(state => {
-      var url = `http://${host(areq)}:5005/` + (
+      var url = sonosUrl + (
         (state.playbackState == 'PLAYING' && state.volume <= 2) ?
-          'pause' : 'groupVolume/-1');
+          '/pause' : '/groupVolume/-1');
       console.log(url);
       return requestDenoded(url);
     })
@@ -84,15 +84,15 @@ app.get('/down', function(areq, ares){
 // probably refactor /up and /down; they're copy/pasta
 app.get('/up', function(areq, ares){
   ares.set('Content-Type', "application/json");
-  requestDenoded('http://smarterhome.local:5005/state')
+  requestDenoded(`${sonosUrl}/state`)
     .then(res => {
       var j = JSON.parse(res.body);
       return Promise.resolve({volume: j.volume, playbackState: j.playbackState});
     })
     .then(state => {
-      var url = `http://${host(areq)}:5005/` + (
+      var url = sonosUrl + (
         (state.playbackState == 'PAUSED_PLAYBACK') ?
-          'play' : 'groupVolume/+1');
+          '/play' : '/groupVolume/+1');
       console.log(url);
       return requestDenoded(url);
     })
@@ -133,7 +133,8 @@ app.get('/temp', function(areq, ares){
 })
 
 app.get('/', function(req, res){
-  res.send(pretty);
+  res.set('Content-Type', "application/json");
+  res.send('{}');
 });
 
 /////////////////////////////////////////////////////////////////////
