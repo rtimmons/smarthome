@@ -7,6 +7,17 @@ body {
     box-sizing: content-box;
 }
 
+body.dark-0     { }
+body.dark-1     { }
+body.dark-2     { }
+body.dark-3     { }
+body.dark-4     { }
+body.dark-5     { }
+body.dark-6     { }
+body.dark-7     { }
+body.dark-8     { }
+body.dark-9     { filter: sepia(0.8) brightness(0.5); }
+
 .cell {
     margin: 0;
     padding: 0;

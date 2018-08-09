@@ -24,6 +24,7 @@ $(() => {
     secret:    secret,
   });
 
+  pubsub.subscribe('*', new ChangeBodyClassOnTime());
   pubsub.subscribe('Room.StateObserved',  new BackgroundChanger());
   pubsub.subscribe('Room.Changed',        new ActiveCells());
   pubsub.subscribe('Cell.Press',          new GenericOnPress());

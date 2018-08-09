@@ -9,6 +9,17 @@ class ActiveCells {
   }
 }
 
+class ChangeBodyClassOnTime {
+  onMessage(e) {
+    var hour = new Date().getHours();
+    var body = $('body');
+    for (var i=0; i<10; ++i) {
+      body.removeClass('dark-'+i);
+    }
+    body.addClass('dark-' + (hour % 10));
+  }
+}
+
 class FetchStateOnRoomChange {
   onMessage(e) {
     // TODO: move to App
