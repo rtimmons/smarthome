@@ -16,6 +16,8 @@ const requestDenoded = Promise.denodeify(require('request'));
 
 const Cache = require('./cache.js');
 
+const roomsApi = require('./api/rooms.js');
+
 // /////////////////////////////////////////////////////////////////
 // build app
 
@@ -165,6 +167,8 @@ app.get('/', (req, res) => {
   res.set('Content-Type', 'application/json');
   res.send('{}');
 });
+
+app.use(roomsApi);
 
 // ///////////////////////////////////////////////////////////////////
 // actually run the thing

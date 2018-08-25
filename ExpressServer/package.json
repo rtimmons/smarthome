@@ -6,8 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "stop": "pkill smhexprsrv",
-    "dev": "supervisor -p 200 -RV --debug -x npm start",
-    "rooms-dev": "supervisor -p 200 -RV -x node api/rooms.js"
+    "dev": "supervisor -p 200 -RV --debug -x npm start"
   },
   "author": "",
   "license": "ISC",

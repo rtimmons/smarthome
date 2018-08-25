@@ -34,13 +34,14 @@ function asRooms(room, zones) {
 
 const sonos = new Sonos('http://smarterhome.local:5005');
 
-app.get('/rooms/:room/state.json', async (areq, ares) => {
+app.get('/rooms/:room/state.json', async (areq, ares, next) => {
   const { room } = areq.params;
   const zones = await sonos.get('zones');
   const rooms = asRooms(room, zones);
   const ownRoom = rooms.filter(r => r.roomName === room)[0];
   const others = rooms.filter(r => r.roomName !== room);
   ares.send({ state: ownRoom, others });
+  next();
 });
 
 // app.get('/rooms/:room/alljoin', async (areq, ares) => {
@@ -52,10 +53,11 @@ app.get('/rooms/:room/state.json', async (areq, ares) => {
 // });
 
 // passthru raw sonos requests
-app.get(/sonos\/(.+)$/, async (areq, ares) => {
+app.get(/sonos\/(.+)$/, async (areq, ares, next) => {
   const url = sonos.url(areq.params[0]);
   console.log(url);
   areq.pipe(request(url)).pipe(ares);
+  next();
 });
 
-app.listen(3005, () => console.log('Running'));
+module.exports = app;
