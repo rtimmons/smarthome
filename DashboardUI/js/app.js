@@ -108,10 +108,11 @@ class App {
 
   // TODO: move to request class?
   request(url) {
-    return $.ajax({
+    var params = typeof url === 'object' ? url : {
       url: url,
       error: (xhr, st, err) => console.log(url, err),
-    });
+    };
+    return $.ajax(params);
   }
 
   // TODO: don't call directly/ expose musicController?
