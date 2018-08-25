@@ -108,8 +108,10 @@ class App {
 
   // TODO: move to request class?
   request(url) {
-    return $.ajax(url)
-      .fail(err  => console.error(url, err));
+    return $.ajax({
+      url: url,
+      error: (xhr, st, err) => console.log(url, err),
+    });
   }
 
   // TODO: don't call directly/ expose musicController?
@@ -192,6 +194,9 @@ class App {
       break;
     case 'Music.VolumeDown':
       this.musicController.volumeDown();
+      break;
+    case 'Music.VolumeSame':
+      this.musicController.volumeSame();
       break;
     case 'Music.Next':
       this.musicController.next();

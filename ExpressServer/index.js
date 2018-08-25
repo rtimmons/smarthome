@@ -60,6 +60,39 @@ app.get('/b/:to', function(req, res){
   req.pipe(request(url)).pipe(res);
 });
 
+// make all rooms in same zone as :room have volume == min volume of any room in the zone
+app.get('/same/:room', function(areq, ares){
+  ares.set('Content-Type', "application/json");
+  requestDenoded(`${sonosUrl}/${areq.params.room}/zones`)
+    .then(res => {
+      try {
+        // *should* be easy to make this apply to all zones, but currently
+        // have no use for it.
+        var zone = JSON.parse(res.body)[0];
+        var volumes = zone.members.map(m => {
+          return {roomName: m.roomName, volume: m.state.volume};
+        });
+        var min = Math.min.apply(null, volumes.map( v => v.volume ));
+        var others = volumes.filter(v => v.volume != min);
+        if (others.length === 0) {
+          return Promise.resolve();
+        }
+        return Promise.all.apply(null,
+          others.map(o => requestDenoded(`${sonosUrl}/${o.roomName}/volume/${min}`))
+        );
+      } catch(e) {
+        console.log(e);
+      }
+    })
+    .then(_ => {
+      return Promise.resolve({status:"success"});
+    })
+    .then(res => ares.send(res))
+    .catch(err => {
+      console.error(error);
+      ares.close();
+    });
+});
 
 app.get('/down', function(areq, ares){
   ares.set('Content-Type', "application/json");

@@ -11,6 +11,7 @@ var config = {
       'Pause':    '⏸',
       'Up':       '🔼',
       'Down':     '🔽',
+      'Klingon':  '🖖',
       'Skip':     '⏭',
       'Time15':   '🕘',
       'Time30':   '🕕',
@@ -203,6 +204,11 @@ var config = {
       y:4, x:1,
       emoji: 'Down',
       onPress: {action: 'Music.VolumeDown', args: []},
+    },
+    { w:1, h:1,
+      y:4, x:0,
+      emoji: 'Klingon',
+      onPress: {action: 'Music.VolumeSame', args: []},
     },
 
     ////
