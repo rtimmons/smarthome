@@ -86,7 +86,7 @@ app.get('/same/:room', (areq, ares) => {
     .then(res => ares.send(res))
     .catch((err) => {
       console.error(err);
-      ares.close();
+      ares.end();
     });
 });
 
@@ -105,7 +105,7 @@ app.get('/down', (areq, ares) => {
       return requestDenoded(url);
     })
     .then(res => ares.send(res.body))
-    .then(() => ares.close())
+    .then(() => ares.end())
     .catch((err) => {
       console.error(err);
     });
@@ -115,7 +115,7 @@ app.get('/pause', (areq, ares) => {
   ares.set('Content-Type', 'application/json');
   requestDenoded(`${sonosUrl}/pause`)
     .then(res => ares.send(res.body))
-    .then(() => ares.close())
+    .then(() => ares.end())
     .catch(err => console.log(err))
 });
 
@@ -123,8 +123,16 @@ app.get('/play', (areq, ares) => {
   ares.set('Content-Type', 'application/json');
   requestDenoded(`${sonosUrl}/play`)
     .then(res => ares.send(res.body))
-    .then(() => ares.close())
+    .then(() => ares.end())
     .catch(err => console.log(err))
+});
+
+app.get('/tv', (areq, ares) => {
+  ares.set('Content-Type', 'application/json');
+  requestDenoded(`${sonosUrl}/preset/all-tv`)
+    .then(res => ares.send(res.body))
+    .then(() => ares.end())
+    .catch(err => console.log(err));
 });
 
 // probably refactor /up and /down; they're copy/pasta
