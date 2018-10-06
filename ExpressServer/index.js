@@ -144,6 +144,12 @@ app.get('/journal', (req, res) => {
 
 
 app.get('/temp', (areq, ares) => {
+  ares.set('Content-Type', 'text/plain');
+  ares.write('');
+  ares.end();
+});
+
+app.get('/temp-broken', (areq, ares) => {
   const url = 'http://grovepi.local/GrovePi/cgi-bin/temp.py';
   ares.set('Content-Type', 'text/plain');
   return cache
