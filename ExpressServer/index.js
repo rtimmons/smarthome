@@ -105,9 +105,26 @@ app.get('/down', (areq, ares) => {
       return requestDenoded(url);
     })
     .then(res => ares.send(res.body))
+    .then(() => ares.close())
     .catch((err) => {
       console.error(err);
     });
+});
+
+app.get('/pause', (areq, ares) => {
+  ares.set('Content-Type', 'application/json');
+  requestDenoded(`${sonosUrl}/pause`)
+    .then(res => ares.send(res.body))
+    .then(() => ares.close())
+    .catch(err => console.log(err))
+});
+
+app.get('/play', (areq, ares) => {
+  ares.set('Content-Type', 'application/json');
+  requestDenoded(`${sonosUrl}/play`)
+    .then(res => ares.send(res.body))
+    .then(() => ares.close())
+    .catch(err => console.log(err))
 });
 
 // probably refactor /up and /down; they're copy/pasta
