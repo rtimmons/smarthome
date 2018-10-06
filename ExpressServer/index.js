@@ -52,11 +52,15 @@ const redirs = {
   '2right': () => `${sonosUrl}/Bedroom/next`,
 };
 
+const sonosPipe = function(route, req, res) {
+  const url = `${sonosUrl}/${route}`;
+  console.log(`Requesting ${url}`);
+  return req.pipe(request(url)).pipe(res);
+};
+
 const sonosGet = function(route) {
   return (req, res) => {
-    const url = `${sonosUrl}/${route}`;
-    console.log(`Requesting ${url}`);
-    req.pipe(request(url)).pipe(res);
+    return sonosPipe(route, req, res);
   };
 };
 
@@ -67,6 +71,11 @@ app.get('/pause', sonosGet('pause'));
 app.get('/play',  sonosGet('play'));
 app.get('/tv',    sonosGet('preset/all-tv'));
 app.get('/07',    sonosGet('favorite/Zero 7 Radio'));
+app.get('/quiet', sonosGet('groupVolume/7'));
+
+app.get('/sonos/:rest', (req, res) => {
+  return sonosPipe(req.params.rest, req, res);
+});
 
 app.get('/b/:to', (req, res) => {
   const url = redirs[req.params.to](req, res);
