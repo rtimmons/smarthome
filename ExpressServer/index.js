@@ -52,11 +52,25 @@ const redirs = {
   '2right': () => `${sonosUrl}/Bedroom/next`,
 };
 
+const sonosGet = function(route) {
+  return (req, res) => {
+    const url = `${sonosUrl}/${route}`;
+    console.log(`Requesting ${url}`);
+    req.pipe(request(url)).pipe(res);
+  };
+};
+
 // //////////////////////////////////////////////////////////////
 // routes
 
+app.get('/pause', sonosGet('pause'));
+app.get('/play',  sonosGet('play'));
+app.get('/tv',    sonosGet('preset/all-tv'));
+app.get('/07',    sonosGet('favorite/Zero 7 Radio'));
+
 app.get('/b/:to', (req, res) => {
   const url = redirs[req.params.to](req, res);
+  console.log(`/b/${req.params.to} => ${url}`);
   req.pipe(request(url)).pipe(res);
 });
 
@@ -109,30 +123,6 @@ app.get('/down', (areq, ares) => {
     .catch((err) => {
       console.error(err);
     });
-});
-
-app.get('/pause', (areq, ares) => {
-  ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/pause`)
-    .then(res => ares.send(res.body))
-    .then(() => ares.end())
-    .catch(err => console.log(err))
-});
-
-app.get('/play', (areq, ares) => {
-  ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/play`)
-    .then(res => ares.send(res.body))
-    .then(() => ares.end())
-    .catch(err => console.log(err))
-});
-
-app.get('/tv', (areq, ares) => {
-  ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/preset/all-tv`)
-    .then(res => ares.send(res.body))
-    .then(() => ares.end())
-    .catch(err => console.log(err));
 });
 
 // probably refactor /up and /down; they're copy/pasta
