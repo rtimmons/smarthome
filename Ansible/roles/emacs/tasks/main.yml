@@ -1,0 +1,6 @@
+- name: install emacs
+  become_user: root
+  become: yes
+  apt:
+      name: emacs
+      state: present

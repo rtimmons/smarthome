@@ -1,0 +1,15 @@
+{
+    "zone_dir_pins" : {
+	"earthbox" : 14,
+	"dripline" : 15,
+	"misters" : 9,
+	"tbd" : 11
+    },
+
+    "zone_pulse_pins" : {
+	"earthbox" : 22,
+	"dripline" : 27,
+	"misters" : 10,
+	"tbd" : 17
+    }
+}
