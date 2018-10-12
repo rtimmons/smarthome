@@ -7,4 +7,6 @@ dependencies:
   - { role: print-server }
   - { role: systemd-journal-remote }
   - { role: emacs }
+  - { role: boot-config}
   - { role: grovepi }
+  - { role: projector-control}

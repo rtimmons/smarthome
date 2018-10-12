@@ -1,0 +1,50 @@
+- name: install lirc kernel module
+  modprobe:
+    name: lirc_rpi
+    state: present
+
+- name: install lirc
+  become_user: root
+  become: yes
+  apt:
+      name: lirc
+      state: present
+
+- name: deploy modules configuration
+  become_user: root
+  become: true
+  copy:
+    src: modules
+    dest: /etc/modules
+    owner: root
+    group: root
+    mode: 0644
+
+- name: deploy lirc hardware configuration
+  become_user: root
+  become: true
+  copy:
+    src: hardware.conf
+    dest: /etc/lirc/hardware.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: deploy lirc remotes configuration
+  become_user: root
+  become: true
+  copy:
+    src: remotes.conf
+    dest: /etc/lirc/lircd.conf
+    owner: root
+    group: root
+    mode: 0644
+
+- name: enable lirc service
+  become_user: root
+  become: yes
+  systemd:
+    name: lirc
+    enabled: yes
+    state: restarted
+    masked: no

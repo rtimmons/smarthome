@@ -1,0 +1,9 @@
+- name: enable temperature sensor serial communication & enable lirc communication
+  become_user: root
+  become: true
+  copy:
+    src: bootconfig.txt
+    dest: /boot/config.txt
+    owner: root
+    group: root
+    mode: 0755
