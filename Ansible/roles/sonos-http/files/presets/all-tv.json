@@ -14,5 +14,5 @@
     }
   ],
   "uri": "x-sonos-htastream:RINCON_7828CA5810B401400:spdif",
-  "pauseOthers": false
+  "pauseOthers": true
 }
