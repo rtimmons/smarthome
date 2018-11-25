@@ -1,5 +1,6 @@
 ---
 dependencies:
+  - { role: projector-control}
   - { role: dashboard-ui }
   - { role: dasher }
   - { role: sonos-http }
@@ -9,4 +10,3 @@ dependencies:
   - { role: emacs }
   - { role: boot-config}
   - { role: grovepi }
-  - { role: projector-control}

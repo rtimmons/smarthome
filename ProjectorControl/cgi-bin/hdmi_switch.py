@@ -10,11 +10,13 @@ cgitb.enable()
 
 # Query Params:
 arguments = cgi.FieldStorage()
-state = int(arguments["state"].value)
+input = int(arguments["input"].value)
 
-if state == 0:
-    irsend.send_once('screen', ['KEY_0'])
-if state == 1:
-    irsend.send_once('screen', ['KEY_2'])
+if input == 1:
+    irsend.send_once('hdmi_switch', ['KEY_1'])
+if input == 2:
+    irsend.send_once('hdmi_switch', ['KEY_2'])
+if input == 3:
+    irsend.send_once('hdmi_switch', ['KEY_3'])
 
 print 'Content-Type: application/json;charset=UTF-8\n\n{"success":true}'

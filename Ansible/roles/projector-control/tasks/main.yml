@@ -1,8 +1,3 @@
-- name: install lirc kernel module
-  modprobe:
-    name: lirc_rpi
-    state: present
-
 - name: install lirc
   become_user: root
   become: yes
@@ -40,11 +35,88 @@
     group: root
     mode: 0644
 
+- name: deploy lirc options configuration
+  become_user: root
+  become: true
+  copy:
+    src: lirc_options.conf
+    dest: /etc/lirc/lirc_options.conf
+    owner: root
+    group: root
+    mode: 0644
+
 - name: enable lirc service
   become_user: root
   become: yes
   systemd:
-    name: lirc
+    name: lircd
+    enabled: yes
+    state: restarted
+    masked: no
+
+- name: install lirc kernel module
+  become_user: root
+  become: yes
+  modprobe:
+    name: lirc_rpi
+    state: present
+
+- name: enable cgid
+  become_user: root
+  become: yes
+  #ignore_errors: yes
+  apache2_module:
+    name: cgid
+    state: present
+
+- name: install py_irsend with pip
+  become_user: root
+  become: yes
+  pip:
+      name: py_irsend
+      state: present
+
+- name: install projectorcontrol apache config
+  become_user: root
+  become: true
+  copy:
+    src: 002-projectorcontrol.conf
+    dest: /etc/apache2/sites-available/002-projectorcontrol.conf
+    owner: root
+    group: root
+    mode: 0664
+
+- name: enable projectorcontrol apache config
+  become_user: root
+  become: true
+  command: a2ensite 002-projectorcontrol
+
+- name: setup /ProjectorControl/cgi-bin directory
+  become_user: root
+  become: yes
+  file:
+    path:   /var/www/html/ProjectorControl
+    owner:  root
+    group:  root
+    state:  directory
+    mode: a+wrx
+
+- name: setup /ProjectorControl/cgi-bin
+  become_user: root
+  become: yes
+  file:
+    src:    /home/pi/repo/ProjectorControl/cgi-bin
+    dest:   /var/www/html/ProjectorControl/cgi-bin
+    owner:  root
+    group:  root
+    state:  link
+    mode: a+wrx
+
+- name: enable service httpd and ensure it is not masked
+  become_user: root
+  become: yes
+  systemd:
+    name: apache2
     enabled: yes
     state: restarted
     masked: no
