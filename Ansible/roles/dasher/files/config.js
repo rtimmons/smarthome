@@ -77,5 +77,69 @@
 	"protocol": "arp",
 	"url": "http://localhost:5005/pauseall",
 	"method": "GET"
+    },
+    {
+        "name": "IR Pi Off (Colgate) - Projector Screen",
+     	"address": "00:fc:8b:46:84:fa",
+     	"timeout": "120000",
+     	"protocol": "arp",
+     	"url": "http://raspberrypi.local/ProjectorControl/cgi-bin/projector_move.py?state=0",
+     	"method": "GET"
+    },
+    {
+        "name": "IR Pi Off (Colgate) - Projector",
+        "address": "00:fc:8b:46:84:fa",
+        "timeout": "120000",
+        "protocol": "arp",
+        "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/projector_power.py?state=0",
+        "method": "GET"
+    },
+    {
+        "name": "IR Pi AppleTV (Iams) - Projector Screen",
+        "address": "00:fc:8b:5c:43:40",
+        "timeout": "120000",
+        "protocol": "arp",
+        "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/projector_move.py?state=1",
+        "method": "GET"
+    },
+    {
+         "name": "IR Pi AppleTV (Iams) - Projector",
+         "address": "00:fc:8b:5c:43:40",
+         "timeout": "120000",
+         "protocol": "arp",
+         "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/projector_power.py?state=1",
+         "method": "GET"
+    },
+    {
+          "name": "IR Pi AppleTV (Iams) - HDMI Switch",
+          "address": "00:fc:8b:5c:43:40",
+          "timeout": "120000",
+          "protocol": "arp",
+          "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/hdmi_switch.py?input=2",
+          "method": "GET"
+    },
+    {
+         "name": "IR Pi Switch (Clif) - Projector Screen",
+         "address": "fc:a6:67:25:60:4c",
+         "timeout": "120000",
+         "protocol": "arp",
+         "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/projector_move.py?state=1",
+         "method": "GET"
+    },
+    {
+          "name": "IR Pi Switch (Clif) - Projector",
+          "address": "fc:a6:67:25:60:4c",
+          "timeout": "120000",
+          "protocol": "arp",
+          "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/projector_power.py?state=1",
+          "method": "GET"
+    },
+    {
+           "name": "IR Pi Switch (Clif) - HDMI Switch",
+           "address": "fc:a6:67:25:60:4c",
+           "timeout": "120000",
+           "protocol": "arp",
+           "url": "http://raspberrypi.local/ProjectorControl/cgi-bin/hdmi_switch.py?input=3",
+           "method": "GET"
     }
 ]}
