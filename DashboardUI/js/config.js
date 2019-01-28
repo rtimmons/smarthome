@@ -11,6 +11,7 @@ var config = {
       'Pause':    '⏸',
       'Up':       '🔼',
       'Down':     '🔽',
+      'MilkyWay': '🌌',
       'Klingon':  '🖖',
       'Skip':     '⏭',
       'Time15':   '🕘',
