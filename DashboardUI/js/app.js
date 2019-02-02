@@ -45,7 +45,7 @@ class App {
     // TODO: instead perioically send messages
     // TODO: move to config class
     this.config.poll.forEach(p => {
-      var f = () => this.onAction(p.action, p.args)
+      var f = () => this.onAction(p.action, p.args, {Submitted: new Date()})
       setInterval(f, p.period);
     });
   }
@@ -122,6 +122,12 @@ class App {
 
   // TODO: move to action listeners
   onAction(action, params, evt) {
+
+    // only process events that have happened in the last 500 milliseconds
+    if ((new Date().getTime() - evt.Submitted.getTime()) > 500) {
+      console.log('Event too old ' + evt.Submitted);
+      return;
+    }
     switch(action) {
 
     // TODO: BrowserController

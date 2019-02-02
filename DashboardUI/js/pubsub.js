@@ -38,6 +38,7 @@ class PubSub {
         Topic: topic,
         Event: event,
         Globals: this.globals,
+        Submitted: new Date(),
       };
       setTimeout(function(){
         listener.onMessage(toSubmit);
