@@ -12,6 +12,9 @@ Smarthome Dashboard
   
 ## TODO
 
+- Look into [Nekmo/amazon-dash](https://github.com/Nekmo/amazon-dash) as an
+  alternative to Dasher
+
 - music
 	- "Play all from" join button
 	- Preset music
