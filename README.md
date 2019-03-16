@@ -12,6 +12,9 @@ Smarthome Dashboard
   
 ## TODO
 
+- Look into "Home Assistant" as detailed by holman [here][ha]
+  [ha]: https://stackshare.io/holman/decisions/101735320676191302
+
 - Look into [Nekmo/amazon-dash](https://github.com/Nekmo/amazon-dash) as an
   alternative to Dasher
 
