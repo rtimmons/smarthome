@@ -1,5 +1,18 @@
 # Hue Integration
 
+This is still WIP. Hue's APIs are kinda bulky.
+Still thinking on the best way to organize the
+smarterhome backend for them.
+
+Ideally we'd have a `setup-hue.sh` script
+that you run once and put the output into the
+secret.yml file. Then ExpressServer does some
+wrapping to recall by named scenes configured
+in the Hue app.
+
+
+----------------------------------------
+
 Register for Developer account here:
 https://developers.meethue.com/login/?
 
