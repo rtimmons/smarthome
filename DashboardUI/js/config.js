@@ -38,7 +38,7 @@ var config = {
       'ThumbsUp': '👍🏽',
       'ThumbsDown': '👎🏽',
       'XMasTree': '🎄',
-      'Cher': '💁🏻‍♀️'
+      'Cher': '💁🏻‍♀️',
   },
   rows: 8,
   cols: 11,
