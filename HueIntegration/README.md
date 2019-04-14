@@ -41,7 +41,15 @@ APPID="$(jq --raw-output '.[0].success.username' out-register.json)"
 curl "$BASE/api/$APPID" -o ./out-state.json
 ```
 
-Set a scene:
+List all scenes:
+
+```sh
+BASE="http://192.168.1.11"
+APPID="$(jq --raw-output '.[0].success.username' out-register.json)"
+curl "$BASE/api/$APPID/scenes"
+```
+
+Set a scene (for "group 1" which is our living room):
 
 ```sh
 BASE="http://192.168.1.11"
