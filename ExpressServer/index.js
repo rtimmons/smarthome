@@ -13,7 +13,7 @@ const express = require('express');
 const Promise = require('promise');
 const request = require('request');
 const requestDenoded = Promise.denodeify(require('request'));
-
+const HueManager = require('./hue-manager.js');
 const Cache = require('./cache.js');
 
 // /////////////////////////////////////////////////////////////////
