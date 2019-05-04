@@ -4,14 +4,10 @@ var hue = require("node-hue-api");
 
 const API_CONFIG = {
   // make undefined to look it up
-  ip: '192.168.1.16',
+  // ip: '192.168.1.16',
   // secret? idk.
-  user: 'wAdDo9PF3j79jG1aOUc6aTebqziyGCCN9tPkckSD',
+  // user: 'wAdDo9PF3j79jG1aOUc6aTebqziyGCCN9tPkckSD',
   description: 'SmartHomeDashboard',
-};
-
-const light_config = {
-  
 };
 
 var displayResult = function(result) {
@@ -38,5 +34,8 @@ var displayResult = function(result) {
 //   return
 // });
 
-var api = new hue.HueApi(API_CONFIG.ip, API_CONFIG.user);
-api.lights().then(displayResult).done();
+// var api = new hue.HueApi(API_CONFIG.ip, API_CONFIG.user);
+// api.lights().then(displayResult).done();
+
+
+

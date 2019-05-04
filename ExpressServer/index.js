@@ -29,6 +29,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
 
+const hueManager = new HueManager();
+
 // /////////////////////////////////////////////////////////////////
 // helpers
 
@@ -63,6 +65,28 @@ const sonosGet = function(route) {
     return sonosPipe(route, req, res);
   };
 };
+
+app.get('/lights/on', (areq, ares) => {
+  hueManager.on().then(r => {
+    return Promise.resolve(r);
+  })
+  .then(res => ares.send(res))
+  .catch((err) => {
+    console.error('Caught Hue error', err);
+    ares.end();
+  });
+});
+
+app.get('/lights/off', (areq, ares) => {
+  hueManager.off().then(r => {
+    return Promise.resolve(r);
+  })
+  .then(res => ares.send(res))
+  .catch((err) => {
+    console.error('Caught Hue error', err);
+    ares.end();
+  });
+});
 
 // //////////////////////////////////////////////////////////////
 // routes
