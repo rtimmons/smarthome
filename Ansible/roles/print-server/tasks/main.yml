@@ -1,6 +1,8 @@
 # https://pimylifeup.com/raspberry-pi-print-server/
 # Consider: https://www.techradar.com/how-to/computing/how-to-turn-the-raspberry-pi-into-a-wireless-printer-server-1312717
 
+# http://smarterhome.local:631
+
 # Don't setup samba because ew windows
 
 - name: install cups
