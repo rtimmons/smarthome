@@ -11,21 +11,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.3",
-    "cors": "^2.8.4",
-    "express": "^4.16.3",
-    "node-hue-api": "^2.4.4",
-    "promise": "^8.0.2",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "node-hue-api": "^2.4.6",
+    "promise": "^8.0.3",
     "request": "^2.88.0",
     "underscore": "^1.9.1"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "mocha": "^5.2.0",
-    "sinon": "^6.1.5",
+    "chai": "^4.2.0",
+    "eslint": "^6.0.1",
+    "eslint-config-airbnb-base": "^13.2.0",
+    "eslint-plugin-import": "^2.18.0",
+    "mocha": "^6.1.4",
+    "sinon": "^7.3.2",
     "supervisor": "^0.12.0"
   }
 }

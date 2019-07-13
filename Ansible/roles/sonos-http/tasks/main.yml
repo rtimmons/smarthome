@@ -4,7 +4,8 @@
       clone: yes
       dest: /home/pi/node-sonos-http-api
       # TODO: vars?
-      version: 876a47a68881ae555b9a3200188df77d25e20a0c
+      # merged from upstream 2019-07-13
+      version: ce7ba806a3bcff012677da25ce7f17a70107f8d9
 
 - name: Install node-sonos-http-api node.js package
   retries: 5
