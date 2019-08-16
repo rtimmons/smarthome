@@ -1,12 +1,13 @@
+---
 - name: apply roles
   hosts: post_init
   roles:
    # - { name: repo }
-   - { name: smarthome }
+   - {name: smarthome}
 
   pre_tasks:
-  - name: import secret vars
-    include_vars: secret.yml
-    no_log: true
-  - name: import vars
-    include_vars: main.yml
+   - name: import secret vars
+     include_vars: secret.yml
+     no_log: true
+   - name: import vars
+     include_vars: main.yml

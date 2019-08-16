@@ -1,3 +1,5 @@
+---
+
 - name: install secrets
   template:
     src: secret.js.j2

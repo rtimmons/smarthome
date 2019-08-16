@@ -1,12 +1,14 @@
+---
+
 - name: apply roles
   hosts: pre_init
   roles:
-  - { name: wifi, become: True, become_user: root }
-  - { name: hostname, become: True, become_user: root }
+   - {name: wifi, become: true, become_user: root}
+   - {name: hostname, become: true, become_user: root}
 
   pre_tasks:
-  - name: import secret vars
-    include_vars: secret.yml
-    no_log: true
-  - name: import vars
-    include_vars: main.yml
+   - name: import secret vars
+     include_vars: secret.yml
+     no_log: true
+   - name: import vars
+     include_vars: main.yml

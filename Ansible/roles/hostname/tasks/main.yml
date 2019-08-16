@@ -1,3 +1,4 @@
+---
 - name: replace /etc/hosts
   template:
     src: etc_hosts.j2

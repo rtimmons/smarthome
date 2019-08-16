@@ -1,3 +1,5 @@
+---
+
 - name: clone node-sonos-http-api repo
   git:
       repo: https://github.com/rtimmons/node-sonos-http-api.git

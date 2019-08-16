@@ -5,6 +5,7 @@ if [ ! -d "venv" ]; then
     virtualenv venv
     source ./venv/bin/activate
     pip install ansible
+    pip install yamllint
 fi
 
 source ./venv/bin/activate
