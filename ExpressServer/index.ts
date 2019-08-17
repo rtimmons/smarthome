@@ -10,11 +10,11 @@ process.title = 'smhexprsrv';
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const express = require('express');
-const Promise = require('promise');
+const MyPromise = require('promise');
 const request = require('request');
-const requestDenoded = Promise.denodeify(require('request'));
+const requestDenoded = MyPromise.denodeify(require('request'));
 
-const Cache = require('./cache.js');
+const MyCache = require('./cache.js');
 
 // /////////////////////////////////////////////////////////////////
 // build app
@@ -35,7 +35,7 @@ app.use(cors());
 // removes port
 const host = req => req.headers.host.replace(/:\d+$/, '');
 
-const cache = new Cache();
+const cache = new MyCache();
 
 const sonosUrl = 'http://smarterhome.local:5005';
 
@@ -96,16 +96,16 @@ app.get('/same/:room', (areq, ares) => {
         const min = Math.min.apply(null, volumes.map(v => v.volume));
         const others = volumes.filter(v => v.volume !== min);
         if (others.length === 0) {
-          return Promise.resolve();
+          return MyPromise.resolve();
         }
-        return Promise.all.apply(null,
+        return MyPromise.all.apply(null,
           others.map(o => requestDenoded(`${sonosUrl}/${o.roomName}/volume/${min}`)));
       } catch (e) {
         console.log(e);
-        return Promise.reject(e);
+        return MyPromise.reject(e);
       }
     })
-    .then(() => Promise.resolve({ status: 'success' }))
+    .then(() => MyPromise.resolve({ status: 'success' }))
     .then(res => ares.send(res))
     .catch((err) => {
       console.error(err);
@@ -118,7 +118,7 @@ app.get('/down', (areq, ares) => {
   requestDenoded(`${sonosUrl}/Bedroom/state`)
     .then((res) => {
       const j = JSON.parse(res.body);
-      return Promise.resolve({ volume: j.volume, playbackState: j.playbackState });
+      return MyPromise.resolve({ volume: j.volume, playbackState: j.playbackState });
     })
     .then((state) => {
       const url = sonosUrl + (
@@ -140,7 +140,7 @@ app.get('/up', (areq, ares) => {
   requestDenoded(`${sonosUrl}/Bedroom/state`)
     .then((res) => {
       const j = JSON.parse(res.body);
-      return Promise.resolve({ volume: j.volume, playbackState: j.playbackState });
+      return MyPromise.resolve({ volume: j.volume, playbackState: j.playbackState });
     })
     .then((state) => {
       const url = sonosUrl + (
@@ -176,14 +176,14 @@ app.get('/temp-broken', (areq, ares) => {
   ares.set('Content-Type', 'text/plain');
   return cache
     .get('temp', requestDenoded(url))
-    .then(res => Promise.resolve(res.body.trim()))
+    .then(res => MyPromise.resolve(res.body.trim()))
     .then((res) => {
       const i = parseInt(res, 10);
-      return Promise.resolve(Number.isNaN(i) ? 0 : i);
+      return MyPromise.resolve(Number.isNaN(i) ? 0 : i);
     })
     .catch((err) => {
       console.log('Error fetching temp', err);
-      return Promise.resolve(0);
+      return MyPromise.resolve(0);
     })
     .then((temp) => {
       ares.write(temp);

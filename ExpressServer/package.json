@@ -2,9 +2,9 @@
   "name": "express-server",
   "version": "1.0.0",
   "description": "api for smarterhome",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "start": "ts-node index.js",
+    "start": "ts-node index.ts",
     "stop": "pkill smhexprsrv",
     "dev": "supervisor -p 200 -RV --debug -x npm start"
   },
