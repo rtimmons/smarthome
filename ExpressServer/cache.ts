@@ -1,4 +1,4 @@
-const _ = require('underscore');
+import * as _ from 'underscore';
 
 const nopProducer = () => Promise.resolve(null);
 
@@ -7,8 +7,11 @@ function isExpired(then, ttl) {
   return then + ttl <= now;
 }
 
-class Cache {
-  constructor(params) {
+export class Cache {
+  ttl: any;
+  data: any;
+
+  constructor(params?) {
     const usedParams = params || {
       ttl: 60 * 1000, // 60 seconds
     };
@@ -44,5 +47,3 @@ class Cache {
     });
   }
 }
-
-module.exports = Cache;

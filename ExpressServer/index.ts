@@ -1,20 +1,18 @@
 // Simple API for things that are hard or can't be implemented
 // within the font-end.
 
+import * as bodyParser from 'body-parser';
+import * as cors from 'cors';
+import * as express from 'express';
+import * as MyPromise from 'promise';
+import * as request from 'request';
+import {Cache as MyCache} from './cache';
+
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
 
-// /////////////////////////////////////////////////////////////////
-// Requires
-
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const express = require('express');
-const MyPromise = require('promise');
-const request = require('request');
 const requestDenoded = MyPromise.denodeify(require('request'));
 
-const MyCache = require('./cache.js');
 
 // /////////////////////////////////////////////////////////////////
 // build app
