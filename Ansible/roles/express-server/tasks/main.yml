@@ -8,7 +8,7 @@
 - name: Install express-server node.js package
   retries: 5
   delay: 5
-  shell: npm install --no-save
+  shell: npm install
   args:
     chdir: /home/pi/repo/ExpressServer
 

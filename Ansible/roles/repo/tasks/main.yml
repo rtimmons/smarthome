@@ -13,3 +13,5 @@
       delete: yes
       src: "{{ playbook_dir }}/.."
       dest: /home/pi/repo
+      rsync_opts:
+        - "--exclude=node_modules"
