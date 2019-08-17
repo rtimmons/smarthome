@@ -4,7 +4,7 @@
   "description": "api for smarterhome",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "ts-node index.js",
     "stop": "pkill smhexprsrv",
     "dev": "supervisor -p 200 -RV --debug -x npm start"
   },
@@ -17,9 +17,12 @@
     "node-hue-api": "^2.4.6",
     "promise": "^8.0.3",
     "request": "^2.88.0",
-    "underscore": "^1.9.1"
+    "underscore": "^1.9.1",
+    "ts-node": "^8.3.0",
+    "typescript": "3.5.3"
   },
   "devDependencies": {
+    "@types/express": "^4.17.0",
     "chai": "^4.2.0",
     "eslint": "^6.0.1",
     "eslint-config-airbnb-base": "^13.2.0",
