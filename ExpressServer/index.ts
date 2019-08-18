@@ -12,7 +12,7 @@ import {RequestResponse} from "request";
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
 
-const requestDenoded = MyPromise.denodeify(require('request'));
+const requestDenoded = MyPromise.denodeify(request);
 
 
 // /////////////////////////////////////////////////////////////////
@@ -83,7 +83,7 @@ app.get('/b/:to', (req: express.Request, res: express.Response) => {
 });
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
-app.get('/same/:room', (areq: express.Request, ares: express.Response) => {
+app.get('/same/:room', async (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
   requestDenoded(`${sonosUrl}/${areq.params['room']}/zones`)
     .then((res) => {
@@ -134,24 +134,15 @@ app.get('/down', (areq: express.Request, ares: express.Response) => {
 });
 
 // probably refactor /up and /down; they're copy/pasta
-app.get('/up', (areq: express.Request, ares: express.Response) => {
-  ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/Bedroom/state`)
-    .then((res) => {
-      const j = JSON.parse(res.body);
-      return MyPromise.resolve({ volume: j.volume, playbackState: j.playbackState });
-    })
-    .then((state) => {
-      const url = sonosUrl + (
-        (state.playbackState === 'PAUSED_PLAYBACK')
-          ? '/Bedroom/play' : '/Bedroom/groupVolume/+1');
-      console.log(url);
-      return requestDenoded(url);
-    })
-    .then(res => ares.send(res.body))
-    .catch((err) => {
-      console.error(err);
-    });
+app.get('/up', async (areq: express.Request, ares: express.Response) => {
+    ares.set('Content-Type', 'application/json');
+    const res = await requestDenoded(`${sonosUrl}/Bedroom/state`);
+    const j = JSON.parse(res.body);
+    const url = sonosUrl + (
+        (j.playbackState === 'PAUSED_PLAYBACK')
+            ? '/Bedroom/play' : '/Bedroom/groupVolume/+1');
+    const thenState = await requestDenoded(url);
+    ares.send(thenState.body);
 });
 
 app.post('/report', (req: express.Request, res: express.Response) => {
