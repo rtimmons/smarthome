@@ -7,6 +7,7 @@ import * as express from 'express';
 import * as MyPromise from 'promise';
 import * as request from 'request';
 import {Cache as MyCache} from './cache';
+import {RequestResponse} from "request";
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -71,20 +72,20 @@ app.get('/tv',    sonosGet('preset/all-tv'));
 app.get('/07',    sonosGet('favorite/Zero 7 Radio'));
 app.get('/quiet', sonosGet('groupVolume/7'));
 
-app.get('/sonos/:rest', (req, res) => {
-  return sonosPipe(req.params.rest, req, res);
+app.get('/sonos/:rest', (req: express.Request, res: express.Response) => {
+  return sonosPipe(req.params['rest'], req, res);
 });
 
-app.get('/b/:to', (req, res) => {
-  const url = redirs[req.params.to](req, res);
-  console.log(`/b/${req.params.to} => ${url}`);
+app.get('/b/:to', (req: express.Request, res: express.Response) => {
+  const url = redirs[req.params['to']](req, res);
+  console.log(`/b/${req.params['to']} => ${url}`);
   req.pipe(request(url)).pipe(res);
 });
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
-app.get('/same/:room', (areq, ares) => {
+app.get('/same/:room', (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/${areq.params.room}/zones`)
+  requestDenoded(`${sonosUrl}/${areq.params['room']}/zones`)
     .then((res) => {
       try {
         // *should* be easy to make this apply to all zones, but currently
@@ -111,7 +112,7 @@ app.get('/same/:room', (areq, ares) => {
     });
 });
 
-app.get('/down', (areq, ares) => {
+app.get('/down', (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
   requestDenoded(`${sonosUrl}/Bedroom/state`)
     .then((res) => {
@@ -133,7 +134,7 @@ app.get('/down', (areq, ares) => {
 });
 
 // probably refactor /up and /down; they're copy/pasta
-app.get('/up', (areq, ares) => {
+app.get('/up', (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
   requestDenoded(`${sonosUrl}/Bedroom/state`)
     .then((res) => {
@@ -153,23 +154,23 @@ app.get('/up', (areq, ares) => {
     });
 });
 
-app.post('/report', (req, res) => {
+app.post('/report', (req: express.Request, res: express.Response) => {
   console.log('REPORT', req.body);
   res.send('OK');
 });
 
-app.get('/journal', (req, res) => {
+app.get('/journal', (req: express.Request, res: express.Response) => {
   res.redirect(301, `http://${host(req)}:19531/browse`);
 });
 
 
-app.get('/temp', (areq, ares) => {
+app.get('/temp', (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'text/plain');
   ares.write('');
   ares.end();
 });
 
-app.get('/temp-broken', (areq, ares) => {
+app.get('/temp-broken', (areq: express.Request, ares: express.Response) => {
   const url = 'http://grovepi.local/GrovePi/cgi-bin/temp.py';
   ares.set('Content-Type', 'text/plain');
   return cache
@@ -189,7 +190,7 @@ app.get('/temp-broken', (areq, ares) => {
     });
 });
 
-app.get('/', (req, res) => {
+app.get('/', (req: express.Request, res: express.Response) => {
   res.set('Content-Type', 'application/json');
   res.send('{}');
 });
