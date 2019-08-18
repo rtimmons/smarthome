@@ -7,7 +7,6 @@ import * as express from 'express';
 import * as MyPromise from 'promise';
 import * as request from 'request';
 import {Cache as MyCache} from './cache';
-import {RequestResponse} from "request";
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -112,25 +111,15 @@ app.get('/same/:room', async (areq: express.Request, ares: express.Response) => 
     });
 });
 
-app.get('/down', (areq: express.Request, ares: express.Response) => {
+app.get('/down', async (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/Bedroom/state`)
-    .then((res) => {
-      const j = JSON.parse(res.body);
-      return MyPromise.resolve({ volume: j.volume, playbackState: j.playbackState });
-    })
-    .then((state) => {
-      const url = sonosUrl + (
-        (state.playbackState === 'PLAYING' && state.volume <= 3)
+  const res = await requestDenoded(`${sonosUrl}/Bedroom/state`);
+  const j = JSON.parse(res.body);
+  const url = sonosUrl + (
+      (j.playbackState === 'PLAYING' && j.volume <= 3)
           ? '/Bedroom/pause' : '/Bedroom/groupVolume/-1');
-      console.log(url);
-      return requestDenoded(url);
-    })
-    .then(res => ares.send(res.body))
-    .then(() => ares.end())
-    .catch((err) => {
-      console.error(err);
-    });
+  const thenState = await requestDenoded(url);
+  ares.send(thenState.body);
 });
 
 // probably refactor /up and /down; they're copy/pasta
