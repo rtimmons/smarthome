@@ -6,10 +6,10 @@
     },
     {
       "roomName": "Kitchen",
-      "volume": 40
+      "volume": 30
     },
     {
-      "roomName": "Bathroom",
+      "roomName": "Guest Bathroom",
       "volume": 30
     }
   ],
