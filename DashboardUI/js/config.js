@@ -345,7 +345,7 @@ var config = {
     { w:1, h:1,
       y:3, x:3,
       emoji: 'Film',
-      onPress: {action: 'Music.Preset', args: ['Living-tv']},
+      onPress: {action: 'Music.Preset', args: ['$room-tv']},
     },
 
   
