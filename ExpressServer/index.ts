@@ -84,12 +84,15 @@ app.get('/b/:to', (req: express.Request, res: express.Response) => {
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
 app.get('/same/:room', async (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
-  requestDenoded(`${sonosUrl}/${areq.params['room']}/zones`)
+  const room = areq.params['room'];
+  requestDenoded(`${sonosUrl}/${room}/zones`)
     .then((res) => {
       try {
-        // *should* be easy to make this apply to all zones, but currently
-        // have no use for it.
-        const zone = JSON.parse(res.body)[0];
+        const zones = JSON.parse(res.body);
+        // For some reason /:room/zones gives back status of
+        // all zones not just the one of the :room parameter.
+        const zone = zones.filter(zone =>
+            zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
         const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
         const min = Math.min.apply(null, volumes.map(v => v.volume));
         const others = volumes.filter(v => v.volume !== min);
