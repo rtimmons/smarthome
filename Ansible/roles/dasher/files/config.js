@@ -11,7 +11,7 @@
 	"address": "34:d2:70:cd:b0:37",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://localhost:5005/preset/all-tv",
+	"url": "http://localhost:5005/preset/living-tv",
 	"method": "GET"
     },
     {
@@ -19,7 +19,7 @@
 	"address": "0c:47:c9:22:ef:aa",
 	"timeout": "120000",
 	"protocol": "arp",
-	"url": "http://localhost:5005/preset/all-tv",
+	"url": "http://localhost:5005/preset/living-tv",
 	"method": "GET"
     },
     {
