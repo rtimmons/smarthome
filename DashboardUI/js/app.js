@@ -56,7 +56,7 @@ class App {
       return;
     }
     var banner = this.$.find('.state-Music div');
-    if (msg.length >= 19) {
+    if (msg && msg.length >= 19) {
       banner.addClass('scroll');
     }
     else {
