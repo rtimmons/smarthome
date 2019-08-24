@@ -33,10 +33,6 @@ class GridView {
     this.$element.width((square + 2) * this.cols);
   }
 
-  getValues() {
-    this.allCells().forEach(c => c.getValues());
-  }
-
   // TODO: each cell is a listener
   updateZones(onoff) {
     // could optimize in the future

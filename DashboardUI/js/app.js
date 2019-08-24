@@ -167,11 +167,6 @@ class App {
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
 
-    // TODO: grid can listen for this
-    case 'GetValues':
-      this.grid.getValues();
-      break;
-
     // TODO: move to Music.* listeners to MusicController
     case 'Music.ToggleRoom':
         if (evt.Event.Cell.isActive()) {

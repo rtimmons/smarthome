@@ -146,33 +146,6 @@ app.get('/journal', (req: express.Request, res: express.Response) => {
   res.redirect(301, `http://${host(req)}:19531/browse`);
 });
 
-
-app.get('/temp', (areq: express.Request, ares: express.Response) => {
-  ares.set('Content-Type', 'text/plain');
-  ares.write('');
-  ares.end();
-});
-
-app.get('/temp-broken', (areq: express.Request, ares: express.Response) => {
-  const url = 'http://grovepi.local/GrovePi/cgi-bin/temp.py';
-  ares.set('Content-Type', 'text/plain');
-  return cache
-    .get('temp', requestDenoded(url))
-    .then(res => MyPromise.resolve(res.body.trim()))
-    .then((res) => {
-      const i = parseInt(res, 10);
-      return MyPromise.resolve(Number.isNaN(i) ? 0 : i);
-    })
-    .catch((err) => {
-      console.log('Error fetching temp', err);
-      return MyPromise.resolve(0);
-    })
-    .then((temp) => {
-      ares.write(temp);
-      ares.end();
-    });
-});
-
 app.get('/', (req: express.Request, res: express.Response) => {
   res.set('Content-Type', 'application/json');
   res.send('{}');
