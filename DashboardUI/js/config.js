@@ -15,6 +15,7 @@ const roomTiles = function({xPos, roomName, emojiName}) {
   }];
 };
 
+let roomX = 1;
 
 var config = {
   emojis: {
@@ -105,13 +106,13 @@ var config = {
 
     */
 
-    ...roomTiles({xPos: 1, emojiName: 'Kimono',     roomName: 'Closet'}),
-    ...roomTiles({xPos: 2, emojiName: 'TV',         roomName: 'Living'}),
-    ...roomTiles({xPos: 3, emojiName: 'Bed',        roomName: 'Bedroom'}),
-    ...roomTiles({xPos: 4, emojiName: 'Rice',       roomName: 'Kitchen'}),
-    ...roomTiles({xPos: 5, emojiName: 'Shower',     roomName: 'Bathroom'}),
-    ...roomTiles({xPos: 6, emojiName: 'Briefcase',  roomName: 'Office'}),
-    ...roomTiles({xPos: 7, emojiName: 'Guest',      roomName: 'Guest Bathroom'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Kimono',     roomName: 'Closet'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'TV',         roomName: 'Living'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Bed',        roomName: 'Bedroom'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Rice',       roomName: 'Kitchen'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Shower',     roomName: 'Bathroom'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Briefcase',  roomName: 'Office'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Guest',      roomName: 'Guest Bathroom'}),
 
     // { w:1, h:1,
     //   y:0, x:7,
