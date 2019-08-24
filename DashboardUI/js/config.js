@@ -15,7 +15,7 @@ const roomTiles = function({xPos, roomName, emojiName}) {
   }];
 };
 
-let roomX = 1;
+let roomX = 2;
 
 var config = {
   emojis: {
@@ -175,17 +175,17 @@ var config = {
     //   activeWhenRoom: 'Kitchen',
     // },
     { w:1, h:1,
-      y:2, x:1,
+      y:3, x:1,
       emoji: 'Up',
       onPress: {action: 'Music.VolumeUp', args: []},
     },
     { w:1, h:1,
-      y:4, x:1,
+      y:5, x:1,
       emoji: 'Down',
       onPress: {action: 'Music.VolumeDown', args: []},
     },
     { w:1, h:1,
-      y:4, x:0,
+      y:4, x:1,
       emoji: 'Klingon',
       onPress: {action: 'Music.VolumeSame', args: []},
     },
