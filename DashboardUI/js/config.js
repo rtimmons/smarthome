@@ -23,7 +23,7 @@ var config = {
       'Film':     '🎬',
       'Bed':      '🛏',
       'Rice':     '🍙',
-      'Shower':   '🛀',
+      'Shower':   '🛁',
       'Earth':    '🌍',
       'Play':     '▶️',
       'Pause':    '⏸',
