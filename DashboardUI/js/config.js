@@ -1,3 +1,20 @@
+const roomTiles = function({xPos, roomName, emojiName}) {
+  return [
+  { w:1, h:1,
+    y:0, x: xPos,
+    emoji: emojiName,
+    activeWhenRoom: roomName,
+    onPress: {action: 'ChangeRoom', args: [roomName]},
+    onDoublePress: {action: 'AllJoin', args: [roomName]},
+  },
+  { w:1, h:1,
+    y:1, x:1,
+    emoji: 'Speaker',
+    togglesRoom: roomName,
+    onPress: {action: 'Music.ToggleRoom', args: [roomName]},
+  }];
+};
+
 
 var config = {
   emojis: {
@@ -54,13 +71,6 @@ var config = {
     'Guest Bathroom',
   ],
   cells: [
-    { w:1, h:1,
-      y:0, x:3-1,
-      emoji: 'TV',
-      activeWhenRoom: 'Living',
-      onPress: {action: 'ChangeRoom', args: ['Living']},
-      onDoublePress: {action: 'AllJoin', args: ['Living']},
-    },
     /*
     Only one room can be "active" at a time.
     The Check/?/X below each room is its indicator. These
@@ -95,20 +105,15 @@ var config = {
 
     */
 
-    { w:1, h:1,
-      y:0, x:1,
-      emoji: 'Kimono',
-      activeWhenRoom: 'Closet',
-      onPress: {action: 'ChangeRoom', args: ['Closet']},
-      onDoublePress: {action: 'AllJoin', args: ['Closet']},
-    },
-    { w:1, h:1,
-      y:1, x:1,
-      emoji: 'Speaker',
-      togglesRoom: 'Closet',
-      onPress: {action: 'Music.ToggleRoom', args: ['Closet']},
-    },
+    ...roomTiles({xPos: 1, emojiName: 'Kimono', roomName: 'Closet'}),
 
+    { w:1, h:1,
+      y:0, x:3-1,
+      emoji: 'TV',
+      activeWhenRoom: 'Living',
+      onPress: {action: 'ChangeRoom', args: ['Living']},
+      onDoublePress: {action: 'AllJoin', args: ['Living']},
+    },
     { w:1, h:1,
       y:1, x:3-1,
       emoji: 'Speaker',
