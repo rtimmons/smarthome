@@ -41,6 +41,7 @@ var config = {
       'Cher':      '💁🏻‍♀️',
       'Briefcase': '💼',
       'Guest':     '👨‍👨‍👦',
+      'Kimono':    '👘',
   },
   rows: 8,
   cols: 11,
@@ -93,6 +94,21 @@ var config = {
       Inactive => volume controls whole group
 
     */
+
+    { w:1, h:1,
+      y:0, x:1,
+      emoji: 'Kimono',
+      activeWhenRoom: 'Closet',
+      onPress: {action: 'ChangeRoom', args: ['Closet']},
+      onDoublePress: {action: 'AllJoin', args: ['Closet']},
+    },
+    { w:1, h:1,
+      y:1, x:1,
+      emoji: 'Speaker',
+      togglesRoom: 'Closet',
+      onPress: {action: 'Music.ToggleRoom', args: ['Closet']},
+    },
+
     { w:1, h:1,
       y:1, x:3-1,
       emoji: 'Speaker',
