@@ -5,4 +5,4 @@ source ./ansible-env.sh
 ansible-playbook \
     -v \
     -i pre_init.ini \
-    "$PWD"/setup-wifi.yml
+    "$PWD"/setup-networking.yml

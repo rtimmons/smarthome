@@ -3,7 +3,7 @@
 - name: apply roles
   hosts: pre_init
   roles:
-   - {name: wifi, become: true, become_user: root}
+   - {name: networking, become: true, become_user: root}
    - {name: hostname, become: true, become_user: root}
 
   pre_tasks:
