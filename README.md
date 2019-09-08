@@ -46,7 +46,7 @@ Smarthome Dashboard
 
 ## System Ideas / Dumping Ground
 
-
+- Maybe [Lutron Caséta][lc]?
 
 - Look into [HomeBridge](https://github.com/nfarina/homebridge)
 
@@ -62,6 +62,8 @@ Smarthome Dashboard
 
  [moz]: https://techcrunch.com/2018/02/06/mozilla-announces-an-open-framework-for-the-internet-of-things/
  [nr]:  https://nodered.org/
+ [lc]:  http://www.lutron.com/en-US/Products/Pages/SingleRoomControls/CasetaWireless/Overview.aspx
+
 
 Scrub for ideas <https://news.ycombinator.com/item?id=16874208>:
 
