@@ -61,6 +61,7 @@ var config = {
       'Guest':     '👨‍👨‍👦',
       'Kimono':    '👘',
       'Sunglasses':'😎',
+      'Tent':      '⛺️',
   },
   rows: 8,
   cols: 11,
@@ -71,6 +72,7 @@ var config = {
     'Bathroom',
     'Office',
     'Guest Bathroom',
+    'Move',
   ],
   cells: [
     /*
@@ -109,6 +111,7 @@ var config = {
 
     ...roomTiles({xPos: roomX++, emojiName: 'Shower',     roomName: 'Bathroom'}),
     ...roomTiles({xPos: roomX++, emojiName: 'Kimono',     roomName: 'Closet'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Tent',       roomName: 'Move'}),
     ...roomTiles({xPos: roomX++, emojiName: 'Bed',        roomName: 'Bedroom'}),
     ...roomTiles({xPos: roomX++, emojiName: 'TV',         roomName: 'Living'}),
     ...roomTiles({xPos: roomX++, emojiName: 'Rice',       roomName: 'Kitchen'}),
