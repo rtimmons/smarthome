@@ -16,7 +16,7 @@ interface CacheValue {
 type CacheValueProducer<T> = (key: keyof CacheDataMap) => Promise<T>;
 
 function nopProducer<T>(): CacheValueProducer<T | null> {
-  return (key: keyof CacheDataMap) => null;
+  return (key: keyof CacheDataMap) => Promise.resolve(null);
 }
 
 
@@ -47,7 +47,7 @@ export class Cache {
   }
 
   // producer is a promise
-  async set<T>(key, producer: CacheValueProducer<T>): Promise<T> {
+  async set<T>(key: keyof CacheDataMap, producer: CacheValueProducer<T>): Promise<T> {
     const produced: T = await producer(key);
     this.data[key] = {
       value: produced,

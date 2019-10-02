@@ -31,7 +31,11 @@ app.use(cors());
 // helpers
 
 // removes port
-const host = req => req.headers.host.replace(/:\d+$/, '');
+const host = (req: express.Request) => {
+  const header = req.headers.host;
+  if (header === undefined) { return; }
+  req.headers.host = header.replace(/:\d+$/, '');
+};
 
 const cache = new MyCache();
 
@@ -40,24 +44,24 @@ const sonosUrl = 'http://smarterhome.local:5005';
 // //////////////////////////////////////////////////////////////////
 // configs
 
-const redirs = {
+const redirs: {[key: string]: (req: express.Request, res: express.Response) => string} = {
   // 1 is up
-  '1up': req => `http://${req.headers.host}/up`,
-  '1down': req => `http://${req.headers.host}/down`,
+  '1up': (req: express.Request) => `http://${req.headers.host}/up`,
+  '1down': (req: express.Request) => `http://${req.headers.host}/down`,
   '1left': () => `${sonosUrl}/Bedroom/favorite/Play%20NPR%20One`,
   '1right': () => `${sonosUrl}/Bedroom/favorite/Zero%207%20Radio`,
   // 2 is right
   '2right': () => `${sonosUrl}/Bedroom/next`,
 };
 
-const sonosPipe = function(route, req, res) {
+const sonosPipe = function(route: string, req: express.Request, res: express.Response) {
   const url = `${sonosUrl}/${route}`;
   console.log(`Requesting ${url}`);
   return req.pipe(request(url)).pipe(res);
 };
 
-const sonosGet = function(route) {
-  return (req, res) => {
+const sonosGet = function(route: string) {
+  return (req: express.Request, res: express.Response) => {
     return sonosPipe(route, req, res);
   };
 };
@@ -85,13 +89,12 @@ app.get('/b/:to', (req: express.Request, res: express.Response) => {
 app.get('/same/:room', async (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
   const room = areq.params['room'];
-  requestDenoded(`${sonosUrl}/${room}/zones`)
-    .then((res) => {
+  const res = await requestDenoded(`${sonosUrl}/${room}/zones`);
       try {
         const zones = JSON.parse(res.body);
         // For some reason /:room/zones gives back status of
         // all zones not just the one of the :room parameter.
-        const zone = zones.filter(zone =>
+        const zone: string = zones.filter(zone =>
             zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
         const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
         const min = Math.min.apply(null, volumes.map(v => v.volume));
@@ -105,8 +108,7 @@ app.get('/same/:room', async (areq: express.Request, ares: express.Response) => 
         console.log(e);
         return MyPromise.reject(e);
       }
-    })
-    .then(() => MyPromise.resolve({ status: 'success' }))
+      await ares.send({status: 'success'});
     .then(res => ares.send(res))
     .catch((err) => {
       console.error(err);

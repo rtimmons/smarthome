@@ -11,6 +11,6 @@
     "rootDir": ".",
     "target": "es2017"
   },
-  "include": ["."],
+  "include": [""],
   "exclude": []
 }
