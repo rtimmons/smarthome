@@ -1,35 +1,45 @@
-import * as _ from 'underscore';
 
-const nopProducer = () => Promise.resolve(null);
-
-function isExpired(then, ttl) {
+function isExpired(then: number, ttl: number): boolean {
   const now = new Date().getTime();
   return then + ttl <= now;
 }
 
+interface CacheParams {
+  ttl: number;
+}
+
+interface CacheValue {
+  value: any;
+  insertedAt: number;
+}
+
+type CacheValueProducer<T> = (key: keyof CacheDataMap) => Promise<T>;
+
+function nopProducer<T>(): CacheValueProducer<T | null> {
+  return (key: keyof CacheDataMap) => null;
+}
+
+
+// example:
+// someKey: {
+//   value: 'SomeValue',
+//   insertedAt: new Date().getTime() - (this.ttl + 1000),
+// }
+type CacheDataMap = {
+  [key:string]: CacheValue
+};
+
 export class Cache {
-  ttl: any;
-  data: any;
+  ttl: number;
+  data: CacheDataMap = {};
 
-  constructor(params?) {
-    const usedParams = params || {
-      ttl: 60 * 1000, // 60 seconds
-    };
-
-    this.ttl = usedParams.ttl;
-    this.data = {
-      // example:
-      // someKey: {
-      //   value: 'SomeValue',
-      //   insertedAt: new Date().getTime() - (this.ttl + 1000),
-      // }
-    };
+  constructor(params: CacheParams = {ttl: 60 * 1000}) {
+    this.ttl = params.ttl;
   }
 
-  // producer is a promise
-  get(key, producer) {
-    const usedProducer = producer || nopProducer;
-    if (_.isUndefined(this.data[key]) || isExpired(this.data[key].insertedAt, this.ttl)) {
+  async get<T>(key: keyof CacheDataMap, producer?: CacheValueProducer<T|null>): Promise<T|null> {
+    const usedProducer = producer || nopProducer<T>();
+    if (this.data[key] === undefined || isExpired(this.data[key].insertedAt, this.ttl)) {
       // console.log('Key [' + key + '] missing or expired');
       return this.set(key, usedProducer);
     }
@@ -37,13 +47,12 @@ export class Cache {
   }
 
   // producer is a promise
-  set(key, producer) {
-    return producer.then((val) => {
-      this.data[key] = {
-        value: val,
-        insertedAt: new Date().getTime(),
-      };
-      return Promise.resolve(val);
-    });
+  async set<T>(key, producer: CacheValueProducer<T>): Promise<T> {
+    const produced: T = await producer(key);
+    this.data[key] = {
+      value: produced,
+      insertedAt: new Date().getTime(),
+    };
+    return produced;
   }
 }

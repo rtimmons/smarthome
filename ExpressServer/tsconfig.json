@@ -1,0 +1,16 @@
+{
+  "extends": "./node_modules/gts/tsconfig-google.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "checkJs": true,
+    "declaration": false,
+    "noImplicitAny": true,
+    "lib": ["es2017", "dom"],
+    "module": "CommonJS",
+    "pretty": true,
+    "rootDir": ".",
+    "target": "es2017"
+  },
+  "include": ["."],
+  "exclude": []
+}
