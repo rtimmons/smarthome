@@ -5,7 +5,7 @@
     "checkJs": true,
     "declaration": false,
     "noImplicitAny": true,
-    "lib": ["es2017", "dom"],
+    "lib": ["es2017"],
     "module": "CommonJS",
     "pretty": true,
     "rootDir": ".",

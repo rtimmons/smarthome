@@ -4,15 +4,13 @@
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
-import * as MyPromise from 'promise';
-import * as request from 'request';
+import * as rpn from 'request-promise-native';
 import {Cache as MyCache} from './cache';
+
+import "./types/sonos";
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
-
-const requestDenoded = MyPromise.denodeify(request);
-
 
 // /////////////////////////////////////////////////////////////////
 // build app
@@ -57,7 +55,7 @@ const redirs: {[key: string]: (req: express.Request, res: express.Response) => s
 const sonosPipe = function(route: string, req: express.Request, res: express.Response) {
   const url = `${sonosUrl}/${route}`;
   console.log(`Requesting ${url}`);
-  return req.pipe(request(url)).pipe(res);
+  return req.pipe(rpn(url)).pipe(res);
 };
 
 const sonosGet = function(route: string) {
@@ -82,60 +80,49 @@ app.get('/sonos/:rest', (req: express.Request, res: express.Response) => {
 app.get('/b/:to', (req: express.Request, res: express.Response) => {
   const url = redirs[req.params['to']](req, res);
   console.log(`/b/${req.params['to']} => ${url}`);
-  req.pipe(request(url)).pipe(res);
+  req.pipe(rpn(url)).pipe(res);
 });
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
 app.get('/same/:room', async (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
   const room = areq.params['room'];
-  const res = await requestDenoded(`${sonosUrl}/${room}/zones`);
-      try {
-        const zones = JSON.parse(res.body);
-        // For some reason /:room/zones gives back status of
-        // all zones not just the one of the :room parameter.
-        const zone: string = zones.filter(zone =>
-            zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
-        const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
-        const min = Math.min.apply(null, volumes.map(v => v.volume));
-        const others = volumes.filter(v => v.volume !== min);
-        if (others.length === 0) {
-          return MyPromise.resolve();
-        }
-        return MyPromise.all.apply(null,
-          others.map(o => requestDenoded(`${sonosUrl}/${o.roomName}/volume/${min}`)));
-      } catch (e) {
-        console.log(e);
-        return MyPromise.reject(e);
-      }
-      await ares.send({status: 'success'});
-    .then(res => ares.send(res))
-    .catch((err) => {
-      console.error(err);
-      ares.end();
-    });
+  const res = await rpn.get(`${sonosUrl}/${room}/zones`);
+  const zones: Sonos.Zone[] = JSON.parse(res.body as string);
+  // For some reason /:room/zones gives back status of
+  // all zones not just the one of the :room parameter.
+  const zone: Sonos.Zone = zones.filter(zone =>
+    zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
+  const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
+  const min = Math.min.apply(null, volumes.map(v => v.volume));
+  const others = volumes.filter(v => v.volume !== min);
+
+  if (others.length === 0) {
+    return;
+  }
+  others.map(async o => await rpn.get(`/rooms/${o}/volume/${min}`));
 });
 
 app.get('/down', async (areq: express.Request, ares: express.Response) => {
   ares.set('Content-Type', 'application/json');
-  const res = await requestDenoded(`${sonosUrl}/Bedroom/state`);
-  const j = JSON.parse(res.body);
+  const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
+  const j = JSON.parse(res.body as string);
   const url = sonosUrl + (
       (j.playbackState === 'PLAYING' && j.volume <= 3)
           ? '/Bedroom/pause' : '/Bedroom/groupVolume/-1');
-  const thenState = await requestDenoded(url);
+  const thenState = await rpn.get(url);
   ares.send(thenState.body);
 });
 
 // probably refactor /up and /down; they're copy/pasta
 app.get('/up', async (areq: express.Request, ares: express.Response) => {
     ares.set('Content-Type', 'application/json');
-    const res = await requestDenoded(`${sonosUrl}/Bedroom/state`);
-    const j = JSON.parse(res.body);
+    const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
+    const j = JSON.parse(res.body as string);
     const url = sonosUrl + (
         (j.playbackState === 'PAUSED_PLAYBACK')
             ? '/Bedroom/play' : '/Bedroom/groupVolume/+1');
-    const thenState = await requestDenoded(url);
+    const thenState = await rpn.get(url);
     ares.send(thenState.body);
 });
 
