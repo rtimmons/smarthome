@@ -85,22 +85,29 @@ app.get('/b/:to', (req: express.Request, res: express.Response) => {
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
 app.get('/same/:room', async (areq: express.Request, ares: express.Response) => {
-  ares.set('Content-Type', 'application/json');
-  const room = areq.params['room'];
-  const res = await rpn.get(`${sonosUrl}/${room}/zones`);
-  const zones: Sonos.Zone[] = JSON.parse(res.body as string);
-  // For some reason /:room/zones gives back status of
-  // all zones not just the one of the :room parameter.
-  const zone: Sonos.Zone = zones.filter(zone =>
-    zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
-  const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
-  const min = Math.min.apply(null, volumes.map(v => v.volume));
-  const others = volumes.filter(v => v.volume !== min);
-
-  if (others.length === 0) {
-    return;
+  try {
+    ares.set('Content-Type', 'application/json');
+    const room = areq.params['room'];
+    const res = await rpn.get(`${sonosUrl}/${room}/zones`);
+    const zones: Sonos.Zone[] = JSON.parse(res);
+    // For some reason /:room/zones gives back status of
+    // all zones not just the one of the :room parameter.
+    const zone: Sonos.Zone = zones.filter(zone =>
+        zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
+    const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
+    const min = Math.min.apply(null, volumes.map(v => v.volume));
+    const others = volumes.filter(v => v.volume !== min);
+    await Promise.all(others.map(async (o) => {
+      console.log(`Setting volume of ${o} to ${min}.`);
+      await rpn.get(`/rooms/${o}/volume/${min}`);
+    }));
+  } catch(e) {
+    console.error(e);
+    ares.sendStatus(500);
+    ares.send(e.toString());
+  } finally {
+    ares.send('{}');
   }
-  others.map(async o => await rpn.get(`/rooms/${o}/volume/${min}`));
 });
 
 app.get('/down', async (areq: express.Request, ares: express.Response) => {
