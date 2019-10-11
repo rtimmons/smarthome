@@ -5,7 +5,6 @@ import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
 import * as express from 'express';
 import * as rpn from 'request-promise-native';
-import {Cache as MyCache} from './cache';
 
 import "./types/sonos";
 
@@ -35,8 +34,6 @@ const host = (req: express.Request) => {
   req.headers.host = header.replace(/:\d+$/, '');
 };
 
-const cache = new MyCache();
-
 const sonosUrl = 'http://smarterhome.local:5005';
 
 // //////////////////////////////////////////////////////////////////
@@ -52,13 +49,13 @@ const redirs: {[key: string]: (req: express.Request, res: express.Response) => s
   '2right': () => `${sonosUrl}/Bedroom/next`,
 };
 
-const sonosPipe = function(route: string, req: express.Request, res: express.Response) {
+const sonosPipe = function(route: string, req: express.Request, res: express.Response): express.Response {
   const url = `${sonosUrl}/${route}`;
   console.log(`Requesting ${url}`);
   return req.pipe(rpn(url)).pipe(res);
 };
 
-const sonosGet = function(route: string) {
+const sonosGet = function(route: string): (req: express.Request, res: express.Response) => express.Response {
   return (req: express.Request, res: express.Response) => {
     return sonosPipe(route, req, res);
   };
