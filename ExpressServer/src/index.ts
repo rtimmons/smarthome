@@ -74,6 +74,23 @@ app.get('/sonos/:rest', (req: express.Request, res: express.Response) => {
   return sonosPipe(req.params['rest'], req, res);
 });
 
+const wrap = function<T>(fn: (req: express.Request, res: express.Response) => T):
+    (req: express.Request, res: express.Response) => Promise<T|undefined> {
+  return async function(areq: express.Request, ares: express.Response) {
+    try {
+      ares.set('Content-Type', 'application/json');
+      return await fn(areq, ares);
+    } catch(e) {
+      console.log(e);
+      ares.status(500);
+      ares.json({error: e.toString()});
+      return undefined;
+    } finally {
+      ares.end();
+    }
+  };
+};
+
 app.get('/b/:to', (req: express.Request, res: express.Response) => {
   const url = redirs[req.params['to']](req, res);
   console.log(`/b/${req.params['to']} => ${url}`);
@@ -81,34 +98,24 @@ app.get('/b/:to', (req: express.Request, res: express.Response) => {
 });
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
-app.get('/same/:room', async (areq: express.Request, ares: express.Response) => {
-  try {
-    ares.set('Content-Type', 'application/json');
-    const room = areq.params['room'];
-    const res = await rpn.get(`${sonosUrl}/${room}/zones`);
-    const zones: Sonos.Zone[] = JSON.parse(res);
-    // For some reason /:room/zones gives back status of
-    // all zones not just the one of the :room parameter.
-    const zone: Sonos.Zone = zones.filter(zone =>
-        zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
-    const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
-    const min = Math.min.apply(null, volumes.map(v => v.volume));
-    const others = volumes.filter(v => v.volume !== min);
-    await Promise.all(others.map(async (o) => {
-      console.log(`Setting volume of ${o} to ${min}.`);
-      await rpn.get(`/rooms/${o}/volume/${min}`);
-    }));
-  } catch(e) {
-    console.error(e);
-    ares.sendStatus(500);
-    ares.send(e.toString());
-  } finally {
-    ares.send('{}');
-  }
-});
+app.get('/same/:room', wrap(async (areq: express.Request, ares: express.Response) => {
+  const room = areq.params['room'];
+  const res = await rpn.get(`${sonosUrl}/${room}/zones`);
+  const zones: Sonos.Zone[] = JSON.parse(res);
+  // For some reason /:room/zones gives back status of
+  // all zones not just the one of the :room parameter.
+  const zone: Sonos.Zone = zones.filter(zone =>
+      zone.members.map(m => m.roomName).indexOf(room) >= 0)[0];
+  const volumes = zone.members.map(m => ({ roomName: m.roomName, volume: m.state.volume }));
+  const min = Math.min.apply(null, volumes.map(v => v.volume));
+  const others = volumes.filter(v => v.volume !== min);
+  await Promise.all(others.map(async (o) => {
+    console.log(`Setting volume of ${o} to ${min}.`);
+    await rpn.get(`/rooms/${o}/volume/${min}`);
+  }));
+}));
 
-app.get('/down', async (areq: express.Request, ares: express.Response) => {
-  ares.set('Content-Type', 'application/json');
+app.get('/down', wrap(async (areq: express.Request, ares: express.Response) => {
   const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
   const j = JSON.parse(res.body as string);
   const url = sonosUrl + (
@@ -116,11 +123,10 @@ app.get('/down', async (areq: express.Request, ares: express.Response) => {
           ? '/Bedroom/pause' : '/Bedroom/groupVolume/-1');
   const thenState = await rpn.get(url);
   ares.send(thenState.body);
-});
+}));
 
 // probably refactor /up and /down; they're copy/pasta
-app.get('/up', async (areq: express.Request, ares: express.Response) => {
-    ares.set('Content-Type', 'application/json');
+app.get('/up', wrap(async (areq: express.Request, ares: express.Response) => {
     const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
     const j = JSON.parse(res.body as string);
     const url = sonosUrl + (
@@ -128,7 +134,7 @@ app.get('/up', async (areq: express.Request, ares: express.Response) => {
             ? '/Bedroom/play' : '/Bedroom/groupVolume/+1');
     const thenState = await rpn.get(url);
     ares.send(thenState.body);
-});
+}));
 
 app.post('/report', (req: express.Request, res: express.Response) => {
   console.log('REPORT', req.body);
