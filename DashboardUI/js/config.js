@@ -1,3 +1,21 @@
+const roomTiles = function({xPos, roomName, emojiName}) {
+  return [
+  { w:1, h:1,
+    y:0, x: xPos,
+    emoji: emojiName,
+    activeWhenRoom: roomName,
+    onPress: {action: 'ChangeRoom', args: [roomName]},
+    onDoublePress: {action: 'AllJoin', args: [roomName]},
+  },
+  { w:1, h:1,
+    y:1, x:xPos,
+    emoji: 'Speaker',
+    togglesRoom: roomName,
+    onPress: {action: 'Music.ToggleRoom', args: [roomName]},
+  }];
+};
+
+let roomX = 2;
 
 var config = {
   emojis: {
@@ -5,7 +23,7 @@ var config = {
       'Film':     '🎬',
       'Bed':      '🛏',
       'Rice':     '🍙',
-      'Shower':   '🛀',
+      'Shower':   '🛁',
       'Earth':    '🌍',
       'Play':     '▶️',
       'Pause':    '⏸',
@@ -37,8 +55,13 @@ var config = {
       'Empty':    '⬜️',
       'ThumbsUp': '👍🏽',
       'ThumbsDown': '👎🏽',
-      'XMasTree': '🎄',
-      'Cher': '💁🏻‍♀️',
+      'XMasTree':  '🎄',
+      'Cher':      '💁🏻‍♀️',
+      'Briefcase': '💼',
+      'Guest':     '👨‍👨‍👦',
+      'Kimono':    '👘',
+      'Sunglasses':'😎',
+      'Tent':      '⛺️',
   },
   rows: 8,
   cols: 11,
@@ -47,15 +70,11 @@ var config = {
     'Bedroom',
     'Kitchen',
     'Bathroom',
+    'Office',
+    'Guest Bathroom',
+    'Move',
   ],
   cells: [
-    { w:1, h:1,
-      y:0, x:3,
-      emoji: 'TV',
-      activeWhenRoom: 'Living',
-      onPress: {action: 'ChangeRoom', args: ['Living']},
-      onDoublePress: {action: 'AllJoin', args: ['Living']},
-    },
     /*
     Only one room can be "active" at a time.
     The Check/?/X below each room is its indicator. These
@@ -89,54 +108,15 @@ var config = {
       Inactive => volume controls whole group
 
     */
-    { w:1, h:1,
-      y:1, x:3,
-      emoji: 'Speaker',
-      togglesRoom: 'Living',
-      onPress: {action: 'Music.ToggleRoom', args: ['Living']},
-    },
 
-    { w:1, h:1,
-      y:0, x:6,
-      emoji: 'Bed',
-      activeWhenRoom: 'Bedroom',
-      onPress: {action: 'ChangeRoom', args: ['Bedroom']},
-      onDoublePress: {action: 'AllJoin', args: ['Bedroom']},
-    },
-    { w:1, h:1,
-      y:1, x:6,
-      emoji: 'Speaker',
-      togglesRoom: 'Bedroom',
-      onPress: {action: 'Music.ToggleRoom', args: ['Bedroom']},
-    },
-
-    { w:1, h:1,
-      y:0, x:4,
-      emoji: 'Rice',
-      activeWhenRoom: 'Kitchen',
-      onPress: {action: 'ChangeRoom', args: ['Kitchen']},
-      onDoublePress: {action: 'AllJoin', args: ['Kitchen']},
-    },
-    { w:1, h:1,
-      y:1, x:4,
-      emoji: 'Speaker',
-      togglesRoom: 'Kitchen',
-      onPress: {action: 'Music.ToggleRoom', args: ['Kitchen']},
-    },
-
-    { w:1, h:1,
-      y:0, x:5,
-      emoji: 'Shower',
-      activeWhenRoom: 'Bathroom',
-      onPress: {action: 'ChangeRoom', args: ['Bathroom']},
-      onDoublePress: {action: 'Music.AllJoin', args: ['Bathroom']},
-    },
-    { w:1, h:1,
-      y:1, x:5,
-      emoji: 'Speaker',
-      togglesRoom: 'Bathroom',
-      onPress: {action: 'Music.ToggleRoom', args: ['Bathroom']},
-    },
+    ...roomTiles({xPos: roomX++, emojiName: 'Shower',     roomName: 'Bathroom'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Kimono',     roomName: 'Closet'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Tent',       roomName: 'Move'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Bed',        roomName: 'Bedroom'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'TV',         roomName: 'Living'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Rice',       roomName: 'Kitchen'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Briefcase',  roomName: 'Office'}),
+    ...roomTiles({xPos: roomX++, emojiName: 'Guest',      roomName: 'Guest Bathroom'}),
 
     // { w:1, h:1,
     //   y:0, x:7,
@@ -199,17 +179,17 @@ var config = {
     //   activeWhenRoom: 'Kitchen',
     // },
     { w:1, h:1,
-      y:2, x:1,
+      y:3, x:1,
       emoji: 'Up',
       onPress: {action: 'Music.VolumeUp', args: []},
     },
     { w:1, h:1,
-      y:4, x:1,
+      y:5, x:1,
       emoji: 'Down',
       onPress: {action: 'Music.VolumeDown', args: []},
     },
     { w:1, h:1,
-      y:4, x:0,
+      y:4, x:1,
       emoji: 'Klingon',
       onPress: {action: 'Music.VolumeSame', args: []},
     },
@@ -285,6 +265,12 @@ var config = {
       emoji: 'Nerd',
       onPress: {action: 'Music.Favorite', args: ['Alpha Chill - Medium']},
     },
+    { w:1, h:1,
+      y:4, x:7,
+      emoji: 'Sunglasses',
+      onPress: {action: 'Music.Favorite', args: ['Office DJ']},
+    },
+
     // { w:1, h:1,
     //   y:4, x:8,
     //   emoji: 'XMasTree',
@@ -296,7 +282,7 @@ var config = {
       onPress: {action: 'Music.Favorite', args: ['Cher Essentials']},
     },
     { w:1, h:1,
-      y:4, x:7,
+      y:4, x:8,
       emoji: 'MilkyWay',
       onPress: {action: 'Music.Favorite', args: ['Zero 7 Radio']},
     },
@@ -314,19 +300,8 @@ var config = {
     { w:1, h:1,
       y:3, x:3,
       emoji: 'Film',
-      onPress: {action: 'Music.Preset', args: ['all-tv']},
+      onPress: {action: 'Music.Preset', args: ['$room-tv']},
     },
-
-  
-    { w:2, h:1, 
-      y:3, x:9,
-      // TODO: use same claz:state-* thing that the banner uses
-      getValues: {
-        url: `http://${window.secret.host.hostname}:3000/temp`,
-      }
-    },
-    {y:3, x:10, w:0},
-    {y:3, x:11, w:0},
 
     ////
     // Pandora ThumbsUp/ThumbsDown
@@ -363,6 +338,5 @@ var config = {
   ],
   poll: [
     {action: 'Music.FetchState', args: [], period: 2000},
-    {action: 'GetValues', args: [], period: 5000},
   ]
 };

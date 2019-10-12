@@ -1,0 +1,17 @@
+{
+  "players": [
+    {
+      "roomName": "Bedroom",
+      "volume": 30
+    },
+    {
+      "roomName": "Bathroom",
+      "volume": 30
+    },
+    {
+      "roomName": "Closet",
+      "volume": 30
+    },
+  ],
+  "uri": "x-sonos-htastream:RINCON_347E5C9C39BA01400:spdif",
+}

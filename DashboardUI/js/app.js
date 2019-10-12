@@ -56,7 +56,7 @@ class App {
       return;
     }
     var banner = this.$.find('.state-Music div');
-    if (msg.length >= 19) {
+    if (msg && msg.length >= 19) {
       banner.addClass('scroll');
     }
     else {
@@ -166,11 +166,6 @@ class App {
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/' + this.secret.ifttt.key);
         // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
-
-    // TODO: grid can listen for this
-    case 'GetValues':
-      this.grid.getValues();
-      break;
 
     // TODO: move to Music.* listeners to MusicController
     case 'Music.ToggleRoom':

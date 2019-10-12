@@ -1,9 +1,10 @@
 ---
+
 - name: apply roles
-  hosts: post_init
+  hosts: pre_init
   roles:
-   # - { name: repo }
-   - {name: smarthome}
+   - {name: networking, become: true, become_user: root}
+   - {name: hostname, become: true, become_user: root}
 
   pre_tasks:
    - name: import secret vars

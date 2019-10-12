@@ -2,30 +2,45 @@
   "name": "express-server",
   "version": "1.0.0",
   "description": "api for smarterhome",
-  "main": "index.js",
+  "main": "index.ts",
   "scripts": {
-    "start": "node index.js",
+    "start": "ts-node src/index.ts",
     "stop": "pkill smhexprsrv",
-    "dev": "supervisor -p 200 -RV --debug -x npm start"
+    "dev": "supervisor -p 200 -RV --debug -x npm start",
+    "test": "ts-mocha -p ./tsconfig.json --recursive ./src/**/*.spec.*"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "body-parser": "^1.18.3",
-    "cors": "^2.8.4",
-    "express": "^4.16.3",
-    "node-hue-api": "^2.4.4",
-    "promise": "^8.0.2",
-    "request": "^2.88.0",
-    "underscore": "^1.9.1"
+    "@types/request-promise-native": "^1.0.17",
+    "body-parser": "1.19.0",
+    "cors": "2.8.5",
+    "express": "4.17.1",
+    "node-hue-api": "3.1.4",
+    "promise": "8.0.3",
+    "request": "2.88.0",
+    "request-promise-native": "^1.0.7",
+    "serve-favicon": "^2.5.0",
+    "ts-node": "8.4.1",
+    "typescript": "3.6.3",
+    "underscore": "1.9.1"
   },
   "devDependencies": {
-    "chai": "^4.1.2",
-    "eslint": "^5.16.0",
-    "eslint-config-airbnb-base": "^13.1.0",
-    "eslint-plugin-import": "^2.14.0",
-    "mocha": "^5.2.0",
-    "sinon": "^6.1.5",
-    "supervisor": "^0.12.0"
+    "@types/chai": "4.2.3",
+    "@types/cors": "^2.8.6",
+    "@types/express": "4.17.1",
+    "@types/mocha": "5.2.7",
+    "@types/promise": "7.1.30",
+    "@types/request": "2.48.3",
+    "@types/serve-favicon": "^2.2.31",
+    "chai": "4.2.0",
+    "eslint": "6.5.1",
+    "eslint-config-airbnb-base": "14.0.0",
+    "eslint-plugin-import": "2.18.2",
+    "gts": "1.1.0",
+    "mocha": "6.2.1",
+    "sinon": "7.5.0",
+    "supervisor": "0.12.0",
+    "ts-mocha": "6.0.0"
   }
 }

@@ -8,7 +8,9 @@ class MusicController {
 
   request() {
     var args = Array.prototype.slice.call(arguments);
-    args = args.map(a => a == '$room' ? this.app.currentRoom() : a);
+    const currRoom = this.app.currentRoom();
+    const replaceName = n => n.replace(/\$room/g, currRoom);
+    args = args.map(a => replaceName(a));
     args = [this.root].concat(args);
     var url = args.join('/');
 
