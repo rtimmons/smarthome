@@ -110,8 +110,7 @@ app.get('/same/:room', wrap(async (areq: express.Request, ares: express.Response
   const min = Math.min.apply(null, volumes.map(v => v.volume));
   const others = volumes.filter(v => v.volume !== min);
   await Promise.all(others.map(async (o) => {
-    console.log(`Setting volume of ${o} to ${min}.`);
-    await rpn.get(`/rooms/${o}/volume/${min}`);
+    await rpn.get(`${sonosUrl}/${o.roomName}/volume/${min}`);
   }));
 }));
 
