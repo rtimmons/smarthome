@@ -3,8 +3,10 @@
 
 import * as bodyParser from 'body-parser';
 import * as cors from 'cors';
+import * as serveFavicon from 'serve-favicon';
 import * as express from 'express';
 import * as rpn from 'request-promise-native';
+import * as path from 'path';
 
 import "./types/sonos";
 
@@ -23,6 +25,8 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
+
+app.use(serveFavicon(path.join(__dirname, 'public', 'favicon.ico')));
 
 // /////////////////////////////////////////////////////////////////
 // helpers

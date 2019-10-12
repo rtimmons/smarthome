@@ -20,6 +20,7 @@
     "promise": "8.0.3",
     "request": "2.88.0",
     "request-promise-native": "^1.0.7",
+    "serve-favicon": "^2.5.0",
     "ts-node": "8.4.1",
     "typescript": "3.6.3",
     "underscore": "1.9.1"
@@ -31,6 +32,7 @@
     "@types/mocha": "5.2.7",
     "@types/promise": "7.1.30",
     "@types/request": "2.48.3",
+    "@types/serve-favicon": "^2.2.31",
     "chai": "4.2.0",
     "eslint": "6.5.1",
     "eslint-config-airbnb-base": "14.0.0",
