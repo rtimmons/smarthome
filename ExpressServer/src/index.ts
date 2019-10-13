@@ -9,6 +9,7 @@ import * as rpn from 'request-promise-native';
 import * as path from 'path';
 
 import "./types/sonos";
+import {Request as RQ, Response as RS} from "express";
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -32,7 +33,7 @@ app.use(serveFavicon(path.join(__dirname, 'public', 'favicon.ico')));
 // helpers
 
 // removes port
-const host = (req: express.Request) => {
+const host = (req: RQ) => {
   const header = req.headers.host;
   if (header === undefined) { return; }
   req.headers.host = header.replace(/:\d+$/, '');
@@ -43,24 +44,24 @@ const sonosUrl = 'http://smarterhome.local:5005';
 // //////////////////////////////////////////////////////////////////
 // configs
 
-const redirs: {[key: string]: (req: express.Request, res: express.Response) => string} = {
+const redirs: {[key: string]: (req: RQ, res: RS) => string} = {
   // 1 is up
-  '1up': (req: express.Request) => `http://${req.headers.host}/up`,
-  '1down': (req: express.Request) => `http://${req.headers.host}/down`,
+  '1up': (req: RQ) => `http://${req.headers.host}/up`,
+  '1down': (req: RQ) => `http://${req.headers.host}/down`,
   '1left': () => `${sonosUrl}/Bedroom/favorite/Play%20NPR%20One`,
   '1right': () => `${sonosUrl}/Bedroom/favorite/Zero%207%20Radio`,
   // 2 is right
   '2right': () => `${sonosUrl}/Bedroom/next`,
 };
 
-const sonosPipe = function(route: string, req: express.Request, res: express.Response): express.Response {
+const sonosPipe = function(route: string, req: RQ, res: RS): RS {
   const url = `${sonosUrl}/${route}`;
   console.log(`Requesting ${url}`);
   return req.pipe(rpn(url)).pipe(res);
 };
 
-const sonosGet = function(route: string): (req: express.Request, res: express.Response) => express.Response {
-  return (req: express.Request, res: express.Response) => {
+const sonosGet = function(route: string): (req: RQ, res: RS) => RS {
+  return (req: RQ, res: RS) => {
     return sonosPipe(route, req, res);
   };
 };
@@ -74,13 +75,13 @@ app.get('/tv',    sonosGet('preset/all-tv'));
 app.get('/07',    sonosGet('favorite/Zero 7 Radio'));
 app.get('/quiet', sonosGet('groupVolume/7'));
 
-app.get('/sonos/:rest', (req: express.Request, res: express.Response) => {
+app.get('/sonos/:rest', (req: RQ, res: RS) => {
   return sonosPipe(req.params['rest'], req, res);
 });
 
-const wrap = function<T>(fn: (req: express.Request, res: express.Response) => T):
-    (req: express.Request, res: express.Response) => Promise<T|undefined> {
-  return async function(areq: express.Request, ares: express.Response) {
+const wrap = function<T>(fn: (req: RQ, res: RS) => T):
+    (req: RQ, res: RS) => Promise<T|undefined> {
+  return async function(areq: RQ, ares: RS) {
     try {
       ares.set('Content-Type', 'application/json');
       return await fn(areq, ares);
@@ -95,14 +96,14 @@ const wrap = function<T>(fn: (req: express.Request, res: express.Response) => T)
   };
 };
 
-app.get('/b/:to', (req: express.Request, res: express.Response) => {
+app.get('/b/:to', (req: RQ, res: RS) => {
   const url = redirs[req.params['to']](req, res);
   console.log(`/b/${req.params['to']} => ${url}`);
   req.pipe(rpn(url)).pipe(res);
 });
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
-app.get('/same/:room', wrap(async (areq: express.Request, ares: express.Response) => {
+app.get('/same/:room', wrap(async (areq: RQ, ares: RS) => {
   const room = areq.params['room'];
   const res = await rpn.get(`${sonosUrl}/${room}/zones`);
   const zones: Sonos.Zone[] = JSON.parse(res);
@@ -118,7 +119,7 @@ app.get('/same/:room', wrap(async (areq: express.Request, ares: express.Response
   }));
 }));
 
-app.get('/down', wrap(async (areq: express.Request, ares: express.Response) => {
+app.get('/down', wrap(async (areq: RQ, ares: RS) => {
   const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
   const j = JSON.parse(res.body as string);
   const url = sonosUrl + (
@@ -129,7 +130,7 @@ app.get('/down', wrap(async (areq: express.Request, ares: express.Response) => {
 }));
 
 // probably refactor /up and /down; they're copy/pasta
-app.get('/up', wrap(async (areq: express.Request, ares: express.Response) => {
+app.get('/up', wrap(async (areq: RQ, ares: RS) => {
     const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
     const j = JSON.parse(res.body as string);
     const url = sonosUrl + (
@@ -139,16 +140,16 @@ app.get('/up', wrap(async (areq: express.Request, ares: express.Response) => {
     ares.send(thenState.body);
 }));
 
-app.post('/report', (req: express.Request, res: express.Response) => {
+app.post('/report', (req: RQ, res: RS) => {
   console.log('REPORT', req.body);
   res.send('OK');
 });
 
-app.get('/journal', (req: express.Request, res: express.Response) => {
+app.get('/journal', (req: RQ, res: RS) => {
   res.redirect(301, `http://${host(req)}:19531/browse`);
 });
 
-app.get('/', (req: express.Request, res: express.Response) => {
+app.get('/', (req: RQ, res: RS) => {
   res.set('Content-Type', 'application/json');
   res.send('{}');
 });
