@@ -149,22 +149,18 @@ class App {
     case 'Lights.On':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_bright/with/key/' + this.secret.ifttt.key);
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_on/with/key/' + this.secret.ifttt.key);
-        // this.request('http://retropie:5005/' + this.room + '/say/on/en-gb')
         break;
     case 'Lights.Scene.Dim':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_dim/with/key/' + this.secret.ifttt.key);
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/' + this.secret.ifttt.key);
-        // this.request('http://retropie:5005/' + this.room + '/say/dimmed/en-gb')
         break;
     case 'Lights.Off':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_off/with/key/' + this.secret.ifttt.key);
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/' + this.secret.ifttt.key);
-        // this.request('http://retropie:5005/' + this.room + '/say/off/en-gb')
         break;
     case 'Lights.Scene.Savana':
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_scene_savanna/with/key/' + this.secret.ifttt.key);
         this.request('http://maker.ifttt.com/trigger/' + this.room + '_switch_off/with/key/' + this.secret.ifttt.key);
-        // this.request('http://retropie:5005/' + this.room + '/say/savanna/en-gb')
         break;
 
     // TODO: move to Music.* listeners to MusicController

@@ -17,7 +17,6 @@ class MusicController {
     return this.requester.request(url);
   }
 
-  // should all of these URLs go thru the ExpressServer API?
   pause()       { this.request('$room', 'pause'       ); }
   playPause()   { this.request('$room', 'playpause'   ); }
   preset(name)  { this.request('$room', 'preset', name); }
@@ -25,23 +24,17 @@ class MusicController {
   volumeDown()  { this.request('$room', 'groupVolume', '-2'); }
   next()        { this.request('$room', 'next'        ); }
   favorite(name){ this.request('$room', 'favorite', name); }
-
-  // custom volume function, run on ExpressServer not on sonos directly
-  volumeSame()  {
-    this.requester.request(`http://smarterhome.local:3000/same/${this.app.currentRoom()}`);
-  }
-
+  volumeSame()  { this.request('same', '$room'); }
 
   leaveRoom(r)  { this.request(r, 'leave');   }
   joinRoom(a,b) { this.request(a, 'join', b); }
 
-  onMessage(e) {
-  }
+  onMessage(e) {}
 
   allJoin(room) {
-    var delay = 0;
+    let delay = 0;
     this.app.config.rooms.filter( x => x != room ).forEach( other => {
-      setTimeout(() => this.requester.request('http://' +  + window.location.host + ':5005/' + other + '/join/' + room), delay)
+      setTimeout(() => this.request([other, 'join', '$room']), delay);
       delay += 250; // only 1 request/quarter-second
     });
   }
