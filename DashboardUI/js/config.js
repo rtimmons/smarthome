@@ -66,12 +66,15 @@ var config = {
   rows: 8,
   cols: 11,
   rooms: [
+    // This is used by allJoin (double-tap a room).
+    // This "should" be implemented in the ExpressAPI
     'Living',
     'Bedroom',
     'Kitchen',
     'Bathroom',
     'Office',
     'Guest Bathroom',
+    'Closet',
     'Move',
   ],
   cells: [

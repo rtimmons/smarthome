@@ -34,7 +34,7 @@ class MusicController {
   allJoin(room) {
     let delay = 0;
     this.app.config.rooms.filter( x => x != room ).forEach( other => {
-      setTimeout(() => this.request([other, 'join', '$room']), delay);
+      setTimeout(() => this.request(other, 'join', '$room'), delay);
       delay += 250; // only 1 request/quarter-second
     });
   }
