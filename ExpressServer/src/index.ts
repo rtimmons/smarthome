@@ -59,7 +59,6 @@ const redirs: {[key: string]: (req: RQ, res: RS) => string} = {
 
 const sonosPipe = function(route: string, req: RQ, res: RS): RS {
   const url = `${sonosUrl}/${route}`;
-  console.log(`Requesting ${url}`);
   return req.pipe(rpn(url)).pipe(res);
 };
 
@@ -78,9 +77,17 @@ app.get('/tv',    sonosGet('preset/all-tv'));
 app.get('/07',    sonosGet('favorite/Zero 7 Radio'));
 app.get('/quiet', sonosGet('groupVolume/7'));
 
-app.get('/sonos/:rest', (req: RQ, res: RS) => {
-  return sonosPipe(req.params['rest'], req, res);
-});
+(function(){
+  const rex: RegExp = /sonos\/(.*)$/;
+  app.get(rex, (req: RQ, res: RS) => {
+    const match = req.path.match(rex);
+    if (match === null) {
+      throw new Error(`Invalid sonos request ${req.path}`);
+    }
+    const rest = match[1];
+    return sonosPipe(rest, req, res);
+  });
+})();
 
 const wrap = function<T>(fn: (req: RQ, res: RS) => T):
     (req: RQ, res: RS) => Promise<T|undefined> {

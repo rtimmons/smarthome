@@ -13,7 +13,7 @@ class App {
     // TODO: move to object-factory
     this.musicController = new MusicController({
       requester: this,
-      root: 'http://' + this.secret.host.hostname + ':5005',
+      root: 'http://' + this.secret.host.hostname + ':3000' + '/sonos',
       app: this,
       pubsub: this.pubsub,
     });
@@ -135,7 +135,7 @@ class App {
       console.log('Reloading');
       this.window.location.reload(true);
       break;
-    
+
     // TODO: is this used?
     case 'AllJoin':
       this.musicController.allJoin(params[0]);
