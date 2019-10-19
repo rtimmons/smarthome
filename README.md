@@ -43,6 +43,25 @@ Smarthome Dashboard
 	- don't do fixed html table, just let code generate grid. Assign `x,y` values and then listeners?
 	- pull hook or something to update cache.manifest since mobile safari doesn't refresh very well
 
+- make development more sustainable
+    - UI
+        - webpack/babel (https://www.evernote.com/l/AAGQBWjMhuBLYqbDMKJfcYJ6hrRv73LLnxE)
+        - consider react but meh
+        - def want typescript
+    - ExpressServer
+        - mocha testing
+        - better live-reload situation
+    - JS in general (UI and ExpressServer)
+        - lint and format js
+    - repo
+        - plugin model (all the ui stuff together including ansible, etc)
+    - ansible
+        - remove deprecations
+        - lint yaml
+        - figure out if there is anything running as root that shouldn't be
+    - integrations
+        - KMS or hashicorp vault for better secrets management
+        - Grafana for metrics
 
 ## System Ideas / Dumping Ground
 
