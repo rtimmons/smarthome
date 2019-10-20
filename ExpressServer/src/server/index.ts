@@ -11,7 +11,7 @@ import * as path from 'path';
 import * as rpn from 'request-promise-native';
 import * as serveFavicon from 'serve-favicon';
 
-import './types/sonos';
+import '../types/sonos';
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -29,7 +29,9 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(cors());
 
-app.use(serveFavicon(path.join(__dirname, 'public', 'favicon.ico')));
+app.use(serveFavicon(path.join(__dirname, '..', 'public', 'favicon.ico')));
+
+app.use('/ui', express.static('src/public'));
 
 app.use(morgan('tiny'));
 
