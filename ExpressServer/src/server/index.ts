@@ -13,6 +13,14 @@ import * as serveFavicon from 'serve-favicon';
 
 import '../types/sonos';
 
+// tslint:disable-next-line:ban-ts-ignore
+// @ts-ignore
+if (module.hot) {
+    // tslint:disable-next-line:ban-ts-ignore
+    // @ts-ignore
+    module.hot.accept();
+}
+
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
 
