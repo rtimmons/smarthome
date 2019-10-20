@@ -11,6 +11,8 @@
     "rootDir": ".",
     "target": "es2017"
   },
-  "include": [""],
-  "exclude": []
+  "include": [
+    "src/**/*.ts",
+    "test/**/*.ts"
+  ]
 }

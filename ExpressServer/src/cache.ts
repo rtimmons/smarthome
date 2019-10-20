@@ -1,4 +1,3 @@
-
 function isExpired(then: number, ttl: number): boolean {
   const now = new Date().getTime();
   return then + ttl <= now;
@@ -19,27 +18,32 @@ function nopProducer<T>(): CacheValueProducer<T | null> {
   return (key: keyof CacheDataMap) => Promise.resolve(null);
 }
 
-
 // example:
 // someKey: {
 //   value: 'SomeValue',
 //   insertedAt: new Date().getTime() - (this.ttl + 1000),
 // }
-type CacheDataMap = {
-  [key:string]: CacheValue
-};
+interface CacheDataMap {
+  [key: string]: CacheValue;
+}
 
 export class Cache {
   ttl: number;
   data: CacheDataMap = {};
 
-  constructor(params: CacheParams = {ttl: 60 * 1000}) {
+  constructor(params: CacheParams = { ttl: 60 * 1000 }) {
     this.ttl = params.ttl;
   }
 
-  async get<T>(key: keyof CacheDataMap, producer?: CacheValueProducer<T|null>): Promise<T|null> {
+  async get<T>(
+    key: keyof CacheDataMap,
+    producer?: CacheValueProducer<T | null>
+  ): Promise<T | null> {
     const usedProducer = producer || nopProducer<T>();
-    if (this.data[key] === undefined || isExpired(this.data[key].insertedAt, this.ttl)) {
+    if (
+      this.data[key] === undefined ||
+      isExpired(this.data[key].insertedAt, this.ttl)
+    ) {
       // console.log('Key [' + key + '] missing or expired');
       return this.set(key, usedProducer);
     }
@@ -47,7 +51,10 @@ export class Cache {
   }
 
   // producer is a promise
-  async set<T>(key: keyof CacheDataMap, producer: CacheValueProducer<T>): Promise<T> {
+  async set<T>(
+    key: keyof CacheDataMap,
+    producer: CacheValueProducer<T>
+  ): Promise<T> {
     const produced: T = await producer(key);
     this.data[key] = {
       value: produced,
