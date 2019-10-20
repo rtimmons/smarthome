@@ -7,7 +7,7 @@
         "grouped-imports": true
       }
     ],
-    "indent": ["spaces", 4],
+    "indent": true,
     "no-any": false,
     "no-duplicate-imports": true
   },
