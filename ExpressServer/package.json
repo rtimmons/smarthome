@@ -39,7 +39,7 @@
     "eslint": "6.5.1",
     "eslint-config-airbnb-base": "14.0.0",
     "eslint-plugin-import": "2.18.2",
-    "gts": "1.1.0",
+    "gts": "^1.1.0",
     "mocha": "6.2.1",
     "sinon": "7.5.0",
     "supervisor": "0.12.0",
