@@ -11,7 +11,7 @@
   become_user: root
   become: yes
   shell:
-    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -;
+    curl -sL https://deb.nodesource.com/setup_12.x | sudo -E bash -;
     touch /root/nodesource
     chmod a+r /root/nodesource
   args:
@@ -21,9 +21,5 @@
   become_user: root
   become: yes
   apt:
-    name: "{{ item }}"
+    name: ['libpcap-dev', 'build-essential', 'nodejs', 'gcc', 'g++', 'make']
     state: present
-  with_items:
-    -  libpcap-dev
-    -  build-essential
-    -  nodejs
