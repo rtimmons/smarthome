@@ -7,26 +7,11 @@
     name: apache2
     state: present
 
-- name: install smarthome apache config
-  become_user: root
-  become: true
-  template:
-    src: 001-smarthome.conf
-    dest: /etc/apache2/sites-available/001-smarthome.conf.j2
-    owner: root
-    group: root
-    mode: 0664
-
-- name: enable smarthome apache config
-  become_user: root
-  become: true
-  command: a2ensite 001-smarthome
-
-- name: enable mod_headers
+- name: enable mod_rewrite
   become_user: root
   become: yes
   apache2_module:
-    name: headers
+    name: rewrite
     state: present
 
 - name: enable mod_status
@@ -36,18 +21,39 @@
     name: status
     state: present
 
-- name: enable mod_rewrite
+- name: enable mod_headers
   become_user: root
   become: yes
   apache2_module:
-    name: rewrite
+    name: headers
     state: present
+
+- name: install smarthome apache config
+  become_user: root
+  become: true
+  template:
+    src: 001-smarthome.conf.j2
+    dest: /etc/apache2/sites-available/001-smarthome.conf
+    owner: root
+    group: root
+    mode: 0664
+
+- name: enable smarthome apache config
+  become_user: root
+  become: true
+  command: a2ensite 001-smarthome
+
+- name: disable default apache config
+  become_user: root
+  become: true
+  command: a2dissite 000-default
 
 - name: enable service httpd and ensure it is not masked
   systemd:
     name: apache2
     enabled: yes
     masked: no
+    state: restarted
 
 - name: install secrets
   template:
