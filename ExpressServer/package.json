@@ -4,6 +4,7 @@
   "description": "api for smarterhome",
   "main": "index.ts",
   "scripts": {
+    "ui-build": "npx webpack",
     "start": "ts-node src/server/index.ts",
     "stop": "pkill smhexprsrv",
     "dev": "supervisor -p 200 -RV --debug -x npm start",

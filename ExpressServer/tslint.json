@@ -14,7 +14,6 @@
   "linterOptions": {
     "exclude": [
       "**/*.json",
-      "**/*.js",
       "**/*.compiled.js"
     ]
   }
