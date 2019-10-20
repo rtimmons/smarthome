@@ -1,0 +1,6 @@
+<Directory /var/www/>
+    RewriteEngine  on
+    RewriteRule    ".*"  "http://${secret.host.hostname}:3000/ui"  [R,L]
+</Directory>
+
+# vim: syntax=apache ts=4 sw=4 sts=4 sr noet
