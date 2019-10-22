@@ -3,9 +3,8 @@ Setup
 
 Goal is for the rpi to be [cattle not a pet](https://www.theregister.co.uk/2013/03/18/servers_pets_or_cattle_cern/), so the entire build and deploy process is designed to 
 
-1. have the rpi connect to wpa2 wifi.
-2. have a custom hostname so you can have multiple raspberry pis on your wifi.
-3. not require **ever** plugging in a keyboard or monitor.
+1. have a custom hostname so you can have multiple raspberry pis on your network.
+2. not require **ever** plugging in a keyboard or monitor.
 
 You will need 
 
@@ -21,7 +20,7 @@ First:
 Download Raspbian Jessie (lite - no desktop) from [here](https://www.raspberrypi.org/downloads/raspbian/).
 This redirects here for the impatient:
 https://downloads.raspberrypi.org/raspbian_lite_latest
-(I've not tried other distros but I assume they'll work - we really only need systemd and `apt-get` I think...plus..whatever does the wifi stuff.)
+(I've not tried other distros but I assume they'll work - we really only need systemd and `apt-get` I think.)
 
 Burn to SD card using [etcher](https://etcher.io/).
 
@@ -59,11 +58,11 @@ Then `cd Ansible`
 
 Then `cp vars/secret-example.yml vars/secret.yml`.
 
-Then modify `vars/secret.yml` with your wifi network info the rpi should use and with a unique hostname. The hostname should end with `.local` and should be unique on your network. Your local machine will use this hostname to connect with your rpi once its on your wifi.
+Then modify `vars/secret.yml` with the relevant credentials your rpi should use and with a unique hostname. The hostname should end with `.local` and should be unique on your network. Your local machine will use this hostname to connect with your rpi once its on your network.
 
-Then `./setup-wifi.sh`
+Then `./setup-network.sh`
 
-Then restart without ethernet plugged in. 
+Then restart.
 
 - Just unplug the thing violently from power. Then more gently unplug ethernet.
 - This restart takes about 45 seconds since it checks the filesystem after your senseless violence.

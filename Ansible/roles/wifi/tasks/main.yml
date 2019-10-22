@@ -1,8 +1,0 @@
-# https://learn.adafruit.com/adafruits-raspberry-pi-lesson-3-network-setup/setting-up-wifi-with-occidentalis
-- name: install /etc/network/interfaces interfaces file
-  become: yes
-  become_user: root
-  template:
-    src: interfaces.j2
-    dest: /etc/network/interfaces
-

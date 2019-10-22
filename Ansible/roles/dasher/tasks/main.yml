@@ -1,3 +1,5 @@
+---
+
 # TODO: standardize yaml to 2 spaces
 
 - name: install dependency packages
@@ -13,7 +15,8 @@
       clone: yes
       dest: /home/pi/dasher
       # TODO: vars?
-      version: ef9d486996ea4eb196ca20098748f8504f2a807f
+      # 2019-07-13
+      version: e5e7a92c48c873444ecbf80c1c3c5a8b59b09974
 
 - name: Install dasher node.js package
   retries: 5

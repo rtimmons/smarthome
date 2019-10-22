@@ -9,7 +9,6 @@ Smarthome Dashboard
 	- install heatsink, put in case, plug into wall. Heatsink is apparently necessary.
 - Follow [setup steps](./setup.md)
 
-  
 ## TODO
 
 - music
@@ -44,10 +43,46 @@ Smarthome Dashboard
 	- don't do fixed html table, just let code generate grid. Assign `x,y` values and then listeners?
 	- pull hook or something to update cache.manifest since mobile safari doesn't refresh very well
 
+- make development more sustainable
+    - UI
+        - webpack/babel (https://www.evernote.com/l/AAGQBWjMhuBLYqbDMKJfcYJ6hrRv73LLnxE)
+        - consider react but meh
+        - def want typescript
+    - ExpressServer
+        - mocha testing
+        - better live-reload situation
+    - JS in general (UI and ExpressServer)
+        - lint and format js
+    - repo
+        - plugin model (all the ui stuff together including ansible, etc)
+    - ansible
+        - remove deprecations
+        - lint yaml
+        - figure out if there is anything running as root that shouldn't be
+    - integrations
+        - KMS or hashicorp vault for better secrets management
+        - Grafana for metrics
+
+## System Ideas / Dumping Ground
+
+- Maybe [Lutron Caséta][lc]?
+
+- Look into [HomeBridge](https://github.com/nfarina/homebridge)
+
+- Look into [openHab](http://www.openhab.org/)
+
+- Look into "Home Assistant" as detailed by holman [here][ha]
+  [ha]: https://stackshare.io/holman/decisions/101735320676191302
+
+- Look into [Nekmo/amazon-dash](https://github.com/Nekmo/amazon-dash) as an
+  alternative to Dasher
+
 - Incorporate [mozilla open gateway][moz]. OR: [node-red][nr]?
 
  [moz]: https://techcrunch.com/2018/02/06/mozilla-announces-an-open-framework-for-the-internet-of-things/
  [nr]:  https://nodered.org/
+ [lc]:  http://www.lutron.com/en-US/Products/Pages/SingleRoomControls/CasetaWireless/Overview.aspx
+
 
 Scrub for ideas <https://news.ycombinator.com/item?id=16874208>:
 

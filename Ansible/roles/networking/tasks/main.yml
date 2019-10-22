@@ -1,0 +1,8 @@
+---
+
+- name: install /etc/network/interfaces interfaces file
+  become: true
+  become_user: root
+  template:
+    src: interfaces.j2
+    dest: /etc/network/interfaces
