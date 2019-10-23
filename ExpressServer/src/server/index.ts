@@ -141,6 +141,8 @@ app.get(
                 await rpn.get(`${sonosUrl}/${o.roomName}/volume/${min}`);
             })
         );
+        ares.status(200);
+        ares.json({status: 'success'});
     })
 );
 

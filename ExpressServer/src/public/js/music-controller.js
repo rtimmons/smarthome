@@ -18,35 +18,36 @@ class MusicController {
     }
 
     pause() {
-        this.request('$room', 'pause');
+        this.request('sonos', '$room', 'pause');
     }
     playPause() {
-        this.request('$room', 'playpause');
+        this.request('sonos', '$room', 'playpause');
     }
     preset(name) {
-        this.request('$room', 'preset', name);
+        this.request('sonos', '$room', 'preset', name);
     }
     volumeUp() {
-        this.request('$room', 'groupVolume', '+2');
+        this.request('sonos', '$room', 'groupVolume', '+2');
     }
     volumeDown() {
-        this.request('$room', 'groupVolume', '-2');
+        this.request('sonos', '$room', 'groupVolume', '-2');
     }
     next() {
-        this.request('$room', 'next');
+        this.request('sonos', '$room', 'next');
     }
     favorite(name) {
-        this.request('$room', 'favorite', name);
+        this.request('sonos', '$room', 'favorite', name);
     }
     volumeSame() {
+        // not provided by sonos natively
         this.request('same', '$room');
     }
 
     leaveRoom(r) {
-        this.request(r, 'leave');
+        this.request('sonos', r, 'leave');
     }
     joinRoom(a, b) {
-        this.request(a, 'join', b);
+        this.request('sonos', a, 'join', b);
     }
 
     onMessage(e) {}
@@ -56,19 +57,19 @@ class MusicController {
         this.app.config.rooms
             .filter(x => x != room)
             .forEach(other => {
-                setTimeout(() => this.request(other, 'join', '$room'), delay);
+                setTimeout(() => this.request('sonos', other, 'join', '$room'), delay);
                 delay += 250; // only 1 request/quarter-second
             });
     }
 
     fetchState() {
-        this.request('$room', 'state').done(resp => {
+        this.request('sonos', '$room', 'state').done(resp => {
             this.pubsub.submit('Room.StateObserved', {
                 State: resp,
             });
         });
 
-        this.request('zones').done(resp => {
+        this.request('sonos', 'zones').done(resp => {
             this.pubsub.submit('Room.ZonesObserved', {
                 Zones: resp,
             });

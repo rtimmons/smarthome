@@ -13,7 +13,7 @@ class App {
         // TODO: move to object-factory
         this.musicController = new MusicController({
             requester: this,
-            root: 'http://' + this.secret.host.hostname + ':3000' + '/sonos',
+            root: 'http://' + this.secret.host.hostname,
             app: this,
             pubsub: this.pubsub,
         });

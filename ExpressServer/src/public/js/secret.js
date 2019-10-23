@@ -4,7 +4,7 @@
 
 var secret = {
     host: {
-        hostname: 'smarterhome.local',
+        hostname: `${window.location.host || 'smarterhome.local:3000'}`,
     },
     ifttt: {
         key: 'DUMMY_DO_ANSIBLE_DEPLOY',
