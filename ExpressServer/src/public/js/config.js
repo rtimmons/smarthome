@@ -30,6 +30,7 @@ var config = {
         Film: '🎬',
         Bed: '🛏',
         Rice: '🍙',
+        Dog: '🐶',
         Shower: '🛁',
         Earth: '🌍',
         Play: '▶️',
@@ -347,6 +348,14 @@ var config = {
             x: 8,
             emoji: 'MilkyWay',
             onPress: { action: 'Music.Favorite', args: ['Zero 7 Radio'] },
+        },
+        {
+            w: 1,
+            h: 1,
+            y: 3,
+            x: 9,
+            emoji: 'Dog',
+            onPress: { action: 'Music.Favorite', args: ['Frankie'] },
         },
         {
             w: 1,
