@@ -65,6 +65,9 @@ Smarthome Dashboard
 
 ## System Ideas / Dumping Ground
 
+- Look into home-assistant.io?
+  [See HN Thread for other things to consider too](https://news.ycombinator.com/item?id=21665125)
+
 - Maybe [Lutron Caséta][lc]?
 
 - Look into [HomeBridge](https://github.com/nfarina/homebridge)
