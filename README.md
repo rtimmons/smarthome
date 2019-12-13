@@ -11,6 +11,24 @@ Smarthome Dashboard
 
 ## TODO
 
+- Fix sonos discovery bug (bug in dependency):
+
+    ```
+    /home/pi/node-sonos-http-api/node_modules/sonos-discovery/lib/models/Player.js:188
+    get: () => getState(state, _this.coordinator._state, _this.hasSub ? _this.sub : null)
+    ^
+    TypeError: Cannot read property '_state' of undefined
+    at Player.get (/home/pi/node-sonos-http-api/node_modules/sonos-discovery/lib/models/Player.js:188:50)
+    at Object.state (/home/pi/node-sonos-http-api/lib/actions/state.js:4:33)
+    at handleAction (/home/pi/node-sonos-http-api/lib/sonos-http-api.js:117:35)
+    at HttpAPI.requestHandler (/home/pi/node-sonos-http-api/lib/sonos-http-api.js:94:21)
+    at /home/pi/node-sonos-http-api/server.js:52:13
+    at Server.finish (/home/pi/node-sonos-http-api/node_modules/node-static/lib/node-static.js:111:13)
+    at finish (/home/pi/node-sonos-http-api/node_modules/node-static/lib/node-static.js:170:14)
+    at /home/pi/node-sonos-http-api/node_modules/node-static/lib/node-static.js:144:17
+    at FSReqCallback.oncomplete (fs.js:169:21)
+    ```
+
 - music
 	- "Play all from" join button
 	- Preset music
