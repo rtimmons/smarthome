@@ -74,6 +74,27 @@ const sonosGet = (route: string): ((req: RQ, res: RS) => RS) => {
 };
 
 // //////////////////////////////////////////////////////////////
+// SmartThings Integration
+const STAPI = 'https://api.smartthings.com/v1';
+const TOKEN = 'REDACTED';
+
+const stGet = (route: string, qs:any = {}): ((req: RQ, res: RS) => RS) => {
+    return (req: RQ, res: RS) => {
+        const options: rpn.Options = {
+            url: `${STAPI}/devices`,
+            qs,
+            json: true,
+            headers: {
+                'Authorization': 'Bearer: ' + TOKEN
+            },
+        };
+        return req.pipe(rpn(options)).pipe(res);
+    }
+};
+
+app.get('/devices', stGet('devices'));
+
+// //////////////////////////////////////////////////////////////
 // routes
 
 app.get('/pause', sonosGet('pause'));
