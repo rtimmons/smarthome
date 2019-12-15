@@ -13,9 +13,9 @@ import * as serveFavicon from 'serve-favicon';
 
 import '../types/smartthings';
 import '../types/sonos';
-import Device = SmartThings.Device;
-import Scene = SmartThings.Scene;
 
+import * as secrets from './../../secret.js';
+import Scene = SmartThings.Scene;
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -79,17 +79,15 @@ const sonosGet = (route: string): ((req: RQ, res: RS) => RS) => {
 
 // //////////////////////////////////////////////////////////////
 // SmartThings Integration
-const STAPI = 'https://api.smartthings.com/v1';
-const TOKEN = 'REDACTED';
 
 function stGet(route: string, qs:any = {}, method = 'GET'): rpn.RequestPromise {
     const options: rpn.Options = {
         method,
-        url: `${STAPI}/${route}`,
+        url: `https://api.smartthings.com/v1/${route}`,
         qs,
         json: true,
         headers: {
-            'Authorization': 'Bearer: ' + TOKEN
+            'Authorization': 'Bearer: ' + secrets.smartthings.token,
         },
     };
     return rpn(options);
