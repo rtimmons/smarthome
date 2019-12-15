@@ -18,6 +18,14 @@ class App {
             pubsub: this.pubsub,
         });
 
+        // TODO: move to object-factory
+        this.lightController = new LightController({
+            requester: this,
+            root: 'http://' + this.secret.host.hostname,
+            app: this,
+            pubsub: this.pubsub,
+        });
+
         // TODO: move to pubsub class
         this.pubsub.subscribe('*', {
             onMessage: e => {
@@ -149,61 +157,8 @@ class App {
                 break;
 
             // TODO: lights controller?
-            case 'Lights.On':
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_scene_bright/with/key/' +
-                        this.secret.ifttt.key
-                );
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_switch_on/with/key/' +
-                        this.secret.ifttt.key
-                );
-                break;
-            case 'Lights.Scene.Dim':
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_scene_dim/with/key/' +
-                        this.secret.ifttt.key
-                );
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_switch_off/with/key/' +
-                        this.secret.ifttt.key
-                );
-                break;
-            case 'Lights.Off':
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_off/with/key/' +
-                        this.secret.ifttt.key
-                );
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_switch_off/with/key/' +
-                        this.secret.ifttt.key
-                );
-                break;
-            case 'Lights.Scene.Savana':
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_scene_savanna/with/key/' +
-                        this.secret.ifttt.key
-                );
-                this.request(
-                    'http://maker.ifttt.com/trigger/' +
-                        this.room +
-                        '_switch_off/with/key/' +
-                        this.secret.ifttt.key
-                );
+            case 'Lights.Scene':
+                this.lightController.scene(params);
                 break;
 
             // TODO: move to Music.* listeners to MusicController
