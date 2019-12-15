@@ -11,7 +11,11 @@ import * as path from 'path';
 import * as rpn from 'request-promise-native';
 import * as serveFavicon from 'serve-favicon';
 
+import '../types/smartthings';
 import '../types/sonos';
+import Device = SmartThings.Device;
+import Scene = SmartThings.Scene;
+
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -78,9 +82,10 @@ const sonosGet = (route: string): ((req: RQ, res: RS) => RS) => {
 const STAPI = 'https://api.smartthings.com/v1';
 const TOKEN = 'REDACTED';
 
-function stGet(route: string, qs:any = {}): rpn.RequestPromise {
+function stGet(route: string, qs:any = {}, method = 'GET'): rpn.RequestPromise {
     const options: rpn.Options = {
-        url: `${STAPI}/devices`,
+        method,
+        url: `${STAPI}/${route}`,
         qs,
         json: true,
         headers: {
@@ -90,13 +95,15 @@ function stGet(route: string, qs:any = {}): rpn.RequestPromise {
     return rpn(options);
 }
 
-const stPipe = (route: string, qs:any = {}): ((req: RQ, res: RS) => RS) => {
-    return (req: RQ, res: RS) => {
-        return req.pipe(stGet(route, qs)).pipe(res);
+app.get('/scenes/:scene', async (req: RQ, res: RS) => {
+    const scenes: SmartThings.STResponse<Scene> = await stGet('scenes');
+    const scene = scenes.items.find(scene => scene.sceneName === req.params['scene']);
+    if (typeof scene === 'undefined') {
+        return res.status(404).send('Scene not found');
     }
-};
-
-app.get('/devices', stPipe('devices'));
+    await stGet('/scenes/' + scene.sceneId + '/execute', {}, 'POST');
+    return res.send('OK');
+});
 
 // //////////////////////////////////////////////////////////////
 // routes

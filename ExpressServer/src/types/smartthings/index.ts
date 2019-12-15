@@ -35,13 +35,25 @@ declare namespace SmartThings {
         deviceManufacturerCode: string;
     }
 
-    export interface Links {
+    export interface STResponse<T> {
+        items: T[];
     }
 
-    export interface RootObject {
-        items: Device[];
-        _links: Links;
+    export interface Scene {
+        sceneId: string;
+        sceneName: string;
+        sceneIcon: string;
+        sceneColor?: any;
+        locationId: string;
+        createdBy: string;
+        createdDate: any;
+        lastUpdatedDate: any;
+        lastExecutedDate: any;
+        editable: boolean;
+        apiVersion: string;
     }
+
+
 
 }
 
