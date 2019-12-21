@@ -5,14 +5,13 @@
       repo: https://github.com/rtimmons/node-sonos-http-api.git
       clone: yes
       dest: /home/pi/node-sonos-http-api
-      # TODO: vars?
-      # merged from upstream 2019-07-13
-      version: ce7ba806a3bcff012677da25ce7f17a70107f8d9
+      # merged from upstream 2019-12-21; has bugfixes
+      version: 097c60f4109b0e6f73250dd18f07c8e9c611c117
 
 - name: Install node-sonos-http-api node.js package
   retries: 5
   delay: 5
-  shell: npm install --no-save
+  shell: npm install --no-save --production
   args:
     chdir: /home/pi/node-sonos-http-api
 
