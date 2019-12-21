@@ -51,7 +51,7 @@ const host = (req: RQ) => {
     req.headers.host = header.replace(/:\d+$/, '');
 };
 
-const sonosUrl = 'http://smarterhome.local:5005';
+const sonosUrl = 'http://localhost:5005';
 
 // //////////////////////////////////////////////////////////////////
 // configs
