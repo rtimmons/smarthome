@@ -6,3 +6,4 @@
   apt:
     name: [curl, build-essential, nodejs]
     state: present
+

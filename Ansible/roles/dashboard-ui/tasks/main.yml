@@ -42,19 +42,20 @@
   become_user: root
   become: true
   command: a2ensite 001-smarthome
+  args:
+    creates: /etc/apache2/sites-enabled/001-smarthome.conf
+  notify:
+  - restart apache2
 
 - name: disable default apache config
   become_user: root
   become: true
   command: a2dissite 000-default
+  args:
+    removes: /etc/apache2/sites-enabled/000-default.conf
 
 - name: enable service httpd and ensure it is not masked
   systemd:
     name: apache2
     enabled: yes
     masked: no
-
-- name: install secrets
-  template:
-    src: secret.js.j2
-    dest: /home/pi/repo/ExpressServer/src/public/js

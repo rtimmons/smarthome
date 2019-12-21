@@ -18,6 +18,8 @@
   become_user: root
   become: true
   command: python3 -m amazon_dash.install
+  args:
+    creates: /etc/amazon-dash.yml
 
 - name: copy amazon-dash config
   become_user: root
@@ -31,7 +33,7 @@
   become: true
   service:
     name: amazon-dash
-    state: restarted
+    state: started
     enabled: yes
 
 # use `sudo journalctl` to look at logs
