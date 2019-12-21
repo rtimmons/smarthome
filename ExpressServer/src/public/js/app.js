@@ -7,13 +7,12 @@ class App {
         this.grid = args.grid;
         this.config = args.config;
         this.rooms = args.config.rooms;
-        this.secret = args.secret;
         this.pubsub = args.pubsub;
 
         // TODO: move to object-factory
         this.musicController = new MusicController({
             requester: this,
-            root: 'http://' + this.secret.host.hostname,
+            root: window.location.origin,
             app: this,
             pubsub: this.pubsub,
         });
@@ -21,7 +20,7 @@ class App {
         // TODO: move to object-factory
         this.lightController = new LightController({
             requester: this,
-            root: 'http://' + this.secret.host.hostname,
+            root: window.location.origin,
             app: this,
             pubsub: this.pubsub,
         });

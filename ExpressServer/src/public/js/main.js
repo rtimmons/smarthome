@@ -21,7 +21,6 @@ $(() => {
         container: container,
         grid: grid,
         config: config,
-        secret: secret,
     });
 
     pubsub.subscribe('Room.StateObserved', new BackgroundChanger());
