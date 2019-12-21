@@ -1,7 +1,7 @@
 ---
 dependencies:
   - { role: dashboard-ui }
-  - { role: dasher }
+  - { role: amazon-dash }
   - { role: sonos-http }
   - { role: express-server }
   - { role: print-server }

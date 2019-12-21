@@ -1,29 +1,8 @@
 ---
 
-- name: install curl
-  become_user: root
-  become: yes
-  apt:
-    name: curl
-    state: present
-
-- name: enable nodesource packages
-  become_user: root
-  become: yes
-  shell:
-    curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -;
-    touch /root/nodesource
-    chmod a+r /root/nodesource
-  args:
-    creates: /root/nodesource
-
 - name: install npm packages
   become_user: root
   become: yes
   apt:
-    name: "{{ item }}"
+    name: [curl, build-essential, nodejs]
     state: present
-  with_items:
-    -  libpcap-dev
-    -  build-essential
-    -  nodejs

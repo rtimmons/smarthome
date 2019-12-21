@@ -95,9 +95,6 @@ Smarthome Dashboard
 - Look into "Home Assistant" as detailed by holman [here][ha]
   [ha]: https://stackshare.io/holman/decisions/101735320676191302
 
-- Look into [Nekmo/amazon-dash](https://github.com/Nekmo/amazon-dash) as an
-  alternative to Dasher
-
 - Incorporate [mozilla open gateway][moz]. OR: [node-red][nr]?
 
  [moz]: https://techcrunch.com/2018/02/06/mozilla-announces-an-open-framework-for-the-internet-of-things/

@@ -1,0 +1,19 @@
+# http://docs.nekmo.org/amazon-dash/config_file.html
+
+settings:
+  # On seconds. Minimum time that must pass between pulsations.
+  delay: 5
+
+devices:
+  34:D2:70:CD:B0:37:
+    name: Living Room Couch Button 1
+    url: http://localhost:3000/sonos/preset/Living-tv
+  0C:47:C9:22:EF:AA:
+    name: Living Room Couch Button 2
+    url: http://localhost:3000/sonos/preset/Living-tv
+  A0:02:DC:E9:50:E8:
+    name: Bedroom Button 1 (Gillette)
+    url: http://localhost:3000/sonos/preset/Bedroom-tv
+  A0:02:DC:82:60:50:
+    name: Bedroom Button 2 (Doubleshot)
+    url: http://localhost:3000/sonos/preset/Bedroom-tv
