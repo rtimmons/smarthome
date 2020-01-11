@@ -5,8 +5,8 @@
       repo: https://github.com/rtimmons/node-sonos-http-api.git
       clone: yes
       dest: /home/pi/node-sonos-http-api
-      # merged from upstream 2019-12-21; has bugfixes
-      version: 097c60f4109b0e6f73250dd18f07c8e9c611c117
+      # merged from upstream 2020-01-11; has bugfixes
+      version: aa77fa64d23230ceffc65a1585bd66e34af68361
 
 - name: Install node-sonos-http-api node.js package
   retries: 5
