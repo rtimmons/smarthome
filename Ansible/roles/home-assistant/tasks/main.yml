@@ -37,6 +37,7 @@
     - "mutagen==1.43.0"
     - "gTTS-token==1.1.3"
     - "pyMetno==0.4.6"
+    - "colorlog==4.0.2"
     state: present
   environment:
     MAKEFLAGS: '-j4'
