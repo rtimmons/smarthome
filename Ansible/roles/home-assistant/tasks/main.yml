@@ -56,5 +56,5 @@
   become: true
   service:
     name: home-assistant
-    state: started
+    state: restarted
     enabled: yes

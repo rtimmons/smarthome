@@ -29,5 +29,5 @@
       times: yes
       # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
       delete: no
-      src: "{{ playbook_dir }}/../HomeAssistantConfig"
-      dest: /home/pi/repo/HomeAssistantConfig
+      src: "{{ playbook_dir }}/../HomeAssistantConfig/"
+      dest: /home/pi/repo/HomeAssistantConfig/
