@@ -437,6 +437,32 @@
                 "supported_features": 43,
                 "unique_id": "00:17:88:01:03:03:9d:31-0b",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "3aa7c8a856a342d5a3533ec59903338d",
+                "disabled_by": null,
+                "entity_id": "zwave.bedroom_switch_closet",
+                "name": "bedroom_switch_closet",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-5",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "3aa7c8a856a342d5a3533ec59903338d",
+                "disabled_by": null,
+                "entity_id": "light.bedroom_switch_closet",
+                "name": "bedroom_switch_closet",
+                "platform": "zwave",
+                "supported_features": 1,
+                "unique_id": "5-72057594126630913",
+                "unit_of_measurement": null
             }
         ]
     },

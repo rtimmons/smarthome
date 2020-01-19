@@ -142,3 +142,70 @@
       value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
+
+## Closet Dashboard Buttons
+
+- id: scene_closet_high
+  name: scene_closet_high
+  entities:
+    light.bedroom_switch_closet:
+      brightness: 255
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594126630913'
+      value_index: 0
+      value_instance: 1
+
+- id: scene_closet_off
+  name: scene_closet_off
+  entities:
+    light.bedroom_switch_closet:
+      brightness: 255
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594126630913'
+      value_index: 0
+      value_instance: 1
+
+- id: scene_closet_medium
+  name: scene_closet_medium
+  entities:
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594126630913'
+      value_index: 0
+      value_instance: 1
+
+- id: bedroom_switch_closet_doubletap_up
+  name: bedroom_switch_closet_doubletap_up
+  entities:
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594126630913'
+      value_index: 0
+      value_instance: 1
+
+- id: bedroom_switch_closet_doubletap_down
+  name: bedroom_switch_closet_doubletap_down
+  entities:
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594126630913'
+      value_index: 0
+      value_instance: 1
