@@ -1,21 +1,13 @@
-- id: living_outlet_slider_on
-  alias: living_outlet_slider_on
+- id: 'scene_bedroom_off'
+  alias: scene_bedroom_off
+  description: ''
   trigger:
   - platform: webhook
-    webhook_id: living_outlet_slider_on
+    webhook_id: scene_bedroom_off
+  condition: []
   action:
-  - data: {}
-    entity_id: switch.living_outlet_slider
-    service: switch.turn_on
-- id: living_outlet_slider_off
-  alias: living_outlet_slider_off
-  trigger:
-  - platform: webhook
-    webhook_id: living_outlet_slider_off
-  action:
-  - data: {}
-    entity_id: switch.living_outlet_slider
-    service: switch.turn_off
+  - scene: scene.scene_bedroom_off
+
 - id: '1579460095280'
   alias: scene_bedroom_medium
   description: ''
@@ -25,6 +17,7 @@
   condition: []
   action:
   - scene: scene.scene_bedroom_medium
+
 - id: '1579461078882'
   alias: scene_bedroom_high
   description: ''
