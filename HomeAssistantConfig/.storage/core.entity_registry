@@ -238,6 +238,32 @@
                 "supported_features": 1,
                 "unique_id": "3-72057594093076481",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "a97ac13091eb4b13a6cc33840da29d53",
+                "disabled_by": null,
+                "entity_id": "zwave.bedroom_outlet_flamingo",
+                "name": "bedroom_outlet_flamingo",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-4",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "a97ac13091eb4b13a6cc33840da29d53",
+                "disabled_by": null,
+                "entity_id": "switch.bedroom_outlet_flamingo",
+                "name": "bedroom_outlet_flamingo",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "4-72057594109837312",
+                "unit_of_measurement": null
             }
         ]
     },

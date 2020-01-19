@@ -240,6 +240,26 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "a97ac13091eb4b13a6cc33840da29d53",
+                "identifiers": [
+                    [
+                        "zwave",
+                        4
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "14288 Duplex Receptacle",
+                "name": "GE (Jasco Products) 14288 Duplex Receptacle",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
             }
         ]
     },
