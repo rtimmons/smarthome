@@ -11,11 +11,9 @@ import * as path from 'path';
 import * as rpn from 'request-promise-native';
 import * as serveFavicon from 'serve-favicon';
 
-import '../types/smartthings';
 import '../types/sonos';
 
 import * as secrets from './../../secret.js';
-import Scene = SmartThings.Scene;
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -78,28 +76,16 @@ const sonosGet = (route: string): ((req: RQ, res: RS) => RS) => {
 };
 
 // //////////////////////////////////////////////////////////////
-// SmartThings Integration
-
-function stGet(route: string, qs:any = {}, method = 'GET'): rpn.RequestPromise {
-    const options: rpn.Options = {
-        method,
-        url: `https://api.smartthings.com/v1/${route}`,
-        qs,
-        json: true,
-        headers: {
-            'Authorization': 'Bearer: ' + secrets.smartthings.token,
-        },
-    };
-    return rpn(options);
-}
+// Home-Assistant integration
 
 app.get('/scenes/:scene', async (req: RQ, res: RS) => {
-    const scenes: SmartThings.STResponse<Scene> = await stGet('scenes');
-    const scene = scenes.items.find(scene => scene.sceneName === req.params['scene']);
-    if (typeof scene === 'undefined') {
-        return res.status(404).send('Scene not found');
-    }
-    await stGet('/scenes/' + scene.sceneId + '/execute', {}, 'POST');
+    const scene = req.params['scene'];
+    const url = 'http://smarterhome.local:8123/api/webhook/' + scene;
+    console.log({url});
+    await rpn({
+        url,
+        method: 'post',
+    });
     return res.send('OK');
 });
 

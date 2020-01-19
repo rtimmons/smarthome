@@ -12,7 +12,7 @@ class LightController {
         paths = paths.map(a => replaceName(a));
         // => ['Living', 'High']
 
-        const path = '/scenes/Lights_' + paths.join('_').replace(/\s+/g, '_');
+        const path = '/scenes/scene_' + paths.join('_').replace(/\s+/g, '_').toLowerCase();
         console.log('Requesting scene at url ', path);
         this.app.request(path);
     }
