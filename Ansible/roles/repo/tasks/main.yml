@@ -24,9 +24,9 @@
       copy_links: yes
       links: yes
       partial: yes
-      perms: yes
+      perms: no
       recursive: yes
-      times: yes
+      times: no
       # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
       delete: no
       src: "{{ playbook_dir }}/../HomeAssistantConfig/"
