@@ -50,7 +50,7 @@
 
 ## Bedroom Dashboard Buttons
 
-- id: 'scene_bedroom_off'
+- id: scene_bedroom_off
   alias: scene_bedroom_off
   description: ''
   trigger:
@@ -82,7 +82,7 @@
 
 ## Closet Dashboard Buttons
 
-- id: 'scene_closet_off'
+- id: scene_closet_off
   alias: scene_closet_off
   description: ''
   trigger:

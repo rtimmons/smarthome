@@ -1,4 +1,4 @@
-## Bedroom Switches
+## Bedroom Bedside Switch
 
 - id: bedroom_switch_bedside_doubletap_up
   name: bedroom_switch_bedside_doubletap_up
@@ -183,6 +183,8 @@
       value_id: '72057594126630913'
       value_index: 0
       value_instance: 1
+
+## Bedroom (Closet) Switch
 
 - id: bedroom_switch_closet_doubletap_up
   name: bedroom_switch_closet_doubletap_up
