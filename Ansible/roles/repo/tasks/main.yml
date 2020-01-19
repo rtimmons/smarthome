@@ -15,6 +15,18 @@
       dest: /home/pi/repo
       rsync_opts:
         - "--exclude=node_modules"
-        # TODO: remove this once configured / need to keep db and log files somehow
         - "--exclude=HomeAssistantConfig"
 
+- name: copy HomeAssistantConfig
+  synchronize:
+      group: no
+      checksum: yes
+      copy_links: yes
+      links: yes
+      partial: yes
+      perms: yes
+      recursive: yes
+      times: yes
+      delete: no
+      src: "{{ playbook_dir }}/../HomeAssistantConfig"
+      dest: /home/pi/repo/HomeAssistantConfig
