@@ -25,3 +25,12 @@
   condition: []
   action:
   - scene: scene.scene_bedroom_medium
+- id: '1579461078882'
+  alias: scene_bedroom_high
+  description: ''
+  trigger:
+  - platform: webhook
+    webhook_id: scene_bedroom_high
+  condition: []
+  action:
+  - scene: scene.scene_bedroom_high

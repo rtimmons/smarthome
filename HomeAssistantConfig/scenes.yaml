@@ -181,3 +181,98 @@
       sentFailed: 0
       sentTS: '2020-01-19 18:43:34:915 '
       state: ready
+- id: '1579461041878'
+  name: scene_bedroom_high
+  entities:
+    light.bedroom_light_dresser:
+      brightness: 254
+      color_temp: 398
+      friendly_name: bedroom_light_dresser
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 43
+    light.bedroom_switch_bedside:
+      brightness: 255
+      friendly_name: bedroom_switch_bedside
+      node_id: 3
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    switch.bedroom_outlet_flamingo:
+      friendly_name: bedroom_outlet_flamingo
+      node_id: 4
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    zwave.bedroom_outlet_flamingo:
+      application_version: '5.26'
+      averageRequestRTT: 190
+      averageResponseRTT: 350
+      capabilities:
+      - routing
+      - zwave_plus
+      - beaming
+      - listening
+      friendly_name: bedroom_outlet_flamingo
+      is_awake: true
+      is_failed: false
+      is_info_received: true
+      is_ready: true
+      is_zwave_plus: true
+      lastRequestRTT: 165
+      lastResponseRTT: 288
+      manufacturer_name: GE (Jasco Products)
+      max_baud_rate: 40000
+      neighbors:
+      - 3
+      node_id: 4
+      node_name: GE (Jasco Products) 14288 Duplex Receptacle
+      product_name: 14288 Duplex Receptacle
+      query_stage: Complete
+      receivedCnt: 7
+      receivedDups: 0
+      receivedTS: '2020-01-19 19:10:33:151 '
+      receivedUnsolicited: 0
+      retries: 0
+      sentCnt: 10
+      sentFailed: 0
+      sentTS: '2020-01-19 19:10:32:863 '
+      state: ready
+    zwave.bedroom_switch_bedside:
+      application_version: '5.53'
+      averageRequestRTT: 60
+      averageResponseRTT: 93
+      capabilities:
+      - routing
+      - zwave_plus
+      - beaming
+      - listening
+      friendly_name: bedroom_switch_bedside
+      is_awake: true
+      is_failed: false
+      is_info_received: true
+      is_ready: true
+      is_zwave_plus: true
+      lastRequestRTT: 83
+      lastResponseRTT: 99
+      manufacturer_name: GE (Jasco Products)
+      max_baud_rate: 40000
+      neighbors:
+      - 4
+      node_id: 3
+      node_name: GE (Jasco Products) 46203 In-Wall Smart Dimmer
+      product_name: 46203 In-Wall Smart Dimmer
+      query_stage: Complete
+      receivedCnt: 10
+      receivedDups: 3
+      receivedTS: '2020-01-19 19:10:41:587 '
+      receivedUnsolicited: 1
+      retries: 0
+      sentCnt: 12
+      sentFailed: 0
+      sentTS: '2020-01-19 19:10:41:465 '
+      state: ready
