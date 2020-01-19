@@ -1,0 +1,88 @@
+- id: '1578867442414'
+  name: scene_living_on
+  entities:
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'on'
+      value_id: '72057594076282880'
+      value_index: 0
+      value_instance: 1
+    zwave.ge_jasco_products_14288_duplex_receptacle:
+      application_version: '5.26'
+      averageRequestRTT: 24
+      averageResponseRTT: 35
+      capabilities:
+      - routing
+      - beaming
+      - zwave_plus
+      - listening
+      friendly_name: GE (Jasco Products) 14288 Duplex Receptacle
+      is_awake: true
+      is_failed: false
+      is_info_received: true
+      is_ready: true
+      is_zwave_plus: true
+      lastRequestRTT: 24
+      lastResponseRTT: 36
+      manufacturer_name: GE (Jasco Products)
+      max_baud_rate: 40000
+      neighbors:
+      - 1
+      node_id: 2
+      node_name: GE (Jasco Products) 14288 Duplex Receptacle
+      product_name: 14288 Duplex Receptacle
+      query_stage: Complete
+      receivedCnt: 8
+      receivedDups: 0
+      receivedTS: '2020-01-12 22:17:25:930 '
+      receivedUnsolicited: 0
+      retries: 0
+      sentCnt: 12
+      sentFailed: 0
+      sentTS: '2020-01-12 22:17:25:894 '
+      state: ready
+- id: '1578867751206'
+  name: scene_living_off
+  entities:
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'off'
+      value_id: '72057594076282880'
+      value_index: 0
+      value_instance: 1
+    zwave.ge_jasco_products_14288_duplex_receptacle:
+      application_version: '5.26'
+      averageRequestRTT: 24
+      averageResponseRTT: 35
+      capabilities:
+      - routing
+      - beaming
+      - zwave_plus
+      - listening
+      friendly_name: GE (Jasco Products) 14288 Duplex Receptacle
+      is_awake: true
+      is_failed: false
+      is_info_received: true
+      is_ready: true
+      is_zwave_plus: true
+      lastRequestRTT: 24
+      lastResponseRTT: 35
+      manufacturer_name: GE (Jasco Products)
+      max_baud_rate: 40000
+      neighbors:
+      - 1
+      node_id: 2
+      node_name: GE (Jasco Products) 14288 Duplex Receptacle
+      product_name: 14288 Duplex Receptacle
+      query_stage: Complete
+      receivedCnt: 9
+      receivedDups: 0
+      receivedTS: '2020-01-12 22:22:39:263 '
+      receivedUnsolicited: 0
+      retries: 0
+      sentCnt: 14
+      sentFailed: 0
+      sentTS: '2020-01-12 22:22:39:227 '
+      state: ready
