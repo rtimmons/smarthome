@@ -24,25 +24,16 @@
     - liblzma-dev
     state: present
 
-- name: clone pyenv
-  become_user: root
-  become: true
-  git:
-    repo: 'https://github.com/pyenv/pyenv.git'
-    dest: /usr/local/pyenv
-
-- name: install pyenv in shell
-  become_user: root
-  become: true
+- name: upload install file
   copy:
-    src: pyenv.sh
-    dest: /etc/profile.d/pyenv.sh
+    src: install-pyenv.sh
+    dest: /tmp/install-pyenv.sh
+    mode: 'a+x'
 
-
-- name: install python3.8
+- name: run install file
   become_user: root
   become: true
-  shell: bash -l -c 'PYTHON_CONFIGURE_OPTS="--enable-loadable-sqlite-extensions" pyenv install 3.8.1'
+  command: /tmp/install-pyenv.sh
   args:
-    creates: /usr/local/pyenv/versions/3.8.1
+    creates: /usr/local/bin/python3.8
 
