@@ -7,6 +7,12 @@
     pkg: [libffi-dev, libssl-dev, python3-nacl, libopenzwave1.5-dev]
     state: present
 
+- name: install master open-zwave configs
+  git:
+    repo: 'https://github.com/OpenZWave/open-zwave.git'
+    dest: /home/pi/open-zwave
+
+
 - name: install global pip packages
   become_user: root
   become: true
