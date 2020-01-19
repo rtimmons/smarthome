@@ -16,3 +16,12 @@
   - data: {}
     entity_id: switch.living_outlet_slider
     service: switch.turn_off
+- id: '1579460095280'
+  alias: scene_bedroom_medium
+  description: ''
+  trigger:
+  - platform: webhook
+    webhook_id: scene_bedroom_medium
+  condition: []
+  action:
+  - scene: scene.scene_bedroom_medium
