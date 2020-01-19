@@ -51,7 +51,7 @@
     group: root
     mode: 0664
 
-- name: start express-server service
+- name: start home-assistant service
   become_user: root
   become: true
   service:
