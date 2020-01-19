@@ -1,0 +1,220 @@
+{
+    "data": {
+        "entities": [
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "869a7efe4140414fbd7a337df912f66e",
+                "disabled_by": null,
+                "entity_id": "zwave.aeon_labs_zw090_z_stick_gen5_us",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-1",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "78c502de2626423b8af62b9eab99ebb0",
+                "disabled_by": null,
+                "entity_id": "zwave.ge_jasco_products_14288_duplex_receptacle",
+                "name": "living_outlet_slider",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-2",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "binary_sensor.updater",
+                "name": null,
+                "platform": "updater",
+                "supported_features": 0,
+                "unique_id": "updater",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "person.admin",
+                "name": null,
+                "platform": "person",
+                "supported_features": 0,
+                "unique_id": "admin",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "b37e1f20d0ae490490c9cf08cf65d8a7",
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "weather.300_newark",
+                "name": null,
+                "platform": "met",
+                "supported_features": 0,
+                "unique_id": "home",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "bd516d0d49694b2895c83865efbe66fd",
+                "disabled_by": null,
+                "entity_id": "media_player.guest_bathroom",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_347E5CCD489601400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "9095453a70e84a52a2e14ec0fcd0af4d",
+                "disabled_by": null,
+                "entity_id": "media_player.move",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_5CAAFDD5999401400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "3cd7fcacde4f401685abf42f6e17b43b",
+                "disabled_by": null,
+                "entity_id": "media_player.living_amp",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_347E5C01DD1B01400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "e8c18fc33a354b6899ec0f65c0194c4e",
+                "disabled_by": null,
+                "entity_id": "media_player.bathroom",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_347E5C08BBFF01400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "source_list": [
+                        "Line-in"
+                    ]
+                },
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "b84e4bfdff404dda92c4842274b4e841",
+                "disabled_by": null,
+                "entity_id": "media_player.closet",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_5CAAFDF5ABE401400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "eb0e1d84a41547709ad72d0a13849e4a",
+                "disabled_by": null,
+                "entity_id": "media_player.kitchen",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_5CAAFD5938F001400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "source_list": [
+                        "TV"
+                    ]
+                },
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "4dff6e0374984159a8d0b0cf52a8b4ec",
+                "disabled_by": null,
+                "entity_id": "media_player.office",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_48A6B83955D101400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "source_list": [
+                        "TV"
+                    ]
+                },
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "eb6b5f0c94804a4886055855e6a3ff29",
+                "disabled_by": null,
+                "entity_id": "media_player.bedroom",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_347E5C9C39BA01400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "source_list": [
+                        "Line-in",
+                        "TV"
+                    ]
+                },
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "213c27f77dbd42df918cf4e840036f85",
+                "disabled_by": null,
+                "entity_id": "media_player.living",
+                "name": null,
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_347E5C7978A801400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "78c502de2626423b8af62b9eab99ebb0",
+                "disabled_by": null,
+                "entity_id": "switch.living_outlet_slider",
+                "name": "living_outlet_slider",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "2-72057594076282880",
+                "unit_of_measurement": null
+            }
+        ]
+    },
+    "key": "core.entity_registry",
+    "version": 1
+}

@@ -16,21 +16,3 @@
   - data: {}
     entity_id: switch.living_outlet_slider
     service: switch.turn_off
-- id: '1578867518792'
-  alias: scene_living_on
-  description: scene_living_on
-  trigger:
-  - platform: webhook
-    webhook_id: scene_living_on
-  condition: []
-  action:
-  - scene: scene.scene_living_on
-- id: '1578867781833'
-  alias: scene_living_off
-  description: ''
-  trigger:
-  - platform: webhook
-    webhook_id: scene_living_off
-  condition: []
-  action:
-  - scene: scene.scene_living_off

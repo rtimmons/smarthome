@@ -1,0 +1,228 @@
+{
+    "data": {
+        "devices": [
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "869a7efe4140414fbd7a337df912f66e",
+                "identifiers": [
+                    [
+                        "zwave",
+                        1
+                    ]
+                ],
+                "manufacturer": "AEON Labs",
+                "model": "ZW090 Z-Stick Gen5 US",
+                "name": "AEON Labs ZW090 Z-Stick Gen5 US",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "78c502de2626423b8af62b9eab99ebb0",
+                "identifiers": [
+                    [
+                        "zwave",
+                        2
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "14288 Duplex Receptacle",
+                "name": "GE (Jasco Products) 14288 Duplex Receptacle",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "bd516d0d49694b2895c83865efbe66fd",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_347E5CCD489601400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Play:1",
+                "name": "Guest Bathroom",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "9095453a70e84a52a2e14ec0fcd0af4d",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_5CAAFDD5999401400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Move",
+                "name": "Move",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "3cd7fcacde4f401685abf42f6e17b43b",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_347E5C01DD1B01400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Amp",
+                "name": "Living Amp",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "e8c18fc33a354b6899ec0f65c0194c4e",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_347E5C08BBFF01400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Amp",
+                "name": "Bathroom",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "b84e4bfdff404dda92c4842274b4e841",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_5CAAFDF5ABE401400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Play:5",
+                "name": "Closet",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "eb0e1d84a41547709ad72d0a13849e4a",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_5CAAFD5938F001400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Play:3",
+                "name": "Kitchen",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "4dff6e0374984159a8d0b0cf52a8b4ec",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_48A6B83955D101400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Beam",
+                "name": "Office",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "eb6b5f0c94804a4886055855e6a3ff29",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_347E5C9C39BA01400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Beam",
+                "name": "Bedroom",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [],
+                "id": "213c27f77dbd42df918cf4e840036f85",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_347E5C7978A801400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Playbar",
+                "name": "Living",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            }
+        ]
+    },
+    "key": "core.device_registry",
+    "version": 1
+}
