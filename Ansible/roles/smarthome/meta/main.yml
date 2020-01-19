@@ -1,5 +1,6 @@
 ---
 dependencies:
+  - { role: python38 }
   - { role: dashboard-ui }
   - { role: amazon-dash }
   - { role: sonos-http }

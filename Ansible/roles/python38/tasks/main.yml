@@ -1,0 +1,48 @@
+---
+
+- name: install dependencies
+  become_user: root
+  become: true
+  apt:
+    pkg:
+    - make
+    - build-essential
+    - libssl-dev
+    - zlib1g-dev
+    - libbz2-dev
+    - libreadline-dev
+    - libsqlite3-dev
+    - wget
+    - curl
+    - llvm
+    - libncurses5-dev
+    - xz-utils
+    - tk-dev
+    - libxml2-dev
+    - libxmlsec1-dev
+    - libffi-dev
+    - liblzma-dev
+    state: present
+
+- name: clone pyenv
+  become_user: root
+  become: true
+  git:
+    repo: 'https://github.com/pyenv/pyenv.git'
+    dest: /usr/local/pyenv
+
+- name: install pyenv in shell
+  become_user: root
+  become: true
+  copy:
+    src: pyenv.sh
+    dest: /etc/profile.d/pyenv.sh
+
+
+- name: install python3.8
+  become_user: root
+  become: true
+  shell: bash -l -c 'PYTHON_CONFIGURE_OPTS="--enable-loadable-sqlite-extensions" pyenv install 3.8.1'
+  args:
+    creates: /usr/local/pyenv/versions/3.8.1
+
