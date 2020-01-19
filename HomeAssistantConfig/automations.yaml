@@ -16,3 +16,7 @@
   - data: {}
     entity_id: switch.living_outlet_slider
     service: switch.turn_off
+  - data:
+      brightness: 50
+    entity_id: light.ge_jasco_products_46203_in_wall_smart_dimmer_level
+    service: light.turn_on

@@ -212,6 +212,32 @@
                 "supported_features": 0,
                 "unique_id": "2-72057594076282880",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "36440e8dd0b444bbb08eca549ae6b8ff",
+                "disabled_by": null,
+                "entity_id": "zwave.ge_jasco_products_46203_in_wall_smart_dimmer",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-3",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "36440e8dd0b444bbb08eca549ae6b8ff",
+                "disabled_by": null,
+                "entity_id": "light.ge_jasco_products_46203_in_wall_smart_dimmer_level",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 1,
+                "unique_id": "3-72057594093076481",
+                "unit_of_measurement": null
             }
         ]
     },
