@@ -47,6 +47,23 @@
                 "title": "Sonos",
                 "unique_id": null,
                 "version": 1
+            },
+            {
+                "connection_class": "local_poll",
+                "data": {
+                    "host": "192.168.1.183",
+                    "username": "BB71aShiiQeBb2kznMhnnT8XkK8x51dlURQaW7cu"
+                },
+                "domain": "hue",
+                "entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
+                "options": {},
+                "source": "homekit",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "Philips hue",
+                "unique_id": "6ef6dc977791",
+                "version": 1
             }
         ]
     },
