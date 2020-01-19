@@ -1,0 +1,44 @@
+---
+
+- name: install dependencies
+  become_user: root
+  become: true
+  apt:
+    pkg: [libffi-dev, libssl-dev]
+    state: present
+
+- name: install global pip packages
+  become_user: root
+  become: true
+  pip:
+    executable: pip3.8
+    name:
+    - python_openzwave
+    - urwid
+    - homeassistant
+    - homeassistant-pyozw
+    - "HAP-python==2.6.0"
+    - "homekit[IP]==0.15.0"
+    - "python-nest==4.1.0"
+    - "aiounifi==11"
+    state: present
+  environment:
+    MAKEFLAGS: '-j4'
+
+- name: copy home-assistant systemd unit file
+  become_user: root
+  become: true
+  copy:
+    src: home-assistant.service
+    dest: /etc/systemd/system/home-assistant.service
+    owner: root
+    group: root
+    mode: 0664
+
+- name: start express-server service
+  become_user: root
+  become: true
+  service:
+    name: home-assistant
+    state: started
+    enabled: yes

@@ -15,3 +15,6 @@
       dest: /home/pi/repo
       rsync_opts:
         - "--exclude=node_modules"
+        # TODO: remove this once configured / need to keep db and log files somehow
+        - "--exclude=HomeAssistantConfig"
+
