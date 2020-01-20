@@ -439,7 +439,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "3aa7c8a856a342d5a3533ec59903338d",
@@ -462,6 +462,32 @@
                 "platform": "zwave",
                 "supported_features": 1,
                 "unique_id": "5-72057594126630913",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "d57db9885552496ba4bc9a994e04b8a7",
+                "disabled_by": null,
+                "entity_id": "switch.office_outlet_pianolight",
+                "name": "office_outlet_pianolight",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "6-72057594143391744",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "d57db9885552496ba4bc9a994e04b8a7",
+                "disabled_by": null,
+                "entity_id": "zwave.office_outlet_pianolight",
+                "name": "office_outlet_pianolight",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-6",
                 "unit_of_measurement": null
             }
         ]
