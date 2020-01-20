@@ -107,6 +107,5 @@
   name: bedroom_switch_closet_doubletap_down
   entities:
     light.bedroom_switch_closet:
-    light.bedroom_switch_closet:
       <<: *light_bedroom_switch_closet_high
       state: 'off'

@@ -112,3 +112,28 @@
   action:
   - scene: scene.scene_closet_high
 
+## Office Switch
+
+- id: office_switch_main_doubletap_up
+  alias: office_switch_main_doubletap_up
+  trigger:
+  - platform: event
+    event_type: zwave.scene_activated
+    event_data:
+      entity_id: zwave.office_switch_main
+      scene_id: 1
+  condition: []
+  action:
+  - scene: scene.office_switch_main_doubletap_up
+
+- id: office_switch_main_doubletap_down
+  alias: office_switch_main_doubletap_down
+  trigger:
+  - platform: event
+    event_type: zwave.scene_activated
+    event_data:
+      entity_id: zwave.office_switch_main
+      scene_id: 2
+  condition: []
+  action:
+  - scene: scene.office_switch_main_doubletap_down
