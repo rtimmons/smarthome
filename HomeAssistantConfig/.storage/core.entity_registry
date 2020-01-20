@@ -515,6 +515,32 @@
                 "supported_features": 0,
                 "unique_id": "7-72057594160168960",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "71401d8f2d1842a992d0e57244a00f76",
+                "disabled_by": null,
+                "entity_id": "zwave.office_switch_main",
+                "name": "office_switch_main",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-8",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "71401d8f2d1842a992d0e57244a00f76",
+                "disabled_by": null,
+                "entity_id": "switch.office_switch_main",
+                "name": "office_switch_main",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "8-72057594176946176",
+                "unit_of_measurement": null
             }
         ]
     },

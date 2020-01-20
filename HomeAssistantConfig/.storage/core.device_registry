@@ -545,6 +545,26 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "71401d8f2d1842a992d0e57244a00f76",
+                "identifiers": [
+                    [
+                        "zwave",
+                        8
+                    ]
+                ],
+                "manufacturer": "HomeSeer Technologies",
+                "model": "HS-WS100+ Wall Switch",
+                "name": "HomeSeer Technologies HS-WS100+ Wall Switch",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
             }
         ]
     },
