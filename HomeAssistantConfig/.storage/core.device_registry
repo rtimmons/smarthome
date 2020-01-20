@@ -361,7 +361,7 @@
                 ],
                 "manufacturer": "Philips",
                 "model": "Hue color lamp",
-                "name": "Desk lamp",
+                "name": "office_light_sidetable",
                 "name_by_user": null,
                 "sw_version": "5.127.1.26420",
                 "via_device_id": "550ffbf855f1408dafecc80eab19093f"
@@ -381,7 +381,7 @@
                 ],
                 "manufacturer": "Philips",
                 "model": "Hue color lamp",
-                "name": "Floor lamp",
+                "name": "living_light_floor",
                 "name_by_user": null,
                 "sw_version": "5.127.1.26581",
                 "via_device_id": "550ffbf855f1408dafecc80eab19093f"
