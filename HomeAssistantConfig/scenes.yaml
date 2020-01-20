@@ -109,3 +109,32 @@
     light.bedroom_switch_closet:
       <<: *light_bedroom_switch_closet_high
       state: 'off'
+
+## Office Switch
+
+- id: office_switch_main_doubletap_down
+  name: office_switch_main_doubletap_down
+  entities:
+    switch.office_outlet_pianolight: &switch_office_outlet_pianolight_off
+      friendly_name: office_outlet_pianolight
+      node_id: 6
+      state: 'off'
+      value_id: '72057594143391744'
+      value_index: 0
+      value_instance: 1
+    switch.office_outlet_pipelight: &switch_office_outlet_pipelight_off
+      friendly_name: office_outlet_pipelight
+      node_id: 7
+      state: 'off'
+      value_id: '72057594160168960'
+      value_index: 0
+      value_instance: 1
+
+- id: office_switch_main_doubletap_up
+  name: office_switch_main_doubletap_up
+  entities:
+    switch.office_outlet_pianolight:
+      <<: *switch_office_outlet_pianolight_off
+      state: 'on'
+    switch.office_outlet_pipelight:
+      <<: *switch_office_outlet_pipelight_off
