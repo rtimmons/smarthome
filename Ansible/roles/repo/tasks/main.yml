@@ -15,5 +15,6 @@
       dest: /home/pi/repo
       rsync_opts:
         - "--exclude=node_modules"
+        - "--exclude=venv"
         # This is handled by the home-assistant role
         - "--exclude=HomeAssistantConfig"
