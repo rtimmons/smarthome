@@ -131,6 +131,7 @@
       value_instance: 1
     light.office_light_sidetable: &light_office_light_sidetable_off
       brightness: 254
+      color_temp: 278
       friendly_name: office_light_sidetable
       hs_color:
       - 0
