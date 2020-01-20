@@ -647,7 +647,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "dedf7599d4a34d8e8f0bfce8bea1a8da",
@@ -670,6 +670,32 @@
                 "platform": "zwave",
                 "supported_features": 1,
                 "unique_id": "13-72057594260848641",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "26aac12fdd174e8d85817dd42e3d9184",
+                "disabled_by": null,
+                "entity_id": "zwave.living_switch_deck",
+                "name": "living_switch_deck",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-14",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "26aac12fdd174e8d85817dd42e3d9184",
+                "disabled_by": null,
+                "entity_id": "switch.living_switch_deck",
+                "name": "living_switch_deck",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "14-72057594277609472",
                 "unit_of_measurement": null
             }
         ]
