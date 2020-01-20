@@ -543,7 +543,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "90f2b0b74fe141729dc8c124bd99f2c7",
@@ -566,6 +566,32 @@
                 "platform": "zwave",
                 "supported_features": 1,
                 "unique_id": "9-72057594193739777",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "94e29b6596f547b4b937418696813736",
+                "disabled_by": null,
+                "entity_id": "zwave.office_switch_hall",
+                "name": "office_switch_hall",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-10",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "94e29b6596f547b4b937418696813736",
+                "disabled_by": null,
+                "entity_id": "light.office_switch_hall",
+                "name": "office_switch_hall",
+                "platform": "zwave",
+                "supported_features": 1,
+                "unique_id": "10-72057594210516993",
                 "unit_of_measurement": null
             }
         ]
