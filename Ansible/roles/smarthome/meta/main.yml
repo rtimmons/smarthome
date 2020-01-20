@@ -2,7 +2,6 @@
 dependencies:
   - { role: home-assistant }
   - { role: dashboard-ui }
-  - { role: amazon-dash }
   - { role: sonos-http }
   - { role: express-server }
   - { role: print-server }
