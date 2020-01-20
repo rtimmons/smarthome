@@ -595,7 +595,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "69cfa2be6d95466eb6586d1da2a1749d",
@@ -618,6 +618,32 @@
                 "platform": "zwave",
                 "supported_features": 1,
                 "unique_id": "11-72057594227294209",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "5c710b52349c4925a98c3f5591f3736c",
+                "disabled_by": null,
+                "entity_id": "zwave.entry_switch_hall",
+                "name": "entry_switch_hall",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-12",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "5c710b52349c4925a98c3f5591f3736c",
+                "disabled_by": null,
+                "entity_id": "light.entry_switch_hall",
+                "name": "entry_switch_hall",
+                "platform": "zwave",
+                "supported_features": 1,
+                "unique_id": "12-72057594244071425",
                 "unit_of_measurement": null
             }
         ]
