@@ -56,10 +56,35 @@
     group: root
     mode: 0664
 
+# Must be stopped prior to copying config
+# since hass writes its state to disk on shutdown.
+- name: stop home-assistant service
+  become_user: root
+  become: true
+  service:
+    name: home-assistant
+    state: stopped
+    enabled: yes
+
+- name: copy HomeAssistantConfig
+  synchronize:
+      group: no
+      checksum: yes
+      copy_links: yes
+      links: yes
+      partial: yes
+      perms: no
+      recursive: yes
+      times: no
+      # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
+      delete: no
+      src: "{{ playbook_dir }}/../HomeAssistantConfig/"
+      dest: /home/pi/repo/HomeAssistantConfig/
+
 - name: start home-assistant service
   become_user: root
   become: true
   service:
     name: home-assistant
-    state: restarted
+    state: started
     enabled: yes

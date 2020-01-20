@@ -15,19 +15,5 @@
       dest: /home/pi/repo
       rsync_opts:
         - "--exclude=node_modules"
+        # This is handled by the home-assistant role
         - "--exclude=HomeAssistantConfig"
-
-- name: copy HomeAssistantConfig
-  synchronize:
-      group: no
-      checksum: yes
-      copy_links: yes
-      links: yes
-      partial: yes
-      perms: no
-      recursive: yes
-      times: no
-      # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
-      delete: no
-      src: "{{ playbook_dir }}/../HomeAssistantConfig/"
-      dest: /home/pi/repo/HomeAssistantConfig/
