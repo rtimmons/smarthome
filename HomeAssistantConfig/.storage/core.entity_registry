@@ -491,7 +491,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "217bb2b844e748789d50c0b93cb649b0",
@@ -504,7 +504,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "217bb2b844e748789d50c0b93cb649b0",
@@ -517,7 +517,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "71401d8f2d1842a992d0e57244a00f76",
@@ -530,7 +530,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "71401d8f2d1842a992d0e57244a00f76",
@@ -540,6 +540,32 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "8-72057594176946176",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "90f2b0b74fe141729dc8c124bd99f2c7",
+                "disabled_by": null,
+                "entity_id": "zwave.dining_switch_main",
+                "name": "dining_switch_main",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-9",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "90f2b0b74fe141729dc8c124bd99f2c7",
+                "disabled_by": null,
+                "entity_id": "light.dining_switch_main",
+                "name": "dining_switch_main",
+                "platform": "zwave",
+                "supported_features": 1,
+                "unique_id": "9-72057594193739777",
                 "unit_of_measurement": null
             }
         ]
