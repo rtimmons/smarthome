@@ -129,6 +129,24 @@
       value_id: '72057594160168960'
       value_index: 0
       value_instance: 1
+    light.office_light_sidetable: &light_office_light_sidetable_off
+      brightness: 254
+      friendly_name: office_light_sidetable
+      hs_color:
+      - 0
+      - 0
+      max_mireds: 500
+      min_mireds: 153
+      rgb_color:
+      - 255
+      - 255
+      - 255
+      state: 'off'
+      supported_features: 63
+      xy_color:
+      - 0.324
+      - 0.324
+
 
 - id: office_switch_main_doubletap_up
   name: office_switch_main_doubletap_up
@@ -138,3 +156,6 @@
       state: 'on'
     switch.office_outlet_pipelight:
       <<: *switch_office_outlet_pipelight_off
+    light.office_light_sidetable:
+      <<: *light_office_light_sidetable_off
+      state: 'on'
