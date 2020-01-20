@@ -20,22 +20,18 @@
     group: lpadmin
     append: yes
 
-
-- name: start cups service
-  become_user: root
-  become: yes
-  service:
-    name: cups
-    state: started
-
 - name: allow remote access from whole network
-  command: cupsctl --remote-any
   become_user: root
   become: yes
+  shell: |
+    cupsctl --remote-any
+    touch /tmp/cupsctl-remote-any-done
+  args:
+    creates: /tmp/cupsctl-remote-any-done
 
 - name: restart cups service
   become_user: root
   become: yes
   service:
     name: cups
-    state: restarted
+    state: started
