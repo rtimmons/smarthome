@@ -49,7 +49,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="2" size="1">
 					<Help>Sets when the LED on the outlet is lit.</Help>
 					<Item label="LED on when outlet off" value="0" />
 					<Item label="LED on when outlet on" value="1" />
@@ -161,7 +161,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="2" size="1">
 					<Help>Adjust the LED status to default, invert, always OFF or always ON</Help>
 					<Item label="Device is ON, LED is OFF; device is OFF, LED is ON" value="0" />
 					<Item label="Device is ON, LED is ON; device is OFF, LED is OFF" value="1" />
@@ -291,7 +291,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="2" size="1">
 					<Help>Sets when the LED on the outlet is lit.</Help>
 					<Item label="LED on when outlet off" value="0" />
 					<Item label="LED on when outlet on" value="1" />
@@ -403,7 +403,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="2" size="1">
 					<Help>Adjust the LED status to default, invert, always OFF or always ON</Help>
 					<Item label="Device is ON, LED is OFF; device is OFF, LED is ON" value="0" />
 					<Item label="Device is ON, LED is ON; device is OFF, LED is OFF" value="1" />
@@ -533,7 +533,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="2" size="1">
 					<Help>Sets when the LED on the outlet is lit.</Help>
 					<Item label="LED on when outlet off" value="0" />
 					<Item label="LED on when outlet on" value="1" />
@@ -638,7 +638,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="2" size="1">
 					<Help>Sets when the LED on the outlet is lit.</Help>
 					<Item label="LED on when outlet off" value="0" />
 					<Item label="LED on when outlet on" value="1" />
@@ -998,7 +998,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="3" size="1">
 					<Help>Adjust the LED status to default, invert, always OFF or always ON</Help>
 					<Item label="Device is ON, LED is OFF; device is OFF, LED is ON" value="0" />
 					<Item label="Device is ON, LED is ON; device is OFF, LED is OFF" value="1" />
@@ -1128,7 +1128,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Light" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="2" vindex="2" size="1">
 					<Help>Sets when the LED on the switch is lit.</Help>
 					<Item label="LED on when light off" value="0" />
 					<Item label="LED on when light on" value="1" />
@@ -1245,7 +1245,7 @@
 			</CommandClass>
 			<CommandClass id="112" name="COMMAND_CLASS_CONFIGURATION" version="1" request_flags="4" innif="true">
 				<Instance index="1" />
-				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="0" size="1">
+				<Value type="list" genre="config" instance="1" index="3" label="LED Indication Configuration" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="0" max="3" vindex="2" size="1">
 					<Help>Adjust the LED status to default, invert, always OFF or always ON</Help>
 					<Item label="Device is ON, LED is OFF; device is OFF, LED is ON" value="0" />
 					<Item label="Device is ON, LED is ON; device is OFF, LED is OFF" value="1" />
