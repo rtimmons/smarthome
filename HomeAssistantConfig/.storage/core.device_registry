@@ -264,231 +264,6 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [
-                    [
-                        "mac",
-                        "00:17:88:61:37:49"
-                    ]
-                ],
-                "id": "550ffbf855f1408dafecc80eab19093f",
-                "identifiers": [
-                    [
-                        "hue",
-                        "001788FFFE613749"
-                    ]
-                ],
-                "manufacturer": "Signify",
-                "model": "BSB002",
-                "name": "Philips hue",
-                "name_by_user": null,
-                "sw_version": "1935144020",
-                "via_device_id": null
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "ac08298843954d61956ccbf09c45a183",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:03:9d:31-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue ambiance lamp",
-                "name": "bedroom_light_dresser",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "ea72fc78aa244238b83e055a356660c8",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:50:d8:ab-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue ambiance lamp",
-                "name": "bathroom_light_vanityleft",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "cb63bcfa18c94555b075015fa54dc9f9",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:20:af:d4-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue ambiance lamp",
-                "name": "bathroom_light_shower",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "f650b5e589744f438e34cee331df0625",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:10:4a:5b:cb-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue color lamp",
-                "name": "office_light_sidetable",
-                "name_by_user": null,
-                "sw_version": "5.127.1.26420",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "672d7b83f50e47ffa59955eb1ce98c41",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:00:ec:74:59-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue color lamp",
-                "name": "living_light_floor",
-                "name_by_user": null,
-                "sw_version": "5.127.1.26581",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "f6cac085803f4edabc4bc01e18f68c00",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:3a:31:7f-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue white lamp",
-                "name": "bedroom_light_desk",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "b79233a5c1f148319a90fd612918f86c",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:04:4a:b6:c1-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue lightstrip plus",
-                "name": "kitchen_light_lower",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "73ee4b2c76b8497ab9d2bb7ad556a45e",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:04:4a:d0:5d-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue lightstrip plus",
-                "name": "kitchen_light_upper",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "d12cba8792d440f79b5c7de8aa65a634",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:50:e6:60-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue ambiance lamp",
-                "name": "bathroom_light_sauna",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "7c4956c35e9a42f6876bb59635fc45ec"
-                ],
-                "connections": [],
-                "id": "985e87c7e60a44aaa4a27c462de41887",
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:01:01:8d-0b"
-                    ]
-                ],
-                "manufacturer": "Philips",
-                "model": "Hue ambiance lamp",
-                "name": "bathroom_light_vanityright",
-                "name_by_user": null,
-                "sw_version": "1.46.13_r26312",
-                "via_device_id": "550ffbf855f1408dafecc80eab19093f"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
@@ -645,6 +420,231 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [
+                    [
+                        "mac",
+                        "00:17:88:61:37:49"
+                    ]
+                ],
+                "id": "987fa93d054c4573a82c2beb9d253132",
+                "identifiers": [
+                    [
+                        "hue",
+                        "001788FFFE613749"
+                    ]
+                ],
+                "manufacturer": "Signify",
+                "model": "BSB002",
+                "name": "Philips hue",
+                "name_by_user": null,
+                "sw_version": "1935144020",
+                "via_device_id": null
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "a4bcb084965844f8ba982a2caff7c711",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:01:01:8d-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue ambiance lamp",
+                "name": "bathroom_light_vanityright",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "ea59fae5872c438fb5f84e3610a8b3fc",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:00:ec:74:59-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue color lamp",
+                "name": "living_light_floor",
+                "name_by_user": null,
+                "sw_version": "5.127.1.26581",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "b642e45cc9d3405396c8af9694f5b411",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:20:af:d4-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue ambiance lamp",
+                "name": "bathroom_light_shower",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "9ec8c3678d334589b55380909747dc01",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:04:4a:b6:c1-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue lightstrip plus",
+                "name": "kitchen_light_lower",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "9b03089ae53749b6bbe751c5ee885a26",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:04:4a:d0:5d-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue lightstrip plus",
+                "name": "kitchen_light_upper",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "51ea28d7e239446c9ef7d8543ba66ea3",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:3a:31:7f-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue white lamp",
+                "name": "bedroom_light_desk",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:50:e6:60-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue ambiance lamp",
+                "name": "bathroom_light_sauna",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "3d031c4674e84be4a2a46c7c519a9be7",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:03:9d:31-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue ambiance lamp",
+                "name": "bedroom_light_dresser",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "3728775cafd046e7b4f6bd5473d77140",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:10:4a:5b:cb-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue color lamp",
+                "name": "office_light_sidetable",
+                "name_by_user": null,
+                "sw_version": "5.127.1.26420",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "id": "de6c440d15964d98bc2134ebef194892",
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:50:d8:ab-0b"
+                    ]
+                ],
+                "manufacturer": "Philips",
+                "model": "Hue ambiance lamp",
+                "name": "bathroom_light_vanityleft",
+                "name_by_user": null,
+                "sw_version": "1.46.13_r26312",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
             }
         ]
     },

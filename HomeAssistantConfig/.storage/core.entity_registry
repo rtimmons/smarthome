@@ -266,179 +266,6 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": {
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "ea72fc78aa244238b83e055a356660c8",
-                "disabled_by": null,
-                "entity_id": "light.vanity_left",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 43,
-                "unique_id": "00:17:88:01:03:50:d8:ab-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "cb63bcfa18c94555b075015fa54dc9f9",
-                "disabled_by": null,
-                "entity_id": "light.shower",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 43,
-                "unique_id": "00:17:88:01:03:20:af:d4-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "effect_list": [
-                        "colorloop",
-                        "random"
-                    ],
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "672d7b83f50e47ffa59955eb1ce98c41",
-                "disabled_by": null,
-                "entity_id": "light.floor_lamp",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 63,
-                "unique_id": "00:17:88:01:00:ec:74:59-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {},
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "f6cac085803f4edabc4bc01e18f68c00",
-                "disabled_by": null,
-                "entity_id": "light.desk_lamp_2",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 41,
-                "unique_id": "00:17:88:01:03:3a:31:7f-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "effect_list": [
-                        "colorloop",
-                        "random"
-                    ],
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "b79233a5c1f148319a90fd612918f86c",
-                "disabled_by": null,
-                "entity_id": "light.kitchen_cabinets_lower",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 63,
-                "unique_id": "00:17:88:01:04:4a:b6:c1-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "effect_list": [
-                        "colorloop",
-                        "random"
-                    ],
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "73ee4b2c76b8497ab9d2bb7ad556a45e",
-                "disabled_by": null,
-                "entity_id": "light.kitchen_cabinets_upper",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 63,
-                "unique_id": "00:17:88:01:04:4a:d0:5d-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "d12cba8792d440f79b5c7de8aa65a634",
-                "disabled_by": null,
-                "entity_id": "light.sauna",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 43,
-                "unique_id": "00:17:88:01:03:50:e6:60-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "985e87c7e60a44aaa4a27c462de41887",
-                "disabled_by": null,
-                "entity_id": "light.vanity_right",
-                "name": null,
-                "platform": "hue",
-                "supported_features": 43,
-                "unique_id": "00:17:88:01:03:01:01:8d-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "effect_list": [
-                        "colorloop",
-                        "random"
-                    ],
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "f650b5e589744f438e34cee331df0625",
-                "disabled_by": null,
-                "entity_id": "light.office_light_sidetable",
-                "name": "office_light_sidetable",
-                "platform": "hue",
-                "supported_features": 63,
-                "unique_id": "00:17:88:01:10:4a:5b:cb-0b",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {
-                    "max_mireds": 500,
-                    "min_mireds": 153
-                },
-                "config_entry_id": "7c4956c35e9a42f6876bb59635fc45ec",
-                "device_class": null,
-                "device_id": "ac08298843954d61956ccbf09c45a183",
-                "disabled_by": null,
-                "entity_id": "light.bedroom_light_dresser",
-                "name": "bedroom_light_dresser",
-                "platform": "hue",
-                "supported_features": 43,
-                "unique_id": "00:17:88:01:03:03:9d:31-0b",
-                "unit_of_measurement": null
-            },
-            {
                 "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
@@ -621,7 +448,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "641486784dd943cea3f8510a67563c17",
@@ -644,6 +471,179 @@
                 "platform": "zwave",
                 "supported_features": 1,
                 "unique_id": "15-72057594294403073",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "a4bcb084965844f8ba982a2caff7c711",
+                "disabled_by": null,
+                "entity_id": "light.bathroom_light_vanityright",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 43,
+                "unique_id": "00:17:88:01:03:01:01:8d-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "effect_list": [
+                        "colorloop",
+                        "random"
+                    ],
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "ea59fae5872c438fb5f84e3610a8b3fc",
+                "disabled_by": null,
+                "entity_id": "light.living_light_floor",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 63,
+                "unique_id": "00:17:88:01:00:ec:74:59-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "b642e45cc9d3405396c8af9694f5b411",
+                "disabled_by": null,
+                "entity_id": "light.bathroom_light_shower",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 43,
+                "unique_id": "00:17:88:01:03:20:af:d4-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "effect_list": [
+                        "colorloop",
+                        "random"
+                    ],
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "9ec8c3678d334589b55380909747dc01",
+                "disabled_by": null,
+                "entity_id": "light.kitchen_light_lower",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 63,
+                "unique_id": "00:17:88:01:04:4a:b6:c1-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "effect_list": [
+                        "colorloop",
+                        "random"
+                    ],
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "9b03089ae53749b6bbe751c5ee885a26",
+                "disabled_by": null,
+                "entity_id": "light.kitchen_light_upper",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 63,
+                "unique_id": "00:17:88:01:04:4a:d0:5d-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "51ea28d7e239446c9ef7d8543ba66ea3",
+                "disabled_by": null,
+                "entity_id": "light.bedroom_light_desk",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 41,
+                "unique_id": "00:17:88:01:03:3a:31:7f-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
+                "disabled_by": null,
+                "entity_id": "light.bathroom_light_sauna",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 43,
+                "unique_id": "00:17:88:01:03:50:e6:60-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "3d031c4674e84be4a2a46c7c519a9be7",
+                "disabled_by": null,
+                "entity_id": "light.bedroom_light_dresser",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 43,
+                "unique_id": "00:17:88:01:03:03:9d:31-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "effect_list": [
+                        "colorloop",
+                        "random"
+                    ],
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "3728775cafd046e7b4f6bd5473d77140",
+                "disabled_by": null,
+                "entity_id": "light.office_light_sidetable",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 63,
+                "unique_id": "00:17:88:01:10:4a:5b:cb-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_class": null,
+                "device_id": "de6c440d15964d98bc2134ebef194892",
+                "disabled_by": null,
+                "entity_id": "light.bathroom_light_vanityleft",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 43,
+                "unique_id": "00:17:88:01:03:50:d8:ab-0b",
                 "unit_of_measurement": null
             }
         ]
