@@ -1,0 +1,192 @@
+# node 1 is the dongle
+# node 2 is the living slider
+
+entities:
+  bathroom_light_sauna:
+    type: hue light
+  bathroom_light_shower:
+    type: hue light
+  bathroom_light_vanityleft:
+    type: hue light
+  bathroom_light_vanityright:
+    type: hue light
+
+  bedroom_light_desk:
+    type: hue light
+  bedroom_light_dresser:
+    type: hue light color
+  bedroom_outlet_flamingo:
+    type: outlet
+    node_id: 4
+  bedroom_switch_bedside:
+    type: dimmer switch
+    node_id: 3
+    # TODO: assert scene is defined
+    on_up: {scene: scene_bedroom_high}
+    on_down: {scene: scene_bedroom_off}
+  bedroom_switch_closet:
+    type: dimmer switch
+    node_id: 5
+    on_up: {scene: scene_bedroom_medium}
+    on_down: {scene: scene_bedroom_off}
+
+  entry_switch_kitchen:
+    type: dimmer switch
+    # TODO: assert is int
+    node_id: TODO
+    on_up: {scene: scene_kitchen_high}
+    on_down: {scene: scene_kitchen_off}
+
+  global_switch_hall:
+    type: dimmer switch
+    node_id: TODO
+    on_up: {scene: scene_hall_high}
+    on_down: {scene: scene_hall_off}
+
+  kitchen_light_lower:
+    type: hue light color
+  kitchen_light_upper:
+    type: hue light color
+  kitchen_switch_dining:
+    type: dimmer switch
+    node_id: TODO
+    on_up: {scene: scene_dining_high}
+    on_down: {scene: scene_dining_off}
+
+  living_light_floor:
+    type: hue light color
+  living_outlet_slider:
+    type: outlet
+    node_id: TODO
+  living_switch_deck:
+    # TODO: it's a different switch type - binary?
+    type: dimmer switch
+    node_id: TODO
+    on_up: {scene: scene_deck_high}
+    on_down: {scene: scene_deck_off}
+
+  office_light_sidetable:
+    type: hue light color
+  office_outlet_pianolight:
+    type: outlet
+    node_id: TODO
+  office_outlet_pipelight:
+    type: outlet
+    node_id: TODO
+  office_switch_main:
+    type: dimmer switch
+    node_id: TODO
+    on_up: {scene: scene_office_high}
+    on_down: {scene: scene_office_off}
+
+state_templates:
+
+  dimmer_high:
+    brightness: 255
+    # friendly_name: bedroom_switch_bedside
+    # node_id: 3
+    state: 'on'
+    supported_features: 1
+    value_id: '72057594093076481'
+    value_index: 0
+    value_instance: 1
+  dimmer_medium:
+    brightness: 49
+    # friendly_name: bedroom_switch_bedside
+    # node_id: 3
+    state: 'on'
+    supported_features: 1
+    value_id: '72057594093076481'
+    value_index: 0
+    value_instance: 1
+  dimmer_off:
+    brightness: 49
+    # friendly_name: bedroom_switch_bedside
+    # node_id: 3
+    state: 'on'
+    supported_features: 1
+    value_id: '72057594093076481'
+    value_index: 0
+    value_instance: 1
+
+  hue_default:
+    min_mireds: 153
+    max_mireds: 500
+    effect_list: colorloop,random
+    brightness: 254
+    color_temp: 346
+    effect: none
+    # friendly_name: office_light_sidetable
+    supported_features: 63
+    state: 'on'
+  hue_medium:
+    min_mireds: 153
+    max_mireds: 500
+    effect_list: colorloop,random
+    brightness: 100
+    color_temp: 454
+    effect: none
+    # friendly_name: office_light_sidetable
+    supported_features: 63
+    state: 'on'
+  hue_off:
+    min_mireds: 153
+    max_mireds: 500
+    effect_list: colorloop,random
+    brightness: 254
+    color_temp: 346
+    effect: none
+    # friendly_name: office_light_sidetable
+    supported_features: 63
+    state: 'off'
+
+  outlet_on:
+    # friendly_name: bedroom_outlet_flamingo
+    # node_id: 4
+    state: 'on'
+    value_id: '72057594109837312'
+    value_index: 0
+    value_instance: 1
+  outlet_off:
+    # friendly_name: bedroom_outlet_flamingo
+    # node_id: 4
+    state: 'off'
+    value_id: '72057594109837312'
+    value_index: 0
+    value_instance: 1
+
+
+
+# Rooms:
+# bathroom, closet, move, bedroom, living, kitchen, office, guest_bathroom
+  
+
+scenes:
+  scene_bathroom_high:
+    bathroom_light_sauna: hue_default
+    bathroom_light_shower: hue_default
+    bathroom_light_vanityleft: hue_default
+    bathroom_light_vanityright: hue_default
+  scene_bathroom_medium:
+    bathroom_light_sauna: hue_medium
+    bathroom_light_shower: hue_medium
+    bathroom_light_vanityleft: hue_medium
+    bathroom_light_vanityright: hue_medium
+  scene_bathroom_off:
+    bathroom_light_sauna: hue_off
+    bathroom_light_shower: hue_off
+    bathroom_light_vanityleft: hue_off
+    bathroom_light_vanityright: hue_off
+
+  scene_bedroom_high:
+    bedroom_switch_bedside: dimmer_on
+    bedroom_outlet_flamingo: outlet_on
+    bedroom_light_dresser: hue_default
+  scene_bedroom_medium:
+    bedroom_switch_bedside: dimmer_medium
+    bedroom_outlet_flamingo: outlet_off
+    bedroom_light_dresser: dimmer_medium
+  scene_bedroom_off:
+    bedroom_switch_bedside: dimmer_off
+    bedroom_outlet_flamingo: outlet_off
+    bedroom_light_dresser: hue_off
