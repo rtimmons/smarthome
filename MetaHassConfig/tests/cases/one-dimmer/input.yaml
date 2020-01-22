@@ -1,12 +1,23 @@
 entities:
+  bedroom_light_desk:
+    type: hue light
+  bedroom_light_dresser:
+    type: hue light color
+  bedroom_outlet_flamingo:
+    type: outlet
+    node_id: 4
   bedroom_switch_bedside:
     type: dimmer switch
     node_id: 3
     # TODO: assert scene is defined
     on_up: {scene: scene_bedroom_high}
     on_down: {scene: scene_bedroom_off}
-  bedroom_light_dresser:
-    type: hue light color
+  bedroom_switch_closet:
+    type: dimmer switch
+    node_id: 5
+    on_up: {scene: scene_bedroom_medium}
+    on_down: {scene: scene_bedroom_off}
+
 
 state_templates:
   dimmer_high:
@@ -32,4 +43,6 @@ scenes:
   scene_bedroom_high:
     bedroom_switch_bedside: dimmer_on
   scene_bedroom_off:
+    bedroom_switch_bedside: dimmer_off
+  scene_bedroom_medium:
     bedroom_switch_bedside: dimmer_off

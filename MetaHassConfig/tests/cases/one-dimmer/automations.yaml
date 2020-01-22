@@ -22,6 +22,30 @@
   action:
   - scene: scene.scene_bedroom_high
 
+- id: bedroom_switch_closet_doubletap_down
+  alias: bedroom_switch_closet_doubletap_down
+  trigger:
+  - platform: event
+    event_type: zwave.scene_activated
+    event_data:
+      entity_id: zwave.bedroom_switch_closet
+      scene_id: 2
+  condition: []
+  action:
+  - scene: scene.scene_bedroom_off
+
+- id: bedroom_switch_closet_doubletap_up
+  alias: bedroom_switch_closet_doubletap_up
+  trigger:
+  - platform: event
+    event_type: zwave.scene_activated
+    event_data:
+      entity_id: zwave.bedroom_switch_closet
+      scene_id: 1
+  condition: []
+  action:
+  - scene: scene.scene_bedroom_medium
+
 - id: scene_bedroom_high
   alias: scene_bedroom_high
   description: ''
@@ -31,6 +55,16 @@
   condition: []
   action:
   - scene: scene.scene_bedroom_high
+
+- id: scene_bedroom_medium
+  alias: scene_bedroom_medium
+  description: ''
+  trigger:
+  - platform: webhook
+    webhook_id: scene_bedroom_medium
+  condition: []
+  action:
+  - scene: scene.scene_bedroom_medium
 
 - id: scene_bedroom_off
   alias: scene_bedroom_off
