@@ -33,13 +33,13 @@ entities:
   entry_switch_kitchen:
     type: dimmer switch
     # TODO: assert is int
-    node_id: TODO
+    node_id: 11
     on_up: {scene: scene_kitchen_high}
     on_down: {scene: scene_kitchen_off}
 
   global_switch_hall:
     type: dimmer switch
-    node_id: TODO
+    node_id: 15
     on_up: {scene: scene_hall_high}
     on_down: {scene: scene_hall_off}
 
@@ -49,7 +49,7 @@ entities:
     type: hue light color
   kitchen_switch_dining:
     type: dimmer switch
-    node_id: TODO
+    node_id: 9
     on_up: {scene: scene_dining_high}
     on_down: {scene: scene_dining_off}
 
@@ -57,11 +57,11 @@ entities:
     type: hue light color
   living_outlet_slider:
     type: outlet
-    node_id: TODO
+    node_id: 2
   living_switch_deck:
     # TODO: it's a different switch type - binary?
     type: dimmer switch
-    node_id: TODO
+    node_id: 14
     on_up: {scene: scene_deck_high}
     on_down: {scene: scene_deck_off}
 
@@ -69,13 +69,13 @@ entities:
     type: hue light color
   office_outlet_pianolight:
     type: outlet
-    node_id: TODO
+    node_id: 6
   office_outlet_pipelight:
     type: outlet
-    node_id: TODO
+    node_id: 7
   office_switch_main:
     type: dimmer switch
-    node_id: TODO
+    node_id: 8
     on_up: {scene: scene_office_high}
     on_down: {scene: scene_office_off}
 
