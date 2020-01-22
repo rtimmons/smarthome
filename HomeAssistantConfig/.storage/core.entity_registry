@@ -619,6 +619,32 @@
                 "supported_features": 0,
                 "unique_id": "14-72057594277609472",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "641486784dd943cea3f8510a67563c17",
+                "disabled_by": null,
+                "entity_id": "zwave.global_switch_hall",
+                "name": "global_switch_hall",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-15",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "641486784dd943cea3f8510a67563c17",
+                "disabled_by": null,
+                "entity_id": "light.global_switch_hall",
+                "name": "global_switch_hall",
+                "platform": "zwave",
+                "supported_features": 1,
+                "unique_id": "15-72057594294403073",
+                "unit_of_measurement": null
             }
         ]
     },
