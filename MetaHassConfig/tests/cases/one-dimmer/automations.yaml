@@ -1,15 +1,3 @@
-- id: bedroom_switch_bedside_doubletap_up
-  alias: bedroom_switch_bedside_doubletap_up
-  trigger:
-  - platform: event
-    event_type: zwave.scene_activated
-    event_data:
-      entity_id: zwave.bedroom_switch_bedside
-      scene_id: 1
-  condition: []
-  action:
-  - scene: scene.scene_bedroom_high
-
 - id: bedroom_switch_bedside_doubletap_down
   alias: bedroom_switch_bedside_doubletap_down
   trigger:
@@ -22,15 +10,17 @@
   action:
   - scene: scene.scene_bedroom_off
 
-- id: scene_bedroom_off
-  alias: scene_bedroom_off
-  description: ''
+- id: bedroom_switch_bedside_doubletap_up
+  alias: bedroom_switch_bedside_doubletap_up
   trigger:
-  - platform: webhook
-    webhook_id: scene_bedroom_off
+  - platform: event
+    event_type: zwave.scene_activated
+    event_data:
+      entity_id: zwave.bedroom_switch_bedside
+      scene_id: 1
   condition: []
   action:
-  - scene: scene.scene_bedroom_off
+  - scene: scene.scene_bedroom_high
 
 - id: scene_bedroom_high
   alias: scene_bedroom_high
@@ -41,3 +31,13 @@
   condition: []
   action:
   - scene: scene.scene_bedroom_high
+
+- id: scene_bedroom_off
+  alias: scene_bedroom_off
+  description: ''
+  trigger:
+  - platform: webhook
+    webhook_id: scene_bedroom_off
+  condition: []
+  action:
+  - scene: scene.scene_bedroom_off

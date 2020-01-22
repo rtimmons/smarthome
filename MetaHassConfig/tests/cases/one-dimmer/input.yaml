@@ -5,6 +5,8 @@ entities:
     # TODO: assert scene is defined
     on_up: {scene: scene_bedroom_high}
     on_down: {scene: scene_bedroom_off}
+  bedroom_light_dresser:
+    type: hue light color
 
 state_templates:
   dimmer_high:

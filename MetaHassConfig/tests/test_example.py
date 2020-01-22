@@ -21,6 +21,9 @@ def expected(tcase, which):
 
 
 class TestAutomation(unittest.TestCase):
+    def setUp(self) -> None:
+        self.maxDiff = 9999999
+
     def test_produces_one_dimmer_automation(self):
         tdir = tcase_dir('one-dimmer')
         config = gen.MetaConfig(os.path.join(tdir, 'input.yaml'))
