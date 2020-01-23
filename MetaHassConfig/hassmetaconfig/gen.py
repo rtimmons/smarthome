@@ -15,15 +15,33 @@ class MetaConfig:
     def dimmer_entities(self):
         return [{k: v} for (k, v) in self.data['entities'].items() if v['type'] == 'dimmer switch']
 
-    def scenes(self) -> typ.Set[str]:
-        return set(self.data['scenes'].keys())
+    def scenes(self) -> typ.Dict:
+        return self.data['scenes']
+
+    def state_templates(self) -> typ.Dict:
+        return self.data['state_templates']
+
 
 class Scenes:
     def __init__(self, metaconfig: MetaConfig):
         self.metaconfig = metaconfig
 
     def gen(self) -> typ.List[typ.Dict]:
-        return []
+        out = []
+        for (name, entities) in self.metaconfig.scenes().items():
+            out.append({
+                'id': name,
+                'name': name,
+                'entities': {},
+                # 'entities': {
+                #     k: self.metaconfig.state_templates()[v].d
+                #         'friendly_name': k,
+                #     } for (k, v) in entities.items()
+                # }
+            })
+        out.sort(key=lambda s: s['id'])
+        return out
+
 
 class Automation:
     def __init__(self, metaconfig: MetaConfig):
@@ -86,6 +104,6 @@ class Automation:
         out = []
         for dimmer in self.metaconfig.dimmer_entities():
             out.extend(self._taps(dimmer))
-        out.extend(self._scene_webhooks(self.metaconfig.scenes()))
+        out.extend(self._scene_webhooks(set(self.metaconfig.scenes().keys())))
         out.sort(key=lambda a: a['id'])
         return out

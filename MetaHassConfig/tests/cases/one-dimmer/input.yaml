@@ -20,7 +20,7 @@ entities:
 
 
 state_templates:
-  dimmer_high:
+  dimmer_on:
     brightness: 255
     # friendly_name: bedroom_switch_bedside
     # node_id: 3
