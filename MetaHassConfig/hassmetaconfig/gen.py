@@ -18,6 +18,12 @@ class MetaConfig:
     def scenes(self) -> typ.Set[str]:
         return set(self.data['scenes'].keys())
 
+class Scenes:
+    def __init__(self, metaconfig: MetaConfig):
+        self.metaconfig = metaconfig
+
+    def gen(self) -> typ.List[typ.Dict]:
+        return []
 
 class Automation:
     def __init__(self, metaconfig: MetaConfig):

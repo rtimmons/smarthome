@@ -35,3 +35,12 @@ class TestAutomation(unittest.TestCase):
         msg = f"Expected:\n{yaml.dump(exp)}\n\nActual:\n{yaml.dump(actual)}\n"
         self.assertListEqual(actual, exp, msg)
 
+    def test_produces_scenes(self):
+        tdir = tcase_dir('one-dimmer')
+        config = gen.MetaConfig(os.path.join(tdir, 'input.yaml'))
+        scenes = gen.Scenes(config)
+        actual = scenes.gen()
+        exp = expected('one-dimmer', 'scenes.yaml')
+
+        msg = f"Expected:\n{yaml.dump(exp)}\n\nActual:\n{yaml.dump(actual)}\n"
+        self.assertListEqual(actual, exp, msg)
