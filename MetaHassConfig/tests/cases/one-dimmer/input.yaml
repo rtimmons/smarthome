@@ -81,6 +81,7 @@ scenes:
     entities:
       bedroom_switch_bedside: dimmer_medium
       bedroom_light_dresser: hue_default
+      bedroom_light_desk: hue_default
   - name: scene_bedroom_off
     entities:
       bedroom_switch_bedside: dimmer_off

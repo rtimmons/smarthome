@@ -51,6 +51,16 @@
       friendly_name: bedroom_light_dresser
       supported_features: 63
       state: 'on'
+    light.bedroom_light_desk:
+      min_mireds: 153
+      max_mireds: 500
+      effect_list: colorloop,random
+      brightness: 254
+      color_temp: 346
+      effect: none
+      friendly_name: bedroom_light_desk
+      supported_features: 63
+      state: 'on'
 
 - id: scene_bedroom_off
   name: scene_bedroom_off
