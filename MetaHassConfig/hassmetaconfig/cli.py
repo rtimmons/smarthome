@@ -10,7 +10,7 @@ def main(args=None):
     automations = gen.Automation(config).gen()
     scenes = gen.Scenes(config).gen()
 
-    with open('automations.yml', 'w') as f:
+    with open('automations.yaml', 'w') as f:
         yaml.dump(automations, f)
     with open('scenes.yaml', 'w') as f:
         yaml.dump(scenes, f)
