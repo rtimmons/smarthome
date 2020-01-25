@@ -111,6 +111,11 @@ scenes:
       bedroom_switch_bedside: dimmer_high
       bedroom_outlet_flamingo: outlet_on
       bedroom_light_dresser: hue_default
+      bedroom_switch_closet: dimmer_high
+      bathroom_light_vanityright: hue_default
+      bathroom_light_vanityleft: hue_default
+      bathroom_light_sauna: hue_default
+      bathroom_light_shower: hue_default
   - name: scene_bedroom_medium
     entities:
       bedroom_switch_bedside: dimmer_medium
@@ -121,6 +126,11 @@ scenes:
       bedroom_switch_bedside: dimmer_off
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: hue_off
+      bedroom_switch_closet: dimmer_off
+      bathroom_light_vanityright: hue_off
+      bathroom_light_vanityleft: hue_off
+      bathroom_light_sauna: hue_off
+      bathroom_light_shower: hue_off
 
   - name: scene_office_high
     entities:
@@ -154,6 +164,15 @@ scenes:
       entry_switch_kitchen: dimmer_off
       living_switch_deck: dimmer_off
       living_outlet_slider: outlet_off
+
+  - name: scene_hall_high
+    entities:
+      kitchen_light_upper: hue_default
+      kitchen_light_lower: hue_default
+      living_light_floor: hue_default
+      global_switch_hall: dimmer_high
+      kitchen_switch_dining: dimmer_high
+      entry_switch_kitchen: dimmer_high
 
   - name: scene_kitchen_high
     entities:
