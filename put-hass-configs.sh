@@ -6,7 +6,7 @@ cd "$(dirname "$0")" || exit 1
 
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 
-if ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local exit &>/dev/null; then
+if ! ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local exit &>/dev/null; then
     echo -e "Need passwordless ssh:\n\n    ssh-copy-id pi@smarterhome.local\n"
     exit 1
 fi
