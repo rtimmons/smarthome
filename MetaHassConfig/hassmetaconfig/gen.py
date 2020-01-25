@@ -85,13 +85,15 @@ class Automation:
             return out
 
         if dimmer['type'] not in self.metaconfig.event_names:
-            raise Exception(f"No event_names configured for {dimmer['type']} ({dimmer['name']})")
-        event_names = self.metaconfig.event_names[dimmer['type']]
+            event_names = {}
+        else:
+            event_names = self.metaconfig.event_names[dimmer['type']]
+
         taps = {k: {'parts': split(k), 'v': v} for (k, v) in dimmer.items() if k.startswith('on_')}
 
         out = []
         for (tap_name, tap) in taps.items():
-            print(f"Writing automation for {dimmer['name']} {tap_name}")
+            # print(f"Writing automation for {dimmer['name']} {tap_name}")
             event_data = {
                 'entity_id': f"zwave.{dimmer['name']}",
             }

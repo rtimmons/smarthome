@@ -57,10 +57,8 @@ entities:
     type: outlet
     node_id: 2
   - name: living_switch_deck
-    type: dimmer switch 14291
+    type: dimmer switch 14291 # doesn't seem to send double-taps so can't have on_ events
     node_id: 14
-#    on_up_double: scene_deck_high
-#    on_down_double: scene_deck_off
 
   - name: office_light_sidetable
     type: hue light color
