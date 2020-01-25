@@ -34,4 +34,4 @@ popd >/dev/null 2>&1 || exit 1
 echo "Restarting home-assistant for new changes to take effect"
 ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local \
     'sudo systemctl restart home-assistant.service'
-echo "Home-assistant is now restarting."
+echo -e "Home-assistant is now restarting. Check Z-Wave at\n    http://smarterhome.local:8123\n"
