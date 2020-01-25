@@ -22,6 +22,7 @@ class MetaConfig:
 
     @property
     def dimmer_entities(self) -> typ.List[typ.Dict]:
+        # TODO: just look for on_* entries don't rely on gross substring logic.
         return [e for e in self.entities if e['type'].startswith('dimmer switch')]
 
     @property
