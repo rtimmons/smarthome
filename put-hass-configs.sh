@@ -27,7 +27,11 @@ popd >/dev/null 2>&1 || exit 1
 ./check-hass-configs.sh
 
 pushd HomeAssistantConfig >/dev/null 2>&1 || exit 1
-    scp ./automations.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/
-    scp ./scenes.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/
+    scp ./automations.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
+    scp ./scenes.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
 popd >/dev/null 2>&1 || exit 1
 
+echo "Restarting home-assistant for new changes to take effect"
+ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local \
+    'sudo systemctl restart home-assistant.service'
+echo "Home-assistant is now restarting."
