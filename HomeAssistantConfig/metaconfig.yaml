@@ -77,6 +77,14 @@ entities:
     on_down_double: scene_office_off
 
 event_names:
+  'dimmer switch ws100':
+    up: {scene_id: 1}
+    down: {scene_id: 2}
+    single: {scene_data: 0}
+    double: {scene_data: 3}
+    triple: {scene_data: 4}
+    hold_start: {scene_data: 2}
+    hold_end: {scene_data: 1}
   'dimmer switch 46203':
     up: {scene_id: 1}
     down: {scene_id: 2}
