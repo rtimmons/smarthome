@@ -42,5 +42,5 @@ class TestAutomation(unittest.TestCase):
         actual = scenes.gen()
         exp = expected('one-dimmer', 'scenes.yaml')
 
-        msg = f"Expected:\n{yaml.dump(exp)}\n\nActual:\n{yaml.dump(actual)}\n"
+        msg = f"\nExpected:\n{yaml.dump(exp)}\n\nActual:\n{yaml.dump(actual)}\n"
         self.assertListEqual(actual, exp, msg)

@@ -2,78 +2,76 @@
 # node 2 is the living slider
 
 entities:
-  bathroom_light_sauna:
+  - name: bathroom_light_sauna
     type: hue light
-  bathroom_light_shower:
+  - name: bathroom_light_shower
     type: hue light
-  bathroom_light_vanityleft:
+  - name: bathroom_light_vanityleft
     type: hue light
-  bathroom_light_vanityright:
+  - name: bathroom_light_vanityright
     type: hue light
 
-  bedroom_light_desk:
+  - name: bedroom_light_desk
     type: hue light
-  bedroom_light_dresser:
+  - name: bedroom_light_dresser
     type: hue light color
-  bedroom_outlet_flamingo:
+  - name: bedroom_outlet_flamingo
     type: outlet
     node_id: 4
-  bedroom_switch_bedside:
+  - name: bedroom_switch_bedside
     type: dimmer switch
     node_id: 3
-    # TODO: assert scene is defined
     on_up: {scene: scene_bedroom_high}
     on_down: {scene: scene_bedroom_off}
-  bedroom_switch_closet:
+  - name: bedroom_switch_closet
     type: dimmer switch
     node_id: 5
     on_up: {scene: scene_bedroom_medium}
     on_down: {scene: scene_bedroom_off}
 
-  entry_switch_kitchen:
+  - name: entry_switch_kitchen
     type: dimmer switch
-    # TODO: assert is int
     node_id: 11
     on_up: {scene: scene_kitchen_high}
     on_down: {scene: scene_kitchen_off}
 
-  global_switch_hall:
+  - name: global_switch_hall
     type: dimmer switch
     node_id: 15
     on_up: {scene: scene_hall_high}
     on_down: {scene: scene_hall_off}
 
-  kitchen_light_lower:
+  - name: kitchen_light_lower
     type: hue light color
-  kitchen_light_upper:
+  - name: kitchen_light_upper
     type: hue light color
-  kitchen_switch_dining:
+  - name: kitchen_switch_dining
     type: dimmer switch
     node_id: 9
     on_up: {scene: scene_dining_high}
     on_down: {scene: scene_dining_off}
 
-  living_light_floor:
+  - name: living_light_floor
     type: hue light color
-  living_outlet_slider:
+  - name: living_outlet_slider
     type: outlet
     node_id: 2
-  living_switch_deck:
+  - name: living_switch_deck
     # TODO: it's a different switch type - binary?
     type: dimmer switch
     node_id: 14
     on_up: {scene: scene_deck_high}
     on_down: {scene: scene_deck_off}
 
-  office_light_sidetable:
+  - name: office_light_sidetable
     type: hue light color
-  office_outlet_pianolight:
+  - name: office_outlet_pianolight
     type: outlet
     node_id: 6
-  office_outlet_pipelight:
+  - name: office_outlet_pipelight
     type: outlet
     node_id: 7
-  office_switch_main:
+  - name: office_switch_main
     type: dimmer switch
     node_id: 8
     on_up: {scene: scene_office_high}
@@ -162,31 +160,36 @@ state_templates:
   
 
 scenes:
-  scene_bathroom_high:
-    bathroom_light_sauna: hue_default
-    bathroom_light_shower: hue_default
-    bathroom_light_vanityleft: hue_default
-    bathroom_light_vanityright: hue_default
-  scene_bathroom_medium:
-    bathroom_light_sauna: hue_medium
-    bathroom_light_shower: hue_medium
-    bathroom_light_vanityleft: hue_medium
-    bathroom_light_vanityright: hue_medium
-  scene_bathroom_off:
-    bathroom_light_sauna: hue_off
-    bathroom_light_shower: hue_off
-    bathroom_light_vanityleft: hue_off
-    bathroom_light_vanityright: hue_off
+  - name: scene_bathroom_high
+    entities:
+      bathroom_light_sauna: hue_default
+      bathroom_light_shower: hue_default
+      bathroom_light_vanityleft: hue_default
+      bathroom_light_vanityright: hue_default
+  - name: scene_bathroom_medium
+    entities:
+      bathroom_light_sauna: hue_medium
+      bathroom_light_shower: hue_medium
+      bathroom_light_vanityleft: hue_medium
+      bathroom_light_vanityright: hue_medium
+  - name: scene_bathroom_off
+    entities:
+      bathroom_light_sauna: hue_off
+      bathroom_light_shower: hue_off
+      bathroom_light_vanityleft: hue_off
+      bathroom_light_vanityright: hue_off
 
-  scene_bedroom_high:
-    bedroom_switch_bedside: dimmer_on
-    bedroom_outlet_flamingo: outlet_on
-    bedroom_light_dresser: hue_default
-  scene_bedroom_medium:
-    bedroom_switch_bedside: dimmer_medium
-    bedroom_outlet_flamingo: outlet_off
-    bedroom_light_dresser: dimmer_medium
-  scene_bedroom_off:
-    bedroom_switch_bedside: dimmer_off
-    bedroom_outlet_flamingo: outlet_off
-    bedroom_light_dresser: hue_off
+  - name: scene_bedroom_high
+    entities:
+      bedroom_switch_bedside: dimmer_on
+      bedroom_outlet_flamingo: outlet_on
+      bedroom_light_dresser: hue_default
+  - name: scene_bedroom_medium
+    entities:
+      bedroom_switch_bedside: dimmer_medium
+      bedroom_outlet_flamingo: outlet_off
+      bedroom_light_dresser: dimmer_medium
+  - name: scene_bedroom_off
+      bedroom_switch_bedside: dimmer_off
+      bedroom_outlet_flamingo: outlet_off
+      bedroom_light_dresser: hue_off
