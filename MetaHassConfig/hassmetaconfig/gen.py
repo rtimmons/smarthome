@@ -47,6 +47,8 @@ class Scenes:
                 entity = self.metaconfig.entity(ent_name)
                 full_name = ent_name
 
+                if entity['type'] == 'hue light color':
+                    full_name = f"light.{ent_name}"
                 if entity['type'] == 'dimmer switch':
                     full_name = f"light.{ent_name}"
                     template['node_id'] = entity['node_id']

@@ -46,14 +46,38 @@ state_templates:
     value_id: '72057594093076481'
     value_index: 0
     value_instance: 1
+  hue_default:
+    min_mireds: 153
+    max_mireds: 500
+    effect_list: colorloop,random
+    brightness: 254
+    color_temp: 346
+    effect: none
+    # friendly_name: office_light_sidetable
+    supported_features: 63
+    state: 'on'
+  hue_off:
+    min_mireds: 153
+    max_mireds: 500
+    effect_list: colorloop,random
+    brightness: 254
+    color_temp: 346
+    effect: none
+    # friendly_name: office_light_sidetable
+    supported_features: 63
+    state: 'off'
+
 
 scenes:
   - name: scene_bedroom_high
     entities:
       bedroom_switch_bedside: dimmer_on
+      bedroom_light_dresser: hue_default
   - name: scene_bedroom_medium
     entities:
       bedroom_switch_bedside: dimmer_medium
+      bedroom_light_dresser: hue_default
   - name: scene_bedroom_off
     entities:
       bedroom_switch_bedside: dimmer_off
+      bedroom_light_dresser: hue_off
