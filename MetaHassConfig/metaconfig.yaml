@@ -21,8 +21,8 @@ entities:
   - name: bedroom_switch_bedside
     type: dimmer switch
     node_id: 3
-    on_up: {scene: scene_bedroom_high}
-    on_down: {scene: scene_bedroom_off}
+    on_up_double: scene_bedroom_high
+    on_down_double: scene_bedroom_off
   - name: bedroom_switch_closet
     type: dimmer switch
     node_id: 5
@@ -190,7 +190,7 @@ scenes:
 
   - name: scene_bedroom_high
     entities:
-      bedroom_switch_bedside: dimmer_on
+      bedroom_switch_bedside: dimmer_high
       bedroom_outlet_flamingo: outlet_on
       bedroom_light_dresser: hue_default
   - name: scene_bedroom_medium
@@ -199,6 +199,7 @@ scenes:
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: dimmer_medium
   - name: scene_bedroom_off
+    entities:
       bedroom_switch_bedside: dimmer_off
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: hue_off
