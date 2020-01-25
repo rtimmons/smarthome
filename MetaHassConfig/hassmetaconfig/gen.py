@@ -32,6 +32,10 @@ class MetaConfig:
     def state_templates(self) -> typ.Dict:
         return self.data['state_templates']
 
+    @property
+    def event_names(self) -> typ.Dict:
+        return self.data['event_names']
+
 
 class Scenes:
     def __init__(self, metaconfig: MetaConfig):
@@ -74,40 +78,36 @@ class Automation:
         self.metaconfig = metaconfig
 
     def _taps(self, dimmer: typ.Dict) -> typ.List[typ.Dict]:
-        name = dimmer['name']
-        return [{
-            'id': f"{name}_doubletap_up",
-            'alias': f"{name}_doubletap_up",
-            'trigger': [{
-                'platform': 'event',
-                'event_type': 'zwave.scene_activated',
-                'event_data': {
-                    'entity_id': f"zwave.{name}",
-                    'scene_id': 1,  # 1 is up
-                    'scene_data': 7860,  # double-tap
-                }
-            }],
-            'condition': [],
-            'action': [
-                {'scene': f"scene.{dimmer['on_up']['scene']}"}
-            ]
-        }, {
-            'id': f"{name}_doubletap_down",
-            'alias': f"{name}_doubletap_down",
-            'trigger': [{
-                'platform': 'event',
-                'event_type': 'zwave.scene_activated',
-                'event_data': {
-                    'entity_id': f"zwave.{name}",
-                    'scene_id': 2,  # 2 is down
-                    'scene_data': 7860,  # double-tap
-                }
-            }],
-            'condition': [],
-            'action': [
-                {'scene': f"scene.{dimmer['on_down']['scene']}"}
-            ]
-        }]
+        def split(k):
+            out = k.split('_')[1:]
+            out.sort()
+            return out
+
+        event_names = self.metaconfig.event_names
+        taps = {k: {'parts': split(k), 'v': v} for (k, v) in dimmer.items() if k.startswith('on_')}
+
+        out = []
+        for (tap_name, tap) in taps.items():
+            event_data = {
+                'entity_id': f"zwave.{dimmer['name']}",
+            }
+            for part in tap['parts']:
+                event_data.update(event_names[part])
+            item = {
+                'id': f"{dimmer['name']}_{tap_name}",
+                'alias': f"{dimmer['name']}_{tap_name}",
+                'trigger': [{
+                    'platform': 'event',
+                    'event_type': 'zwave.scene_activated',
+                    'event_data': event_data,
+                }],
+                'condition': [],
+                'action': [
+                    {'scene': f"scene.{tap['v']}"}
+                ]
+            }
+            out.append(item)
+        return out
 
     def _scene_webhooks(self, scenes: typ.List[typ.Dict]) -> typ.List[typ.Dict]:
         return [{

@@ -9,14 +9,22 @@ entities:
   - name: bedroom_switch_bedside
     type: dimmer switch
     node_id: 3
-    on_up: {scene: scene_bedroom_high}
-    on_down: {scene: scene_bedroom_off}
+    on_up_double: scene_bedroom_high
+    on_down_double: scene_bedroom_off
   - name: bedroom_switch_closet
     type: dimmer switch
     node_id: 5
-    on_up: {scene: scene_bedroom_medium}
-    on_down: {scene: scene_bedroom_off}
+    on_up_double: scene_bedroom_medium
+    on_down_double: scene_bedroom_off
 
+event_names:
+  up: {scene_id: 1}
+  down: {scene_id: 2}
+  single: {scene_data: 7680}
+  double: {scene_data: 7860}
+  triple: {scene_data: 7920}
+  hold_start: {scene_data: 7800}
+  hold_end: {scene_data: 7740}
 
 state_templates:
   dimmer_on:

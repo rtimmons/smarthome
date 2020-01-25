@@ -1,5 +1,5 @@
-- id: bedroom_switch_bedside_doubletap_down
-  alias: bedroom_switch_bedside_doubletap_down
+- id: bedroom_switch_bedside_on_down_double
+  alias: bedroom_switch_bedside_on_down_double
   trigger:
   - platform: event
     event_type: zwave.scene_activated
@@ -11,8 +11,8 @@
   action:
   - scene: scene.scene_bedroom_off
 
-- id: bedroom_switch_bedside_doubletap_up
-  alias: bedroom_switch_bedside_doubletap_up
+- id: bedroom_switch_bedside_on_up_double
+  alias: bedroom_switch_bedside_on_up_double
   trigger:
   - platform: event
     event_type: zwave.scene_activated
@@ -24,8 +24,8 @@
   action:
   - scene: scene.scene_bedroom_high
 
-- id: bedroom_switch_closet_doubletap_down
-  alias: bedroom_switch_closet_doubletap_down
+- id: bedroom_switch_closet_on_down_double
+  alias: bedroom_switch_closet_on_down_double
   trigger:
   - platform: event
     event_type: zwave.scene_activated
@@ -37,8 +37,8 @@
   action:
   - scene: scene.scene_bedroom_off
 
-- id: bedroom_switch_closet_doubletap_up
-  alias: bedroom_switch_closet_doubletap_up
+- id: bedroom_switch_closet_on_up_double
+  alias: bedroom_switch_closet_on_up_double
   trigger:
   - platform: event
     event_type: zwave.scene_activated

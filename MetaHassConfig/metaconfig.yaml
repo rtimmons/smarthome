@@ -26,20 +26,20 @@ entities:
   - name: bedroom_switch_closet
     type: dimmer switch
     node_id: 5
-    on_up: {scene: scene_bedroom_medium}
-    on_down: {scene: scene_bedroom_off}
+    on_up_double: scene_bedroom_medium
+    on_down_double: scene_bedroom_off
 
   - name: entry_switch_kitchen
     type: dimmer switch
     node_id: 11
-    on_up: {scene: scene_kitchen_high}
-    on_down: {scene: scene_kitchen_off}
+    on_up_double: scene_kitchen_high
+    on_down_double: scene_kitchen_off
 
   - name: global_switch_hall
     type: dimmer switch
     node_id: 15
-    on_up: {scene: scene_hall_high}
-    on_down: {scene: scene_hall_off}
+    on_up_double: scene_hall_high
+    on_down_double: scene_hall_off
 
   - name: kitchen_light_lower
     type: hue light color
@@ -48,8 +48,8 @@ entities:
   - name: kitchen_switch_dining
     type: dimmer switch
     node_id: 9
-    on_up: {scene: scene_dining_high}
-    on_down: {scene: scene_dining_off}
+    on_up_double: scene_dining_high
+    on_down_double: scene_dining_off
 
   - name: living_light_floor
     type: hue light color
@@ -60,8 +60,8 @@ entities:
     # TODO: it's a different switch type - binary?
     type: dimmer switch
     node_id: 14
-    on_up: {scene: scene_deck_high}
-    on_down: {scene: scene_deck_off}
+#    on_up_double: scene_deck_high
+#    on_down_double: scene_deck_off
 
   - name: office_light_sidetable
     type: hue light color
@@ -74,8 +74,17 @@ entities:
   - name: office_switch_main
     type: dimmer switch
     node_id: 8
-    on_up: {scene: scene_office_high}
-    on_down: {scene: scene_office_off}
+    on_up_double: scene_office_high
+    on_down_double: scene_office_off
+
+event_names:
+  up: {scene_id: 1}
+  down: {scene_id: 2}
+  single: {scene_data: 7680}
+  double: {scene_data: 7860}
+  triple: {scene_data: 7920}
+  hold_start: {scene_data: 7800}
+  hold_end: {scene_data: 7740}
 
 state_templates:
 
