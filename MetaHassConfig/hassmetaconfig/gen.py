@@ -49,8 +49,11 @@ class Scenes:
 
                 if entity['type'] == 'hue light color':
                     full_name = f"light.{ent_name}"
-                if entity['type'] == 'dimmer switch':
+                elif entity['type'] == 'dimmer switch':
                     full_name = f"light.{ent_name}"
+                    template['node_id'] = entity['node_id']
+                elif entity['type'] == 'outlet':
+                    full_name = f"switch.{ent_name}"
                     template['node_id'] = entity['node_id']
 
                 template['friendly_name'] = ent_name

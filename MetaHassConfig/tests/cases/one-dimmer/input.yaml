@@ -21,8 +21,6 @@ entities:
 state_templates:
   dimmer_on:
     brightness: 255
-    # friendly_name: bedroom_switch_bedside
-    # node_id: 3
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -30,8 +28,6 @@ state_templates:
     value_instance: 1
   dimmer_off:
     brightness: 255
-    # friendly_name: bedroom_switch_bedside
-    # node_id: 3
     state: 'off'
     supported_features: 1
     value_id: '72057594093076481'
@@ -39,8 +35,6 @@ state_templates:
     value_instance: 1
   dimmer_medium:
     brightness: 49
-    # friendly_name: bedroom_switch_bedside
-    # node_id: 3
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -53,7 +47,6 @@ state_templates:
     brightness: 254
     color_temp: 346
     effect: none
-    # friendly_name: office_light_sidetable
     supported_features: 63
     state: 'on'
   hue_off:
@@ -66,6 +59,16 @@ state_templates:
     # friendly_name: office_light_sidetable
     supported_features: 63
     state: 'off'
+  outlet_on:
+    state: 'on'
+    value_id: '72057594109837312'
+    value_index: 0
+    value_instance: 1
+  outlet_off:
+    state: 'off'
+    value_id: '72057594109837312'
+    value_index: 0
+    value_instance: 1
 
 
 scenes:
@@ -73,6 +76,7 @@ scenes:
     entities:
       bedroom_switch_bedside: dimmer_on
       bedroom_light_dresser: hue_default
+      bedroom_outlet_flamingo: outlet_on
   - name: scene_bedroom_medium
     entities:
       bedroom_switch_bedside: dimmer_medium
@@ -81,3 +85,4 @@ scenes:
     entities:
       bedroom_switch_bedside: dimmer_off
       bedroom_light_dresser: hue_off
+      bedroom_outlet_flamingo: outlet_off
