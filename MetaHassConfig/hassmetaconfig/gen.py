@@ -59,7 +59,8 @@ class Automation:
                 'event_type': 'zwave.scene_activated',
                 'event_data': {
                     'entity_id': f"zwave.{name}",
-                    'scene_id': 1,  # convention that 1 is up
+                    'scene_id': 1,  # 1 is up
+                    'scene_data': 7860,  # double-tap
                 }
             }],
             'condition': [],
@@ -74,7 +75,8 @@ class Automation:
                 'event_type': 'zwave.scene_activated',
                 'event_data': {
                     'entity_id': f"zwave.{name}",
-                    'scene_id': 2,  # convention that 1 is down
+                    'scene_id': 2,  # 2 is down
+                    'scene_data': 7860,  # double-tap
                 }
             }],
             'condition': [],

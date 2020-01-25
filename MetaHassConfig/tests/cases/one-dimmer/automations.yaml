@@ -6,6 +6,7 @@
     event_data:
       entity_id: zwave.bedroom_switch_bedside
       scene_id: 2
+      scene_data: 7860
   condition: []
   action:
   - scene: scene.scene_bedroom_off
@@ -18,6 +19,7 @@
     event_data:
       entity_id: zwave.bedroom_switch_bedside
       scene_id: 1
+      scene_data: 7860
   condition: []
   action:
   - scene: scene.scene_bedroom_high
@@ -30,6 +32,7 @@
     event_data:
       entity_id: zwave.bedroom_switch_closet
       scene_id: 2
+      scene_data: 7860
   condition: []
   action:
   - scene: scene.scene_bedroom_off
@@ -42,6 +45,7 @@
     event_data:
       entity_id: zwave.bedroom_switch_closet
       scene_id: 1
+      scene_data: 7860
   condition: []
   action:
   - scene: scene.scene_bedroom_medium
