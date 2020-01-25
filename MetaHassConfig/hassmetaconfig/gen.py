@@ -22,7 +22,7 @@ class MetaConfig:
 
     @property
     def dimmer_entities(self) -> typ.List[typ.Dict]:
-        return [e for e in self.entities if e['type'] == 'dimmer switch']
+        return [e for e in self.entities if e['type'].startswith('dimmer switch')]
 
     @property
     def scenes(self) -> typ.List[typ.Dict]:
@@ -83,15 +83,20 @@ class Automation:
             out.sort()
             return out
 
-        event_names = self.metaconfig.event_names
+        if dimmer['type'] not in self.metaconfig.event_names:
+            raise Exception(f"No event_names configured for {dimmer['type']} ({dimmer['name']})")
+        event_names = self.metaconfig.event_names[dimmer['type']]
         taps = {k: {'parts': split(k), 'v': v} for (k, v) in dimmer.items() if k.startswith('on_')}
 
         out = []
         for (tap_name, tap) in taps.items():
+            print(f"Writing automation for {dimmer['name']} {tap_name}")
             event_data = {
                 'entity_id': f"zwave.{dimmer['name']}",
             }
             for part in tap['parts']:
+                if part not in event_names:
+                    raise Exception(f"Don't know how to do {part} for {dimmer['type']}. Update event_names.")
                 event_data.update(event_names[part])
             item = {
                 'id': f"{dimmer['name']}_{tap_name}",

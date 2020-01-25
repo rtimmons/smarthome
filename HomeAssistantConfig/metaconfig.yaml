@@ -19,24 +19,24 @@ entities:
     type: outlet
     node_id: 4
   - name: bedroom_switch_bedside
-    type: dimmer switch
+    type: dimmer switch 46203
     node_id: 3
     on_up_double: scene_bedroom_high
     on_down_double: scene_bedroom_off
   - name: bedroom_switch_closet
-    type: dimmer switch
+    type: dimmer switch 46203
     node_id: 5
     on_up_double: scene_bedroom_medium
     on_down_double: scene_bedroom_off
 
   - name: entry_switch_kitchen
-    type: dimmer switch
+    type: dimmer switch 46203
     node_id: 11
     on_up_double: scene_kitchen_high
     on_down_double: scene_kitchen_off
 
   - name: global_switch_hall
-    type: dimmer switch
+    type: dimmer switch 46203
     node_id: 15
     on_up_double: scene_hall_high
     on_down_double: scene_hall_off
@@ -46,7 +46,7 @@ entities:
   - name: kitchen_light_upper
     type: hue light color
   - name: kitchen_switch_dining
-    type: dimmer switch
+    type: dimmer switch 46203
     node_id: 9
     on_up_double: scene_dining_high
     on_down_double: scene_dining_off
@@ -57,8 +57,7 @@ entities:
     type: outlet
     node_id: 2
   - name: living_switch_deck
-    # TODO: it's a different switch type - binary?
-    type: dimmer switch
+    type: dimmer switch 14291
     node_id: 14
 #    on_up_double: scene_deck_high
 #    on_down_double: scene_deck_off
@@ -72,19 +71,20 @@ entities:
     type: outlet
     node_id: 7
   - name: office_switch_main
-    type: dimmer switch
+    type: dimmer switch ws100
     node_id: 8
     on_up_double: scene_office_high
     on_down_double: scene_office_off
 
 event_names:
-  up: {scene_id: 1}
-  down: {scene_id: 2}
-  single: {scene_data: 7680}
-  double: {scene_data: 7860}
-  triple: {scene_data: 7920}
-  hold_start: {scene_data: 7800}
-  hold_end: {scene_data: 7740}
+  'dimmer switch 46203':
+    up: {scene_id: 1}
+    down: {scene_id: 2}
+    single: {scene_data: 7680}
+    double: {scene_data: 7860}
+    triple: {scene_data: 7920}
+    hold_start: {scene_data: 7800}
+    hold_end: {scene_data: 7740}
 
 state_templates:
 
