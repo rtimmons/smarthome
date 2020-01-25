@@ -228,3 +228,24 @@ scenes:
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
 
+  - name: scene_hall_off
+    entities:
+      bathroom_light_sauna: hue_off
+      bathroom_light_shower: hue_off
+      bathroom_light_vanityleft: hue_off
+      bathroom_light_vanityright: hue_off
+      kitchen_light_upper: hue_off
+      kitchen_light_lower: hue_off
+      living_light_floor: hue_off
+      kitchen_switch_dining: dimmer_off
+      entry_switch_kitchen: dimmer_off
+      living_switch_deck: dimmer_off
+      living_outlet_slider: outlet_off
+
+  - name: scene_kitchen_high
+    entities:
+      kitchen_light_upper: hue_default
+      kitchen_light_lower: hue_default
+      kitchen_switch_dining: dimmer_high
+      entry_switch_kitchen: dimmer_high
+      living_light_floor: hue_default

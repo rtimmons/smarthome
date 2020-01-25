@@ -18,7 +18,10 @@ class MetaConfig:
         return self.data['entities']
 
     def entity(self, name):
-        return [e for e in self.entities if e['name'] == name][0]
+        ents = [e for e in self.entities if e['name'] == name]
+        if len(ents) != 1:
+            raise Exception(f"Unknown entity {name}")
+        return ents[0]
 
     @property
     def dimmer_entities(self) -> typ.List[typ.Dict]:
@@ -54,7 +57,7 @@ class Scenes:
 
                 if entity['type'] == 'hue light color' or entity['type'] == 'hue light':
                     full_name = f"light.{ent_name}"
-                elif entity['type'] == 'dimmer switch':
+                elif entity['type'].startswith('dimmer switch'):
                     full_name = f"light.{ent_name}"
                     template['node_id'] = entity['node_id']
                 elif entity['type'] == 'outlet':
