@@ -10,5 +10,7 @@ fi
 # shellcheck disable=SC1091
 source ./venv/bin/activate
 
+python3 -m pip install homeassistant
+
 hass -c "$PWD/HomeAssistantConfig" --script check_config
 

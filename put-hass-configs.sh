@@ -18,6 +18,7 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
     fi
     # shellcheck disable=SC1091
     source ./venv/bin/activate
+        python3 ./setup.py develop >/dev/null
         pushd ../HomeAssistantConfig >/dev/null 2>&1 || exit 1
             hassmetagen ./metaconfig.yaml
         popd >/dev/null 2>&1 || exit 1
@@ -34,4 +35,5 @@ popd >/dev/null 2>&1 || exit 1
 echo "Restarting home-assistant for new changes to take effect"
 ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local \
     'sudo systemctl restart home-assistant.service'
+
 echo -e "Home-assistant is now restarting. Check Z-Wave at\n    http://smarterhome.local:8123\n"
