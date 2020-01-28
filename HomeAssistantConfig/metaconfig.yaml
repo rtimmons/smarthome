@@ -1,72 +1,91 @@
 entities:
+  # Bathroom
   - name: bathroom_light_sauna
     type: hue light
+
   - name: bathroom_light_shower
     type: hue light
+
   - name: bathroom_light_vanityleft
     type: hue light
+
   - name: bathroom_light_vanityright
     type: hue light
 
+  # Bedroom
   - name: bedroom_light_desk
     type: hue light
+
   - name: bedroom_light_dresser
     type: hue light color
+
   - name: bedroom_outlet_flamingo
     type: outlet
     node_id: 4
+
   - name: bedroom_switch_bedside
     type: dimmer switch 46203
     node_id: 3
     on_up_double: scene_bedroom_high
     on_down_double: scene_bedroom_off
+
   - name: bedroom_switch_closet
     type: dimmer switch 46203
     node_id: 5
-    on_up_double: scene_bedroom_medium
-    on_down_double: scene_bedroom_off
+    on_up_double: scene_bathroom_closet_medium
+    on_down_double: scene_bathroom_closet_off
 
+  # Kitchen
   - name: entry_switch_kitchen
     type: dimmer switch 46203
     node_id: 11
-    on_up_double: scene_kitchen_high
-    on_down_double: scene_kitchen_off
+    on_up_double: scene_kitchen_living_high
+    on_down_double: scene_kitchen_living_off
 
   - name: global_switch_hall
     type: dimmer switch 46203
     node_id: 15
-    on_up_double: scene_hall_high
-    on_down_double: scene_hall_off
+    on_up_double: scene_all_high
+    on_down_double: scene_all_off
 
   - name: kitchen_light_lower
     type: hue light color
+
   - name: kitchen_light_upper
     type: hue light color
+
   - name: kitchen_switch_dining
     type: dimmer switch 46203
     node_id: 9
     on_up_double: scene_dining_high
     on_down_double: scene_dining_off
 
+  # Living
   - name: living_light_floor
     type: hue light color
+
   - name: living_outlet_slider
     type: outlet
     node_id: 2
   # TODO: having issues with this
   #    [homeassistant.components.light.reproduce_state] Unable to find entity light.living_switch_deck
+
   - name: living_switch_deck
     type: dimmer switch 14291 # doesn't seem to send double-taps so can't have on_ events
     node_id: 14
 
+  # Office
   - name: office_light_sidetable
     type: hue light color
+
   - name: office_outlet_pianolight
     type: outlet
     node_id: 6
+
   - name: office_outlet_pipelight
     type: outlet
     node_id: 7
+
   - name: office_switch_main
     type: dimmer switch ws100
     node_id: 8
@@ -75,7 +94,7 @@ entities:
     
 
 #
-# The value of the entity keys (e.g. hue_default) corresponds to
+# The value of the entity keys (e.g. hue_high) corresponds to
 # an entry in the state_templates map below.
 #
 # There is no validation that the type of the entity and the state
@@ -87,18 +106,22 @@ entities:
 # so on_double_down is the same as on_down_double.
 #
 scenes:
+  # Bathroom
   - name: scene_bathroom_high
     entities:
-      bathroom_light_sauna: hue_default
-      bathroom_light_shower: hue_default
-      bathroom_light_vanityleft: hue_default
-      bathroom_light_vanityright: hue_default
+      bathroom_light_sauna: hue_high
+      bathroom_light_shower: hue_high
+      bathroom_light_vanityleft: hue_high
+      bathroom_light_vanityright: hue_high
+      bedroom_switch_bedside: dimmer_high
+
   - name: scene_bathroom_medium
     entities:
       bathroom_light_sauna: hue_medium
       bathroom_light_shower: hue_medium
       bathroom_light_vanityleft: hue_medium
       bathroom_light_vanityright: hue_medium
+
   - name: scene_bathroom_off
     entities:
       bathroom_light_sauna: hue_off
@@ -106,35 +129,126 @@ scenes:
       bathroom_light_vanityleft: hue_off
       bathroom_light_vanityright: hue_off
 
-  - name: scene_bedroom_high
+  # Closet
+  - name: scene_closet_high
     entities:
-      bedroom_switch_bedside: dimmer_high
-      bedroom_outlet_flamingo: outlet_on
-      bedroom_light_dresser: hue_default
       bedroom_switch_closet: dimmer_high
-      bathroom_light_vanityright: hue_default
-      bathroom_light_vanityleft: hue_default
-      bathroom_light_sauna: hue_default
-      bathroom_light_shower: hue_default
-  - name: scene_bedroom_medium
+
+  - name: scene_closet_medium
     entities:
-      bedroom_switch_bedside: dimmer_medium
-      bedroom_outlet_flamingo: outlet_off
-      bedroom_light_dresser: dimmer_medium
-  - name: scene_bedroom_off
+        bedroom_switch_closet: dimmer_medium
+
+  - name: scene_closet_off
     entities:
-      bedroom_switch_bedside: dimmer_off
-      bedroom_outlet_flamingo: outlet_off
-      bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
+
+  # Bathroom & Closet
+  - name: scene_bathroom_closet_medium
+    entities:
+      bathroom_light_vanityright: hue_high
+      bathroom_light_vanityleft: hue_medium
+      bathroom_light_sauna: hue_medium
+      bathroom_light_shower: hue_medium
+      bedroom_switch_closet: dimmer_medium
+
+  - name: scene_bathroom_closet_off
+    entities:
       bathroom_light_vanityright: hue_off
       bathroom_light_vanityleft: hue_off
       bathroom_light_sauna: hue_off
       bathroom_light_shower: hue_off
+      bedroom_switch_closet: dimmer_off
 
+  # Living
+  - name: scene_living_high
+    entities:
+      living_light_floor: hue_high
+      global_switch_hall: dimmer_high
+      living_outlet_slider: outlet_off
+
+  - name: scene_living_medium
+    entities:
+      living_light_floor: hue_medium
+      global_switch_hall: dimmer_medium
+      living_switch_deck: dimmer_off
+      living_outlet_slider: outlet_on
+
+  - name: scene_living_off
+    entities:
+      living_light_floor: hue_off
+      global_switch_hall: dimmer_off
+      living_switch_deck: dimmer_off
+      living_outlet_slider: outlet_off
+
+  # Kitchen
+  - name: scene_kitchen_high
+    entities:
+      kitchen_light_upper: hue_high
+      kitchen_light_lower: hue_high
+      kitchen_switch_dining: dimmer_high
+      entry_switch_kitchen: dimmer_high
+
+  - name: scene_kitchen_medium
+    entities:
+        kitchen_light_upper: hue_medium
+        kitchen_light_lower: hue_medium
+        kitchen_switch_dining: dimmer_medium
+        entry_switch_kitchen: dimmer_medium
+
+  - name: scene_kitchen_off
+    entities:
+        kitchen_light_upper: hue_off
+        kitchen_light_lower: hue_off
+        kitchen_switch_dining: dimmer_off
+        entry_switch_kitchen: dimmer_off
+
+  # Kitchen & Living
+  - name: scene_kitchen_living_high
+    entities:
+      kitchen_light_upper: hue_high
+      kitchen_light_lower: hue_high
+      kitchen_switch_dining: dimmer_high
+      entry_switch_kitchen: dimmer_high
+      living_light_floor: hue_high
+      global_switch_hall: dimmer_high
+      living_outlet_slider: outlet_on
+
+  - name: scene_kitchen_living_off
+    entities:
+      kitchen_light_upper: hue_off
+      kitchen_light_lower: hue_off
+      kitchen_switch_dining: dimmer_off
+      entry_switch_kitchen: dimmer_off
+      living_light_floor: hue_off
+      global_switch_hall: dimmer_off
+      living_outlet_slider: outlet_off
+
+  # Bedroom
+  - name: scene_bedroom_high
+    entities:
+      bedroom_outlet_flamingo: outlet_on
+      bedroom_light_dresser: hue_high
+      bedroom_switch_closet: dimmer_high
+      bedroom_light_desk: hue_high
+
+  - name: scene_bedroom_medium
+    entities:
+      bedroom_outlet_flamingo: outlet_off
+      bedroom_light_dresser: dimmer_medium
+      bedroom_switch_closet: dimmer_medium
+      bedroom_light_desk: hue_off
+
+  - name: scene_bedroom_off
+    entities:
+      bedroom_outlet_flamingo: outlet_off
+      bedroom_light_dresser: hue_off
+      bedroom_switch_closet: dimmer_off
+      bedroom_light_desk: hue_off
+
+  # Office
   - name: scene_office_high
     entities:
-      office_light_sidetable: hue_default
+      office_light_sidetable: hue_high
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_on
 
@@ -150,12 +264,17 @@ scenes:
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
 
-  - name: scene_hall_off
+  # All
+  - name: scene_all_off
     entities:
       bathroom_light_sauna: hue_off
       bathroom_light_shower: hue_off
       bathroom_light_vanityleft: hue_off
       bathroom_light_vanityright: hue_off
+      bedroom_outlet_flamingo: outlet_off
+      bedroom_light_dresser: hue_off
+      bedroom_switch_closet: dimmer_off
+      bedroom_light_desk: hue_off
       kitchen_light_upper: hue_off
       kitchen_light_lower: hue_off
       living_light_floor: hue_off
@@ -164,24 +283,30 @@ scenes:
       entry_switch_kitchen: dimmer_off
       living_switch_deck: dimmer_off
       living_outlet_slider: outlet_off
+      office_light_sidetable: hue_off
+      office_outlet_pipelight: outlet_off
+      office_outlet_pianolight: outlet_off
 
-  - name: scene_hall_high
+  - name: scene_all_high
     entities:
-      kitchen_light_upper: hue_default
-      kitchen_light_lower: hue_default
-      living_light_floor: hue_default
+#      bathroom_light_sauna: hue_high
+#      bathroom_light_shower: hue_high
+#      bathroom_light_vanityleft: hue_high
+#      bathroom_light_vanityright: hue_high
+#      bedroom_outlet_flamingo: outlet_on
+#      bedroom_light_dresser: hue_high
+#      bedroom_switch_closet: dimmer_high
+#      bedroom_light_desk: hue_high
+      kitchen_light_upper: hue_high
+      kitchen_light_lower: hue_high
+      living_light_floor: hue_high
       global_switch_hall: dimmer_high
       kitchen_switch_dining: dimmer_high
       entry_switch_kitchen: dimmer_high
-
-  - name: scene_kitchen_high
-    entities:
-      kitchen_light_upper: hue_default
-      kitchen_light_lower: hue_default
-      kitchen_switch_dining: dimmer_high
-      entry_switch_kitchen: dimmer_high
-      living_light_floor: hue_default
-
+      living_outlet_slider: outlet_on
+      office_light_sidetable: hue_high
+      office_outlet_pipelight: outlet_on
+      office_outlet_pianolight: outlet_on
 
 event_names:
   'dimmer switch ws100':
@@ -229,7 +354,7 @@ state_templates:
     value_index: 0
     value_instance: 1
 
-  hue_default:
+  hue_high:
     min_mireds: 153
     max_mireds: 500
     effect_list: colorloop,random
