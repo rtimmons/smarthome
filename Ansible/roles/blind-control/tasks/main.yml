@@ -1,0 +1,109 @@
+- name: install python3
+  become_user: root
+  become: yes
+  apt:
+    name: python3
+    state: present
+
+- name: install python-pip
+  become_user: root
+  become: yes
+  apt:
+    name: python-pip
+    state: present
+
+- name: install python3-gpiozero
+  become_user: root
+  become: yes
+  apt:
+    name: python3-gpiozero
+    state: present
+
+- name: install python3-pigpio
+  become_user: root
+  become: yes
+  apt:
+    name: python3-pigpio
+    state: present
+
+- name: install pigpio
+  become_user: root
+  become: yes
+  apt:
+    name: pigpio
+    state: present
+
+- name: install pigpio with pip
+  become_user: root
+  become: yes
+  pip:
+    name: pigpio
+    state: present
+
+- name: install requests with pip
+  become_user: root
+  become: yes
+  pip:
+    name: requests
+    state: present
+
+- name: enable cgid
+  become_user: root
+  become: yes
+  apache2_module:
+    name: cgid
+    state: present
+
+- name: install blindcontrol apache config
+  become_user: root
+  become: true
+  copy:
+    src: 002-blindcontrol.conf
+    dest: /etc/apache2/sites-available/002-blindcontrol.conf
+    owner: root
+    group: root
+    mode: 0664
+
+- name: enable blindcontrol apache config
+  become_user: root
+  become: true
+  command: a2ensite 002-blindcontrol
+
+- name: setup /BlindControl/cgi-bin directory
+  become_user: root
+  become: yes
+  file:
+    path:   /var/www/html/BlindControl
+    owner:  root
+    group:  root
+    state:  directory
+    mode: a+wrx
+
+- name: setup /BlindControl/cgi-bin
+  become_user: root
+  become: yes
+  file:
+    src:    /home/pi/repo/BlindControl/cgi-bin
+    dest:   /var/www/html/BlindControl/cgi-bin
+    owner:  root
+    group:  root
+    state:  link
+    mode: a+wrx
+
+- name: enable service httpd and ensure it is not masked
+  become_user: root
+  become: yes
+  systemd:
+    name: apache2
+    enabled: yes
+    state: restarted
+    masked: no
+
+- name: enable pigpio service
+  become_user: root
+  become: yes
+  systemd:
+    name: pigpiod
+    enabled: yes
+    state: started
+    masked: no
