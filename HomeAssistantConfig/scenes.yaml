@@ -1,17 +1,416 @@
-## Bedroom Bedside Switch
-
-- id: bedroom_switch_bedside_doubletap_up
-  name: bedroom_switch_bedside_doubletap_up
-  entities: &bedroom_switch_bedside_doubletap_up
-    light.bedroom_light_dresser: &light_bedroom_light_dresser_high
+- entities:
+    light.entry_switch_kitchen:
+      brightness: 255
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.global_switch_hall:
+      brightness: 255
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
       brightness: 254
-      color_temp: 398
-      friendly_name: bedroom_light_dresser
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
       max_mireds: 500
       min_mireds: 153
       state: 'on'
-      supported_features: 43
-    light.bedroom_switch_bedside: &light_bedroom_switch_bedside_high
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 255
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.office_light_sidetable:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: office_light_sidetable
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_outlet_pianolight:
+      friendly_name: office_outlet_pianolight
+      node_id: 6
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_outlet_pipelight:
+      friendly_name: office_outlet_pipelight
+      node_id: 7
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_all_high
+  name: scene_all_high
+- entities:
+    light.bathroom_light_sauna:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_sauna
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_shower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_shower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_vanityleft:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityleft
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_vanityright:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityright
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_light_desk:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_desk
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_light_dresser:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_dresser
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.entry_switch_kitchen:
+      brightness: 49
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.global_switch_hall:
+      brightness: 49
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 49
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.living_switch_deck:
+      brightness: 49
+      friendly_name: living_switch_deck
+      node_id: 14
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.office_light_sidetable:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: office_light_sidetable
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    switch.bedroom_outlet_flamingo:
+      friendly_name: bedroom_outlet_flamingo
+      node_id: 4
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_outlet_pianolight:
+      friendly_name: office_outlet_pianolight
+      node_id: 6
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_outlet_pipelight:
+      friendly_name: office_outlet_pipelight
+      node_id: 7
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_all_off
+  name: scene_all_off
+- entities:
+    light.bathroom_light_sauna:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_sauna
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_shower:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_shower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_vanityleft:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityleft
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_vanityright:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityright
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_bathroom_closet_medium
+  name: scene_bathroom_closet_medium
+- entities:
+    light.bathroom_light_sauna:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_sauna
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_shower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_shower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_vanityleft:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityleft
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_vanityright:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityright
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_bathroom_closet_off
+  name: scene_bathroom_closet_off
+- entities:
+    light.bathroom_light_sauna:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_sauna
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_shower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_shower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_vanityleft:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityleft
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_vanityright:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityright
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bedroom_switch_bedside:
       brightness: 255
       friendly_name: bedroom_switch_bedside
       node_id: 3
@@ -20,143 +419,685 @@
       value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
-    switch.bedroom_outlet_flamingo: &switch_bedroom_outlet_flamingo_high
+  id: scene_bathroom_high
+  name: scene_bathroom_high
+- entities:
+    light.bathroom_light_sauna:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_sauna
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_shower:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_shower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_vanityleft:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityleft
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bathroom_light_vanityright:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityright
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+  id: scene_bathroom_medium
+  name: scene_bathroom_medium
+- entities:
+    light.bathroom_light_sauna:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_sauna
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_shower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_shower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_vanityleft:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityleft
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bathroom_light_vanityright:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bathroom_light_vanityright
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+  id: scene_bathroom_off
+  name: scene_bathroom_off
+- entities:
+    light.bedroom_light_desk:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_desk
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bedroom_light_dresser:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_dresser
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.bedroom_switch_closet:
+      brightness: 255
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    switch.bedroom_outlet_flamingo:
       friendly_name: bedroom_outlet_flamingo
       node_id: 4
       state: 'on'
       value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
-
-- id: bedroom_switch_bedside_doubletap_down
-  name: bedroom_switch_bedside_doubletap_down
-  entities: &bedroom_switch_bedside_doubletap_down
-    light.bedroom_light_dresser:
-      <<: *light_bedroom_light_dresser_high
-      state: off
-    light.bedroom_switch_bedside:
-      <<: *light_bedroom_switch_bedside_high
-      state: off
-    switch.bedroom_outlet_flamingo:
-      <<: *switch_bedroom_outlet_flamingo_high
-      state: off
-
-## Bedroom Dashboard Buttons
-
-- id: scene_bedroom_medium
-  name: scene_bedroom_medium
-  entities:
-    light.bedroom_light_dresser:
-      <<: *light_bedroom_light_dresser_high
-      brightness: 100
-      color_temp: 454
-    light.bedroom_switch_bedside:
-      <<: *light_bedroom_switch_bedside_high
-      brightness: 49
-    switch.bedroom_outlet_flamingo:
-      <<: *switch_bedroom_outlet_flamingo_high
-      state: off
-
-- id: scene_bedroom_high
+  id: scene_bedroom_high
   name: scene_bedroom_high
-  entities: *bedroom_switch_bedside_doubletap_up
-
-- id: scene_bedroom_off
+- entities:
+    light.bedroom_light_desk:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_desk
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_light_dresser:
+      brightness: 49
+      friendly_name: bedroom_light_dresser
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    switch.bedroom_outlet_flamingo:
+      friendly_name: bedroom_outlet_flamingo
+      node_id: 4
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_bedroom_medium
+  name: scene_bedroom_medium
+- entities:
+    light.bedroom_light_desk:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_desk
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_light_dresser:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: bedroom_light_dresser
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.bedroom_switch_closet:
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    switch.bedroom_outlet_flamingo:
+      friendly_name: bedroom_outlet_flamingo
+      node_id: 4
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_bedroom_off
   name: scene_bedroom_off
-  entities: *bedroom_switch_bedside_doubletap_down
-
-## Closet Dashboard Buttons
-
-- id: scene_closet_high
-  name: scene_closet_high
-  entities:
-    light.bedroom_switch_closet: &light_bedroom_switch_closet_high
+- entities:
+    light.bedroom_switch_closet:
       brightness: 255
       friendly_name: bedroom_switch_closet
       node_id: 5
       state: 'on'
       supported_features: 1
-      value_id: '72057594126630913'
+      value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
-
-- id: scene_closet_off
-  name: scene_closet_off
-  entities:
+  id: scene_closet_high
+  name: scene_closet_high
+- entities:
     light.bedroom_switch_closet:
-      <<: *light_bedroom_switch_closet_high
-      state: 'off'
-
-- id: scene_closet_medium
+      brightness: 49
+      friendly_name: bedroom_switch_closet
+      node_id: 5
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_closet_medium
   name: scene_closet_medium
-  entities:
+- entities:
     light.bedroom_switch_closet:
-      <<: *light_bedroom_switch_closet_high
       brightness: 49
-
-## Bedroom (Closet) Switch
-
-- id: bedroom_switch_closet_doubletap_up
-  name: bedroom_switch_closet_doubletap_up
-  entities:
-    light.bedroom_switch_closet:
-      <<: *light_bedroom_switch_closet_high
-      brightness: 49
-
-- id: bedroom_switch_closet_doubletap_down
-  name: bedroom_switch_closet_doubletap_down
-  entities:
-    light.bedroom_switch_closet:
-      <<: *light_bedroom_switch_closet_high
+      friendly_name: bedroom_switch_closet
+      node_id: 5
       state: 'off'
-
-## Office Switch
-
-- id: office_switch_main_doubletap_down
-  name: office_switch_main_doubletap_down
-  entities:
-    switch.office_outlet_pianolight: &switch_office_outlet_pianolight_off
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_closet_off
+  name: scene_closet_off
+- entities:
+    light.entry_switch_kitchen:
+      brightness: 255
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 255
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_kitchen_high
+  name: scene_kitchen_high
+- entities:
+    light.entry_switch_kitchen:
+      brightness: 255
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.global_switch_hall:
+      brightness: 255
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 255
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_kitchen_living_high
+  name: scene_kitchen_living_high
+- entities:
+    light.entry_switch_kitchen:
+      brightness: 49
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.global_switch_hall:
+      brightness: 49
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 49
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_kitchen_living_off
+  name: scene_kitchen_living_off
+- entities:
+    light.entry_switch_kitchen:
+      brightness: 49
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 49
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_kitchen_medium
+  name: scene_kitchen_medium
+- entities:
+    light.entry_switch_kitchen:
+      brightness: 49
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 49
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+  id: scene_kitchen_off
+  name: scene_kitchen_off
+- entities:
+    light.global_switch_hall:
+      brightness: 255
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_living_high
+  name: scene_living_high
+- entities:
+    light.global_switch_hall:
+      brightness: 49
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.living_switch_deck:
+      brightness: 49
+      friendly_name: living_switch_deck
+      node_id: 14
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_living_medium
+  name: scene_living_medium
+- entities:
+    light.global_switch_hall:
+      brightness: 49
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'off'
+      supported_features: 63
+    light.living_switch_deck:
+      brightness: 49
+      friendly_name: living_switch_deck
+      node_id: 14
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_living_off
+  name: scene_living_off
+- entities:
+    light.office_light_sidetable:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: office_light_sidetable
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    switch.office_outlet_pianolight:
       friendly_name: office_outlet_pianolight
       node_id: 6
-      state: 'off'
-      value_id: '72057594143391744'
+      state: 'on'
+      value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
-    switch.office_outlet_pipelight: &switch_office_outlet_pipelight_off
+    switch.office_outlet_pipelight:
       friendly_name: office_outlet_pipelight
       node_id: 7
       state: 'off'
-      value_id: '72057594160168960'
+      value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
-    light.office_light_sidetable: &light_office_light_sidetable_off
-      brightness: 254
-      color_temp: 278
+  id: scene_office_high
+  name: scene_office_high
+- entities:
+    light.office_light_sidetable:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
       friendly_name: office_light_sidetable
-      hs_color:
-      - 0
-      - 0
       max_mireds: 500
       min_mireds: 153
-      rgb_color:
-      - 255
-      - 255
-      - 255
+      state: 'on'
+      supported_features: 63
+    switch.office_outlet_pianolight:
+      friendly_name: office_outlet_pianolight
+      node_id: 6
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_outlet_pipelight:
+      friendly_name: office_outlet_pipelight
+      node_id: 7
+      state: 'on'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_office_medium
+  name: scene_office_medium
+- entities:
+    light.office_light_sidetable:
+      brightness: 254
+      color_temp: 346
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: office_light_sidetable
+      max_mireds: 500
+      min_mireds: 153
       state: 'off'
       supported_features: 63
-      xy_color:
-      - 0.324
-      - 0.324
-
-
-- id: office_switch_main_doubletap_up
-  name: office_switch_main_doubletap_up
-  entities:
     switch.office_outlet_pianolight:
-      <<: *switch_office_outlet_pianolight_off
-      state: 'on'
+      friendly_name: office_outlet_pianolight
+      node_id: 6
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
     switch.office_outlet_pipelight:
-      <<: *switch_office_outlet_pipelight_off
-    light.office_light_sidetable:
-      <<: *light_office_light_sidetable_off
-      state: 'on'
+      friendly_name: office_outlet_pipelight
+      node_id: 7
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_office_off
+  name: scene_office_off
