@@ -78,7 +78,6 @@ Smarthome Dashboard
         - lint yaml
         - figure out if there is anything running as root that shouldn't be
     - integrations
-        - KMS or hashicorp vault for better secrets management
         - Grafana for metrics
 
 ## System Ideas / Dumping Ground

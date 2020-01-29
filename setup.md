@@ -56,11 +56,7 @@ If you've re-burned the image (starting over) or have otherwise connected to ano
 
 Then `cd Ansible`
 
-Then `cp vars/secret-example.yml vars/secret.yml`.
-
-Then modify `vars/secret.yml` with the relevant credentials your rpi should use and with a unique hostname. The hostname should end with `.local` and should be unique on your network. Your local machine will use this hostname to connect with your rpi once its on your network.
-
-Then `./setup-network.sh`
+Then `./setup-network.sh`./
 
 Then restart.
 

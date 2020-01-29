@@ -13,8 +13,6 @@ import * as serveFavicon from 'serve-favicon';
 
 import '../types/sonos';
 
-import * as secrets from './../../secret.js';
-
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
 

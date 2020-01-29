@@ -1,4 +1,3 @@
 ---
+hostname: smarterhome
 
-# TODO: do we need this?
-smarthome: {}
