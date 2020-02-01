@@ -26,6 +26,9 @@ class NopBlind implements Blind {
     }
 
     setState(state: BlindState): void {
+        const wait = GpioBlind.waits[state];
+        console.log(`Setting state to ${state} with a wait of ${wait}`);
+        sleep.sleep(wait);
         this.state = state;
     }
 }
@@ -58,6 +61,7 @@ class GpioBlind implements Blind {
     }
 
     setState(state: BlindState) {
+        // console.log(`Setting state to ${state} with a sleep of ${GpioBlind.waits[state]}`);
         this.pins[state].writeSync(1);
         sleep.sleep(GpioBlind.waits[state]);
         this.pins[state].writeSync(0);
@@ -82,12 +86,20 @@ const rooms: {[k: string] : Blind} = {
 };
 
 blindControl.get('/blinds/:room', (req, res) => {
-    const room = req.params.room;
+    const room = req.params.room.toLowerCase();
+    if (typeof rooms[room] === 'undefined') {
+        res.json({error: `unknown room ${room}`});
+        return;
+    }
     res.json(rooms[room].getState());
 });
 
 blindControl.post('/blinds/:room', (req, res) => {
-    const room = req.params.room;
+    const room = req.params.room.toLowerCase();
+    if (typeof rooms[room] === 'undefined') {
+        res.json({error: `unknown room ${room}`});
+        return;
+    }
     if (typeof req.body.state === 'undefined') {
         res.status(400);
         res.json({error: 'Missing state parameter'});

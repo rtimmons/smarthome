@@ -25,6 +25,15 @@ class App {
             pubsub: this.pubsub,
         });
 
+        // TODO: move to object-factory
+        this.blindController = new BlindController({
+            requester: this,
+            root: window.location.origin,
+            app: this,
+            pubsub: this.pubsub,
+        });
+
+
         // TODO: move to pubsub class
         this.pubsub.subscribe('*', {
             onMessage: e => {
@@ -158,6 +167,10 @@ class App {
             // TODO: lights controller?
             case 'Lights.Scene':
                 this.lightController.scene(params);
+                break;
+
+            case 'Blinds.Move':
+                this.blindController.move(params);
                 break;
 
             // TODO: move to Music.* listeners to MusicController

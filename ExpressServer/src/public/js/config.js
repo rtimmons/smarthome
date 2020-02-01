@@ -70,6 +70,9 @@ var config = {
         Kimono: '👘',
         Sunglasses: '😎',
         Tent: '⛺️',
+        BlindUp: '⏫',
+        BlindDown: '⏬',
+        BlindMid: '⏩'
     },
     rows: 8,
     cols: 11,
@@ -180,6 +183,22 @@ var config = {
         { y: 7, x: 9, w: 0 },
         // TODO: display music cover art instead of notes
         { w: 1, h: 1, y: 7, x: 10, emoji: 'Notes' },
+
+        { w:1, h:1,
+          y:2, x:4,
+          emoji: 'BlindUp',
+          onPress: {action: 'Blinds.Move', args: ['Up']},
+        },
+        { w:1, h:1,
+          y:2, x:5,
+          emoji: 'BlindDown',
+          onPress: {action: 'Blinds.Move', args: ['Down']},
+        },
+        { w:1, h:1,
+          y:2, x:6,
+          emoji: 'BlindMid',
+          onPress: {action: 'Blinds.Move', args: ['Mid']},
+        },
 
         { w:1, h:1,
           y:2, x:8,
