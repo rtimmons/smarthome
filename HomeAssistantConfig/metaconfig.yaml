@@ -64,6 +64,9 @@ entities:
   - name: living_light_floor
     type: hue light color
 
+  - name: living_light_maria
+    type: hue light
+
   - name: living_outlet_slider
     type: outlet
     node_id: 2
@@ -71,8 +74,11 @@ entities:
   #    [homeassistant.components.light.reproduce_state] Unable to find entity light.living_switch_deck
 
   - name: living_switch_deck
-    type: dimmer switch 14291 # doesn't seem to send double-taps so can't have on_ events
+    type: outlet # doesn't seem to send double-taps so can't have on_ events
     node_id: 14
+
+  - name: entry_light_nook
+    type: hue light
 
   # Office
   - name: office_light_sidetable
@@ -150,6 +156,7 @@ scenes:
       bathroom_light_sauna: hue_medium
       bathroom_light_shower: hue_medium
       bedroom_switch_closet: dimmer_medium
+      bedroom_light_desk: hue_medium
 
   - name: scene_bathroom_closet_off
     entities:
@@ -158,6 +165,7 @@ scenes:
       bathroom_light_sauna: hue_off
       bathroom_light_shower: hue_off
       bedroom_switch_closet: dimmer_off
+      bedroom_light_desk: hue_off
 
   # Living
   - name: scene_living_high
@@ -165,13 +173,16 @@ scenes:
       living_light_floor: hue_high
       global_switch_hall: dimmer_high
       living_outlet_slider: outlet_off
+      entry_light_nook: hue_high
+      living_light_maria: hue_high
 
   - name: scene_living_medium
     entities:
       living_light_floor: hue_medium
       global_switch_hall: dimmer_medium
       living_switch_deck: dimmer_off
-      living_outlet_slider: outlet_on
+      entry_light_nook: hue_medium
+      living_light_maria: hue_medium
 
   - name: scene_living_off
     entities:
@@ -179,6 +190,8 @@ scenes:
       global_switch_hall: dimmer_off
       living_switch_deck: dimmer_off
       living_outlet_slider: outlet_off
+      entry_light_nook: hue_off
+      living_light_maria: hue_off
 
   # Kitchen
   - name: scene_kitchen_high
@@ -212,6 +225,8 @@ scenes:
       living_light_floor: hue_high
       global_switch_hall: dimmer_high
       living_outlet_slider: outlet_on
+      entry_light_nook: hue_high
+      living_light_maria: hue_high
 
   - name: scene_kitchen_living_off
     entities:
@@ -222,6 +237,8 @@ scenes:
       living_light_floor: hue_off
       global_switch_hall: dimmer_off
       living_outlet_slider: outlet_off
+      entry_light_nook: hue_off
+      living_light_maria: hue_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -236,7 +253,7 @@ scenes:
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: dimmer_medium
       bedroom_switch_closet: dimmer_medium
-      bedroom_light_desk: hue_off
+      bedroom_light_desk: hue_medium
 
   - name: scene_bedroom_off
     entities:
@@ -286,6 +303,8 @@ scenes:
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
+      entry_light_nook: hue_off
+      living_light_maria: hue_off
 
   - name: scene_all_high
     entities:
@@ -295,6 +314,8 @@ scenes:
       global_switch_hall: dimmer_high
       kitchen_switch_dining: dimmer_high_led
       entry_switch_kitchen: dimmer_high_led
+      entry_light_nook: hue_high
+      living_light_maria: hue_high
 
 event_names:
   'dimmer switch ws100':
@@ -317,8 +338,6 @@ event_names:
 state_templates:
   dimmer_high_led: # led bulbs seem just a lot brighter
     brightness: 175
-    # friendly_name: bedroom_switch_bedside
-    # node_id: 3
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -326,8 +345,6 @@ state_templates:
     value_instance: 1
   dimmer_high:
     brightness: 255
-    # friendly_name: bedroom_switch_bedside
-    # node_id: 3
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -335,8 +352,6 @@ state_templates:
     value_instance: 1
   dimmer_medium:
     brightness: 49
-    # friendly_name: bedroom_switch_bedside
-    # node_id: 3
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -357,7 +372,6 @@ state_templates:
     brightness: 254
     color_temp: 346
     effect: none
-    # friendly_name: office_light_sidetable
     supported_features: 63
     state: 'on'
   hue_medium:
@@ -367,7 +381,6 @@ state_templates:
     brightness: 100
     color_temp: 454
     effect: none
-    # friendly_name: office_light_sidetable
     supported_features: 63
     state: 'on'
   hue_off:
@@ -377,20 +390,15 @@ state_templates:
     brightness: 254
     color_temp: 346
     effect: none
-    # friendly_name: office_light_sidetable
     supported_features: 63
     state: 'off'
 
   outlet_on:
-    # friendly_name: bedroom_outlet_flamingo
-    # node_id: 4
     state: 'on'
     value_id: '72057594109837312'
     value_index: 0
     value_instance: 1
   outlet_off:
-    # friendly_name: bedroom_outlet_flamingo
-    # node_id: 4
     state: 'off'
     value_id: '72057594109837312'
     value_index: 0

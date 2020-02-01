@@ -645,6 +645,35 @@
                 "supported_features": 43,
                 "unique_id": "00:17:88:01:03:50:d8:ab-0b",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "86a4de60667d483e9227cb87ea0916c1",
+                "device_class": null,
+                "device_id": "5d895a4a837e4a0aa4650f5fb01c1d0b",
+                "disabled_by": null,
+                "entity_id": "light.living_light_maria",
+                "name": null,
+                "platform": "hue",
+                "supported_features": 41,
+                "unique_id": "00:17:88:01:03:3d:bc:50-0b",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "max_mireds": 500,
+                    "min_mireds": 153
+                },
+                "config_entry_id": "86a4de60667d483e9227cb87ea0916c1",
+                "device_class": null,
+                "device_id": "f20e8ce336ef4e4cb7e28a2b0e1ddeaa",
+                "disabled_by": null,
+                "entity_id": "light.entry_light_nook",
+                "name": "entry_light_nook",
+                "platform": "hue",
+                "supported_features": 43,
+                "unique_id": "00:17:88:01:06:bd:40:7e-0b",
+                "unit_of_measurement": null
             }
         ]
     },

@@ -64,6 +64,23 @@
                 "title": "Philips hue",
                 "unique_id": "001788613749",
                 "version": 1
+            },
+            {
+                "connection_class": "local_poll",
+                "data": {
+                    "host": "192.168.1.183",
+                    "username": "c1dQWYe6aIrrsHPW6-hg7x3FYfdhV0WqQmpbp5B-"
+                },
+                "domain": "hue",
+                "entry_id": "86a4de60667d483e9227cb87ea0916c1",
+                "options": {},
+                "source": "homekit",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "Philips hue",
+                "unique_id": "6ef6dc977791",
+                "version": 1
             }
         ]
     },
