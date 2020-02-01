@@ -20,3 +20,40 @@ zwave:
   config_path: "/home/pi/open-zwave/config"
 
 api: {}
+
+# TODO: move to !rest.yaml include file
+# Call service manually http://192.168.1.224:8123/developer-tools/service
+# or by automation
+#
+#     automation:
+#     - alias: 'Arrive at Work'
+#       trigger:
+#         platform: zone
+#         entity_id: device_tracker.my_device
+#         zone: zone.work
+#         event: enter
+#       action:
+#         - service: rest_command.my_request
+#           data:
+#             status: "At Work"
+#             emoji: ":calendar:"
+#
+rest_command:
+  bedroom_blinds_up:
+    url: http://localhost:3000/blinds/bedroom
+    method: POST
+    payload: '{"state": "up"}'
+    content_type:  'application/json; charset=utf-8'
+  bedroom_blinds_down:
+    url: http://localhost:3000/blinds/bedroom
+    method: POST
+    payload: '{"state": "down"}'
+    content_type:  'application/json; charset=utf-8'
+
+# Get "state" via rest (just whatever is stored in the node app)
+sensor:
+  - platform: rest
+    resource: http://localhost:3000/blinds/bedroom
+    name: blinds_bedroom
+    value_template: '{{ value_json.state }}'
+
