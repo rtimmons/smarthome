@@ -47,9 +47,9 @@ class GpioBlind implements Blind {
         this.state = 'up';
         this.pins = {
             // Couldn't find a wa to map `new Gpio` over `inPins` values.
-            up: new Gpio(inPins.up, 'in'),
-            down: new Gpio(inPins.down, 'in'),
-            mid: new Gpio(inPins.mid, 'in'),
+            up: new Gpio(inPins.up, 'out'),
+            down: new Gpio(inPins.down, 'out'),
+            mid: new Gpio(inPins.mid, 'out'),
         };
         process.on('SIGINT', () => this.onExit());
     }
