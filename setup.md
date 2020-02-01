@@ -54,20 +54,18 @@ Default password is `raspberry`.
 
 If you've re-burned the image (starting over) or have otherwise connected to another host named `raspberrypi.local`, ssh will complain. You need to modify `~/.ssh/known_hosts` and just remove the line containing `raspberrypi.local`.
 
-Then `cd Ansible`
+If you want to change the hostname, modify `./Ansible/vars/main.yml`.
 
-Then `cp vars/secret-example.yml vars/secret.yml`.
+Then:
 
-Then modify `vars/secret.yml` with the relevant credentials your rpi should use and with a unique hostname. The hostname should end with `.local` and should be unique on your network. Your local machine will use this hostname to connect with your rpi once its on your network.
+```sh
+./Ansible/setup-networking.sh
 
-Then `./setup-network.sh`
+# Restart. Takes about 45 seconds.
+ssh pi@smarterhome.local 'sudo /sbin/reboot -h now'
 
-Then restart.
-
-- Just unplug the thing violently from power. Then more gently unplug ethernet.
-- This restart takes about 45 seconds since it checks the filesystem after your senseless violence.
-
-Then `./deploy.sh`.
+./Ansible/deploy.sh
+```
 
 ## 🔥
 

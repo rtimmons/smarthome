@@ -1,10 +1,5 @@
 ---
 
-- name: install secrets
-  template:
-    src: secret.js.j2
-    dest: /home/pi/repo/ExpressServer/secret.js
-
 - name: Install express-server node.js package
   retries: 5
   delay: 5
