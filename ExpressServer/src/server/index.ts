@@ -13,7 +13,8 @@ import * as serveFavicon from 'serve-favicon';
 
 import '../types/sonos';
 
-import * as secrets from './../../secret.js';
+import {appConfig} from "./config";
+import {redirs} from './redirs';
 
 // name can't be much longer; matches with stop in package.json
 process.title = 'smhexprsrv';
@@ -37,35 +38,10 @@ app.use('/ui', express.static('src/public'));
 
 app.use(morgan('tiny'));
 
-// /////////////////////////////////////////////////////////////////
-// helpers
-
-// removes port
-const host = (req: RQ) => {
-    const header = req.headers.host;
-    if (header === undefined) {
-        return;
-    }
-    req.headers.host = header.replace(/:\d+$/, '');
-};
-
-const sonosUrl = 'http://localhost:5005';
-
-// //////////////////////////////////////////////////////////////////
-// configs
-
-const redirs: { [key: string]: (req: RQ, res: RS) => string } = {
-    // 1 is up
-    '1up': (req: RQ) => `http://${req.headers.host}/up`,
-    '1down': (req: RQ) => `http://${req.headers.host}/down`,
-    '1left': () => `${sonosUrl}/Bedroom/favorite/Play%20NPR%20One`,
-    '1right': () => `${sonosUrl}/Bedroom/favorite/Zero%207%20Radio`,
-    // 2 is right
-    '2right': () => `${sonosUrl}/Bedroom/next`,
-};
+app.use(redirs);
 
 const sonosPipe = (route: string, req: RQ, res: RS): RS => {
-    const url = `${sonosUrl}/${route}`;
+    const url = `${appConfig.sonosUrl}/${route}`;
     return req.pipe(rpn(url)).pipe(res);
 };
 
@@ -74,9 +50,6 @@ const sonosGet = (route: string): ((req: RQ, res: RS) => RS) => {
         return sonosPipe(route, req, res);
     };
 };
-
-// //////////////////////////////////////////////////////////////
-// Home-Assistant integration
 
 app.get('/scenes/:scene', async (req: RQ, res: RS) => {
     const scene = req.params['scene'];
@@ -88,9 +61,6 @@ app.get('/scenes/:scene', async (req: RQ, res: RS) => {
     });
     return res.send('OK');
 });
-
-// //////////////////////////////////////////////////////////////
-// routes
 
 app.get('/pause', sonosGet('pause'));
 app.get('/play', sonosGet('play'));
@@ -128,18 +98,13 @@ const wrap = <T>(
     };
 };
 
-app.get('/b/:to', (req: RQ, res: RS) => {
-    const url = redirs[req.params['to']](req, res);
-    console.log(`/b/${req.params['to']} => ${url}`);
-    req.pipe(rpn(url)).pipe(res);
-});
 
 // make all rooms in same zone as :room have volume == min volume of any room in the zone
 app.get(
     '/same/:room',
     wrap(async (areq: RQ, ares: RS) => {
         const room = areq.params['room'];
-        const res = await rpn.get(`${sonosUrl}/${room}/zones`);
+        const res = await rpn.get(`${appConfig.sonosUrl}/${room}/zones`);
         const zones: Sonos.Zone[] = JSON.parse(res);
         // For some reason /:room/zones gives back status of
         // all zones not just the one of the :room parameter.
@@ -154,7 +119,7 @@ app.get(
         const others = volumes.filter(v => v.volume !== min);
         await Promise.all(
             others.map(async o => {
-                await rpn.get(`${sonosUrl}/${o.roomName}/volume/${min}`);
+                await rpn.get(`${appConfig.sonosUrl}/${o.roomName}/volume/${min}`);
             })
         );
         ares.status(200);
@@ -165,10 +130,10 @@ app.get(
 app.get(
     '/down',
     wrap(async (areq: RQ, ares: RS) => {
-        const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
+        const res = await rpn.get(`${appConfig.sonosUrl}/Bedroom/state`);
         const j = JSON.parse(res.body as string);
         const url =
-            sonosUrl +
+            appConfig.sonosUrl +
             (j.playbackState === 'PLAYING' && j.volume <= 3
                 ? '/Bedroom/pause'
                 : '/Bedroom/groupVolume/-1');
@@ -181,10 +146,10 @@ app.get(
 app.get(
     '/up',
     wrap(async (areq: RQ, ares: RS) => {
-        const res = await rpn.get(`${sonosUrl}/Bedroom/state`);
+        const res = await rpn.get(`${appConfig.sonosUrl}/Bedroom/state`);
         const j = JSON.parse(res.body as string);
         const url =
-            sonosUrl +
+            appConfig.sonosUrl +
             (j.playbackState === 'PAUSED_PLAYBACK'
                 ? '/Bedroom/play'
                 : '/Bedroom/groupVolume/+1');
@@ -192,20 +157,6 @@ app.get(
         ares.send(thenState.body);
     })
 );
-
-app.post('/report', (req: RQ, res: RS) => {
-    console.log('REPORT', req.body);
-    res.send('OK');
-});
-
-app.get('/journal', (req: RQ, res: RS) => {
-    res.redirect(301, `http://${host(req)}:19531/browse`);
-});
-
-app.get('/', (req: RQ, res: RS) => {
-    res.set('Content-Type', 'application/json');
-    res.send('{}');
-});
 
 // ///////////////////////////////////////////////////////////////////
 // actually run the thing
