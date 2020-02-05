@@ -67,18 +67,15 @@
             },
             {
                 "connection_class": "local_poll",
-                "data": {
-                    "host": "192.168.1.183",
-                    "username": "c1dQWYe6aIrrsHPW6-hg7x3FYfdhV0WqQmpbp5B-"
-                },
+                "data": {},
                 "domain": "hue",
-                "entry_id": "86a4de60667d483e9227cb87ea0916c1",
+                "entry_id": "55c09e8db3b04e7d97434387ad69da38",
                 "options": {},
-                "source": "homekit",
+                "source": "ignore",
                 "system_options": {
                     "disable_new_entities": false
                 },
-                "title": "Philips hue",
+                "title": "Ignored",
                 "unique_id": "6ef6dc977791",
                 "version": 1
             }

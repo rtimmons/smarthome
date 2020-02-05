@@ -424,8 +424,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [
                     [
@@ -450,8 +449,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "a4bcb084965844f8ba982a2caff7c711",
@@ -471,8 +469,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "ea59fae5872c438fb5f84e3610a8b3fc",
@@ -492,8 +489,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "b642e45cc9d3405396c8af9694f5b411",
@@ -513,8 +509,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "9ec8c3678d334589b55380909747dc01",
@@ -534,8 +529,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "9b03089ae53749b6bbe751c5ee885a26",
@@ -555,8 +549,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "51ea28d7e239446c9ef7d8543ba66ea3",
@@ -576,8 +569,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
@@ -597,8 +589,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "3d031c4674e84be4a2a46c7c519a9be7",
@@ -618,8 +609,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "3728775cafd046e7b4f6bd5473d77140",
@@ -639,8 +629,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "de6c440d15964d98bc2134ebef194892",
@@ -660,8 +649,7 @@
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "f20e8ce336ef4e4cb7e28a2b0e1ddeaa",
@@ -675,14 +663,13 @@
                 "model": "Hue ambiance candle",
                 "name": "entry_light_nook",
                 "name_by_user": null,
-                "sw_version": "1.29.0_r21169",
+                "sw_version": "1.46.13_r26312",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132"
             },
             {
                 "area_id": null,
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd",
-                    "86a4de60667d483e9227cb87ea0916c1"
+                    "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
                 "id": "5d895a4a837e4a0aa4650f5fb01c1d0b",
@@ -696,7 +683,7 @@
                 "model": "Hue white lamp",
                 "name": "living_light_maria",
                 "name_by_user": null,
-                "sw_version": "1.23.0_r20156",
+                "sw_version": "1.46.13_r26312",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132"
             }
         ]
