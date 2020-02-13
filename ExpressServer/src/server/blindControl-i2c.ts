@@ -42,7 +42,7 @@ class NopBlind implements Blind {
 class I2cBlind implements Blind {
     relays: PerPosition<Relay>;
     state: BlindState;
-    //i2c1: I2cBus;
+    i2c1: I2cBus;
 
     static waits: PerPosition<number> = {
         up: 2,
@@ -54,11 +54,11 @@ class I2cBlind implements Blind {
         this.state = 'up';
         this.relays = relays;
         process.on('SIGINT', () => this.onExit());
-        //this.i2c1 = i2c.openSync(1);
+        this.i2c1 = i2c.openSync(1);
     }
 
     onExit() {
-        //this.i2c1.closeSync();
+        this.i2c1.closeSync();
     }
 
     setState(state: BlindState) {
