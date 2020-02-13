@@ -26,7 +26,7 @@ class App {
         });
 
         // TODO: move to object-factory
-        this.blindController = new BlindController({
+        this.blindControllerI2c = new BlindControllerI2C({
             requester: this,
             root: window.location.origin,
             app: this,
@@ -170,7 +170,7 @@ class App {
                 break;
 
             case 'Blinds.Move':
-                this.blindController.move(params);
+                this.blindControllerI2c.move(params);
                 break;
 
             // TODO: move to Music.* listeners to MusicController
