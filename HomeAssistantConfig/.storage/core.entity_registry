@@ -975,7 +975,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -988,7 +988,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1001,7 +1001,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1014,7 +1014,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1027,7 +1027,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1040,7 +1040,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1053,7 +1053,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1066,7 +1066,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1079,7 +1079,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1092,7 +1092,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1105,7 +1105,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1118,7 +1118,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1131,7 +1131,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1144,7 +1144,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1157,7 +1157,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1170,7 +1170,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1183,7 +1183,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1196,7 +1196,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1209,7 +1209,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1222,7 +1222,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1235,7 +1235,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1248,7 +1248,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1261,7 +1261,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1274,7 +1274,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1287,7 +1287,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1300,7 +1300,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1313,7 +1313,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1326,7 +1326,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1339,7 +1339,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1352,7 +1352,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1365,7 +1365,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1378,7 +1378,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1391,7 +1391,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1404,7 +1404,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1417,7 +1417,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1430,7 +1430,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1443,7 +1443,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1456,7 +1456,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1469,7 +1469,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1482,7 +1482,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1495,7 +1495,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1508,7 +1508,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1521,7 +1521,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1534,7 +1534,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1547,7 +1547,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1560,7 +1560,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1573,7 +1573,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1586,7 +1586,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1599,7 +1599,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": null,
                 "device_class": null,
                 "device_id": null,
@@ -1610,6 +1610,292 @@
                 "supported_features": 0,
                 "unique_id": "scene_closet_high",
                 "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_alarm_type",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188367114241",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_alarm_level",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188367114257",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "zwave.zooz_zen31_rgbw_dimmer",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-17",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_voltage",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594328137970",
+                "unit_of_measurement": "V"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_voltage_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188366065906",
+                "unit_of_measurement": "V"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "abc2af4f050448969d2bb6d4d4242aef",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_voltage_3",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-216172782403993842",
+                "unit_of_measurement": "V"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "fcac307ffcf34741a3e7c97c6886059e",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_voltage_4",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-288230376441921778",
+                "unit_of_measurement": "V"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "48b84ea5dd4b4922b655a40d9a5407c5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_voltage_5",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-360287970479849714",
+                "unit_of_measurement": "V"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_power",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594328154242",
+                "unit_of_measurement": "W"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_exporting",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594328154624",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_energy",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188366082050",
+                "unit_of_measurement": "kWh"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_power_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188366082178",
+                "unit_of_measurement": "W"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_exporting_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188366082560",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_sourcenodeid",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594329186337",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_power_management",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594329186481",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_system",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594329186497",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_sourcenodeid_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188367114273",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_power_management_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188367114417",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "53e531cba9544fd29a236fa9b4a66dd5",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_system_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-144115188367114433",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_alarm_type_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594329186305",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_alarm_level_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594329186321",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "0ac0c481cefb426f9541d904d40c4f91",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_energy_2",
+                "name": null,
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "17-72057594328154114",
+                "unit_of_measurement": "kWh"
             }
         ]
     },
