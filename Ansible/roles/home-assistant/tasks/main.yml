@@ -21,7 +21,7 @@
     name:
     - python_openzwave
     - urwid
-    - "homeassistant==0.105.0b4"
+    - "homeassistant==0.106.2"
     # these are packages that home-assistant would normally install "on-demand"
     # but I want to do it ahead of time as much as possible especially since
     # this is the only real way to pass in the -j4 flag.
