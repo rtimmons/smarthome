@@ -67,7 +67,9 @@
             },
             {
                 "connection_class": "local_poll",
-                "data": {},
+                "data": {
+                    "host": "192.168.1.183"
+                },
                 "domain": "hue",
                 "entry_id": "55c09e8db3b04e7d97434387ad69da38",
                 "options": {},
