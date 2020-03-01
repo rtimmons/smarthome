@@ -853,6 +853,110 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "0ac0c481cefb426f9541d904d40c4f91"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "5d86497c0ee44f4988d77910f8671eee",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (2)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "5fd432eee97a41bc8e8878cd1db91362",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "17b6b0c6f3e041c08112b6fcee9883ba",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (3)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "180dd301340540f3a5e426dc41fd1423",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        4
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (4)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "f8cee1100f1a45b78cd6bb61d8dcec90",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        5
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (5)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
             }
         ]
     },
