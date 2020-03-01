@@ -797,26 +797,6 @@
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "id": "0ac0c481cefb426f9541d904d40c4f91",
-                "identifiers": [
-                    [
-                        "zwave",
-                        17
-                    ]
-                ],
-                "manufacturer": "Zooz",
-                "model": "ZEN31 RGBW Dimmer",
-                "name": "Zooz ZEN31 RGBW Dimmer",
-                "name_by_user": null,
-                "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
-            },
-            {
-                "area_id": null,
-                "config_entries": [
-                    "c0a82fc7f46e4b449ad8dd16d4426956"
-                ],
-                "connections": [],
                 "id": "abc2af4f050448969d2bb6d4d4242aef",
                 "identifiers": [
                     [
