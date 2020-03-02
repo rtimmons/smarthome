@@ -96,3 +96,10 @@ scenes:
       bedroom_switch_bedside: dimmer_off
       bedroom_light_dresser: hue_off
       bedroom_outlet_flamingo: outlet_off
+
+additional_automations:
+  - id: z_some_example
+    alias: some_example
+    trigger: {say: cheese}
+    action:
+      - scene: scene.scene_bedroom_off

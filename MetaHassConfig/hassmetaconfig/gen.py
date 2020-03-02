@@ -40,6 +40,10 @@ class MetaConfig:
     def event_names(self) -> typ.Dict:
         return self.data['event_names']
 
+    @property
+    def additional_automations(self) -> typ.Dict:
+        return self.data.get("additional_automations", {})
+
 
 class Scenes:
     def __init__(self, metaconfig: MetaConfig):
@@ -142,5 +146,6 @@ class Automation:
         for dimmer in self.metaconfig.dimmer_entities:
             out.extend(self._taps(dimmer))
         out.extend(self._scene_webhooks(self.metaconfig.scenes))
+        out.extend(self.metaconfig.additional_automations)
         out.sort(key=lambda a: a['id'])
         return out

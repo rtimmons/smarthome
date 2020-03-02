@@ -79,3 +79,9 @@
   condition: []
   action:
   - scene: scene.scene_bedroom_off
+
+- id: z_some_example
+  alias: some_example
+  trigger: {say: cheese}
+  action:
+    - scene: scene.scene_bedroom_off
