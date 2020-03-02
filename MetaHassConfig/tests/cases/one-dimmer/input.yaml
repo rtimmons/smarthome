@@ -103,3 +103,8 @@ additional_automations:
     trigger: {say: cheese}
     action:
       - scene: scene.scene_bedroom_off
+
+additional_scenes:
+  - id: z_some_example
+    name: z_some_example
+    entities: [lolz]

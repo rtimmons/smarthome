@@ -92,3 +92,6 @@
       value_index: 0
       value_instance: 1
 
+- id: z_some_example
+  name: z_some_example
+  entities: [lolz]

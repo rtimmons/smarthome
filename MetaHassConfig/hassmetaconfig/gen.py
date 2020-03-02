@@ -44,6 +44,10 @@ class MetaConfig:
     def additional_automations(self) -> typ.Dict:
         return self.data.get("additional_automations", {})
 
+    @property
+    def additional_scenes(self) -> typ.Dict:
+        return self.data.get("additional_scenes", {})
+
 
 class Scenes:
     def __init__(self, metaconfig: MetaConfig):
@@ -77,6 +81,7 @@ class Scenes:
                 'name': scene['name'],
                 'entities': entities,
             })
+        out.extend(self.metaconfig.additional_scenes)
         out.sort(key=lambda s: s['id'])
         return out
 
