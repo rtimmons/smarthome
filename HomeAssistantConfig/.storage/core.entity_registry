@@ -1969,7 +1969,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -1985,7 +1985,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2001,14 +2001,14 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
                 "disabled_by": null,
                 "entity_id": "zwave.zooz_zen31_rgbw_dimmer_2",
                 "icon": null,
-                "name": null,
+                "name": "zwave.office_light_abovecouch",
                 "original_icon": null,
                 "original_name": "Zooz ZEN31 RGBW Dimmer",
                 "platform": "zwave",
@@ -2017,7 +2017,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2030,10 +2030,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "18-72057594344915186",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2046,10 +2046,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "18-144115188382843122",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "17b6b0c6f3e041c08112b6fcee9883ba",
@@ -2062,10 +2062,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "18-216172782420771058",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "180dd301340540f3a5e426dc41fd1423",
@@ -2078,10 +2078,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "18-288230376458698994",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "f8cee1100f1a45b78cd6bb61d8dcec90",
@@ -2094,10 +2094,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "18-360287970496626930",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2113,7 +2113,7 @@
                 "unit_of_measurement": "W"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2129,7 +2129,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2145,7 +2145,7 @@
                 "unit_of_measurement": "kWh"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2161,7 +2161,7 @@
                 "unit_of_measurement": "W"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2177,7 +2177,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2193,7 +2193,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2209,7 +2209,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2225,7 +2225,7 @@
                 "unit_of_measurement": "kWh"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2241,7 +2241,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2257,7 +2257,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5fd432eee97a41bc8e8878cd1db91362",
@@ -2273,7 +2273,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2289,7 +2289,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2305,7 +2305,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "5d86497c0ee44f4988d77910f8671eee",
@@ -2319,6 +2319,22 @@
                 "supported_features": 0,
                 "unique_id": "18-144115188383891649",
                 "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "5fd432eee97a41bc8e8878cd1db91362",
+                "disabled_by": null,
+                "entity_id": "light.office_light_abovecouch",
+                "icon": null,
+                "name": "light.office_light_abovecouch",
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Level",
+                "platform": "zwave",
+                "supported_features": 17,
+                "unique_id": "18-72057594344734721",
+                "unit_of_measurement": null
             }
         ]
     },
