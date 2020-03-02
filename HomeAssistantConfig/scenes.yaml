@@ -1143,6 +1143,15 @@
   id: scene_living_off
   name: scene_living_off
 - entities:
+    light.office_light_abovecouch:
+      brightness: 255
+      friendly_name: office_light_abovecouch
+      node_id: 18
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.office_light_sidetable:
       brightness: 254
       color_temp: 346
@@ -1170,6 +1179,15 @@
   id: scene_office_high
   name: scene_office_high
 - entities:
+    light.office_light_abovecouch:
+      brightness: 49
+      friendly_name: office_light_abovecouch
+      node_id: 18
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.office_light_sidetable:
       brightness: 100
       color_temp: 454
@@ -1197,6 +1215,15 @@
   id: scene_office_medium
   name: scene_office_medium
 - entities:
+    light.office_light_abovecouch:
+      brightness: 49
+      friendly_name: office_light_abovecouch
+      node_id: 18
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.office_light_sidetable:
       brightness: 254
       color_temp: 346
