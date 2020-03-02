@@ -56,6 +56,3 @@ sensor:
     resource: http://localhost:3000/blinds/bedroom
     name: blinds_bedroom
     value_template: '{{ value_json.state }}'
-
-logger:
-  default: debug
