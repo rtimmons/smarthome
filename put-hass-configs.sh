@@ -32,9 +32,8 @@ ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local \
     'sudo systemctl stop home-assistant.service'
 
 pushd HomeAssistantConfig >/dev/null 2>&1 || exit 1
-    scp ./zwcfg_0xef979358.xml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
-    scp ./automations.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
-    scp ./scenes.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
+    scp ./*.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
+    scp ./*.xml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
 popd >/dev/null 2>&1 || exit 1
 
 echo "Restarting home-assistant for new changes to take effect"
