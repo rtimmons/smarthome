@@ -119,6 +119,28 @@
     event_type: zwave.scene_activated
     platform: event
 - action:
+  - service: rest_command.bedroom_roller_down
+  - service: rest_command.bedroom_blackout_up
+  - service: rest_command.living_roller_up
+  alias: morning_blinds_up
+  id: morning_blinds_up
+  trigger:
+  - event: sunset
+    offset: +00:00:00
+    platform: sun
+- action:
+  - service: rest_command.bedroom_roller_down
+  - service: rest_command.bedroom_blackout_down
+  - service: rest_command.living_roller_down
+  - service: rest_command.office_roller_down
+  - service: rest_command.office_blackout_down
+  alias: night_blinds_down
+  id: night_blinds_down
+  trigger:
+  - event: sunset
+    offset: +00:15:00
+    platform: sun
+- action:
   - scene: scene.scene_office_off
   alias: office_switch_main_on_down_double
   condition: []

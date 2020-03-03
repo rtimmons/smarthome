@@ -39,20 +39,55 @@ api: {}
 #             emoji: ":calendar:"
 #
 rest_command:
-  bedroom_blinds_up:
-    url: http://localhost:3000/blinds/bedroom
+  bedroom_roller_up:
+    url: http://localhost:3000/blinds-i2c/bedroom_roller
     method: POST
     payload: '{"state": "up"}'
     content_type:  'application/json; charset=utf-8'
-  bedroom_blinds_down:
-    url: http://localhost:3000/blinds/bedroom
+  bedroom_roller_down:
+    url: http://localhost:3000/blinds-i2c/bedroom_roller
+    method: POST
+    payload: '{"state": "down"}'
+    content_type:  'application/json; charset=utf-8'
+  bedroom_blackout_up:
+    url: http://localhost:3000/blinds-i2c/bedroom_blackout
+    method: POST
+    payload: '{"state": "up"}'
+    content_type:  'application/json; charset=utf-8'
+  bedroom_blackout_down:
+    url: http://localhost:3000/blinds-i2c/bedroom_blackout
     method: POST
     payload: '{"state": "down"}'
     content_type:  'application/json; charset=utf-8'
 
-# Get "state" via rest (just whatever is stored in the node app)
-sensor:
-  - platform: rest
-    resource: http://localhost:3000/blinds/bedroom
-    name: blinds_bedroom
-    value_template: '{{ value_json.state }}'
+  living_roller_down:
+    url: http://localhost:3000/blinds-i2c/living_roller
+    method: POST
+    payload: '{"state": "down"}'
+    content_type:  'application/json; charset=utf-8'
+  living_roller_up:
+    url: http://localhost:3000/blinds-i2c/living_roller
+    method: POST
+    payload: '{"state": "up"}'
+    content_type:  'application/json; charset=utf-8'
+
+  office_roller_up:
+    url: http://localhost:3000/blinds-i2c/office_roller
+    method: POST
+    payload: '{"state": "up"}'
+    content_type:  'application/json; charset=utf-8'
+  office_roller_down:
+    url: http://localhost:3000/blinds-i2c/office_roller
+    method: POST
+    payload: '{"state": "down"}'
+    content_type:  'application/json; charset=utf-8'
+  office_blackout_up:
+    url: http://localhost:3000/blinds-i2c/office_blackout
+    method: POST
+    payload: '{"state": "up"}'
+    content_type:  'application/json; charset=utf-8'
+  office_blackout_down:
+    url: http://localhost:3000/blinds-i2c/office_blackout
+    method: POST
+    payload: '{"state": "down"}'
+    content_type:  'application/json; charset=utf-8'

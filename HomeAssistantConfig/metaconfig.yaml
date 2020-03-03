@@ -410,3 +410,30 @@ state_templates:
     value_id: '72057594109837312'
     value_index: 0
     value_instance: 1
+
+additional_automations:
+- id: night_blinds_down
+  alias: night_blinds_down
+  trigger:
+  - platform: sun
+    event: sunset
+    offset: '+00:15:00'  # 10 minutes after sunset.
+  action:
+  - service: rest_command.bedroom_roller_down
+  - service: rest_command.bedroom_blackout_down
+  - service: rest_command.living_roller_down
+  - service: rest_command.office_roller_down
+  - service: rest_command.office_blackout_down
+
+- id: morning_blinds_up
+  alias: morning_blinds_up
+  trigger:
+  - platform: sun
+    event: sunrise
+    offset: '+00:00:00'  # At sunrise.
+  action:
+  - service: rest_command.bedroom_roller_down
+  - service: rest_command.bedroom_blackout_up
+  - service: rest_command.office_blackout_up
+
+
