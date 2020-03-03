@@ -121,11 +121,11 @@
 - action:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
-  - service: rest_command.living_roller_up
+  - service: rest_command.office_blackout_up
   alias: morning_blinds_up
   id: morning_blinds_up
   trigger:
-  - event: sunset
+  - event: sunrise
     offset: +00:00:00
     platform: sun
 - action:
