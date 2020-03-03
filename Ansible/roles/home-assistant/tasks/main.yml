@@ -79,6 +79,8 @@
       delete: no
       src: "{{ playbook_dir }}/../HomeAssistantConfig/"
       dest: /home/pi/repo/HomeAssistantConfig/
+      rsync_opts:
+      - "--exclude=venv"
 
 - name: start home-assistant service
   become_user: root
