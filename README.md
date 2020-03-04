@@ -80,6 +80,8 @@ Smarthome Dashboard
     - integrations
         - Grafana for metrics
 
+- flic buttons (they run on Bluetooth LTE) are setup in their own Flic iOS app
+
 ## System Ideas / Dumping Ground
 
 - Look into home-assistant.io?
