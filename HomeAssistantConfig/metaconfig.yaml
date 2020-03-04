@@ -248,6 +248,7 @@ scenes:
       bedroom_light_dresser: hue_high
       bedroom_switch_closet: dimmer_high
       bedroom_light_desk: hue_high
+      bedroom_switch_bedside: dimmer_high
 
   - name: scene_bedroom_medium
     entities:
