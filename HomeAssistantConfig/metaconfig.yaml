@@ -143,11 +143,9 @@ scenes:
   - name: scene_closet_high
     entities:
       bedroom_switch_closet: dimmer_high
-
   - name: scene_closet_medium
     entities:
         bedroom_switch_closet: dimmer_medium
-
   - name: scene_closet_off
     entities:
       bedroom_switch_closet: dimmer_off
@@ -161,7 +159,6 @@ scenes:
       bathroom_light_shower: hue_medium
       bedroom_switch_closet: dimmer_medium
       bedroom_light_desk: hue_medium
-
   - name: scene_bathroom_closet_off
     entities:
       bathroom_light_vanityright: hue_off
@@ -254,10 +251,11 @@ scenes:
 
   - name: scene_bedroom_medium
     entities:
-      bedroom_outlet_flamingo: outlet_off
+      bedroom_outlet_flamingo: outlet_on
       bedroom_light_dresser: dimmer_medium
       bedroom_switch_closet: dimmer_medium
       bedroom_light_desk: hue_medium
+      bedroom_switch_bedside: dimmer_medium
 
   - name: scene_bedroom_off
     entities:
@@ -302,6 +300,7 @@ scenes:
       kitchen_light_upper: hue_off
       kitchen_light_lower: hue_off
       living_light_floor: hue_off
+      living_light_maria: hue_off
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
@@ -310,8 +309,9 @@ scenes:
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
+      office_light_abovecouch: dimmer_off
       entry_light_nook: hue_off
-      living_light_maria: hue_off
+
 
   - name: scene_all_high
     entities:
