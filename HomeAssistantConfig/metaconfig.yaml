@@ -67,13 +67,9 @@ entities:
   - name: living_light_maria
     type: hue light
 
-  - name: living_outlet_slider
+  - name: living_outlet_slider  # Globe light.
     type: outlet
     node_id: 2
-
-  - name: office_switch_closet
-    type: outlet # doesn't seem to send double-taps so can't have on_ events
-    node_id: 14
 
   - name: entry_light_nook
     type: hue light
@@ -99,7 +95,10 @@ entities:
     node_id: 8
     on_up_double: scene_office_high
     on_down_double: scene_office_off
-    
+
+  - name: office_switch_closet
+    type: outlet # doesn't seem to send double-taps so can't have on_ events
+    node_id: 14
 
 #
 # The value of the entity keys (e.g. hue_high) corresponds to
@@ -179,15 +178,14 @@ scenes:
     entities:
       living_light_floor: hue_medium
       global_switch_hall: dimmer_medium
-      office_switch_closet: dimmer_off
       entry_light_nook: hue_medium
       living_light_maria: hue_medium
+      living_outlet_slider: outlet_on
 
   - name: scene_living_off
     entities:
       living_light_floor: hue_off
       global_switch_hall: dimmer_off
-      office_switch_closet: dimmer_off
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_light_maria: hue_off
@@ -223,7 +221,7 @@ scenes:
       entry_switch_kitchen: dimmer_high_led
       living_light_floor: hue_high
       global_switch_hall: dimmer_high
-      living_outlet_slider: outlet_on
+      living_outlet_slider: outlet_off
       entry_light_nook: hue_high
       living_light_maria: hue_high
 
@@ -277,6 +275,7 @@ scenes:
       office_outlet_pipelight: outlet_on
       office_outlet_pianolight: outlet_off
       office_light_abovecouch: dimmer_medium
+      office_switch_closet: dimmer_off
 
   - name: scene_office_off
     entities:
@@ -284,6 +283,7 @@ scenes:
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
       office_light_abovecouch: dimmer_off
+      office_switch_closet: dimmer_off
 
   # All
   - name: scene_all_off
@@ -303,12 +303,12 @@ scenes:
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
-      office_switch_closet: dimmer_off
       living_outlet_slider: outlet_off
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
       office_light_abovecouch: dimmer_off
+      office_switch_closet: dimmer_off
       entry_light_nook: hue_off
 
 
@@ -418,6 +418,7 @@ additional_automations:
     event: sunset
     offset: '+00:15:00'  # 10 minutes after sunset.
   action:
+  # These rest actions must be defined in the configuration.yaml file.
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_down
   - service: rest_command.living_roller_down
