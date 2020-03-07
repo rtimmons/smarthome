@@ -258,15 +258,6 @@
       value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
-    switch.living_switch_deck:
-      brightness: 49
-      friendly_name: living_switch_deck
-      node_id: 14
-      state: 'off'
-      supported_features: 1
-      value_id: '72057594093076481'
-      value_index: 0
-      value_instance: 1
     switch.office_outlet_pianolight:
       friendly_name: office_outlet_pianolight
       node_id: 6
@@ -279,6 +270,15 @@
       node_id: 7
       state: 'off'
       value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_switch_closet:
+      brightness: 49
+      friendly_name: office_switch_closet
+      node_id: 14
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
   id: scene_all_off
@@ -566,6 +566,15 @@
       min_mireds: 153
       state: 'on'
       supported_features: 63
+    light.bedroom_switch_bedside:
+      brightness: 255
+      friendly_name: bedroom_switch_bedside
+      node_id: 3
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.bedroom_switch_closet:
       brightness: 255
       friendly_name: bedroom_switch_closet
@@ -827,7 +836,7 @@
     switch.living_outlet_slider:
       friendly_name: living_outlet_slider
       node_id: 2
-      state: 'on'
+      state: 'off'
       value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
@@ -1091,13 +1100,11 @@
       min_mireds: 153
       state: 'on'
       supported_features: 63
-    switch.living_switch_deck:
-      brightness: 49
-      friendly_name: living_switch_deck
-      node_id: 14
-      state: 'off'
-      supported_features: 1
-      value_id: '72057594093076481'
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'on'
+      value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
   id: scene_living_medium
@@ -1147,15 +1154,6 @@
       node_id: 2
       state: 'off'
       value_id: '72057594109837312'
-      value_index: 0
-      value_instance: 1
-    switch.living_switch_deck:
-      brightness: 49
-      friendly_name: living_switch_deck
-      node_id: 14
-      state: 'off'
-      supported_features: 1
-      value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
   id: scene_living_off
@@ -1230,6 +1228,15 @@
       value_id: '72057594109837312'
       value_index: 0
       value_instance: 1
+    switch.office_switch_closet:
+      brightness: 49
+      friendly_name: office_switch_closet
+      node_id: 14
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
   id: scene_office_medium
   name: scene_office_medium
 - entities:
@@ -1264,6 +1271,15 @@
       node_id: 7
       state: 'off'
       value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+    switch.office_switch_closet:
+      brightness: 49
+      friendly_name: office_switch_closet
+      node_id: 14
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
   id: scene_office_off

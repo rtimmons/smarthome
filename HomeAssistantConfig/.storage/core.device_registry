@@ -443,7 +443,7 @@
                 "model": "BSB002",
                 "name": "Philips hue",
                 "name_by_user": null,
-                "sw_version": "1935144040",
+                "sw_version": "1937045000",
                 "via_device_id": null
             },
             {
@@ -459,7 +459,7 @@
                         "00:17:88:01:03:01:01:8d-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_vanityright",
                 "name_by_user": null,
@@ -479,7 +479,7 @@
                         "00:17:88:01:00:ec:74:59-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue color lamp",
                 "name": "living_light_floor",
                 "name_by_user": null,
@@ -499,7 +499,7 @@
                         "00:17:88:01:03:20:af:d4-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_shower",
                 "name_by_user": null,
@@ -519,7 +519,7 @@
                         "00:17:88:01:04:4a:b6:c1-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue lightstrip plus",
                 "name": "kitchen_light_lower",
                 "name_by_user": null,
@@ -539,7 +539,7 @@
                         "00:17:88:01:04:4a:d0:5d-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue lightstrip plus",
                 "name": "kitchen_light_upper",
                 "name_by_user": null,
@@ -559,7 +559,7 @@
                         "00:17:88:01:03:3a:31:7f-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue white lamp",
                 "name": "bedroom_light_desk",
                 "name_by_user": null,
@@ -579,7 +579,7 @@
                         "00:17:88:01:03:50:e6:60-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_sauna",
                 "name_by_user": null,
@@ -599,7 +599,7 @@
                         "00:17:88:01:03:03:9d:31-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bedroom_light_dresser",
                 "name_by_user": null,
@@ -619,7 +619,7 @@
                         "00:17:88:01:10:4a:5b:cb-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue color lamp",
                 "name": "office_light_sidetable",
                 "name_by_user": null,
@@ -639,7 +639,7 @@
                         "00:17:88:01:03:50:d8:ab-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_vanityleft",
                 "name_by_user": null,
@@ -659,7 +659,7 @@
                         "00:17:88:01:06:bd:40:7e-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance candle",
                 "name": "entry_light_nook",
                 "name_by_user": null,
@@ -679,7 +679,7 @@
                         "00:17:88:01:03:3d:bc:50-0b"
                     ]
                 ],
-                "manufacturer": "Philips",
+                "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue white lamp",
                 "name": "living_light_maria",
                 "name_by_user": null,
