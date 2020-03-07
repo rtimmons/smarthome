@@ -70,10 +70,8 @@ entities:
   - name: living_outlet_slider
     type: outlet
     node_id: 2
-  # TODO: having issues with this
-  #    [homeassistant.components.light.reproduce_state] Unable to find entity light.living_switch_deck
 
-  - name: living_switch_deck
+  - name: office_switch_closet
     type: outlet # doesn't seem to send double-taps so can't have on_ events
     node_id: 14
 
@@ -181,7 +179,7 @@ scenes:
     entities:
       living_light_floor: hue_medium
       global_switch_hall: dimmer_medium
-      living_switch_deck: dimmer_off
+      office_switch_closet: dimmer_off
       entry_light_nook: hue_medium
       living_light_maria: hue_medium
 
@@ -189,7 +187,7 @@ scenes:
     entities:
       living_light_floor: hue_off
       global_switch_hall: dimmer_off
-      living_switch_deck: dimmer_off
+      office_switch_closet: dimmer_off
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_light_maria: hue_off
@@ -305,7 +303,7 @@ scenes:
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
-      living_switch_deck: dimmer_off
+      office_switch_closet: dimmer_off
       living_outlet_slider: outlet_off
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
