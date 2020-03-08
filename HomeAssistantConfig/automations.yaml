@@ -119,6 +119,30 @@
     event_type: zwave.scene_activated
     platform: event
 - action:
+  - scene: scene.scene_kitchen_living_medium
+  alias: living_switch_deck_on_down_double
+  condition: []
+  id: living_switch_deck_on_down_double
+  trigger:
+  - event_data:
+      entity_id: zwave.living_switch_deck
+      scene_data: 7860
+      scene_id: 2
+    event_type: zwave.scene_activated
+    platform: event
+- action:
+  - scene: scene.scene_kitchen_living_high
+  alias: living_switch_deck_on_up_double
+  condition: []
+  id: living_switch_deck_on_up_double
+  trigger:
+  - event_data:
+      entity_id: zwave.living_switch_deck
+      scene_data: 7860
+      scene_id: 1
+    event_type: zwave.scene_activated
+    platform: event
+- action:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
   - service: rest_command.office_blackout_up
@@ -299,6 +323,15 @@
   trigger:
   - platform: webhook
     webhook_id: scene_kitchen_living_high
+- action:
+  - scene: scene.scene_kitchen_living_medium
+  alias: scene_kitchen_living_medium
+  condition: []
+  description: ''
+  id: scene_kitchen_living_medium
+  trigger:
+  - platform: webhook
+    webhook_id: scene_kitchen_living_medium
 - action:
   - scene: scene.scene_kitchen_living_off
   alias: scene_kitchen_living_off
