@@ -243,6 +243,15 @@
       value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
+    light.office_light_abovedesk:
+      brightness: 49
+      friendly_name: office_light_abovedesk
+      node_id: 19
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.office_light_sidetable:
       brightness: 254
       color_temp: 346
@@ -1273,6 +1282,15 @@
       value_id: '72057594093076481'
       value_index: 0
       value_instance: 1
+    light.office_light_abovedesk:
+      brightness: 255
+      friendly_name: office_light_abovedesk
+      node_id: 19
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.office_light_sidetable:
       brightness: 254
       color_temp: 346
@@ -1304,6 +1322,15 @@
       brightness: 49
       friendly_name: office_light_abovecouch
       node_id: 18
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.office_light_abovedesk:
+      brightness: 49
+      friendly_name: office_light_abovedesk
+      node_id: 19
       state: 'on'
       supported_features: 1
       value_id: '72057594093076481'
@@ -1349,6 +1376,15 @@
       brightness: 49
       friendly_name: office_light_abovecouch
       node_id: 18
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.office_light_abovedesk:
+      brightness: 49
+      friendly_name: office_light_abovedesk
+      node_id: 19
       state: 'off'
       supported_features: 1
       value_id: '72057594093076481'
