@@ -75,6 +75,12 @@ entities:
     type: outlet
     node_id: 2
 
+  - name: living_switch_deck
+    type: dimmer switch 46203
+    node_id: 20
+    on_up_double: scene_kitchen_living_high
+    on_down_double: scene_kitchen_living_medium
+
   - name: entry_light_nook
     type: hue light
 
@@ -233,6 +239,18 @@ scenes:
       entry_light_nook: hue_high
       living_light_maria: hue_high
 
+  - name: scene_kitchen_living_medium
+    entities:
+      kitchen_light_upper: hue_medium
+      kitchen_light_lower: hue_medium
+      kitchen_switch_dining: dimmer_medium
+      entry_switch_kitchen: dimmer_medium
+      living_light_floor: hue_medium
+      global_switch_hall: dimmer_medium
+      living_outlet_slider: outlet_off
+      entry_light_nook: hue_medium
+      living_light_maria: hue_medium
+
   - name: scene_kitchen_living_off
     entities:
       kitchen_light_upper: hue_off
@@ -244,6 +262,7 @@ scenes:
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_light_maria: hue_off
+      living_switch_deck: dimmer_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -311,6 +330,7 @@ scenes:
       kitchen_light_lower: hue_off
       living_light_floor: hue_off
       living_light_maria: hue_off
+      living_switch_deck: dimmer_off
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off

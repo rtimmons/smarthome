@@ -225,6 +225,15 @@
       min_mireds: 153
       state: 'off'
       supported_features: 63
+    light.living_switch_deck:
+      brightness: 49
+      friendly_name: living_switch_deck
+      node_id: 20
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     light.office_light_abovecouch:
       brightness: 49
       friendly_name: office_light_abovecouch
@@ -853,6 +862,93 @@
   name: scene_kitchen_living_high
 - entities:
     light.entry_light_nook:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: entry_light_nook
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.entry_switch_kitchen:
+      brightness: 49
+      friendly_name: entry_switch_kitchen
+      node_id: 11
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.global_switch_hall:
+      brightness: 49
+      friendly_name: global_switch_hall
+      node_id: 15
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.kitchen_light_lower:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_lower
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_light_upper:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: kitchen_light_upper
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.kitchen_switch_dining:
+      brightness: 49
+      friendly_name: kitchen_switch_dining
+      node_id: 9
+      state: 'on'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
+    light.living_light_floor:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_floor
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    light.living_light_maria:
+      brightness: 100
+      color_temp: 454
+      effect: none
+      effect_list: colorloop,random
+      friendly_name: living_light_maria
+      max_mireds: 500
+      min_mireds: 153
+      state: 'on'
+      supported_features: 63
+    switch.living_outlet_slider:
+      friendly_name: living_outlet_slider
+      node_id: 2
+      state: 'off'
+      value_id: '72057594109837312'
+      value_index: 0
+      value_instance: 1
+  id: scene_kitchen_living_medium
+  name: scene_kitchen_living_medium
+- entities:
+    light.entry_light_nook:
       brightness: 254
       color_temp: 346
       effect: none
@@ -929,6 +1025,15 @@
       min_mireds: 153
       state: 'off'
       supported_features: 63
+    light.living_switch_deck:
+      brightness: 49
+      friendly_name: living_switch_deck
+      node_id: 20
+      state: 'off'
+      supported_features: 1
+      value_id: '72057594093076481'
+      value_index: 0
+      value_instance: 1
     switch.living_outlet_slider:
       friendly_name: living_outlet_slider
       node_id: 2
