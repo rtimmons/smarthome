@@ -60,6 +60,10 @@ entities:
     on_up_double: scene_dining_high
     on_down_double: scene_dining_off
 
+  - name: kitchen_outlet_plants
+    type: outlet
+    node_id: 21
+
   # Living
   - name: living_light_floor
     type: hue light color
@@ -464,4 +468,20 @@ additional_automations:
   - service: rest_command.bedroom_blackout_up
   - service: rest_command.office_blackout_up
 
+- id: plants_on
+  alias: plants_on
+  trigger:
+  - platform: time
+    at: "05:00:00"
+  action:
+  - service: switch.turn_on
+    entity_id: switch.kitchen_switch_plants
 
+- id: plants_off
+  alias: plants_off
+  trigger:
+  - platform: time
+    at: "21:00:00"
+  action:
+  - service: switch.turn_off
+    entity_id: switch.kitchen_switch_plants

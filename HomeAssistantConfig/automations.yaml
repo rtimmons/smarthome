@@ -189,6 +189,22 @@
     event_type: zwave.scene_activated
     platform: event
 - action:
+  - entity_id: switch.kitchen_switch_plants
+    service: switch.turn_off
+  alias: plants_off
+  id: plants_off
+  trigger:
+  - at: '21:00:00'
+    platform: time
+- action:
+  - entity_id: switch.kitchen_switch_plants
+    service: switch.turn_on
+  alias: plants_on
+  id: plants_on
+  trigger:
+  - at: 05:00:00
+    platform: time
+- action:
   - scene: scene.scene_all_high
   alias: scene_all_high
   condition: []
