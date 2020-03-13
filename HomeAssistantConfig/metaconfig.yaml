@@ -475,7 +475,7 @@ additional_automations:
     at: "05:00:00"
   action:
   - service: switch.turn_on
-    entity_id: switch.kitchen_switch_plants
+    entity_id: switch.kitchen_outlet_plants
 
 - id: plants_off
   alias: plants_off
@@ -484,4 +484,4 @@ additional_automations:
     at: "21:00:00"
   action:
   - service: switch.turn_off
-    entity_id: switch.kitchen_switch_plants
+    entity_id: switch.kitchen_outlet_plants
