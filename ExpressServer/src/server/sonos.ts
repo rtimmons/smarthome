@@ -55,7 +55,7 @@ const wrap = <T>(
 };
 
 
-// make all rooms in same zone as :room have volume == min volume of any room in the zone
+// make all rooms in same zone as :room have volume same as active room
 app.get(
     '/same/:room',
     wrap(async (areq: RQ, ares: RS) => {
@@ -71,11 +71,11 @@ app.get(
             roomName: m.roomName,
             volume: m.state.volume,
         }));
-        const min = Math.min.apply(null, volumes.map(v => v.volume));
-        const others = volumes.filter(v => v.volume !== min);
+        const myVolume = volumes.find(r => r.roomName === room)!.volume;
+        const others = volumes.filter(v => v.volume !== myVolume);
         await Promise.all(
             others.map(async o => {
-                await rpn.get(`${appConfig.sonosUrl}/${o.roomName}/volume/${min}`);
+                await rpn.get(`${appConfig.sonosUrl}/${o.roomName}/volume/${myVolume}`);
             })
         );
         ares.status(200);
