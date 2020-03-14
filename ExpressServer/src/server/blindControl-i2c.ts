@@ -30,7 +30,7 @@ class Blind {
     constructor(relays: PerPosition<Relay>) {
         this.state = 'up';
         this.relays = relays;
-        process.on('SIGINT', () => this.onExit());
+        process.on('exit', () => this.onExit());
         this.i2c1 = i2c.openSync(1);
     }
 
@@ -48,11 +48,14 @@ class Blind {
         }
 
         const i2c1 = i2c.openSync(1);
-        i2c1.writeByteSync(relay.address, 0x10, relay.bit);
-        sleep.sleep(wait);
-        i2c1.writeByteSync(relay.address, 0x10, 0x0);
-        this.state = state;
-        i2c1.closeSync();
+        try {
+            i2c1.writeByteSync(relay.address, 0x10, relay.bit);
+            sleep.sleep(wait);
+            i2c1.writeByteSync(relay.address, 0x10, 0x0);
+            this.state = state;
+        } finally {
+            i2c1.closeSync();
+        }
 
     }
     getState(): {state: BlindState} {
