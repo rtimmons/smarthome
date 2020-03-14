@@ -32,6 +32,7 @@
 - name: restart cups service
   become_user: root
   become: yes
+  async: 30
   service:
     name: cups
     state: started

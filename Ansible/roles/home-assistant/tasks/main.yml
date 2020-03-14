@@ -14,6 +14,7 @@
 
 
 - name: install global pip packages
+  async: 600 # this is a "best effort" thing so no need to wait forever
   become_user: root
   become: true
   pip:
@@ -83,6 +84,7 @@
       - "--exclude=venv"
 
 - name: start home-assistant service
+  async: 60
   become_user: root
   become: true
   service:

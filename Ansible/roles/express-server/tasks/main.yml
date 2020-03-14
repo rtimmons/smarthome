@@ -3,6 +3,7 @@
 - name: Install express-server node.js package
   retries: 5
   delay: 5
+  async: 30
   shell: npm install
   args:
     chdir: /home/pi/repo/ExpressServer
@@ -18,6 +19,7 @@
     mode: 0664
 
 - name: start express-server service
+  async: 30
   become_user: root
   become: true
   service:
