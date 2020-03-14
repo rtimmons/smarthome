@@ -129,8 +129,8 @@ var config = {
         ...roomTiles({ xPos: roomX++, emojiName: 'Kimono', roomName: 'Closet' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Bed', roomName: 'Bedroom' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Tent', roomName: 'Move' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'TV', roomName: 'Living' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Rice', roomName: 'Kitchen' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'TV', roomName: 'Living' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Guest', roomName: 'Guest Bathroom' }),
 
