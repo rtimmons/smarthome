@@ -23,3 +23,6 @@ ip_bans.yaml
 !/.gitignore
 config
 ozw_config
+# we generate these
+automations.yaml
+scenes.yaml
