@@ -125,39 +125,15 @@ var config = {
 
     */
 
-        ...roomTiles({
-            xPos: roomX++,
-            emojiName: 'Shower',
-            roomName: 'Bathroom',
-        }),
-        ...roomTiles({
-            xPos: roomX++,
-            emojiName: 'Kimono',
-            roomName: 'Closet',
-        }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Tent', roomName: 'Move' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Shower', roomName: 'Bathroom' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Kimono', roomName: 'Closet' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Bed', roomName: 'Bedroom' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Tent', roomName: 'Move' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'TV', roomName: 'Living' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Rice', roomName: 'Kitchen' }),
-        ...roomTiles({
-            xPos: roomX++,
-            emojiName: 'Briefcase',
-            roomName: 'Office',
-        }),
-        ...roomTiles({
-            xPos: roomX++,
-            emojiName: 'Guest',
-            roomName: 'Guest Bathroom',
-        }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Guest', roomName: 'Guest Bathroom' }),
 
-        // { w:1, h:1,
-        //   y:0, x:7,
-        //   emoji: 'Earth',
-        //   activeWhenRoom: 'All',
-        //   onPress: {action: 'ChangeRoom', args: ['All']},
-        // },
-
-        // TODO: display music cover art instead of notes
         {
             w: 1,
             h: 1,
@@ -183,7 +159,6 @@ var config = {
         { y: 7, x: 7, w: 0 },
         { y: 7, x: 8, w: 0 },
         { y: 7, x: 9, w: 0 },
-        // TODO: display music cover art instead of notes
         { w: 1, h: 1, y: 7, x: 10, emoji: 'Notes' },
 
         { w:1, h:1,
