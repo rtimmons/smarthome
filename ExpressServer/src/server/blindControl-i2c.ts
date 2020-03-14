@@ -1,8 +1,7 @@
 import {Router} from 'express';
-import * as i2c from 'i2c-bus';
-import {Gpio} from 'onoff';
 import * as sleep from 'sleep';
-import {I2cBus} from "i2c-bus";
+
+import {i2c} from './i2c';
 
 interface Relay {
     address: number;
@@ -17,32 +16,10 @@ interface PerPosition<T> {
 
 type BlindState = keyof PerPosition<Relay>;
 
-interface Blind {
-    setState(state: BlindState): void;
-    getState(): {state: BlindState};
-}
-
-class NopBlind implements Blind {
-    state: BlindState;
-    constructor() {
-        this.state = 'up';
-    }
-
-    getState(): { state: BlindState } {
-        return {state: this.state};
-    }
-
-    setState(state: BlindState): void {
-        const wait = I2cBlind.waits[state];
-        console.log(`Setting state to ${state} with a wait of ${wait}`);
-        this.state = state;
-    }
-}
-
-class I2cBlind implements Blind {
+class Blind {
     relays: PerPosition<Relay>;
     state: BlindState;
-    i2c1: I2cBus;
+    i2c1: any;
 
     static waits: PerPosition<number> = {
         up: 2,
@@ -64,7 +41,7 @@ class I2cBlind implements Blind {
     setState(state: BlindState) {
         // console.log(`Setting state to ${state} with a sleep of ${GpioBlind.waits[state]}`);
         const relay = this.relays[state];
-        const wait = I2cBlind.waits[state];
+        const wait = Blind.waits[state];
         //Some blinds do not have mid setting. If null, do nothing.
         if(typeof relay === 'undefined' || typeof wait === 'undefined') {
             return;
@@ -82,36 +59,33 @@ class I2cBlind implements Blind {
         return {state: this.state};
     }
 }
-export const blindControli2c = Router();
-
-function createBlind(pins: PerPosition<Relay>): Blind {
-    return Gpio.accessible ? new I2cBlind(pins) : new NopBlind();
-}
 
 const rooms: {[k: string] : Blind} = {
-    bedroom_roller: createBlind({
+    bedroom_roller: new Blind({
         up: {address: 0x11, bit: 0x2},
         down: {address: 0x11, bit: 0x1}
     }),
-    bedroom_blackout: createBlind({
+    bedroom_blackout: new Blind({
         up: {address: 0x11, bit: 0x08},
         down: {address: 0x12, bit: 0x04},
         mid: {address: 0x11, bit: 0x04}
     }),
-    living_roller: createBlind({
+    living_roller: new Blind({
         up: {address: 0x13, bit: 0x02},
         down: {address: 0x13, bit: 0x01}
     }),
-    office_roller: createBlind({
+    office_roller: new Blind({
         up: {address: 0x12, bit: 0x02},
         down: {address: 0x12, bit: 0x01}
     }),
-    office_blackout: createBlind({
+    office_blackout: new Blind({
         up: {address: 0x13, bit: 0x08},
         down: {address: 0x13, bit: 0x04},
         mid: {address: 0x12, bit: 0x08}
     }),
 };
+
+export const blindControli2c = Router();
 
 blindControli2c.get('/blinds-i2c/:room', (req, res) => {
     const room = req.params.room.toLowerCase();
