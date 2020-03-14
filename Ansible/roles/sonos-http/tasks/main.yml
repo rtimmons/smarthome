@@ -34,6 +34,8 @@
 - name: start node-sonos-http-api service
   become_user: root
   become: true
+  async: 30
+  poll: 0
   service:
     name: node-sonos-http-api
     state: restarted

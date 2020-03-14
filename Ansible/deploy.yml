@@ -1,6 +1,7 @@
 ---
 - name: apply roles
   hosts: post_init
+  strategy: free
   roles:
    - {name: smarthome}
 
