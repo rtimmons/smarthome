@@ -1,9 +1,10 @@
 body {
-    font-family: Monoid, monospace;
-    background-color: rgb(127, 135, 139);
+    /*font-family: "Helvetica Neue", sans-serif;*/
+    font-family: "Futura", sans-serif;
+    background-color: rgb(50, 50, 50);
 
     /* no scrolling */
-    overflow-y: hide;
+    overflow-y: hidden;
     box-sizing: content-box;
 }
 
@@ -16,17 +17,16 @@ body {
 
     text-align: center;
     cursor: pointer;
-    
-    color: #aaa;
+
+    color: rgba(110, 110, 110, 50);
 }
 
 .cell.active {
-    background-color: rgba(94, 122, 137, 1);
+    background-color: rgba(70, 70, 70, 1);
 }
 
 .cell:hover {
-    border: 0.5px solid rgba(89, 106, 114, 0.7);
-    background-color: rgba(86,101,115, 0.7);
+    border: 1px solid rgba(40, 40, 40, 0.7);
 }
 
 #grid-container {
@@ -35,7 +35,7 @@ body {
 }
 
 #grid {
-    background-color:rgba(89, 106, 114, 0.7);
+    background-color:rgba(60, 60, 60, 0.7);
 
     margin: 0 auto;
     width: 100%;
@@ -48,10 +48,7 @@ body {
     overflow: hidden;
 }
 .cell div.scroll {
-    animation: marq 5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
-    /*
-    font-family: Futura;
-    */
+    animation: marq 10s infinite;
 }
 
 @keyframes marq {
