@@ -389,14 +389,14 @@ state_templates:
     value_index: 0
     value_instance: 1
   dimmer_medium:
-    brightness: 15
+    brightness: 49
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
     value_index: 0
     value_instance: 1
   dimmer_off:
-    brightness: 0
+    brightness: 49
     state: 'off'
     supported_features: 1
     value_id: '72057594093076481'
@@ -460,11 +460,9 @@ additional_automations:
 - id: morning_blinds_up
   alias: morning_blinds_up
   trigger:
-  - platform: time
-    at: "06:55:00"
-  # - platform: sun
-  #   event: sunrise
-  #   offset: '+00:00:00'  # At sunrise (bring this back later in the year)
+  - platform: sun
+    event: sunrise
+    offset: '+00:00:00'  # At sunrise.
   action:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
@@ -474,7 +472,7 @@ additional_automations:
   alias: plants_on
   trigger:
   - platform: time
-    at: "06:30:00"
+    at: "05:00:00"
   action:
   - service: switch.turn_on
     entity_id: switch.kitchen_outlet_plants

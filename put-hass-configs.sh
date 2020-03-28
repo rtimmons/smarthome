@@ -20,6 +20,7 @@ ssh -o PasswordAuthentication=no -o BatchMode=yes pi@smarterhome.local \
 pushd HomeAssistantConfig >/dev/null 2>&1 || exit 1
     scp ./*.yaml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
     scp ./*.xml pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig/ >/dev/null
+    scp -r .storage pi@smarterhome.local:/home/pi/repo/HomeAssistantConfig >/dev/null
 popd >/dev/null 2>&1 || exit 1
 
 echo "Restarting home-assistant for new changes to take effect"

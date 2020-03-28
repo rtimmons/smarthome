@@ -12,6 +12,10 @@
             {
                 "id": "4bc549bfcfd04a44889509f0f9276916",
                 "name": "Bedroom"
+            },
+            {
+                "id": "5c26033f5ca244f6a44480714a63d22e",
+                "name": "Bathroom"
             }
         ]
     },
