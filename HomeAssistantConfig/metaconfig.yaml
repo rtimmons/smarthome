@@ -12,6 +12,10 @@ entities:
   - name: bathroom_light_vanityright
     type: hue light
 
+  - name: bathroom_light_vanitysconces
+    type: dimmer switch generic
+    node_id: 22
+
   # Bedroom
   - name: bedroom_light_desk
     type: hue light
@@ -134,6 +138,7 @@ scenes:
       bathroom_light_shower: hue_high
       bathroom_light_vanityleft: hue_high
       bathroom_light_vanityright: hue_high
+      bathroom_light_vanitysconces: dimmer_high
       bedroom_switch_bedside: dimmer_high
 
   - name: scene_bathroom_medium
@@ -142,6 +147,7 @@ scenes:
       bathroom_light_shower: hue_medium
       bathroom_light_vanityleft: hue_medium
       bathroom_light_vanityright: hue_medium
+      bathroom_light_vanitysconces: dimmer_high
 
   - name: scene_bathroom_off
     entities:
@@ -149,6 +155,7 @@ scenes:
       bathroom_light_shower: hue_off
       bathroom_light_vanityleft: hue_off
       bathroom_light_vanityright: hue_off
+      bathroom_light_vanitysconces: dimmer_off
 
   # Closet
   - name: scene_closet_high
@@ -164,8 +171,9 @@ scenes:
   # Bathroom & Closet
   - name: scene_bathroom_closet_medium
     entities:
-      bathroom_light_vanityright: hue_high
+      bathroom_light_vanityright: hue_medium
       bathroom_light_vanityleft: hue_medium
+      bathroom_light_vanitysconces: dimmer_high
       bathroom_light_sauna: hue_medium
       bathroom_light_shower: hue_medium
       bedroom_switch_closet: dimmer_medium
@@ -174,6 +182,7 @@ scenes:
     entities:
       bathroom_light_vanityright: hue_off
       bathroom_light_vanityleft: hue_off
+      bathroom_light_vanitysconces: dimmer_off
       bathroom_light_sauna: hue_off
       bathroom_light_shower: hue_off
       bedroom_switch_closet: dimmer_off
@@ -322,6 +331,7 @@ scenes:
       bathroom_light_shower: hue_off
       bathroom_light_vanityleft: hue_off
       bathroom_light_vanityright: hue_off
+      bathroom_light_vanitysconces: dimmer_off
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
