@@ -482,7 +482,7 @@ additional_automations:
   alias: plants_on
   trigger:
   - platform: time
-    at: "05:00:00"
+    at: "06:30:00"
   action:
   - service: switch.turn_on
     entity_id: switch.kitchen_outlet_plants
