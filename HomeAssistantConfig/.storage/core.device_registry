@@ -785,6 +785,174 @@
                 "name_by_user": "bathroom_light_vanitysconces",
                 "sw_version": null,
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "825beeaddd3848898ad7ce32560f0168",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (2)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "d6ffe90127f74cbf84ab58b41101bf8a",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (3)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "aed9708216e043c8a3a2c4449a695b11",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        4
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (4)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "3a3bed75c32f4f5ba7acb2d6a917a799",
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        5
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (5)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "b70b6a281e664ce09138a92a13e41265",
+                "identifiers": [
+                    [
+                        "zwave",
+                        19,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (2)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "e3d1418667a24fd68fa3007cd512112f",
+                "identifiers": [
+                    [
+                        "zwave",
+                        19,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (3)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "186b947ea29a46c6a0e0d6d87a3fc846",
+                "identifiers": [
+                    [
+                        "zwave",
+                        19,
+                        4
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (4)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "e556ae5ce07c49ab9192c09baf97fdd8",
+                "identifiers": [
+                    [
+                        "zwave",
+                        19,
+                        5
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (5)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
             }
         ]
     },
