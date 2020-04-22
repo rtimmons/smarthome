@@ -173,11 +173,11 @@ scenes:
     entities:
       bathroom_light_vanityright: hue_medium
       bathroom_light_vanityleft: hue_medium
-      bathroom_light_vanitysconces: dimmer_high
+      bathroom_light_vanitysconces: dimmer_medium
       bathroom_light_sauna: hue_medium
       bathroom_light_shower: hue_medium
       bedroom_switch_closet: dimmer_medium
-      bedroom_light_desk: hue_medium
+      bedroom_light_desk: hue_off
   - name: scene_bathroom_closet_off
     entities:
       bathroom_light_vanityright: hue_off
@@ -453,6 +453,38 @@ state_templates:
     value_instance: 1
 
 additional_automations:
+# Ref: https://www.home-assistant.io/docs/automation/examples/
+# webhook integrations are describe at https://www.home-assistant.io/docs/automation/trigger/
+# access via https://smarterhome.local:8123/api/webhook/flic_closet_single
+# TODO: this isn't right somehow
+- id: flic_closet_single
+  alias: flic_closet_single
+  trigger:
+  - platform: webhook
+    webhook_id: flic_closet_single
+  action:
+    service: scene.apply
+    entity_id: scene.scene_closet_high
+
+- id: flic_closet_double
+  alias: flic_closet_double
+  trigger:
+  - platform: webhook
+    webhook_id: flic_closet_double
+  action:
+    service: scene.apply
+    entity_id: scene.scene_closet_off
+
+- id: flic_closet_hold
+  alias: flic_closet_hold
+  trigger:
+  - platform: webhook
+    webhook_id: flic_closet_hold
+  action:
+    service: scene.apply
+    entity_id: scene.scene_closet_medium
+
+
 - id: night_blinds_down
   alias: night_blinds_down
   trigger:
