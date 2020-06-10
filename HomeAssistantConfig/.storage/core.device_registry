@@ -443,7 +443,7 @@
                 "model": "BSB002",
                 "name": "Philips hue",
                 "name_by_user": null,
-                "sw_version": "1937045000",
+                "sw_version": "1938112040",
                 "via_device_id": null
             },
             {
@@ -953,6 +953,173 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "ab77a036e1b24b529ee5b98d16acb516",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "8fcbf9f66fa043309753a47ab86058f3",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (2)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "17713184dcc54d4f855d4605d904537a",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (3)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "b7b4668a476049b695890bc2f5ca87a3",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        4
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (4)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "99b510a3cd8049a587d16d7bdd77eee0",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        5
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (5)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "2d164b6f88b64ca9809a06354b064611",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        6
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (6)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "eb2a05ac0d1a47a7b567360d2dabbf88",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        7
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (7)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "id": "72829b994232483f842b70bc70df838b",
+                "identifiers": [
+                    [
+                        "zwave",
+                        24,
+                        8
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN20 V2.0 Power Strip",
+                "name": "Zooz ZEN20 V2.0 Power Strip (8)",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
             }
         ]
     },
