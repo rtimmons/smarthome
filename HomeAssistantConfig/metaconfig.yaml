@@ -82,8 +82,16 @@ entities:
   - name: living_switch_deck
     type: dimmer switch 46203
     node_id: 20
-    on_up_double: scene_kitchen_living_high
-    on_down_double: scene_kitchen_living_medium
+    on_up_double: scene_living_outside_high
+    on_down_double: scene_living_outside_off
+
+  - name: living_outlet_deck_cafe_lights
+    type: outlet
+    node_id: 24
+
+  - name: living_outlet_deck_bugtrap
+    type: outlet
+    node_id: 24
 
   - name: entry_light_nook
     type: hue light
@@ -212,6 +220,17 @@ scenes:
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_light_maria: hue_off
+
+  #Outside
+  - name: scene_living_outside_high
+    entities:
+      living_switch_deck: dimmer_high
+      living_outlet_deck_cafe_lights: outlet_on
+
+  - name: scene_living_outside_off
+    entities:
+      living_switch_deck: dimmer_off
+      living_outlet_deck_cafe_lights: outlet_off
 
   # Kitchen
   - name: scene_kitchen_high
@@ -345,6 +364,7 @@ scenes:
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
       living_outlet_slider: outlet_off
+      living_outlet_deck_cafe_lights: outlet_off
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
@@ -453,10 +473,8 @@ state_templates:
     value_instance: 1
 
 additional_automations:
-# Ref: https://www.home-assistant.io/docs/automation/examples/
 # webhook integrations are describe at https://www.home-assistant.io/docs/automation/trigger/
 # access via https://smarterhome.local:8123/api/webhook/flic_closet_single
-# TODO: this isn't right somehow
 - id: flic_closet_single
   alias: flic_closet_single
   trigger:
