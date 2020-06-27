@@ -4,7 +4,7 @@
   become_user: root
   become: true
   apt:
-    pkg: [libffi-dev, libssl-dev, python3-nacl, libopenzwave1.5-dev]
+    pkg: [libffi-dev, libssl-dev, python3-nacl, libopenzwave1.5-dev, libudev-dev]
     state: present
 
 - name: install master open-zwave configs
