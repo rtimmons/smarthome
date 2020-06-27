@@ -6,8 +6,7 @@ cd "$(dirname "$0")" || exit 1
 
 pushd MetaHassConfig >/dev/null 2>&1 || exit 1
     if [ ! -d venv ]; then
-        python3 -m pip install virtualenv
-        virtualenv venv
+        python3 -mvenv venv
     fi
     export VIRTUAL_ENV_DISABLE_PROMPT=1
     # shellcheck disable=SC1091
@@ -20,6 +19,8 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
 popd >/dev/null 2>&1 || exit 1
 
 python3 -m pip install homeassistant  -q -q
+
+hash -r
 
 hass -c "$PWD/HomeAssistantConfig" --script check_config
 
