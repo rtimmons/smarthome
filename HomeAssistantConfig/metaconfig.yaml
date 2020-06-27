@@ -87,11 +87,11 @@ entities:
 
   - name: living_outlet_deck_cafe_lights
     type: outlet
-    node_id: 24
+    node_id: 23
 
   - name: living_outlet_deck_bugtrap
     type: outlet
-    node_id: 24
+    node_id: 23
 
   - name: entry_light_nook
     type: hue light
@@ -231,7 +231,7 @@ scenes:
     entities:
       living_switch_deck: dimmer_off
       living_outlet_deck_cafe_lights: outlet_off
-
+    
   # Kitchen
   - name: scene_kitchen_high
     entities:
