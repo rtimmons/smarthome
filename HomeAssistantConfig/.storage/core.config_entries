@@ -80,6 +80,23 @@
                 "title": "Ignored",
                 "unique_id": "6ef6dc977791",
                 "version": 1
+            },
+            {
+                "connection_class": "local_poll",
+                "data": {
+                    "host": "192.168.1.230",
+                    "name": "Brother HL-5240 series @ smarterhome"
+                },
+                "domain": "ipp",
+                "entry_id": "21e3f8a193d64ef8b93295125eaef5af",
+                "options": {},
+                "source": "ignore",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "Ignored",
+                "unique_id": "e97bb554-5990-300a-6315-16150d9439cb",
+                "version": 1
             }
         ]
     },
