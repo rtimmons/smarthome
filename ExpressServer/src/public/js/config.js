@@ -65,6 +65,7 @@ const config = {
         ThumbsDown: '👎🏽',
         XMasTree: '🎄',
         Cher: '💁🏻‍♀️',
+        Grande: '👸🏻',
         Briefcase: '💼',
         Guest: '👨‍👨‍👦',
         Kimono: '👘',
@@ -358,12 +359,20 @@ const config = {
         {
             w: 1,
             h: 1,
+            y: 3,
+            x: 9,
+            emoji: 'Grande',
+            onPress: { action: 'Music.Favorite', args: ['Ariana Grande Essentials'] },
+        },
+        {
+            w: 1,
+            h: 1,
             y: 4,
             x: 6,
             emoji: 'Dancers',
             onPress: {
                 action: 'Music.Favorite',
-                args: ['Britney Spears Radio'],
+                args: ['Britney Spears Essentials'],
             },
         },
         // TODO: maybe just use built-in pandora support?
