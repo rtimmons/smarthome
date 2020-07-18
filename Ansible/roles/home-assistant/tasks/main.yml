@@ -45,6 +45,13 @@
     group: root
     mode: 0664
 
+- name: Remove .storage dir
+  become_user: root
+  become: true
+  file:
+    path: /home/pi/repo/HomeAssistantConfig/.storage
+    state: absent
+
 - name: copy HomeAssistantConfig
   synchronize:
       group: no
