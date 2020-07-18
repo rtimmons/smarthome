@@ -6,11 +6,15 @@ if ! command -v poetry &> /dev/null; then
     python3 -m pip install poetry -q -q
 fi
 
-cd "$(dirname "$0")" || exit 1
+cd "$(dirname "$0")" || exit 7
 
 #if command -v ocho &> /dev/null; then
 #    exit 0
 #fi
 
-poetry -q build
-python3 -m pip install ./dist/ocho-*.whl -q -q
+rm -f ./dist/*
+
+# the -q option makes it nop?
+poetry build >/dev/null 2>/dev/null
+
+python3 -m pip install --force-reinstall ./dist/ocho-0.0.0-py3-none-any.whl -q -q || exit 39

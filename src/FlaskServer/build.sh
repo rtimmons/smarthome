@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+if [[ "${1}" == "list-dependencies" ]]; then
+    echo "Ansible"
+    exit 0
+fi
+
 set -eou pipefail
 
 pushd "$(dirname "$0")" >/dev/null || exit
