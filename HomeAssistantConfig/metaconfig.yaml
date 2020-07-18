@@ -486,34 +486,28 @@ state_templates:
 
 additional_automations:
 # webhook integrations are describe at https://www.home-assistant.io/docs/automation/trigger/
-# access via https://smarterhome.local:8123/api/webhook/flic_closet_single
+# access via https://smarterhome.local:8123/api/webhook/flic_closet_single (only via POST)
 - id: flic_closet_single
   alias: flic_closet_single
   trigger:
   - platform: webhook
     webhook_id: flic_closet_single
   action:
-    service: scene.apply
-    entity_id: scene.scene_closet_high
-
+  - scene: scene.scene_closet_high
 - id: flic_closet_double
   alias: flic_closet_double
   trigger:
   - platform: webhook
     webhook_id: flic_closet_double
   action:
-    service: scene.apply
-    entity_id: scene.scene_closet_off
-
+  - scene: scene.scene_closet_off
 - id: flic_closet_hold
   alias: flic_closet_hold
   trigger:
   - platform: webhook
     webhook_id: flic_closet_hold
   action:
-    service: scene.apply
-    entity_id: scene.scene_closet_medium
-
+  - scene: scene.scene_closet_medium
 
 - id: night_blinds_down
   alias: night_blinds_down
@@ -540,20 +534,20 @@ additional_automations:
   - service: rest_command.bedroom_blackout_up
   - service: rest_command.office_blackout_up
 
-- id: plants_on
-  alias: plants_on
-  trigger:
-  - platform: time
-    at: "06:30:00"
-  action:
-  - service: switch.turn_on
-    entity_id: switch.kitchen_outlet_plants
-
-- id: plants_off
-  alias: plants_off
-  trigger:
-  - platform: time
-    at: "21:00:00"
-  action:
-  - service: switch.turn_off
-    entity_id: switch.kitchen_outlet_plants
+# - id: plants_on
+#   alias: plants_on
+#   trigger:
+#   - platform: time
+#     at: "06:30:00"
+#   action:
+#   - service: switch.turn_on
+#     entity_id: switch.kitchen_outlet_plants
+#
+# - id: plants_off
+#   alias: plants_off
+#   trigger:
+#   - platform: time
+#     at: "21:00:00"
+#   action:
+#   - service: switch.turn_off
+#     entity_id: switch.kitchen_outlet_plants
