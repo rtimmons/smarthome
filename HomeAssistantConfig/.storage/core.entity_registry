@@ -50,6 +50,22 @@
                 "unit_of_measurement": null
             },
             {
+                "capabilities": null,
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "person.admin",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "admin",
+                "platform": "person",
+                "supported_features": 0,
+                "unique_id": "admin",
+                "unit_of_measurement": null
+            },
+            {
                 "capabilities": {},
                 "config_entry_id": "b37e1f20d0ae490490c9cf08cf65d8a7",
                 "device_class": null,
