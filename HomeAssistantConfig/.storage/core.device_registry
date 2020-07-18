@@ -1346,6 +1346,32 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "477f72cedd894942a600f4be203acf6a"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [
+                    [
+                        "mac",
+                        "48:a6:b8:e4:c3:5e"
+                    ]
+                ],
+                "entry_type": null,
+                "id": "8ce39e3290cd426ba782de507c1e27c9",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_48A6B8E4C35E01400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Move",
+                "name": "Move",
+                "name_by_user": null,
+                "sw_version": "58.1-78090",
+                "via_device_id": null
             }
         ]
     },
