@@ -12,6 +12,7 @@ WorkingDirectory=/home/pi/repo/ExpressServer
 Environment=NODE_ENV=production
 LimitNOFILE=infinity
 ExecStart=/usr/bin/npm run start
+# TODO: really should be using something like https://pm2.keymetrics.io/
 ExecStop=/usr/bin/npm run stop
 Restart=always
 RestartSec=10
