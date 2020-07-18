@@ -61,6 +61,7 @@
       dest: /home/pi/repo/HomeAssistantConfig/
       rsync_opts:
       - "--exclude=venv"
+      - "--exclude=deps"
 
 - name: start home-assistant service
   become_user: root
