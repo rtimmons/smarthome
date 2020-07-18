@@ -3,8 +3,13 @@ import yaml
 
 
 class Vault:
-    def __init__(self, key: str):
+    def __init__(self, key: str = None):
+        if key is None:
+            # TODO: document this file
+            with open("./key") as handle:
+                key = handle.readline()
         self.fernet = Fernet(bytes(key, "utf-8"))
+        # TODO: document this file
         with open("./secrets.yml") as handle:
             self.db = yaml.safe_load(handle)
         decr = self.decrypt("__vault__hello")

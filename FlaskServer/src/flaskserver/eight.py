@@ -4,14 +4,14 @@ from pyeight import eight
 from flaskserver.vault import Vault
 
 
-async def main(key):
+async def main8():
     loop = asyncio.get_running_loop()
 
-    vault = Vault(key)
+    vault = Vault()
 
     api = eight.EightSleep(
-        email="ryan@rytim.com",
-        password=vault.decrypt("eight"),
+        email=vault.decrypt("eight_user"),
+        password=vault.decrypt("eight_pw"),
         tzone="America/New_York",
         partner=False,
         loop=loop,
@@ -26,4 +26,4 @@ async def main(key):
     await api.stop()
 
 
-# asyncio.run(main(KEY))
+asyncio.run(main8())
