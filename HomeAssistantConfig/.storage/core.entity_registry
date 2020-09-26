@@ -75,7 +75,7 @@
                 "icon": null,
                 "name": null,
                 "original_icon": null,
-                "original_name": "300 Newark",
+                "original_name": "Home",
                 "platform": "met",
                 "supported_features": 0,
                 "unique_id": "home",
@@ -3076,22 +3076,6 @@
                 "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
-                "device_id": "ab77a036e1b24b529ee5b98d16acb516",
-                "disabled_by": null,
-                "entity_id": "zwave.zooz_zen20_v2_0_power_strip_2",
-                "icon": null,
-                "name": null,
-                "original_icon": null,
-                "original_name": "Zooz ZEN20 V2.0 Power Strip",
-                "platform": "zwave",
-                "supported_features": 0,
-                "unique_id": "node-24",
-                "unit_of_measurement": null
-            },
-            {
-                "capabilities": {},
-                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
-                "device_class": null,
                 "device_id": "8fcbf9f66fa043309753a47ab86058f3",
                 "disabled_by": null,
                 "entity_id": "switch.living_outlet_deck_cafe_lights",
@@ -4529,7 +4513,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "477f72cedd894942a600f4be203acf6a",
@@ -4542,10 +4526,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "25-72057594462355698",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4558,10 +4542,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "25-144115188500283634",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "50733a3060e442929b96f83df823507e",
@@ -4574,10 +4558,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "25-216172782538211570",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "19f31a64ed3a40279839b0974574b58c",
@@ -4590,10 +4574,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "25-288230376576139506",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "e13b45778ae542b19e9ec67eef7cbe25",
@@ -4606,10 +4590,10 @@
                 "platform": "zwave",
                 "supported_features": 0,
                 "unique_id": "25-360287970614067442",
-                "unit_of_measurement": ""
+                "unit_of_measurement": "V"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "477f72cedd894942a600f4be203acf6a",
@@ -4625,7 +4609,7 @@
                 "unit_of_measurement": "W"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "477f72cedd894942a600f4be203acf6a",
@@ -4641,7 +4625,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4657,7 +4641,7 @@
                 "unit_of_measurement": "W"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4673,7 +4657,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "477f72cedd894942a600f4be203acf6a",
@@ -4689,7 +4673,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "477f72cedd894942a600f4be203acf6a",
@@ -4705,7 +4689,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "477f72cedd894942a600f4be203acf6a",
@@ -4721,7 +4705,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4737,7 +4721,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4753,7 +4737,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4796,8 +4780,256 @@
                 "original_icon": null,
                 "original_name": "Zooz ZEN31 RGBW Dimmer Level",
                 "platform": "zwave",
-                "supported_features": 1,
+                "supported_features": 17,
                 "unique_id": "25-72057594462175233",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "477f72cedd894942a600f4be203acf6a",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_energy_5",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Energy",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "25-72057594462371842",
+                "unit_of_measurement": "kWh"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_energy_6",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Energy",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "25-144115188500299778",
+                "unit_of_measurement": "kWh"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "477f72cedd894942a600f4be203acf6a",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_alarm_type_6",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Alarm Type",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "25-72057594463404033",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "477f72cedd894942a600f4be203acf6a",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_alarm_level_6",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Alarm Level",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "25-72057594463404049",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "0e2302ea021e4a6095999b70da10e9fd",
+                "device_class": null,
+                "device_id": "8ce39e3290cd426ba782de507c1e27c9",
+                "disabled_by": null,
+                "entity_id": "media_player.unnamed_room",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Move",
+                "platform": "sonos",
+                "supported_features": 64063,
+                "unique_id": "RINCON_48A6B8E4C35E01400",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "a898c4ee45af4290bd2ff947509b16b5",
+                "disabled_by": null,
+                "entity_id": "sensor.qubino_goap_zmnhhdx_mini_dimmer_previous_reading",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Qubino (Goap) ZMNHHDx Mini Dimmer Previous Reading",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "22-72057594412040338",
+                "unit_of_measurement": "W"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "a898c4ee45af4290bd2ff947509b16b5",
+                "disabled_by": null,
+                "entity_id": "sensor.qubino_goap_zmnhhdx_mini_dimmer_interval",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Qubino (Goap) ZMNHHDx Mini Dimmer Interval",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "22-72057594412040355",
+                "unit_of_measurement": "seconds"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_previous_reading",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Previous Reading",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "25-144115188500299922",
+                "unit_of_measurement": "W"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_interval",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN31 RGBW Dimmer Interval",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "25-144115188500299939",
+                "unit_of_measurement": "seconds"
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "disabled_by": null,
+                "entity_id": "zwave.outdoor_powerstrip_main",
+                "icon": null,
+                "name": "outdoor_powerstrip_main",
+                "original_icon": null,
+                "original_name": "Zooz ZEN20 V2.0 Power Strip",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "node-24",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "72829b994232483f842b70bc70df838b",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen20_v2_0_power_strip_previous_reading_25",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN20 V2.0 Power Strip Previous Reading",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "24-576460752711090194",
+                "unit_of_measurement": ""
+            },
+            {
+                "capabilities": {},
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_class": null,
+                "device_id": "72829b994232483f842b70bc70df838b",
+                "disabled_by": null,
+                "entity_id": "sensor.zooz_zen20_v2_0_power_strip_interval_25",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "Zooz ZEN20 V2.0 Power Strip Interval",
+                "platform": "zwave",
+                "supported_features": 0,
+                "unique_id": "24-576460752711090211",
+                "unit_of_measurement": "seconds"
+            },
+            {
+                "capabilities": {
+                    "hvac_modes": [
+                        "auto",
+                        "heat"
+                    ],
+                    "max_temp": 157,
+                    "min_temp": 41,
+                    "preset_modes": [
+                        "Run Schedule",
+                        "Temporary Hold",
+                        "Permanent Hold"
+                    ]
+                },
+                "config_entry_id": "64f2e28e9be54ee883c6ef213eab4ddd",
+                "device_class": null,
+                "device_id": "59f7bf6d29124e27b6ef16f7c2b4c6df",
+                "disabled_by": null,
+                "entity_id": "climate.floors",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "floors",
+                "platform": "nuheat",
+                "supported_features": 17,
+                "unique_id": "1461532",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "hvac_modes": [
+                        "auto",
+                        "heat"
+                    ],
+                    "max_temp": 157,
+                    "min_temp": 41,
+                    "preset_modes": [
+                        "Run Schedule",
+                        "Temporary Hold",
+                        "Permanent Hold"
+                    ]
+                },
+                "config_entry_id": "9acab01c000543eb8e8fa5a4f5cc0a8f",
+                "device_class": null,
+                "device_id": "a63ea2500bc24986a75f128850420793",
+                "disabled_by": null,
+                "entity_id": "climate.sauna",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "sauna",
+                "platform": "nuheat",
+                "supported_features": 17,
+                "unique_id": "1461624",
                 "unit_of_measurement": null
             }
         ]

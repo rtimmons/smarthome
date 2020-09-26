@@ -26,6 +26,14 @@ class App {
         });
 
         // TODO: move to object-factory
+        this.climateController = new ClimateController({
+            requester: this,
+            root: window.location.origin,
+            app: this,
+            pubsub: this.pubsub,
+        });
+
+        // TODO: move to object-factory
         this.blindControllerI2c = new BlindControllerI2C({
             requester: this,
             root: window.location.origin,
@@ -167,6 +175,10 @@ class App {
             // TODO: lights controller?
             case 'Lights.Scene':
                 this.lightController.scene(params);
+                break;
+
+            case 'Climate.SetTemperature':
+                this.climateController.set_temperature(params);
                 break;
 
             case 'Blinds.Move':

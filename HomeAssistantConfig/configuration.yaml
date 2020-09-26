@@ -38,6 +38,7 @@ api: {}
 #             status: "At Work"
 #             emoji: ":calendar:"
 #
+
 rest_command:
   bedroom_roller_up:
     url: http://localhost:3000/blinds-i2c/bedroom_roller

@@ -67,7 +67,7 @@
                 "model": "Play:1",
                 "name": "Guest Bathroom",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -140,7 +140,7 @@
                 "model": "Amp",
                 "name": "Bathroom",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -166,7 +166,7 @@
                 "model": "Play:5",
                 "name": "Closet",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -192,7 +192,7 @@
                 "model": "Play:3",
                 "name": "Kitchen",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -218,7 +218,7 @@
                 "model": "Beam",
                 "name": "Office",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -244,7 +244,7 @@
                 "model": "Beam",
                 "name": "Bedroom",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -270,7 +270,7 @@
                 "model": "Playbar",
                 "name": "Living",
                 "name_by_user": null,
-                "sw_version": "58.1-78090",
+                "sw_version": "58.1-80080",
                 "via_device_id": null
             },
             {
@@ -506,7 +506,7 @@
                 "model": "BSB002",
                 "name": "Philips hue",
                 "name_by_user": null,
-                "sw_version": "1939070020",
+                "sw_version": "1940094000",
                 "via_device_id": null
             },
             {
@@ -1346,6 +1346,74 @@
                 "name_by_user": null,
                 "sw_version": null,
                 "via_device_id": "477f72cedd894942a600f4be203acf6a"
+            },
+            {
+                "area_id": null,
+                "config_entries": [
+                    "0e2302ea021e4a6095999b70da10e9fd"
+                ],
+                "connections": [
+                    [
+                        "mac",
+                        "48:a6:b8:e4:c3:5e"
+                    ]
+                ],
+                "entry_type": null,
+                "id": "8ce39e3290cd426ba782de507c1e27c9",
+                "identifiers": [
+                    [
+                        "sonos",
+                        "RINCON_48A6B8E4C35E01400"
+                    ]
+                ],
+                "manufacturer": "Sonos",
+                "model": "Move",
+                "name": "Move",
+                "name_by_user": null,
+                "sw_version": "58.1-80080",
+                "via_device_id": null
+            },
+            {
+                "area_id": "5c26033f5ca244f6a44480714a63d22e",
+                "config_entries": [
+                    "64f2e28e9be54ee883c6ef213eab4ddd"
+                ],
+                "connections": [],
+                "entry_type": null,
+                "id": "59f7bf6d29124e27b6ef16f7c2b4c6df",
+                "identifiers": [
+                    [
+                        "nuheat",
+                        "1461532"
+                    ]
+                ],
+                "manufacturer": "NuHeat",
+                "model": "nVent Signature",
+                "name": "floors",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
+            },
+            {
+                "area_id": "5c26033f5ca244f6a44480714a63d22e",
+                "config_entries": [
+                    "9acab01c000543eb8e8fa5a4f5cc0a8f"
+                ],
+                "connections": [],
+                "entry_type": null,
+                "id": "a63ea2500bc24986a75f128850420793",
+                "identifiers": [
+                    [
+                        "nuheat",
+                        "1461624"
+                    ]
+                ],
+                "manufacturer": "NuHeat",
+                "model": "nVent Signature",
+                "name": "sauna",
+                "name_by_user": null,
+                "sw_version": null,
+                "via_device_id": null
             }
         ]
     },

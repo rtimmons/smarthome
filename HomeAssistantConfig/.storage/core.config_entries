@@ -97,6 +97,42 @@
                 "title": "Ignored",
                 "unique_id": "e97bb554-5990-300a-6315-16150d9439cb",
                 "version": 1
+            },
+            {
+                "connection_class": "cloud_poll",
+                "data": {
+                    "password": "9REBGcmdita]PP",
+                    "serial_number": "1461532",
+                    "username": "ryan@rytim.com"
+                },
+                "domain": "nuheat",
+                "entry_id": "64f2e28e9be54ee883c6ef213eab4ddd",
+                "options": {},
+                "source": "user",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "floors",
+                "unique_id": "1461532",
+                "version": 1
+            },
+            {
+                "connection_class": "cloud_poll",
+                "data": {
+                    "password": "9REBGcmdita]PP",
+                    "serial_number": "1461624",
+                    "username": "ryan@rytim.com"
+                },
+                "domain": "nuheat",
+                "entry_id": "9acab01c000543eb8e8fa5a4f5cc0a8f",
+                "options": {},
+                "source": "user",
+                "system_options": {
+                    "disable_new_entities": false
+                },
+                "title": "sauna",
+                "unique_id": "1461624",
+                "version": 1
             }
         ]
     },

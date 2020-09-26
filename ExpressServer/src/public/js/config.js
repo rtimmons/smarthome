@@ -75,7 +75,9 @@ const config = {
         DoubleDown: '⏬',
         DoubleRight: '⏩',
         SingleUp: '⬆',
-        SingleDown: '⬇'
+        SingleDown: '⬇',
+        Heat: '♨️',
+        Cool: '🧊',
     },
     rows: 8,
     cols: 11,
@@ -135,6 +137,23 @@ const config = {
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Guest', roomName: 'Guest Bathroom' }),
 
+
+        {
+            w: 1,
+            h: 1,
+            y: 1,
+            x: 1,
+            emoji: 'Heat',
+            onPress: { action: 'Climate.SetTemperature', args: ["climate.sauna", "110"] },
+        },
+        {
+            w: 1,
+            h: 1,
+            y: 1,
+            x: 2,
+            emoji: 'Cool',
+            onPress: { action: 'Climate.SetTemperature', args: ["climate.sauna", "60"] },
+        },
         {
             w: 1,
             h: 1,
