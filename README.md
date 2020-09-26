@@ -84,6 +84,9 @@ Smarthome Dashboard
 
 ## System Ideas / Dumping Ground
 
+- Look into methods to offload from SD Card to prevent burning it out over time
+  https://news.ycombinator.com/item?id=24474309
+
 - Look into home-assistant.io?
   [See HN Thread for other things to consider too](https://news.ycombinator.com/item?id=21665125)
 

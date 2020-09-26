@@ -101,9 +101,9 @@
             {
                 "connection_class": "cloud_poll",
                 "data": {
-                    "password": "9REBGcmdita]PP",
+                    "password": "<secret>",
                     "serial_number": "1461532",
-                    "username": "ryan@rytim.com"
+                    "username": "<secret>"
                 },
                 "domain": "nuheat",
                 "entry_id": "64f2e28e9be54ee883c6ef213eab4ddd",
@@ -119,9 +119,9 @@
             {
                 "connection_class": "cloud_poll",
                 "data": {
-                    "password": "9REBGcmdita]PP",
+                    "password": "<secret>",
                     "serial_number": "1461624",
-                    "username": "ryan@rytim.com"
+                    "username": "<secret>"
                 },
                 "domain": "nuheat",
                 "entry_id": "9acab01c000543eb8e8fa5a4f5cc0a8f",

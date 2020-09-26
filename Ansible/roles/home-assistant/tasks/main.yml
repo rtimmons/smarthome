@@ -12,21 +12,25 @@
     repo: 'https://github.com/OpenZWave/open-zwave.git'
     dest: /home/pi/open-zwave
 
+# Must be stopped prior to copying config
+# since hass writes its state to disk on shutdown.
+- name: stop home-assistant service
+  become_user: root
+  become: true
+  service:
+    name: home-assistant
+    state: stopped
+    enabled: yes
 
 - name: install global pip packages
   become_user: root
   become: true
-  async: 600
-  poll: 0
+  async: 3600 # 1 hour
+  poll: 10
   pip:
     executable: pip3.8
     name:
-    - "homeassistant==0.111.4"
-    - python_openzwave
-    - urwid
-    - "sqlalchemy==1.3.17"
-    - "home-assistant-frontend==20200603.3"
-    - "homeassistant-pyozw==0.1.10"
+    - "homeassistant==0.112.5"
     state: present
   environment:
     MAKEFLAGS: '-j4'
@@ -41,15 +45,12 @@
     group: root
     mode: 0664
 
-# Must be stopped prior to copying config
-# since hass writes its state to disk on shutdown.
-- name: stop home-assistant service
+- name: Remove .storage dir
   become_user: root
   become: true
-  service:
-    name: home-assistant
-    state: stopped
-    enabled: yes
+  file:
+    path: /home/pi/repo/HomeAssistantConfig/.storage
+    state: absent
 
 - name: copy HomeAssistantConfig
   synchronize:
@@ -67,6 +68,7 @@
       dest: /home/pi/repo/HomeAssistantConfig/
       rsync_opts:
       - "--exclude=venv"
+      - "--exclude=deps"
 
 - name: start home-assistant service
   become_user: root

@@ -77,7 +77,7 @@ const config = {
         SingleUp: '⬆',
         SingleDown: '⬇',
         Heat: '♨️',
-        Cool: '🧊',
+        Cool: '🌡'
     },
     rows: 8,
     cols: 11,
@@ -137,23 +137,6 @@ const config = {
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Guest', roomName: 'Guest Bathroom' }),
 
-
-        {
-            w: 1,
-            h: 1,
-            y: 1,
-            x: 1,
-            emoji: 'Heat',
-            onPress: { action: 'Climate.SetTemperature', args: ["climate.sauna", "110"] },
-        },
-        {
-            w: 1,
-            h: 1,
-            y: 1,
-            x: 2,
-            emoji: 'Cool',
-            onPress: { action: 'Climate.SetTemperature', args: ["climate.sauna", "60"] },
-        },
         {
             w: 1,
             h: 1,
@@ -210,22 +193,22 @@ const config = {
         { w:1, h:1,
             y:2, x:8,
             emoji: 'Sun',
-            onPress: {action: 'Lights.Scene', args: ['$room','High']},
+            onPress: {action: 'HomeAssistant.Scene', args: ['$room','High']},
         },
         { w:1, h:1,
             y:2, x:9,
             emoji: 'Dim',
-            onPress: {action: 'Lights.Scene', args: ['$room','Medium']},
+            onPress: {action: 'HomeAssistant.Scene', args: ['$room','Medium']},
         },
         { w:1, h:1,
             y:2, x:10,
             emoji: 'Moon',
-            onPress: {action: 'Lights.Scene', args: ['$room','Off']},
+            onPress: {action: 'HomeAssistant.Scene', args: ['$room','Off']},
         },
         // { w:1, h:1,
         //   y:5, x:8,
         //   emoji: 'Sunset',
-        //   onPress: {action: 'Lights.Scene.Savana', args: ["savana"]},
+        //   onPress: {action: 'HomeAssistant.Scene.Savana', args: ["savana"]},
         // },
 
         // Room/Global volume toggle
@@ -452,6 +435,23 @@ const config = {
             x: 7,
             emoji: 'Skip',
             onPress: { action: 'Music.Next', args: [] },
+        },
+
+        {
+            w: 1,
+            h: 1,
+            y: 5,
+            x: 9,
+            emoji: 'Heat',
+            onPress: { action: 'HomeAssistant.Scene', args: ['$room','Heat'] },
+        },
+        {
+            w: 1,
+            h: 1,
+            y: 6,
+            x: 9,
+            emoji: 'Cool',
+            onPress: { action: 'HomeAssistant.Scene', args: ['$room','Cool'] },
         },
 
         // TODO: sleep timer buttons - sonos http API has it built in

@@ -71,6 +71,8 @@ class Scenes:
                 elif entity['type'] == 'outlet':
                     full_name = f"switch.{ent_name}"
                     template['node_id'] = entity['node_id']
+                elif entity['type'] == 'climate':
+                    full_name = f"climate.{ent_name}"
 
                 template['friendly_name'] = ent_name
 

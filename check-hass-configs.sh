@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-set -eou pipefail
+set -eo pipefail
 
 cd "$(dirname "$0")" || exit 1
 
@@ -12,6 +12,7 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
     # shellcheck disable=SC1091
     source ./venv/bin/activate
         python3 ./setup.py develop >/dev/null
+        pip install -r ./requirements.txt
         pushd ../HomeAssistantConfig >/dev/null 2>&1 || exit 1
             hassmetagen ./metaconfig.yaml
         popd >/dev/null 2>&1 || exit 1

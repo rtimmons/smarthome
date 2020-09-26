@@ -1,0 +1,44 @@
+{
+    "data": {
+        "credentials": [
+            {
+                "auth_provider_id": null,
+                "auth_provider_type": "homeassistant",
+                "data": {
+                    "username": "admin"
+                },
+                "id": "d8edbd2f5c3f472e83ab92c4363d9463",
+                "user_id": "b225f15c703b4ebf8f77b21692eb77fb"
+            }
+        ],
+        "groups": [
+            {
+                "id": "system-admin",
+                "name": "Administrators"
+            },
+            {
+                "id": "system-users",
+                "name": "Users"
+            },
+            {
+                "id": "system-read-only",
+                "name": "Read Only"
+            }
+        ],
+        "refresh_tokens": [],
+        "users": [
+            {
+                "group_ids": [
+                    "system-admin"
+                ],
+                "id": "b225f15c703b4ebf8f77b21692eb77fb",
+                "is_active": true,
+                "is_owner": true,
+                "name": "admin",
+                "system_generated": false
+            }
+        ]
+    },
+    "key": "auth",
+    "version": 1
+}

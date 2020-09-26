@@ -20,6 +20,7 @@ known_devices.yaml
 pyozw.sqlite
 ip_bans.yaml
 .*
+!/.storage
 !/.gitignore
 config
 ozw_config
