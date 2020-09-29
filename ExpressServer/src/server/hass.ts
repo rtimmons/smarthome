@@ -14,9 +14,5 @@ app.get('/scenes/:scene', async (req: RQ, res: RS) => {
     return res.send('OK');
 });
 
-app.get('/temperature', function (req, res) {
-    res.send('test')
-});
-
 export const hass = app;
 
