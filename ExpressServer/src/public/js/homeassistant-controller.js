@@ -1,4 +1,4 @@
-class LightController {
+class HomeAssistantController {
     constructor(args) {
         this.requester = args.requester;
         this.root = args.root;

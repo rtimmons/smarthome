@@ -18,7 +18,7 @@ class App {
         });
 
         // TODO: move to object-factory
-        this.lightController = new LightController({
+        this.homeAssistantController = new HomeAssistantController({
             requester: this,
             root: window.location.origin,
             app: this,
@@ -164,9 +164,9 @@ class App {
                 this.changeRoom.apply(this, params);
                 break;
 
-            // TODO: lights controller?
-            case 'Lights.Scene':
-                this.lightController.scene(params);
+            // TODO: HomeAssistant controller?
+            case 'HomeAssistant.Scene':
+                this.homeAssistantController.scene(params);
                 break;
 
             case 'Blinds.Move':

@@ -4865,7 +4865,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "a898c4ee45af4290bd2ff947509b16b5",
@@ -4881,7 +4881,7 @@
                 "unit_of_measurement": "W"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "a898c4ee45af4290bd2ff947509b16b5",
@@ -4897,7 +4897,7 @@
                 "unit_of_measurement": "seconds"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4913,7 +4913,7 @@
                 "unit_of_measurement": "W"
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "9fbfcbe3477e4a1a84d824b73d45aa31",
@@ -4945,7 +4945,7 @@
                 "unit_of_measurement": null
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "72829b994232483f842b70bc70df838b",
@@ -4961,7 +4961,7 @@
                 "unit_of_measurement": ""
             },
             {
-                "capabilities": null,
+                "capabilities": {},
                 "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
                 "device_class": null,
                 "device_id": "72829b994232483f842b70bc70df838b",
@@ -4975,6 +4975,126 @@
                 "supported_features": 0,
                 "unique_id": "24-576460752711090211",
                 "unit_of_measurement": "seconds"
+            },
+            {
+                "capabilities": {
+                    "hvac_modes": [
+                        "auto",
+                        "heat"
+                    ],
+                    "max_temp": 157,
+                    "min_temp": 41,
+                    "preset_modes": [
+                        "Run Schedule",
+                        "Temporary Hold",
+                        "Permanent Hold"
+                    ]
+                },
+                "config_entry_id": "64f2e28e9be54ee883c6ef213eab4ddd",
+                "device_class": null,
+                "device_id": "59f7bf6d29124e27b6ef16f7c2b4c6df",
+                "disabled_by": null,
+                "entity_id": "climate.bathroom_floors",
+                "icon": null,
+                "name": "bathroom_floors",
+                "original_icon": null,
+                "original_name": "floors",
+                "platform": "nuheat",
+                "supported_features": 17,
+                "unique_id": "1461532",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": {
+                    "hvac_modes": [
+                        "auto",
+                        "heat"
+                    ],
+                    "max_temp": 157,
+                    "min_temp": 41,
+                    "preset_modes": [
+                        "Run Schedule",
+                        "Temporary Hold",
+                        "Permanent Hold"
+                    ]
+                },
+                "config_entry_id": "9acab01c000543eb8e8fa5a4f5cc0a8f",
+                "device_class": null,
+                "device_id": "a63ea2500bc24986a75f128850420793",
+                "disabled_by": null,
+                "entity_id": "climate.bathroom_sauna",
+                "icon": null,
+                "name": "bathroom_sauna",
+                "original_icon": null,
+                "original_name": "sauna",
+                "platform": "nuheat",
+                "supported_features": 17,
+                "unique_id": "1461624",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "scene.scene_bathroom_cool",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "scene_bathroom_cool",
+                "platform": "homeassistant",
+                "supported_features": 0,
+                "unique_id": "scene_bathroom_cool",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "scene.scene_bathroom_heat",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "scene_bathroom_heat",
+                "platform": "homeassistant",
+                "supported_features": 0,
+                "unique_id": "scene_bathroom_heat",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "automation.scene_bathroom_cool",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "scene_bathroom_cool",
+                "platform": "automation",
+                "supported_features": 0,
+                "unique_id": "scene_bathroom_cool",
+                "unit_of_measurement": null
+            },
+            {
+                "capabilities": null,
+                "config_entry_id": null,
+                "device_class": null,
+                "device_id": null,
+                "disabled_by": null,
+                "entity_id": "automation.scene_bathroom_heat",
+                "icon": null,
+                "name": null,
+                "original_icon": null,
+                "original_name": "scene_bathroom_heat",
+                "platform": "automation",
+                "supported_features": 0,
+                "unique_id": "scene_bathroom_heat",
+                "unit_of_measurement": null
             }
         ]
     },
