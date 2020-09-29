@@ -76,8 +76,8 @@ const config = {
         DoubleRight: '⏩',
         SingleUp: '⬆',
         SingleDown: '⬇',
-        Heat: '♨️',
-        Cool: '🌡'
+        Heat: '🥵',
+        Cool: '🥶'
     },
     rows: 8,
     cols: 11,
