@@ -1390,7 +1390,7 @@
                 "manufacturer": "NuHeat",
                 "model": "nVent Signature",
                 "name": "floors",
-                "name_by_user": "bathroom_floors",
+                "name_by_user": "climate.bathroom_floors",
                 "sw_version": null,
                 "via_device_id": null
             },
@@ -1411,7 +1411,7 @@
                 "manufacturer": "NuHeat",
                 "model": "nVent Signature",
                 "name": "sauna",
-                "name_by_user": "bathroom_sauna",
+                "name_by_user": "climate.bathroom_sauna",
                 "sw_version": null,
                 "via_device_id": null
             }
