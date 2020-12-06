@@ -1,15 +1,13 @@
 {
+    "version": 1,
+    "key": "core.device_registry",
     "data": {
-        "deleted_devices": [],
         "devices": [
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "869a7efe4140414fbd7a337df912f66e",
                 "identifiers": [
                     [
                         "zwave",
@@ -19,18 +17,18 @@
                 "manufacturer": "AEON Labs",
                 "model": "ZW090 Z-Stick Gen5 US",
                 "name": "AEON Labs ZW090 Z-Stick Gen5 US",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": null
+                "entry_type": null,
+                "id": "869a7efe4140414fbd7a337df912f66e",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "78c502de2626423b8af62b9eab99ebb0",
                 "identifiers": [
                     [
                         "zwave",
@@ -40,12 +38,14 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "14288 Duplex Receptacle",
                 "name": "GE (Jasco Products) 14288 Duplex Receptacle",
-                "name_by_user": "living_outlet_slider",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "78c502de2626423b8af62b9eab99ebb0",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "living_outlet_slider"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -55,8 +55,6 @@
                         "34:7e:5c:cd:48:96"
                     ]
                 ],
-                "entry_type": null,
-                "id": "bd516d0d49694b2895c83865efbe66fd",
                 "identifiers": [
                     [
                         "sonos",
@@ -66,12 +64,14 @@
                 "manufacturer": "Sonos",
                 "model": "Play:1",
                 "name": "Guest Bathroom",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "bd516d0d49694b2895c83865efbe66fd",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -81,8 +81,6 @@
                         "5c:aa:fd:d5:99:94"
                     ]
                 ],
-                "entry_type": null,
-                "id": "9095453a70e84a52a2e14ec0fcd0af4d",
                 "identifiers": [
                     [
                         "sonos",
@@ -92,18 +90,18 @@
                 "manufacturer": "Sonos",
                 "model": "Move",
                 "name": "Move",
-                "name_by_user": null,
                 "sw_version": "58.1-77280",
-                "via_device_id": null
+                "entry_type": null,
+                "id": "9095453a70e84a52a2e14ec0fcd0af4d",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "3cd7fcacde4f401685abf42f6e17b43b",
                 "identifiers": [
                     [
                         "sonos",
@@ -113,12 +111,14 @@
                 "manufacturer": "Sonos",
                 "model": "Amp",
                 "name": "Living Amp",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": null
+                "entry_type": null,
+                "id": "3cd7fcacde4f401685abf42f6e17b43b",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -128,8 +128,6 @@
                         "34:7e:5c:08:bb:ff"
                     ]
                 ],
-                "entry_type": null,
-                "id": "e8c18fc33a354b6899ec0f65c0194c4e",
                 "identifiers": [
                     [
                         "sonos",
@@ -139,12 +137,14 @@
                 "manufacturer": "Sonos",
                 "model": "Amp",
                 "name": "Bathroom",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "e8c18fc33a354b6899ec0f65c0194c4e",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -154,8 +154,6 @@
                         "5c:aa:fd:f5:ab:e4"
                     ]
                 ],
-                "entry_type": null,
-                "id": "b84e4bfdff404dda92c4842274b4e841",
                 "identifiers": [
                     [
                         "sonos",
@@ -165,12 +163,14 @@
                 "manufacturer": "Sonos",
                 "model": "Play:5",
                 "name": "Closet",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "b84e4bfdff404dda92c4842274b4e841",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -180,8 +180,6 @@
                         "5c:aa:fd:59:38:f0"
                     ]
                 ],
-                "entry_type": null,
-                "id": "eb0e1d84a41547709ad72d0a13849e4a",
                 "identifiers": [
                     [
                         "sonos",
@@ -191,12 +189,14 @@
                 "manufacturer": "Sonos",
                 "model": "Play:3",
                 "name": "Kitchen",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "eb0e1d84a41547709ad72d0a13849e4a",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -206,8 +206,6 @@
                         "48:a6:b8:39:55:d1"
                     ]
                 ],
-                "entry_type": null,
-                "id": "4dff6e0374984159a8d0b0cf52a8b4ec",
                 "identifiers": [
                     [
                         "sonos",
@@ -217,12 +215,14 @@
                 "manufacturer": "Sonos",
                 "model": "Beam",
                 "name": "Office",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "4dff6e0374984159a8d0b0cf52a8b4ec",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -232,8 +232,6 @@
                         "34:7e:5c:9c:39:ba"
                     ]
                 ],
-                "entry_type": null,
-                "id": "eb6b5f0c94804a4886055855e6a3ff29",
                 "identifiers": [
                     [
                         "sonos",
@@ -243,12 +241,14 @@
                 "manufacturer": "Sonos",
                 "model": "Beam",
                 "name": "Bedroom",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "eb6b5f0c94804a4886055855e6a3ff29",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -258,8 +258,6 @@
                         "34:7e:5c:79:78:a8"
                     ]
                 ],
-                "entry_type": null,
-                "id": "213c27f77dbd42df918cf4e840036f85",
                 "identifiers": [
                     [
                         "sonos",
@@ -269,18 +267,18 @@
                 "manufacturer": "Sonos",
                 "model": "Playbar",
                 "name": "Living",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "213c27f77dbd42df918cf4e840036f85",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "36440e8dd0b444bbb08eca549ae6b8ff",
                 "identifiers": [
                     [
                         "zwave",
@@ -290,18 +288,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "46203 In-Wall Smart Dimmer",
                 "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
-                "name_by_user": "bedroom_switch_bedside",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "36440e8dd0b444bbb08eca549ae6b8ff",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "bedroom_switch_bedside"
             },
             {
-                "area_id": "4bc549bfcfd04a44889509f0f9276916",
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "a97ac13091eb4b13a6cc33840da29d53",
                 "identifiers": [
                     [
                         "zwave",
@@ -311,18 +309,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "14288 Duplex Receptacle",
                 "name": "GE (Jasco Products) 14288 Duplex Receptacle",
-                "name_by_user": "bedroom_outlet_flamingo",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "a97ac13091eb4b13a6cc33840da29d53",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": "4bc549bfcfd04a44889509f0f9276916",
+                "name_by_user": "bedroom_outlet_flamingo"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "3aa7c8a856a342d5a3533ec59903338d",
                 "identifiers": [
                     [
                         "zwave",
@@ -332,18 +330,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "46203 In-Wall Smart Dimmer",
                 "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
-                "name_by_user": "bedroom_switch_closet",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "3aa7c8a856a342d5a3533ec59903338d",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "bedroom_switch_closet"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "d57db9885552496ba4bc9a994e04b8a7",
                 "identifiers": [
                     [
                         "zwave",
@@ -353,18 +351,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "14288 Duplex Receptacle",
                 "name": "GE (Jasco Products) 14288 Duplex Receptacle",
-                "name_by_user": "office_outlet_pianolight",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "d57db9885552496ba4bc9a994e04b8a7",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "office_outlet_pianolight"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "217bb2b844e748789d50c0b93cb649b0",
                 "identifiers": [
                     [
                         "zwave",
@@ -374,18 +372,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "14288 Duplex Receptacle",
                 "name": "GE (Jasco Products) 14288 Duplex Receptacle",
-                "name_by_user": "office_outlet_pipelight",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "217bb2b844e748789d50c0b93cb649b0",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "office_outlet_pipelight"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "71401d8f2d1842a992d0e57244a00f76",
                 "identifiers": [
                     [
                         "zwave",
@@ -395,18 +393,18 @@
                 "manufacturer": "HomeSeer Technologies",
                 "model": "HS-WS100+ Wall Switch",
                 "name": "HomeSeer Technologies HS-WS100+ Wall Switch",
-                "name_by_user": "office_switch_main",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "71401d8f2d1842a992d0e57244a00f76",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "office_switch_main"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "90f2b0b74fe141729dc8c124bd99f2c7",
                 "identifiers": [
                     [
                         "zwave",
@@ -416,18 +414,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "46203 In-Wall Smart Dimmer",
                 "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
-                "name_by_user": "kitchen_switch_dining",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "90f2b0b74fe141729dc8c124bd99f2c7",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "kitchen_switch_dining"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "69cfa2be6d95466eb6586d1da2a1749d",
                 "identifiers": [
                     [
                         "zwave",
@@ -437,18 +435,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "46203 In-Wall Smart Dimmer",
                 "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
-                "name_by_user": "global_switch_hall",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "69cfa2be6d95466eb6586d1da2a1749d",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "global_switch_hall"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "26aac12fdd174e8d85817dd42e3d9184",
                 "identifiers": [
                     [
                         "zwave",
@@ -458,18 +456,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "14291 In-Wall Smart Switch",
                 "name": "GE (Jasco Products) 14291 In-Wall Smart Switch",
-                "name_by_user": "office_switch_closet",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "26aac12fdd174e8d85817dd42e3d9184",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "office_switch_closet"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "641486784dd943cea3f8510a67563c17",
                 "identifiers": [
                     [
                         "zwave",
@@ -479,12 +477,14 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "46203 In-Wall Smart Dimmer",
                 "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
-                "name_by_user": "global_switch_hall",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "641486784dd943cea3f8510a67563c17",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "global_switch_hall"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
@@ -494,8 +494,6 @@
                         "00:17:88:61:37:49"
                     ]
                 ],
-                "entry_type": null,
-                "id": "987fa93d054c4573a82c2beb9d253132",
                 "identifiers": [
                     [
                         "hue",
@@ -505,18 +503,18 @@
                 "manufacturer": "Signify",
                 "model": "BSB002",
                 "name": "Philips hue",
-                "name_by_user": null,
-                "sw_version": "1939070020",
-                "via_device_id": null
+                "sw_version": "1941132070",
+                "entry_type": null,
+                "id": "987fa93d054c4573a82c2beb9d253132",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "a4bcb084965844f8ba982a2caff7c711",
                 "identifiers": [
                     [
                         "hue",
@@ -526,18 +524,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_vanityright",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "a4bcb084965844f8ba982a2caff7c711",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "ea59fae5872c438fb5f84e3610a8b3fc",
                 "identifiers": [
                     [
                         "hue",
@@ -547,18 +545,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue color lamp",
                 "name": "living_light_floor",
-                "name_by_user": null,
                 "sw_version": "5.127.1.26581",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "ea59fae5872c438fb5f84e3610a8b3fc",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "b642e45cc9d3405396c8af9694f5b411",
                 "identifiers": [
                     [
                         "hue",
@@ -568,18 +566,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_shower",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "b642e45cc9d3405396c8af9694f5b411",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "9ec8c3678d334589b55380909747dc01",
                 "identifiers": [
                     [
                         "hue",
@@ -589,18 +587,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue lightstrip plus",
                 "name": "kitchen_light_lower",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "9ec8c3678d334589b55380909747dc01",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "9b03089ae53749b6bbe751c5ee885a26",
                 "identifiers": [
                     [
                         "hue",
@@ -610,18 +608,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue lightstrip plus",
                 "name": "kitchen_light_upper",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "9b03089ae53749b6bbe751c5ee885a26",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "51ea28d7e239446c9ef7d8543ba66ea3",
                 "identifiers": [
                     [
                         "hue",
@@ -631,18 +629,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue white lamp",
                 "name": "bedroom_light_desk",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "51ea28d7e239446c9ef7d8543ba66ea3",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
                 "identifiers": [
                     [
                         "hue",
@@ -652,18 +650,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_sauna",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "3d031c4674e84be4a2a46c7c519a9be7",
                 "identifiers": [
                     [
                         "hue",
@@ -673,18 +671,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bedroom_light_dresser",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "3d031c4674e84be4a2a46c7c519a9be7",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "3728775cafd046e7b4f6bd5473d77140",
                 "identifiers": [
                     [
                         "hue",
@@ -694,18 +692,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue color lamp",
                 "name": "office_light_sidetable",
-                "name_by_user": null,
                 "sw_version": "5.130.1.30000",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "3728775cafd046e7b4f6bd5473d77140",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "de6c440d15964d98bc2134ebef194892",
                 "identifiers": [
                     [
                         "hue",
@@ -715,18 +713,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_vanityleft",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "de6c440d15964d98bc2134ebef194892",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "f20e8ce336ef4e4cb7e28a2b0e1ddeaa",
                 "identifiers": [
                     [
                         "hue",
@@ -736,18 +734,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance candle",
                 "name": "entry_light_nook",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "f20e8ce336ef4e4cb7e28a2b0e1ddeaa",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "5d895a4a837e4a0aa4650f5fb01c1d0b",
                 "identifiers": [
                     [
                         "hue",
@@ -757,18 +755,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue white lamp",
                 "name": "living_light_maria",
-                "name_by_user": null,
                 "sw_version": "1.50.2_r30933",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "5d895a4a837e4a0aa4650f5fb01c1d0b",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "5fd432eee97a41bc8e8878cd1db91362",
                 "identifiers": [
                     [
                         "zwave",
@@ -778,18 +776,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer",
-                "name_by_user": "office_light_abovecouch",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "5fd432eee97a41bc8e8878cd1db91362",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "office_light_abovecouch"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "4f3dff1031da4ea99f7438194186aa59",
                 "identifiers": [
                     [
                         "zwave",
@@ -799,18 +797,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer",
-                "name_by_user": "office_light_abovedesk",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "4f3dff1031da4ea99f7438194186aa59",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "office_light_abovedesk"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "573d39550fa344c3a909a884a06e1db2",
                 "identifiers": [
                     [
                         "zwave",
@@ -820,18 +818,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "46203 In-Wall Smart Dimmer",
                 "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
-                "name_by_user": "living_switch_deck",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "573d39550fa344c3a909a884a06e1db2",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "living_switch_deck"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "26e01b7f568e4084b4dd557e4c59c7ac",
                 "identifiers": [
                     [
                         "zwave",
@@ -841,18 +839,18 @@
                 "manufacturer": "GE (Jasco Products)",
                 "model": "14288 Duplex Receptacle",
                 "name": "GE (Jasco Products) 14288 Duplex Receptacle",
-                "name_by_user": "kitchen_outlet_plants",
                 "sw_version": "null",
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "26e01b7f568e4084b4dd557e4c59c7ac",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": "kitchen_outlet_plants"
             },
             {
-                "area_id": "5c26033f5ca244f6a44480714a63d22e",
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "a898c4ee45af4290bd2ff947509b16b5",
                 "identifiers": [
                     [
                         "zwave",
@@ -862,62 +860,62 @@
                 "manufacturer": "Qubino (Goap)",
                 "model": "ZMNHHDx Mini Dimmer",
                 "name": "Qubino (Goap) ZMNHHDx Mini Dimmer",
-                "name_by_user": "bathroom_light_vanitysconces",
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "a898c4ee45af4290bd2ff947509b16b5",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": "5c26033f5ca244f6a44480714a63d22e",
+                "name_by_user": "bathroom_light_vanitysconces"
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (2)",
+                "sw_version": null,
                 "entry_type": null,
                 "id": "825beeaddd3848898ad7ce32560f0168",
-                "identifiers": [
-                    [
-                        "zwave",
-                        18,
-                        2
-                    ]
-                ],
-                "manufacturer": "Zooz",
-                "model": "ZEN31 RGBW Dimmer",
-                "name": "Zooz ZEN31 RGBW Dimmer (2)",
-                "name_by_user": null,
-                "sw_version": null,
-                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        18,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (3)",
+                "sw_version": null,
                 "entry_type": null,
                 "id": "d6ffe90127f74cbf84ab58b41101bf8a",
-                "identifiers": [
-                    [
-                        "zwave",
-                        18,
-                        3
-                    ]
-                ],
-                "manufacturer": "Zooz",
-                "model": "ZEN31 RGBW Dimmer",
-                "name": "Zooz ZEN31 RGBW Dimmer (3)",
-                "name_by_user": null,
-                "sw_version": null,
-                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "aed9708216e043c8a3a2c4449a695b11",
                 "identifiers": [
                     [
                         "zwave",
@@ -928,18 +926,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (4)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+                "entry_type": null,
+                "id": "aed9708216e043c8a3a2c4449a695b11",
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "3a3bed75c32f4f5ba7acb2d6a917a799",
                 "identifiers": [
                     [
                         "zwave",
@@ -950,18 +948,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (5)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362"
+                "entry_type": null,
+                "id": "3a3bed75c32f4f5ba7acb2d6a917a799",
+                "via_device_id": "5fd432eee97a41bc8e8878cd1db91362",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "b70b6a281e664ce09138a92a13e41265",
                 "identifiers": [
                     [
                         "zwave",
@@ -972,18 +970,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (2)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+                "entry_type": null,
+                "id": "b70b6a281e664ce09138a92a13e41265",
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "e3d1418667a24fd68fa3007cd512112f",
                 "identifiers": [
                     [
                         "zwave",
@@ -994,18 +992,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (3)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+                "entry_type": null,
+                "id": "e3d1418667a24fd68fa3007cd512112f",
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "186b947ea29a46c6a0e0d6d87a3fc846",
                 "identifiers": [
                     [
                         "zwave",
@@ -1016,18 +1014,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (4)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+                "entry_type": null,
+                "id": "186b947ea29a46c6a0e0d6d87a3fc846",
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "e556ae5ce07c49ab9192c09baf97fdd8",
                 "identifiers": [
                     [
                         "zwave",
@@ -1038,18 +1036,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (5)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "4f3dff1031da4ea99f7438194186aa59"
+                "entry_type": null,
+                "id": "e556ae5ce07c49ab9192c09baf97fdd8",
+                "via_device_id": "4f3dff1031da4ea99f7438194186aa59",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "ab77a036e1b24b529ee5b98d16acb516",
                 "identifiers": [
                     [
                         "zwave",
@@ -1059,18 +1057,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "ab77a036e1b24b529ee5b98d16acb516",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "8fcbf9f66fa043309753a47ab86058f3",
                 "identifiers": [
                     [
                         "zwave",
@@ -1081,18 +1079,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (2)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "8fcbf9f66fa043309753a47ab86058f3",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "17713184dcc54d4f855d4605d904537a",
                 "identifiers": [
                     [
                         "zwave",
@@ -1103,18 +1101,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (3)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "17713184dcc54d4f855d4605d904537a",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "b7b4668a476049b695890bc2f5ca87a3",
                 "identifiers": [
                     [
                         "zwave",
@@ -1125,18 +1123,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (4)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "b7b4668a476049b695890bc2f5ca87a3",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "99b510a3cd8049a587d16d7bdd77eee0",
                 "identifiers": [
                     [
                         "zwave",
@@ -1147,18 +1145,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (5)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "99b510a3cd8049a587d16d7bdd77eee0",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "2d164b6f88b64ca9809a06354b064611",
                 "identifiers": [
                     [
                         "zwave",
@@ -1169,18 +1167,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (6)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "2d164b6f88b64ca9809a06354b064611",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "eb2a05ac0d1a47a7b567360d2dabbf88",
                 "identifiers": [
                     [
                         "zwave",
@@ -1191,18 +1189,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (7)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "eb2a05ac0d1a47a7b567360d2dabbf88",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "72829b994232483f842b70bc70df838b",
                 "identifiers": [
                     [
                         "zwave",
@@ -1213,18 +1211,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN20 V2.0 Power Strip",
                 "name": "Zooz ZEN20 V2.0 Power Strip (8)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516"
+                "entry_type": null,
+                "id": "72829b994232483f842b70bc70df838b",
+                "via_device_id": "ab77a036e1b24b529ee5b98d16acb516",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "27edf7f8014d430991599c034c6dadcd"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "12673b1543154303a1aff7218158ea7f",
                 "identifiers": [
                     [
                         "hue",
@@ -1234,18 +1232,18 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue tap switch",
                 "name": "Living room switch",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132"
+                "entry_type": null,
+                "id": "12673b1543154303a1aff7218158ea7f",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "477f72cedd894942a600f4be203acf6a",
                 "identifiers": [
                     [
                         "zwave",
@@ -1255,18 +1253,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e"
+                "entry_type": null,
+                "id": "477f72cedd894942a600f4be203acf6a",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "9fbfcbe3477e4a1a84d824b73d45aa31",
                 "identifiers": [
                     [
                         "zwave",
@@ -1277,18 +1275,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (2)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "477f72cedd894942a600f4be203acf6a"
+                "entry_type": null,
+                "id": "9fbfcbe3477e4a1a84d824b73d45aa31",
+                "via_device_id": "477f72cedd894942a600f4be203acf6a",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "50733a3060e442929b96f83df823507e",
                 "identifiers": [
                     [
                         "zwave",
@@ -1299,18 +1297,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (3)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "477f72cedd894942a600f4be203acf6a"
+                "entry_type": null,
+                "id": "50733a3060e442929b96f83df823507e",
+                "via_device_id": "477f72cedd894942a600f4be203acf6a",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "19f31a64ed3a40279839b0974574b58c",
                 "identifiers": [
                     [
                         "zwave",
@@ -1321,18 +1319,18 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (4)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "477f72cedd894942a600f4be203acf6a"
+                "entry_type": null,
+                "id": "19f31a64ed3a40279839b0974574b58c",
+                "via_device_id": "477f72cedd894942a600f4be203acf6a",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
-                "entry_type": null,
-                "id": "e13b45778ae542b19e9ec67eef7cbe25",
                 "identifiers": [
                     [
                         "zwave",
@@ -1343,12 +1341,14 @@
                 "manufacturer": "Zooz",
                 "model": "ZEN31 RGBW Dimmer",
                 "name": "Zooz ZEN31 RGBW Dimmer (5)",
-                "name_by_user": null,
                 "sw_version": null,
-                "via_device_id": "477f72cedd894942a600f4be203acf6a"
+                "entry_type": null,
+                "id": "e13b45778ae542b19e9ec67eef7cbe25",
+                "via_device_id": "477f72cedd894942a600f4be203acf6a",
+                "area_id": null,
+                "name_by_user": null
             },
             {
-                "area_id": null,
                 "config_entries": [
                     "0e2302ea021e4a6095999b70da10e9fd"
                 ],
@@ -1358,8 +1358,6 @@
                         "48:a6:b8:e4:c3:5e"
                     ]
                 ],
-                "entry_type": null,
-                "id": "8ce39e3290cd426ba782de507c1e27c9",
                 "identifiers": [
                     [
                         "sonos",
@@ -1369,12 +1367,34 @@
                 "manufacturer": "Sonos",
                 "model": "Move",
                 "name": "Move",
-                "name_by_user": null,
-                "sw_version": "58.1-78090",
-                "via_device_id": null
+                "sw_version": "61.1-83170",
+                "entry_type": null,
+                "id": "8ce39e3290cd426ba782de507c1e27c9",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
+            },
+            {
+                "config_entries": [
+                    "b37e1f20d0ae490490c9cf08cf65d8a7"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "met"
+                    ]
+                ],
+                "manufacturer": "Met.no",
+                "model": "Forecast",
+                "name": "Forecast",
+                "sw_version": null,
+                "entry_type": "service",
+                "id": "e341f095f415c8eb115f1138c2ec6138",
+                "via_device_id": null,
+                "area_id": null,
+                "name_by_user": null
             }
-        ]
-    },
-    "key": "core.device_registry",
-    "version": 1
+        ],
+        "deleted_devices": []
+    }
 }
