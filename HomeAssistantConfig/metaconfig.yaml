@@ -526,7 +526,7 @@ additional_automations:
   trigger:
   - platform: sun
     event: sunset
-    offset: '+00:15:00'  # 10 minutes after sunset.
+    offset: '+00:15:00'  # 15 minutes after sunset.
   action:
   # These rest actions must be defined in the configuration.yaml file.
   - service: rest_command.bedroom_roller_down
@@ -545,6 +545,48 @@ additional_automations:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
   - service: rest_command.office_blackout_up
+
+
+# https://www.home-assistant.io/cookbook/turn_on_light_for_10_minutes_when_motion_detected/
+- id: motion_closet_on
+  alias: Turn on office light when motion
+  trigger:
+    platform: state
+    # TODO: rename this sensor
+    entity_id: sensor.fibaro_system_fgms001_zw5_motion_sensor_burglar
+    to: '8' # Magic number. Note this automation doesn't work the first time the enent triggers after a system restart.
+  # Only from 7:30am to 11:30pm
+  # TODO: should be only when light not already on
+  # TODO: should be bright when daytime and very dim when night
+  condition:
+    condition: time
+    after: '07:30'
+    before: '23:30'
+  action:
+  - scene: scene.scene_closet_medium
+  - service: timer.start
+    data:
+      entity_id: timer.closet_motion
+- id: motion_closet_offtimer
+  alias: Turn off closet light after timer
+  trigger:
+    platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.closet_motion
+  action:
+  - scene: scene.scene_closet_off
+
+# - id: motion_office_on
+#   alias: Turn on office light when no motion
+#   trigger:
+#     platform: state
+#     entity_id: sensor.fibaro_system_fgms001_zw5_motion_sensor_burglar
+#     to: '0'
+#     for:
+#       seconds: 3
+#   action:
+#   - scene: scene.scene_office_high
 
 # - id: plants_on
 #   alias: plants_on
