@@ -4,23 +4,28 @@ set -eo pipefail
 
 cd "$(dirname "$0")" || exit 1
 
+# Create venv for MetaHassConfig
 pushd MetaHassConfig >/dev/null 2>&1 || exit 1
-    if [ ! -d venv ]; then
+    if [[ ! -d "venv" || ! -e "venv/setup3" ]]; then
+        rm -rf "venv"
         python3 -mvenv venv
+        # shellcheck source=/dev/null
+        VIRTUAL_ENV_DISABLE_PROMPT=true source ./venv/bin/activate
+            python3 ./setup.py develop >/dev/null
+            python3 -m pip install -r ./requirements.txt
+            python3 -m pip install homeassistant  -q -q
+            touch venv/setup3
+        deactivate
     fi
-    export VIRTUAL_ENV_DISABLE_PROMPT=1
-    # shellcheck disable=SC1091
-    source ./venv/bin/activate
-    python3 ./setup.py develop >/dev/null
-    python3 -m pip install -r ./requirements.txt
-    python3 -m pip install homeassistant  -q -q
-    pushd ../HomeAssistantConfig >/dev/null 2>&1 || exit 1
-        hassmetagen ./metaconfig.yaml
-    popd >/dev/null 2>&1 || exit 1
 popd >/dev/null 2>&1 || exit 1
 
-hash -r
+# Run `hass` in the HomeAssistantConfig dir.
+pushd HomeAssistantConfig >/dev/null 2>&1 || exit 1
+    # shellcheck source=/dev/null
+    VIRTUAL_ENV_DISABLE_PROMPT=true source ../MetaHassConfig/venv/bin/activate
+        hash -r
+        hass -c "$PWD" --script check_config
+    deactivate
+popd >/dev/null 2>&1 || exit 1
 
-hass -c "$PWD/HomeAssistantConfig" --script check_config
-
-deactivate
+echo "Checked home-assistant config at $PWD/HomeAssistantConfig."
