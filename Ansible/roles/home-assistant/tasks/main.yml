@@ -30,7 +30,7 @@
   pip:
     executable: pip3.8
     name:
-    - "homeassistant==0.112.5"
+    - "homeassistant==0.118.5"
     state: present
   environment:
     MAKEFLAGS: '-j4'
