@@ -28,8 +28,9 @@
   async: 3600 # 1 hour
   poll: 10
   pip:
-    executable: pip3.8
+    executable: pip3.9
     name:
+    - sqlalchemy
     - "homeassistant==0.118.5"
     state: present
   environment:

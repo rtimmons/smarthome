@@ -15,3 +15,6 @@ cd Python-3.9.0
 ./configure --enable-loadable-sqlite-extensions
 make -j4
 make install
+
+hash -r
+pip3.9 install --upgrade pip
