@@ -24,6 +24,7 @@ pushd HomeAssistantConfig >/dev/null 2>&1 || exit 1
     # shellcheck source=/dev/null
     VIRTUAL_ENV_DISABLE_PROMPT=true source ../MetaHassConfig/venv/bin/activate
         hash -r
+        hassmetagen ./metaconfig.yaml
         hass -c "$PWD" --script check_config
     deactivate
 popd >/dev/null 2>&1 || exit 1

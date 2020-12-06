@@ -58,9 +58,13 @@ entities:
   - name: kitchen_light_upper
     type: hue light color
 
-  - name: kitchen_light_cabinets
+  - name: kitchen_light_cabinets_lower
     type: dimmer switch 46203
     node_id: 25
+
+  - name: kitchen_light_cabinets_upper
+    type: dimmer switch 46203
+    node_id: 27
 
   - name: kitchen_switch_dining
     type: dimmer switch 46203
@@ -241,7 +245,8 @@ scenes:
     entities:
       kitchen_light_upper: hue_high
       kitchen_light_lower: hue_high
-      kitchen_light_cabinets: dimmer_high
+      kitchen_light_cabinets_upper: dimmer_high
+      kitchen_light_cabinets_lower: dimmer_high
       kitchen_switch_dining: dimmer_high_led
       entry_switch_kitchen: dimmer_high_led
 
@@ -249,7 +254,8 @@ scenes:
     entities:
         kitchen_light_upper: hue_medium
         kitchen_light_lower: hue_medium
-        kitchen_light_cabinets: dimmer_medium
+        kitchen_light_cabinets_upper: dimmer_medium
+        kitchen_light_cabinets_lower: dimmer_medium
         kitchen_switch_dining: dimmer_medium
         entry_switch_kitchen: dimmer_medium
 
@@ -257,7 +263,8 @@ scenes:
     entities:
         kitchen_light_upper: hue_off
         kitchen_light_lower: hue_off
-        kitchen_light_cabinets: dimmer_off
+        kitchen_light_cabinets_upper: dimmer_off
+        kitchen_light_cabinets_lower: dimmer_off
         kitchen_switch_dining: dimmer_off
         entry_switch_kitchen: dimmer_off
 
@@ -266,7 +273,8 @@ scenes:
     entities:
       kitchen_light_upper: hue_high
       kitchen_light_lower: hue_high
-      kitchen_light_cabinets: dimmer_high
+      kitchen_light_cabinets_upper: dimmer_high
+      kitchen_light_cabinets_lower: dimmer_high
       kitchen_switch_dining: dimmer_high_led
       entry_switch_kitchen: dimmer_high_led
       living_light_floor: hue_high
@@ -279,7 +287,8 @@ scenes:
     entities:
       kitchen_light_upper: hue_medium
       kitchen_light_lower: hue_medium
-      kitchen_light_cabinets: dimmer_medium
+      kitchen_light_cabinets_upper: dimmer_medium
+      kitchen_light_cabinets_lower: dimmer_medium
       kitchen_switch_dining: dimmer_medium
       entry_switch_kitchen: dimmer_medium
       living_light_floor: hue_medium
@@ -292,7 +301,8 @@ scenes:
     entities:
       kitchen_light_upper: hue_off
       kitchen_light_lower: hue_off
-      kitchen_light_cabinets: dimmer_off
+      kitchen_light_cabinets_upper: dimmer_off
+      kitchen_light_cabinets_lower: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
       living_light_floor: hue_off
@@ -367,7 +377,8 @@ scenes:
       bedroom_light_desk: hue_off
       kitchen_light_upper: hue_off
       kitchen_light_lower: hue_off
-      kitchen_light_cabinets: dimmer_off
+      kitchen_light_cabinets_upper: dimmer_off
+      kitchen_light_cabinets_lower: dimmer_off
       living_light_floor: hue_off
       living_light_maria: hue_off
       living_switch_deck: dimmer_off
@@ -389,7 +400,8 @@ scenes:
     entities:
       kitchen_light_upper: hue_high
       kitchen_light_lower: hue_high
-      kitchen_light_cabinets: dimmer_high
+      kitchen_light_cabinets_upper: dimmer_high
+      kitchen_light_cabinets_lower: dimmer_high
       living_light_floor: hue_high
       global_switch_hall: dimmer_high
       kitchen_switch_dining: dimmer_high_led
