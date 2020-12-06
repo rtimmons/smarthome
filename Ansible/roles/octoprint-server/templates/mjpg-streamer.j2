@@ -1,0 +1,9 @@
+[Unit]
+Description=MJPG Streamer
+ 
+[Service]
+ExecStart=/home/pi/repo/mjpg-streamer/mjpg-streamer-experimental/mjpg_streamer -o "/home/pi/repo/mjpg-streamer/mjpg-streamer-experimental/output_http.so -w /home/pi/repo/mjpg-streamer/mjpg-streamer-experimental/www" -i "/home/pi/repo/mjpg-streamer/mjpg-streamer-experimental/input_raspicam.so --width 1080 --height 720 -fps 5 -rot 270"
+User=pi
+ 
+[Install]
+WantedBy=multi-user.target

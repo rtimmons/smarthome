@@ -1,5 +1,6 @@
 ---
 dependencies:
+  - { role: octoprint-server }
   - { role: home-assistant }
   - { role: sonos-http }
   - { role: express-server }

@@ -1,0 +1,303 @@
+---
+# mjpg-stream install based on https://github.com/TimJDFletcher/ansible-role-rpi-mjpg-streamer
+# ffmpeg install based on https://github.com/teachbase-ansible/ffmpeg
+
+- name: Install packages
+  become: true
+  apt:
+    state: present
+    name: "{{ packages }}"
+  vars:
+    packages:
+    # for mjpg-streamer
+    - gcc
+    - g++
+    - build-essential
+    - git
+    - cmake
+    - libjpeg8-dev
+    # for ffmpeg
+    - autoconf 
+    - automake 
+    - libass-dev 
+    - libgpac-dev
+    - libsdl1.2-dev 
+    - libtheora-dev 
+    - libtool 
+    - libva-dev 
+    - libvdpau-dev 
+    - libvorbis-dev 
+    - libx11-dev
+    - libxext-dev 
+    - libxfixes-dev 
+    - pkg-config 
+    - texi2html 
+    - zlib1g-dev
+    - libmp3lame-dev
+
+- name: Enable rpi camera module
+  become: true
+  lineinfile:
+    line: "{{ item }}"
+    insertafter: EOF
+    dest: /boot/config.txt
+  with_items:
+  - start_x=1
+  - gpu_mem=128
+  register: camera_enabled
+
+# Must be stopped prior to copying config
+# since hass writes its state to disk on shutdown.
+- name: stop octoprint-server service
+  become_user: root
+  become: true
+  service:
+    name: octoprint-server
+    state: stopped
+    enabled: yes
+
+- name: install global pip packages
+  become_user: root
+  become: true
+  async: 3600 # 1 hour
+  poll: 10
+  pip:
+    executable: pip3.8
+    name:
+    - "OctoPrint==1.4.2"
+    state: present
+
+- name: restart to load camera module
+  shell: shutdown -r now "Ansible triggered reboot for camera module"
+  async: 1
+  poll: 0
+  become: true
+  ignore_errors: true
+  when: camera_enabled.changed
+
+- name: waiting for host to come back
+  local_action: wait_for host="localhost" state=started port=22 delay=15 timeout=300
+  when: camera_enabled.changed
+
+- name: Template over systemd service file
+  template:
+    src: mjpg-streamer.j2
+    dest: /etc/systemd/system/mjpg-streamer.service
+    owner: root
+    group: root
+    mode: 0444
+  become: true
+
+- name: Create directory for mjpg streamer
+  become: true
+  file:
+    dest: "/home/pi/repo/mjpg-streamer"
+    state: directory
+    owner: "pi"
+    group: "pi"
+    mode: 0755
+
+- name: Create directories for timelapse dependencies
+  become: true
+  file:
+    dest: "{{ item }}"
+    state: directory
+    owner: "pi"
+    group: "pi"
+    mode: 0755
+  loop:
+    - /home/pi/repo/timelapse/
+    - /home/pi/repo/timelapse/yasm
+    - /home/pi/repo/timelapse/nasm
+    - /home/pi/repo/timelapse/fdk-aac
+    - /home/pi/repo/timelapse/x264
+    - /home/pi/repo/timelapse/libvpx
+    - /home/pi/repo/timelapse/libvpx
+    - /home/pi/repo/timelapse/speex
+    - /home/pi/repo/timelapse/opus
+    - /home/pi/repo/timelapse/ffmpeg
+
+- name: Pull latest git source for mjpg streamer
+  git:
+    repo: "https://github.com/jacksonliam/mjpg-streamer"
+    dest: "/home/pi/repo/mjpg-streamer"
+    version: "master"
+    force: yes
+  register: checkout
+
+- name: Pull latest git source for yasm
+  git:
+    repo: "https://github.com/yasm/yasm"
+    dest: "/home/pi/repo/timelapse/yasm"
+    version: "master"
+    force: yes
+  register: checkout
+
+- name: Download nasm archive
+  command: "wget https://www.nasm.us/pub/nasm/releasebuilds/2.13.02/nasm-2.13.02.tar.bz2 chdir=/home/pi/repo/timelapse/nasm"
+
+- name: Extract nasm
+  command: "tar xjvf /home/pi/repo/timelapse/nasm/nasm-2.13.02.tar.bz2 chdir=/home/pi/repo/timelapse/nasm"
+
+- name: clone latest fdk-aac
+  git: repo=git://github.com/mstorsjo/fdk-aac.git accept_hostkey=true dest=/home/pi/repo/timelapse/fdk-aac force=yes
+
+- name: clone latest x264
+  git: repo=https://code.videolan.org/videolan/x264.git accept_hostkey=true dest=/home/pi/repo/timelapse/x264 force=yes
+
+- name: clone latest libvpx
+  git: repo=https://chromium.googlesource.com/webm/libvpx.git accept_hostkey=true dest=/home/pi/repo/timelapse/libvpx force=yes
+
+- name: clone latest speex
+  git: repo=https://github.com/xiph/speex.git accept_hostkey=true dest=/home/pi/repo/timelapse/speex force=yes
+
+- name: clone latest opus
+  git: repo=https://github.com/xiph/opus.git accept_hostkey=true dest=/home/pi/repo/timelapse/opus force=yes
+
+- name: clone latest ffmpeg
+  git: repo=git://source.ffmpeg.org/ffmpeg.git accept_hostkey=true dest=/home/pi/repo/timelapse/ffmpeg force=yes
+
+#TODO: adopt args similar to https://github.com/OctoPrint/OctoPrint/pull/1716/files#diff-f379861edcfaa93fe3cc6138c15b4d77R49 to prevent symlinks
+- name: copy octoprint-server systemd unit file
+  become_user: root
+  become: true
+  copy:
+    src: octoprint-server.service
+    dest: /etc/systemd/system/octoprint-server.service
+    owner: root
+    group: root
+    mode: 0664
+
+- name: copy OctoPrintConfig
+  synchronize:
+      group: no
+      checksum: yes
+      copy_links: yes
+      links: yes
+      partial: yes
+      perms: no
+      recursive: yes
+      times: no
+      # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
+      delete: no
+      src: "{{ playbook_dir }}/../OctoPrintConfig/"
+      dest: /home/pi/repo/OctoPrintConfig
+      rsync_opts:
+      - "--exclude=venv"
+      - "--exclude=deps"
+
+- name: Create symbolic link to config.yaml
+  file:
+    src: "/home/pi/repo/OctoPrintConfig/config.yaml"
+    dest: "/home/pi/.octoprint/config.yaml"
+    force: yes
+    state: link
+
+- name: Build mjpg-streamer
+  command: make
+  args:
+    chdir: "/home/pi/repo/mjpg-streamer/mjpg-streamer-experimental"
+  when: checkout.changed
+
+# ffmpeg_source_dir: "/usr/local/src"
+# ffmpeg_build: "/usr/local/ffmpeg_build"
+# ffmpeg_bin_dir: "/usr/local/bin"
+# ffmpeg_env: 
+#   PKG_CONFIG_PATH: "{{ ffmpeg_build }}/lib/pkgconfig"
+# ffmpeg_flags: "--pkg-config-flags=\"--static\" --extra-cflags=\"-I{{ ffmpeg_build }}/include\" --extra-ldflags=\"-L{{ ffmpeg_build }}/lib\" --bindir=\"{{ ffmpeg_bin_dir}}\" --extra-libs=-ldl --enable-gpl --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libspeex --enable-nonfree"
+
+# nasm_version: nasm-2.13.02
+# nasm_filename: "{{ nasm_version }}.tar.bz2"
+# nasm_url: "https://www.nasm.us/pub/nasm/releasebuilds/2.13.02/{{ nasm_filename }}"
+# nasm_dir: "{{ ffm:peg_source_dir }}/nasm/{{ nasm_version }}"
+
+- name: Build yasm 
+  shell: 'cd /home/pi/repo/timelapse/yasm; {{ item }} creates=/home/pi/repo/timelapse/bin/yasm'
+  with_items:
+    - ./autogen.sh
+    - ./configure --prefix=/home/pi/repo/timelapse/build --bindir=/home/pi/repo/timelapse/bin
+    - make
+    - make install
+    - make distclean
+
+- name: Compile nasm
+  shell: 'cd /home/pi/repo/timelapse/nasm/nasm-2.13.02; {{ item }} creates=/home/pi/repo/timelapse/bin/nasm'
+  with_items:
+    - ./autogen.sh
+    - ./configure --prefix=/home/pi/repo/timelapse/build --bindir=/home/pi/repo/timelapse/bin
+    - make
+    - make install
+    - make distclean
+
+- name: compile fdk-aac
+  shell: 'cd /home/pi/repo/timelapse/fdk-aac; {{ item }} creates=/home/pi/repo/timelapse/build/lib/libfdk-aac.a'
+  with_items:
+    - autoreconf -fiv
+    - ./configure --prefix=/home/pi/repo/timelapse/build --disable-shared
+    - make
+    - make install
+    - make distclean
+
+- name: compile x264
+  environment: ffmpeg_env
+  shell: 'cd /home/pi/repo/timelapse/x264; {{ item }} creates=/home/pi/repo/timelapse/bin/x264'
+  with_items:
+    - ./configure --prefix=/home/pi/repo/timelapse/build --bindir=/home/pi/repo/timelapse/bin --enable-static
+    - make
+    - make install
+    - make distclean
+
+- name: compile libvpx
+  environment: ffmpeg_env
+  shell: 'cd /home/pi/repo/timelapse/libvpx; {{ item }} creates=/home/pi/repo/timelapse/build/lib/libvpx.a'
+  with_items:
+    - ./configure --prefix=/home/pi/repo/timelapse/build --disable-shared
+    - make
+    - make install
+    - make clean
+
+- name: compile libspeex
+  shell: 'cd /home/pi/repo/timelapse/speex; {{ item }} creates=/home/pi/repo/timelapse/build/lib/libspeex.a'
+  with_items:
+    - libtoolize --force
+    - aclocal
+    - autoheader
+    - automake --force-missing --add-missing
+    - autoconf -i
+    - ./configure --prefix=/home/pi/repo/timelapse/build --disable-shared
+    - make
+    - make install
+    - make distclean
+
+- name: compile libopus
+  shell: 'cd /home/pi/repo/timelapse/opus; {{ item }} creates=/home/pi/repo/timelapse/build/lib/libopus.a'
+  with_items:
+    - ./autogen.sh
+    - ./configure --prefix=/home/pi/repo/timelapse/build --disable-shared
+    - make
+    - make install
+    - make distclean
+
+- name: compile ffmpeg
+  environment: ffmpeg_env
+  shell: 'cd /home/pi/repo/timelapse/ffmpeg; {{ item }} creates=/home/pi/repo/timelapse/bin/ffmpeg'
+  with_items:
+    - ./configure --prefix=/home/pi/repo/timelapse/build "--pkg-config-flags=\"--static\" --extra-cflags=\"-I/home/pi/repo/timelapse/build/include\" --extra-ldflags=\"-L/home/pi/repo/timelapse/build/lib\" --bindir=\"/home/pi/repo/timelapse/bin\" --extra-libs=-ldl --enable-gpl --enable-libass --enable-libfdk-aac --enable-libmp3lame --enable-libopus --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libspeex --enable-nonfree"
+    - make
+    - make install
+    - make distclean
+
+- name: Start mjpg-streamer and set service to autostart
+  service:
+    state: started
+    name: mjpg-streamer
+    enabled: true
+  become: true
+
+- name: start octoprint-server service
+  become_user: root
+  become: true
+  service:
+    name: octoprint-server
+    state: started
+    enabled: yes

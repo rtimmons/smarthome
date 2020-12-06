@@ -1,0 +1,14 @@
+[Unit]
+Description=Octoprint Server
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+ExecStart=/bin/bash -c "/usr/local/bin/octoprint serve"
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

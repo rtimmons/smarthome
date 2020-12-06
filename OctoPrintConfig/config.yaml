@@ -1,0 +1,156 @@
+accessControl:
+    salt: secret
+api:
+    enabled: False
+    key: secret
+plugins:
+    announcements:
+        _config_version: 1
+        channels:
+            _blog:
+                read_until: 1599738300
+            _important:
+                read_until: 1521111600
+            _octopi:
+                read_until: 1573722900
+            _plugins:
+                read_until: 1600664400
+            _releases:
+                read_until: 1596714600
+    discovery:
+        upnpUuid: 0c455fa2-7093-4c49-9ec2-429890e7a34f
+    errortracking:
+        unique_id: 0e05a0f1-ab32-47d3-8817-a0cf72b320af
+    gcodeviewer:
+        _config_version: 1
+    softwareupdate:
+        _config_version: 8
+    tracking:
+        enabled: false
+        unique_id: 8a814fa6-a02f-41ad-938c-9d1e670c4aa8
+    virtual_printer:
+        _config_version: 1
+printerProfiles:
+    default: _default
+server:
+    firstRun: false
+    onlineCheck:
+        enabled: true
+    pluginBlacklist:
+        enabled: true
+    secretKey: secret
+    seenWizards:
+        backup: null
+        corewizard: 3
+temperature:
+    profiles:
+    -   bed: 90
+        chamber: null
+        extruder: 230
+        name: PETG
+    -   bed: 60
+        chamber: null
+        extruder: 215
+        name: PLA
+folder:
+  # Absolute path where to store gcode uploads. Defaults to the uploads folder in the OctoPrint settings folder
+  uploads: /home/pi/repo/OctoPrintConfig/uploads
+
+  # Absolute path where to store finished timelapse recordings. Defaults to the timelapse folder in the OctoPrint
+  # settings dir
+  timelapse: /home/pi/repo/OctoPrintConfig/timelapse
+
+  # Absolute path where to store temporary timelapse files. Defaults to the timelapse/tmp folder in the OctoPrint
+  # settings dir
+  timelapse_tmp: /home/pi/repo/OctoPrintConfig/timelapse_tmp
+
+  # Absolute path where to store log files. Defaults to the logs folder in the OctoPrint settings dir
+  logs: /home/pi/repo/OctoPrintConfig/logs
+
+  # Absolute path to the virtual printer's simulated SD card. Only useful for development, just ignore
+  # it otherwise
+  virtualSd: /home/pi/repo/OctoPrintConfig/virtualSd
+
+  # Absolute path to a folder being watched for new files which then get automatically
+  # added to OctoPrint (and deleted from that folder). Can e.g. be used to define a folder which
+  # can then be mounted from remote machines and used as local folder for quickly adding downloaded
+  # and/or sliced objects to print in the future.
+  watched: /home/pi/repo/OctoPrintConfig/watched
+
+  # Absolute path to a folder where manually installed plugins may reside
+  plugins: /home/pi/repo/OctoPrintConfig/plugins
+
+  # Absolute path where to store slicing profiles
+  slicingProfiles: /home/pi/repo/OctoPrintConfig/slicingProfiles
+
+  # Absolute path where to store printer profiles
+  printerProfiles: /home/pi/repo/OctoPrintConfig/printerProfiles
+
+  # Absolute path where to store (GCODE) scripts
+  scripts: /home/pi/repo/OctoPrintConfig/scripts
+
+webcam:
+  # Use this option to enable display of a webcam stream in the UI, e.g. via MJPG-Streamer.
+  # Webcam support will be disabled if not set
+  stream: http://smarterhome.local:8080/?action=stream
+
+  # Use this option to enable timelapse support via snapshot, e.g. via MJPG-Streamer.
+  # Timelapse support will be disabled if not set
+  snapshot: http://smarterhome.local:8080/?action=snapshot
+
+  # Path to ffmpeg binary to use for creating timelapse recordings.
+  # Timelapse support will be disabled if not set
+  #ffmpeg: /home/pi/repo/timelapse/bin/ffmpeg
+
+  # Number of how many threads to instruct ffmpeg to use for encoding. Defaults to 1.
+  # Should be left at 1 for RPi1.
+  ffmpegThreads: 1
+
+  # Videocodec to be used for encoding. Defaults to mpeg2video.
+  ffmpegVideoCodec: mpeg2video
+
+  # The bitrate to use for rendering the timelapse video. This gets directly passed to ffmpeg.
+  bitrate: 5000k
+
+  # Whether to include a "created with OctoPrint" watermark in the generated timelapse movies
+  watermark: false
+
+  # Whether to flip the webcam horizontally
+  flipH: false
+
+  # Whether to flip the webcam vertically
+  flipV: false
+
+  # Whether to rotate the webcam 90° counter clockwise
+  rotate90: false
+
+  # The default timelapse settings.
+  timelapse:
+
+    # The timelapse type. Can be either "off", "zchange" or "timed". Defaults to "off"
+    type: timed
+
+    # The framerate at which to render the movie
+    fps: 25
+
+    # The number of seconds in the rendered video to add after a finished print. The exact way how the
+    # additional images will be recorded depends on timelapse type. Timed timelapses continue to
+    # record just like at the beginning, so the recording will continue another
+    # fps * postRoll * interval seconds. Zchange timelapses will take one final picture and add it fps * postRoll
+    postRoll: 0
+
+    # Additional options depending on the timelapse type. All timelapses take a postRoll and an fps setting.
+    options:
+
+      # Timed timelapses only: The interval which to leave between images in seconds
+      interval: 2
+
+      # Timed timelapses only: Whether to capture the snapshots for the post roll (true) or just copy
+      # the last captured snapshot from the print over and over again (false)
+      capturePostRoll: true
+
+      # ZChange timelapses only: Z-hop height during retractions to ignore for capturing snapshots
+      retractionZHop: 0.0
+
+  # After how many days unrendered timelapses will be deleted
+  cleanTmpAfterDays: 7
