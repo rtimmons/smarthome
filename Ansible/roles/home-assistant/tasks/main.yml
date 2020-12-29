@@ -11,6 +11,7 @@
   git:
     repo: 'https://github.com/OpenZWave/open-zwave.git'
     dest: /home/pi/open-zwave
+    update: yes
 
 # Must be stopped prior to copying config
 # since hass writes its state to disk on shutdown.
@@ -31,7 +32,8 @@
     executable: pip3.9
     name:
     - sqlalchemy
-    - "homeassistant==0.118.5"
+    # Find version at https://pypi.org/project/homeassistant/
+    - "homeassistant==2020.12.1"
     state: present
   environment:
     MAKEFLAGS: '-j4'
