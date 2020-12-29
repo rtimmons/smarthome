@@ -1,5 +1,13 @@
 ---
 
+- name: stop node-sonos-http-api
+  become_user: root
+  become: true
+  service:
+    name: node-sonos-http-api
+    state: stopped
+    enabled: yes
+
 - name: clone node-sonos-http-api repo
   git:
       repo: https://github.com/rtimmons/node-sonos-http-api.git

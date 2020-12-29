@@ -1,5 +1,13 @@
 ---
 
+- name: stop express-server
+  become_user: root
+  become: true
+  service:
+    name: express-server
+    state: stopped
+    enabled: yes
+
 - name: Install express-server node.js package
   retries: 5
   delay: 5
