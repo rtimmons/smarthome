@@ -82,6 +82,10 @@ Smarthome Dashboard
 
 - flic buttons (they run on Bluetooth LTE) are setup in their own Flic iOS app
 
+- known bug / issue with openzwave starting to bork
+  https://github.com/home-assistant/core/issues/5501
+  "Hass crashes Aeotec Gen 5 zwave stick #5501"
+
 ## System Ideas / Dumping Ground
 
 - Look into methods to offload from SD Card to prevent burning it out over time
