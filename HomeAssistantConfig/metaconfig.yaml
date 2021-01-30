@@ -95,11 +95,15 @@ entities:
 
   - name: living_outlet_deck_cafe_lights
     type: outlet
-    node_id: 23
+    node_id: 24
 
   - name: living_outlet_deck_bugtrap
     type: outlet
-    node_id: 23
+    node_id: 24
+
+  - name: living_light_entry_closet
+    type: dimmer switch ws100
+    node_id: 28
 
   - name: entry_light_nook
     type: hue light
@@ -306,6 +310,7 @@ scenes:
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
       living_light_floor: hue_off
+      living_light_entry_closet: outlet_off
       global_switch_hall: dimmer_off
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
@@ -382,6 +387,7 @@ scenes:
       living_light_floor: hue_off
       living_light_maria: hue_off
       living_switch_deck: dimmer_off
+      living_light_entry_closet: outlet_off
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
@@ -394,7 +400,6 @@ scenes:
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
       entry_light_nook: hue_off
-
 
   - name: scene_all_high
     entities:
@@ -457,6 +462,7 @@ state_templates:
     value_index: 0
     value_instance: 1
 
+    
   hue_high:
     min_mireds: 153
     max_mireds: 500
@@ -520,6 +526,13 @@ additional_automations:
     webhook_id: flic_closet_hold
   action:
   - scene: scene.scene_closet_medium
+- id: flic_bedroom_single
+  alias: flic_bedroom_single
+  trigger:
+  - platform: webhook
+    webhook_id: flic_bedroom_single
+  action:
+  - scene: scene.scene_all_off
 
 - id: night_blinds_down
   alias: night_blinds_down
