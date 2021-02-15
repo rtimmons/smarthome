@@ -1384,7 +1384,7 @@
                 "id": "e13b45778ae542b19e9ec67eef7cbe25",
                 "via_device_id": "477f72cedd894942a600f4be203acf6a",
                 "area_id": null,
-                "name_by_user": null,
+                "name_by_user": "kitchen_light_cabinets_lower",
                 "disabled_by": null
             },
             {
@@ -1477,7 +1477,7 @@
                 "id": "c1d99ec46f7bdf276bdcabbb1337a685",
                 "via_device_id": "5425764d29dd8c1714f84c13520c2eaf",
                 "area_id": null,
-                "name_by_user": null,
+                "name_by_user": "kitchen_light_cabinets_upper",
                 "disabled_by": null
             },
             {
@@ -1590,7 +1590,7 @@
                 "id": "573d39550fa344c3a909a884a06e1db2",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
-                "name_by_user": null,
+                "name_by_user": "living_switch_deck",
                 "disabled_by": null
             },
             {
@@ -1612,7 +1612,7 @@
                 "id": "7c529920b0165ac448232ebac27c03b1",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
-                "name_by_user": null,
+                "name_by_user": "living_switch_entry_closet",
                 "disabled_by": null
             }
         ],

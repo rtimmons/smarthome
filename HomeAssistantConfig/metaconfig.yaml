@@ -101,8 +101,8 @@ entities:
     type: outlet
     node_id: 24
 
-  - name: living_light_entry_closet
-    type: dimmer switch ws100
+  - name: living_switch_entry_closet
+    type: outlet
     node_id: 28
 
   - name: entry_light_nook
@@ -231,6 +231,7 @@ scenes:
       global_switch_hall: dimmer_off
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
+      living_switch_entry_closet: outlet_off
       living_light_maria: hue_off
 
   #Outside
@@ -310,7 +311,7 @@ scenes:
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
       living_light_floor: hue_off
-      living_light_entry_closet: outlet_off
+      living_switch_entry_closet: outlet_off
       global_switch_hall: dimmer_off
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
@@ -387,7 +388,7 @@ scenes:
       living_light_floor: hue_off
       living_light_maria: hue_off
       living_switch_deck: dimmer_off
-      living_light_entry_closet: outlet_off
+      living_switch_entry_closet: outlet_off
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
@@ -490,7 +491,6 @@ state_templates:
     effect: none
     supported_features: 63
     state: 'off'
-
   outlet_on:
     state: 'on'
     value_id: '72057594109837312'

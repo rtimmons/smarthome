@@ -5992,7 +5992,7 @@
                 "name": "living_switch_entry_closet",
                 "icon": null,
                 "disabled_by": null,
-                "capabilities": null,
+                "capabilities": {},
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
@@ -6009,11 +6009,28 @@
                 "name": "living_switch_entry_closet",
                 "icon": null,
                 "disabled_by": null,
-                "capabilities": null,
+                "capabilities": {},
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
                 "original_name": "HomeSeer Technologies HS-WS200+ Wall Switch Switch",
+                "original_icon": null
+            },
+            {
+                "entity_id": "automation.flic_bedroom_single",
+                "config_entry_id": null,
+                "device_id": null,
+                "area_id": null,
+                "unique_id": "flic_bedroom_single",
+                "platform": "automation",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": {},
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "flic_bedroom_single",
                 "original_icon": null
             }
         ]
