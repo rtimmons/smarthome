@@ -6,6 +6,7 @@ if [[ ! -d "venv" || ! -e "venv/setup2" ]]; then
     # shellcheck source=/dev/null
     set +u
         VIRTUAL_ENV_DISABLE_PROMPT=true source ./venv/bin/activate
+            python3 -m pip install --upgrade pip
             python3 -m pip install ansible
             python3 -m pip install yamllint
             touch venv/setup2
