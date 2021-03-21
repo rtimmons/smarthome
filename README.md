@@ -88,6 +88,9 @@ Smarthome Dashboard
 
 ## System Ideas / Dumping Ground
 
+- Maybe M5Stack e-ink tablets
+  https://m5stack-store.myshopify.com/collections/black-friday/products/m5paper-esp32-development-kit-960x540-4-7-eink-display-235-ppi
+
 - Look into methods to offload from SD Card to prevent burning it out over time
   https://news.ycombinator.com/item?id=24474309
 
