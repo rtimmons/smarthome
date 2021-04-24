@@ -220,7 +220,7 @@ scenes:
   - name: scene_living_medium
     entities:
       living_light_floor: hue_medium
-      global_switch_hall: dimmer_medium
+      global_switch_hall: dimmer_off
       entry_light_nook: hue_medium
       living_light_maria: hue_medium
       living_outlet_slider: outlet_on
