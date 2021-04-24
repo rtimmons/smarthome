@@ -88,6 +88,8 @@ Smarthome Dashboard
 
 ## System Ideas / Dumping Ground
 
+- Deploy/run with [piku](https://github.com/piku/piku)?
+
 - Maybe M5Stack e-ink tablets
   https://m5stack-store.myshopify.com/collections/black-friday/products/m5paper-esp32-development-kit-960x540-4-7-eink-display-235-ppi
 
