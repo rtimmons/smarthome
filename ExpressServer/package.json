@@ -30,7 +30,7 @@
     "sleep": "^6.1.0",
     "ts-node": "8.4.1",
     "typescript": "3.6.3",
-    "underscore": "1.9.1"
+    "underscore": "1.12.1"
   },
   "devDependencies": {
     "@types/chai": "4.2.3",
