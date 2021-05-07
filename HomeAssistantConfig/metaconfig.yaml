@@ -546,7 +546,7 @@ additional_automations:
   - service: rest_command.bedroom_blackout_down
   - service: rest_command.living_roller_down
   - service: rest_command.office_roller_down
-  - service: rest_command.office_blackout_down
+  # - service: rest_command.office_blackout_down
 
 - id: morning_blinds_up
   alias: morning_blinds_up
@@ -557,7 +557,7 @@ additional_automations:
   action:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
-  - service: rest_command.office_blackout_up
+  # - service: rest_command.office_blackout_up
 
 
 # https://www.home-assistant.io/cookbook/turn_on_light_for_10_minutes_when_motion_detected/
