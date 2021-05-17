@@ -31,9 +31,10 @@
   pip:
     executable: pip3.9
     name:
-    - sqlalchemy
+    - wheel
+    - sqlalchemy==1.4.13
     # Find version at https://pypi.org/project/homeassistant/
-    - "homeassistant==2020.12.1"
+    - "homeassistant==2021.5.4"
     state: present
   environment:
     MAKEFLAGS: '-j4'

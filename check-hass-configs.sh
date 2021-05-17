@@ -6,7 +6,7 @@ cd "$(dirname "$0")" || exit 1
 
 # Create venv for MetaHassConfig
 pushd MetaHassConfig >/dev/null 2>&1 || exit 1
-    if [[ ! -d "venv" || ! -e "venv/setup3" ]]; then
+    if [[ ! -d "venv" || ! -e "venv/setup4" ]]; then
         rm -rf "venv"
         python3 -mvenv venv
         # shellcheck source=/dev/null
@@ -14,8 +14,8 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
             python3 -m pip install --upgrade pip
             python3 ./setup.py develop >/dev/null
             python3 -m pip install -r ./requirements.txt
-            python3 -m pip install homeassistant  -q -q
-            touch venv/setup3
+            python3 -m pip install 'homeassistant==2021.5.4'  -q -q
+            touch venv/setup4
         deactivate
     fi
 popd >/dev/null 2>&1 || exit 1
