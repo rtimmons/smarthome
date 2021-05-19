@@ -32,14 +32,7 @@
     executable: pip3.9
     name:
     - wheel
-    # This is gross. home-assistant will on-demand install dependency packages depending on
-    # which integrations you enable (or it decides to install on its own for some reason).
-    # Some of these dependencies are VERY expensive to install as they involve compiling entire
-    # large C++ codebases. This basically brings the whole rpi down as it maxes the CPU for an
-    # extended period of time. If we do it at deploy time while hass is down we can prevent it
-    # from trying to install at runtime.
     - sqlalchemy==1.4.13
-    - google-nest-sdm==0.2.12
     # Find version at https://pypi.org/project/homeassistant/
     - "homeassistant==2021.5.4"
     state: present
