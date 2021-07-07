@@ -11,6 +11,8 @@ Smarthome Dashboard
 
 ## TODO
 
+- Debounce track next button(s): pressing it once can sometimes skip 2 tracks.
+
 - Fix sonos discovery bug (bug in dependency):
 
     ```
