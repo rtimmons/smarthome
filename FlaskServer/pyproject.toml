@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-cryptography = "^2.9.2"
+cryptography = "^3.3.2"
 pyyaml = "^5.3.1"
 pyeight = "^0.1.4"
 asyncio = "^3.4.3"
