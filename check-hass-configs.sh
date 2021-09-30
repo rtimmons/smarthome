@@ -14,7 +14,7 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
             python3 -m pip install --upgrade pip
             python3 ./setup.py develop >/dev/null
             python3 -m pip install -r ./requirements.txt
-            python3 -m pip install homeassistant  -q -q
+            python3 -m pip install 'homeassistant==2021.9.7'  -q -q
             touch venv/setup3
         deactivate
     fi

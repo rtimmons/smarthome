@@ -4,7 +4,15 @@
   become_user: root
   become: true
   apt:
-    pkg: [libffi-dev, libssl-dev, python3-nacl, libopenzwave1.5-dev, libudev-dev, ffmpeg]
+    pkg:
+    - libffi-dev
+    - libssl-dev
+    - python3-nacl
+    - libopenzwave1.5-dev
+    - libudev-dev
+    - ffmpeg
+    - libjpeg-dev
+    - zlib1g-dev
     state: present
 
 - name: install master open-zwave configs
@@ -22,6 +30,7 @@
     name: home-assistant
     state: stopped
     enabled: yes
+  ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?
 
 - name: install global pip packages
   become_user: root
@@ -29,10 +38,12 @@
   async: 3600 # 1 hour
   poll: 10
   pip:
-    executable: pip3.9
+    executable: pip3.8
     name:
     - sqlalchemy
     # Find version at https://pypi.org/project/homeassistant/
+    # TODO: try with 2021.9.7 (latest as of 2021-09-30)
+    - "pillow==7.2.0"
     - "homeassistant==2020.12.1"
     state: present
   environment:

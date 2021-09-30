@@ -20,7 +20,7 @@ First:
 Download Raspbian Jessie (lite - no desktop) from [here](https://www.raspberrypi.org/downloads/raspbian/).
 This redirects here for the impatient:
 https://downloads.raspberrypi.org/raspbian_lite_latest
-**NOTE 2020-12-06**: This doc was created when latest was "Jessie". Now it's "Buster." Not sure if anything breaks.
+**NOTE 2021-09-30**: This doc was created when latest was "Buster".
 (I've not tried other distros but I assume they'll work - we really only need systemd and `apt-get` I think.)
 
 Burn to SD card using [etcher](https://etcher.io/).
@@ -62,8 +62,15 @@ Then:
 ```sh
 ./Ansible/setup-networking.sh
 
-# Restart. Takes about 45 seconds.
-ssh pi@smarterhome.local 'sudo /sbin/reboot -h now'
+# Do a manual update of apt packages first to make the update process faster/easier.
+ssh pi@raspberrypi.local
+
+$> sudo apt update --allow-releaseinfo-change
+$> sudo apt upgrade -y
+# Takes about 6.5 minutes :(
+
+$> sudo /sbin/reboot -h now
+# Takes about 75 seconds
 
 ./Ansible/deploy.sh
 ```
@@ -76,3 +83,9 @@ If things go funky, you can start over pretty easily.
 2. Remove any lines from  your `~/.ssh/known_hosts` file that have `raspberrypi.local` or your chosen hostname in them.
 3. GOTO top of this file and start over, you ninny.
 
+## I2C Setup
+
+```sh
+sudo raspi-config
+# => Interface Options => Enable I2C
+```

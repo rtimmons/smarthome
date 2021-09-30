@@ -10,4 +10,4 @@ source ./ansible-env.sh
 ansible-playbook \
     -vv \
     -i post_init.ini \
-    "$PWD"/deploy.yml \
+    "$PWD"/deploy.yml
