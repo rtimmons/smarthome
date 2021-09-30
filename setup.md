@@ -83,3 +83,9 @@ If things go funky, you can start over pretty easily.
 2. Remove any lines from  your `~/.ssh/known_hosts` file that have `raspberrypi.local` or your chosen hostname in them.
 3. GOTO top of this file and start over, you ninny.
 
+## I2C Setup
+
+```sh
+sudo raspi-config
+# => Interface Options => Enable I2C
+```

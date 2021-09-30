@@ -16,6 +16,8 @@
   apt:
     pkg:
     - libi2c-dev
+    - python-smbus
+    - i2c-tools
     state: present
 
 - name: Install express-server node.js package
