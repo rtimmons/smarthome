@@ -1,0 +1,32 @@
+---
+
+- name: Add Tailscale gpg key
+  become_user: root
+  become: true
+  apt_key:
+    url: https://pkgs.tailscale.com/stable/debian/buster.gpg
+    state: present
+
+- name: Add Tailscale deb source
+  become_user: root
+  become: true
+  apt_repository:
+    # https://pkgs.tailscale.com/stable/debian/buster.list
+    repo: deb https://pkgs.tailscale.com/stable/debian buster main
+    state: present
+    filename: tailscale-buster
+
+- name: Install Tailscale
+  become_user: root
+  become: true
+  apt:
+    name: tailscale
+    state: present
+
+- name: Enable Tailscale systemd service
+  become_user: root
+  become: true
+  service:
+    name: tailscaled
+    state: started
+    enabled: yes
