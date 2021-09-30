@@ -19,15 +19,17 @@
     - xz-utils
     - tk-dev
     - libxml2-dev
-    - libxmlsec1-dev
     - libffi-dev
+    - libxmlsec1-dev
+    - libffi6
     - liblzma-dev
     # Need python-pip in order to use the `pip` ansible module (in the home-assistant role)
-    # even though we use `pip3.9`. Unsure if this wants to live in the home-assistant role
+    # even though we use `pip3.8`. Unsure if this wants to live in the home-assistant role
     # or here in the python role (since really we always want pip to be available because
     # welcome to the future that is 2005).
     - python-pip
     state: present
+    update_cache: yes  # Run apt-get update first.
 
 - name: upload install file
   copy:
@@ -40,5 +42,5 @@
   become: true
   command: /tmp/install-pyenv.sh
   args:
-    creates: /usr/local/bin/python3.9
+    creates: /usr/local/bin/python3.8
 

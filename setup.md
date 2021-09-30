@@ -64,9 +64,11 @@ Then:
 
 # Do a manual update of apt packages first to make the update process faster/easier.
 ssh pi@raspberrypi.local
-$> apt-get update --allow-releaseinfo-change
-$> sudo apt-get upgrade
+
+$> sudo apt update --allow-releaseinfo-change
+$> sudo apt upgrade -y
 # Takes about 6.5 minutes :(
+
 $> sudo /sbin/reboot -h now
 # Takes about 75 seconds
 

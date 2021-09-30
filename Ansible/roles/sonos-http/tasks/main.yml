@@ -7,6 +7,7 @@
     name: node-sonos-http-api
     state: stopped
     enabled: yes
+  ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?  
 
 - name: clone node-sonos-http-api repo
   git:

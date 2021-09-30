@@ -7,6 +7,16 @@
     name: express-server
     state: stopped
     enabled: yes
+  ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?  
+
+
+- name: Install required packages
+  become_user: root
+  become: true
+  apt:
+    pkg:
+    - libi2c-dev
+    state: present
 
 - name: Install express-server node.js package
   retries: 5

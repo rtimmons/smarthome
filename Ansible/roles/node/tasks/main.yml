@@ -4,6 +4,6 @@
   become_user: root
   become: yes
   apt:
-    name: [curl, build-essential, nodejs]
+    name: [curl, build-essential, nodejs, npm]
     state: present
 
