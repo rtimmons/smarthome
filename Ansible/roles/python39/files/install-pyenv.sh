@@ -17,4 +17,4 @@ make -j4
 make install
 
 hash -r
-pip3.9 install --upgrade pip
+pip3.9 install --upgrade pip setuptools wheel

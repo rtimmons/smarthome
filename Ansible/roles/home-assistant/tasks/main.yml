@@ -22,6 +22,7 @@
     name: home-assistant
     state: stopped
     enabled: yes
+  ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?
 
 - name: install global pip packages
   become_user: root

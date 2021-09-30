@@ -8,6 +8,6 @@ cd "$(dirname "$0")" || exit 1
 source ./ansible-env.sh
 
 ansible-playbook \
-    -vv \
+    -vvv \
     -i post_init.ini \
     "$PWD"/deploy.yml \
