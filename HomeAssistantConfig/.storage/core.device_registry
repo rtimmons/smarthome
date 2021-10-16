@@ -1570,6 +1570,50 @@
                 "area_id": null,
                 "name_by_user": "living_switch_entry_closet",
                 "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:09:01:18:01-0b"
+                    ]
+                ],
+                "manufacturer": "Signify Netherlands B.V.",
+                "model": "Hue filament bulb",
+                "name": "living_light_corner",
+                "sw_version": "1.90.1",
+                "entry_type": null,
+                "id": "d890c27f7d2ca2694b63e12775a25d20",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:03:17:02:e1-0b"
+                    ]
+                ],
+                "manufacturer": "Signify Netherlands B.V.",
+                "model": "Hue white lamp",
+                "name": "bedroom_light_mikedesk",
+                "sw_version": "1.23.0_r20156",
+                "entry_type": null,
+                "id": "148580f4ad2a31f43dace70b05f8ed84",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
             }
         ],
         "deleted_devices": []

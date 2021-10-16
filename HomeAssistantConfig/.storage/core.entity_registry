@@ -6002,7 +6002,7 @@
             {
                 "entity_id": "light.living_light_corner",
                 "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
-                "device_id": "d9a113a1fa76871e4b327d852401e832",
+                "device_id": "d890c27f7d2ca2694b63e12775a25d20",
                 "area_id": null,
                 "unique_id": "00:17:88:01:09:01:18:01-0b",
                 "platform": "hue",
@@ -6014,6 +6014,23 @@
                 "device_class": null,
                 "unit_of_measurement": null,
                 "original_name": "living_light_corner",
+                "original_icon": null
+            },
+            {
+                "entity_id": "light.bedroom_light_mikedesk",
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_id": "148580f4ad2a31f43dace70b05f8ed84",
+                "area_id": null,
+                "unique_id": "00:17:88:01:03:17:02:e1-0b",
+                "platform": "hue",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": {},
+                "supported_features": 41,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "bedroom_light_mikedesk",
                 "original_icon": null
             }
         ]
