@@ -694,23 +694,6 @@
                 "original_icon": null
             },
             {
-                "entity_id": "light.bedroom_light_desk",
-                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
-                "device_id": "51ea28d7e239446c9ef7d8543ba66ea3",
-                "area_id": null,
-                "unique_id": "00:17:88:01:03:3a:31:7f-0b",
-                "platform": "hue",
-                "name": null,
-                "icon": null,
-                "disabled_by": null,
-                "capabilities": {},
-                "supported_features": 41,
-                "device_class": null,
-                "unit_of_measurement": null,
-                "original_name": "bedroom_light_desk",
-                "original_icon": null
-            },
-            {
                 "entity_id": "light.bathroom_light_sauna",
                 "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
                 "device_id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
