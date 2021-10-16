@@ -80,7 +80,7 @@ entities:
   - name: living_light_floor
     type: hue light color
 
-  - name: living_light_maria
+  - name: living_light_corner
     type: hue light
 
   - name: living_outlet_slider  # Globe light.
@@ -215,14 +215,14 @@ scenes:
       global_switch_hall: dimmer_high
       living_outlet_slider: outlet_off
       entry_light_nook: hue_high
-      living_light_maria: hue_high
+      living_light_corner: hue_high
 
   - name: scene_living_medium
     entities:
       living_light_floor: hue_medium
       global_switch_hall: dimmer_off
       entry_light_nook: hue_medium
-      living_light_maria: hue_medium
+      living_light_corner: hue_medium
       living_outlet_slider: outlet_on
 
   - name: scene_living_off
@@ -232,7 +232,7 @@ scenes:
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_switch_entry_closet: outlet_off
-      living_light_maria: hue_off
+      living_light_corner: hue_off
 
   #Outside
   - name: scene_living_outside_high
@@ -286,7 +286,7 @@ scenes:
       global_switch_hall: dimmer_high
       living_outlet_slider: outlet_off
       entry_light_nook: hue_high
-      living_light_maria: hue_high
+      living_light_corner: hue_high
 
   - name: scene_kitchen_living_medium
     entities:
@@ -300,7 +300,7 @@ scenes:
       global_switch_hall: dimmer_medium
       living_outlet_slider: outlet_off
       entry_light_nook: hue_medium
-      living_light_maria: hue_medium
+      living_light_corner: hue_medium
 
   - name: scene_kitchen_living_off
     entities:
@@ -315,7 +315,7 @@ scenes:
       global_switch_hall: dimmer_off
       living_outlet_slider: outlet_off
       entry_light_nook: hue_off
-      living_light_maria: hue_off
+      living_light_corner: hue_off
       living_switch_deck: dimmer_off
 
   # Bedroom
@@ -386,7 +386,7 @@ scenes:
       kitchen_light_cabinets_upper: dimmer_off
       kitchen_light_cabinets_lower: dimmer_off
       living_light_floor: hue_off
-      living_light_maria: hue_off
+      living_light_corner: hue_off
       living_switch_deck: dimmer_off
       living_switch_entry_closet: outlet_off
       global_switch_hall: dimmer_off
@@ -413,7 +413,7 @@ scenes:
       kitchen_switch_dining: dimmer_high_led
       entry_switch_kitchen: dimmer_high_led
       entry_light_nook: hue_high
-      living_light_maria: hue_high
+      living_light_corner: hue_high
 
 event_names:
   'dimmer switch ws100':
