@@ -177,6 +177,10 @@ scenes:
       bathroom_light_vanityright: hue_off
       bathroom_light_vanitysconces: dimmer_off
 
+  - name: scene_bathroom_low
+    entities:
+      bathroom_light_vanitysconces: dimmer_medium
+
   # Closet
   - name: scene_closet_high
     entities:
@@ -466,6 +470,13 @@ state_templates:
     value_id: '72057594093076481'
     value_index: 0
     value_instance: 1
+  dimmer_low:
+    brightness: 20
+    state: 'on'
+    supported_features: 1
+    value_id: '72057594093076481'
+    value_index: 0
+    value_instance: 1
   dimmer_off:
     brightness: 49
     state: 'off'
@@ -489,6 +500,15 @@ state_templates:
     max_mireds: 500
     effect_list: colorloop,random
     brightness: 100
+    color_temp: 454
+    effect: none
+    supported_features: 63
+    state: 'on'
+  hue_low:
+    min_mireds: 153
+    max_mireds: 500
+    effect_list: colorloop,random
+    brightness: 50
     color_temp: 454
     effect: none
     supported_features: 63
@@ -544,6 +564,28 @@ additional_automations:
     webhook_id: flic_bedroom_single
   action:
   - scene: scene.scene_all_off
+
+
+- id: flic_bedroom_hold
+  alias: flic_bedroom_hold
+  trigger:
+  - platform: webhook
+    webhook_id: flic_bedroom_hold
+  action:
+  - scene: scene.scene_bathroom_low
+  - service: timer.start
+    data:
+      entity_id: timer.bathroom_low
+- id: bathroom_low_offtimer
+  alias: Turn off bathroom light after timer
+  trigger:
+    platform: event
+    event_type: timer.finished
+    event_data:
+      entity_id: timer.bathroom_low
+  action:
+  - scene: scene.bathroom_off
+
 
 - id: night_blinds_down
   alias: night_blinds_down
