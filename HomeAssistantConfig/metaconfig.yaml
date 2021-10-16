@@ -17,7 +17,7 @@ entities:
     node_id: 22
 
   # Bedroom
-  - name: bedroom_light_desk
+  - name: bedroom_light_mikedesk
     type: hue light
 
   - name: bedroom_light_dresser
@@ -197,7 +197,7 @@ scenes:
       bathroom_light_sauna: hue_medium
       bathroom_light_shower: hue_medium
       bedroom_switch_closet: dimmer_medium
-      bedroom_light_desk: hue_off
+      bedroom_light_mikedesk: hue_off
   - name: scene_bathroom_closet_off
     entities:
       bathroom_light_vanityright: hue_off
@@ -206,7 +206,7 @@ scenes:
       bathroom_light_sauna: hue_off
       bathroom_light_shower: hue_off
       bedroom_switch_closet: dimmer_off
-      bedroom_light_desk: hue_off
+      bedroom_light_mikedesk: hue_off
 
   # Living
   - name: scene_living_high
@@ -324,7 +324,7 @@ scenes:
       bedroom_outlet_flamingo: outlet_on
       bedroom_light_dresser: hue_high
       bedroom_switch_closet: dimmer_high
-      bedroom_light_desk: hue_high
+      bedroom_light_mikedesk: hue_high
       bedroom_switch_bedside: dimmer_high
 
   - name: scene_bedroom_medium
@@ -332,7 +332,7 @@ scenes:
       bedroom_outlet_flamingo: outlet_on
       bedroom_light_dresser: dimmer_medium
       bedroom_switch_closet: dimmer_medium
-      bedroom_light_desk: hue_medium
+      bedroom_light_mikedesk: hue_medium
       bedroom_switch_bedside: dimmer_medium
 
   - name: scene_bedroom_off
@@ -340,7 +340,7 @@ scenes:
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
-      bedroom_light_desk: hue_off
+      bedroom_light_mikedesk: hue_off
 
   # Office
   - name: scene_office_high
@@ -380,7 +380,7 @@ scenes:
       bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
-      bedroom_light_desk: hue_off
+      bedroom_light_mikedesk: hue_off
       kitchen_light_upper: hue_off
       kitchen_light_lower: hue_off
       kitchen_light_cabinets_upper: dimmer_off
