@@ -795,7 +795,7 @@
                 "original_icon": null
             },
             {
-                "entity_id": "light.living_light_maria",
+                "entity_id": "light.living_light_corner",
                 "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
                 "device_id": "5d895a4a837e4a0aa4650f5fb01c1d0b",
                 "area_id": null,
@@ -808,7 +808,7 @@
                 "supported_features": 41,
                 "device_class": null,
                 "unit_of_measurement": null,
-                "original_name": "living_light_maria",
+                "original_name": "living_light_corner",
                 "original_icon": null
             },
             {
@@ -6031,6 +6031,23 @@
                 "device_class": null,
                 "unit_of_measurement": null,
                 "original_name": "flic_bedroom_single",
+                "original_icon": null
+            },
+            {
+                "entity_id": "light.living_light_corner_2",
+                "config_entry_id": "27edf7f8014d430991599c034c6dadcd",
+                "device_id": "a34f7a1e17f81f5ffe1702aba0757326",
+                "area_id": null,
+                "unique_id": "00:17:88:01:09:01:18:01-0b",
+                "platform": "hue",
+                "name": "QWCKTMJB837NE3J461W1",
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": {},
+                "supported_features": 41,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "living_light_corner",
                 "original_icon": null
             }
         ]
