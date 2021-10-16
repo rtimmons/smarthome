@@ -776,28 +776,6 @@
             },
             {
                 "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:03:3d:bc:50-0b"
-                    ]
-                ],
-                "manufacturer": "Signify Netherlands B.V.",
-                "model": "Hue white lamp",
-                "name": "living_light_corner",
-                "sw_version": "1.50.2_r30933",
-                "entry_type": null,
-                "id": "5d895a4a837e4a0aa4650f5fb01c1d0b",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
-                "area_id": null,
-                "name_by_user": null,
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
                     "c0a82fc7f46e4b449ad8dd16d4426956"
                 ],
                 "connections": [],
@@ -1613,28 +1591,6 @@
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
                 "name_by_user": "living_switch_entry_closet",
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:09:01:18:01-0b"
-                    ]
-                ],
-                "manufacturer": "Signify Netherlands B.V.",
-                "model": "Hue filament bulb",
-                "name": "living_light_corner",
-                "sw_version": "1.90.1",
-                "entry_type": null,
-                "id": "a34f7a1e17f81f5ffe1702aba0757326",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
-                "area_id": null,
-                "name_by_user": "QWCKTMJB837NE3J461W1",
                 "disabled_by": null
             }
         ],
