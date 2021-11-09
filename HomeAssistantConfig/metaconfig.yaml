@@ -604,9 +604,11 @@ additional_automations:
 - id: morning_blinds_up
   alias: morning_blinds_up
   trigger:
-  - platform: sun
-    event: sunrise
-    offset: '+00:00:00'  # At sunrise.
+  - platform: time
+    at: "06:00:00"
+  # - platform: sun
+  #   event: sunrise
+  #   offset: '+00:00:00'  # At sunrise.
   action:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
