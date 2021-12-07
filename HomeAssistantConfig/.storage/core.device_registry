@@ -1614,6 +1614,120 @@
                 "area_id": null,
                 "name_by_user": null,
                 "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        30,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (2)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "79a0889b7d4ab022678d64d6335a7c98",
+                "via_device_id": "8fc48864a508a2593cd5fab6e1e1a466",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        30
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "8fc48864a508a2593cd5fab6e1e1a466",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        30,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (3)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "80f4a95d1d3152f71fedd782309cbc3d",
+                "via_device_id": "8fc48864a508a2593cd5fab6e1e1a466",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        30,
+                        4
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (4)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "05464d91176d3d4871bcc0d84be2fb4a",
+                "via_device_id": "8fc48864a508a2593cd5fab6e1e1a466",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        30,
+                        5
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (5)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "887dc48d8f2fab49c18f8c10c11a5325",
+                "via_device_id": "8fc48864a508a2593cd5fab6e1e1a466",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
             }
         ],
         "deleted_devices": []
