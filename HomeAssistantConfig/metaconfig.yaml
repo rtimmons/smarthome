@@ -87,6 +87,10 @@ entities:
     type: outlet
     node_id: 2
 
+  - name: living_light_curtain
+    type: dimmer switch 46203
+    node_id: 30
+
   - name: living_switch_deck
     type: dimmer switch 46203
     node_id: 20
@@ -220,6 +224,7 @@ scenes:
       living_outlet_slider: outlet_off
       entry_light_nook: hue_high
       living_light_corner: hue_high
+      living_light_curtain: dimmer_high
 
   - name: scene_living_medium
     entities:
@@ -228,6 +233,7 @@ scenes:
       entry_light_nook: hue_medium
       living_light_corner: hue_medium
       living_outlet_slider: outlet_on
+      living_light_curtain: dimmer_medium
 
   - name: scene_living_off
     entities:
@@ -237,6 +243,7 @@ scenes:
       entry_light_nook: hue_off
       living_switch_entry_closet: outlet_off
       living_light_corner: hue_off
+      living_light_curtain: dimmer_off
 
   # Outside
   - name: scene_living_outside_high
@@ -404,6 +411,7 @@ scenes:
       living_light_corner: hue_off
       living_switch_deck: dimmer_off
       living_switch_entry_closet: outlet_off
+      living_light_curtain: dimmer_off
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
@@ -429,6 +437,7 @@ scenes:
       entry_switch_kitchen: dimmer_high_led
       entry_light_nook: hue_high
       living_light_corner: hue_high
+      living_light_curtain: dimmer_high
 
 event_names:
   'dimmer switch ws100':
