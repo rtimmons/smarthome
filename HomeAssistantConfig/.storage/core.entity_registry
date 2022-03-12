@@ -6644,6 +6644,40 @@
                 "unit_of_measurement": null,
                 "original_name": "Zooz ZEN31 RGBW Dimmer Level",
                 "original_icon": null
+            },
+            {
+                "entity_id": "zwave.living_light_stringlight",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "78bdf1bc60fbc80590888fc489b68061",
+                "area_id": null,
+                "unique_id": "node-31",
+                "platform": "zwave",
+                "name": "living_light_stringlight",
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "GE (Jasco Products) 14288 Duplex Receptacle",
+                "original_icon": null
+            },
+            {
+                "entity_id": "switch.living_light_stringlight",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "78bdf1bc60fbc80590888fc489b68061",
+                "area_id": null,
+                "unique_id": "31-72057594562822144",
+                "platform": "zwave",
+                "name": "living_light_stringlight",
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "GE (Jasco Products) 14288 Duplex Receptacle Switch",
+                "original_icon": null
             }
         ]
     }
