@@ -289,8 +289,8 @@ scenes:
         kitchen_light_lower: hue_medium
         kitchen_light_cabinets_upper: dimmer_medium
         kitchen_light_cabinets_lower: dimmer_medium
-        kitchen_switch_dining: dimmer_medium
-        entry_switch_kitchen: dimmer_medium
+        kitchen_switch_dining: dimmer_off
+        entry_switch_kitchen: dimmer_off
 
   - name: scene_kitchen_off
     entities:
@@ -323,14 +323,15 @@ scenes:
       kitchen_light_lower: hue_medium
       kitchen_light_cabinets_upper: dimmer_medium
       kitchen_light_cabinets_lower: dimmer_medium
-      kitchen_switch_dining: dimmer_medium
-      entry_switch_kitchen: dimmer_medium
+      kitchen_switch_dining: dimmer_off
+      entry_switch_kitchen: dimmer_off
       living_light_floor: hue_medium
       global_switch_hall: dimmer_medium
       living_outlet_slider: outlet_off
       entry_light_nook: hue_medium
       living_light_corner: hue_medium
-      living_light_stringlight: outlet_on
+      living_light_curtain: dimmer_off
+      living_light_stringlight: outlet_off
 
   - name: scene_kitchen_living_off
     entities:
@@ -470,7 +471,7 @@ event_names:
 
 state_templates:
   dimmer_high_led: # led bulbs seem just a lot brighter
-    brightness: 125
+    brightness: 175
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -491,7 +492,7 @@ state_templates:
     value_index: 0
     value_instance: 1
   dimmer_low:
-    brightness: 25
+    brightness: 50
     state: 'on'
     supported_features: 1
     value_id: '72057594093076481'
@@ -518,7 +519,7 @@ state_templates:
     min_mireds: 153
     max_mireds: 500
     effect_list: colorloop,random
-    brightness: 100
+    brightness: 90
     color_temp: 454
     effect: none
     supported_features: 63
