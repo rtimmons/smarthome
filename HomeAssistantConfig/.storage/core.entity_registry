@@ -6655,7 +6655,7 @@
                 "name": "living_light_stringlight",
                 "icon": null,
                 "disabled_by": null,
-                "capabilities": null,
+                "capabilities": {},
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
@@ -6672,11 +6672,28 @@
                 "name": "living_light_stringlight",
                 "icon": null,
                 "disabled_by": null,
-                "capabilities": null,
+                "capabilities": {},
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
                 "original_name": "GE (Jasco Products) 14288 Duplex Receptacle Switch",
+                "original_icon": null
+            },
+            {
+                "entity_id": "sensor.fibaro_system_fgms001_zw5_motion_sensor_water_acidity",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "a126597b8bd7aeea548dca875b292a62",
+                "area_id": null,
+                "unique_id": "26-72057594479133746",
+                "platform": "zwave",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": "pH",
+                "original_name": "FIBARO System FGMS001-ZW5 Motion Sensor Water Acidity",
                 "original_icon": null
             }
         ]
