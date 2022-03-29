@@ -113,6 +113,12 @@ entities:
     type: outlet
     node_id: 31
 
+  # This is 100% not a dimmer switch, but the template works
+  # to turn it off and on so ¯\_(ツ)_/¯
+  - name: living_light_stringlightright
+    type: dimmer switch 46203
+    node_id: 32
+
   - name: entry_light_nook
     type: hue light
 
@@ -230,6 +236,7 @@ scenes:
       living_light_corner: hue_high
       living_light_curtain: dimmer_high
       living_light_stringlight: outlet_on
+      living_light_stringlightright: dimmer_high
 
   - name: scene_living_medium
     entities:
@@ -250,6 +257,7 @@ scenes:
       living_light_corner: hue_off
       living_light_curtain: dimmer_off
       living_light_stringlight: outlet_off
+      living_light_stringlightright: dimmer_off
 
   # Outside
   - name: scene_living_outside_high

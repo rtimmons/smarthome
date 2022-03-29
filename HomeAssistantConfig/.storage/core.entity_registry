@@ -6695,6 +6695,40 @@
                 "unit_of_measurement": "pH",
                 "original_name": "FIBARO System FGMS001-ZW5 Motion Sensor Water Acidity",
                 "original_icon": null
+            },
+            {
+                "entity_id": "zwave.nei_technology_unknown_type_ff07_id_ff03",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "a4b6092b02845fbaf3d6ca651077d55b",
+                "area_id": null,
+                "unique_id": "node-32",
+                "platform": "zwave",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "NEI Technology Unknown: type=ff07, id=ff03",
+                "original_icon": null
+            },
+            {
+                "entity_id": "light.nei_technology_unknown_type_ff07_id_ff03_level",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "a4b6092b02845fbaf3d6ca651077d55b",
+                "area_id": null,
+                "unique_id": "32-72057594579615745",
+                "platform": "zwave",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": {},
+                "supported_features": 1,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "NEI Technology Unknown: type=ff07, id=ff03 Level",
+                "original_icon": null
             }
         ]
     }
