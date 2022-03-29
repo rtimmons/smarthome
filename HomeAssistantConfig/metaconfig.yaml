@@ -324,6 +324,7 @@ scenes:
       entry_light_nook: hue_high
       living_light_corner: hue_high
       living_light_stringlight: outlet_on
+      living_light_stringlightright: dimmer_high
 
   - name: scene_kitchen_living_medium
     entities:
@@ -340,6 +341,7 @@ scenes:
       living_light_corner: hue_medium
       living_light_curtain: dimmer_off
       living_light_stringlight: outlet_off
+      living_light_stringlightright: dimmer_off
 
   - name: scene_kitchen_living_off
     entities:
@@ -357,6 +359,7 @@ scenes:
       living_light_corner: hue_off
       living_switch_deck: dimmer_off
       living_light_stringlight: outlet_off
+      living_light_stringlightright: dimmer_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -443,6 +446,7 @@ scenes:
       office_switch_closet: dimmer_off
       entry_light_nook: hue_off
       living_light_stringlight: outlet_off
+      living_light_stringlightright: dimmer_off
 
   - name: scene_all_high
     entities:
@@ -458,6 +462,7 @@ scenes:
       living_light_corner: hue_high
       living_light_curtain: dimmer_high
       living_light_stringlight: outlet_on
+      living_light_stringlightright: dimmer_high
 
 event_names:
   'dimmer switch ws100':
@@ -632,11 +637,11 @@ additional_automations:
 - id: morning_blinds_up
   alias: morning_blinds_up
   trigger:
-  - platform: time
-    at: "06:00:00"
-  # - platform: sun
-  #   event: sunrise
-  #   offset: '+00:00:00'  # At sunrise.
+  # - platform: time
+  #   at: "06:00:00"
+  - platform: sun
+    event: sunrise
+    offset: '+00:00:00'  # At sunrise.
   action:
   - service: rest_command.bedroom_roller_down
   - service: rest_command.bedroom_blackout_up
