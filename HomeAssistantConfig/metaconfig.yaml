@@ -119,6 +119,11 @@ entities:
     type: dimmer switch 46203
     node_id: 32
 
+
+  - name: living_light_desklight
+    type: dimmer switch 46203
+    node_id: 33
+
   - name: entry_light_nook
     type: hue light
 
@@ -235,8 +240,10 @@ scenes:
       entry_light_nook: hue_high
       living_light_corner: hue_high
       living_light_curtain: dimmer_high
+      # TODO: these should be the same?
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
+      living_light_desklight: dimmer_high
 
   - name: scene_living_medium
     entities:
@@ -258,6 +265,7 @@ scenes:
       living_light_curtain: dimmer_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
+      living_light_desklight: dimmer_off
 
   # Outside
   - name: scene_living_outside_high
@@ -325,6 +333,7 @@ scenes:
       living_light_corner: hue_high
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
+      living_light_desklight: dimmer_high
 
   - name: scene_kitchen_living_medium
     entities:
@@ -342,6 +351,7 @@ scenes:
       living_light_curtain: dimmer_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
+      living_light_desklight: dimmer_off
 
   - name: scene_kitchen_living_off
     entities:
@@ -360,6 +370,7 @@ scenes:
       living_switch_deck: dimmer_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
+      living_light_desklight: dimmer_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -447,6 +458,7 @@ scenes:
       entry_light_nook: hue_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
+      living_light_desklight: dimmer_off
 
   - name: scene_all_high
     entities:
@@ -463,6 +475,7 @@ scenes:
       living_light_curtain: dimmer_high
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
+      living_light_desklight: dimmer_high
 
 event_names:
   'dimmer switch ws100':
@@ -555,6 +568,7 @@ state_templates:
     effect: none
     supported_features: 63
     state: 'off'
+
   outlet_on:
     state: 'on'
     value_id: '72057594109837312'

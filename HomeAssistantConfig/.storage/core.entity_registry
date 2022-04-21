@@ -6729,6 +6729,40 @@
                 "unit_of_measurement": null,
                 "original_name": "NEI Technology Unknown: type=ff07, id=ff03",
                 "original_icon": null
+            },
+            {
+                "entity_id": "zwave.living_light_desklight",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "85a8a1b50ab629ca90abeb40e655e001",
+                "area_id": null,
+                "unique_id": "node-33",
+                "platform": "zwave",
+                "name": "living_light_desklight",
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "NEI Technology Unknown: type=ff07, id=ff03",
+                "original_icon": null
+            },
+            {
+                "entity_id": "light.living_light_desklight",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "85a8a1b50ab629ca90abeb40e655e001",
+                "area_id": null,
+                "unique_id": "33-72057594596392961",
+                "platform": "zwave",
+                "name": "living_light_desklight",
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": {},
+                "supported_features": 1,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "NEI Technology Unknown: type=ff07, id=ff03 Level",
+                "original_icon": null
             }
         ]
     }
