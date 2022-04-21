@@ -109,6 +109,8 @@ entities:
     type: outlet
     node_id: 28
 
+  # This is 100% not a dimmer switch, but the template works
+  # to turn it off and on so ¯\_(ツ)_/¯
   - name: living_light_stringlight
     type: outlet
     node_id: 31
@@ -119,7 +121,8 @@ entities:
     type: dimmer switch 46203
     node_id: 32
 
-
+  # This is 100% not a dimmer switch, but the template works
+  # to turn it off and on so ¯\_(ツ)_/¯
   - name: living_light_desklight
     type: dimmer switch 46203
     node_id: 33
@@ -146,6 +149,12 @@ entities:
   - name: office_light_abovedesk
     type: dimmer switch 46203
     node_id: 19
+
+  # This is 100% not a dimmer switch, but the template works
+  # to turn it off and on so ¯\_(ツ)_/¯
+  - name: office_light_armlight
+    type: dimmer switch 46203
+    node_id: 34
 
   - name: office_switch_main
     type: dimmer switch ws100
@@ -404,6 +413,7 @@ scenes:
       office_outlet_pianolight: outlet_on
       office_light_abovecouch: dimmer_high
       office_light_abovedesk: dimmer_high
+      office_light_armlight: dimmer_high
 
   - name: scene_office_medium
     entities:
@@ -413,6 +423,7 @@ scenes:
       office_light_abovecouch: dimmer_medium
       office_light_abovedesk: dimmer_medium
       office_switch_closet: dimmer_off
+      office_light_armlight: dimmer_high
 
   - name: scene_office_off
     entities:
@@ -422,6 +433,7 @@ scenes:
       office_light_abovecouch: dimmer_off
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
+      office_light_armlight: dimmer_off
 
   # All
   - name: scene_all_off
@@ -453,6 +465,7 @@ scenes:
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
       office_light_abovecouch: dimmer_off
+      office_light_armlight: dimmer_off
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
       entry_light_nook: hue_off
