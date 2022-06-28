@@ -55,6 +55,7 @@ const config = {
         Dim: '🌘',
         Sunset: '🌆',
         Check: '✅',
+        Chill: '🪬',
         X: '❌',
         '?': '❓',
         Tulip: '🌷',
@@ -75,7 +76,8 @@ const config = {
         DoubleDown: '⏬',
         DoubleRight: '⏩',
         SingleUp: '⬆',
-        SingleDown: '⬇'
+        SingleDown: '⬇',
+        Diplo: '👱🏻‍♂️',
     },
     rows: 8,
     cols: 11,
@@ -126,13 +128,13 @@ const config = {
 
     */
 
-        ...roomTiles({ xPos: roomX++, emojiName: 'Shower', roomName: 'Bathroom' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Kimono', roomName: 'Closet' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Bed', roomName: 'Bedroom' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Tent', roomName: 'Move' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Rice', roomName: 'Kitchen' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'TV', roomName: 'Living' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Guest', roomName: 'Guest Bathroom' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Shower',    roomName: 'Bathroom' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Kimono',    roomName: 'Closet' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Bed',       roomName: 'Bedroom' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Tent',      roomName: 'Move' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Rice',      roomName: 'Kitchen' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'TV',        roomName: 'Living' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Guest',     roomName: 'Guest Bathroom' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
 
         {
@@ -182,11 +184,11 @@ const config = {
             emoji: 'DoubleDown',
             onPress: {action: 'Blinds.Move', args: ['Blackout','Down']},
         },
-        { w:1, h:1,
-            y:2, x:6,
-            emoji: 'DoubleRight',
-            onPress: {action: 'Blinds.Move', args: ['Blackout','Mid']},
-        },
+        // { w:1, h:1,
+        //     y:2, x:6,
+        //     emoji: 'DoubleRight',
+        //     onPress: {action: 'Blinds.Move', args: ['Blackout','Mid']},
+        // },
 
         { w:1, h:1,
             y:2, x:7,
@@ -304,8 +306,8 @@ const config = {
             h: 1,
             y: 4,
             x: 5,
-            emoji: 'Tulip',
-            onPress: { action: 'Music.Favorite', args: ['Tulip Radio'] },
+            emoji: 'Diplo',
+            onPress: { action: 'Music.Favorite', args: ['52 - Diplo\'s Revolution'] },
         },
         {
             w: 1,
@@ -363,6 +365,14 @@ const config = {
             x: 9,
             emoji: 'Grande',
             onPress: { action: 'Music.Favorite', args: ['Ariana Grande Essentials'] },
+        },
+        {
+            w: 1,
+            h: 1,
+            y: 4,
+            x: 9,
+            emoji: 'Chill',
+            onPress: { action: 'Music.Favorite', args: ['53 - SiriusXM Chill'] },
         },
         {
             w: 1,
