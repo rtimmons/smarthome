@@ -146,6 +146,10 @@ entities:
     type: dimmer switch 46203
     node_id: 18
 
+  - name: office_light_abovecouch2
+    type: dimmer switch 46203
+    node_id: 18
+
   - name: office_light_abovedesk
     type: dimmer switch 46203
     node_id: 19
@@ -411,7 +415,7 @@ scenes:
       office_light_sidetable: hue_high
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_on
-      office_light_abovecouch: dimmer_high
+      office_light_abovecouch2: dimmer_high
       office_light_abovedesk: dimmer_high
       office_light_armlight: dimmer_high
 
@@ -420,7 +424,7 @@ scenes:
       office_light_sidetable: hue_medium
       office_outlet_pipelight: outlet_on
       office_outlet_pianolight: outlet_off
-      office_light_abovecouch: dimmer_medium
+      office_light_abovecouch2: dimmer_medium
       office_light_abovedesk: dimmer_medium
       office_switch_closet: dimmer_off
       office_light_armlight: dimmer_high
@@ -430,7 +434,7 @@ scenes:
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
-      office_light_abovecouch: dimmer_off
+      office_light_abovecouch2: dimmer_off
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
       office_light_armlight: dimmer_off
@@ -464,7 +468,7 @@ scenes:
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off
-      office_light_abovecouch: dimmer_off
+      office_light_abovecouch2: dimmer_off
       office_light_armlight: dimmer_off
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
