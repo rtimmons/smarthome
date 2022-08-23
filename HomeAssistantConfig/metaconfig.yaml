@@ -83,7 +83,7 @@ entities:
   - name: living_light_corner
     type: hue light
 
-  - name: living_outlet_slider  # Globe light.
+  - name: living_outlet_slider  # Was Globe light. Now a fan.
     type: outlet
     node_id: 2
 
@@ -96,6 +96,8 @@ entities:
     node_id: 20
     on_up_double: scene_living_outside_high
     on_down_double: scene_living_outside_off
+    on_triple_up: scene_all_high
+    on_triple_down: scene_living_medium
 
   - name: living_outlet_deck_cafe_lights
     type: outlet
@@ -249,7 +251,7 @@ scenes:
     entities:
       living_light_floor: hue_high
       global_switch_hall: dimmer_high
-      living_outlet_slider: outlet_off
+      # living_outlet_slider: outlet_off
       entry_light_nook: hue_high
       living_light_corner: hue_high
       living_light_curtain: dimmer_high
@@ -264,14 +266,14 @@ scenes:
       global_switch_hall: dimmer_off
       entry_light_nook: hue_medium
       living_light_corner: hue_medium
-      living_outlet_slider: outlet_on
+      # living_outlet_slider: outlet_on
       living_light_curtain: dimmer_medium
 
   - name: scene_living_off
     entities:
       living_light_floor: hue_off
       global_switch_hall: dimmer_off
-      living_outlet_slider: outlet_off
+      # living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_switch_entry_closet: outlet_off
       living_light_corner: hue_off
@@ -341,7 +343,7 @@ scenes:
       entry_switch_kitchen: dimmer_high_led
       living_light_floor: hue_high
       global_switch_hall: dimmer_high
-      living_outlet_slider: outlet_off
+      # living_outlet_slider: outlet_off
       entry_light_nook: hue_high
       living_light_corner: hue_high
       living_light_stringlight: outlet_on
@@ -358,7 +360,7 @@ scenes:
       entry_switch_kitchen: dimmer_off
       living_light_floor: hue_medium
       global_switch_hall: dimmer_medium
-      living_outlet_slider: outlet_off
+      # living_outlet_slider: outlet_off
       entry_light_nook: hue_medium
       living_light_corner: hue_medium
       living_light_curtain: dimmer_off
@@ -377,7 +379,7 @@ scenes:
       living_light_floor: hue_off
       living_switch_entry_closet: outlet_off
       global_switch_hall: dimmer_off
-      living_outlet_slider: outlet_off
+      # living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_light_corner: hue_off
       living_switch_deck: dimmer_off
@@ -396,7 +398,7 @@ scenes:
 
   - name: scene_bedroom_medium
     entities:
-      bedroom_outlet_flamingo: outlet_on
+      bedroom_outlet_flamingo: outlet_off
       bedroom_light_dresser: dimmer_medium
       bedroom_switch_closet: dimmer_medium
       bedroom_light_mikedesk: hue_medium
@@ -463,7 +465,7 @@ scenes:
       global_switch_hall: dimmer_off
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
-      living_outlet_slider: outlet_off
+      # living_outlet_slider: outlet_off
       living_outlet_deck_cafe_lights: outlet_off
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
@@ -651,32 +653,32 @@ additional_automations:
   - scene: scene.scene_bathroom_off
 
 
-- id: night_blinds_down
-  alias: night_blinds_down
-  trigger:
-  - platform: sun
-    event: sunset
-    offset: '+00:15:00'  # 15 minutes after sunset.
-  action:
-  # These rest actions must be defined in the configuration.yaml file.
-  - service: rest_command.bedroom_roller_down
-  - service: rest_command.bedroom_blackout_down
-  - service: rest_command.living_roller_down
-  - service: rest_command.office_roller_down
-  # - service: rest_command.office_blackout_down
-
-- id: morning_blinds_up
-  alias: morning_blinds_up
-  trigger:
-  # - platform: time
-  #   at: "06:00:00"
-  - platform: sun
-    event: sunrise
-    offset: '+00:00:00'  # At sunrise.
-  action:
-  - service: rest_command.bedroom_roller_down
-  - service: rest_command.bedroom_blackout_up
-  # - service: rest_command.office_blackout_up
+# - id: night_blinds_down
+#   alias: night_blinds_down
+#   trigger:
+#   - platform: sun
+#     event: sunset
+#     offset: '+00:15:00'  # 15 minutes after sunset.
+#   action:
+#   # These rest actions must be defined in the configuration.yaml file.
+#   - service: rest_command.bedroom_roller_down
+#   - service: rest_command.bedroom_blackout_down
+#   - service: rest_command.living_roller_down
+#   - service: rest_command.office_roller_down
+#   # - service: rest_command.office_blackout_down
+#
+# - id: morning_blinds_up
+#   alias: morning_blinds_up
+#   trigger:
+#   # - platform: time
+#   #   at: "06:00:00"
+#   - platform: sun
+#     event: sunrise
+#     offset: '+00:00:00'  # At sunrise.
+#   action:
+#   - service: rest_command.bedroom_roller_down
+#   - service: rest_command.bedroom_blackout_up
+#   # - service: rest_command.office_blackout_up
 
 
 # https://www.home-assistant.io/cookbook/turn_on_light_for_10_minutes_when_motion_detected/
