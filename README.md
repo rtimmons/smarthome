@@ -11,6 +11,8 @@ Smarthome Dashboard
 
 ## TODO
 
+- 2022-11-28: Maybe try out Phoenix personal radio station thing https://github.com/pncnmnp/phoenix10.1
+
 - Debounce track next button(s): pressing it once can sometimes skip 2 tracks.
 
 - Fix sonos discovery bug (bug in dependency):
