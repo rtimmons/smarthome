@@ -22,7 +22,7 @@ const roomTiles = function({ xPos, roomName, emojiName }) {
     ];
 };
 
-let roomX = 2;
+let roomX = 1;
 
 const config = {
     emojis: {
@@ -78,6 +78,7 @@ const config = {
         SingleUp: '⬆',
         SingleDown: '⬇',
         Diplo: '👱🏻‍♂️',
+        Robot: '🦾',
     },
     rows: 8,
     cols: 11,
@@ -92,6 +93,7 @@ const config = {
         'Guest Bathroom',
         'Closet',
         'Move',
+        'Maker Room',
     ],
     cells: [
         /*
@@ -136,6 +138,7 @@ const config = {
         ...roomTiles({ xPos: roomX++, emojiName: 'TV',        roomName: 'Living' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Guest',     roomName: 'Guest Bathroom' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Robot',     roomName: 'Maker Room' }),
 
         {
             w: 1,
@@ -305,7 +308,7 @@ const config = {
             w: 1,
             h: 1,
             y: 4,
-            x: 5,
+            x: 5+4-1,
             emoji: 'Diplo',
             onPress: { action: 'Music.Favorite', args: ['52 - Diplo\'s Revolution'] },
         },
@@ -313,7 +316,7 @@ const config = {
             w: 1,
             h: 1,
             y: 3,
-            x: 6,
+            x: 5+4-1,
             emoji: 'Monkey',
             onPress: { action: 'Music.Favorite', args: ['Sosononos'] },
         },
@@ -321,7 +324,7 @@ const config = {
             w: 1,
             h: 1,
             y: 3,
-            x: 7,
+            x: 7-1,
             emoji: 'Nerd',
             onPress: {
                 action: 'Music.Favorite',
@@ -332,7 +335,7 @@ const config = {
             w: 1,
             h: 1,
             y: 4,
-            x: 7,
+            x: 7-1,
             emoji: 'Sunglasses',
             onPress: { action: 'Music.Favorite', args: ['Office DJ'] },
         },
@@ -342,61 +345,61 @@ const config = {
         //   emoji: 'XMasTree',
         //   onPress: {action: 'Music.Favorite', args: ['Vince Guaraldi Trio (Holiday) Radio']},
         // },
-        {
-            w: 1,
-            h: 1,
-            y: 3,
-            x: 8,
-            emoji: 'Cher',
-            onPress: { action: 'Music.Favorite', args: ['Cher Essentials'] },
-        },
+        // {
+        //     w: 1,
+        //     h: 1,
+        //     y: 3,
+        //     x: 8,
+        //     emoji: 'Cher',
+        //     onPress: { action: 'Music.Favorite', args: ['Cher Essentials'] },
+        // },
         {
             w: 1,
             h: 1,
             y: 4,
-            x: 8,
+            x: 8-1,
             emoji: 'MilkyWay',
             onPress: { action: 'Music.Favorite', args: ['Zero 7 Radio'] },
         },
+        // {
+        //     w: 1,
+        //     h: 1,
+        //     y: 3,
+        //     x: 9,
+        //     emoji: 'Grande',
+        //     onPress: { action: 'Music.Favorite', args: ['Ariana Grande Essentials'] },
+        // },
         {
             w: 1,
             h: 1,
-            y: 3,
-            x: 9,
-            emoji: 'Grande',
-            onPress: { action: 'Music.Favorite', args: ['Ariana Grande Essentials'] },
-        },
-        {
-            w: 1,
-            h: 1,
-            y: 4,
-            x: 9,
+            y: 4-1,
+            x: 9-1-1,
             emoji: 'Chill',
             onPress: { action: 'Music.Favorite', args: ['53 - SiriusXM Chill'] },
         },
-        {
-            w: 1,
-            h: 1,
-            y: 4,
-            x: 6,
-            emoji: 'Dancers',
-            onPress: {
-                action: 'Music.Favorite',
-                args: ['Britney Spears Essentials'],
-            },
-        },
+        // {
+        //     w: 1,
+        //     h: 1,
+        //     y: 4,
+        //     x: 6,
+        //     emoji: 'Dancers',
+        //     onPress: {
+        //         action: 'Music.Favorite',
+        //         args: ['Britney Spears Essentials'],
+        //     },
+        // },
         // TODO: maybe just use built-in pandora support?
-        {
-            w: 1,
-            h: 1,
-            y: 3,
-            x: 5,
-            emoji: 'Taco',
-            onPress: {
-                action: 'Music.Favorite',
-                args: ['Despacito (Feat. Daddy Yankee) Radio'],
-            },
-        },
+        // {
+        //     w: 1,
+        //     h: 1,
+        //     y: 3,
+        //     x: 5,
+        //     emoji: 'Taco',
+        //     onPress: {
+        //         action: 'Music.Favorite',
+        //         args: ['Despacito (Feat. Daddy Yankee) Radio'],
+        //     },
+        // },
         {
             w: 1,
             h: 1,
