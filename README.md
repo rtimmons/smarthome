@@ -92,6 +92,9 @@ Smarthome Dashboard
 
 ## System Ideas / Dumping Ground
 
+- Look at what @opsnlops has:
+  https://github.com/opsnlops/ha-config
+
 - Deploy/run with [piku](https://github.com/piku/piku)?
 
 - Maybe M5Stack e-ink tablets
