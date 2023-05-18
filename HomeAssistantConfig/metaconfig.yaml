@@ -91,6 +91,14 @@ entities:
     type: dimmer switch 46203
     node_id: 30
 
+  - name: living_light_leftbuiltin
+    type: dimmer switch 46203
+    node_id: 36
+
+  - name: living_light_rightbuiltin
+    type: dimmer switch 46203
+    node_id: 37
+
   - name: living_switch_deck
     type: dimmer switch 46203
     node_id: 20
@@ -256,6 +264,8 @@ scenes:
       living_light_corner: hue_high
       living_light_curtain: dimmer_high
       # TODO: these should be the same?
+      living_light_leftbuiltin: dimmer_high
+      living_light_rightbuiltin: dimmer_high
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
       living_light_desklight: dimmer_high
@@ -268,6 +278,8 @@ scenes:
       living_light_corner: hue_medium
       # living_outlet_slider: outlet_on
       living_light_curtain: dimmer_medium
+      living_light_leftbuiltin: dimmer_off
+      living_light_rightbuiltin: dimmer_off
 
   - name: scene_living_off
     entities:
@@ -281,6 +293,8 @@ scenes:
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
       living_light_desklight: dimmer_off
+      living_light_leftbuiltin: dimmer_off
+      living_light_rightbuiltin: dimmer_off
 
   # Outside
   - name: scene_living_outside_high
@@ -349,6 +363,8 @@ scenes:
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
       living_light_desklight: dimmer_high
+      living_light_leftbuiltin: dimmer_high
+      living_light_rightbuiltin: dimmer_high
 
   - name: scene_kitchen_living_medium
     entities:
@@ -367,6 +383,8 @@ scenes:
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
       living_light_desklight: dimmer_off
+      living_light_leftbuiltin: dimmer_off
+      living_light_rightbuiltin: dimmer_off
 
   - name: scene_kitchen_living_off
     entities:
@@ -386,6 +404,8 @@ scenes:
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
       living_light_desklight: dimmer_off
+      living_light_leftbuiltin: dimmer_off
+      living_light_rightbuiltin: dimmer_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -478,6 +498,8 @@ scenes:
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
       living_light_desklight: dimmer_off
+      living_light_leftbuiltin: dimmer_off
+      living_light_rightbuiltin: dimmer_off
 
   - name: scene_all_high
     entities:
@@ -495,6 +517,8 @@ scenes:
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
       living_light_desklight: dimmer_high
+      living_light_leftbuiltin: dimmer_high
+      living_light_rightbuiltin: dimmer_high
 
 event_names:
   'dimmer switch ws100':
