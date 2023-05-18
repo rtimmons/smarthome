@@ -108,8 +108,8 @@ entities:
     on_triple_down: scene_living_medium
 
   - name: living_outlet_deck_cafe_lights
-    type: outlet
-    node_id: 24
+    type: dimmer switch 46203
+    node_id: 38
 
   - name: living_outlet_deck_bugtrap
     type: outlet
@@ -300,22 +300,22 @@ scenes:
   - name: scene_living_outside_high
     entities:
       living_switch_deck: dimmer_high
-      living_outlet_deck_cafe_lights: outlet_on
+      living_outlet_deck_cafe_lights: dimmer_high
 
   - name: scene_living_outside_off
     entities:
       living_switch_deck: dimmer_off
-      living_outlet_deck_cafe_lights: outlet_off
+      living_outlet_deck_cafe_lights: dimmer_off
 
   - name: scene_move_high
     entities:
       living_switch_deck: dimmer_high
-      living_outlet_deck_cafe_lights: outlet_on
+      living_outlet_deck_cafe_lights: dimmer_high
 
   - name: scene_move_off
     entities:
       living_switch_deck: dimmer_off
-      living_outlet_deck_cafe_lights: outlet_off
+      living_outlet_deck_cafe_lights: dimmer_off
 
     
   # Kitchen
@@ -486,7 +486,7 @@ scenes:
       kitchen_switch_dining: dimmer_off
       entry_switch_kitchen: dimmer_off
       # living_outlet_slider: outlet_off
-      living_outlet_deck_cafe_lights: outlet_off
+      living_outlet_deck_cafe_lights: dimmer_off
       office_light_sidetable: hue_off
       office_outlet_pipelight: outlet_off
       office_outlet_pianolight: outlet_off

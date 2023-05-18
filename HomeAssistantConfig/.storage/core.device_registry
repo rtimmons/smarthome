@@ -2185,6 +2185,28 @@
                 "area_id": null,
                 "name_by_user": null,
                 "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        38
+                    ]
+                ],
+                "manufacturer": "NEI Technology",
+                "model": "Unknown: type=ff07, id=ff03",
+                "name": "NEI Technology Unknown: type=ff07, id=ff03",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "849456f7a51e1b619c425c804db342f7",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
             }
         ],
         "deleted_devices": []
