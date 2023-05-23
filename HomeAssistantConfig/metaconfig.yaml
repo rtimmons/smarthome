@@ -24,8 +24,7 @@ entities:
     type: hue light color
 
   - name: bedroom_outlet_flamingo
-    type: outlet
-    node_id: 4
+    type: hue light
 
   - name: bedroom_switch_bedside
     type: dimmer switch 46203
@@ -172,7 +171,7 @@ entities:
 
   - name: office_switch_main
     type: dimmer switch ws100
-    node_id: 8
+    node_id: 39
     on_up_double: scene_office_high
     on_down_double: scene_office_off
 
@@ -264,8 +263,8 @@ scenes:
       living_light_corner: hue_high
       living_light_curtain: dimmer_high
       # TODO: these should be the same?
-      living_light_leftbuiltin: dimmer_high
-      living_light_rightbuiltin: dimmer_high
+      living_light_leftbuiltin: dimmer_medium
+      living_light_rightbuiltin: dimmer_medium
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
       living_light_desklight: dimmer_high
@@ -410,7 +409,7 @@ scenes:
   # Bedroom
   - name: scene_bedroom_high
     entities:
-      bedroom_outlet_flamingo: outlet_on
+      bedroom_outlet_flamingo: hue_high
       bedroom_light_dresser: hue_high
       bedroom_switch_closet: dimmer_high
       bedroom_light_mikedesk: hue_high
@@ -418,7 +417,7 @@ scenes:
 
   - name: scene_bedroom_medium
     entities:
-      bedroom_outlet_flamingo: outlet_off
+      bedroom_outlet_flamingo: hue_medium
       bedroom_light_dresser: dimmer_medium
       bedroom_switch_closet: dimmer_medium
       bedroom_light_mikedesk: hue_medium
@@ -426,7 +425,7 @@ scenes:
 
   - name: scene_bedroom_off
     entities:
-      bedroom_outlet_flamingo: outlet_off
+      bedroom_outlet_flamingo: hue_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
       bedroom_light_mikedesk: hue_off
@@ -469,7 +468,7 @@ scenes:
       bathroom_light_vanityleft: hue_off
       bathroom_light_vanityright: hue_off
       bathroom_light_vanitysconces: dimmer_off
-      bedroom_outlet_flamingo: outlet_off
+      bedroom_outlet_flamingo: hue_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
       bedroom_light_mikedesk: hue_off

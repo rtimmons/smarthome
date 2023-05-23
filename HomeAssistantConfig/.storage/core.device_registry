@@ -403,28 +403,6 @@
                 "identifiers": [
                     [
                         "zwave",
-                        8
-                    ]
-                ],
-                "manufacturer": "HomeSeer Technologies",
-                "model": "HS-WS100+ Wall Switch",
-                "name": "HomeSeer Technologies HS-WS100+ Wall Switch",
-                "sw_version": null,
-                "entry_type": null,
-                "id": "71401d8f2d1842a992d0e57244a00f76",
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
-                "area_id": null,
-                "name_by_user": "office_switch_main",
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
-                    "c0a82fc7f46e4b449ad8dd16d4426956"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "zwave",
                         9
                     ]
                 ],
@@ -2207,8 +2185,88 @@
                 "area_id": null,
                 "name_by_user": null,
                 "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "27edf7f8014d430991599c034c6dadcd"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "hue",
+                        "00:17:88:01:0b:83:4f:dd-0b"
+                    ]
+                ],
+                "manufacturer": "Signify Netherlands B.V.",
+                "model": "Hue filament bulb",
+                "name": "bedroom_light_flamingo",
+                "sw_version": "1.55.8_r28815",
+                "entry_type": null,
+                "id": "b6f1c32d7aea04c4abb91ce87b46dbee",
+                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        39
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "a0c43717e11d968e8f20c2ded32c031d",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        40
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "4535f630353eadae7d692c4c37786a62",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
             }
         ],
-        "deleted_devices": []
+        "deleted_devices": [
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        8
+                    ]
+                ],
+                "id": "71401d8f2d1842a992d0e57244a00f76"
+            }
+        ]
     }
 }
