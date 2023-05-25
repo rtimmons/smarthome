@@ -170,14 +170,14 @@ entities:
     node_id: 34
 
   - name: office_switch_main
-    type: dimmer switch ws100
-    node_id: 39
+    type: dimmer switch 46203
+    node_id: 40
     on_up_double: scene_office_high
     on_down_double: scene_office_off
 
   - name: office_switch_closet
-    type: outlet # doesn't seem to send double-taps so can't have on_ events
-    node_id: 14
+    type: dimmer switch 46203
+    node_id: 41
 
 #
 # The value of the entity keys (e.g. hue_high) corresponds to

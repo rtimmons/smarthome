@@ -738,28 +738,6 @@
                 "identifiers": [
                     [
                         "zwave",
-                        18
-                    ]
-                ],
-                "manufacturer": "Zooz",
-                "model": "ZEN31 RGBW Dimmer",
-                "name": "Zooz ZEN31 RGBW Dimmer",
-                "sw_version": null,
-                "entry_type": null,
-                "id": "5fd432eee97a41bc8e8878cd1db91362",
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
-                "area_id": null,
-                "name_by_user": "office_light_abovecouch",
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
-                    "c0a82fc7f46e4b449ad8dd16d4426956"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "zwave",
                         19
                     ]
                 ],
@@ -1563,7 +1541,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue filament bulb",
                 "name": "living_light_corner",
-                "sw_version": "1.101.2",
+                "sw_version": "1.104.2",
                 "entry_type": null,
                 "id": "d890c27f7d2ca2694b63e12775a25d20",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -2200,7 +2178,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue filament bulb",
                 "name": "bedroom_light_flamingo",
-                "sw_version": "1.55.8_r28815",
+                "sw_version": "1.101.2",
                 "entry_type": null,
                 "id": "b6f1c32d7aea04c4abb91ce87b46dbee",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -2247,6 +2225,72 @@
                 "sw_version": null,
                 "entry_type": null,
                 "id": "4535f630353eadae7d692c4c37786a62",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        41
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "b527aab62d3f2c365ecbe121ed3bf972",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        42
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "de5bdf3f9ace9db783470f12b7ad090d",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        18
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "5fd432eee97a41bc8e8878cd1db91362",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
                 "name_by_user": null,
