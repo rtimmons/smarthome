@@ -179,6 +179,10 @@ entities:
     type: dimmer switch 46203
     node_id: 41
 
+  - name: office_light_closet_underbench
+    type: dimmer switch 46203
+    node_id: 43
+
 #
 # The value of the entity keys (e.g. hue_high) corresponds to
 # an entry in the state_templates map below.
@@ -448,6 +452,7 @@ scenes:
       office_light_abovecouch2: dimmer_medium
       office_light_abovedesk: dimmer_medium
       office_switch_closet: dimmer_off
+      office_light_closet_underbench: dimmer_off
       office_light_armlight: dimmer_high
 
   - name: scene_office_off
@@ -458,6 +463,7 @@ scenes:
       office_light_abovecouch2: dimmer_off
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
+      office_light_closet_underbench: dimmer_off
       office_light_armlight: dimmer_off
 
   # All
@@ -493,6 +499,7 @@ scenes:
       office_light_armlight: dimmer_off
       office_light_abovedesk: dimmer_off
       office_switch_closet: dimmer_off
+      office_light_closet_underbench: dimmer_off
       entry_light_nook: hue_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
