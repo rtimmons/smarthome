@@ -4,8 +4,8 @@ After=network-online.target
 
 [Service]
 Type=simple
-User=udoobolt
-ExecStart=/bin/bash -c "MAKEFLAGS=-j4 /usr/local/bin/hass --config /home/udoobolt/repo/HomeAssistantConfig"
+User=homeassistant
+ExecStart=/bin/bash -c "MAKEFLAGS=-j4 /usr/local/bin/hass --config /srv/homeassistant/repo/HomeAssistantConfig"
 Restart=on-failure
 RestartSec=5s
 

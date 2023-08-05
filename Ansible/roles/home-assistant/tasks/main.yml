@@ -60,14 +60,35 @@
     group: root
     mode: 0664
 
+- name: create homeassistant
+  become_user: root
+  become: true
+  user:
+    name: homeassistant
+    comment: "Home Assistant"
+    system: yes
+    shell: "/sbin/nologin"
+
+- name: create directory
+  become_user: root
+  become: true
+  file:
+    path: /srv/homeassistant/repo//HomeAssistantConfig/
+    state: directory
+    mode: 02775
+    owner: homeassistant
+    group: homeassistant
+
 - name: Remove .storage dir
   become_user: root
   become: true
   file:
-    path: /home/udoobolt/repo/HomeAssistantConfig/.storage
+    path: /srv/homeassistant/repo/HomeAssistantConfig/.storage
     state: absent
 
 - name: copy HomeAssistantConfig
+  become_user: root
+  become: true
   synchronize:
       group: no
       checksum: yes
@@ -80,10 +101,20 @@
       # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
       delete: no
       src: "{{ playbook_dir }}/../HomeAssistantConfig/"
-      dest: /home/udoobolt/repo/HomeAssistantConfig/
+      dest: /srv/homeassistant/repo//HomeAssistantConfig/
       rsync_opts:
       - "--exclude=venv"
       - "--exclude=deps"
+
+- name: Recursively change ownership of a directory
+  become_user: root
+  become: true
+  ansible.builtin.file:
+    path: /srv/homeassistant
+    state: directory
+    recurse: yes
+    owner: homeassistant
+    group: homeassistant
 
 - name: start home-assistant service
   become_user: root
