@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-if [[ ! -d "venv" || ! -e "venv/setup2" ]]; then
+if [[ ! -d "venv" || ! -e "venv/setup3" ]]; then
     rm -rf "venv"
+    pyenv install -s
     python3 -mvenv venv
     # shellcheck source=/dev/null
     set +u
@@ -9,7 +10,7 @@ if [[ ! -d "venv" || ! -e "venv/setup2" ]]; then
             python3 -m pip install --upgrade pip
             python3 -m pip install ansible
             python3 -m pip install yamllint
-            touch venv/setup2
+            touch venv/setup3
         deactivate
     set -u
 fi

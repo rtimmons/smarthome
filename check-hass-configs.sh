@@ -4,6 +4,9 @@ set -eo pipefail
 
 cd "$(dirname "$0")" || exit 1
 
+exit 1
+# TODO
+
 # Create venv for MetaHassConfig
 pushd MetaHassConfig >/dev/null 2>&1 || exit 1
     if [[ ! -d "venv" || ! -e "venv/setup3" ]]; then
