@@ -6,7 +6,7 @@ Description=node-sonos-http-api
 
 [Service]
 Type=simple
-User=pi
+User=udoobolt
 WorkingDirectory=/home/udoobolt/node-sonos-http-api
 Environment=NODE_ENV=production
 LimitNOFILE=infinity

@@ -7,7 +7,7 @@ Description=express-server
 
 [Service]
 Type=simple
-User=pi
+User=udoobolt
 WorkingDirectory=/home/udoobolt/repo/ExpressServer
 Environment=NODE_ENV=production
 LimitNOFILE=infinity
