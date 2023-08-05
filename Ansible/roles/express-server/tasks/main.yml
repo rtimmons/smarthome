@@ -16,7 +16,7 @@
   apt:
     pkg:
     - libi2c-dev
-    - python-smbus
+    - python3-smbus
     - i2c-tools
     state: present
 

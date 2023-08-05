@@ -1,7 +1,13 @@
 import {Router} from 'express';
-import * as sleep from 'sleep';
 
 import {i2c} from './i2c';
+
+function msleep(n: number) {
+    Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, n);
+}
+function sleep(n: number) {
+    msleep(n * 1000);
+}
 
 interface Relay {
     address: number;
@@ -50,7 +56,7 @@ class Blind {
         const i2c1 = i2c.openSync(1);
         try {
             i2c1.writeByteSync(relay.address, 0x10, relay.bit);
-            sleep.sleep(wait);
+            sleep(wait);
             i2c1.writeByteSync(relay.address, 0x10, 0x0);
             this.state = state;
         } finally {

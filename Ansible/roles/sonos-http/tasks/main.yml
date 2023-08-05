@@ -28,7 +28,7 @@
   copy:
     src: presets
     dest: /home/udoobolt/node-sonos-http-api
-    owner: pi
+    owner: udoobolt
 
 - name: copy node-sonos-http-api systemd unit file
   become_user: root

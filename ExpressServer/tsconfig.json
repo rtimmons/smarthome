@@ -9,7 +9,8 @@
     "module": "CommonJS",
     "pretty": true,
     "rootDir": ".",
-    "target": "es2017"
+    "target": "es2017",
+    "useUnknownInCatchVariables": false
   },
   "include": [
     "src/**/*.ts"
