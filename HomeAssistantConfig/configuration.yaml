@@ -23,7 +23,7 @@ timer:
 
 zwave:
   usb_path: "/dev/serial/by-id/usb-0658_0200-if00"
-  config_path: "/home/pi/open-zwave/config"
+  config_path: "/home/udoobolt/open-zwave/config"
 
 api: {}
 

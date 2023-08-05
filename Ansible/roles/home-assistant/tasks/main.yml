@@ -5,21 +5,26 @@
   become: true
   apt:
     pkg:
+    - python3.11
+    - python3.11-dev
+    - python3.11-venv
+    - python3.11-pip
+    - bluez
     - libffi-dev
     - libssl-dev
-    - python3-nacl
-    - libopenzwave1.5-dev
-    - libudev-dev
-    - ffmpeg
     - libjpeg-dev
     - zlib1g-dev
+    - autoconf
+    - build-essential
+    - libopenjp2-7
+    - libtiff5
+    - libturbojpeg0-dev
+    - tzdata
+    - ffmpeg
+    - liblapack3
+    - liblapack-dev
+    - libatlas-base-dev
     state: present
-
-- name: install master open-zwave configs
-  git:
-    repo: 'https://github.com/OpenZWave/open-zwave.git'
-    dest: /home/pi/open-zwave
-    update: yes
 
 # Must be stopped prior to copying config
 # since hass writes its state to disk on shutdown.
@@ -38,13 +43,9 @@
   async: 3600 # 1 hour
   poll: 10
   pip:
-    executable: pip3.8
+    executable: pip3.11
     name:
-    - sqlalchemy
-    # Find version at https://pypi.org/project/homeassistant/
-    # TODO: try with 2021.9.7 (latest as of 2021-09-30)
-    - "pillow==7.2.0"
-    - "homeassistant==2020.12.1"
+    - "homeassistant==2023.8.1"
     state: present
   environment:
     MAKEFLAGS: '-j4'
@@ -63,7 +64,7 @@
   become_user: root
   become: true
   file:
-    path: /home/pi/repo/HomeAssistantConfig/.storage
+    path: /home/udoobolt/repo/HomeAssistantConfig/.storage
     state: absent
 
 - name: copy HomeAssistantConfig
@@ -79,7 +80,7 @@
       # ↓ must be no because don't want to delete hass's internal dbs/logs/deps
       delete: no
       src: "{{ playbook_dir }}/../HomeAssistantConfig/"
-      dest: /home/pi/repo/HomeAssistantConfig/
+      dest: /home/udoobolt/repo/HomeAssistantConfig/
       rsync_opts:
       - "--exclude=venv"
       - "--exclude=deps"

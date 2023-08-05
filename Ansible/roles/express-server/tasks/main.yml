@@ -25,7 +25,7 @@
   delay: 5
   shell: npm install
   args:
-    chdir: /home/pi/repo/ExpressServer
+    chdir: /home/udoobolt/repo/ExpressServer
 
 - name: copy express-server systemd unit file
   become_user: root

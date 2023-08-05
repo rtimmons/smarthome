@@ -12,7 +12,7 @@
       times: yes
       delete: yes
       src: "{{ playbook_dir }}/.."
-      dest: /home/pi/repo
+      dest: /home/udoobolt/repo
       rsync_opts:
         - "--exclude=node_modules"
         - "--exclude=venv"

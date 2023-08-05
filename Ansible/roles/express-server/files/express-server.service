@@ -8,7 +8,7 @@ Description=express-server
 [Service]
 Type=simple
 User=pi
-WorkingDirectory=/home/pi/repo/ExpressServer
+WorkingDirectory=/home/udoobolt/repo/ExpressServer
 Environment=NODE_ENV=production
 LimitNOFILE=infinity
 ExecStart=/usr/bin/npm run start
