@@ -54,7 +54,7 @@ class App {
     }
 
     // This is the one method called from main.js
-    run() {
+    async run() {
         this.grid.init($(this.window), this);
 
         this.pubsub.setGlobal('App', this);
@@ -142,7 +142,7 @@ class App {
     }
 
     // TODO: move to action listeners
-    onAction(action, params, evt) {
+    async onAction(action, params, evt) {
         // only process events that have happened in the last 500 milliseconds
         if (new Date().getTime() - evt.Submitted.getTime() > 500) {
             console.log('Event too old ' + evt.Submitted);
