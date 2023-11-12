@@ -447,6 +447,8 @@ scenes:
       office_light_abovecouch2: dimmer_high
       office_light_abovedesk: dimmer_high
       office_light_armlight: dimmer_high
+      office_light_closet_underbench: dimmer_high
+      office_switch_closet: dimmer_high
 
   - name: scene_office_medium
     entities:

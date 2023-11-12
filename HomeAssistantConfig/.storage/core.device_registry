@@ -2479,6 +2479,28 @@
                 "area_id": null,
                 "name_by_user": null,
                 "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        45
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "4fb0ca528187f036af714097c6571a67",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
             }
         ],
         "deleted_devices": [
