@@ -135,7 +135,7 @@
                 "access_token_expiration": 1800.0,
                 "token": "b624bec25f87d6633d00694171ee2aa9d8ef80813f9bce53641d856073e224a40711b3488b9aafda35d6c1a4b2ed249d36d1b7d4452888b36b043f68bb555533",
                 "jwt_key": "6258d20e405305258099f402cd67c1dae424c9c5b0c26aca1f164aaf2727ff51adcf0b7b7b4e9c211e367c00c00f404c5b74bac55c17dfb3af3eeacc6cad83d4",
-                "last_used_at": "2023-11-12T18:52:01.881592+00:00",
+                "last_used_at": "2023-11-12T21:05:47.839552+00:00",
                 "last_used_ip": "192.168.1.26"
             }
         ]

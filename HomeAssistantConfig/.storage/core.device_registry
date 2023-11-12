@@ -502,7 +502,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_vanityright",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "a4bcb084965844f8ba982a2caff7c711",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -546,7 +546,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_shower",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "b642e45cc9d3405396c8af9694f5b411",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -612,7 +612,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_sauna",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "ff1373f8ea2b4bcdbd9e5e9c2d9a06b0",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -634,7 +634,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bedroom_light_dresser",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "3d031c4674e84be4a2a46c7c519a9be7",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -678,7 +678,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance lamp",
                 "name": "bathroom_light_vanityleft",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "de6c440d15964d98bc2134ebef194892",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -700,7 +700,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue ambiance candle",
                 "name": "entry_light_nook",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "f20e8ce336ef4e4cb7e28a2b0e1ddeaa",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -1541,7 +1541,7 @@
                 "manufacturer": "Signify Netherlands B.V.",
                 "model": "Hue white lamp",
                 "name": "bedroom_light_mikedesk",
-                "sw_version": "1.108.5",
+                "sw_version": "1.108.7",
                 "entry_type": null,
                 "id": "148580f4ad2a31f43dace70b05f8ed84",
                 "via_device_id": "987fa93d054c4573a82c2beb9d253132",
@@ -2362,6 +2362,120 @@
                 "entry_type": null,
                 "id": "7a581edfd198957f9db5b9a8ee5264d5",
                 "via_device_id": "8ce9071b67bf72bf60587793688ba182",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        44
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "3b714199c2fc498668a979b28e619bce",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        44,
+                        2
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (2)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "d674b9f057567cf5203734d43e7c9d53",
+                "via_device_id": "3b714199c2fc498668a979b28e619bce",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        44,
+                        3
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (3)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "41d3ba9527507dcb13dc97da59c8cf30",
+                "via_device_id": "3b714199c2fc498668a979b28e619bce",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        44,
+                        4
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (4)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "0a42084a4d7330a654fdf221750d9cdd",
+                "via_device_id": "3b714199c2fc498668a979b28e619bce",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        44,
+                        5
+                    ]
+                ],
+                "manufacturer": "Zooz",
+                "model": "ZEN31 RGBW Dimmer",
+                "name": "Zooz ZEN31 RGBW Dimmer (5)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "f48415a0288b6edb931307dd52ef3621",
+                "via_device_id": "3b714199c2fc498668a979b28e619bce",
                 "area_id": null,
                 "name_by_user": null,
                 "disabled_by": null

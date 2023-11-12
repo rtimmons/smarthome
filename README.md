@@ -161,3 +161,11 @@ The device's command class must be manually updated. If not done correctly you w
   on_triple_up: scene_all_high
   on_triple_down: scene_all_off
 ```
+
+## Adding Zooz Zen31 RGBW Dimmer
+By default the device is added with the wrong specific setting. It needs to be changed from 2 to 1 so that a light entity is created
+
+For example:
+```
+<Node id="<id>" name="" location="" basic="4" generic="17" specific="1" roletype="5" devicetype="1536" nodetype="0" type="Multilevel Tunable Color Light" listening="true" frequentListening="false" beaming="true" routing="true" max_baud_rate="40000" version="4" query_stage="Complete">
+```
