@@ -171,13 +171,15 @@ entities:
 
   - name: office_switch_main
     type: dimmer switch 46203
-    node_id: 40
+    node_id: 41
     on_up_double: scene_office_high
     on_down_double: scene_office_off
+    on_triple_up: scene_all_high
+    on_triple_down: scene_all_off
 
   - name: office_switch_closet
     type: dimmer switch 46203
-    node_id: 41
+    node_id: 42
 
   - name: office_light_closet_underbench
     type: dimmer switch 46203
