@@ -21,6 +21,8 @@ pyozw.sqlite
 ip_bans.yaml
 .*
 !/.storage
+.storage/http
+.storage/auth
 !/.gitignore
 config
 ozw_config
