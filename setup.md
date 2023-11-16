@@ -17,11 +17,11 @@ You will need
 (Below steps are mostly formalizing [this article](http://desertbot.io/ssh-into-pi-zero-over-usb/), but modifying for Raspberry Pi 3 model B.)
 
 First:
-Download Raspbian Jessie (lite - no desktop) from [here](https://www.raspberrypi.org/downloads/raspbian/).
+Download Raspbian Buster (lite - no desktop) from [here](https://www.raspberrypi.org/downloads/raspbian/).
 This redirects here for the impatient:
-https://downloads.raspberrypi.org/raspbian_lite_latest
+https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2020-05-28/
+https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2020-05-28/2020-05-27-raspios-buster-lite-armhf.zip
 **NOTE 2021-09-30**: This doc was created when latest was "Buster".
-(I've not tried other distros but I assume they'll work - we really only need systemd and `apt-get` I think.)
 
 Burn to SD card using [etcher](https://etcher.io/).
 

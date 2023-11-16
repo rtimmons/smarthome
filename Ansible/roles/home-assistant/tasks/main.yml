@@ -32,6 +32,18 @@
     enabled: yes
   ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?
 
+# TODO: create a venv
+#
+# - name: Create a virtual environment for Home Assistant
+#   become: true
+#   become_user: root
+#   command: python3 -m venv /home/pi/homeassistant
+#   args:
+#     creates: /home/pi/homeassistant
+#
+# and then use that as the pip executable in the step below:
+#        executable: /home/pi/homeassistant/bin/pip # was: pip3.8
+
 - name: install global pip packages
   become_user: root
   become: true
@@ -41,6 +53,9 @@
     executable: pip3.8
     name:
     - sqlalchemy
+    - "markupsafe==2.0.1"
+    - "jinja2==2.11.3"
+    - "aiohttp_cors==0.7.0"
     # Find version at https://pypi.org/project/homeassistant/
     # TODO: try with 2021.9.7 (latest as of 2021-09-30)
     - "pillow==7.2.0"
