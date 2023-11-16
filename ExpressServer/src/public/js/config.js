@@ -323,17 +323,6 @@ const config = {
         {
             w: 1,
             h: 1,
-            y: 3,
-            x: 7-1,
-            emoji: 'Nerd',
-            onPress: {
-                action: 'Music.Favorite',
-                args: ['Alpha Chill - Medium'],
-            },
-        },
-        {
-            w: 1,
-            h: 1,
             y: 4,
             x: 7-1,
             emoji: 'Sunglasses',
