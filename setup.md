@@ -73,6 +73,8 @@ $> sudo /sbin/reboot -h now
 # Takes about 75 seconds
 
 ./Ansible/deploy.sh
+
+# TODO: sudo raspi-config nonint do_i2c 0
 ```
 
 ## 🔥
