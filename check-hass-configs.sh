@@ -25,6 +25,8 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
         python3 -mvenv venv
         # shellcheck source=/dev/null
         VIRTUAL_ENV_DISABLE_PROMPT=true source ./venv/bin/activate
+            export PIP_CONSTRAINT="$PWD/venv/constraints.txt"
+            echo "cython < 3.0" > "${PIP_CONSTRAINT}"
             python3 -m pip install --upgrade pip
             echo "${crypto_cmd[@]}"
             "${crypto_cmd[@]}"
