@@ -647,7 +647,10 @@ state_templates:
 
 additional_automations:
 # webhook integrations are describe at https://www.home-assistant.io/docs/automation/trigger/
-# access via https://smarterhome.local:8123/api/webhook/flic_closet_single (only via POST)
+#
+# access via https://smarterhome.local:8123/api/webhook/flic_closet_single
+#            https://smarterhome.local:8123/api/webhook/siri_turn_off_the_lights
+#                       (only via POST)
 - id: flic_closet_single
   alias: flic_closet_single
   trigger:
@@ -676,7 +679,13 @@ additional_automations:
     webhook_id: flic_bedroom_single
   action:
   - scene: scene.scene_all_off
-
+- id: siri_turn_off_the_lights
+  alias: flic_bedroom_single
+  trigger:
+  - platform: webhook
+    webhook_id: flic_bedroom_single
+  action:
+  - scene: scene.scene_all_off
 
 - id: flic_bedroom_hold
   alias: flic_bedroom_hold
