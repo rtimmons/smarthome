@@ -23,7 +23,7 @@ entities:
   - name: bedroom_light_dresser
     type: hue light color
 
-  - name: bedroom_outlet_flamingo
+  - name: bedroom_light_flamingo
     type: hue light
 
   - name: bedroom_switch_bedside
@@ -417,7 +417,7 @@ scenes:
   # Bedroom
   - name: scene_bedroom_high
     entities:
-      bedroom_outlet_flamingo: hue_high
+      bedroom_light_flamingo: hue_high
       bedroom_light_dresser: hue_high
       bedroom_switch_closet: dimmer_high
       bedroom_light_mikedesk: hue_high
@@ -425,7 +425,7 @@ scenes:
 
   - name: scene_bedroom_medium
     entities:
-      bedroom_outlet_flamingo: hue_medium
+      bedroom_light_flamingo: hue_medium
       bedroom_light_dresser: dimmer_medium
       bedroom_switch_closet: dimmer_medium
       bedroom_light_mikedesk: hue_medium
@@ -433,7 +433,7 @@ scenes:
 
   - name: scene_bedroom_off
     entities:
-      bedroom_outlet_flamingo: hue_off
+      bedroom_light_flamingo: hue_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
       bedroom_light_mikedesk: hue_off
@@ -490,7 +490,7 @@ scenes:
       bathroom_light_vanityleft: hue_off
       bathroom_light_vanityright: hue_off
       bathroom_light_vanitysconces: dimmer_off
-      bedroom_outlet_flamingo: hue_off
+      bedroom_light_flamingo: hue_off
       bedroom_light_dresser: hue_off
       bedroom_switch_closet: dimmer_off
       bedroom_light_mikedesk: hue_off
