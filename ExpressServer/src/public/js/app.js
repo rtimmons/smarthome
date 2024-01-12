@@ -205,6 +205,9 @@ class App {
             case 'Music.VolumeSame':
                 this.musicController.volumeSame();
                 break;
+            case 'Music.SetVolume':
+                this.musicController.setVolume(params[0]);
+                break;
             case 'Music.Next':
                 this.musicController.next();
                 break;
