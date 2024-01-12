@@ -32,6 +32,9 @@ class MusicController {
     volumeDown() {
         this.request('sonos', '$room', 'groupVolume', '-2');
     }
+    setVolume(vol) {
+        this.request('sonos', '$room', 'groupVolume', new String(vol));
+    }
     next() {
         this.request('sonos', '$room', 'next');
     }

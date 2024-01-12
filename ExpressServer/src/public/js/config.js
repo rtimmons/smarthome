@@ -235,6 +235,7 @@ const config = {
             x: 1,
             emoji: 'Down',
             onPress: { action: 'Music.VolumeDown', args: [] },
+            onDoublePress: { action: 'Music.SetVolume', args: [3] },
         },
         {
             w: 1,
