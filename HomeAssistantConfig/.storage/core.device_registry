@@ -2537,13 +2537,13 @@
                 ],
                 "manufacturer": "GE (Jasco Products)",
                 "model": "ZW7101 Smart LED Light Bulb ZE26I",
-                "name": "GE (Jasco Products) ZW7101 Smart LED Light Bulb ZE26I",
+                "name": "bathroom_light_vanityright",
                 "sw_version": null,
                 "entry_type": null,
                 "id": "64856809fb828e3a4a3bc922474df88e",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
-                "name_by_user": null,
+                "name_by_user": "bathroom_light_vanityright",
                 "disabled_by": null
             },
             {
@@ -2559,13 +2559,13 @@
                 ],
                 "manufacturer": "GE (Jasco Products)",
                 "model": "ZW7101 Smart LED Light Bulb ZE26I",
-                "name": "GE (Jasco Products) ZW7101 Smart LED Light Bulb ZE26I",
+                "name": "bathroom_light_vanityleft",
                 "sw_version": null,
                 "entry_type": null,
                 "id": "3146672eb924cef9fc36adc85a5b533a",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
-                "name_by_user": null,
+                "name_by_user": "bathroom_light_vanityleft",
                 "disabled_by": null
             }
         ],
