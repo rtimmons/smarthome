@@ -139,6 +139,14 @@ entities:
   - name: entry_light_nook
     type: hue light
 
+  - name: living_ring_lower
+    type: outlet
+    node_id: 52
+
+  - name: living_ring_upper
+    type: outlet
+    node_id: 51
+
   # Office
   - name: office_light_sidetable
     type: hue light color
@@ -276,6 +284,8 @@ scenes:
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
       living_light_desklight: dimmer_high
+      living_ring_lower: outlet_on
+      living_ring_upper: outlet_on
 
   - name: scene_living_medium
     entities:
@@ -287,6 +297,8 @@ scenes:
       living_light_curtain: dimmer_medium
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
+      living_ring_lower: outlet_off
+      living_ring_upper: outlet_off
 
   - name: scene_living_off
     entities:
@@ -302,6 +314,8 @@ scenes:
       living_light_desklight: dimmer_off
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
+      living_ring_lower: outlet_off
+      living_ring_upper: outlet_off
 
   # Outside
   - name: scene_living_outside_high
@@ -522,6 +536,8 @@ scenes:
       living_light_desklight: dimmer_off
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
+      living_ring_lower: outlet_off
+      living_ring_upper: outlet_off
 
   - name: scene_all_high
     entities:
@@ -541,6 +557,8 @@ scenes:
       living_light_desklight: dimmer_high
       living_light_leftbuiltin: dimmer_high
       living_light_rightbuiltin: dimmer_high
+      living_ring_lower: outlet_on
+      living_ring_upper: outlet_on
 
 event_names:
   'dimmer switch ws100':
