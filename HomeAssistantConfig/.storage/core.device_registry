@@ -66,7 +66,7 @@
                 "manufacturer": "Sonos",
                 "model": "Play:1",
                 "name": "Guest Bathroom",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "bd516d0d49694b2895c83865efbe66fd",
                 "via_device_id": null,
@@ -142,7 +142,7 @@
                 "manufacturer": "Sonos",
                 "model": "Amp",
                 "name": "Bathroom",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "e8c18fc33a354b6899ec0f65c0194c4e",
                 "via_device_id": null,
@@ -169,7 +169,7 @@
                 "manufacturer": "Sonos",
                 "model": "Play:5",
                 "name": "Closet",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "b84e4bfdff404dda92c4842274b4e841",
                 "via_device_id": null,
@@ -196,7 +196,7 @@
                 "manufacturer": "Sonos",
                 "model": "Play:3",
                 "name": "Kitchen",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "eb0e1d84a41547709ad72d0a13849e4a",
                 "via_device_id": null,
@@ -223,7 +223,7 @@
                 "manufacturer": "Sonos",
                 "model": "Beam",
                 "name": "Office",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "4dff6e0374984159a8d0b0cf52a8b4ec",
                 "via_device_id": null,
@@ -250,7 +250,7 @@
                 "manufacturer": "Sonos",
                 "model": "Beam",
                 "name": "Bedroom",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "eb6b5f0c94804a4886055855e6a3ff29",
                 "via_device_id": null,
@@ -277,7 +277,7 @@
                 "manufacturer": "Sonos",
                 "model": "Playbar",
                 "name": "Living",
-                "sw_version": "76.2-48080",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "213c27f77dbd42df918cf4e840036f85",
                 "via_device_id": null,
@@ -480,7 +480,7 @@
                 "manufacturer": "Signify",
                 "model": "BSB002",
                 "name": "Hue Bridge",
-                "sw_version": "1962097030",
+                "sw_version": "1961135030",
                 "entry_type": null,
                 "id": "987fa93d054c4573a82c2beb9d253132",
                 "via_device_id": null,
@@ -1296,7 +1296,7 @@
                 "manufacturer": "Sonos",
                 "model": "Move",
                 "name": "Move",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "8ce39e3290cd426ba782de507c1e27c9",
                 "via_device_id": null,
@@ -1884,7 +1884,7 @@
                 "manufacturer": "Sonos",
                 "model": "Roam",
                 "name": "Maker Room",
-                "sw_version": "76.2-47270",
+                "sw_version": "76.2-47142",
                 "entry_type": null,
                 "id": "c345c90ec3b3cc5242f00e958189805e",
                 "via_device_id": null,
@@ -2497,72 +2497,6 @@
                 "sw_version": null,
                 "entry_type": null,
                 "id": "4fb0ca528187f036af714097c6571a67",
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
-                "area_id": null,
-                "name_by_user": null,
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
-                    "27edf7f8014d430991599c034c6dadcd"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "hue",
-                        "00:17:88:01:0d:02:39:05-0b"
-                    ]
-                ],
-                "manufacturer": "Signify Netherlands B.V.",
-                "model": "Hue white lamp",
-                "name": "living_light_nook",
-                "sw_version": "1.104.2",
-                "entry_type": null,
-                "id": "66553b987800c6d5dad56ab8a5240705",
-                "via_device_id": "987fa93d054c4573a82c2beb9d253132",
-                "area_id": null,
-                "name_by_user": null,
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
-                    "c0a82fc7f46e4b449ad8dd16d4426956"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "zwave",
-                        49
-                    ]
-                ],
-                "manufacturer": "GE (Jasco Products)",
-                "model": "ZW7101 Smart LED Light Bulb ZE26I",
-                "name": "GE (Jasco Products) ZW7101 Smart LED Light Bulb ZE26I",
-                "sw_version": null,
-                "entry_type": null,
-                "id": "64856809fb828e3a4a3bc922474df88e",
-                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
-                "area_id": null,
-                "name_by_user": null,
-                "disabled_by": null
-            },
-            {
-                "config_entries": [
-                    "c0a82fc7f46e4b449ad8dd16d4426956"
-                ],
-                "connections": [],
-                "identifiers": [
-                    [
-                        "zwave",
-                        50
-                    ]
-                ],
-                "manufacturer": "GE (Jasco Products)",
-                "model": "ZW7101 Smart LED Light Bulb ZE26I",
-                "name": "GE (Jasco Products) ZW7101 Smart LED Light Bulb ZE26I",
-                "sw_version": null,
-                "entry_type": null,
-                "id": "3146672eb924cef9fc36adc85a5b533a",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
                 "name_by_user": null,
