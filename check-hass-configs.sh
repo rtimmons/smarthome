@@ -43,8 +43,8 @@ pushd MetaHassConfig >/dev/null 2>&1 || exit 1
             python3 -m pip install --upgrade pip
             # echo "${crypto_cmd[@]}"
             # "${crypto_cmd[@]}"
-            python3 ./setup.py develop >/dev/null
             python3 -m pip install -r ./requirements.txt
+            python3 ./setup.py develop >/dev/null
             # echo "${hass_cmd[@]}"
             # "${hass_cmd[@]}"
             touch venv/setup4

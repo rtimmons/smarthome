@@ -79,7 +79,7 @@ entities:
   - name: living_light_floor
     type: hue light color
 
-  - name: living_light_corner
+  - name: living_light_nook
     type: hue light
 
   - name: living_outlet_slider  # Was Globe light. Now a fan.
@@ -140,11 +140,11 @@ entities:
     type: hue light
 
   - name: living_ring_lower
-    type: outlet
+    type: dimmer switch 46203
     node_id: 52
 
   - name: living_ring_upper
-    type: outlet
+    type: dimmer switch 46203
     node_id: 51
 
   # Office
@@ -276,7 +276,7 @@ scenes:
       global_switch_hall: dimmer_high
       # living_outlet_slider: outlet_off
       entry_light_nook: hue_high
-      living_light_corner: hue_high
+      living_light_nook: hue_high
       living_light_curtain: dimmer_high
       # TODO: these should be the same?
       living_light_leftbuiltin: dimmer_medium
@@ -292,7 +292,7 @@ scenes:
       living_light_floor: hue_medium
       global_switch_hall: dimmer_off
       entry_light_nook: hue_medium
-      living_light_corner: hue_medium
+      living_light_nook: hue_medium
       # living_outlet_slider: outlet_on
       living_light_curtain: dimmer_medium
       living_light_leftbuiltin: dimmer_off
@@ -307,7 +307,7 @@ scenes:
       # living_outlet_slider: outlet_off
       entry_light_nook: hue_off
       living_switch_entry_closet: outlet_off
-      living_light_corner: hue_off
+      living_light_nook: hue_off
       living_light_curtain: dimmer_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
@@ -380,7 +380,7 @@ scenes:
       global_switch_hall: dimmer_high
       # living_outlet_slider: outlet_off
       entry_light_nook: hue_high
-      living_light_corner: hue_high
+      living_light_nook: hue_high
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high
       living_light_desklight: dimmer_high
@@ -399,7 +399,7 @@ scenes:
       global_switch_hall: dimmer_medium
       # living_outlet_slider: outlet_off
       entry_light_nook: hue_medium
-      living_light_corner: hue_medium
+      living_light_nook: hue_medium
       living_light_curtain: dimmer_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
@@ -420,7 +420,7 @@ scenes:
       global_switch_hall: dimmer_off
       # living_outlet_slider: outlet_off
       entry_light_nook: hue_off
-      living_light_corner: hue_off
+      living_light_nook: hue_off
       living_switch_deck: dimmer_off
       living_light_stringlight: outlet_off
       living_light_stringlightright: dimmer_off
@@ -513,7 +513,7 @@ scenes:
       kitchen_light_cabinets_upper: dimmer_off
       kitchen_light_cabinets_lower: dimmer_off
       living_light_floor: hue_off
-      living_light_corner: hue_off
+      living_light_nook: hue_off
       living_switch_deck: dimmer_off
       living_switch_entry_closet: outlet_off
       living_light_curtain: dimmer_off
@@ -550,7 +550,7 @@ scenes:
       kitchen_switch_dining: dimmer_high_led
       entry_switch_kitchen: dimmer_high_led
       entry_light_nook: hue_high
-      living_light_corner: hue_high
+      living_light_nook: hue_high
       living_light_curtain: dimmer_high
       living_light_stringlight: outlet_on
       living_light_stringlightright: dimmer_high

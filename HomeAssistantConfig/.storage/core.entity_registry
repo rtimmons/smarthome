@@ -8461,7 +8461,7 @@
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
-                "original_name": "Zooz ZEN31 RGBW Dimmer",
+                "original_name": "Unknown Node 43",
                 "original_icon": null
             },
             {
@@ -8814,7 +8814,7 @@
                 "name": "living_ring_lower",
                 "icon": null,
                 "disabled_by": null,
-                "capabilities": null,
+                "capabilities": {},
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
@@ -8848,7 +8848,7 @@
                 "name": "living_ring_upper",
                 "icon": null,
                 "disabled_by": null,
-                "capabilities": null,
+                "capabilities": {},
                 "supported_features": 0,
                 "device_class": null,
                 "unit_of_measurement": null,
@@ -8870,6 +8870,40 @@
                 "device_class": null,
                 "unit_of_measurement": null,
                 "original_name": "NEI Technology Unknown: type=ff07, id=ff03 Level",
+                "original_icon": null
+            },
+            {
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_previous_reading_7",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "ecc28f15af6d796cc0519121aa887a22",
+                "area_id": null,
+                "unique_id": "37-144115188701626514",
+                "platform": "zwave",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": "W",
+                "original_name": "Zooz ZEN31 RGBW Dimmer Previous Reading",
+                "original_icon": null
+            },
+            {
+                "entity_id": "sensor.zooz_zen31_rgbw_dimmer_interval_7",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "ecc28f15af6d796cc0519121aa887a22",
+                "area_id": null,
+                "unique_id": "37-144115188701626531",
+                "platform": "zwave",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": "seconds",
+                "original_name": "Zooz ZEN31 RGBW Dimmer Interval",
                 "original_icon": null
             }
         ]
