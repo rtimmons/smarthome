@@ -480,7 +480,7 @@
                 "manufacturer": "Signify",
                 "model": "BSB002",
                 "name": "Hue Bridge",
-                "sw_version": "1964117020",
+                "sw_version": "1965017030",
                 "entry_type": null,
                 "id": "987fa93d054c4573a82c2beb9d253132",
                 "via_device_id": null,
@@ -2607,6 +2607,50 @@
                 "sw_version": null,
                 "entry_type": null,
                 "id": "bd2aa9d61457f1a655f5ef7d55307620",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        53
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "ba4c9a252899cf4f9f2a6acd73f630a1",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        54
+                    ]
+                ],
+                "manufacturer": "GE (Jasco Products)",
+                "model": "46203 In-Wall Smart Dimmer",
+                "name": "GE (Jasco Products) 46203 In-Wall Smart Dimmer",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "6b4c277f5ddb213b6f8e3204aab15fb9",
                 "via_device_id": "869a7efe4140414fbd7a337df912f66e",
                 "area_id": null,
                 "name_by_user": null,

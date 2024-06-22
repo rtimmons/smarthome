@@ -195,6 +195,15 @@ entities:
     type: dimmer switch 46203
     node_id: 44
 
+# Guest Bath
+  - name: guestbath_light_ceiling
+    type: dimmer switch 46203
+    node_id: 53
+
+  - name: guestbath_light_sconce
+    type: dimmer switch 46203
+    node_id: 54
+
 #
 # The value of the entity keys (e.g. hue_high) corresponds to
 # an entry in the state_templates map below.
@@ -538,6 +547,8 @@ scenes:
       living_light_rightbuiltin: dimmer_off
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
+      guestbath_light_ceiling: dimmer_off
+      guestbath_light_sconce: dimmer_off
 
   - name: scene_all_high
     entities:
@@ -559,6 +570,8 @@ scenes:
       living_light_rightbuiltin: dimmer_high
       living_ring_lower: outlet_on
       living_ring_upper: outlet_on
+      guestbath_light_ceiling: dimmer_low
+      guestbath_light_sconce: dimmer_low
 
 event_names:
   'dimmer switch ws100':
