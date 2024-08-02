@@ -188,21 +188,25 @@ entities:
   - name: office_switch_closet
     type: dimmer switch 46203
     node_id: 42
-    on_up_double: scene_office_closet_high
-    on_down_double: scene_office_closet_off
+    on_up_double: scene_maker_room_high
+    on_down_double: scene_maker_room_off
 
   - name: office_light_closet_underbench
     type: dimmer switch 46203
     node_id: 44
 
-# Guest Bath
+  # Guest Bath
   - name: guestbath_light_ceiling
     type: dimmer switch 46203
     node_id: 53
+    on_up_double: scene_guest_bathroom_high
+    on_down_double: scene_guest_bathroom_off
 
   - name: guestbath_light_sconce
     type: dimmer switch 46203
     node_id: 54
+    on_up_double: scene_guest_bathroom_high
+    on_down_double: scene_guest_bathroom_off
 
 #
 # The value of the entity keys (e.g. hue_high) corresponds to
@@ -495,15 +499,37 @@ scenes:
       office_light_closet_underbench: dimmer_off
       office_light_armlight: dimmer_off
 
-  - name: scene_office_closet_high
+  # Maker Room
+  - name: scene_maker_room_high
     entities:
       office_light_closet_underbench: dimmer_high
       office_switch_closet: dimmer_high
 
-  - name: scene_office_closet_off
+  - name: scene_maker_room_medium
+    entities:
+      office_light_closet_underbench: dimmer_high
+      office_switch_closet: dimmer_high
+
+  - name: scene_maker_room_off
     entities:
       office_light_closet_underbench: dimmer_off
       office_switch_closet: dimmer_off
+
+  # Guest Bathroom
+  - name: scene_guest_bathroom_high
+    entities:
+      guestbath_light_ceiling: dimmer_high
+      guestbath_light_sconce: dimmer_high
+
+  - name: scene_guest_bathroom_medium
+    entities:
+      guestbath_light_ceiling: dimmer_medium
+      guestbath_light_sconce: dimmer_medium
+
+  - name: scene_guest_bathroom_off
+    entities:
+      guestbath_light_ceiling: dimmer_off
+      guestbath_light_sconce: dimmer_off
 
   # All
   - name: scene_all_off
