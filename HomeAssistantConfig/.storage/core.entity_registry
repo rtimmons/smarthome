@@ -9721,6 +9721,23 @@
                 "unit_of_measurement": null,
                 "original_name": "FIBARO System FGRGBW442 RGBW Controller 2 Level",
                 "original_icon": null
+            },
+            {
+                "entity_id": "zwave.unknown_node_39",
+                "config_entry_id": "c0a82fc7f46e4b449ad8dd16d4426956",
+                "device_id": "a0c43717e11d968e8f20c2ded32c031d",
+                "area_id": null,
+                "unique_id": "node-39",
+                "platform": "zwave",
+                "name": null,
+                "icon": null,
+                "disabled_by": null,
+                "capabilities": null,
+                "supported_features": 0,
+                "device_class": null,
+                "unit_of_measurement": null,
+                "original_name": "Unknown Node 39",
+                "original_icon": null
             }
         ]
     }
