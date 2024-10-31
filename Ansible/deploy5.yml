@@ -4,6 +4,7 @@
   strategy: free
   roles:
    - {name: tailscale}
+   - {name: docker}
 
   pre_tasks:
    - name: import vars

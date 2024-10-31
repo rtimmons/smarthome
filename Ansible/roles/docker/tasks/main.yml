@@ -1,0 +1,15 @@
+---
+
+- name: install podman
+  become_user: root
+  become: yes
+  apt:
+      name: podman
+      state: present
+
+- name: install docker-compose
+  become_user: root
+  become: yes
+  apt:
+      name: docker-compose
+      state: present
