@@ -1,0 +1,10 @@
+---
+- name: apply roles
+  hosts: post_init5
+  strategy: free
+  roles:
+   - {name: tailscale}
+
+  pre_tasks:
+   - name: import vars
+     include_vars: main.yml

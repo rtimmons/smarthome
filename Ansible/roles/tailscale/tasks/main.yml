@@ -4,17 +4,16 @@
   become_user: root
   become: true
   apt_key:
-    url: https://pkgs.tailscale.com/stable/debian/buster.gpg
+    url: https://pkgs.tailscale.com/stable/debian/bookworm.gpg
     state: present
 
 - name: Add Tailscale deb source
   become_user: root
   become: true
   apt_repository:
-    # https://pkgs.tailscale.com/stable/debian/buster.list
-    repo: deb https://pkgs.tailscale.com/stable/debian buster main
+    repo: deb https://pkgs.tailscale.com/stable/debian bookworm main
     state: present
-    filename: tailscale-buster
+    filename: tailscale-bookworm
 
 - name: Install Tailscale
   become_user: root
