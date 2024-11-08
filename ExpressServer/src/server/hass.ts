@@ -5,7 +5,7 @@ const app = Router();
 
 app.get('/scenes/:scene', async (req: RQ, res: RS) => {
     const scene = req.params['scene'];
-    const url = 'http://smarterhome.local:8123/api/webhook/' + scene;
+    const url = 'http://smarterhome5.local:8123/api/webhook/' + scene;
     console.log({url});
     await rpn({
         url,
