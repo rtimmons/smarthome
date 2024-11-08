@@ -11,9 +11,9 @@
   become_user: root
   become: true
   apt_repository:
-    repo: deb https://pkgs.tailscale.com/stable/debian bookworm main
+    repo: deb https://pkgs.tailscale.com/stable/debian {{distro}} main
     state: present
-    filename: tailscale-bookworm
+    filename: tailscale-{{distro}}
 
 - name: Install Tailscale
   become_user: root

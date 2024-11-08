@@ -3,7 +3,7 @@
   hosts: post_init5
   strategy: free
   roles:
-   - {name: tailscale}
+   - {name: tailscale, vars: {distro: bookworm}}
    - {name: docker}
 
   pre_tasks:

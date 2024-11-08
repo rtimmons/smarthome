@@ -3,7 +3,7 @@
   hosts: post_init
   strategy: free
   roles:
-   - {name: smarthome}
+   - {name: smarthome, vars: {distro: buster}}
 
   pre_tasks:
    - name: import vars
