@@ -616,21 +616,21 @@ scenes:
 
 event_names:
   'dimmer switch ws100':
-    up: {scene_id: 1}
-    down: {scene_id: 2}
-    single: {scene_data: 0}
-    double: {scene_data: 3}
-    triple: {scene_data: 4}
-    hold_start: {scene_data: 2}
-    hold_end: {scene_data: 1}
+    up: {property_key: "001"}
+    down: {property_key: "002"}
+    # single: {value: KeyPressed} # ?
+    double: {value: KeyPressed2x}
+    triple: {value: KeyPressed3x}
+    # hold_start: {scene_data: 7800} ?
+    # hold_end: {scene_data: 7740} ?
   'dimmer switch 46203':
-    up: {scene_id: 1}
-    down: {scene_id: 2}
-    single: {scene_data: 7680}
-    double: {scene_data: 7860}
-    triple: {scene_data: 7920}
-    hold_start: {scene_data: 7800}
-    hold_end: {scene_data: 7740}
+    up: {property_key: "001"}
+    down: {property_key: "002"}
+    # single: {value: KeyPressed} # ?
+    double: {value: KeyPressed2x}
+    triple: {value: KeyPressed3x}
+    # hold_start: {scene_data: 7800} ?
+    # hold_end: {scene_data: 7740} ?
 
 state_templates:
   dimmer_high_led: # led bulbs seem just a lot brighter

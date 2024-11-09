@@ -102,13 +102,20 @@ class Automation:
             event_names = self.metaconfig.event_names[dimmer['type']]
 
         taps = {k: {'parts': split(k), 'v': v} for (k, v) in dimmer.items() if k.startswith('on_')}
+        # taps = {'on_down_double':
+        #             {'parts': ['double', 'down'],
+        #              'v': 'scene_bedroom_off'},
+        #         'on_up_double':
+        #             {'parts': ['double', 'up'],
+        #              'v': 'scene_bedroom_high'}}
 
         out = []
         for (tap_name, tap) in taps.items():
             # print(f"Writing automation for {dimmer['name']} {tap_name}")
             event_data = {
-                'entity_id': f"zwave.{dimmer['name']}",
+                'node_id': dimmer['node_id'],
             }
+            # for part in ["double", "up"]
             for part in tap['parts']:
                 if part not in event_names:
                     raise Exception(f"Don't know how to do {part} for {dimmer['type']}. Update event_names.")
@@ -116,9 +123,9 @@ class Automation:
             item = {
                 'id': f"{dimmer['name']}_{tap_name}",
                 'alias': f"{dimmer['name']}_{tap_name}",
-                'trigger': [{
-                    'platform': 'event',
-                    'event_type': 'zwave.scene_activated',
+                'triggers': [{
+                    'trigger': 'event',
+                    'event_type': 'zwave_js_value_notification',
                     'event_data': event_data,
                 }],
                 'condition': [],

@@ -1,51 +1,51 @@
 - id: bedroom_switch_bedside_on_down_double
   alias: bedroom_switch_bedside_on_down_double
-  trigger:
-  - platform: event
-    event_type: zwave.scene_activated
+  triggers:
+  - trigger: event
+    event_type: zwave_js_value_notification
     event_data:
-      entity_id: zwave.bedroom_switch_bedside
-      scene_id: 2
-      scene_data: 7860
+      property_key: "002"
+      value: KeyPressed2x
+      node_id: 3
   condition: []
   action:
   - scene: scene.scene_bedroom_off
 
 - id: bedroom_switch_bedside_on_up_double
   alias: bedroom_switch_bedside_on_up_double
-  trigger:
-  - platform: event
-    event_type: zwave.scene_activated
-    event_data:
-      entity_id: zwave.bedroom_switch_bedside
-      scene_id: 1
-      scene_data: 7860
+  triggers:
+    - trigger: event
+      event_type: zwave_js_value_notification
+      event_data:
+        property_key: "001"
+        value: KeyPressed2x
+        node_id: 3
   condition: []
   action:
   - scene: scene.scene_bedroom_high
 
 - id: bedroom_switch_closet_on_down_double
   alias: bedroom_switch_closet_on_down_double
-  trigger:
-  - platform: event
-    event_type: zwave.scene_activated
+  triggers:
+  - trigger: event
+    event_type: zwave_js_value_notification
     event_data:
-      entity_id: zwave.bedroom_switch_closet
-      scene_id: 2
-      scene_data: 7860
+      property_key: "002"
+      value: KeyPressed2x
+      node_id: 5
   condition: []
   action:
   - scene: scene.scene_bedroom_off
 
 - id: bedroom_switch_closet_on_up_double
   alias: bedroom_switch_closet_on_up_double
-  trigger:
-  - platform: event
-    event_type: zwave.scene_activated
+  triggers:
+  - trigger: event
+    event_type: zwave_js_value_notification
     event_data:
-      entity_id: zwave.bedroom_switch_closet
-      scene_id: 1
-      scene_data: 7860
+      property_key: "001"
+      value: KeyPressed2x
+      node_id: 5
   condition: []
   action:
   - scene: scene.scene_bedroom_medium
