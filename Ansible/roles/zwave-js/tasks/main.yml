@@ -1,0 +1,30 @@
+---
+
+- name: stop zwave-js
+  become_user: root
+  become: true
+  service:
+    name: zwave-js
+    state: stopped
+    enabled: yes
+  ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?  
+
+- name: copy zwave-js systemd unit file
+  become_user: root
+  become: true
+  copy:
+    src: zwave-js.service
+    dest: /etc/systemd/system/zwave-js.service
+    owner: root
+    group: root
+    mode: 0664
+
+- name: start zwave-js service
+  become_user: root
+  become: true
+  async: 30
+  poll: 0
+  service:
+    name: node-sonos-http-api
+    state: restarted
+    enabled: yes

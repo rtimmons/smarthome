@@ -4,7 +4,7 @@
   strategy: free
   roles:
    - {name: tailscale, vars: {distro: bookworm}}
-   - {name: docker}
+   - {name: zwave-js}
 
   pre_tasks:
    - name: import vars

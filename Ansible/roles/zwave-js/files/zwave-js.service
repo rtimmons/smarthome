@@ -1,0 +1,26 @@
+#!/bin/sh
+
+[Unit]
+Description=zwave-js
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi
+Environment=
+LimitNOFILE=infinity
+ExecStart=podman run -d \
+    --name zwave-js \
+    --restart=unless-stopped \
+    -p 8091:8091    \
+    -p 3000:3000    \
+    --device "/dev/serial/by-id/usb-0658_0200-if00:/dev/zwave" \
+    -v "/home/pi/store:/usr/src/app/store" \
+    zwavejs/zwave-js-ui:latest
+ExecStop=/bin/sh -c "podman stop zwave-js; podman rm zwave-js"
+Restart=always
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=default.target
