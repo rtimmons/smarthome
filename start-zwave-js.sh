@@ -4,6 +4,7 @@ set -eou pipefail
 
 cd "/home/pi"
 podman run -d \
+    --name zwave-js \
     --restart=unless-stopped \
     -p 8091:8091    \
     -p 3000:3000    \
