@@ -1,3 +1,6 @@
+import collections
+collections.Callable = collections.abc.Callable
+
 import hassmetaconfig.gen as gen
 
 import unittest
