@@ -7,6 +7,14 @@
       name: podman
       state: present
 
+- name: Enable Podman service to start on boot
+  become_user: root
+  become: yes
+  ansible.builtin.systemd:
+    name: podman
+    enabled: yes
+    state: started
+
 - name: install docker-compose
   become_user: root
   become: yes

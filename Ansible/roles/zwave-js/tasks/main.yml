@@ -19,12 +19,18 @@
     group: root
     mode: 0664
 
+- name: Add pi user to dialout group
+  become_user: root
+  become: yes
+  ansible.builtin.user:
+    name: pi
+    groups: dialout
+    append: yes
+
 - name: start zwave-js service
   become_user: root
   become: true
-  async: 30
-  poll: 0
   service:
-    name: node-sonos-http-api
+    name: zwave-js
     state: restarted
     enabled: yes
