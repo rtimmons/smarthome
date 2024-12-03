@@ -10,8 +10,8 @@ TimeoutStartSec=0
 Restart=always
 StandardOutput=journal
 StandardError=journal
-ExecStartPre=-/usr/bin/podman stop %n
-ExecStartPre=-/usr/bin/podman rm %n
+ExecStartPre=-sudo /usr/bin/podman stop %n
+ExecStartPre=-sudo /usr/bin/podman rm %n
 #ExecStartPre=/usr/bin/docker pull zwavejs/zwave-js-ui:latest
 ExecStart=sudo /usr/bin/podman run --rm \
         --name %n \
