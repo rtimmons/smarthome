@@ -20,7 +20,7 @@ class MetaConfig:
     def entity(self, name):
         ents = [e for e in self.entities if e['name'] == name]
         if len(ents) != 1:
-            raise Exception(f"Unknown entity {name}")
+            raise Exception(f"Unknown entity {name} in {ents}")
         return ents[0]
 
     @property
