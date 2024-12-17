@@ -1,15 +1,11 @@
 Smarthome Dashboard
 ============================
 
-## Setup and Install
-
-- Buy 🍓pi 3 and sd card
-    - pi3 is the only one tested for now. Zero W should work with minor tweaks to ansible code, though.
-    - don't get a cheap sd card. Pay the extra $5.
-	- install heatsink, put in case, plug into wall. Heatsink is apparently necessary.
-- Follow [setup steps](./setup.md)
+Follow [setup steps](./setup.md)
 
 ## TODO
+
+- 2024-12-17: https://inovelli.com/collections/inovelli-blue-series - @opsnlops recommends this as an alternative to Z-Wave switches. Need to see if we have the right zigbee infrastructure; maybe gradually phase out z-wave.
 
 - 2022-11-28: Maybe try out Phoenix personal radio station thing https://github.com/pncnmnp/phoenix10.1
 
