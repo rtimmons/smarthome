@@ -1,75 +1,22 @@
 ---
 
-- name: install dependencies
-  become_user: root
-  become: true
-  apt:
-    pkg:
-    - libffi-dev
-    - libssl-dev
-    - python3-nacl
-    - libopenzwave1.5-dev
-    - libudev-dev
-    - ffmpeg
-    - libjpeg-dev
-    - zlib1g-dev
-    state: present
-
-- name: install master open-zwave configs
-  git:
-    repo: 'https://github.com/OpenZWave/open-zwave.git'
-    dest: /home/pi/open-zwave
-    update: yes
-
 # Must be stopped prior to copying config
 # since hass writes its state to disk on shutdown.
-- name: stop home-assistant service
+- name: stop hass5 service
   become_user: root
   become: true
   service:
-    name: home-assistant
+    name: hass5
     state: stopped
     enabled: yes
   ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?
 
-# TODO: create a venv
-#
-# - name: Create a virtual environment for Home Assistant
-#   become: true
-#   become_user: root
-#   command: python3 -m venv /home/pi/homeassistant
-#   args:
-#     creates: /home/pi/homeassistant
-#
-# and then use that as the pip executable in the step below:
-#        executable: /home/pi/homeassistant/bin/pip # was: pip3.8
-
-- name: install global pip packages
-  become_user: root
-  become: true
-  async: 3600 # 1 hour
-  poll: 10
-  pip:
-    executable: pip3.8
-    name:
-    - sqlalchemy
-    - "markupsafe==2.0.1"
-    - "jinja2==2.11.3"
-    - "aiohttp_cors==0.7.0"
-    # Find version at https://pypi.org/project/homeassistant/
-    # TODO: try with 2021.9.7 (latest as of 2021-09-30)
-    - "pillow==7.2.0"
-    - "homeassistant==2020.12.1"
-    state: present
-  environment:
-    MAKEFLAGS: '-j4'
-
-- name: copy home-assistant systemd unit file
+- name: copy hass5 systemd unit file
   become_user: root
   become: true
   copy:
-    src: home-assistant.service
-    dest: /etc/systemd/system/home-assistant.service
+    src: hass5.service
+    dest: /etc/systemd/system/hass5.service
     owner: root
     group: root
     mode: 0664
@@ -103,6 +50,6 @@
   become_user: root
   become: true
   service:
-    name: home-assistant
+    name: hass5
     state: started
     enabled: yes

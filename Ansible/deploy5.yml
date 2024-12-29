@@ -5,6 +5,7 @@
   roles:
    - {name: tailscale, vars: {distro: bookworm}}
    - {name: zwave-js}
+   - {name: hass5}
 
   pre_tasks:
    - name: import vars

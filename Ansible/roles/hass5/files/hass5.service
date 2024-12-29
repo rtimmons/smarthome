@@ -1,0 +1,26 @@
+[Install]
+WantedBy=multi-user.target
+
+[Unit]
+Description=hass5
+After=network-online.target
+
+[Service]
+User=pi
+WorkingDirectory=/home/pi
+TimeoutStartSec=0
+Restart=always
+StandardOutput=journal
+StandardError=journal
+ExecStartPre=-sudo /usr/bin/podman stop %n
+ExecStartPre=-sudo /usr/bin/podman rm %n
+#ExecStartPre=/usr/bin/docker pull zwavejs/zwave-js-ui:latest
+ExecStart=sudo /usr/bin/podman run --rm -d \
+  --name hass5 \
+  --privileged \
+  -e TZ=MY_TIME_ZONE \
+  -v /home/pi/repo/HomeAssistantConfig:/config \
+  -v /run/dbus:/run/dbus:ro \
+  --network=host \
+  --device "/dev/serial/by-id/usb-0658_0200-if00:/dev/serial/by-id/usb-0658_0200-if00" \
+  ghcr.io/home-assistant/home-assistant:stable
