@@ -1,0 +1,13 @@
+[Unit]
+Description=Home-Assistant
+After=network-online.target
+
+[Service]
+Type=simple
+User=pi
+ExecStart=/bin/bash -c "MAKEFLAGS=-j4 /usr/local/bin/hass --config /home/pi/repo/HomeAssistantConfig"
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
