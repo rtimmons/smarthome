@@ -8,15 +8,16 @@ After=network-online.target
 [Service]
 User=pi
 WorkingDirectory=/home/pi
-TimeoutStartSec=0
-Restart=always
+TimeoutStartSec=10
+RestartSec=10
+Restart=on-failure
 StandardOutput=journal
 StandardError=journal
-ExecStartPre=-sudo /usr/bin/podman stop %n
-ExecStartPre=-sudo /usr/bin/podman rm %n
+ExecStartPre=-sudo /usr/bin/podman stop hass5
+ExecStartPre=-sudo /usr/bin/podman rm hass5
 #ExecStartPre=/usr/bin/docker pull zwavejs/zwave-js-ui:latest
 ExecStart=sudo /usr/bin/podman run --rm -d \
-  --name %n \
+  --name hass5 \
   --privileged \
   -e TZ=MY_TIME_ZONE \
   -v /home/pi/newconfig:/config \

@@ -19,6 +19,12 @@
     group: root
     mode: 0664
 
+- name: daemon reload
+  become_user: root
+  become: true
+  service:
+    daemon_reload: true
+
 - name: Add pi user to dialout group
   become_user: root
   become: yes
@@ -32,6 +38,5 @@
   become: true
   service:
     name: zwave-js
-    state: restarted
+    state: started
     enabled: yes
-    daemon_reload: true
