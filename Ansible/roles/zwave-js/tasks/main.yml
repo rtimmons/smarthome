@@ -34,3 +34,4 @@
     name: zwave-js
     state: restarted
     enabled: yes
+    daemon_reload: true
