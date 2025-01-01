@@ -16,7 +16,7 @@ ExecStartPre=-sudo /usr/bin/podman stop %n
 ExecStartPre=-sudo /usr/bin/podman rm %n
 #ExecStartPre=/usr/bin/docker pull zwavejs/zwave-js-ui:latest
 ExecStart=sudo /usr/bin/podman run --rm -d \
-  --name hass5 \
+  --name %n \
   --privileged \
   -e TZ=MY_TIME_ZONE \
   -v /home/pi/newconfig:/config \
