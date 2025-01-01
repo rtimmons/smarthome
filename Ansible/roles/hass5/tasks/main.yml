@@ -21,6 +21,8 @@
     group: root
     mode: 0664
 
+
+
 - name: Remove .storage dir
   become_user: root
   become: true
@@ -53,3 +55,4 @@
     name: hass5
     state: started
     enabled: yes
+    daemon_reload: true
