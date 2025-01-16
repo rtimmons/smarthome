@@ -2535,9 +2535,9 @@
                         49
                     ]
                 ],
-                "manufacturer": "GE (Jasco Products)",
-                "model": "ZW7101 Smart LED Light Bulb ZE26I",
-                "name": "GE (Jasco Products) ZW7101 Smart LED Light Bulb ZE26I",
+                "manufacturer": "",
+                "model": "",
+                "name": "Unknown Node 49",
                 "sw_version": null,
                 "entry_type": null,
                 "id": "64856809fb828e3a4a3bc922474df88e",
@@ -2789,6 +2789,143 @@
                 "entry_type": null,
                 "id": "c91f1de4b3a01b4400d38d667db4f552",
                 "via_device_id": "e08df2eac11a6c15d78f8cdb6e212237",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        56
+                    ]
+                ],
+                "manufacturer": "FIBARO System",
+                "model": "FGRGBW442 RGBW Controller 2",
+                "name": "FIBARO System FGRGBW442 RGBW Controller 2",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "132182b27102efc0e1f8eea004346c71",
+                "via_device_id": "869a7efe4140414fbd7a337df912f66e",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        56,
+                        2
+                    ]
+                ],
+                "manufacturer": "FIBARO System",
+                "model": "FGRGBW442 RGBW Controller 2",
+                "name": "FIBARO System FGRGBW442 RGBW Controller 2 (2)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "d0c646f1225c2908cc659378c5313cf4",
+                "via_device_id": "132182b27102efc0e1f8eea004346c71",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        56,
+                        3
+                    ]
+                ],
+                "manufacturer": "FIBARO System",
+                "model": "FGRGBW442 RGBW Controller 2",
+                "name": "FIBARO System FGRGBW442 RGBW Controller 2 (3)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "7275f54819f4aeb64dfb68b00a988656",
+                "via_device_id": "132182b27102efc0e1f8eea004346c71",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        56,
+                        4
+                    ]
+                ],
+                "manufacturer": "FIBARO System",
+                "model": "FGRGBW442 RGBW Controller 2",
+                "name": "FIBARO System FGRGBW442 RGBW Controller 2 (4)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "18a63eebe22d339a7336f61caa99ec69",
+                "via_device_id": "132182b27102efc0e1f8eea004346c71",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        56,
+                        5
+                    ]
+                ],
+                "manufacturer": "FIBARO System",
+                "model": "FGRGBW442 RGBW Controller 2",
+                "name": "FIBARO System FGRGBW442 RGBW Controller 2 (5)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "e250f6a5cde55954bd62349a1a737908",
+                "via_device_id": "132182b27102efc0e1f8eea004346c71",
+                "area_id": null,
+                "name_by_user": null,
+                "disabled_by": null
+            },
+            {
+                "config_entries": [
+                    "c0a82fc7f46e4b449ad8dd16d4426956"
+                ],
+                "connections": [],
+                "identifiers": [
+                    [
+                        "zwave",
+                        56,
+                        6
+                    ]
+                ],
+                "manufacturer": "FIBARO System",
+                "model": "FGRGBW442 RGBW Controller 2",
+                "name": "FIBARO System FGRGBW442 RGBW Controller 2 (6)",
+                "sw_version": null,
+                "entry_type": null,
+                "id": "4e7b7c8a9714581f833ceae1a11d4755",
+                "via_device_id": "132182b27102efc0e1f8eea004346c71",
                 "area_id": null,
                 "name_by_user": null,
                 "disabled_by": null
