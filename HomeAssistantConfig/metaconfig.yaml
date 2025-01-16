@@ -151,8 +151,8 @@ entities:
     type: dimmer switch 46203
     node_id: 55
 
-  - name: living_tv_backlight
-    type: dimmer switch 46203
+  - name: living_light_behindtv
+    type: hue light color
     node_id: 56
 
   # Office
@@ -308,7 +308,7 @@ scenes:
       living_ring_lower: outlet_on
       living_ring_upper: outlet_on
       living_light_topshelf: dimmer_high
-      living_tv_backlight: dimmer_high
+      living_light_behindtv: hue_high
 
   - name: scene_living_medium
     entities:
@@ -323,7 +323,7 @@ scenes:
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
       living_light_topshelf: dimmer_medium
-      living_tv_backlight: dimmer_off
+      living_light_behindtv: hue_off
 
   - name: scene_living_off
     entities:
@@ -342,7 +342,7 @@ scenes:
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
       living_light_topshelf: dimmer_off
-      living_tv_backlight: dimmer_off
+      living_light_behindtv: hue_off
 
   # Outside
   - name: scene_living_outside_high
@@ -415,7 +415,7 @@ scenes:
       living_light_leftbuiltin: dimmer_high
       living_light_rightbuiltin: dimmer_high
       living_light_topshelf: dimmer_high
-      living_tv_backlight: dimmer_high
+      living_light_behindtv: hue_high
 
   - name: scene_kitchen_living_medium
     entities:
@@ -438,7 +438,7 @@ scenes:
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
       living_light_topshelf: dimmer_medium
-      living_tv_backlight: dimmer_off
+      living_light_behindtv: hue_off
 
   - name: scene_kitchen_living_off
     entities:
@@ -462,7 +462,7 @@ scenes:
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
       living_light_topshelf: dimmer_off
-      living_tv_backlight: dimmer_off
+      living_light_behindtv: hue_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -597,7 +597,7 @@ scenes:
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
       living_light_topshelf: dimmer_off
-      living_tv_backlight: dimmer_off
+      living_light_behindtv: hue_off
       guestbath_light_ceiling: dimmer_off
       guestbath_light_sconce: dimmer_off
 
@@ -622,7 +622,7 @@ scenes:
       living_ring_lower: outlet_on
       living_ring_upper: outlet_on
       living_light_topshelf: dimmer_high
-      living_tv_backlight: dimmer_high
+      living_light_behindtv: hue_high
       guestbath_light_ceiling: dimmer_low
       guestbath_light_sconce: dimmer_low
 
