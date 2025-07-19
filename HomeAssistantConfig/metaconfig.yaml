@@ -98,6 +98,10 @@ entities:
     type: dimmer switch 46203
     node_id: 37
 
+  - name: living_light_behindtv
+    type: dimmer switch 46203
+    node_id: 56
+
   - name: living_switch_deck
     type: dimmer switch 46203
     node_id: 20
@@ -150,10 +154,6 @@ entities:
   - name: living_light_topshelf
     type: dimmer switch 46203
     node_id: 55
-
-  - name: living_light_behindtv
-    type: hue light color
-    node_id: 56
 
   # Office
   - name: office_light_sidetable
@@ -308,7 +308,7 @@ scenes:
       living_ring_lower: outlet_on
       living_ring_upper: outlet_on
       living_light_topshelf: dimmer_high
-      living_light_behindtv: hue_high
+      living_light_behindtv: dimmer_high
 
   - name: scene_living_medium
     entities:
@@ -322,8 +322,8 @@ scenes:
       living_light_rightbuiltin: dimmer_off
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
-      living_light_topshelf: dimmer_medium
-      living_light_behindtv: hue_off
+      living_light_topshelf: dimmer_off
+      living_light_behindtv: dimmer_off
 
   - name: scene_living_off
     entities:
@@ -342,7 +342,7 @@ scenes:
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
       living_light_topshelf: dimmer_off
-      living_light_behindtv: hue_off
+      living_light_behindtv: dimmer_off
 
   # Outside
   - name: scene_living_outside_high
@@ -415,7 +415,6 @@ scenes:
       living_light_leftbuiltin: dimmer_high
       living_light_rightbuiltin: dimmer_high
       living_light_topshelf: dimmer_high
-      living_light_behindtv: hue_high
 
   - name: scene_kitchen_living_medium
     entities:
@@ -438,7 +437,6 @@ scenes:
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
       living_light_topshelf: dimmer_medium
-      living_light_behindtv: hue_off
 
   - name: scene_kitchen_living_off
     entities:
@@ -462,7 +460,6 @@ scenes:
       living_light_leftbuiltin: dimmer_off
       living_light_rightbuiltin: dimmer_off
       living_light_topshelf: dimmer_off
-      living_light_behindtv: hue_off
 
   # Bedroom
   - name: scene_bedroom_high
@@ -597,7 +594,6 @@ scenes:
       living_ring_lower: outlet_off
       living_ring_upper: outlet_off
       living_light_topshelf: dimmer_off
-      living_light_behindtv: hue_off
       guestbath_light_ceiling: dimmer_off
       guestbath_light_sconce: dimmer_off
 
@@ -622,27 +618,26 @@ scenes:
       living_ring_lower: outlet_on
       living_ring_upper: outlet_on
       living_light_topshelf: dimmer_high
-      living_light_behindtv: hue_high
       guestbath_light_ceiling: dimmer_low
       guestbath_light_sconce: dimmer_low
 
 event_names:
   'dimmer switch ws100':
-    up: {scene_id: 1}
-    down: {scene_id: 2}
-    single: {scene_data: 0}
-    double: {scene_data: 3}
-    triple: {scene_data: 4}
-    hold_start: {scene_data: 2}
-    hold_end: {scene_data: 1}
+    up: {property_key: "001"}
+    down: {property_key: "002"}
+    # single: {value: KeyPressed} # ?
+    double: {value: KeyPressed2x}
+    triple: {value: KeyPressed3x}
+    # hold_start: {scene_data: 7800} ?
+    # hold_end: {scene_data: 7740} ?
   'dimmer switch 46203':
-    up: {scene_id: 1}
-    down: {scene_id: 2}
-    single: {scene_data: 7680}
-    double: {scene_data: 7860}
-    triple: {scene_data: 7920}
-    hold_start: {scene_data: 7800}
-    hold_end: {scene_data: 7740}
+    up: {property_key: "001"}
+    down: {property_key: "002"}
+    # single: {value: KeyPressed} # ?
+    double: {value: KeyPressed2x}
+    triple: {value: KeyPressed3x}
+    # hold_start: {scene_data: 7800} ?
+    # hold_end: {scene_data: 7740} ?
 
 state_templates:
   dimmer_high_led: # led bulbs seem just a lot brighter
