@@ -26,18 +26,20 @@ let roomX = 1;
 
 const config = {
     emojis: {
+        Banjo: '🪕',
         TV: '📺',
         Film: '🎬',
         Bed: '🛏',
         Rice: '🍙',
         Dog: '🐶',
+        Chair: '🪑',
         Shower: '🛁',
         Earth: '🌍',
         Play: '▶️',
         Pause: '⏸',
         Up: '🔼',
         Down: '🔽',
-        MilkyWay: '🌌',
+        MilkyWay: '🌌', // 🎷
         Klingon: '🖖',
         Skip: '⏭',
         Time15: '🕘',
@@ -55,7 +57,7 @@ const config = {
         Dim: '🌘',
         Sunset: '🌆',
         Check: '✅',
-        Chill: '🪬',
+        Chill: '🥶', // 🎷
         X: '❌',
         '?': '❓',
         Tulip: '🌷',
@@ -77,7 +79,7 @@ const config = {
         DoubleRight: '⏩',
         SingleUp: '⬆',
         SingleDown: '⬇',
-        SteveAoki: '🪆',
+        SteveAoki: '💇🏻‍♂️',
         Robot: '🦾',
     },
     rows: 8,
@@ -86,6 +88,7 @@ const config = {
         // This is used by allJoin (double-tap a room).
         // This "should" be implemented in the ExpressAPI
         'Living',
+        'Chair',
         'Bedroom',
         'Kitchen',
         'Bathroom',
@@ -136,6 +139,7 @@ const config = {
         ...roomTiles({ xPos: roomX++, emojiName: 'Tent',      roomName: 'Move' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Rice',      roomName: 'Kitchen' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'TV',        roomName: 'Living' }),
+        ...roomTiles({ xPos: roomX++, emojiName: 'Chair',     roomName: 'Chair' }),      
         ...roomTiles({ xPos: roomX++, emojiName: 'Guest',     roomName: 'Guest Bathroom' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Robot',     roomName: 'Maker Room' }),
@@ -297,14 +301,14 @@ const config = {
         /////
         // Presets
         /////
-        {
-            w: 1,
-            h: 1,
-            y: 4,
-            x: 3,
-            emoji: 'News',
-            onPress: { action: 'Music.Favorite', args: ['Play NPR One'] },
-        },
+        // {
+        //     w: 1,
+        //     h: 1,
+        //     y: 4,
+        //     x: 3,
+        //     emoji: 'News',
+        //     onPress: {  action: 'Music.Favorite', args: ['Play NPR One'] },
+        // },
         {
             w: 1,
             h: 1,
@@ -313,14 +317,14 @@ const config = {
             emoji: 'SteveAoki',
             onPress: { action: 'Music.Favorite', args: ['735 - Steve Aoki\'s Remix Radio'] },
         },
-        {
-            w: 1,
-            h: 1,
-            y: 3,
-            x: 5+4-1,
-            emoji: 'Monkey',
-            onPress: { action: 'Music.Favorite', args: ['Sosononos'] },
-        },
+        // {
+        //     w: 1,
+        //     h: 1,
+        //     y: 3,
+        //     x: 5+4-1,
+        //     emoji: 'Monkey',
+        //     onPress: { action: 'Music.Favorite', args: ['Sosononos'] },
+        // },
         {
             w: 1,
             h: 1,
@@ -329,7 +333,14 @@ const config = {
             emoji: 'Sunglasses',
             onPress: { action: 'Music.Favorite', args: ['Office DJ'] },
         },
-
+        {
+            w: 1,
+            h: 1,
+            y: 4-1,
+            x: 7-1,
+            emoji: 'Banjo',
+            onPress: { action: 'Music.Favorite', args: ['Carbon Leaf'] },
+        },
         // { w:1, h:1,
         //   y:4, x:8,
         //   emoji: 'XMasTree',
@@ -349,7 +360,7 @@ const config = {
             y: 4,
             x: 8-1,
             emoji: 'MilkyWay',
-            onPress: { action: 'Music.Favorite', args: ['Zero 7 Radio'] },
+            onPress: { action: 'Music.Favorite', args: ['Zero 7'] },
         },
         // {
         //     w: 1,
