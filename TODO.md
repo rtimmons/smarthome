@@ -47,6 +47,7 @@
 ## 🟢 Infrastructure Improvements (Medium Priority)
 
 ### 7. Containerization
+- [ ] Investigate deployment via ProxMox https://www.proxmox.com/en/
 - [ ] Create Dockerfile for ExpressServer
 - [ ] Create Dockerfile for MetaHassConfig
 - [ ] Set up docker-compose for local development
