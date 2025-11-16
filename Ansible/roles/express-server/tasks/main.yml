@@ -70,7 +70,9 @@
     state: restarted
     enabled: yes
 
-- name: Notify if reboot needed for I2C
-  debug:
-    msg: "I2C configuration changed. You may need to reboot for changes to take effect: sudo reboot"
-  when: i2c_config.changed
+- name: Reboot to apply all changes
+  become_user: root
+  become: true
+  reboot:
+    msg: "Rebooting to apply I2C and service changes"
+    reboot_timeout: 300
