@@ -3,8 +3,6 @@ set -eou pipefail
 
 cd "$(dirname "$0")" || exit 1
 
-../check-hass-configs.sh
-
 source ./ansible-env.sh
 
 ansible-playbook \

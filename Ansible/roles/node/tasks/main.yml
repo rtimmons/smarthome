@@ -1,25 +1,46 @@
 ---
 
-- name: Add NodeSource repository key
-  become_user: root
-  become: yes
-  apt_key:
-    url: https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key
-    state: present
-
-- name: Add NodeSource Node.js 20.x repository
-  become_user: root
-  become: yes
-  apt_repository:
-    repo: "deb https://deb.nodesource.com/node_20.x {{ ansible_distribution_release }} main"
-    state: present
-    update_cache: yes
-
-- name: Install Node.js 20.x and build tools
+- name: Install prerequisites
   become_user: root
   become: yes
   apt:
-    name: [curl, build-essential, nodejs]
+    name: [curl, ca-certificates, gnupg]
     state: present
     update_cache: yes
+
+- name: Check if Node.js is already installed
+  command: node --version
+  register: node_version
+  ignore_errors: yes
+  changed_when: false
+
+- name: Download NodeSource setup script
+  become_user: root
+  become: yes
+  get_url:
+    url: https://deb.nodesource.com/setup_20.x
+    dest: /tmp/nodesource_setup.sh
+    mode: '0755'
+  when: node_version.rc != 0 or not node_version.stdout is search("v20")
+
+- name: Run NodeSource setup script
+  become_user: root
+  become: yes
+  command: bash /tmp/nodesource_setup.sh
+  when: node_version.rc != 0 or not node_version.stdout is search("v20")
+
+- name: Install Node.js and build tools
+  become_user: root
+  become: yes
+  apt:
+    name: [build-essential, nodejs]
+    state: present
+    update_cache: yes
+
+- name: Clean up setup script
+  become_user: root
+  become: yes
+  file:
+    path: /tmp/nodesource_setup.sh
+    state: absent
 

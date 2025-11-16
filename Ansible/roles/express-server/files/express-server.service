@@ -1,14 +1,12 @@
 #!/bin/sh
 
-# https://github.com/maddox/dasher/wiki/Running-Dasher-on-a-Raspberry-Pi-at-startup
-# https://expressjs.com/en/starter/hello-world.html
 [Unit]
-Description=express-server
+Description=Blinds Controller API
 
 [Service]
 Type=simple
-User=pi
-WorkingDirectory=/home/pi/repo/ExpressServer
+User=blinds
+WorkingDirectory=/home/blinds/repo/ExpressServer
 Environment=NODE_ENV=production
 LimitNOFILE=infinity
 ExecStart=/usr/bin/npm run start

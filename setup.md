@@ -1,93 +1,163 @@
 Setup
 =====
 
-Goal is for the rpi to be [cattle not a pet](https://www.theregister.co.uk/2013/03/18/servers_pets_or_cattle_cern/), so the entire build and deploy process is designed to 
+Goal is for the Raspberry Pi to be [cattle not a pet](https://www.theregister.co.uk/2013/03/18/servers_pets_or_cattle_cern/), so the entire build and deploy process is designed to:
 
-1. have a custom hostname so you can have multiple raspberry pis on your network.
-2. not require **ever** plugging in a keyboard or monitor.
+1. Have a custom hostname so you can have multiple Raspberry Pis on your network
+2. Not require **ever** plugging in a keyboard or monitor
 
-You will need 
+## Prerequisites
 
-1. to plug your rpi into your router's ethernet so your computer and the rpi can be on the same network (same subnet I think for the `.local` thing to work).
-2. You also cannot have any existing hosts with the `raspberrypi.local` hostname since this whole process assumes that this is the hostname for the machine it's going to provision. The first step will change the hostname to whatever you want though so you can have multiple rpis on your network if they all have distinct hostnames.
-3. The setup isn't in any way "offline" - your rpi will need to connect to the internet to download dependencies. I tried without luck to get the apt packages it needs pre-burned onto the SD card, but my linux-foo isn't up to par.
-4. I've written/tested/designed to have this work from a mac. There's nothing inherently mac-specific here, though. Replace `brew` with whatever you use to install things and I think that's it. (Oh and whatever it takes to mount SD cards...I assume you can mount an sd card at `/Volumes/boot` which is what the mac's default behavior is here)
+You will need:
 
+1. Raspberry Pi 3 (or compatible model) with heatsink
+2. Quality SD card (don't cheap out on this)
+3. Ethernet cable to connect your Pi to your router
+4. Your Pi and computer on the same network (same subnet for `.local` mDNS to work)
+5. No existing hosts with the `raspberrypi.local` hostname
+6. Internet connection for the Pi to download dependencies
+7. A Mac or Linux computer (tested on Mac; Windows should work with WSL)
 
-(Below steps are mostly formalizing [this article](http://desertbot.io/ssh-into-pi-zero-over-usb/), but modifying for Raspberry Pi 3 model B.)
+## Initial SD Card Setup
 
-First:
-Download Raspbian Buster (lite - no desktop) from [here](https://www.raspberrypi.org/downloads/raspbian/).
-This redirects here for the impatient:
-https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2020-05-28/
-https://downloads.raspberrypi.com/raspios_lite_armhf/images/raspios_lite_armhf-2020-05-28/2020-05-27-raspios-buster-lite-armhf.zip
-**NOTE 2021-09-30**: This doc was created when latest was "Buster".
+1. Download Raspbian Buster Lite from [here](https://www.raspberrypi.org/downloads/raspbian/)
+   - Direct link: https://downloads.raspberrypi.com/raspios_lite_armhf/images/
+   - Use the "lite" version (no desktop needed)
 
-Burn to SD card using [etcher](https://etcher.io/).
+2. Burn to SD card using [Etcher](https://etcher.io/)
 
-Mount SD card to your computer.
+3. Mount SD card to your computer
 
-Run this:
-
+4. Enable SSH by creating an empty file:
 ```sh
 touch /Volumes/boot/ssh
-# only for pi zero
-# sed -i .bak 's/rootwait/rootwait modules-load=dwc2,g_ether/' /Volumes/boot/cmdline.txt
-# echo "dtoverlay=dwc2" >> /Volumes/boot/config.txt
 ```
 
-Unmount, plug card into rpi, and connect to your router using an ethernet cable. 
+5. Unmount the SD card
 
-Then plug in power to rpi. Takes about 30 seconds to boot up. There's no obvious indicator when it's done booting other than that the next step doesn't timeout trying to find the host.
+## First Boot
 
-Then enable passwordless SSH:
+1. Insert SD card into Raspberry Pi
+2. Connect Pi to your router via Ethernet cable
+3. Plug in power to the Pi
+4. Wait about 30 seconds for it to boot
+
+## Enable Passwordless SSH
 
 ```sh
-# if necessary, install ssh-copy-id
+# If necessary, install ssh-copy-id (Mac)
 brew install ssh-copy-id
 
+# Copy your SSH key to the Pi (using default pi user initially)
 ssh-copy-id 'pi@raspberrypi.local'
 ```
 
 This will ask you to confirm adding to your `known_hosts` file.
-
 Default password is `raspberry`.
 
-If you've re-burned the image (starting over) or have otherwise connected to another host named `raspberrypi.local`, ssh will complain. You need to modify `~/.ssh/known_hosts` and just remove the line containing `raspberrypi.local`.
+After initial setup, you'll create a `blinds` user during deployment.
 
-If you want to change the hostname, modify `./Ansible/vars/main.yml`.
+**Note**: If you've re-burned the image or connected to another host named `raspberrypi.local`, SSH will complain. Remove the old entry from `~/.ssh/known_hosts`.
 
-Then:
+## Configure Hostname
+
+Edit `./Ansible/vars/main.yml` to set your desired hostname (default is `blinds.local`).
+
+## Initial System Update
+
+Update the system packages before deployment:
 
 ```sh
-./Ansible/setup-networking.sh
-
-# Do a manual update of apt packages first to make the update process faster/easier.
 ssh pi@raspberrypi.local
 
-$> sudo apt update --allow-releaseinfo-change
-$> sudo apt upgrade -y
-# Takes about 6.5 minutes :(
+# Update package lists
+sudo apt update --allow-releaseinfo-change
 
-$> sudo /sbin/reboot -h now
-# Takes about 75 seconds
+# Upgrade all packages (takes about 6-7 minutes)
+sudo apt upgrade -y
 
-./Ansible/deploy.sh
-
-# TODO: sudo raspi-config nonint do_i2c 0
+# Reboot (takes about 75 seconds)
+sudo /sbin/reboot -h now
 ```
 
-## 🔥
+## Deploy Blinds Controller
 
-If things go funky, you can start over pretty easily.
-
-1. Unplug rpi from power.
-2. Remove any lines from  your `~/.ssh/known_hosts` file that have `raspberrypi.local` or your chosen hostname in them.
-3. GOTO top of this file and start over, you ninny.
-
-## I2C Setup
+Wait for the Pi to reboot, then run the deployment:
 
 ```sh
+# Configure networking and hostname
+./Ansible/setup-networking.sh
+
+# Deploy the blinds controller
+./Ansible/deploy.sh
+```
+
+## Enable I2C
+
+The blinds controller requires I2C to be enabled:
+
+```sh
+ssh blinds@blinds.local
 sudo raspi-config
-# => Interface Options => Enable I2C
+```
+
+Navigate to: **Interface Options → I2C → Enable**
+
+Then reboot:
+```sh
+sudo /sbin/reboot -h now
+```
+
+## Access the API
+
+After deployment completes, access the API at:
+```
+http://blinds.local:3000
+```
+
+Test it with:
+```sh
+curl http://blinds.local:3000
+curl http://blinds.local:3000/blinds-i2c/bedroom_roller
+```
+
+## Troubleshooting
+
+### Starting Over
+
+If things go wrong, you can easily start fresh:
+
+1. Unplug Pi from power
+2. Remove any lines from your `~/.ssh/known_hosts` file that contain `raspberrypi.local` or your chosen hostname
+3. Re-burn the SD card and start from the top
+
+### SSH Connection Issues
+
+- Ensure your computer and Pi are on the same network
+- Check that mDNS/Bonjour is working (`.local` resolution)
+- Try using the IP address instead of hostname
+- Verify SSH is enabled on the Pi
+
+### I2C Not Working
+
+- Double-check I2C is enabled via `raspi-config`
+- Verify I2C devices are connected properly
+- Check with `i2cdetect -y 1` to see connected devices
+- Ensure proper permissions for the `blinds` user
+
+### Service Not Starting
+
+Check service status:
+```sh
+sudo systemctl status express-server
+```
+
+View logs:
+```sh
+sudo journalctl -u express-server -f
+```
+
+Restart service:
+```sh
+sudo systemctl restart express-server
 ```

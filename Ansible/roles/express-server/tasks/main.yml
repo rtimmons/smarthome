@@ -10,22 +10,47 @@
   ignore_errors: yes  # The first time we run the service won't exist. Could set vars or something?  
 
 
-- name: Install required packages
+- name: Install required packages for I2C
   become_user: root
   become: true
   apt:
     pkg:
     - libi2c-dev
-    - python-smbus
     - i2c-tools
     state: present
+
+- name: Enable I2C in boot config
+  become_user: root
+  become: true
+  lineinfile:
+    path: /boot/firmware/config.txt
+    regexp: '^#?dtparam=i2c_arm='
+    line: 'dtparam=i2c_arm=on'
+    state: present
+  register: i2c_config
+
+- name: Enable I2C kernel module
+  become_user: root
+  become: true
+  lineinfile:
+    path: /etc/modules
+    line: 'i2c-dev'
+    state: present
+
+- name: Add blinds user to i2c group
+  become_user: root
+  become: true
+  user:
+    name: blinds
+    groups: i2c,gpio
+    append: yes
 
 - name: Install express-server node.js package
   retries: 5
   delay: 5
   shell: npm install
   args:
-    chdir: /home/pi/repo/ExpressServer
+    chdir: /home/blinds/repo/ExpressServer
 
 - name: copy express-server systemd unit file
   become_user: root
@@ -44,3 +69,8 @@
     name: express-server
     state: restarted
     enabled: yes
+
+- name: Notify if reboot needed for I2C
+  debug:
+    msg: "I2C configuration changed. You may need to reboot for changes to take effect: sudo reboot"
+  when: i2c_config.changed

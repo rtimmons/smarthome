@@ -1,9 +1,9 @@
 ---
-- name: apply roles
+- name: deploy blinds controller
   hosts: post_init
   strategy: free
   roles:
-   - {name: smarthome}
+   - {name: express-server}
 
   pre_tasks:
    - name: import vars

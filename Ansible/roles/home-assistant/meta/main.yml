@@ -1,4 +1,0 @@
----
-dependencies:
-  - { role: repo }
-  - { role: python39 }

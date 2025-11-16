@@ -12,7 +12,7 @@
       times: yes
       delete: yes
       src: "{{ playbook_dir }}/.."
-      dest: /home/pi/repo
+      dest: /home/blinds/repo
       rsync_opts:
         - "--exclude=node_modules"
         - "--exclude=venv"

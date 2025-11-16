@@ -1,8 +1,0 @@
----
-dependencies:
-  - { role: home-assistant }
-  - { role: sonos-http }
-  - { role: express-server }
-  - { role: print-server }
-  - { role: systemd-journal-remote }
-  - { role: tailscale }
