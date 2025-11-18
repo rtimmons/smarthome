@@ -28,8 +28,8 @@ export const scenes: SceneRegistry = {
   // Office Scenes
   // ============================================================================
 
-  office_toggle_doubleup: {
-    name: "office_toggle_doubleup",
+  office_high: {
+    name: "Office - High",
     lights: [
       {
         device: "office_abovecouch",
@@ -65,8 +65,60 @@ export const scenes: SceneRegistry = {
     }
   },
 
-  office_toggle_doubledown: {
-    name: "office_toggle_doubledown",
+  office_medium: {
+    name: "Office - Medium",
+    lights: [
+      {
+        device: "office_abovecouch",
+        state: "on",
+        brightness: 180,
+        rgbw_color: [5, 4, 0, 180]  // Warm white
+      },
+      {
+        device: "office_abovecouch_white",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "office_abovetv",
+        state: "on",
+        brightness: 180,
+        rgbw_color: [5, 4, 0, 180]  // Warm white
+      },
+      {
+        device: "office_abovetv_white",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "office_sidetable",
+        state: "on",
+        brightness: 180,
+        color_temp: 2732  // Warm white
+      }
+    ],
+    switches: {
+      office_pianolight: "on"
+    }
+  },
+
+  office_low: {
+    name: "Office - Low",
+    lights: [
+      {
+        device: "office_sidetable",
+        state: "on",
+        brightness: 50,
+        color_temp: 2732  // Warm white
+      }
+    ],
+    switches: {
+      office_pianolight: "off"
+    }
+  },
+
+  office_off: {
+    name: "Office - Off",
     lights: [
       {
         device: "office_abovecouch",
@@ -92,6 +144,86 @@ export const scenes: SceneRegistry = {
     switches: {
       office_pianolight: "off"
     }
+  },
+
+  // ============================================================================
+  // Bathroom Scenes
+  // ============================================================================
+
+  bathroom_high: {
+    name: "Bathroom - High",
+    lights: [
+      {
+        device: "bathroom_abovesauna",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "bathroom_vanityleft",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "bathroom_vanityright",
+        state: "on",
+        brightness: 255
+      }
+    ]
+  },
+
+  bathroom_medium: {
+    name: "Bathroom - Medium",
+    lights: [
+      {
+        device: "bathroom_abovesauna",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "bathroom_vanityleft",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "bathroom_vanityright",
+        state: "on",
+        brightness: 180
+      }
+    ]
+  },
+
+  bathroom_off: {
+    name: "Bathroom - Off",
+    lights: [
+      {
+        device: "bathroom_abovesauna",
+        state: "off"
+      },
+      {
+        device: "bathroom_vanityleft",
+        state: "off"
+      },
+      {
+        device: "bathroom_vanityright",
+        state: "off"
+      }
+    ]
+  },
+
+  bathroom_low: {
+    name: "Bathroom - Low",
+    lights: [
+      {
+        device: "bathroom_vanityleft",
+        state: "on",
+        brightness: 50
+      },
+      {
+        device: "bathroom_vanityright",
+        state: "on",
+        brightness: 50
+      }
+    ]
   },
 };
 

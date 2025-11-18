@@ -50,6 +50,23 @@ export const devices: DeviceRegistry = {
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
+
+    // Bathroom lights - Z-Wave dimmers (brightness only)
+    bathroom_abovesauna: {
+      entity: "light.light_bathroom_abovesauna",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
+    bathroom_vanityleft: {
+      entity: "light.light_bathroom_vanityleft",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
+    bathroom_vanityright: {
+      entity: "light.light_bathroom_vanityright",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
   },
 
   // ============================================================================

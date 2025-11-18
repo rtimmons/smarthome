@@ -31,7 +31,7 @@ export const automations: AutomationRegistry = {
   // ============================================================================
 
   office_switch_doubleup: {
-    alias: "office_toggle_doubledown",
+    alias: "Office Switch - Double Up → High",
     description: "Turn on all office lights on double-tap up",
     trigger: {
       type: "zwave_js_scene",
@@ -40,13 +40,13 @@ export const automations: AutomationRegistry = {
     },
     action: {
       type: "scene",
-      scene: "office_toggle_doubleup"
+      scene: "office_high"
     },
     mode: "single"
   },
 
   office_switch_doubledown: {
-    alias: "office_toggle_doubledown",
+    alias: "Office Switch - Double Down → Off",
     description: "Turn off all office lights on double-tap down",
     trigger: {
       type: "zwave_js_scene",
@@ -55,7 +55,7 @@ export const automations: AutomationRegistry = {
     },
     action: {
       type: "scene",
-      scene: "office_toggle_doubledown"
+      scene: "office_off"
     },
     mode: "single"
   },
