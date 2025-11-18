@@ -129,7 +129,9 @@ addons:
     description: The actual node-sonos-http-api server for controlling Sonos speakers via HTTP.
     url: https://github.com/jishi/node-sonos-http-api
     source_dir: node-sonos-http-api
-    copy: []
+    copy:
+      - presets
+      - presets.example.json
     git_clone:
       repo: https://github.com/jishi/node-sonos-http-api.git
       target: /app

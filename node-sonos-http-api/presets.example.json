@@ -1,0 +1,25 @@
+{
+  "Bedroom-tv": {
+    "players": [
+      { "roomName": "Bedroom", "volume": 30 },
+      { "roomName": "Bathroom", "volume": 30 },
+      { "roomName": "Closet", "volume": 30 }
+    ],
+    "uri": "x-sonos-htastream:RINCON_347E5C9C39BA01400:spdif"
+  },
+  "Living Room-tv": {
+    "players": [
+      { "roomName": "Living Room", "volume": 30 },
+      { "roomName": "Kitchen", "volume": 30 },
+      { "roomName": "Guest Bathroom", "volume": 30 }
+    ],
+    "uri": "x-sonos-htastream:RINCON_347E5C7978A801400:spdif",
+    "pauseOthers": true
+  },
+  "Office-tv": {
+    "players": [
+      { "roomName": "Office", "volume": 20 }
+    ],
+    "uri": "x-sonos-htastream:RINCON_48A6B83955D101400:spdif"
+  }
+}

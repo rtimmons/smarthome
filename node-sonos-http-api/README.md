@@ -28,6 +28,21 @@ The add-on exposes the following configuration options:
 
 - `sonos_discovery_timeout`: Timeout in seconds for discovering Sonos speakers (default: 5)
 
+### Presets and settings
+
+- Put your `presets.json` in Home Assistant at `/config/node-sonos-http-api/presets.json`. The add-on will
+  automatically symlink it into the app directory on start.
+- You can also use individual preset files under `/config/node-sonos-http-api/presets/` (one JSON file per preset,
+  named `<preset-name>.json`).
+- If no file is provided, a blank `presets.json` is created at `/data/node-sonos-http-api/presets.json`
+  and used so presets persist across restarts. If nothing exists, the bundled `presets.example.json` is copied
+  into `/data/node-sonos-http-api/presets.json` on first start.
+- `settings.json` is also picked up from `/config/node-sonos-http-api/settings.json` or `/data/node-sonos-http-api/settings.json`
+  if you need to override upstream defaults. An empty file is created under `/data/node-sonos-http-api/settings.json`
+  if none is provided to suppress upstream warnings.
+- Default TV presets from the old Ansible setup are checked in under `node-sonos-http-api/presets/` and
+  aggregated in `node-sonos-http-api/presets.example.json` for convenience—copy one of these into `/config/node-sonos-http-api/`.
+
 ## Architecture
 
 This add-on:

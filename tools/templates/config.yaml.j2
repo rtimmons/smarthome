@@ -20,7 +20,8 @@ panel_title: "{{ addon.panel_title or addon.name }}"
 init: false
 homeassistant_api: {{ "true" if addon.homeassistant_api else "false" }}
 auth_api: {{ "true" if addon.auth_api else "false" }}
-{% if addon.host_network %}host_network: true{% endif %}
+{% if addon.host_network %}host_network: true
+{% endif %}
 {% if addon.ports %}
 ports:
 {{ ports_yaml | indent(2, true) }}

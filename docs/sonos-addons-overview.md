@@ -31,6 +31,12 @@ HA_HOST=smarterhome5.local just deploy
 
 ### Configuration:
 - `sonos_discovery_timeout`: Timeout in seconds for discovering Sonos speakers (default: 5)
+- `presets.json`: Place at `/config/node-sonos-http-api/presets.json` (auto-linked). If missing, the add-on
+  will create and use `/data/node-sonos-http-api/presets.json` so presets persist across restarts. If nothing is present,
+  the bundled `presets.example.json` is copied there on first start. Per-preset files in `/config/node-sonos-http-api/presets/`
+  are also supported.
+- Default TV presets from the legacy Ansible install are stored in `node-sonos-http-api/presets/`
+  and combined in `node-sonos-http-api/presets.example.json` for quick copy into `/config/node-sonos-http-api/`.
 
 ### Access:
 - External: `http://<ha-host>:5005`
