@@ -39,6 +39,15 @@ app.get('/quiet', sonosGet('groupVolume/7'));
 
 // Custom routes /same/:room, /down, /up are now handled by sonos-api add-on
 // Simple proxy routes below forward to sonos-api which has the business logic
+app.get('/same/:room', (req: RQ, res: RS) => {
+    return sonosPipe(`same/${req.params.room}`, req, res);
+});
+app.get('/down', (req: RQ, res: RS) => {
+    return sonosPipe('down', req, res);
+});
+app.get('/up', (req: RQ, res: RS) => {
+    return sonosPipe('up', req, res);
+});
 
 export const sonos = app;
 

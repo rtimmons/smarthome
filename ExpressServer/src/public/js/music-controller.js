@@ -11,8 +11,15 @@ class MusicController {
         const currRoom = this.app.currentRoom();
         const replaceName = n => n.replace(/\$room/g, currRoom);
         args = args.map(a => replaceName(a));
-        // Build URL: only include root if it's not empty, to avoid double slashes
-        var url = this.root ? [this.root].concat(args).join('/') : args.join('/');
+        // Build URL using current page's base path for ingress compatibility
+        var path = args.join('/');
+        if (!this.root) {
+            // Get base path from current location, removing ALL trailing slashes
+            var basePath = window.location.pathname.replace(/\/+$/, ''); // Remove all trailing slashes
+            var url = basePath + '/' + path;
+        } else {
+            var url = [this.root].concat(args).join('/');
+        }
 
         return this.requester.request(url);
     }

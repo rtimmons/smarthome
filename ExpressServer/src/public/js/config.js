@@ -87,8 +87,7 @@ const config = {
     rooms: [
         // This is used by allJoin (double-tap a room).
         // This "should" be implemented in the ExpressAPI
-        'Living',
-        'Chair',
+        'Living Room',
         'Bedroom',
         'Kitchen',
         'Bathroom',
@@ -96,7 +95,6 @@ const config = {
         'Guest Bathroom',
         'Closet',
         'Move',
-        'Maker Room',
     ],
     cells: [
         /*
@@ -138,11 +136,9 @@ const config = {
         ...roomTiles({ xPos: roomX++, emojiName: 'Bed',       roomName: 'Bedroom' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Tent',      roomName: 'Move' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Rice',      roomName: 'Kitchen' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'TV',        roomName: 'Living' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Chair',     roomName: 'Chair' }),      
+        ...roomTiles({ xPos: roomX++, emojiName: 'TV',        roomName: 'Living Room' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Guest',     roomName: 'Guest Bathroom' }),
         ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Robot',     roomName: 'Maker Room' }),
 
         {
             w: 1,
