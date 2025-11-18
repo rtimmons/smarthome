@@ -1,10 +1,53 @@
 set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
+backup_dir := "backups"
 
-# Fetch the Home Assistant YAML configs into new-hass-configs/
+# Generate Home Assistant configs from TypeScript sources
+generate:
+	cd config-generator && npm install && npm run generate
+	@echo "Merging generated configs with manual configs..."
+	@# Note: Manual configs are already YAML files, just concatenate them
+	@cat generated/scenes.yaml manual/scenes.yaml > scenes.yaml || cp generated/scenes.yaml scenes.yaml
+	@cat generated/automations.yaml manual/automations.yaml > automations.yaml || cp generated/automations.yaml automations.yaml
+	@echo "Configuration generation complete!"
+
+# Fetch the Home Assistant YAML configs into current directory
 fetch:
-	mkdir -p new-hass-configs
+	rsync -av \
+		--delete \
+		--prune-empty-dirs \
+		--filter='protect config-generator/' \
+		--filter='protect generated/' \
+		--filter='protect manual/' \
+		--filter='protect backups/' \
+		--filter='protect HomeAssistantConfig/***' \
+		--filter='protect MetaHassConfig/***' \
+		--filter='protect .git/***' \
+		--include '*/' \
+		--include '*.yaml' \
+		--include '*.yml' \
+		--include '*.json' \
+		--include '*.sh' \
+		--exclude '.cloud/' \
+		--exclude '.storage/' \
+		--exclude 'deps/' \
+		--exclude 'tts/' \
+		--exclude 'secrets.yaml' \
+		--exclude '*.db*' \
+		--exclude '*.log' \
+		--exclude '*.pickle' \
+		--exclude '*.uuid' \
+		--exclude '*~' \
+		--exclude '*.pyc' \
+		--exclude '__pycache__/' \
+		--exclude '*' \
+		-e "ssh -p 22" \
+		root@homeassistant.local:/config/ .
+
+# Validate the current config on Home Assistant and show what would change (no apply).
+check:
+	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \
 		--prune-empty-dirs \
@@ -26,38 +69,15 @@ fetch:
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
+		--exclude 'config-generator/' \
+		--exclude 'generated/' \
+		--exclude 'manual/' \
+		--exclude 'backups/' \
+		--exclude 'HomeAssistantConfig/' \
+		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
-		root@homeassistant.local:/config/ new-hass-configs/
-
-# Validate the contents of new-hass-configs/ on Home Assistant and show what would change (no apply).
-check:
-		test -d new-hass-configs
-		ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
-	rsync -av \
-		--delete \
-		--prune-empty-dirs \
-		--include '*/' \
-		--include '*.yaml' \
-		--include '*.yml' \
-		--include '*.json' \
-		--include '*.sh' \
-		--exclude '.git/' \
-		--exclude '.cloud/' \
-		--exclude '.storage/' \
-		--exclude 'deps/' \
-		--exclude 'tts/' \
-		--exclude 'secrets.yaml' \
-		--exclude '*.db*' \
-		--exclude '*.log' \
-		--exclude '*.pickle' \
-		--exclude '*.uuid' \
-		--exclude '*~' \
-		--exclude '*.pyc' \
-	    --exclude '__pycache__/' \
-	    --exclude '*' \
-		    -e "ssh -p 22" \
-		    new-hass-configs/ root@homeassistant.local:"{{tmp_dir}}"/
+		. root@homeassistant.local:"{{tmp_dir}}"/
 	ssh -p 22 root@homeassistant.local "if [ -f /config/secrets.yaml ]; then cp /config/secrets.yaml \"{{tmp_dir}}\"/; fi"
 	ssh -p 22 root@homeassistant.local "\
 		set -euo pipefail; \
@@ -110,15 +130,20 @@ check:
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
+		--exclude 'config-generator/' \
+		--exclude 'generated/' \
+		--exclude 'manual/' \
+		--exclude 'backups/' \
+		--exclude 'HomeAssistantConfig/' \
+		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
-		new-hass-configs/ root@homeassistant.local:/config/ \
+		. root@homeassistant.local:/config/ \
 		| sed 's/^/  /'
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 
-# Push the contents of new-hass-configs/ to Home Assistant, validate, and restart.
+# Push the current config to Home Assistant, validate, and restart.
 push:
-			test -d new-hass-configs
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \
@@ -140,10 +165,16 @@ push:
 		--exclude '*.uuid' \
 		--exclude '*~' \
 		--exclude '*.pyc' \
-	    --exclude '__pycache__/' \
-	    --exclude '*' \
-		    -e "ssh -p 22" \
-		    new-hass-configs/ root@homeassistant.local:"{{tmp_dir}}"/
+		--exclude '__pycache__/' \
+		--exclude 'config-generator/' \
+		--exclude 'generated/' \
+		--exclude 'manual/' \
+		--exclude 'backups/' \
+		--exclude 'HomeAssistantConfig/' \
+		--exclude 'MetaHassConfig/' \
+		--exclude '*' \
+		-e "ssh -p 22" \
+		. root@homeassistant.local:"{{tmp_dir}}"/
 	ssh -p 22 root@homeassistant.local "if [ -f /config/secrets.yaml ]; then cp /config/secrets.yaml \"{{tmp_dir}}\"/; fi"
 	ssh -p 22 root@homeassistant.local "\
 		set -euo pipefail; \
@@ -200,8 +231,186 @@ push:
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
+		--exclude 'config-generator/' \
+		--exclude 'generated/' \
+		--exclude 'manual/' \
+		--exclude 'backups/' \
+		--exclude 'HomeAssistantConfig/' \
+		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
-		new-hass-configs/ root@homeassistant.local:/config/
+		. root@homeassistant.local:/config/
 	ssh -p 22 root@homeassistant.local "ha core restart"
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
+
+# Create a timestamped backup of Home Assistant configs
+backup DESCRIPTION="":
+	#!/usr/bin/env bash
+	set -euo pipefail
+	timestamp=$(date +"%Y%m%d-%H%M%S")
+	backup_path="{{backup_dir}}/${timestamp}"
+	mkdir -p "${backup_path}"
+	echo "Creating backup: ${backup_path}"
+	rsync -av \
+		--prune-empty-dirs \
+		--include '*/' \
+		--include '*.yaml' \
+		--include '*.yml' \
+		--include '*.json' \
+		--include '*.sh' \
+		--exclude '.git/' \
+		--exclude '.cloud/' \
+		--exclude '.storage/' \
+		--exclude 'deps/' \
+		--exclude 'tts/' \
+		--exclude 'secrets.yaml' \
+		--exclude '*.db*' \
+		--exclude '*.log' \
+		--exclude '*.pickle' \
+		--exclude '*.uuid' \
+		--exclude '*~' \
+		--exclude '*.pyc' \
+		--exclude '__pycache__/' \
+		--exclude '*' \
+		-e "ssh -p 22" \
+		root@homeassistant.local:/config/ "${backup_path}/"
+	if [ -n "{{DESCRIPTION}}" ]; then
+		echo "{{DESCRIPTION}}" > "${backup_path}/DESCRIPTION.txt"
+	fi
+	echo "Backup created: ${backup_path}"
+
+# List available backups
+backups:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	if [ ! -d "{{backup_dir}}" ]; then
+		echo "No backups directory found"
+		exit 0
+	fi
+	echo "Available backups:"
+	for backup in {{backup_dir}}/*/; do
+		if [ -d "${backup}" ]; then
+			backup_name=$(basename "${backup}")
+			if [ -f "${backup}/DESCRIPTION.txt" ]; then
+				desc=$(cat "${backup}/DESCRIPTION.txt")
+				echo "  ${backup_name} - ${desc}"
+			else
+				echo "  ${backup_name}"
+			fi
+		fi
+	done
+
+# Restore configuration from a backup (use 'latest' for most recent)
+restore TIMESTAMP:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	if [ "{{TIMESTAMP}}" = "latest" ]; then
+		backup_path=$(ls -td {{backup_dir}}/*/ 2>/dev/null | head -1)
+		if [ -z "${backup_path}" ]; then
+			echo "No backups found"
+			exit 1
+		fi
+		backup_path="${backup_path%/}"
+	else
+		backup_path="{{backup_dir}}/{{TIMESTAMP}}"
+	fi
+	if [ ! -d "${backup_path}" ]; then
+		echo "Backup not found: ${backup_path}"
+		exit 1
+	fi
+	echo "Restoring from backup: ${backup_path}"
+	echo "This will restore config to Home Assistant and restart"
+	read -p "Continue? (y/N) " -n 1 -r
+	echo
+	if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+		echo "Restore cancelled"
+		exit 0
+	fi
+	# Create a safety backup first
+	timestamp=$(date +"%Y%m%d-%H%M%S")
+	safety_backup="{{backup_dir}}/pre-restore-${timestamp}"
+	mkdir -p "${safety_backup}"
+	echo "Creating safety backup: ${safety_backup}"
+	rsync -av \
+		--prune-empty-dirs \
+		--include '*/' \
+		--include '*.yaml' \
+		--include '*.yml' \
+		--include '*.json' \
+		--include '*.sh' \
+		--exclude '.git/' \
+		--exclude '.cloud/' \
+		--exclude '.storage/' \
+		--exclude 'deps/' \
+		--exclude 'tts/' \
+		--exclude 'secrets.yaml' \
+		--exclude '*.db*' \
+		--exclude '*.log' \
+		--exclude '*.pickle' \
+		--exclude '*.uuid' \
+		--exclude '*~' \
+		--exclude '*.pyc' \
+		--exclude '__pycache__/' \
+		--exclude '*' \
+		-e "ssh -p 22" \
+		root@homeassistant.local:/config/ "${safety_backup}/"
+	# Restore the backup
+	rsync -av \
+		--delete \
+		--prune-empty-dirs \
+		--include '*/' \
+		--include '*.yaml' \
+		--include '*.yml' \
+		--include '*.json' \
+		--include '*.sh' \
+		--exclude '.git/' \
+		--exclude '.cloud/' \
+		--exclude '.storage/' \
+		--exclude 'deps/' \
+		--exclude 'tts/' \
+		--exclude 'secrets.yaml' \
+		--exclude '*.db*' \
+		--exclude '*.log' \
+		--exclude '*.pickle' \
+		--exclude '*.uuid' \
+		--exclude '*~' \
+		--exclude '*.pyc' \
+		--exclude '__pycache__/' \
+		--exclude '*' \
+		-e "ssh -p 22" \
+		"${backup_path}/" root@homeassistant.local:/config/
+	# Validate and restart
+	if ssh -p 22 root@homeassistant.local "ha core check"; then
+		echo "Configuration valid, restarting Home Assistant..."
+		ssh -p 22 root@homeassistant.local "ha core restart"
+		echo "Restore complete"
+	else
+		echo "Configuration validation failed!"
+		echo "Restoring safety backup..."
+		rsync -av \
+			--delete \
+			--prune-empty-dirs \
+			--include '*/' \
+			--include '*.yaml' \
+			--include '*.yml' \
+			--include '*.json' \
+			--include '*.sh' \
+			--exclude '.git/' \
+			--exclude '.cloud/' \
+			--exclude '.storage/' \
+			--exclude 'deps/' \
+			--exclude 'tts/' \
+			--exclude 'secrets.yaml' \
+			--exclude '*.db*' \
+			--exclude '*.log' \
+			--exclude '*.pickle' \
+			--exclude '*.uuid' \
+			--exclude '*~' \
+			--exclude '*.pyc' \
+			--exclude '__pycache__/' \
+			--exclude '*' \
+			-e "ssh -p 22" \
+			"${safety_backup}/" root@homeassistant.local:/config/
+		echo "Safety backup restored"
+		exit 1
+	fi

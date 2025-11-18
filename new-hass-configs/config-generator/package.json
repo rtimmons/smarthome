@@ -1,0 +1,26 @@
+{
+  "name": "hass-config-generator",
+  "version": "1.0.0",
+  "description": "TypeScript-based Home Assistant configuration generator",
+  "main": "dist/generate.js",
+  "scripts": {
+    "build": "tsc",
+    "generate": "npm run build && node dist/generate.js",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "home-assistant",
+    "configuration",
+    "generator"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "typescript": "^5.3.3"
+  },
+  "dependencies": {
+    "yaml": "^2.3.4"
+  }
+}

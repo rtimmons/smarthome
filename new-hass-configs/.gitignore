@@ -1,0 +1,18 @@
+# Backups (local only)
+backups/
+
+# Generated configs (should be regenerated from TypeScript sources)
+generated/
+
+# Secrets (never commit)
+secrets.yaml
+
+# Node modules
+config-generator/node_modules/
+config-generator/dist/
+
+# Logs
+*.log
+
+# System files
+.DS_Store
