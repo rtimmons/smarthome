@@ -1,0 +1,46 @@
+- id: '1763430527828'
+  alias: set from device
+  description: ''
+  triggers:
+  - device_id: 44ca863fc3d89c94bdfb7471c370a932
+    domain: zwave_js
+    type: event.value_notification.central_scene
+    property: scene
+    property_key: '001'
+    endpoint: 0
+    command_class: 91
+    subtype: Endpoint 0 Scene 001
+    metadata: {}
+    trigger: device
+    value: 3
+  conditions: []
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id: scene.scene_001_keypressed2x
+  mode: single
+- id: '1763430651033'
+  alias: office_toggle_doubledown
+  description: ''
+  triggers:
+  - device_id: 44ca863fc3d89c94bdfb7471c370a932
+    domain: zwave_js
+    type: event.value_notification.central_scene
+    property: scene
+    property_key: '002'
+    endpoint: 0
+    command_class: 91
+    subtype: Endpoint 0 Scene 002
+    trigger: device
+    value: 3
+  conditions: []
+  actions:
+  - action: scene.turn_on
+    metadata: {}
+    data: {}
+    target:
+      entity_id:
+      - scene.scene_002_keypressed2x
+  mode: single

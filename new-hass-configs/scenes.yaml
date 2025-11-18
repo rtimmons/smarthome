@@ -1,0 +1,163 @@
+- id: '1763429714321'
+  name: office_toggle_doubleup
+  entities:
+    light.light_office_abovecouch:
+      supported_color_modes:
+      - rgbw
+      color_mode: rgbw
+      brightness: 255
+      hs_color:
+      - 48
+      - 1.961
+      rgb_color:
+      - 255
+      - 254
+      - 250
+      xy_color:
+      - 0.326
+      - 0.333
+      rgbw_color:
+      - 5
+      - 4
+      - 0
+      - 255
+      friendly_name: 'light_office_abovecouch '
+      supported_features: 32
+      state: 'on'
+    light.light_office_abovecouch_white:
+      supported_color_modes:
+      - brightness
+      color_mode: brightness
+      brightness: 255
+      friendly_name: light_office_abovecouch_white
+      supported_features: 32
+      state: 'on'
+    switch.light_office_pianolight:
+      friendly_name: 'light_office_pianolight '
+      state: 'on'
+    light.light_office_abovetv_white:
+      supported_color_modes:
+      - brightness
+      color_mode: brightness
+      brightness: 255
+      friendly_name: light_office_abovetv_white
+      supported_features: 32
+      state: 'on'
+    light.light_office_abovetv:
+      supported_color_modes:
+      - rgbw
+      color_mode: rgbw
+      brightness: 255
+      hs_color:
+      - 48
+      - 1.961
+      rgb_color:
+      - 255
+      - 254
+      - 250
+      xy_color:
+      - 0.326
+      - 0.333
+      rgbw_color:
+      - 5
+      - 4
+      - 0
+      - 255
+      friendly_name: light_office_abovetv
+      supported_features: 32
+      state: 'on'
+    light.office_light_sidetable:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 500
+      supported_color_modes:
+      - color_temp
+      - xy
+      color_mode: color_temp
+      brightness: 255
+      color_temp_kelvin: 2732
+      color_temp: 366
+      hs_color:
+      - 28.327
+      - 64.71
+      rgb_color:
+      - 255
+      - 168
+      - 90
+      xy_color:
+      - 0.522
+      - 0.387
+      mode: normal
+      dynamics: none
+      friendly_name: office_light_sidetable
+      supported_features: 40
+      state: 'on'
+  metadata: {}
+- id: '1763429872262'
+  name: office_toggle_doubledown
+  entities:
+    light.light_office_abovecouch:
+      supported_color_modes:
+      - rgbw
+      color_mode:
+      brightness:
+      hs_color:
+      rgb_color:
+      xy_color:
+      rgbw_color:
+      friendly_name: 'light_office_abovecouch '
+      supported_features: 32
+      state: 'off'
+    light.light_office_abovecouch_white:
+      supported_color_modes:
+      - brightness
+      color_mode:
+      brightness:
+      friendly_name: light_office_abovecouch_white
+      supported_features: 32
+      state: 'off'
+    switch.light_office_pianolight:
+      friendly_name: 'light_office_pianolight '
+      state: 'off'
+    light.light_office_abovetv_white:
+      supported_color_modes:
+      - brightness
+      color_mode:
+      brightness:
+      friendly_name: light_office_abovetv_white
+      supported_features: 32
+      state: 'off'
+    light.light_office_abovetv:
+      supported_color_modes:
+      - rgbw
+      color_mode:
+      brightness:
+      hs_color:
+      rgb_color:
+      xy_color:
+      rgbw_color:
+      friendly_name: light_office_abovetv
+      supported_features: 32
+      state: 'off'
+    light.office_light_sidetable:
+      min_color_temp_kelvin: 2000
+      max_color_temp_kelvin: 6535
+      min_mireds: 153
+      max_mireds: 500
+      supported_color_modes:
+      - color_temp
+      - xy
+      color_mode:
+      brightness:
+      color_temp_kelvin:
+      color_temp:
+      hs_color:
+      rgb_color:
+      xy_color:
+      mode: normal
+      dynamics: none
+      friendly_name: office_light_sidetable
+      supported_features: 40
+      state: 'off'
+  metadata: {}
