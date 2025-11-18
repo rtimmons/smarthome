@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-EXPRESS_ROOT="${REPO_ROOT}/../ExpressServer"
+EXPRESS_ROOT="${REPO_ROOT}/ExpressServer"
 ADDON_SLUG="grid_dashboard"
 ADDON_NAME="Grid Dashboard"
 DIST_ROOT="${REPO_ROOT}/build/home-assistant-addon"
