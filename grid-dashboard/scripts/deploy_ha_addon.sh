@@ -39,6 +39,7 @@ REMOTE_ADDON_DIR="/addons/${ADDON_SLUG}"
 ha addons stop "${ADDON_ID}" >/dev/null 2>&1 || true
 ha addons uninstall "${ADDON_ID}" >/dev/null 2>&1 || true
 rm -rf "${REMOTE_ADDON_DIR}"
+rm -rf "/data/addons/local/${ADDON_SLUG}"
 mkdir -p "/addons"
 tar -xzf "${REMOTE_TAR}" -C "/addons"
 rm -f "${REMOTE_TAR}"

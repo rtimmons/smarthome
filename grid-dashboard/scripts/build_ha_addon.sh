@@ -56,19 +56,22 @@ arch:
   - armhf
   - i386
 startup: services
-ingress: false
+ingress: true
+ingress_port: 3000
+ingress_entry: "/"
 panel_icon: "mdi:view-dashboard"
-webui: "http://[HOST]:[PORT:3000]/ui"
+panel_title: "Grid Dashboard"
 init: false
 homeassistant_api: true
 auth_api: false
 ports:
   3000/tcp: 3000
 ports_description:
-  3000/tcp: "Public dashboard UI and API (ingress is disabled)."
+  3000/tcp: "Optional host port for direct access (ingress is enabled by default)."
 homeassistant: "2024.6.0"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
+  INGRESS_ENTRY: "/api/hassio_ingress"
 options:
   sonos_base_url: "http://node-sonos-http-api:5005"
   webhook_base: ""
@@ -128,7 +131,7 @@ log "Writing ${README_PATH}"
 cat >"${README_PATH}" <<'EOF'
 # Grid Dashboard Home Assistant Add-on
 
-Local add-on that exposes the Express-based grid dashboard UI, Sonos helper routes (via node-sonos-http-api), and a few convenience redirects on a public port (ingress is disabled).
+Local add-on that exposes the Express-based grid dashboard UI with ingress support. Access the dashboard directly from the Home Assistant sidebar, or use the Sonos helper routes and convenience redirects.
 EOF
 
 DOCS_PATH="${ADDON_ROOT}/DOCS.md"
@@ -136,21 +139,26 @@ log "Writing ${DOCS_PATH}"
 cat >"${DOCS_PATH}" <<'EOF'
 # Grid Dashboard Add-on
 
-This add-on packages the ExpressServer dashboard so it can run locally on Home Assistant while remaining reachable over a public host port (no ingress).
+This add-on packages the ExpressServer dashboard for Home Assistant, providing easy access to the dashboard UI, Sonos controls, and Home Assistant webhook helpers through the Home Assistant interface.
 
 ## Installation
 
 1. Generate the add-on payload with `just ha-addon` (see the Justfile in this folder).
-2. Copy the generated `grid_dashboard` folder or the tarball from `build/home-assistant-addon/` to your Home Assistant host under `/addons/local/`.
+2. Copy the generated `grid_dashboard` folder or the tarball from `build/home-assistant-addon/` to your Home Assistant host under `/addons/`.
 3. In Home Assistant, open **Settings → Add-ons → Add-on Store**, click **Check for updates**, then install **Grid Dashboard** from **Local add-ons**.
-4. Start the add-on and open `http://<ha-host>:<port>/ui` (default port 3000).
+4. Start the add-on.
+
+## Access
+
+- **Preferred**: Use the add-on ingress link from the Home Assistant sidebar. After installation, click "Grid Dashboard" in the sidebar to open the UI.
+- **Alternative**: Access directly via `http://<ha-host>:3000/` if you need to bypass ingress (port 3000 is exposed by default).
 
 ## Configuration
 
 - `sonos_base_url`: Base URL for the upstream `node-sonos-http-api` service. Default `http://node-sonos-http-api:5005`.
 - `webhook_base`: Optional override for Home Assistant webhooks. Leave blank to use the supervisor proxy.
 
-The add-on disables ingress by design. Use the host port to reach the UI and routes directly (default mapping `3000 → 3000`; adjust under **Network** if needed).
+The add-on enables ingress by default, making it accessible through the Home Assistant interface. The sidebar panel provides quick access to the dashboard.
 EOF
 
 CHANGELOG_PATH="${ADDON_ROOT}/CHANGELOG.md"

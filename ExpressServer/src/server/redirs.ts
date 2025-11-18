@@ -9,7 +9,9 @@ const host = (req: RQ) => {
     if (header === undefined) {
         return;
     }
-    req.headers.host = header.replace(/:\d+$/, '');
+    const sanitized = header.replace(/:\d+$/, '');
+    req.headers.host = sanitized;
+    return sanitized;
 };
 
 export const redirs = Router();
@@ -36,10 +38,11 @@ redirs.post('/report', (req: RQ, res: RS) => {
 });
 
 redirs.get('/journal', (req: RQ, res: RS) => {
-    res.redirect(301, `http://${host(req)}:19531/browse`);
+    const hostName = host(req) || req.hostname || 'localhost';
+    res.redirect(301, `http://${hostName}:19531/browse`);
 });
 
-redirs.get('/', (req: RQ, res: RS) => {
-    res.set('Content-Type', 'application/json');
-    res.send('{}');
-});
+// Root is now handled by static middleware for ingress support
+// redirs.get('/', (req: RQ, res: RS) => {
+//     res.redirect('/ui/');
+// });

@@ -11,8 +11,10 @@ process.title = 'smhexprsrv';
 import {hass} from './hass';
 import {redirs} from './redirs';
 import {sonos} from './sonos';
+import {appConfig} from './config';
 
 const app = express();
+const publicDir = path.join(__dirname, '..', 'public');
 
 // Community middle-ware.
 app.use(morgan('tiny'));
@@ -21,13 +23,16 @@ app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
 app.use(cors());
 
 // /ui (dashboard ui) middleware
-app.use(serveFavicon(path.join(__dirname, '..', 'public', 'favicon.ico')));
-app.use('/ui', express.static('src/public'));
+app.use(serveFavicon(path.join(publicDir, 'favicon.ico')));
+app.use('/ui', express.static(publicDir));
 
 // Internal API middleware.
 app.use(redirs);
 app.use(sonos);
 app.use(hass);
 
+// Serve dashboard at root for ingress (must be last to not override API routes)
+app.use('/', express.static(publicDir));
+
 // Run the thing.
-app.listen(3000, () => console.log('Listening on port 3000!'));
+app.listen(appConfig.port, () => console.log(`Listening on port ${appConfig.port}!`));
