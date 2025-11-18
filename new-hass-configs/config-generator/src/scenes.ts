@@ -230,8 +230,8 @@ export const scenes: SceneRegistry = {
   // Living Room Scenes
   // ============================================================================
 
-  living_high: {
-    name: "Living - High",
+  living_room_high: {
+    name: "Living Room - High",
     lights: [
       {
         device: "living_floor",
@@ -284,8 +284,8 @@ export const scenes: SceneRegistry = {
     }
   },
 
-  living_medium: {
-    name: "Living - Medium",
+  living_room_medium: {
+    name: "Living Room - Medium",
     lights: [
       {
         device: "living_floor",
@@ -329,8 +329,8 @@ export const scenes: SceneRegistry = {
     }
   },
 
-  living_low: {
-    name: "Living - Low",
+  living_room_low: {
+    name: "Living Room - Low",
     lights: [
       {
         device: "living_floor",
@@ -348,8 +348,8 @@ export const scenes: SceneRegistry = {
     }
   },
 
-  living_off: {
-    name: "Living - Off",
+  living_room_off: {
+    name: "Living Room - Off",
     lights: [
       {
         device: "living_floor",

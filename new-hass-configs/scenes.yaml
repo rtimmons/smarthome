@@ -126,8 +126,8 @@
     light.light_bathroom_vanityright:
       state: on
       brightness: 50
-- id: living_high
-  name: Living - High
+- id: living_room_high
+  name: Living Room - High
   entities:
     light.living_light_floor:
       state: on
@@ -158,8 +158,8 @@
       brightness: 255
     switch.light_living_ledwall:
       state: on
-- id: living_medium
-  name: Living - Medium
+- id: living_room_medium
+  name: Living Room - Medium
   entities:
     light.living_light_floor:
       state: on
@@ -183,8 +183,8 @@
       state: off
     switch.light_living_ledwall:
       state: off
-- id: living_low
-  name: Living - Low
+- id: living_room_low
+  name: Living Room - Low
   entities:
     light.living_light_floor:
       state: on
@@ -194,8 +194,8 @@
       brightness: 50
     switch.light_living_ledwall:
       state: off
-- id: living_off
-  name: Living - Off
+- id: living_room_off
+  name: Living Room - Off
   entities:
     light.living_light_floor:
       state: off

@@ -59,6 +59,144 @@ export const automations: AutomationRegistry = {
     },
     mode: "single"
   },
+
+  // ============================================================================
+  // Office Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  office_webhook_high: {
+    alias: "Office Webhook → High",
+    description: "Dashboard button: Office High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_office_high"
+    },
+    action: {
+      type: "scene",
+      scene: "office_high"
+    },
+    mode: "single"
+  },
+
+  office_webhook_medium: {
+    alias: "Office Webhook → Medium",
+    description: "Dashboard button: Office Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_office_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "office_medium"
+    },
+    mode: "single"
+  },
+
+  office_webhook_off: {
+    alias: "Office Webhook → Off",
+    description: "Dashboard button: Office Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_office_off"
+    },
+    action: {
+      type: "scene",
+      scene: "office_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
+  // Bathroom Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  bathroom_webhook_high: {
+    alias: "Bathroom Webhook → High",
+    description: "Dashboard button: Bathroom High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bathroom_high"
+    },
+    action: {
+      type: "scene",
+      scene: "bathroom_high"
+    },
+    mode: "single"
+  },
+
+  bathroom_webhook_medium: {
+    alias: "Bathroom Webhook → Medium",
+    description: "Dashboard button: Bathroom Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bathroom_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "bathroom_medium"
+    },
+    mode: "single"
+  },
+
+  bathroom_webhook_off: {
+    alias: "Bathroom Webhook → Off",
+    description: "Dashboard button: Bathroom Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bathroom_off"
+    },
+    action: {
+      type: "scene",
+      scene: "bathroom_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
+  // Living Room Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  living_room_webhook_high: {
+    alias: "Living Room Webhook → High",
+    description: "Dashboard button: Living Room High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_living_room_high"
+    },
+    action: {
+      type: "scene",
+      scene: "living_room_high"
+    },
+    mode: "single"
+  },
+
+  living_room_webhook_medium: {
+    alias: "Living Room Webhook → Medium",
+    description: "Dashboard button: Living Room Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_living_room_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "living_room_medium"
+    },
+    mode: "single"
+  },
+
+  living_room_webhook_off: {
+    alias: "Living Room Webhook → Off",
+    description: "Dashboard button: Living Room Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_living_room_off"
+    },
+    action: {
+      type: "scene",
+      scene: "living_room_off"
+    },
+    mode: "single"
+  },
 };
 
 /**

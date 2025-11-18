@@ -201,6 +201,118 @@ export const automations = {
 
 ---
 
+## Naming Conventions & Dashboard Integration
+
+### Room-Scene-Webhook Naming Convention
+
+**CRITICAL**: Room names must match exactly across three systems for the dashboard scene buttons to work properly.
+
+#### 1. Dashboard Room Names
+- **Location**: `grid-dashboard/ExpressServer/src/public/js/config.js`
+- **Format**: Proper case with spaces (e.g., "Living Room", "Office", "Guest Bathroom")
+- **Example**:
+  ```javascript
+  rooms: [
+    'Living Room',
+    'Bedroom',
+    'Kitchen',
+    'Bathroom',
+    'Office',
+  ]
+  ```
+
+#### 2. Scene IDs
+- **Location**: `config-generator/src/scenes.ts`
+- **Format**: `{room}_{level}` (lowercase, spaces → underscores)
+- **Levels**: `high`, `medium`, `low`, `off`
+- **Example**: `living_room_high`, `office_medium`, `bathroom_off`
+
+#### 3. Webhook IDs
+- **Location**: `config-generator/src/automations.ts` (webhook triggers)
+- **Format**: `scene_{room}_{level}` (lowercase, spaces → underscores)
+- **Example**: `scene_living_room_high`, `scene_office_medium`
+
+### Conversion Flow
+
+```
+Dashboard: "Living Room" button + Sun button (High)
+    ↓ (Dashboard LightController converts to URL)
+URL: /scenes/scene_living_room_high
+    ↓ (Express server POSTs to Home Assistant webhook)
+Webhook: scene_living_room_high
+    ↓ (Home Assistant automation triggers scene)
+Scene: scene.living_room_high
+    ↓ (Scene applies light states)
+Lights: Turn on at specified brightness
+```
+
+### Scene Levels
+
+Each room should have **four standard scenes**:
+
+| Level  | Button | Brightness | Use Case                        | Webhook? |
+|--------|--------|------------|---------------------------------|----------|
+| High   | ☀️ Sun | 255 (100%) | Daytime, active work            | ✅ Yes   |
+| Medium | 🌘 Dim | 180 (70%)  | Evening, relaxation             | ✅ Yes   |
+| Low    | -      | 50 (20%)   | Night light, minimal            | ❌ No    |
+| Off    | 🌑 Moon| 0 (off)    | Leaving room, sleep             | ✅ Yes   |
+
+**Note**: Only High, Medium, and Off are accessible from dashboard buttons. Low is available via physical switch automations.
+
+### Adding a New Room
+
+See detailed guide in [config-generator/README.md](config-generator/README.md) and [config-generator/TEMPLATE_NEW_ROOM.md](config-generator/TEMPLATE_NEW_ROOM.md).
+
+**Quick steps:**
+1. Add devices to `config-generator/src/devices.ts`
+2. Add scenes to `config-generator/src/scenes.ts` (can use helper functions)
+3. Add webhook automations to `config-generator/src/automations.ts` (can use helper functions)
+4. Verify room in dashboard `config.js`
+5. Run `just generate && just push`
+
+**Example using helpers:**
+```typescript
+// scenes.ts
+import { createStandardRoomScenes } from "./helpers";
+
+export const scenes: SceneRegistry = {
+  ...createStandardRoomScenes({
+    roomDisplayName: "Bedroom",
+    roomId: "bedroom",
+    devices: ["bedroom_ceiling", "bedroom_nightstand"]
+  }),
+};
+
+// automations.ts
+import { createStandardWebhooks } from "./helpers";
+
+export const automations: AutomationRegistry = {
+  ...createStandardWebhooks({
+    roomDisplayName: "Bedroom",
+    roomId: "bedroom"
+  }),
+};
+```
+
+### Dashboard Scene Buttons
+
+Dashboard displays three scene buttons per room at grid coordinates `y:2, x:7-9`:
+
+```javascript
+// From grid-dashboard config.js
+{ emoji: 'Sun',  onPress: {action: 'Lights.Scene', args: ['$room','High']} },   // x:7
+{ emoji: 'Dim',  onPress: {action: 'Lights.Scene', args: ['$room','Medium']} }, // x:8
+{ emoji: 'Moon', onPress: {action: 'Lights.Scene', args: ['$room','Off']} },    // x:9
+```
+
+When pressed, these buttons:
+1. Replace `$room` with current room name
+2. POST to `/scenes/scene_{room}_{level}`
+3. Express server forwards to Home Assistant webhook
+4. Webhook automation triggers the corresponding scene
+
+---
+
 ## Migration Plan
 
 ### Phase 1: Setup & Backup ✓ (COMPLETED)
