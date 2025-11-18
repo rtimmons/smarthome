@@ -8,10 +8,10 @@ import * as serveFavicon from 'serve-favicon';
 // The below value matches with stop in package.json.
 process.title = 'smhexprsrv';
 
-import {hass} from './hass';
-import {redirs} from './redirs';
-import {sonos} from './sonos';
-import {appConfig} from './config';
+import { appConfig } from './config';
+import { hass } from './hass';
+import { redirs } from './redirs';
+import { sonos } from './sonos';
 
 const app = express();
 const publicDir = path.join(__dirname, '..', 'public');
@@ -35,4 +35,6 @@ app.use(hass);
 app.use('/', express.static(publicDir));
 
 // Run the thing.
-app.listen(appConfig.port, () => console.log(`Listening on port ${appConfig.port}!`));
+app.listen(appConfig.port, () =>
+    console.log(`Listening on port ${appConfig.port}!`)
+);

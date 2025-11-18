@@ -1,0 +1,36 @@
+name: "{{ addon.name }}"
+version: "{{ addon.version }}"
+slug: "{{ addon.slug }}"
+description: "{{ addon.description }}"
+url: "{{ addon.url }}"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+  - armhf
+  - i386
+startup: services
+ingress: {{ "true" if addon.ingress else "false" }}
+{% if addon.ingress -%}
+ingress_port: {{ addon.port }}
+ingress_entry: "{{ addon.ingress_entry or "/" }}"
+panel_icon: "{{ addon.panel_icon or "mdi:apps" }}"
+panel_title: "{{ addon.panel_title or addon.name }}"
+{% endif -%}
+init: false
+homeassistant_api: {{ "true" if addon.homeassistant_api else "false" }}
+auth_api: {{ "true" if addon.auth_api else "false" }}
+{% if addon.host_network %}host_network: true{% endif %}
+{% if addon.ports %}
+ports:
+{{ ports_yaml | indent(2, true) }}
+ports_description:
+{{ ports_desc_yaml | indent(2, true) }}
+{% endif -%}
+homeassistant: "{{ addon.homeassistant_min }}"
+environment:
+{{ environment_yaml | indent(2, true) }}
+options:
+{{ options_yaml | indent(2, true) }}
+schema:
+{{ schema_yaml | indent(2, true) }}

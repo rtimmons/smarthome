@@ -1,0 +1,24 @@
+#!/usr/bin/with-contenv bashio
+set -euo pipefail
+
+{% for env in addon.run_env %}
+{% if env.from_option %}
+{{ env.env }}="$(bashio::config '{{ env.from_option }}' 2>/dev/null || true)"
+if [ -z "{{ '$' + env.env }}" ]; then
+  {{ env.env }}={{ env.default | default('') | shquote }}
+fi
+{% else %}
+{{ env.env }}="{{ env.value }}"
+{% endif %}
+{% if env.optional %}
+if [ -n "{{ '$' + env.env }}" ]; then
+  export {{ env.env }}
+fi
+{% else %}
+export {{ env.env }}
+{% endif %}
+{% endfor %}
+
+cd {{ addon.container_workdir }}
+bashio::log.info "Starting {{ addon.name }} on port {{ addon.port }}"
+exec npm start

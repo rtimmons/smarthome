@@ -1,0 +1,24 @@
+ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
+FROM ${BUILD_FROM}
+
+ENV LANG=C.UTF-8
+WORKDIR {{ addon.container_workdir }}
+
+RUN apk add --no-cache nodejs npm {% if addon.git_clone %}git{% endif %}
+
+{% if addon.git_clone %}
+RUN git clone {{ addon.git_clone.repo | shquote }} {{ addon.git_clone.target | shquote }} {% if addon.git_clone.ref %}&& cd {{ addon.git_clone.target | shquote }} && git checkout {{ addon.git_clone.ref | shquote }}{% endif %} \
+  && cd {{ addon.git_clone.target | shquote }} \
+  && npm install --production \
+  && npm cache clean --force
+{% else %}
+COPY app/ {{ addon.container_workdir }}/
+RUN npm ci {% if addon.npm_build %}&& npm run build {% endif %}&& npm cache clean --force
+{% endif %}
+
+COPY run.sh /
+RUN chmod a+x /run.sh
+
+{% if addon.port %}EXPOSE {{ addon.port }}{% endif %}
+
+CMD ["/run.sh"]

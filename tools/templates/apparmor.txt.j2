@@ -1,0 +1,27 @@
+#include <tunables/global>
+
+profile {{ addon.slug }} flags=(attach_disconnected,mediate_deleted) {
+  #include <abstractions/base>
+
+  file,
+  capability net_bind_service,
+
+  /init ix,
+  /bin/** ix,
+  /usr/bin/** ix,
+  /run/{s6,s6-rc*,service}/** ix,
+  /package/** ix,
+  /command/** ix,
+  /etc/services.d/** rwix,
+  /etc/cont-init.d/** rwix,
+  /etc/cont-finish.d/** rwix,
+  /run/{,**} rwk,
+  /tmp/** rwk,
+
+  /usr/lib/bashio/** ix,
+  /data/** rw,
+
+  /usr/bin/node ix,
+  /usr/bin/npm ix,
+  {{ addon.container_workdir }}/** rwix,
+}

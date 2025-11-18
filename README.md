@@ -12,6 +12,13 @@ This smart home system is built as a collection of Home Assistant add-ons:
 
 ## Quick Start
 
+### Tooling Setup
+
+```bash
+# one-time tooling bootstrap
+just setup
+```
+
 ### Home Assistant Configuration
 
 ```bash
@@ -23,16 +30,20 @@ just push    # Deploy and restart Home Assistant
 
 ### Deploy Add-ons
 
+From the repo root:
+
 ```bash
-# Grid Dashboard
-cd grid-dashboard && just deploy
+# Build all add-ons
+just ha-addon
 
-# Sonos API
-cd sonos-api && just deploy
+# Deploy all add-ons (uses HA_HOST/HA_PORT/HA_USER envs)
+just deploy
 
-# Node Sonos HTTP API
-cd node-sonos-http-api && just deploy
+# Run add-on tests
+just test
 ```
+
+To target a single add-on: append its name, e.g. `just deploy sonos-api` or `just ha-addon grid-dashboard`.
 
 ## Documentation
 

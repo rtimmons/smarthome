@@ -1,9 +1,9 @@
-import {Request as RQ, Response as RS, Router} from "express";
-import * as rpn from "request-promise-native";
+import { Request as RQ, Response as RS, Router } from 'express';
+import * as rpn from 'request-promise-native';
 
 import '../types/sonos';
 
-import {appConfig} from './config';
+import { appConfig } from './config';
 
 const app = Router();
 
@@ -50,4 +50,3 @@ app.get('/up', (req: RQ, res: RS) => {
 });
 
 export const sonos = app;
-

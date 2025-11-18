@@ -1,0 +1,22 @@
+# {{ addon.name }} Add-on
+
+{{ addon.docs.docs }}
+
+## Installation
+
+1. Generate the add-on payload with `just ha-addon {{ addon.key }}` (or run `python tools/addon_builder.py build {{ addon.key }}`).
+2. Copy the generated `{{ addon.slug }}` folder or the tarball from `build/home-assistant-addon/` to your Home Assistant host under `/addons/`.
+3. In Home Assistant, open **Settings → Add-ons → Add-on Store**, click **Check for updates**, then install **{{ addon.name }}** from **Local add-ons**.
+4. Start the add-on.
+
+## Access
+
+{{ addon.docs.access }}
+
+{% if addon.docs.dependencies %}
+## Dependencies
+
+{% for dep in addon.docs.dependencies -%}
+- {{ dep }}
+{% endfor %}
+{% endif %}

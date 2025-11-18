@@ -1,12 +1,10 @@
 set shell := ["bash", "-lc"]
 
 ha-addon:
-    set -e
-    scripts/build_ha_addon.sh
+    python ../tools/addon_builder.py build grid-dashboard
 
 deploy:
-    set -e
-    scripts/deploy_ha_addon.sh
+    python ../tools/addon_builder.py deploy grid-dashboard
 
 report:
     set -e

@@ -1,7 +1,7 @@
-import {Request as RQ, Response as RS, Router} from "express";
-import * as rpn from "request-promise-native";
+import { Request as RQ, Response as RS, Router } from 'express';
+import * as rpn from 'request-promise-native';
 
-import {appConfig as cfg} from './config';
+import { appConfig as cfg } from './config';
 
 // removes port
 const host = (req: RQ) => {
