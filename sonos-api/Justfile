@@ -1,0 +1,9 @@
+set shell := ["bash", "-lc"]
+
+ha-addon:
+    set -e
+    scripts/build_ha_addon.sh
+
+deploy:
+    set -e
+    scripts/deploy_ha_addon.sh
