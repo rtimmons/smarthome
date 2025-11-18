@@ -1,10 +1,55 @@
 Smarthome Dashboard
 ============================
 
-## Setup and Install
+## Architecture
 
-- Buy 🍓pi 3 and sd card
-    - pi3 is the only one tested for now. Zero W should work with minor tweaks to ansible code, though.
+This smart home system is built as a collection of Home Assistant add-ons:
+
+- **grid-dashboard** - Main web dashboard UI for controlling lights, music, and smart home devices
+- **sonos-api** - Custom Sonos API wrapper for enhanced Sonos control
+- **node-sonos-http-api** - Integration with jishi's node-sonos-http-api
+- **new-hass-configs** - Home Assistant configuration management with Justfile-based deployment
+
+## Quick Start
+
+### Home Assistant Configuration
+
+```bash
+cd new-hass-configs
+just fetch   # Fetch current config from Home Assistant
+just check   # Validate changes (dry-run)
+just push    # Deploy and restart Home Assistant
+```
+
+### Deploy Add-ons
+
+```bash
+# Grid Dashboard
+cd grid-dashboard && just deploy
+
+# Sonos API
+cd sonos-api && just deploy
+
+# Node Sonos HTTP API
+cd node-sonos-http-api && just deploy
+```
+
+## Documentation
+
+See the [docs/](./docs/) directory for detailed documentation:
+- [setup.md](./docs/setup.md) - Initial setup instructions
+- [sonos-addons-overview.md](./docs/sonos-addons-overview.md) - Overview of Sonos add-on architecture
+- [sonos-routing-guide.md](./docs/sonos-routing-guide.md) - Guide to Sonos API routing
+- [ingress-fixes.md](./docs/ingress-fixes.md) - Home Assistant ingress integration fixes
+
+## Development
+
+See [CLAUDE.md](./CLAUDE.md) for detailed development commands and architecture overview.
+
+## Legacy Setup
+
+- Buy 🍓pi 3 and sd card (note: Ansible deployment has been removed in favor of Home Assistant add-ons)
+    - pi3 is the only one tested for now
     - don't get a cheap sd card. Pay the extra $5.
 	- install heatsink, put in case, plug into wall. Heatsink is apparently necessary.
 - Follow [setup steps](./docs/setup.md)

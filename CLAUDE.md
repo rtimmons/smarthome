@@ -4,49 +4,76 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a smart home automation system built on Raspberry Pi that integrates with Home Assistant, Sonos, Hue lights, and Z-Wave devices. The system provides a custom web interface for controlling various smart home components.
+This is a smart home automation system that integrates with Home Assistant, Sonos, Hue lights, and Z-Wave devices. The system is structured as a collection of Home Assistant add-ons providing custom web interfaces and API endpoints for smart home control.
 
 ## Architecture
 
-The project consists of three main components:
+The project consists of several Home Assistant add-ons and configuration tools:
 
-1. **HomeAssistantConfig** - Home Assistant configuration files including automations, scenes, and Z-Wave device configurations
-2. **MetaHassConfig** - Python tool that generates Home Assistant configuration from a metaconfig.yaml file
-3. **grid-dashboard** - Home Assistant add-on that packages the ExpressServer (TypeScript/Node.js) providing API endpoints and web interface for smart home control
+1. **grid-dashboard** - Home Assistant add-on providing the main web dashboard UI (TypeScript/Node.js ExpressServer)
+2. **sonos-api** - Home Assistant add-on providing a custom Sonos API wrapper
+3. **node-sonos-http-api** - Home Assistant add-on for node-sonos-http-api integration
+4. **new-hass-configs** - Home Assistant configuration files including automations and scenes
+5. **new-hass-configs/MetaHassConfig** - Python tool that generates Home Assistant configuration from a metaconfig.yaml file
+6. **new-hass-configs/HomeAssistantConfig** - Legacy Home Assistant configs (being phased out in favor of new-hass-configs)
 
 ## Key Commands
 
-### Development
+### Home Assistant Configuration Management
 
 ```bash
-# Generate Home Assistant configuration from metaconfig
-./check-hass-configs.sh
+cd new-hass-configs
 
-# Deploy configuration to Raspberry Pi (hostname: smarterhome5.local)
-./put-hass-configs.sh
+# Fetch current configuration from Home Assistant
+just fetch
 
-# Retrieve current configuration from Raspberry Pi
-./get-hass-configs.sh
+# Validate configuration changes (dry-run)
+just check
 
-# Deploy entire system using Ansible
-cd Ansible && ./deploy.sh
+# Deploy configuration to Home Assistant and restart
+just push
 ```
 
-### Grid Dashboard Development
+### Grid Dashboard Development & Deployment
 
 ```bash
-cd grid-dashboard/ExpressServer
-npm install           # Install dependencies
-npm run dev          # Run development server with auto-reload
-npm test             # Run tests
-npm run check        # Run TypeScript checks
-npm run fix          # Fix linting issues
+cd grid-dashboard
+
+# Install dependencies
+cd ExpressServer && npm install
+
+# Run development server with auto-reload
+cd ExpressServer && npm run dev
+
+# Run tests
+cd ExpressServer && npm test
+
+# Build Home Assistant add-on
+just ha-addon
+
+# Deploy add-on to Home Assistant
+just deploy
+
+# Collect diagnostic report
+just report
 ```
 
-### MetaHassConfig Development
+### Sonos API Add-on Development & Deployment
 
 ```bash
-cd MetaHassConfig
+cd sonos-api
+
+# Build Home Assistant add-on
+just ha-addon
+
+# Deploy add-on to Home Assistant
+just deploy
+```
+
+### MetaHassConfig Development (Legacy)
+
+```bash
+cd new-hass-configs/MetaHassConfig
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -56,16 +83,19 @@ hassmetagen ../HomeAssistantConfig/metaconfig.yaml  # Generate Home Assistant co
 
 ## Deployment Process
 
-1. The Raspberry Pi runs at hostname `smarterhome5.local` (configurable in Ansible/vars/main.yml)
-2. Deployment uses Ansible playbooks to configure the Pi with all necessary services
-3. Home Assistant configuration is generated from metaconfig.yaml using the MetaHassConfig tool
-4. The system requires passwordless SSH access to the Pi for deployment
+1. Home Assistant runs at hostname `homeassistant.local` (accessed via SSH on port 22)
+2. Add-ons are built locally into tarball packages using build scripts
+3. Add-ons are deployed via rsync to Home Assistant and installed via `ha addons install`
+4. Home Assistant configuration is managed via the `new-hass-configs/Justfile` recipes
+5. The system requires passwordless SSH access to Home Assistant for deployment
 
 ## Important Files
 
-- `HomeAssistantConfig/metaconfig.yaml` - Master configuration for all Home Assistant entities
-- `grid-dashboard/ExpressServer/src/server/index.ts` - Main Express server entry point
-- `Ansible/roles/smarthome/tasks/main.yml` - Primary Ansible role for system setup
+- `new-hass-configs/metaconfig.yaml` - Legacy master configuration for Home Assistant entities
+- `new-hass-configs/configuration.yaml` - Main Home Assistant configuration
+- `grid-dashboard/ExpressServer/src/server/index.ts` - Main Express server entry point for dashboard
+- `sonos-api/src/server/index.ts` - Sonos API wrapper entry point
+- `docs/` - Documentation including setup guides, Sonos routing, and ingress fixes
 
 ## Z-Wave Device Notes
 
