@@ -2,6 +2,10 @@
 
 This is a Home Assistant add-on that provides a proxy API for node-sonos-http-api with custom routes and helper endpoints for controlling Sonos speakers.
 
+## Dependencies
+
+This add-on requires the **Node Sonos HTTP API** add-on to be installed and running. The Node Sonos HTTP API add-on provides the underlying Sonos control functionality, while this add-on adds custom convenience routes on top of it.
+
 ## Features
 
 - Proxy all node-sonos-http-api endpoints via `/sonos/*`
@@ -47,6 +51,8 @@ HA_HOST=smarterhome5.local just deploy
 The add-on accepts the following configuration options:
 
 - `sonos_base_url`: Base URL for the upstream node-sonos-http-api service (default: `http://node-sonos-http-api:5005`)
+  - This should point to the hostname of the Node Sonos HTTP API add-on
+  - If you installed the Node Sonos HTTP API add-on with the default slug, the default value should work
 
 ## API Routes
 

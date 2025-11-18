@@ -2,11 +2,10 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ADDON_SLUG="sonos_api"
-ADDON_NAME="Sonos API"
+ADDON_SLUG="node_sonos_http_api"
+ADDON_NAME="Node Sonos HTTP API"
 DIST_ROOT="${REPO_ROOT}/build/home-assistant-addon"
 ADDON_ROOT="${DIST_ROOT}/${ADDON_SLUG}"
-APP_SRC_DIR="${ADDON_ROOT}/app"
 
 read_package_version() {
   node -e "console.log(require(process.argv[1]).version)" "$1" 2>/dev/null || echo "0.0.0"
@@ -21,23 +20,7 @@ PACKAGE_VERSION="$(read_package_version "${REPO_ROOT}/package.json")"
 log "Preparing Home Assistant add-on payload at ${ADDON_ROOT}"
 rm -rf "${ADDON_ROOT}"
 mkdir -p \
-  "${APP_SRC_DIR}/src" \
   "${ADDON_ROOT}/translations"
-
-if [ ! -d "${REPO_ROOT}/src" ]; then
-  echo "Sonos API sources not found at ${REPO_ROOT}/src" >&2
-  exit 1
-fi
-
-log "Copying Sonos API sources"
-rsync -a \
-  --delete \
-  --exclude 'node_modules' \
-  --exclude 'dist' \
-  "${REPO_ROOT}/src/" "${APP_SRC_DIR}/src/"
-cp "${REPO_ROOT}/package.json" "${APP_SRC_DIR}/"
-cp "${REPO_ROOT}/package-lock.json" "${APP_SRC_DIR}/"
-cp "${REPO_ROOT}/tsconfig.json" "${APP_SRC_DIR}/"
 
 CONFIG_PATH="${ADDON_ROOT}/config.yaml"
 log "Writing ${CONFIG_PATH}"
@@ -45,8 +28,8 @@ cat >"${CONFIG_PATH}" <<EOF
 name: "${ADDON_NAME}"
 version: "${PACKAGE_VERSION}"
 slug: "${ADDON_SLUG}"
-description: "Proxy API for node-sonos-http-api with custom routes and helpers."
-url: "https://github.com/rtimmons/smarthome"
+description: "The actual node-sonos-http-api server for controlling Sonos speakers via HTTP"
+url: "https://github.com/jishi/node-sonos-http-api"
 arch:
   - aarch64
   - amd64
@@ -58,17 +41,18 @@ ingress: false
 init: false
 homeassistant_api: false
 auth_api: false
+host_network: true
 ports:
-  5006/tcp: 5006
+  5005/tcp: 5005
 ports_description:
-  5006/tcp: "Sonos API HTTP port"
+  5005/tcp: "Node Sonos HTTP API port"
 homeassistant: "2024.6.0"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
 options:
-  sonos_base_url: "http://local-node-sonos-http-api:5005"
+  sonos_discovery_timeout: 5
 schema:
-  sonos_base_url: "str?"
+  sonos_discovery_timeout: "int?"
 EOF
 
 DOCKERFILE_PATH="${ADDON_ROOT}/Dockerfile"
@@ -78,17 +62,21 @@ ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
 FROM ${BUILD_FROM}
 
 ENV LANG=C.UTF-8
-WORKDIR /opt/sonos-api/app
+WORKDIR /app
 
-RUN apk add --no-cache nodejs npm
+# Install Node.js, npm, and git
+RUN apk add --no-cache nodejs npm git
 
-COPY app/ /opt/sonos-api/app/
-RUN npm ci && npm run build && npm cache clean --force
+# Clone the node-sonos-http-api repository
+RUN git clone https://github.com/jishi/node-sonos-http-api.git /app && \
+    cd /app && \
+    npm install --production && \
+    npm cache clean --force
 
 COPY run.sh /
 RUN chmod a+x /run.sh
 
-EXPOSE 5006
+EXPOSE 5005
 
 CMD ["/run.sh"]
 EOF
@@ -99,69 +87,62 @@ cat >"${RUN_SCRIPT_PATH}" <<'EOF'
 #!/usr/bin/with-contenv bashio
 set -euo pipefail
 
-PORT="5006"
-SONOS_BASE="$(bashio::config 'sonos_base_url' 2>/dev/null || true)"
-
-SONOS_BASE="${SONOS_BASE:-http://local-node-sonos-http-api:5005}"
+PORT="5005"
+DISCOVERY_TIMEOUT="$(bashio::config 'sonos_discovery_timeout' 2>/dev/null || echo '5')"
 
 export PORT
-export APP_PORT="${PORT}"
-export SONOS_BASE_URL="${SONOS_BASE}"
+export SONOS_DISCOVERY_TIMEOUT="${DISCOVERY_TIMEOUT}"
 
-cd /opt/sonos-api/app
-bashio::log.info "Starting Sonos API on port ${PORT}"
+cd /app
+bashio::log.info "Starting Node Sonos HTTP API on port ${PORT}"
+bashio::log.info "Discovery timeout: ${DISCOVERY_TIMEOUT} seconds"
 exec npm start
 EOF
 
 README_PATH="${ADDON_ROOT}/README.md"
 log "Writing ${README_PATH}"
 cat >"${README_PATH}" <<'EOF'
-# Sonos API Home Assistant Add-on
+# Node Sonos HTTP API Home Assistant Add-on
 
-Local add-on that provides a proxy API for node-sonos-http-api with custom routes and helper endpoints for controlling Sonos speakers.
+Local add-on that runs the node-sonos-http-api server for controlling Sonos speakers via HTTP API.
+
+This is the actual Sonos HTTP API server that other add-ons (like the Sonos API proxy) can communicate with.
 EOF
 
 DOCS_PATH="${ADDON_ROOT}/DOCS.md"
 log "Writing ${DOCS_PATH}"
 cat >"${DOCS_PATH}" <<'EOF'
-# Sonos API Add-on
+# Node Sonos HTTP API Add-on
 
-This add-on provides a proxy API for node-sonos-http-api with custom routes and helper endpoints tailored for controlling Sonos speakers in your smart home setup.
-
-## Dependencies
-
-**IMPORTANT:** This add-on requires the **Node Sonos HTTP API** add-on to be installed and running first. The Node Sonos HTTP API add-on provides the underlying Sonos control functionality, while this add-on adds custom convenience routes on top of it.
+This add-on runs the node-sonos-http-api server, which provides a simple HTTP API for controlling Sonos speakers on your network.
 
 ## Installation
 
-1. First, install and start the **Node Sonos HTTP API** add-on
-2. Generate the add-on payload with `just ha-addon` (see the Justfile in this folder).
-3. Copy the generated `sonos_api` folder or the tarball from `build/home-assistant-addon/` to your Home Assistant host under `/addons/`.
-4. In Home Assistant, open **Settings → Add-ons → Add-on Store**, click **Check for updates**, then install **Sonos API** from **Local add-ons**.
-5. Start the add-on.
+1. Generate the add-on payload with `just ha-addon` (see the Justfile in this folder).
+2. Copy the generated `node_sonos_http_api` folder or the tarball from `build/home-assistant-addon/` to your Home Assistant host under `/addons/`.
+3. In Home Assistant, open **Settings → Add-ons → Add-on Store**, click **Check for updates**, then install **Node Sonos HTTP API** from **Local add-ons**.
+4. Start the add-on.
 
 ## Access
 
-Access the API at `http://<ha-host>:5006/` or use it from other add-ons via `http://sonos-api:5006/`.
+The API will be available at `http://<ha-host>:5005/` or from other add-ons via `http://node-sonos-http-api:5005/`.
 
 ## Configuration
 
-- `sonos_base_url`: Base URL for the upstream `node-sonos-http-api` service. Default `http://node-sonos-http-api:5005`.
-  - This should point to the Node Sonos HTTP API add-on hostname
-  - If you installed the Node Sonos HTTP API add-on with the default slug, the default value should work automatically
+- `sonos_discovery_timeout`: Timeout in seconds for discovering Sonos speakers on the network (default: 5).
 
-## API Routes
+## API Documentation
 
-- `/pause` - Pause playback
-- `/play` - Resume playback
-- `/tv` - Switch all speakers to TV mode
-- `/07` - Play Zero 7 Radio
-- `/quiet` - Set group volume to 7
-- `/same/:room` - Sync all room volumes in the same zone
-- `/down` - Smart volume down (pause if volume <= 3 and playing)
-- `/up` - Smart volume up (play if paused, otherwise increase volume)
-- `/sonos/*` - Proxy any request to the underlying node-sonos-http-api
-- `/health` - Health check endpoint
+For full API documentation, see the upstream project: https://github.com/jishi/node-sonos-http-api
+
+## Common Endpoints
+
+- `/<room>/play` - Start playback in a room
+- `/<room>/pause` - Pause playback in a room
+- `/<room>/volume/<level>` - Set volume (0-100)
+- `/<room>/state` - Get current state of a room
+- `/zones` - Get information about all zones
+- `/preset/<preset-name>` - Activate a preset
 EOF
 
 CHANGELOG_PATH="${ADDON_ROOT}/CHANGELOG.md"
@@ -169,7 +150,7 @@ log "Writing ${CHANGELOG_PATH}"
 cat >"${CHANGELOG_PATH}" <<EOF
 ## ${PACKAGE_VERSION}
 
-- Initial Home Assistant add-on packaging for Sonos API.
+- Initial Home Assistant add-on packaging for node-sonos-http-api.
 EOF
 
 APPARMOR_PATH="${ADDON_ROOT}/apparmor.txt"
@@ -177,11 +158,16 @@ log "Writing ${APPARMOR_PATH}"
 cat >"${APPARMOR_PATH}" <<'EOF'
 #include <tunables/global>
 
-profile sonos_api flags=(attach_disconnected,mediate_deleted) {
+profile node_sonos_http_api flags=(attach_disconnected,mediate_deleted) {
   #include <abstractions/base>
 
   file,
+  network inet stream,
+  network inet6 stream,
+  network inet dgram,
+  network inet6 dgram,
   capability net_bind_service,
+  capability net_raw,
 
   /init ix,
   /bin/** ix,
@@ -200,7 +186,7 @@ profile sonos_api flags=(attach_disconnected,mediate_deleted) {
 
   /usr/bin/node ix,
   /usr/bin/npm ix,
-  /opt/sonos-api/app/** rwix,
+  /app/** rwix,
 }
 EOF
 
@@ -208,9 +194,9 @@ TRANSLATIONS_PATH="${ADDON_ROOT}/translations/en.yaml"
 log "Writing ${TRANSLATIONS_PATH}"
 cat >"${TRANSLATIONS_PATH}" <<'EOF'
 configuration:
-  sonos_base_url:
-    name: Sonos API base URL
-    description: Base URL for node-sonos-http-api (e.g., http://node-sonos-http-api:5005).
+  sonos_discovery_timeout:
+    name: Sonos discovery timeout
+    description: Timeout in seconds for discovering Sonos speakers on the network.
 EOF
 
 generate_pngs() {

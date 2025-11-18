@@ -11,8 +11,8 @@ class MusicController {
         const currRoom = this.app.currentRoom();
         const replaceName = n => n.replace(/\$room/g, currRoom);
         args = args.map(a => replaceName(a));
-        args = [this.root].concat(args);
-        var url = args.join('/');
+        // Build URL: only include root if it's not empty, to avoid double slashes
+        var url = this.root ? [this.root].concat(args).join('/') : args.join('/');
 
         return this.requester.request(url);
     }

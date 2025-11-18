@@ -12,7 +12,7 @@ class App {
         // TODO: move to object-factory
         this.musicController = new MusicController({
             requester: this,
-            root: window.location.origin,
+            root: '', // Empty root for relative URLs (ingress compatible)
             app: this,
             pubsub: this.pubsub,
         });
@@ -20,7 +20,7 @@ class App {
         // TODO: move to object-factory
         this.lightController = new LightController({
             requester: this,
-            root: window.location.origin,
+            root: '', // Empty root for relative URLs (ingress compatible)
             app: this,
             pubsub: this.pubsub,
         });
@@ -28,7 +28,7 @@ class App {
         // TODO: move to object-factory
         this.blindControllerI2c = new BlindControllerI2C({
             requester: this,
-            root: window.location.origin,
+            root: '', // Empty root for relative URLs (ingress compatible)
             app: this,
             pubsub: this.pubsub,
         });

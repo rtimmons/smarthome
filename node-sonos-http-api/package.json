@@ -1,0 +1,11 @@
+{
+  "name": "node-sonos-http-api-addon",
+  "version": "1.0.0",
+  "description": "Home Assistant add-on for node-sonos-http-api",
+  "scripts": {
+    "build": "echo 'Build script for add-on'",
+    "start": "echo 'Start script for add-on'"
+  },
+  "author": "",
+  "license": "ISC"
+}

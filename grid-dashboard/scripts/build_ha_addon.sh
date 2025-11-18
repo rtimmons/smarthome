@@ -73,7 +73,7 @@ environment:
   NODE_OPTIONS: "--enable-source-maps"
   INGRESS_ENTRY: "/api/hassio_ingress"
 options:
-  sonos_base_url: "http://node-sonos-http-api:5005"
+  sonos_base_url: "http://local-sonos-api:5006"
   webhook_base: ""
 schema:
   sonos_base_url: "str?"
@@ -112,7 +112,7 @@ PORT="3000"
 SONOS_BASE="$(bashio::config 'sonos_base_url' 2>/dev/null || true)"
 WEBHOOK_BASE="$(bashio::config 'webhook_base' 2>/dev/null || true)"
 
-SONOS_BASE="${SONOS_BASE:-http://node-sonos-http-api:5005}"
+SONOS_BASE="${SONOS_BASE:-http://local-sonos-api:5006}"
 
 export PORT
 export APP_PORT="${PORT}"
@@ -155,7 +155,8 @@ This add-on packages the ExpressServer dashboard for Home Assistant, providing e
 
 ## Configuration
 
-- `sonos_base_url`: Base URL for the upstream `node-sonos-http-api` service. Default `http://node-sonos-http-api:5005`.
+- `sonos_base_url`: Base URL for the Sonos API service. Default `http://local-sonos-api:5006`.
+  - The Sonos API add-on provides custom routes and proxies to the Node Sonos HTTP API add-on
 - `webhook_base`: Optional override for Home Assistant webhooks. Leave blank to use the supervisor proxy.
 
 The add-on enables ingress by default, making it accessible through the Home Assistant interface. The sidebar panel provides quick access to the dashboard.
