@@ -51,19 +51,29 @@ export const devices: DeviceRegistry = {
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
 
-    // Bathroom lights - Z-Wave dimmers (brightness only)
-    bathroom_abovesauna: {
-      entity: "light.light_bathroom_abovesauna",
+    // Bathroom lights - all Z-Wave dimmers (no more Hue)
+    bathroom_sauna: {
+      entity: "light.bathroom_light_sauna",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
+    bathroom_shower: {
+      entity: "light.bathroom_light_shower",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     bathroom_vanityleft: {
-      entity: "light.light_bathroom_vanityleft",
+      entity: "light.bathroom_light_vanityleft",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     bathroom_vanityright: {
-      entity: "light.light_bathroom_vanityright",
+      entity: "light.bathroom_light_vanityright",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
+    bathroom_vanitysconces: {
+      entity: "light.bathroom_light_vanitysconces",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },

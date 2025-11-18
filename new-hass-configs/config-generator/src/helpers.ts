@@ -6,7 +6,7 @@
  * automations (high, medium, off).
  */
 
-import { Scene, Automation, LightScene } from "./types";
+import { Scene, Automation, LightState } from "./types";
 
 // ============================================================================
 // Scene Helpers
@@ -86,7 +86,7 @@ export function createRoomScene(config: {
   const brightness = getStandardBrightness(level);
   const state = level === "off" ? "off" : "on";
 
-  const lights: LightScene[] = [];
+  const lights: LightState[] = [];
 
   // Main devices (on in all non-off scenes, or just high/medium)
   const mainDevices =

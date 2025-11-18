@@ -87,45 +87,66 @@
 - id: bathroom_high
   name: Bathroom - High
   entities:
-    light.light_bathroom_abovesauna:
+    light.bathroom_light_sauna:
       state: on
       brightness: 255
-    light.light_bathroom_vanityleft:
+    light.bathroom_light_shower:
       state: on
       brightness: 255
-    light.light_bathroom_vanityright:
+    light.bathroom_light_vanityleft:
+      state: on
+      brightness: 255
+    light.bathroom_light_vanityright:
+      state: on
+      brightness: 255
+    light.bathroom_light_vanitysconces:
       state: on
       brightness: 255
 - id: bathroom_medium
   name: Bathroom - Medium
   entities:
-    light.light_bathroom_abovesauna:
+    light.bathroom_light_sauna:
       state: on
-      brightness: 180
-    light.light_bathroom_vanityleft:
+      brightness: 155
+    light.bathroom_light_shower:
       state: on
-      brightness: 180
-    light.light_bathroom_vanityright:
+      brightness: 155
+    light.bathroom_light_vanityleft:
       state: on
-      brightness: 180
-- id: bathroom_off
-  name: Bathroom - Off
-  entities:
-    light.light_bathroom_abovesauna:
-      state: off
-    light.light_bathroom_vanityleft:
-      state: off
-    light.light_bathroom_vanityright:
-      state: off
+      brightness: 155
+    light.bathroom_light_vanityright:
+      state: on
+      brightness: 155
+    light.bathroom_light_vanitysconces:
+      state: on
+      brightness: 155
 - id: bathroom_low
   name: Bathroom - Low
   entities:
-    light.light_bathroom_vanityleft:
+    light.bathroom_light_sauna:
+      state: off
+    light.bathroom_light_shower:
+      state: off
+    light.bathroom_light_vanityleft:
+      state: off
+    light.bathroom_light_vanityright:
+      state: off
+    light.bathroom_light_vanitysconces:
       state: on
       brightness: 50
-    light.light_bathroom_vanityright:
-      state: on
-      brightness: 50
+- id: bathroom_off
+  name: Bathroom - Off
+  entities:
+    light.bathroom_light_sauna:
+      state: off
+    light.bathroom_light_shower:
+      state: off
+    light.bathroom_light_vanityleft:
+      state: off
+    light.bathroom_light_vanityright:
+      state: off
+    light.bathroom_light_vanitysconces:
+      state: off
 - id: living_room_high
   name: Living Room - High
   entities:
