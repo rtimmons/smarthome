@@ -7,7 +7,7 @@ Smarthome Dashboard
     - pi3 is the only one tested for now. Zero W should work with minor tweaks to ansible code, though.
     - don't get a cheap sd card. Pay the extra $5.
 	- install heatsink, put in case, plug into wall. Heatsink is apparently necessary.
-- Follow [setup steps](./setup.md)
+- Follow [setup steps](./docs/setup.md)
 
 ## TODO
 

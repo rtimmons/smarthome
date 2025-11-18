@@ -1,8 +1,64 @@
-# Final Ingress Fix - Double Slash Issue
+# Home Assistant Ingress Fixes
 
-## Problem
+This document chronicles the fixes applied to make the Grid Dashboard work correctly when accessed through Home Assistant ingress.
 
-The dashboard was creating URLs with **double slashes** when accessed through Home Assistant ingress, resulting in **502 Bad Gateway** errors:
+## Overview
+
+The dashboard UI needed to work in two scenarios:
+1. **Direct access**: `http://localhost:3000/`
+2. **Through ingress**: `http://homeassistant.local:8123/api/hassio_ingress/{token}/`
+
+The challenge was making API calls work correctly in both contexts using relative URLs.
+
+## Problem 1: Absolute URLs (Initial Issue)
+
+### The Problem
+
+The dashboard was unable to refresh state when accessed through Home Assistant ingress because JavaScript was using absolute URLs based on `window.location.origin`.
+
+**Error:**
+```
+http://homeassistant.local:8123/sonos/Bedroom/state
+[HTTP/1.1 404 Not Found]
+```
+
+When accessed through ingress:
+- UI served at: `http://homeassistant.local:8123/api/hassio_ingress/{token}/`
+- JavaScript tried to fetch: `http://homeassistant.local:8123/sonos/...`
+- Should fetch: `/api/hassio_ingress/{token}/sonos/...` (relative to current page)
+
+### Initial Solution (Attempt 1)
+
+Changed the `root` parameter in `ExpressServer/src/public/js/app.js` from `window.location.origin` to `'.'`:
+
+```javascript
+// Before
+this.musicController = new MusicController({
+    requester: this,
+    root: window.location.origin,  // Absolute URL
+    app: this,
+    pubsub: this.pubsub,
+});
+
+// After
+this.musicController = new MusicController({
+    requester: this,
+    root: '.',  // Current directory - relative to current page path
+    app: this,
+    pubsub: this.pubsub,
+});
+```
+
+**Why `root: '.'` seemed to work initially:**
+- URLs like `./sonos/Bedroom/state` are relative to current page directory
+- Direct access: Page at `/` → `./sonos/zones` → `http://localhost:3000/sonos/zones` ✓
+- Through ingress: Page at `/api/hassio_ingress/{token}/` → `./sonos/zones` → correct path ✓
+
+## Problem 2: Double Slash Issue (Final Fix)
+
+### The Problem
+
+However, the `root: '.'` solution created URLs with **double slashes**, resulting in **502 Bad Gateway** errors:
 
 ```
 http://homeassistant.local:8123/api/hassio_ingress/{token}//sonos/Living/state
@@ -10,7 +66,7 @@ http://homeassistant.local:8123/api/hassio_ingress/{token}//sonos/Living/state
                                                      Double slash!
 ```
 
-## Root Cause
+### Root Cause
 
 The URL building logic in `music-controller.js` was:
 
@@ -28,11 +84,9 @@ When `root` was set to `''` (empty string):
 - `['', 'sonos', 'Living', 'state'].join('/')` = `'/sonos/Living/state'`
 - Leading `/` makes it absolute to domain root (wrong path!)
 
-## Solution
+### Final Solution (Two-Part Fix)
 
-**Two-part fix:**
-
-### 1. Modified URL building logic in `music-controller.js`
+#### 1. Modified URL building logic in `music-controller.js`
 
 Changed the request method to only include root if it's not empty:
 
@@ -45,7 +99,7 @@ var url = args.join('/');
 var url = this.root ? [this.root].concat(args).join('/') : args.join('/');
 ```
 
-### 2. Set root to empty string in `app.js`
+#### 2. Set root to empty string in `app.js`
 
 ```javascript
 this.musicController = new MusicController({
@@ -56,7 +110,7 @@ this.musicController = new MusicController({
 });
 ```
 
-## How It Works Now
+### How It Works Now
 
 With `root: ''` and the updated logic:
 
@@ -84,7 +138,7 @@ This creates a **relative URL without leading slash**, which resolves correctly:
    - Updated URL building to skip empty root values
 
 2. **ExpressServer/src/public/js/app.js** (lines 15, 23, 31)
-   - Changed `root: '.'` to `root: ''`
+   - Changed `root: window.location.origin` → `root: '.'` → `root: ''`
    - Applied to MusicController, LightController, and BlindControllerI2C
 
 ## Testing
@@ -103,9 +157,7 @@ GET /api/hassio_ingress/{token}/sonos/zones
 Status: 200 OK
 ```
 
-No more double slashes, no more 502 errors!
-
-## Complete Routing Flow
+## Complete Routing Flow (with Ingress)
 
 ```
 User clicks VolumeUp in Dashboard UI
@@ -130,4 +182,9 @@ Success! Volume increased by 2
 
 ## Summary
 
-The dashboard state refresh now works correctly through Home Assistant ingress. All API calls use relative URLs (without leading slashes) that resolve properly to the ingress path, avoiding both the double slash issue and the domain root problem.
+The dashboard state refresh now works correctly through Home Assistant ingress. The solution uses:
+- Empty root string (`''`) in app.js
+- Smart URL building logic that only includes root when non-empty
+- Relative URLs without leading slashes that resolve properly to the ingress path
+
+This avoids both the double slash issue and the domain root problem while maintaining compatibility with direct access.

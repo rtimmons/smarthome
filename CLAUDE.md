@@ -12,7 +12,7 @@ The project consists of three main components:
 
 1. **HomeAssistantConfig** - Home Assistant configuration files including automations, scenes, and Z-Wave device configurations
 2. **MetaHassConfig** - Python tool that generates Home Assistant configuration from a metaconfig.yaml file
-3. **ExpressServer** - TypeScript/Node.js Express server providing API endpoints and web interface for smart home control
+3. **grid-dashboard** - Home Assistant add-on that packages the ExpressServer (TypeScript/Node.js) providing API endpoints and web interface for smart home control
 
 ## Key Commands
 
@@ -32,10 +32,10 @@ The project consists of three main components:
 cd Ansible && ./deploy.sh
 ```
 
-### ExpressServer Development
+### Grid Dashboard Development
 
 ```bash
-cd ExpressServer
+cd grid-dashboard/ExpressServer
 npm install           # Install dependencies
 npm run dev          # Run development server with auto-reload
 npm test             # Run tests
@@ -64,7 +64,7 @@ hassmetagen ../HomeAssistantConfig/metaconfig.yaml  # Generate Home Assistant co
 ## Important Files
 
 - `HomeAssistantConfig/metaconfig.yaml` - Master configuration for all Home Assistant entities
-- `ExpressServer/src/server/index.ts` - Main Express server entry point
+- `grid-dashboard/ExpressServer/src/server/index.ts` - Main Express server entry point
 - `Ansible/roles/smarthome/tasks/main.yml` - Primary Ansible role for system setup
 
 ## Z-Wave Device Notes
