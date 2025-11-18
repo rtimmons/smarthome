@@ -1,9 +1,0 @@
-{
-  "players": [
-    {
-      "roomName": "Office",
-      "volume": 20
-    }
-  ],
-  "uri": "x-sonos-htastream:RINCON_48A6B83955D101400:spdif",
-}
