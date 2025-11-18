@@ -8,7 +8,6 @@ import * as serveFavicon from 'serve-favicon';
 // The below value matches with stop in package.json.
 process.title = 'smhexprsrv';
 
-import {blindControli2c} from "./blindControl-i2c";
 import {hass} from './hass';
 import {redirs} from './redirs';
 import {sonos} from './sonos';
@@ -29,7 +28,6 @@ app.use('/ui', express.static('src/public'));
 app.use(redirs);
 app.use(sonos);
 app.use(hass);
-app.use(blindControli2c);
 
 // Run the thing.
 app.listen(3000, () => console.log('Listening on port 3000!'));

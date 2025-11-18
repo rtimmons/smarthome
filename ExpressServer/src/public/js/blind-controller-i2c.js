@@ -6,7 +6,7 @@ class BlindControllerI2C {
         this.pubsub = args.pubsub;
     }
 
-    move([blind,direction]) { // [blind,direction]
+    move([blind, direction]) { // [blind,direction]
         this.app.request({
             type: 'POST',
             url: `/blinds-i2c/${app.currentRoom()}_${blind.toLowerCase()}`,
