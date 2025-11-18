@@ -1,46 +1,32 @@
-- id: '1763430527828'
-  alias: set from device
-  description: ''
-  triggers:
-  - device_id: 44ca863fc3d89c94bdfb7471c370a932
-    domain: zwave_js
-    type: event.value_notification.central_scene
-    property: scene
-    property_key: '001'
-    endpoint: 0
-    command_class: 91
-    subtype: Endpoint 0 Scene 001
-    metadata: {}
-    trigger: device
-    value: 3
-  conditions: []
-  actions:
-  - action: scene.turn_on
-    metadata: {}
-    data: {}
+- alias: Office Switch - Double Up → High
+  description: Turn on all office lights on double-tap up
+  trigger:
+    platform: event
+    event_type: zwave_js_value_notification
+    event_data:
+      device_id: 44ca863fc3d89c94bdfb7471c370a932
+      command_class_name: Central Scene
+      property_key_name: "001"
+      value: KeyPressed2x
+  action:
+    service: scene.turn_on
     target:
-      entity_id: scene.scene_001_keypressed2x
+      entity_id: scene.office_high
   mode: single
-- id: '1763430651033'
-  alias: office_toggle_doubledown
-  description: ''
-  triggers:
-  - device_id: 44ca863fc3d89c94bdfb7471c370a932
-    domain: zwave_js
-    type: event.value_notification.central_scene
-    property: scene
-    property_key: '002'
-    endpoint: 0
-    command_class: 91
-    subtype: Endpoint 0 Scene 002
-    trigger: device
-    value: 3
-  conditions: []
-  actions:
-  - action: scene.turn_on
-    metadata: {}
-    data: {}
+- alias: Office Switch - Double Down → Off
+  description: Turn off all office lights on double-tap down
+  trigger:
+    platform: event
+    event_type: zwave_js_value_notification
+    event_data:
+      device_id: 44ca863fc3d89c94bdfb7471c370a932
+      command_class_name: Central Scene
+      property_key_name: "002"
+      value: KeyPressed2x
+  action:
+    service: scene.turn_on
     target:
-      entity_id:
-      - scene.scene_002_keypressed2x
+      entity_id: scene.office_off
   mode: single
+# Manual automations (not generated from TypeScript)
+# Add any hand-written automations here that are not suitable for the generator

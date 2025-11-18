@@ -67,6 +67,58 @@ export const devices: DeviceRegistry = {
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
+
+    // Living room lights - mix of Hue and Z-Wave
+    living_floor: {
+      entity: "light.living_light_floor",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
+    },
+    living_nook: {
+      entity: "light.living_light_nook",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp"]
+    },
+    entry_nook: {
+      entity: "light.entry_light_nook",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp"]
+    },
+    living_curtains: {
+      entity: "light.light_living_curtains",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    living_windowsillleft: {
+      entity: "light.light_living_windowsillleft",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    living_windowsillright: {
+      entity: "light.light_living_windowsillright",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    living_behindtv: {
+      entity: "light.light_living_behindtv",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    living_desklamps: {
+      entity: "light.light_living_desklamps",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
+    living_sliderring: {
+      entity: "light.light_living_sliderring",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
+    living_palm: {
+      entity: "light.light_living_palm",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
   },
 
   // ============================================================================
@@ -130,6 +182,13 @@ export const devices: DeviceRegistry = {
     // Office piano light (controlled as a switch)
     office_pianolight: {
       entity: "switch.light_office_pianolight",
+      type: "outlet",
+      capabilities: ["on_off"]
+    },
+
+    // Living room LED wall
+    living_ledwall: {
+      entity: "switch.light_living_ledwall",
       type: "outlet",
       capabilities: ["on_off"]
     },

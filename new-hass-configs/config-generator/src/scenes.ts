@@ -225,6 +225,177 @@ export const scenes: SceneRegistry = {
       }
     ]
   },
+
+  // ============================================================================
+  // Living Room Scenes
+  // ============================================================================
+
+  living_high: {
+    name: "Living - High",
+    lights: [
+      {
+        device: "living_floor",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "living_nook",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "entry_nook",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "living_curtains",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "living_windowsillleft",
+        state: "on",
+        brightness: 180  // medium per legacy config
+      },
+      {
+        device: "living_windowsillright",
+        state: "on",
+        brightness: 180  // medium per legacy config
+      },
+      {
+        device: "living_behindtv",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "living_desklamps",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "living_palm",
+        state: "on",
+        brightness: 255
+      }
+    ],
+    switches: {
+      living_ledwall: "on"
+    }
+  },
+
+  living_medium: {
+    name: "Living - Medium",
+    lights: [
+      {
+        device: "living_floor",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "living_nook",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "entry_nook",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "living_curtains",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "living_windowsillleft",
+        state: "off"
+      },
+      {
+        device: "living_windowsillright",
+        state: "off"
+      },
+      {
+        device: "living_behindtv",
+        state: "off"
+      },
+      {
+        device: "living_palm",
+        state: "off"
+      }
+    ],
+    switches: {
+      living_ledwall: "off"
+    }
+  },
+
+  living_low: {
+    name: "Living - Low",
+    lights: [
+      {
+        device: "living_floor",
+        state: "on",
+        brightness: 50
+      },
+      {
+        device: "living_nook",
+        state: "on",
+        brightness: 50
+      }
+    ],
+    switches: {
+      living_ledwall: "off"
+    }
+  },
+
+  living_off: {
+    name: "Living - Off",
+    lights: [
+      {
+        device: "living_floor",
+        state: "off"
+      },
+      {
+        device: "living_nook",
+        state: "off"
+      },
+      {
+        device: "entry_nook",
+        state: "off"
+      },
+      {
+        device: "living_curtains",
+        state: "off"
+      },
+      {
+        device: "living_windowsillleft",
+        state: "off"
+      },
+      {
+        device: "living_windowsillright",
+        state: "off"
+      },
+      {
+        device: "living_behindtv",
+        state: "off"
+      },
+      {
+        device: "living_desklamps",
+        state: "off"
+      },
+      {
+        device: "living_sliderring",
+        state: "off"
+      },
+      {
+        device: "living_palm",
+        state: "off"
+      }
+    ],
+    switches: {
+      living_ledwall: "off"
+    }
+  },
 };
 
 /**

@@ -1,163 +1,223 @@
-- id: '1763429714321'
-  name: office_toggle_doubleup
+- id: office_high
+  name: Office - High
   entities:
     light.light_office_abovecouch:
-      supported_color_modes:
-      - rgbw
-      color_mode: rgbw
+      state: on
       brightness: 255
-      hs_color:
-      - 48
-      - 1.961
-      rgb_color:
-      - 255
-      - 254
-      - 250
-      xy_color:
-      - 0.326
-      - 0.333
       rgbw_color:
-      - 5
-      - 4
-      - 0
-      - 255
-      friendly_name: 'light_office_abovecouch '
-      supported_features: 32
-      state: 'on'
+        - 5
+        - 4
+        - 0
+        - 255
     light.light_office_abovecouch_white:
-      supported_color_modes:
-      - brightness
-      color_mode: brightness
+      state: on
       brightness: 255
-      friendly_name: light_office_abovecouch_white
-      supported_features: 32
-      state: 'on'
-    switch.light_office_pianolight:
-      friendly_name: 'light_office_pianolight '
-      state: 'on'
-    light.light_office_abovetv_white:
-      supported_color_modes:
-      - brightness
-      color_mode: brightness
-      brightness: 255
-      friendly_name: light_office_abovetv_white
-      supported_features: 32
-      state: 'on'
     light.light_office_abovetv:
-      supported_color_modes:
-      - rgbw
-      color_mode: rgbw
+      state: on
       brightness: 255
-      hs_color:
-      - 48
-      - 1.961
-      rgb_color:
-      - 255
-      - 254
-      - 250
-      xy_color:
-      - 0.326
-      - 0.333
       rgbw_color:
-      - 5
-      - 4
-      - 0
-      - 255
-      friendly_name: light_office_abovetv
-      supported_features: 32
-      state: 'on'
-    light.office_light_sidetable:
-      min_color_temp_kelvin: 2000
-      max_color_temp_kelvin: 6535
-      min_mireds: 153
-      max_mireds: 500
-      supported_color_modes:
-      - color_temp
-      - xy
-      color_mode: color_temp
+        - 5
+        - 4
+        - 0
+        - 255
+    light.light_office_abovetv_white:
+      state: on
       brightness: 255
-      color_temp_kelvin: 2732
-      color_temp: 366
-      hs_color:
-      - 28.327
-      - 64.71
-      rgb_color:
-      - 255
-      - 168
-      - 90
-      xy_color:
-      - 0.522
-      - 0.387
-      mode: normal
-      dynamics: none
-      friendly_name: office_light_sidetable
-      supported_features: 40
-      state: 'on'
-  metadata: {}
-- id: '1763429872262'
-  name: office_toggle_doubledown
+    light.office_light_sidetable:
+      state: on
+      brightness: 255
+      color_temp: 2732
+    switch.light_office_pianolight:
+      state: on
+- id: office_medium
+  name: Office - Medium
   entities:
     light.light_office_abovecouch:
-      supported_color_modes:
-      - rgbw
-      color_mode:
-      brightness:
-      hs_color:
-      rgb_color:
-      xy_color:
+      state: on
+      brightness: 180
       rgbw_color:
-      friendly_name: 'light_office_abovecouch '
-      supported_features: 32
-      state: 'off'
+        - 5
+        - 4
+        - 0
+        - 180
     light.light_office_abovecouch_white:
-      supported_color_modes:
-      - brightness
-      color_mode:
-      brightness:
-      friendly_name: light_office_abovecouch_white
-      supported_features: 32
-      state: 'off'
-    switch.light_office_pianolight:
-      friendly_name: 'light_office_pianolight '
-      state: 'off'
-    light.light_office_abovetv_white:
-      supported_color_modes:
-      - brightness
-      color_mode:
-      brightness:
-      friendly_name: light_office_abovetv_white
-      supported_features: 32
-      state: 'off'
+      state: on
+      brightness: 180
     light.light_office_abovetv:
-      supported_color_modes:
-      - rgbw
-      color_mode:
-      brightness:
-      hs_color:
-      rgb_color:
-      xy_color:
+      state: on
+      brightness: 180
       rgbw_color:
-      friendly_name: light_office_abovetv
-      supported_features: 32
-      state: 'off'
+        - 5
+        - 4
+        - 0
+        - 180
+    light.light_office_abovetv_white:
+      state: on
+      brightness: 180
     light.office_light_sidetable:
-      min_color_temp_kelvin: 2000
-      max_color_temp_kelvin: 6535
-      min_mireds: 153
-      max_mireds: 500
-      supported_color_modes:
-      - color_temp
-      - xy
-      color_mode:
-      brightness:
-      color_temp_kelvin:
-      color_temp:
-      hs_color:
-      rgb_color:
-      xy_color:
-      mode: normal
-      dynamics: none
-      friendly_name: office_light_sidetable
-      supported_features: 40
-      state: 'off'
-  metadata: {}
+      state: on
+      brightness: 180
+      color_temp: 2732
+    switch.light_office_pianolight:
+      state: on
+- id: office_low
+  name: Office - Low
+  entities:
+    light.office_light_sidetable:
+      state: on
+      brightness: 50
+      color_temp: 2732
+    switch.light_office_pianolight:
+      state: off
+- id: office_off
+  name: Office - Off
+  entities:
+    light.light_office_abovecouch:
+      state: off
+    light.light_office_abovecouch_white:
+      state: off
+    light.light_office_abovetv:
+      state: off
+    light.light_office_abovetv_white:
+      state: off
+    light.office_light_sidetable:
+      state: off
+    switch.light_office_pianolight:
+      state: off
+- id: bathroom_high
+  name: Bathroom - High
+  entities:
+    light.light_bathroom_abovesauna:
+      state: on
+      brightness: 255
+    light.light_bathroom_vanityleft:
+      state: on
+      brightness: 255
+    light.light_bathroom_vanityright:
+      state: on
+      brightness: 255
+- id: bathroom_medium
+  name: Bathroom - Medium
+  entities:
+    light.light_bathroom_abovesauna:
+      state: on
+      brightness: 180
+    light.light_bathroom_vanityleft:
+      state: on
+      brightness: 180
+    light.light_bathroom_vanityright:
+      state: on
+      brightness: 180
+- id: bathroom_off
+  name: Bathroom - Off
+  entities:
+    light.light_bathroom_abovesauna:
+      state: off
+    light.light_bathroom_vanityleft:
+      state: off
+    light.light_bathroom_vanityright:
+      state: off
+- id: bathroom_low
+  name: Bathroom - Low
+  entities:
+    light.light_bathroom_vanityleft:
+      state: on
+      brightness: 50
+    light.light_bathroom_vanityright:
+      state: on
+      brightness: 50
+- id: living_high
+  name: Living - High
+  entities:
+    light.living_light_floor:
+      state: on
+      brightness: 255
+    light.living_light_nook:
+      state: on
+      brightness: 255
+    light.entry_light_nook:
+      state: on
+      brightness: 255
+    light.light_living_curtains:
+      state: on
+      brightness: 255
+    light.light_living_windowsillleft:
+      state: on
+      brightness: 180
+    light.light_living_windowsillright:
+      state: on
+      brightness: 180
+    light.light_living_behindtv:
+      state: on
+      brightness: 255
+    light.light_living_desklamps:
+      state: on
+      brightness: 255
+    light.light_living_palm:
+      state: on
+      brightness: 255
+    switch.light_living_ledwall:
+      state: on
+- id: living_medium
+  name: Living - Medium
+  entities:
+    light.living_light_floor:
+      state: on
+      brightness: 180
+    light.living_light_nook:
+      state: on
+      brightness: 180
+    light.entry_light_nook:
+      state: on
+      brightness: 180
+    light.light_living_curtains:
+      state: on
+      brightness: 180
+    light.light_living_windowsillleft:
+      state: off
+    light.light_living_windowsillright:
+      state: off
+    light.light_living_behindtv:
+      state: off
+    light.light_living_palm:
+      state: off
+    switch.light_living_ledwall:
+      state: off
+- id: living_low
+  name: Living - Low
+  entities:
+    light.living_light_floor:
+      state: on
+      brightness: 50
+    light.living_light_nook:
+      state: on
+      brightness: 50
+    switch.light_living_ledwall:
+      state: off
+- id: living_off
+  name: Living - Off
+  entities:
+    light.living_light_floor:
+      state: off
+    light.living_light_nook:
+      state: off
+    light.entry_light_nook:
+      state: off
+    light.light_living_curtains:
+      state: off
+    light.light_living_windowsillleft:
+      state: off
+    light.light_living_windowsillright:
+      state: off
+    light.light_living_behindtv:
+      state: off
+    light.light_living_desklamps:
+      state: off
+    light.light_living_sliderring:
+      state: off
+    light.light_living_palm:
+      state: off
+    switch.light_living_ledwall:
+      state: off
+# Manual scenes (not generated from TypeScript)
+# Add any hand-written scenes here that are not suitable for the generator
