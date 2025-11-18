@@ -278,22 +278,32 @@ export const devices = {
 }
 ```
 
-### Phase 3: Migrate Scenes (Gradual)
+### Phase 3: Migrate Scenes (In Progress)
 
 **Goals:**
 - Convert metaconfig scenes → TypeScript definitions
 - Generate scenes.yaml
-- Deploy incrementally (5-10 scenes at a time)
+- Deploy incrementally room-by-room
 
 **Tasks:**
-- [ ] Create scene type definitions
-- [ ] Convert bedroom scenes (high/medium/low/off)
-- [ ] Generate & deploy bedroom scenes
-- [ ] Test bedroom scenes work correctly
-- [ ] Convert office scenes
+- [x] Create scene type definitions
+- [x] Convert office scenes (proof of concept complete)
+- [ ] Convert bathroom scenes (recommended next - simple room)
+- [ ] Convert bedroom scenes
 - [ ] Convert kitchen/living scenes
-- [ ] Convert bathroom scenes
 - [ ] Convert all remaining scenes
+
+**Recommended Approach:**
+1. Pick a room (start with bathroom - 4 lights, 1 switch)
+2. Map room devices to `config-generator/src/devices.ts`
+3. Find room scenes in `HomeAssistantConfig/metaconfig.yaml`
+4. Create scenes in `config-generator/src/scenes.ts`
+5. Create automations in `config-generator/src/automations.ts`
+6. Test: `just generate && just check`
+7. Backup: `just backup "pre-[room]-migration"`
+8. Deploy: `just push`
+9. Verify scenes work in HA UI
+10. Repeat for next room
 
 **Migration Example:**
 
@@ -729,23 +739,44 @@ just push
 
 ## Next Steps
 
-### Immediate (Phase 1)
-1. Add backup/restore commands to Justfile
-2. Initialize TypeScript project structure
-3. Create base type definitions
-4. Test backup/restore workflow
+### ✅ Completed
+- Phase 1: Setup & Backup ✓
+- Phase 2: Device Registry (Office) ✓
 
-### Short-term (Phase 2-3)
-1. Map old → new device names
-2. Implement scene generator
-3. Migrate 5-10 test scenes
-4. Validate scene functionality
+### 🚀 Phase 3: Migrate Remaining Scenes (CURRENT)
 
-### Long-term (Phase 4-5)
-1. Implement automation generator
-2. Migrate all automations
+**Quick Start for Next Session:**
+1. Read `PHASE3_QUICKSTART.md` for step-by-step guide
+2. Start with bathroom (recommended - simplest room)
+3. Follow the migration process:
+   - Map devices → Edit TypeScript → Generate → Test → Deploy
+4. Reference office implementation as working example
+
+**Recommended Room Order:**
+1. Bathroom (4 lights, 1 switch) - Simple
+2. Bedroom (3 lights, 2 switches) - Medium
+3. Kitchen/Living (complex switches) - Complex
+
+**Key Files:**
+- `HomeAssistantConfig/metaconfig.yaml` - Legacy config reference
+- `config-generator/src/devices.ts` - Add room devices here
+- `config-generator/src/scenes.ts` - Add room scenes here
+- `config-generator/src/automations.ts` - Add switch automations here
+
+**Commands:**
+```bash
+just fetch     # Get current HA entity IDs
+just generate  # Generate YAML from TypeScript
+just check     # Validate config (dry-run)
+just backup    # Create safety backup
+just push      # Deploy to HA
+```
+
+### 📋 Long-term (Phase 4-5)
+1. Complete all room migrations
+2. Test all scenes and automations in HA
 3. Clean up legacy code
-4. Document new workflow
+4. Archive old configs
 
 ---
 
