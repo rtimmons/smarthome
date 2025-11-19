@@ -99,20 +99,40 @@ export const devices: DeviceRegistry = {
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
+    living_curtains_white: {
+      entity: "light.light_living_curtains_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
     living_windowsillleft: {
       entity: "light.light_living_windowsillleft",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
+    },
+    living_windowsillleft_white: {
+      entity: "light.light_living_windowsillleft_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
     living_windowsillright: {
       entity: "light.light_living_windowsillright",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
+    living_windowsillright_white: {
+      entity: "light.light_living_windowsillright_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
     living_behindtv: {
       entity: "light.light_living_behindtv",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
+    },
+    living_behindtv_white: {
+      entity: "light.light_living_behindtv_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
     living_desklamps: {
       entity: "light.light_living_desklamps",
@@ -180,6 +200,11 @@ export const devices: DeviceRegistry = {
       entity: "light.light_dining_nook",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
+    },
+    kitchen_dining_nook_white: {
+      entity: "light.light_dining_nook_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
     dining_abovetable: {
       entity: "light.light_dining_abovetable",

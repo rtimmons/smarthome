@@ -291,20 +291,44 @@ export const scenes: SceneRegistry = {
       {
         device: "living_curtains",
         state: "on",
+        brightness: 255,
+        rgbw_color: [5, 4, 0, 255]  // Warm white
+      },
+      {
+        device: "living_curtains_white",
+        state: "on",
         brightness: 255
       },
       {
         device: "living_windowsillleft",
         state: "on",
-        brightness: 180  // medium per legacy config
+        brightness: 180,  // medium per legacy config
+        rgbw_color: [5, 4, 0, 180]
+      },
+      {
+        device: "living_windowsillleft_white",
+        state: "on",
+        brightness: 180
       },
       {
         device: "living_windowsillright",
         state: "on",
-        brightness: 180  // medium per legacy config
+        brightness: 180,  // medium per legacy config
+        rgbw_color: [5, 4, 0, 180]
+      },
+      {
+        device: "living_windowsillright_white",
+        state: "on",
+        brightness: 180
       },
       {
         device: "living_behindtv",
+        state: "on",
+        brightness: 255,
+        rgbw_color: [5, 4, 0, 255]
+      },
+      {
+        device: "living_behindtv_white",
         state: "on",
         brightness: 255
       },
@@ -355,6 +379,12 @@ export const scenes: SceneRegistry = {
       {
         device: "living_curtains",
         state: "on",
+        brightness: 180,
+        rgbw_color: [5, 4, 0, 180]  // Warm white
+      },
+      {
+        device: "living_curtains_white",
+        state: "on",
         brightness: 180
       },
       {
@@ -362,11 +392,23 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
+        device: "living_windowsillleft_white",
+        state: "off"
+      },
+      {
         device: "living_windowsillright",
         state: "off"
       },
       {
+        device: "living_windowsillright_white",
+        state: "off"
+      },
+      {
         device: "living_behindtv",
+        state: "off"
+      },
+      {
+        device: "living_behindtv_white",
         state: "off"
       },
       {
@@ -426,7 +468,15 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
+        device: "living_curtains_white",
+        state: "off"
+      },
+      {
         device: "living_windowsillleft",
+        state: "off"
+      },
+      {
+        device: "living_windowsillleft_white",
         state: "off"
       },
       {
@@ -434,7 +484,15 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
+        device: "living_windowsillright_white",
+        state: "off"
+      },
+      {
         device: "living_behindtv",
+        state: "off"
+      },
+      {
+        device: "living_behindtv_white",
         state: "off"
       },
       {
@@ -503,6 +561,10 @@ export const scenes: SceneRegistry = {
         state: "on",
         brightness: 255,
         rgbw_color: [5, 4, 0, 255]  // Warm white
+      },
+      {
+        device: "kitchen_dining_nook_white",
+        state: "on"
       }
     ]
   },
@@ -543,6 +605,10 @@ export const scenes: SceneRegistry = {
         state: "on",
         brightness: 180,
         rgbw_color: [5, 4, 0, 180]  // Warm white
+      },
+      {
+        device: "kitchen_dining_nook_white",
+        state: "on"
       }
     ]
   },
@@ -579,6 +645,10 @@ export const scenes: SceneRegistry = {
         state: "on",
         brightness: 50,
         rgbw_color: [5, 4, 0, 50]  // Warm white dim
+      },
+      {
+        device: "kitchen_dining_nook_white",
+        state: "on"
       }
     ]
   },
@@ -612,6 +682,10 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "kitchen_dining_nook",
+        state: "off"
+      },
+      {
+        device: "kitchen_dining_nook_white",
         state: "off"
       }
     ]
