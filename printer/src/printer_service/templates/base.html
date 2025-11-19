@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>{% block page_title %}{{ active_template.display_name }}{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        :root {
+            color-scheme: light dark;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            margin: 1.5rem auto;
+            max-width: 740px;
+            color: #1a1a1a;
+            background-color: #fdfdfd;
+        }
+        header {
+            margin-bottom: 1.5rem;
+        }
+        nav {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        nav a {
+            text-decoration: none;
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            background-color: #e6ecf8;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+        nav a.active {
+            background-color: #1b73e7;
+            color: #fff;
+        }
+        main {
+            display: grid;
+            gap: 1.5rem;
+        }
+        form {
+            display: grid;
+            gap: 0.75rem;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 440px);
+            gap: 1rem;
+            align-items: start;
+        }
+        .form-fields {
+            display: grid;
+            gap: 0.6rem;
+        }
+        .preview {
+            border: 1px solid #dce2f1;
+            border-radius: 8px;
+            padding: 0.75rem;
+            background-color: #f4f7ff;
+        }
+        .preview h3 {
+            margin: 0 0 0.5rem;
+            font-size: 1rem;
+        }
+        .preview-frame {
+            display: grid;
+            justify-items: center;
+            gap: 0.5rem;
+            min-height: clamp(360px, 60vh, 520px);
+        }
+        .preview-image {
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            border: 1px dashed #9bb5ee;
+            border-radius: 4px;
+            background-color: #fff;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            display: block;
+            margin: 0 auto;
+            transform-origin: center center;
+            max-height: clamp(360px, 60vh, 540px);
+        }
+        .preview-image.preview-image--loading {
+            opacity: 0.4;
+        }
+        .preview-status {
+            color: #495a80;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        .preview-status.preview-status--error {
+            color: #b3261e;
+        }
+        .preview-status__label {
+            font-weight: 600;
+            display: inline-block;
+        }
+        .preview-status__warnings {
+            color: #b3261e;
+            display: block;
+            margin-top: 0.2rem;
+        }
+        @media (max-width: 720px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            .preview {
+                margin-top: 0.5rem;
+            }
+        }
+        label {
+            display: grid;
+            gap: 0.3rem;
+        }
+        input,
+        select {
+            padding: 0.6rem;
+            font-size: 1rem;
+            border: 1px solid #cfd6e6;
+            border-radius: 6px;
+            background-color: #fff;
+            color: inherit;
+        }
+        button {
+            cursor: pointer;
+            background-color: #1b73e7;
+            color: #fff;
+            border: none;
+            padding: 0.65rem;
+            font-size: 1rem;
+            border-radius: 6px;
+        }
+        button:hover {
+            background-color: #1358ad;
+        }
+        #labels {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 240px));
+            gap: 1rem;
+        }
+        .label-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.75rem;
+            text-align: center;
+            background-color: #fafafa;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            min-height: clamp(360px, 55vh, 520px);
+        }
+        .label-card img {
+            max-width: 100%;
+            width: auto;
+            height: auto;
+            border: 1px solid #d0d0d0;
+            border-radius: 4px;
+            cursor: pointer;
+            background-color: #fff;
+            display: block;
+            margin: 0 auto;
+            transform-origin: center center;
+            transition: transform 0.2s ease-in-out;
+            max-height: clamp(320px, 50vh, 520px);
+        }
+        .label-card time {
+            display: block;
+            margin-top: 0.5rem;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .empty-state {
+            color: #555;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav aria-label="Label templates">
+            {% for template in templates %}
+                <a href="{{ url_for('show_template', template_slug=template.slug) }}"
+                   class="{% if template.slug == active_template.slug %}active{% endif %}">
+                    {{ template.display_name }}
+                </a>
+            {% endfor %}
+        </nav>
+    </header>
+    <main>
+        <section>
+            <h2>{% block form_heading %}{{ active_template.display_name }}{% endblock %}</h2>
+            <form id="labelForm" data-template="{{ active_template.slug }}">
+                <div class="form-grid">
+                    <div class="form-fields">
+                        {% block form_fields %}{% endblock %}
+                    </div>
+                    <section id="previewContainer" class="preview" aria-live="polite">
+                        <h3>Preview</h3>
+                        <div class="preview-frame">
+                            <p id="livePreviewStatus" class="preview-status">Start filling out the form to see your label.</p>
+                            <img id="livePreviewImage" class="preview-image" src="" alt="Live label preview" hidden>
+                        </div>
+                    </section>
+                </div>
+                {% block form_actions %}
+                <button type="submit">Save Label</button>
+                {% endblock %}
+            </form>
+        </section>
+        <section>
+            <h3>Recent Labels</h3>
+            <div id="labels" class="empty-state">Loading…</div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+</body>
+</html>

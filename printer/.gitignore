@@ -1,0 +1,5 @@
+label-output/
+.uv-cache/
+.venv/
+developers.home-assistant/
+build/

@@ -1,0 +1,53 @@
+set shell := ["bash", "-lc"]
+
+venv := ".venv"
+python := ".venv/bin/python"
+
+ensure-venv:
+    set -e
+    if [ ! -d "{{venv}}" ]; then python3 -m venv "{{venv}}"; fi
+
+setup:
+    set -e; \
+    brew_prefix="$(brew --prefix)"; \
+    brew list --formula cairo >/dev/null 2>&1 || brew install cairo; \
+    export PKG_CONFIG_PATH="${brew_prefix}/lib/pkgconfig:${brew_prefix}/share/pkgconfig:${PKG_CONFIG_PATH:-}"; \
+    just ensure-venv; \
+    if [ ! -x "{{python}}" ]; then python3 -m venv "{{venv}}"; fi; \
+    if [ ! -x "{{venv}}/bin/pip" ]; then "{{python}}" -m ensurepip --upgrade; fi; \
+    "{{python}}" scripts/bootstrap_env.py
+
+start:
+    set -e; \
+    brew_prefix="$(brew --prefix)"; \
+    brew_lib="${brew_prefix}/lib"; \
+    export LABEL_OUTPUT_DIR="${LABEL_OUTPUT_DIR:-label-output}"; \
+    export PRINTER_BACKEND="${PRINTER_BACKEND:-brother-network}"; \
+    export DYLD_LIBRARY_PATH="${brew_lib}:${DYLD_LIBRARY_PATH:-}"; \
+    export DYLD_FALLBACK_LIBRARY_PATH="${brew_lib}:${DYLD_FALLBACK_LIBRARY_PATH:-}"; \
+    export PKG_CONFIG_PATH="${brew_prefix}/lib/pkgconfig:${brew_prefix}/share/pkgconfig:${PKG_CONFIG_PATH:-}"; \
+    export PRINTER_DEV_RELOAD="${PRINTER_DEV_RELOAD:-1}"; \
+    if [ ! -d "{{venv}}" ]; then just setup; fi; \
+    "{{python}}" -m printer_service.app
+
+test:
+    set -e
+    if [ ! -d "{{venv}}" ]; then just setup; fi
+    "{{python}}" -m ruff format --check .
+    "{{python}}" -m mypy --config-file mypy.toml src/printer_service tests
+    "{{python}}" -m pytest
+
+fmt:
+    set -e
+    if [ ! -d "{{venv}}" ]; then just setup; fi
+    "{{python}}" -m ruff format .
+
+ha-addon:
+    python ../tools/addon_builder.py build printer
+
+deploy:
+    python ../tools/addon_builder.py deploy printer
+
+report:
+    set -e
+    scripts/diagnose_ha_addon.sh

@@ -2,8 +2,53 @@ ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
 FROM ${BUILD_FROM}
 
 ENV LANG=C.UTF-8
+{% if addon.python %}
+ENV PYTHONUNBUFFERED=1
+{% endif %}
 WORKDIR {{ addon.container_workdir }}
 
+{% if addon.python %}
+RUN apk add --no-cache \
+    bash \
+    python3 \
+    python3-dev \
+    py3-pip \
+    py3-virtualenv \
+    py3-wheel \
+    libstdc++ \
+    cairo \
+    pango \
+    gdk-pixbuf \
+    ttf-dejavu \
+    libjpeg-turbo \
+    zlib \
+    freetype \
+    libpng \
+    libffi \
+    libusb \
+    pkgconf \
+  && apk add --no-cache --virtual .build-deps \
+    build-base \
+    linux-headers \
+    python3-dev \
+    cairo-dev \
+    pango-dev \
+    gdk-pixbuf-dev \
+    libjpeg-turbo-dev \
+    zlib-dev \
+    freetype-dev \
+    libpng-dev \
+    libffi-dev \
+  && python3 -m venv /opt/venv \
+  && /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+
+ENV PATH="/opt/venv/bin:${PATH}"
+COPY app/ {{ addon.container_workdir }}/
+RUN /opt/venv/bin/pip install --no-cache-dir {{ addon.container_workdir }}/ \
+  && find {{ addon.container_workdir }}/ -type f -name '*.pyc' -delete \
+  && find {{ addon.container_workdir }}/ -type d -name '__pycache__' -delete \
+  && apk del .build-deps
+{% else %}
 RUN apk add --no-cache nodejs npm {% if addon.git_clone %}git patch{% endif %}
 
 {% if addon.git_clone %}
@@ -21,6 +66,7 @@ RUN set -e; \
 {% else %}
 COPY app/ {{ addon.container_workdir }}/
 RUN npm ci {% if addon.npm_build %}&& npm run build {% endif %}&& npm cache clean --force
+{% endif %}
 {% endif %}
 
 COPY run.sh /

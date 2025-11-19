@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block form_heading %}
+Kitchen Label Printer
+{% endblock %}
+
+{% block form_fields %}
+    <label for="line1">
+        Line 1
+        <input type="text" id="line1" name="line1" placeholder="Item name">
+    </label>
+    <label for="line2">
+        Line 2
+        <input type="text" id="line2" name="line2" placeholder="Date or shelf">
+    </label>
+    <label for="line3">
+        Line 3
+        <input type="text" id="line3" name="line3" placeholder="Notes">
+    </label>
+{% endblock %}

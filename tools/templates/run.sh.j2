@@ -122,4 +122,8 @@ fi
 
 cd {{ addon.container_workdir }}
 bashio::log.info "Starting {{ addon.name }} on port {{ addon.port }}"
+{% if addon.python %}
+exec python -m {{ addon.python_module }}
+{% else %}
 exec npm start
+{% endif %}

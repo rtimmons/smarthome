@@ -28,6 +28,19 @@ ports:
 ports_description:
 {{ ports_desc_yaml | indent(2, true) }}
 {% endif -%}
+{% if addon.map %}
+map:
+{% for item in addon.map %}
+  - type: {{ item.type }}
+    read_only: {{ "true" if item.read_only else "false" }}
+{% endfor %}
+{% endif -%}
+{% if addon.usb %}usb: true
+{% endif -%}
+{% if addon.audio %}audio: true
+{% endif -%}
+{% if addon.gpio %}gpio: true
+{% endif -%}
 homeassistant: "{{ addon.homeassistant_min }}"
 environment:
 {{ environment_yaml | indent(2, true) }}

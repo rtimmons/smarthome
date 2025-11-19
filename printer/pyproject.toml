@@ -1,0 +1,40 @@
+[project]
+name = "printer"
+version = "0.1.0"
+description = "Kitchen label printing service."
+requires-python = ">=3.10"
+dependencies = [
+    "flask",
+    "pillow>=9.5,<10",
+    "brother-ql",
+    "python-escpos",
+    "pytest",
+    "cairosvg",
+]
+
+[project.scripts]
+printer-service = "printer_service.app:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.uv]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/printer_service"]
+include = [
+    "src/printer_service/templates/**",
+    "src/printer_service/static/**",
+    "src/printer_service/label_templates/**",
+]

@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block form_heading %}
+{{ active_template.display_name }}
+{% endblock %}
+
+{% block form_fields %}
+    <p>Generates a single line reading Best By with a date 14 days from today using 24pt text on the Bluey roll.</p>
+    <label for="baseDate">
+        Base date (YYYY-MM-DD, optional)
+        <input type="text" id="baseDate" name="BaseDate" placeholder="2025-11-17">
+    </label>
+{% endblock %}

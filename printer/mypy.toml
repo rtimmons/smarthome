@@ -1,0 +1,17 @@
+[tool.mypy]
+python_version = "3.12"
+mypy_path = "src"
+show_error_codes = true
+pretty = true
+warn_unused_configs = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+    "brother_ql.*",
+    "cairosvg",
+    "escpos.*",
+    "PIL",
+    "PIL.*",
+]
+ignore_missing_imports = true

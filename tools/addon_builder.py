@@ -38,6 +38,25 @@ def read_package_version(path: Path) -> str:
         return "0.0.0"
 
 
+def read_pyproject_version(path: Path) -> str:
+    try:
+        import tomllib
+    except ImportError:
+        try:
+            import tomli as tomllib  # type: ignore
+        except ImportError:
+            import re
+            raw = path.read_text()
+            match = re.search(r'^version\s*=\s*"(?P<version>[^"]+)"', raw, re.MULTILINE)
+            return match.group("version") if match else "0.0.0"
+
+    try:
+        data = tomllib.loads(path.read_text(encoding="utf-8"))
+        return data.get("project", {}).get("version", "0.0.0")
+    except Exception:
+        return "0.0.0"
+
+
 def default_yaml(data: Dict[str, Any]) -> str:
     return yaml.safe_dump(data or {}, default_flow_style=False, sort_keys=False).strip() or "{}"
 
@@ -48,8 +67,14 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
 
     raw = manifest[addon_key]
     source_dir = REPO_ROOT / raw["source_dir"]
-    version_from = source_dir / "package.json"
-    version = read_package_version(version_from) if version_from.exists() else "0.0.0"
+
+    # Determine version based on project type
+    if raw.get("python", False):
+        version_from = source_dir / "pyproject.toml"
+        version = read_pyproject_version(version_from) if version_from.exists() else "0.0.0"
+    else:
+        version_from = source_dir / "package.json"
+        version = read_package_version(version_from) if version_from.exists() else "0.0.0"
 
     ports = raw.get("ports") or {}
     port = int(next(iter(ports.keys()))) if ports else None
@@ -81,10 +106,16 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "docs": raw.get("docs", {}),
             "version": version,
             "npm_build": raw.get("npm_build", False),
+            "python": raw.get("python", False),
+            "python_module": raw.get("python_module", ""),
             "port": port,
             "run_env": raw.get("run_env", []),
             "git_clone": raw.get("git_clone"),
             "tests": raw.get("tests", []),
+            "map": raw.get("map", []),
+            "usb": raw.get("usb", False),
+            "audio": raw.get("audio", False),
+            "gpio": raw.get("gpio", False),
         },
         "ports_yaml": default_yaml({f"{k}/tcp": v for k, v in ports.items()}),
         "ports_desc_yaml": default_yaml({f"{k}/tcp": v for k, v in raw.get("ports_description", {}).items()}),
