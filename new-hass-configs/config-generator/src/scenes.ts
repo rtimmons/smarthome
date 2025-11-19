@@ -321,6 +321,11 @@ export const scenes: SceneRegistry = {
         device: "living_abovetv",
         state: "on",
         brightness: 255
+      },
+      {
+        device: "living_cornerspot",
+        state: "on",
+        brightness: 255
       }
     ],
     switches: {
@@ -369,6 +374,10 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_abovetv",
+        state: "off"
+      },
+      {
+        device: "living_cornerspot",
         state: "off"
       }
     ],
@@ -441,6 +450,10 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_abovetv",
+        state: "off"
+      },
+      {
+        device: "living_cornerspot",
         state: "off"
       }
     ],

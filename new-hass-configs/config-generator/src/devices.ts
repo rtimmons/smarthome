@@ -51,31 +51,31 @@ export const devices: DeviceRegistry = {
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
 
-    // Bathroom lights - all Z-Wave dimmers (no more Hue)
+    // Bathroom lights - Z-Wave dimmers with non-dimmable fixtures (on/off only)
     bathroom_sauna: {
       entity: "light.bathroom_light_sauna",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     bathroom_shower: {
       entity: "light.bathroom_light_shower",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     bathroom_vanityleft: {
       entity: "light.bathroom_light_vanityleft",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     bathroom_vanityright: {
       entity: "light.bathroom_light_vanityright",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     bathroom_vanitysconces: {
       entity: "light.bathroom_light_vanitysconces",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
 
     // Living room lights - mix of Hue and Z-Wave
@@ -116,23 +116,28 @@ export const devices: DeviceRegistry = {
     },
     living_desklamps: {
       entity: "light.light_living_desklamps",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     living_sliderring: {
       entity: "light.light_living_sliderring",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     living_palm: {
       entity: "light.light_living_palm",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
     living_abovetv: {
       entity: "light.light_living_abovetv",
-      type: "dimmer_light",
-      capabilities: ["brightness"]
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
+    living_cornerspot: {
+      entity: "light.light_living_cornerspot",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
   },
 

@@ -89,37 +89,27 @@
   entities:
     light.bathroom_light_sauna:
       state: on
-      brightness: 255
     light.bathroom_light_shower:
       state: on
-      brightness: 255
     light.bathroom_light_vanityleft:
       state: on
-      brightness: 255
     light.bathroom_light_vanityright:
       state: on
-      brightness: 255
     light.bathroom_light_vanitysconces:
       state: on
-      brightness: 255
 - id: bathroom_medium
   name: Bathroom - Medium
   entities:
     light.bathroom_light_sauna:
       state: on
-      brightness: 155
     light.bathroom_light_shower:
       state: on
-      brightness: 155
     light.bathroom_light_vanityleft:
       state: on
-      brightness: 155
     light.bathroom_light_vanityright:
       state: on
-      brightness: 155
     light.bathroom_light_vanitysconces:
       state: on
-      brightness: 155
 - id: bathroom_low
   name: Bathroom - Low
   entities:
@@ -133,7 +123,6 @@
       state: off
     light.bathroom_light_vanitysconces:
       state: on
-      brightness: 50
 - id: bathroom_off
   name: Bathroom - Off
   entities:
@@ -173,13 +162,12 @@
       brightness: 255
     light.light_living_desklamps:
       state: on
-      brightness: 255
     light.light_living_palm:
       state: on
-      brightness: 255
     light.light_living_abovetv:
       state: on
-      brightness: 255
+    light.light_living_cornerspot:
+      state: on
     switch.light_living_ledwall:
       state: on
 - id: living_room_medium
@@ -206,6 +194,8 @@
     light.light_living_palm:
       state: off
     light.light_living_abovetv:
+      state: off
+    light.light_living_cornerspot:
       state: off
     switch.light_living_ledwall:
       state: off
@@ -244,6 +234,8 @@
     light.light_living_palm:
       state: off
     light.light_living_abovetv:
+      state: off
+    light.light_living_cornerspot:
       state: off
     switch.light_living_ledwall:
       state: off

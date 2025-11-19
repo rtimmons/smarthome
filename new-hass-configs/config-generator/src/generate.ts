@@ -55,34 +55,37 @@ function generateScenes(): HAScene[] {
           state: light.state || "on",
         };
 
-        // Add brightness if specified
-        if (light.brightness !== undefined) {
-          entityState.brightness = light.brightness;
-        }
+        // For zwave_switch_light devices (on/off only), don't add brightness or color attributes
+        if (device.type !== "zwave_switch_light") {
+          // Add brightness if specified
+          if (light.brightness !== undefined) {
+            entityState.brightness = light.brightness;
+          }
 
-        // Add RGB color if specified
-        if (light.rgb_color) {
-          entityState.rgb_color = light.rgb_color;
-        }
+          // Add RGB color if specified
+          if (light.rgb_color) {
+            entityState.rgb_color = light.rgb_color;
+          }
 
-        // Add RGBW color if specified
-        if (light.rgbw_color) {
-          entityState.rgbw_color = light.rgbw_color;
-        }
+          // Add RGBW color if specified
+          if (light.rgbw_color) {
+            entityState.rgbw_color = light.rgbw_color;
+          }
 
-        // Add color temperature if specified
-        if (light.color_temp) {
-          entityState.color_temp = light.color_temp;
-        }
+          // Add color temperature if specified
+          if (light.color_temp) {
+            entityState.color_temp = light.color_temp;
+          }
 
-        // Add white value if specified
-        if (light.white_value !== undefined) {
-          entityState.white_value = light.white_value;
-        }
+          // Add white value if specified
+          if (light.white_value !== undefined) {
+            entityState.white_value = light.white_value;
+          }
 
-        // Add transition if specified
-        if (light.transition !== undefined) {
-          entityState.transition = light.transition;
+          // Add transition if specified
+          if (light.transition !== undefined) {
+            entityState.transition = light.transition;
+          }
         }
 
         entities[device.entity] = entityState;
