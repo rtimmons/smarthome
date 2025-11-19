@@ -94,6 +94,11 @@ export const devices: DeviceRegistry = {
       type: "color_light",
       capabilities: ["brightness", "color_temp"]
     },
+    living_corner: {
+      entity: "light.living_light_corner",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
+    },
     living_curtains: {
       entity: "light.light_living_curtains",
       type: "zwave_zen31_rgbw",
@@ -151,8 +156,13 @@ export const devices: DeviceRegistry = {
     },
     living_abovetv: {
       entity: "light.light_living_abovetv",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    living_abovetv_white: {
+      entity: "light.light_living_abovetv_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
     living_cornerspot: {
       entity: "light.light_living_cornerspot",
@@ -210,6 +220,23 @@ export const devices: DeviceRegistry = {
       entity: "light.light_dining_abovetable",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
+    },
+
+    // Bedroom lights - Hue
+    bedroom_dresser: {
+      entity: "light.bedroom_light_dresser",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
+    },
+    bedroom_mikedesk: {
+      entity: "light.bedroom_light_mikedesk",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
+    },
+    bedroom_flamingo: {
+      entity: "light.bedroom_light_flamingo",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
     },
   },
 
