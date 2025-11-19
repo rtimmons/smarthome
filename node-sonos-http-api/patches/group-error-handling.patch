@@ -1,0 +1,36 @@
+diff -Naur a/lib/actions/group.js b/lib/actions/group.js
+--- a/lib/actions/group.js	2025-11-18 22:14:43
++++ b/lib/actions/group.js	2025-11-18 22:14:43
+@@ -26,7 +26,31 @@
+ }
+ 
+ function attachTo(player, coordinator) {
+-  return player.setAVTransport(rinconUri(coordinator));
++  const MAX_RETRIES = 3;
++  const RETRY_DELAY = 1000; // 1 second
++
++  function attemptJoin(retryCount) {
++    retryCount = retryCount || 0;
++
++    return player.setAVTransport(rinconUri(coordinator))
++      .catch(function(err) {
++        logger.warn(`Join failed for ${player.roomName} -> ${coordinator.roomName}: ${err.message}`);
++
++        if (retryCount < MAX_RETRIES && err.message && err.message.includes('status 500')) {
++          logger.info(`Retrying join (attempt ${retryCount + 1}/${MAX_RETRIES}) after ${RETRY_DELAY}ms...`);
++          return new Promise(function(resolve) {
++            setTimeout(function() {
++              resolve(attemptJoin(retryCount + 1));
++            }, RETRY_DELAY);
++          });
++        }
++
++        logger.error(`Join permanently failed after ${retryCount} retries, ignoring to prevent crash`);
++        return Promise.resolve(); // Don't crash, just resolve
++      });
++  }
++
++  return attemptJoin(0);
+ }
+ 
+ function isolate(player) {

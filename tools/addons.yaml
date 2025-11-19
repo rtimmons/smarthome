@@ -132,6 +132,7 @@ addons:
     copy:
       - presets
       - presets.example.json
+      - patches
     git_clone:
       repo: https://github.com/jishi/node-sonos-http-api.git
       target: /app

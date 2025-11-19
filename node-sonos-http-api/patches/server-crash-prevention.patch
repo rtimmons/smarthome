@@ -1,0 +1,17 @@
+diff -Naur a/server.js b/server.js
+--- a/server.js	2025-11-18 22:15:08
++++ b/server.js	2025-11-18 22:15:08
+@@ -80,6 +80,13 @@
+   logger.error(err);
+ });
+ 
++// Prevent crashes from uncaught exceptions (e.g., SOAP errors)
++process.on('uncaughtException', (err) => {
++  logger.error('Uncaught exception (non-fatal):', err);
++  logger.error('Stack:', err.stack);
++  // Don't exit - let the service continue
++});
++
+ let host = settings.ip;
+ server.listen(settings.port, host, function () {
+   logger.info('http server listening on', host, 'port', settings.port);

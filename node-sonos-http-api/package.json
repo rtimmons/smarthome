@@ -1,6 +1,6 @@
 {
   "name": "node-sonos-http-api-addon",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Home Assistant add-on for node-sonos-http-api",
   "scripts": {
     "build": "echo 'Build script for add-on'",

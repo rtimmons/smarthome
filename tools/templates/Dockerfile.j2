@@ -4,7 +4,7 @@ FROM ${BUILD_FROM}
 ENV LANG=C.UTF-8
 WORKDIR {{ addon.container_workdir }}
 
-RUN apk add --no-cache nodejs npm {% if addon.git_clone %}git{% endif %}
+RUN apk add --no-cache nodejs npm {% if addon.git_clone %}git patch{% endif %}
 
 {% if addon.git_clone %}
 COPY app/ /tmp/app-overlay/
@@ -16,7 +16,8 @@ RUN set -e; \
   cd {{ addon.git_clone.target | shquote }} \
   && npm install --production \
   && npm cache clean --force \
-  && if [ -d /tmp/app-overlay ]; then cp -R /tmp/app-overlay/. {{ addon.git_clone.target | shquote }}/; fi
+  && if [ -d /tmp/app-overlay ]; then cp -R /tmp/app-overlay/. {{ addon.git_clone.target | shquote }}/; fi \
+  && if [ -d /tmp/app-overlay/patches ]; then for patch in /tmp/app-overlay/patches/*.patch; do [ -f "$patch" ] && patch -p1 < "$patch" && echo "Applied patch: $patch"; done; fi
 {% else %}
 COPY app/ {{ addon.container_workdir }}/
 RUN npm ci {% if addon.npm_build %}&& npm run build {% endif %}&& npm cache clean --force

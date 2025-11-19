@@ -50,6 +50,24 @@ This add-on:
 - Uses host networking to discover Sonos devices on your network
 - Clones and runs the official node-sonos-http-api from GitHub
 - Is accessible to other add-ons via `http://node-sonos-http-api:5005`
+- Applies custom patches to improve error handling and prevent crashes
+
+## Error Handling
+
+This add-on applies runtime patches to the upstream node-sonos-http-api to prevent crashes from transient SOAP errors:
+
+### Patches Applied
+
+1. **`patches/group-error-handling.patch`**: Adds retry logic to join operations
+   - Retries failed join attempts up to 3 times with 1-second delays
+   - Gracefully handles HTTP 500 errors from Sonos devices
+   - Logs failures without crashing the service
+
+2. **`patches/server-crash-prevention.patch`**: Adds global error handlers
+   - Catches uncaught exceptions to prevent process crashes
+   - Logs errors with stack traces for debugging
+
+These patches are automatically applied during the Docker build process and help maintain service stability when Sonos devices are busy or network conditions are poor.
 
 ## API Documentation
 

@@ -97,6 +97,32 @@ hassmetagen ../HomeAssistantConfig/metaconfig.yaml  # Generate Home Assistant co
 - `sonos-api/src/server/index.ts` - Sonos API wrapper entry point
 - `docs/` - Documentation including setup guides, Sonos routing, and ingress fixes
 
+## Error Handling and Stability
+
+### Sonos API Error Handling
+
+The system includes error handling to prevent crashes from transient Sonos API failures:
+
+1. **node-sonos-http-api patches**: Runtime patches are applied during Docker build to handle SOAP errors gracefully
+   - `node-sonos-http-api/patches/group-error-handling.patch` - Adds retry logic (3 attempts, 1s delay) for join operations
+   - `node-sonos-http-api/patches/server-crash-prevention.patch` - Global uncaught exception handler
+   - Patches use `-p1` format and are applied via the Dockerfile template
+
+2. **grid-dashboard error handling**: HTTP proxy includes error handlers to catch 500 status codes from sonos API
+   - Implemented in `grid-dashboard/ExpressServer/src/server/sonos.ts`
+   - Returns JSON error responses instead of crashing
+
+### Modifying Error Handling Patches
+
+When updating patches for node-sonos-http-api:
+- Clone the upstream repo: `git clone https://github.com/jishi/node-sonos-http-api.git`
+- Make changes to the cloned files
+- Generate patches with `diff -Naur a/ b/` format (for `-p1` compatibility)
+- Place patch files in `node-sonos-http-api/patches/`
+- Patches are auto-applied during Docker build via `tools/templates/Dockerfile.j2`
+- Bump version in `node-sonos-http-api/package.json` to force Docker image rebuild
+- Use `ha addons rebuild local_node_sonos_http_api` to force rebuild without version change
+
 ## Z-Wave Device Notes
 
 - Dimmer switch 46203 requires manual command class updates for scene support (see README.md:134-163)
