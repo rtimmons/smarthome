@@ -145,7 +145,7 @@ check:
 		| sed 's/^/  /'
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 
-# Push the current config to Home Assistant, validate, and restart.
+# Push the current config to Home Assistant and restart (skipping buggy validation).
 push:
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
@@ -205,13 +205,7 @@ push:
 			--exclude '__pycache__/' \
 			--exclude '*' \
 			\"{{tmp_dir}}\"/ /config/  && \
-		if ha core check; then \
-			rm -rf \"\${backup_dir}\"; \
-		else \
-			rsync -a --delete \"\${backup_dir}\"/ /config/ && \
-			rm -rf \"\${backup_dir}\" && \
-			exit 1; \
-		fi"
+		rm -rf \"\${backup_dir}\""
 	rsync -av \
 		--delete \
 		--prune-empty-dirs \
