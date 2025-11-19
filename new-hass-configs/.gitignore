@@ -4,6 +4,10 @@ backups/
 # Generated configs (should be regenerated from TypeScript sources)
 generated/
 
+# Merged output files (created from generated/ + manual/)
+scenes.yaml
+automations.yaml
+
 # Secrets (never commit)
 secrets.yaml
 
