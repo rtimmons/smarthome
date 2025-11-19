@@ -207,6 +207,7 @@ const config = {
             y:2, x:9,
             emoji: 'Moon',
             onPress: {action: 'Lights.Scene', args: ['$room','Off']},
+            onDoublePress: {action: 'Lights.Scene', args: ['all','off']},
         },
         // { w:1, h:1,
         //   y:5, x:8,

@@ -139,6 +139,11 @@ export const devices: DeviceRegistry = {
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
+    living_hallway: {
+      entity: "light.light_living_hallway",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
 
     // Kitchen lights (including dining area)
     kitchen_upper: {
@@ -175,6 +180,11 @@ export const devices: DeviceRegistry = {
       entity: "light.light_dining_nook",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
+    },
+    dining_abovetable: {
+      entity: "light.light_dining_abovetable",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
     },
   },
 
@@ -227,6 +237,35 @@ export const devices: DeviceRegistry = {
           command_class_name: "Central Scene",
           property_key_name: "001",
           value: "KeyReleased"
+        }
+      }
+    },
+
+    // Bedroom bedside switch - Z-Wave Central Scene device
+    bedroom_switch_bedside: {
+      entity: "switch.bedroom_switch_bedside",
+      type: "zwave_dimmer_46203",
+      device_id: "TODO_DEVICE_ID",  // TODO: Get actual device_id from Home Assistant
+      events: {
+        singleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed"
+        },
+        singleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed"
+        },
+        doubleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed2x"
+        },
+        doubleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed2x"
         }
       }
     },

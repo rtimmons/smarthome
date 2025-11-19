@@ -8,7 +8,8 @@
  *       Reference devices using logical names from devices.ts
  */
 
-import { SceneRegistry } from "./types";
+import { SceneRegistry, Scene } from "./types";
+import { devices } from "./devices";
 
 /**
  * Scene Registry
@@ -615,7 +616,63 @@ export const scenes: SceneRegistry = {
       }
     ]
   },
+
+  // ============================================================================
+  // All Off Scene (Generated)
+  // ============================================================================
+  // This scene automatically includes all lights, switches, and outlets
+  // except those in the blocklist
+  ...generateAllOffScene(),
 };
+
+/**
+ * Generate the "All Off" scene
+ *
+ * Automatically creates a scene that turns off all lights, switches, and outlets
+ * except those in the blocklist.
+ *
+ * Blocklist: Devices that should NOT be turned off by the all_off scene
+ */
+function generateAllOffScene(): { all_off: Scene } {
+  const blocklist = [
+    "bedroom_switch_bedside",  // Bedroom sconces - user requested to exclude
+  ];
+
+  const lights: Array<{ device: string; state: "off" }> = [];
+  const switches: Record<string, "on" | "off"> = {};
+
+  // Collect all lights (except blocklisted ones)
+  for (const [deviceName, _device] of Object.entries(devices.lights)) {
+    if (!blocklist.includes(deviceName)) {
+      lights.push({
+        device: deviceName,
+        state: "off"
+      });
+    }
+  }
+
+  // Collect all switches (except blocklisted ones)
+  for (const [deviceName, _device] of Object.entries(devices.switches)) {
+    if (!blocklist.includes(deviceName)) {
+      switches[deviceName] = "off";
+    }
+  }
+
+  // Collect all outlets (except blocklisted ones)
+  for (const [deviceName, _device] of Object.entries(devices.outlets)) {
+    if (!blocklist.includes(deviceName)) {
+      switches[deviceName] = "off";
+    }
+  }
+
+  return {
+    all_off: {
+      name: "All Off",
+      lights,
+      switches,
+    }
+  };
+}
 
 /**
  * Helper function to get a scene by key

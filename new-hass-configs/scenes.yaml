@@ -349,5 +349,76 @@
       state: off
     light.light_dining_nook:
       state: off
+- id: all_off
+  name: All Off
+  entities:
+    light.light_office_abovecouch:
+      state: off
+    light.light_office_abovecouch_white:
+      state: off
+    light.light_office_abovetv:
+      state: off
+    light.light_office_abovetv_white:
+      state: off
+    light.office_light_sidetable:
+      state: off
+    light.bathroom_light_sauna:
+      state: off
+    light.bathroom_light_shower:
+      state: off
+    light.bathroom_light_vanityleft:
+      state: off
+    light.bathroom_light_vanityright:
+      state: off
+    light.bathroom_light_vanitysconces:
+      state: off
+    light.living_light_floor:
+      state: off
+    light.living_light_nook:
+      state: off
+    light.entry_light_nook:
+      state: off
+    light.light_living_curtains:
+      state: off
+    light.light_living_windowsillleft:
+      state: off
+    light.light_living_windowsillright:
+      state: off
+    light.light_living_behindtv:
+      state: off
+    light.light_living_desklamps:
+      state: off
+    light.light_living_sliderring:
+      state: off
+    light.light_living_palm:
+      state: off
+    light.light_living_abovetv:
+      state: off
+    light.light_living_cornerspot:
+      state: off
+    light.light_living_hallway:
+      state: off
+    light.light_kitchen_upper:
+      state: off
+    light.light_kitchen_upper_white:
+      state: off
+    light.light_kitchen_lower:
+      state: off
+    light.light_kitchen_lower_white:
+      state: off
+    light.light_kitchen_ring:
+      state: off
+    light.light_kitchen_hanging:
+      state: off
+    light.light_dining_nook:
+      state: off
+    light.light_dining_abovetable:
+      state: off
+    switch.office_wall_switch:
+      state: off
+    switch.light_office_pianolight:
+      state: off
+    switch.light_living_ledwall:
+      state: off
 # Manual scenes (not generated from TypeScript)
 # Add any hand-written scenes here that are not suitable for the generator

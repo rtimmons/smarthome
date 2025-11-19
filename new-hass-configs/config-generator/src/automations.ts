@@ -243,6 +243,24 @@ export const automations: AutomationRegistry = {
     },
     mode: "single"
   },
+
+  // ============================================================================
+  // All Off Webhook Automation (Dashboard Moon Button Double-Tap)
+  // ============================================================================
+
+  all_off_webhook: {
+    alias: "All Off Webhook",
+    description: "Dashboard Moon button double-tap: Turn off all lights except bedroom sconces",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_all_off"
+    },
+    action: {
+      type: "scene",
+      scene: "all_off"
+    },
+    mode: "single"
+  },
 };
 
 /**
