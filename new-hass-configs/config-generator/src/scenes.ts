@@ -461,6 +461,160 @@ export const scenes: SceneRegistry = {
       living_ledwall: "off"
     }
   },
+
+  // ============================================================================
+  // Kitchen Scenes (includes dining area)
+  // ============================================================================
+
+  kitchen_high: {
+    name: "Kitchen - High",
+    lights: [
+      {
+        device: "kitchen_upper",
+        state: "on",
+        brightness: 255,
+        rgbw_color: [5, 4, 0, 255]  // Warm white
+      },
+      {
+        device: "kitchen_upper_white",
+        state: "on"
+      },
+      {
+        device: "kitchen_lower",
+        state: "on",
+        brightness: 255,
+        rgbw_color: [5, 4, 0, 255]  // Warm white
+      },
+      {
+        device: "kitchen_lower_white",
+        state: "on"
+      },
+      {
+        device: "kitchen_ring",
+        state: "on"
+      },
+      {
+        device: "kitchen_hanging",
+        state: "on"
+      },
+      {
+        device: "kitchen_dining_nook",
+        state: "on",
+        brightness: 255,
+        rgbw_color: [5, 4, 0, 255]  // Warm white
+      }
+    ]
+  },
+
+  kitchen_medium: {
+    name: "Kitchen - Medium",
+    lights: [
+      {
+        device: "kitchen_upper",
+        state: "on",
+        brightness: 180,
+        rgbw_color: [5, 4, 0, 180]  // Warm white
+      },
+      {
+        device: "kitchen_upper_white",
+        state: "on"
+      },
+      {
+        device: "kitchen_lower",
+        state: "on",
+        brightness: 180,
+        rgbw_color: [5, 4, 0, 180]  // Warm white
+      },
+      {
+        device: "kitchen_lower_white",
+        state: "on"
+      },
+      {
+        device: "kitchen_ring",
+        state: "on"
+      },
+      {
+        device: "kitchen_hanging",
+        state: "on"
+      },
+      {
+        device: "kitchen_dining_nook",
+        state: "on",
+        brightness: 180,
+        rgbw_color: [5, 4, 0, 180]  // Warm white
+      }
+    ]
+  },
+
+  kitchen_low: {
+    name: "Kitchen - Low",
+    lights: [
+      {
+        device: "kitchen_upper",
+        state: "off"
+      },
+      {
+        device: "kitchen_upper_white",
+        state: "off"
+      },
+      {
+        device: "kitchen_lower",
+        state: "off"
+      },
+      {
+        device: "kitchen_lower_white",
+        state: "off"
+      },
+      {
+        device: "kitchen_ring",
+        state: "off"
+      },
+      {
+        device: "kitchen_hanging",
+        state: "on"
+      },
+      {
+        device: "kitchen_dining_nook",
+        state: "on",
+        brightness: 50,
+        rgbw_color: [5, 4, 0, 50]  // Warm white dim
+      }
+    ]
+  },
+
+  kitchen_off: {
+    name: "Kitchen - Off",
+    lights: [
+      {
+        device: "kitchen_upper",
+        state: "off"
+      },
+      {
+        device: "kitchen_upper_white",
+        state: "off"
+      },
+      {
+        device: "kitchen_lower",
+        state: "off"
+      },
+      {
+        device: "kitchen_lower_white",
+        state: "off"
+      },
+      {
+        device: "kitchen_ring",
+        state: "off"
+      },
+      {
+        device: "kitchen_hanging",
+        state: "off"
+      },
+      {
+        device: "kitchen_dining_nook",
+        state: "off"
+      }
+    ]
+  },
 };
 
 /**

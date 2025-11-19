@@ -239,5 +239,115 @@
       state: off
     switch.light_living_ledwall:
       state: off
+- id: kitchen_high
+  name: Kitchen - High
+  entities:
+    light.light_kitchen_upper:
+      state: on
+      brightness: 255
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 255
+    light.light_kitchen_upper_white:
+      state: on
+    light.light_kitchen_lower:
+      state: on
+      brightness: 255
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 255
+    light.light_kitchen_lower_white:
+      state: on
+    light.light_kitchen_ring:
+      state: on
+    light.light_kitchen_hanging:
+      state: on
+    light.light_dining_nook:
+      state: on
+      brightness: 255
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 255
+- id: kitchen_medium
+  name: Kitchen - Medium
+  entities:
+    light.light_kitchen_upper:
+      state: on
+      brightness: 180
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 180
+    light.light_kitchen_upper_white:
+      state: on
+    light.light_kitchen_lower:
+      state: on
+      brightness: 180
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 180
+    light.light_kitchen_lower_white:
+      state: on
+    light.light_kitchen_ring:
+      state: on
+    light.light_kitchen_hanging:
+      state: on
+    light.light_dining_nook:
+      state: on
+      brightness: 180
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 180
+- id: kitchen_low
+  name: Kitchen - Low
+  entities:
+    light.light_kitchen_upper:
+      state: off
+    light.light_kitchen_upper_white:
+      state: off
+    light.light_kitchen_lower:
+      state: off
+    light.light_kitchen_lower_white:
+      state: off
+    light.light_kitchen_ring:
+      state: off
+    light.light_kitchen_hanging:
+      state: on
+    light.light_dining_nook:
+      state: on
+      brightness: 50
+      rgbw_color:
+        - 5
+        - 4
+        - 0
+        - 50
+- id: kitchen_off
+  name: Kitchen - Off
+  entities:
+    light.light_kitchen_upper:
+      state: off
+    light.light_kitchen_upper_white:
+      state: off
+    light.light_kitchen_lower:
+      state: off
+    light.light_kitchen_lower_white:
+      state: off
+    light.light_kitchen_ring:
+      state: off
+    light.light_kitchen_hanging:
+      state: off
+    light.light_dining_nook:
+      state: off
 # Manual scenes (not generated from TypeScript)
 # Add any hand-written scenes here that are not suitable for the generator

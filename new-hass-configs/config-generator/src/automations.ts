@@ -197,6 +197,52 @@ export const automations: AutomationRegistry = {
     },
     mode: "single"
   },
+
+  // ============================================================================
+  // Kitchen Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  kitchen_webhook_high: {
+    alias: "Kitchen Webhook → High",
+    description: "Dashboard button: Kitchen High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_kitchen_high"
+    },
+    action: {
+      type: "scene",
+      scene: "kitchen_high"
+    },
+    mode: "single"
+  },
+
+  kitchen_webhook_medium: {
+    alias: "Kitchen Webhook → Medium",
+    description: "Dashboard button: Kitchen Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_kitchen_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "kitchen_medium"
+    },
+    mode: "single"
+  },
+
+  kitchen_webhook_off: {
+    alias: "Kitchen Webhook → Off",
+    description: "Dashboard button: Kitchen Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_kitchen_off"
+    },
+    action: {
+      type: "scene",
+      scene: "kitchen_off"
+    },
+    mode: "single"
+  },
 };
 
 /**

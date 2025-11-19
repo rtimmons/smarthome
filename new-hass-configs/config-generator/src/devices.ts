@@ -139,6 +139,43 @@ export const devices: DeviceRegistry = {
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
+
+    // Kitchen lights (including dining area)
+    kitchen_upper: {
+      entity: "light.light_kitchen_upper",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    kitchen_upper_white: {
+      entity: "light.light_kitchen_upper_white",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
+    kitchen_lower: {
+      entity: "light.light_kitchen_lower",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    kitchen_lower_white: {
+      entity: "light.light_kitchen_lower_white",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
+    kitchen_ring: {
+      entity: "light.light_kitchen_ring",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
+    kitchen_hanging: {
+      entity: "light.light_kitchen_hanging",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
+    kitchen_dining_nook: {
+      entity: "light.light_dining_nook",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
   },
 
   // ============================================================================
