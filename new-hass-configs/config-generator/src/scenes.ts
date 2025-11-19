@@ -351,6 +351,11 @@ export const scenes: SceneRegistry = {
         device: "living_cornerspot",
         state: "on",
         brightness: 255
+      },
+      {
+        device: "living_hallway",
+        state: "on",
+        brightness: 255
       }
     ],
     switches: {
@@ -421,6 +426,10 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_cornerspot",
+        state: "off"
+      },
+      {
+        device: "living_hallway",
         state: "off"
       }
     ],
@@ -514,6 +523,10 @@ export const scenes: SceneRegistry = {
       {
         device: "living_cornerspot",
         state: "off"
+      },
+      {
+        device: "living_hallway",
+        state: "off"
       }
     ],
     switches: {
@@ -565,6 +578,11 @@ export const scenes: SceneRegistry = {
       {
         device: "kitchen_dining_nook_white",
         state: "on"
+      },
+      {
+        device: "dining_abovetable",
+        state: "on",
+        brightness: 255
       }
     ]
   },
@@ -609,6 +627,11 @@ export const scenes: SceneRegistry = {
       {
         device: "kitchen_dining_nook_white",
         state: "on"
+      },
+      {
+        device: "dining_abovetable",
+        state: "on",
+        brightness: 180
       }
     ]
   },
@@ -649,6 +672,11 @@ export const scenes: SceneRegistry = {
       {
         device: "kitchen_dining_nook_white",
         state: "on"
+      },
+      {
+        device: "dining_abovetable",
+        state: "on",
+        brightness: 50
       }
     ]
   },
@@ -686,6 +714,10 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "kitchen_dining_nook_white",
+        state: "off"
+      },
+      {
+        device: "dining_abovetable",
         state: "off"
       }
     ]

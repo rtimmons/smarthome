@@ -200,6 +200,8 @@
       state: on
     light.light_living_cornerspot:
       state: on
+    light.light_living_hallway:
+      state: on
     switch.light_living_ledwall:
       state: on
 - id: living_room_medium
@@ -242,6 +244,8 @@
     light.light_living_abovetv:
       state: off
     light.light_living_cornerspot:
+      state: off
+    light.light_living_hallway:
       state: off
     switch.light_living_ledwall:
       state: off
@@ -291,6 +295,8 @@
       state: off
     light.light_living_cornerspot:
       state: off
+    light.light_living_hallway:
+      state: off
     switch.light_living_ledwall:
       state: off
 - id: kitchen_high
@@ -330,6 +336,8 @@
         - 255
     light.light_dining_nook_white:
       state: on
+    light.light_dining_abovetable:
+      state: on
 - id: kitchen_medium
   name: Kitchen - Medium
   entities:
@@ -367,6 +375,8 @@
         - 180
     light.light_dining_nook_white:
       state: on
+    light.light_dining_abovetable:
+      state: on
 - id: kitchen_low
   name: Kitchen - Low
   entities:
@@ -392,6 +402,8 @@
         - 50
     light.light_dining_nook_white:
       state: on
+    light.light_dining_abovetable:
+      state: on
 - id: kitchen_off
   name: Kitchen - Off
   entities:
@@ -410,6 +422,8 @@
     light.light_dining_nook:
       state: off
     light.light_dining_nook_white:
+      state: off
+    light.light_dining_abovetable:
       state: off
 - id: all_off
   name: All Off
