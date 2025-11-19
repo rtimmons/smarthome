@@ -129,6 +129,11 @@ export const devices: DeviceRegistry = {
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
+    living_abovetv: {
+      entity: "light.light_living_abovetv",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
   },
 
   // ============================================================================

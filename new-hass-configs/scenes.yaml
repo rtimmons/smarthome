@@ -177,6 +177,9 @@
     light.light_living_palm:
       state: on
       brightness: 255
+    light.light_living_abovetv:
+      state: on
+      brightness: 255
     switch.light_living_ledwall:
       state: on
 - id: living_room_medium
@@ -201,6 +204,8 @@
     light.light_living_behindtv:
       state: off
     light.light_living_palm:
+      state: off
+    light.light_living_abovetv:
       state: off
     switch.light_living_ledwall:
       state: off
@@ -237,6 +242,8 @@
     light.light_living_sliderring:
       state: off
     light.light_living_palm:
+      state: off
+    light.light_living_abovetv:
       state: off
     switch.light_living_ledwall:
       state: off
