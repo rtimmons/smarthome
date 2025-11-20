@@ -299,16 +299,18 @@ REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
 
 ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
-ha addons uninstall "${{ADDON_ID}}" >/dev/null 2>&1 || true
 rm -rf "${{REMOTE_ADDON_DIR}}"
-rm -rf "/data/addons/local/${{ADDON_SLUG}}"
 mkdir -p "/addons"
 tar -xzf "${{REMOTE_TAR}}" -C "/addons"
 rm -f "${{REMOTE_TAR}}"
 
 ha addons reload
 sleep 2
-ha addons install "${{ADDON_ID}}"
+if ha addons info "${{ADDON_ID}}" >/dev/null 2>&1; then
+  ha addons rebuild "${{ADDON_ID}}"
+else
+  ha addons install "${{ADDON_ID}}"
+fi
 ha addons start "${{ADDON_ID}}" || true
 """
     ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
