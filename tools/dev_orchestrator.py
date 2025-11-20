@@ -97,7 +97,7 @@ class AddonConfig:
             # Add Homebrew library paths for cairo
             if shutil.which("brew"):
                 try:
-                    import subprocess
+import subprocess
                     brew_prefix = subprocess.check_output(["brew", "--prefix"], text=True).strip()
                     cairo_lib = f"{brew_prefix}/lib"
 
@@ -321,6 +321,11 @@ class ServiceProcess:
                     self.failure_reason = "Missing uv.lock (run uv sync)"
                     return False
 
+        # Allow add-ons to run custom logic before starting (e.g., network checks)
+        if not self._run_addon_hook("pre_start"):
+            self.failure_reason = "Pre-start hook failed"
+            return False
+
         return True
 
     async def start(self):
@@ -389,6 +394,28 @@ class ServiceProcess:
         timestamp = datetime.now().strftime("%H:%M:%S")
         prefix = f"[{self.color}][{self.addon.key} {timestamp}][/{self.color}]"
         console.print(f"{prefix} {message}")
+
+    def _run_addon_hook(self, hook: str) -> bool:
+        """Run a local-dev hook for this add-on if it exists."""
+        hooks_runner = REPO_ROOT / "tools" / "addon_hooks.py"
+        if not hooks_runner.exists():
+            return True
+
+        cmd = [sys.executable, str(hooks_runner), "run", self.addon.key, hook, "--if-missing-ok"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+
+        if result.returncode == 0:
+            return True
+
+        for stream in (result.stdout, result.stderr):
+            if not stream:
+                continue
+            for line in stream.strip().splitlines():
+                if line:
+                    self._log(f"[yellow]{line}[/yellow]")
+
+        self._log(f"[red]{hook} hook failed with exit code {result.returncode}[/red]")
+        return False
 
     async def stop(self):
         """Stop the service process gracefully."""

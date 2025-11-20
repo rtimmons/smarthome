@@ -151,6 +151,33 @@ cd node-sonos-http-api
 git clone https://github.com/jishi/node-sonos-http-api.git
 ```
 
+### node-sonos-http-api never discovers speakers on macOS
+
+Symptoms:
+
+- `just dev` leaves the Node Sonos HTTP API spamming `No system has yet been discovered.`
+- `node node-sonos-http-api/tools/check_sonos_multicast.js` (run automatically from `just setup` via the add-on's `pre_setup` hook) reports `EHOSTUNREACH` when it tries to send SSDP probes.
+
+Modern macOS VPN / ZeroTrust clients (Tailscale, WARP, enterprise VPNs, etc.) install `utun` interfaces that steal the 239.255.255.250 and 255.255.255.255 routes. When that happens, macOS refuses to send the broadcast packets that Sonos uses for discovery and the HTTP API never sees your players even though you can `curl` them by IP.
+
+Fix:
+
+1. Disconnect or pause the VPN/ZeroTrust client so the extra `utun*` routes disappear **or** update its settings so it does not own multicast/broadcast traffic on your LAN interface.
+2. On macOS Sonoma+, also disable **Private Wi-Fi Address** _and_ **Limit IP Address Tracking** for your current Wi-Fi network (System Settings → Wi-Fi → Details…). These features quietly route packets through Apple’s network extension and block SSDP.
+3. Re-run `just setup` (or manually `node node-sonos-http-api/tools/check_sonos_multicast.js`) until it reports `SSDP probe ... sent`.
+4. Retry `just dev`.
+
+If you cannot disable the VPN, add static routes pointing 239.255.255.250/32 and 255.255.255.255/32 at your Wi-Fi interface (e.g. `en0`). That requires administrator privileges (`sudo route -nv change ...`) and is outside this repo's tooling, but the new setup check will confirm when the fix works.
+
+### Local dev hooks
+
+Each add-on can expose lifecycle hooks under `<addon>/local-dev/hooks/`. Hooks provide a lightweight interface for add-ons to participate in repo-wide workflows without hardcoding paths into `just` recipes or the orchestrator. The following hooks are currently recognized:
+
+- `pre_setup` — executed during `just setup` via `python tools/addon_hooks.py run <addon> pre_setup`. Use this for dependency or environment validation (e.g., Sonos multicast reachability).
+- `pre_start` — executed by `just dev` immediately before an add-on process is spawned.
+
+Hooks are ordinary executables (shell scripts, Python, etc.) and should exit non-zero to block the workflow with a helpful error message. See `node-sonos-http-api/local-dev/hooks/` for an example.
+
 ### Port already in use
 
 Another instance may be running. Run:

@@ -43,6 +43,16 @@ The add-on exposes the following configuration options:
 - Default TV presets from the old Ansible setup are checked in under `node-sonos-http-api/presets/` and
   aggregated in `node-sonos-http-api/presets.example.json` for convenience—copy one of these into `/config/node-sonos-http-api/`.
 
+### Sonos discovery health check
+
+macOS often blocks the SSDP probes that Sonos discovery relies on whenever VPNs, Private Wi-Fi Address, or Limit IP Address Tracking are enabled. Use the bundled helper to confirm multicast reachability before starting the add-on:
+
+```bash
+node node-sonos-http-api/tools/check_sonos_multicast.js
+```
+
+`just setup` and `just dev` call this script automatically and will refuse to start the HTTP API if SSDP packets cannot leave your laptop. If it fails, disconnect VPN/ZeroTrust clients and disable **Private Wi-Fi Address** / **Limit IP Address Tracking** for your Wi-Fi network, then rerun the check.
+
 ## Architecture
 
 This add-on:

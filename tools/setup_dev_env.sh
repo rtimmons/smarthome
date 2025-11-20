@@ -318,6 +318,23 @@ fi
 
 echo ""
 
+# Validate that SSDP probes can leave this host. VPN/ZeroTrust clients on macOS
+# often install utun routes that block 239.255.255.250/255.255.255.255 traffic,
+# which makes node-sonos-http-api fail with "No system has yet been discovered".
+info "Validating Sonos discovery reachability..."
+SONOS_CHECK_LOG=$(mktemp -t sonos-check.XXXXXX)
+if python tools/addon_hooks.py run node-sonos-http-api pre_setup > "$SONOS_CHECK_LOG" 2>&1; then
+    success "SSDP multicast/broadcast probes were sent successfully"
+else
+    warn "Sonos discovery test failed:"
+    cat "$SONOS_CHECK_LOG"
+    warn "Disable VPN/ZeroTrust adapters (Tailscale, WARP, corp VPN), turn off 'Private Wi-Fi Address' and 'Limit IP Address Tracking' for your Wi-Fi network, then rerun 'just setup'."
+    ERRORS=$((ERRORS + 1))
+fi
+rm -f "$SONOS_CHECK_LOG"
+
+echo ""
+
 # 4. Setup repo-level Python dependencies
 info "Setting up repo-level Python dependencies..."
 
