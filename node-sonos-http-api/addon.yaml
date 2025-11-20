@@ -1,0 +1,48 @@
+slug: node_sonos_http_api
+name: Node Sonos HTTP API
+description: The actual node-sonos-http-api server for controlling Sonos speakers via HTTP.
+url: https://github.com/jishi/node-sonos-http-api
+copy:
+  - presets
+  - presets.example.json
+  - patches
+git_clone:
+  repo: https://github.com/jishi/node-sonos-http-api.git
+  target: /app
+container_workdir: /app
+npm_build: false
+homeassistant_min: "2024.6.0"
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: true
+ports:
+  "5005": 5005
+ports_description:
+  "5005": "Node Sonos HTTP API port"
+environment:
+  NODE_OPTIONS: "--enable-source-maps"
+options:
+  sonos_discovery_timeout: 5
+schema:
+  sonos_discovery_timeout: "int?"
+translations:
+  configuration:
+    sonos_discovery_timeout:
+      name: Sonos discovery timeout
+      description: Timeout in seconds for discovering Sonos speakers on the network.
+docs:
+  readme: >
+    Local add-on that runs the node-sonos-http-api server for controlling Sonos speakers via HTTP API.
+  docs: >
+    This add-on runs the node-sonos-http-api server, which provides a simple HTTP API for controlling Sonos
+    speakers on your network.
+  access: >
+    The API will be available at http://<ha-host>:5005/ or from other add-ons via http://node-sonos-http-api:5005/.
+run_env:
+  - env: PORT
+    value: "5005"
+  - env: SONOS_DISCOVERY_TIMEOUT
+    from_option: sonos_discovery_timeout
+    default: "5"
+tests: []

@@ -19,16 +19,37 @@ from rich.console import Console
 REPO_ROOT = Path(__file__).resolve().parents[1]
 TEMPLATE_DIR = REPO_ROOT / "tools" / "templates"
 BUILD_ROOT = REPO_ROOT / "build" / "home-assistant-addon"
-MANIFEST_PATH = REPO_ROOT / "tools" / "addons.yaml"
 
 console = Console()
 
 
+def discover_addons() -> Dict[str, Any]:
+    """Discover all addons by finding */addon.yaml files in the repo."""
+    addons = {}
+    for addon_yaml in REPO_ROOT.glob("*/addon.yaml"):
+        addon_dir = addon_yaml.parent
+        addon_key = addon_dir.name
+
+        data = yaml.safe_load(addon_yaml.read_text(encoding="utf-8"))
+        if not data:
+            continue
+
+        # Derive source_dir from addon location
+        # If there's a source_subdir, use that as the working directory
+        if "source_subdir" in data:
+            source_dir = addon_dir / data["source_subdir"]
+        else:
+            source_dir = addon_dir
+
+        data["source_dir"] = source_dir
+        addons[addon_key] = data
+
+    return addons
+
+
 def load_manifest() -> Dict[str, Any]:
-    if not MANIFEST_PATH.exists():
-        raise click.ClickException(f"Manifest not found at {MANIFEST_PATH}")
-    data = yaml.safe_load(MANIFEST_PATH.read_text(encoding="utf-8")) or {}
-    return data.get("addons", {})
+    """Load all addon manifests from */addon.yaml files."""
+    return discover_addons()
 
 
 def read_package_version(path: Path) -> str:
@@ -61,12 +82,43 @@ def default_yaml(data: Dict[str, Any]) -> str:
     return yaml.safe_dump(data or {}, default_flow_style=False, sort_keys=False).strip() or "{}"
 
 
+def read_runtime_versions() -> Dict[str, str]:
+    """Read runtime versions from .nvmrc and .python-version files."""
+    versions = {}
+
+    # Read Node version from .nvmrc
+    nvmrc_path = REPO_ROOT / ".nvmrc"
+    if nvmrc_path.exists():
+        node_version = nvmrc_path.read_text().strip()
+        # Convert v20.18.2 to 20.18.2 for Docker image tags
+        versions["node"] = node_version.lstrip('v')
+        versions["node_major"] = node_version.lstrip('v').split('.')[0]
+    else:
+        versions["node"] = "20.18.2"
+        versions["node_major"] = "20"
+
+    # Read Python version from .python-version
+    python_version_path = REPO_ROOT / ".python-version"
+    if python_version_path.exists():
+        python_version = python_version_path.read_text().strip()
+        versions["python"] = python_version
+        versions["python_minor"] = '.'.join(python_version.split('.')[:2])  # 3.9.0 -> 3.9
+    else:
+        versions["python"] = "3.9.0"
+        versions["python_minor"] = "3.9"
+
+    return versions
+
+
 def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
     if addon_key not in manifest:
         raise click.ClickException(f"Addon '{addon_key}' not found in {MANIFEST_PATH}")
 
     raw = manifest[addon_key]
     source_dir = REPO_ROOT / raw["source_dir"]
+
+    # Read runtime versions from version files
+    runtime_versions = read_runtime_versions()
 
     # Determine version based on project type
     if raw.get("python", False):
@@ -116,6 +168,11 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "usb": raw.get("usb", False),
             "audio": raw.get("audio", False),
             "gpio": raw.get("gpio", False),
+            # Runtime versions from .nvmrc and .python-version
+            "node_version": runtime_versions["node"],
+            "node_major": runtime_versions["node_major"],
+            "python_version": runtime_versions["python"],
+            "python_minor": runtime_versions["python_minor"],
         },
         "ports_yaml": default_yaml({f"{k}/tcp": v for k, v in ports.items()}),
         "ports_desc_yaml": default_yaml({f"{k}/tcp": v for k, v in raw.get("ports_description", {}).items()}),

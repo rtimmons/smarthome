@@ -8,7 +8,7 @@
     "start": "node dist/server/index.js",
     "start:dev": "ts-node src/server/index.ts",
     "stop": "pkill -f sonos-api-server",
-    "dev": "supervisor -p 200 -RV --debug -x npm run start:dev"
+    "dev": "supervisor -p 200 -RV -x npm -- run start:dev"
   },
   "author": "",
   "license": "ISC",

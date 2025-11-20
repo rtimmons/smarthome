@@ -1,0 +1,141 @@
+slug: printer_service
+name: Printer Service
+description: Generate and print kitchen labels via Brother/ESC/POS printers or file output.
+url: https://github.com/rtimmons/smarthome
+copy:
+  - src
+  - pyproject.toml
+  - uv.lock
+container_workdir: /opt/printer/app
+python: true
+python_module: printer_service.app
+npm_build: false
+homeassistant_min: "2024.6.0"
+ingress: true
+ingress_entry: "/"
+panel_icon: "mdi:printer"
+panel_title: "Printer"
+homeassistant_api: false
+auth_api: false
+host_network: false
+usb: true
+map:
+  - type: share
+    read_only: false
+ports:
+  "8099": 8099
+ports_description:
+  "8099": "Optional host port for direct access (ingress is enabled by default)."
+environment: {}
+options:
+  printer_backend: "brother-network"
+  brother_uri: "tcp://192.168.1.192:9100"
+  brother_model: "QL-810W"
+  brother_label: "62x29"
+  rotate: "auto"
+  high_quality: true
+  cut: true
+  usb_vendor_id: 4070
+  usb_product_id: 33054
+  label_output_dir: "/share/printer-labels"
+  dev_reload: false
+schema:
+  printer_backend: "list(file|brother-network|escpos-usb|escpos-bluetooth)"
+  brother_uri: "str?"
+  brother_model: "str?"
+  brother_label: "str?"
+  rotate: "list(auto|0|90|180|270)?"
+  high_quality: bool
+  cut: bool
+  usb_vendor_id: "int?"
+  usb_product_id: "int?"
+  label_output_dir: "str?"
+  dev_reload: bool
+translations:
+  configuration:
+    printer_backend:
+      name: Printer backend
+      description: Choose where to send generated labels.
+    brother_uri:
+      name: Brother printer URI
+      description: TCP URI for Brother QL printers (tcp://host:9100).
+    brother_model:
+      name: Brother model
+      description: Model identifier (e.g., QL-810W).
+    brother_label:
+      name: Label code
+      description: Label roll code (e.g., 62x29).
+    rotate:
+      name: Rotation
+      description: Override label rotation before printing.
+    high_quality:
+      name: High quality
+      description: Enable high-quality mode on Brother printers.
+    cut:
+      name: Auto cut
+      description: Trigger a cut after printing on Brother printers.
+    usb_vendor_id:
+      name: USB vendor ID
+      description: Vendor ID for ESC/POS USB printers.
+    usb_product_id:
+      name: USB product ID
+      description: Product ID for ESC/POS USB printers.
+    label_output_dir:
+      name: Label output directory
+      description: Directory where generated labels are stored.
+    dev_reload:
+      name: Enable dev reload
+      description: Restart Flask automatically when files change (development only).
+docs:
+  readme: >
+    Local add-on that exposes the kitchen label printing Flask UI over Home Assistant ingress. It supports Brother QL network printers, ESC/POS USB or Bluetooth devices, or file-only output that saves generated labels into Home Assistant's /share directory.
+  docs: >
+    This add-on packages the kitchen label printing service for Home Assistant. The UI is available via ingress, and prints can be dispatched to Brother network printers, ESC/POS USB/Bluetooth devices, or saved as files.
+  access: >
+    Preferred: use the add-on ingress link from the Home Assistant sidebar (Supervisor → Printer Service → Open Web UI). Optional: map port 8099 to reach it directly via http://<ha-host>:8099/.
+run_env:
+  - env: FLASK_HOST
+    value: "0.0.0.0"
+  - env: FLASK_PORT
+    value: "8099"
+  - env: LABEL_OUTPUT_DIR
+    from_option: label_output_dir
+    default: "/share/printer-labels"
+  - env: PRINTER_BACKEND
+    from_option: printer_backend
+    default: "file"
+  - env: BROTHER_PRINTER_URI
+    from_option: brother_uri
+    default: ""
+    optional: true
+  - env: BROTHER_MODEL
+    from_option: brother_model
+    default: ""
+    optional: true
+  - env: BROTHER_LABEL
+    from_option: brother_label
+    default: ""
+    optional: true
+  - env: BROTHER_ROTATE
+    from_option: rotate
+    default: ""
+    optional: true
+  - env: BROTHER_HQ
+    from_option: high_quality
+    default: "true"
+  - env: BROTHER_CUT
+    from_option: cut
+    default: "true"
+  - env: ESC_POS_VENDOR_ID
+    from_option: usb_vendor_id
+    default: ""
+    optional: true
+  - env: ESC_POS_PRODUCT_ID
+    from_option: usb_product_id
+    default: ""
+    optional: true
+  - env: PRINTER_DEV_RELOAD
+    from_option: dev_reload
+    default: "0"
+tests:
+  - just test

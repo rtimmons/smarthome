@@ -1,0 +1,67 @@
+slug: grid_dashboard
+name: Grid Dashboard
+description: Dashboard UI with Sonos shortcuts and Home Assistant webhook helpers.
+url: https://github.com/rtimmons/smarthome
+source_subdir: ExpressServer
+copy:
+  - src
+  - package.json
+  - package-lock.json
+  - tsconfig.json
+  - prettier.config.js
+container_workdir: /opt/grid-dashboard/app
+npm_build: false
+homeassistant_min: "2024.6.0"
+ingress: true
+ingress_entry: "/"
+panel_icon: "mdi:view-dashboard"
+panel_title: "Grid Dashboard"
+homeassistant_api: true
+auth_api: false
+host_network: false
+ports:
+  "3000": 3000
+ports_description:
+  "3000": "Optional host port for direct access (ingress is enabled by default)."
+environment:
+  NODE_OPTIONS: "--enable-source-maps"
+  INGRESS_ENTRY: "/api/hassio_ingress"
+options:
+  sonos_base_url: "http://local-sonos-api:5006"
+  webhook_base: ""
+schema:
+  sonos_base_url: "str?"
+  webhook_base: "str?"
+translations:
+  configuration:
+    sonos_base_url:
+      name: Sonos API base URL
+      description: Base URL for node-sonos-http-api (e.g., http://node-sonos-http-api:5005).
+    webhook_base:
+      name: Webhook base URL
+      description: Optional override for Home Assistant webhook calls; leave empty to use supervisor proxy.
+docs:
+  readme: >
+    Local add-on that exposes the Express-based grid dashboard UI with ingress support. Access the dashboard directly
+    from the Home Assistant sidebar, or use the Sonos helper routes and convenience redirects.
+  docs: >
+    This add-on packages the ExpressServer dashboard for Home Assistant, providing easy access to the dashboard UI,
+    Sonos controls, and Home Assistant webhook helpers through the Home Assistant interface.
+  access: >
+    Preferred: use the add-on ingress link from the Home Assistant sidebar. Alternative: access directly via
+    http://<ha-host>:3000/ if you need to bypass ingress (port 3000 is exposed by default).
+run_env:
+  - env: PORT
+    value: "3000"
+  - env: APP_PORT
+    value: "3000"
+  - env: SONOS_BASE_URL
+    from_option: sonos_base_url
+    default: "http://local-sonos-api:5006"
+  - env: HASS_WEBHOOK_BASE
+    from_option: webhook_base
+    default: ""
+    optional: true
+tests:
+  - npm test
+  - npm run check

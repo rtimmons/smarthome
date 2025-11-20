@@ -13,11 +13,64 @@ The project consists of several Home Assistant add-ons and configuration tools:
 1. **grid-dashboard** - Home Assistant add-on providing the main web dashboard UI (TypeScript/Node.js ExpressServer)
 2. **sonos-api** - Home Assistant add-on providing a custom Sonos API wrapper
 3. **node-sonos-http-api** - Home Assistant add-on for node-sonos-http-api integration
-4. **new-hass-configs** - Home Assistant configuration files including automations and scenes
-5. **new-hass-configs/MetaHassConfig** - Python tool that generates Home Assistant configuration from a metaconfig.yaml file
-6. **new-hass-configs/HomeAssistantConfig** - Legacy Home Assistant configs (being phased out in favor of new-hass-configs)
+4. **printer** - Home Assistant add-on for kitchen label printing (Python/Flask)
+5. **new-hass-configs** - Home Assistant configuration files including automations and scenes
+6. **new-hass-configs/MetaHassConfig** - Python tool that generates Home Assistant configuration from a metaconfig.yaml file
+7. **new-hass-configs/HomeAssistantConfig** - Legacy Home Assistant configs (being phased out in favor of new-hass-configs)
+
+### Add-on Configuration
+
+Each add-on has its own `addon.yaml` file in its directory:
+- `grid-dashboard/addon.yaml`
+- `sonos-api/addon.yaml`
+- `node-sonos-http-api/addon.yaml`
+- `printer/addon.yaml`
+
+The build system automatically discovers add-ons by globbing for `*/addon.yaml` files. This enables:
+- Decentralized configuration (each add-on owns its own config)
+- Cross-repository add-ons via symlinks
+- Easy addition of new add-ons without central manifest updates
+
+### Runtime Version Management
+
+Runtime versions are managed via **single source of truth** files:
+- **`.nvmrc`** - Node.js version (e.g., `v20.18.2`)
+- **`.python-version`** - Python version (e.g., `3.9.0`)
+
+These files control versions in:
+- ✅ Local development (nvm/pyenv)
+- ✅ Docker images (base image selection)
+- ✅ Documentation (auto-generated comments)
+
+To upgrade a runtime version, simply update the file and run `just setup` (local) or `just ha-addon` (Docker). See `docs/version-management.md` for details.
 
 ## Key Commands
+
+### Local Development
+
+```bash
+# First-time setup (automated)
+just setup
+
+# Start all services locally with auto-reload
+just dev
+
+# Services will be available at:
+# - Grid Dashboard: http://localhost:3000
+# - Sonos API: http://localhost:5006
+# - Node Sonos HTTP API: http://localhost:5005
+# - Printer Service: http://localhost:8099
+```
+
+**First-time setup**: Run `just setup` to automatically install all dependencies. See `docs/dev-setup.md` for manual setup or troubleshooting.
+
+**Features**:
+- Auto-discovers all add-ons from `*/addon.yaml` files
+- Starts services in dependency order
+- Unified logs with timestamps and service-name prefixes
+- File watching and auto-reload (where supported)
+- Graceful shutdown with Ctrl+C
+- Automatic environment variable mapping (production → localhost URLs)
 
 ### Home Assistant Configuration Management
 

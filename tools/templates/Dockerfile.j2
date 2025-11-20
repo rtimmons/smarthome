@@ -1,20 +1,17 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
-FROM ${BUILD_FROM}
+# Version pinning based on .nvmrc and .python-version
+# Node.js version: {{ addon.node_version }} (from .nvmrc)
+# Python version: {{ addon.python_version }} (from .python-version)
+
+{% if addon.python %}
+# Use Python {{ addon.python_minor }} base image
+FROM python:{{ addon.python_minor }}-alpine
 
 ENV LANG=C.UTF-8
-{% if addon.python %}
 ENV PYTHONUNBUFFERED=1
-{% endif %}
 WORKDIR {{ addon.container_workdir }}
 
-{% if addon.python %}
 RUN apk add --no-cache \
     bash \
-    python3 \
-    python3-dev \
-    py3-pip \
-    py3-virtualenv \
-    py3-wheel \
     libstdc++ \
     cairo \
     pango \
@@ -49,7 +46,13 @@ RUN /opt/venv/bin/pip install --no-cache-dir {{ addon.container_workdir }}/ \
   && find {{ addon.container_workdir }}/ -type d -name '__pycache__' -delete \
   && apk del .build-deps
 {% else %}
-RUN apk add --no-cache nodejs npm {% if addon.git_clone %}git patch{% endif %}
+# Use Node.js {{ addon.node_version }} base image
+FROM node:{{ addon.node_version }}-alpine
+
+ENV LANG=C.UTF-8
+WORKDIR {{ addon.container_workdir }}
+
+RUN apk add --no-cache bash {% if addon.git_clone %}git patch{% endif %}
 
 {% if addon.git_clone %}
 COPY app/ /tmp/app-overlay/

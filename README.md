@@ -12,7 +12,30 @@ This smart home system is built as a collection of Home Assistant add-ons:
 
 ## Quick Start
 
-### Tooling Setup
+### Local Development (Recommended!)
+
+Start all services locally with auto-reload:
+
+```bash
+# First-time setup (installs dependencies, clones repos)
+just setup
+
+# Start all services for development
+just dev
+```
+
+If `just dev` reports that a port is already in use, run `just kill` to free the shared add-on ports
+before retrying.
+
+Services will be available at:
+- Grid Dashboard: http://localhost:3000
+- Sonos API: http://localhost:5006
+- Node Sonos HTTP API: http://localhost:5005
+- Printer Service: http://localhost:8099
+
+See `docs/dev-setup.md` for details.
+
+### Build Tooling Setup
 
 ```bash
 # one-time tooling bootstrap
