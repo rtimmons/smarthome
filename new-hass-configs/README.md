@@ -199,6 +199,20 @@ export const automations = {
 }
 ```
 
+### Debugging & Scene Snapshots
+
+Use `iterate.sh` to capture before/after inventories around a scene application. This is helpful when validating new wiring or switch automations.
+
+```bash
+cd new-hass-configs
+./iterate.sh  # runs just inventory, applies scene.guest_bathroom_high via hass-cli, runs inventory again
+ls inventory_snapshots/2025*/  # view captured device/entity snapshots
+```
+
+Requirements:
+- `just inventory` working (hass-cli configured for your Home Assistant instance)
+- `hass-cli` installed locally and authenticated
+
 ---
 
 ## Naming Conventions & Dashboard Integration

@@ -257,6 +257,56 @@ export const scenes: SceneRegistry = {
   },
 
   // ============================================================================
+  // Guest Bathroom Scenes
+  // ============================================================================
+
+  guest_bathroom_high: {
+    name: "Guest Bathroom - High",
+    lights: [
+      {
+        device: "guestbathroom_overhead",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "guestbathroom_sconce",
+        state: "on",
+        brightness: 255
+      }
+    ]
+  },
+
+  guest_bathroom_medium: {
+    name: "Guest Bathroom - Medium (50%)",
+    lights: [
+      {
+        device: "guestbathroom_overhead",
+        state: "on",
+        brightness: 128
+      },
+      {
+        device: "guestbathroom_sconce",
+        state: "on",
+        brightness: 128
+      }
+    ]
+  },
+
+  guest_bathroom_off: {
+    name: "Guest Bathroom - Off",
+    lights: [
+      {
+        device: "guestbathroom_overhead",
+        state: "off"
+      },
+      {
+        device: "guestbathroom_sconce",
+        state: "off"
+      }
+    ]
+  },
+
+  // ============================================================================
   // Living Room Scenes
   // ============================================================================
 

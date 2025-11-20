@@ -49,6 +49,8 @@ cd new-hass-configs
 just fetch   # Fetch current config from Home Assistant
 just check   # Validate changes (dry-run)
 just deploy  # Deploy and restart Home Assistant
+# Debug scene wiring: capture before/after inventories while applying a scene
+./iterate.sh
 ```
 
 ### Deploy Add-ons

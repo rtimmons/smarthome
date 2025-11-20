@@ -381,6 +381,64 @@ export const devices: DeviceRegistry = {
         }
       }
     },
+
+    // Guest bathroom overhead switch - controls both guest bathroom lights via scenes
+    guestbathroom_switch: {
+      entity: "light.light_guestbathroom_overhead",
+      type: "zwave_dimmer_46203",
+      device_id: "ba4c9a252899cf4f9f2a6acd73f630a1",
+      events: {
+        singleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed"
+        },
+        singleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed"
+        },
+        doubleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed2x"
+        },
+        doubleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed2x"
+        }
+      }
+    },
+
+    // Guest bathroom sconce switch - also triggers shared scenes
+    guestbathroom_sconce_switch: {
+      entity: "light.light_guestbathroom_sconce",
+      type: "zwave_dimmer_46203",
+      device_id: "6b4c277f5ddb213b6f8e3204aab15fb9",
+      events: {
+        singleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed"
+        },
+        singleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed"
+        },
+        doubleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed2x"
+        },
+        doubleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed2x"
+        }
+      }
+    },
   },
 
   // ============================================================================

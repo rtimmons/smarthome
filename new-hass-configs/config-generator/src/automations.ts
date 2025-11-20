@@ -95,6 +95,130 @@ export const automations: AutomationRegistry = {
   },
 
   // ============================================================================
+  // Guest Bathroom Switch Automations
+  // ============================================================================
+
+  guest_bathroom_switch_doubleup: {
+    alias: "Guest Bathroom Switch - Double Up → High",
+    description: "Turn on both guest bathroom lights to full on double-tap up",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_switch",
+      event: "doubleUp"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_high"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_switch_singleup: {
+    alias: "Guest Bathroom Switch - Single Up → 50%",
+    description: "Set both guest bathroom lights to 50% on single tap up",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_switch",
+      event: "singleUp"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_medium"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_switch_doubledown: {
+    alias: "Guest Bathroom Switch - Double Down → Off",
+    description: "Turn off both guest bathroom lights on double-tap down",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_switch",
+      event: "doubleDown"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_off"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_switch_singledown: {
+    alias: "Guest Bathroom Switch - Single Down → Off",
+    description: "Turn off both guest bathroom lights on single tap down",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_switch",
+      event: "singleDown"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_off"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_sconce_switch_doubleup: {
+    alias: "Guest Bathroom Sconce Switch - Double Up → High",
+    description: "Turn on both guest bathroom lights to full on double-tap up (sconce switch)",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_sconce_switch",
+      event: "doubleUp"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_high"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_sconce_switch_singleup: {
+    alias: "Guest Bathroom Sconce Switch - Single Up → 50%",
+    description: "Set both guest bathroom lights to 50% on single tap up (sconce switch)",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_sconce_switch",
+      event: "singleUp"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_medium"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_sconce_switch_doubledown: {
+    alias: "Guest Bathroom Sconce Switch - Double Down → Off",
+    description: "Turn off both guest bathroom lights on double-tap down (sconce switch)",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_sconce_switch",
+      event: "doubleDown"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_off"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_sconce_switch_singledown: {
+    alias: "Guest Bathroom Sconce Switch - Single Down → Off",
+    description: "Turn off both guest bathroom lights on single tap down (sconce switch)",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "guestbathroom_sconce_switch",
+      event: "singleDown"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
   // Office Webhook Automations (Dashboard Scene Buttons)
   // ============================================================================
 
@@ -182,6 +306,52 @@ export const automations: AutomationRegistry = {
     action: {
       type: "scene",
       scene: "bathroom_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
+  // Guest Bathroom Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  guest_bathroom_webhook_high: {
+    alias: "Guest Bathroom Webhook → High",
+    description: "Dashboard button: Guest Bathroom High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_guest_bathroom_high"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_high"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_webhook_medium: {
+    alias: "Guest Bathroom Webhook → Medium",
+    description: "Dashboard button: Guest Bathroom Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_guest_bathroom_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_medium"
+    },
+    mode: "single"
+  },
+
+  guest_bathroom_webhook_off: {
+    alias: "Guest Bathroom Webhook → Off",
+    description: "Dashboard button: Guest Bathroom Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_guest_bathroom_off"
+    },
+    action: {
+      type: "scene",
+      scene: "guest_bathroom_off"
     },
     mode: "single"
   },
