@@ -6,6 +6,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 This is a smart home automation system that integrates with Home Assistant, Sonos, Hue lights, and Z-Wave devices. The system is structured as a collection of Home Assistant add-ons providing custom web interfaces and API endpoints for smart home control.
 
+## Development Guidelines for Claude Code
+
+### Using Just Command Wrappers
+
+This project uses [just](https://github.com/casey/just) as a command runner. **ALWAYS prefer `just` commands over raw commands** when they are available:
+
+**✅ Correct approach:**
+- Run tests: `just test` (not `npm test` or `pytest`)
+- Setup project: `just setup` (not `pip install` or `npm install`)
+- Build add-ons: `just ha-addon` (not manual Docker builds)
+- Deploy: `just deploy` (not manual rsync/scp)
+
+**Justfile locations:**
+- **Root Justfile** (`/Justfile`): Commands that operate on all add-ons or the entire project
+  - `just test` - Run tests for all add-ons
+  - `just setup` - Install all dependencies for local development
+  - `just dev` - Start all services with auto-reload
+  - `just ha-addon [addon]` - Build Home Assistant add-on(s)
+  - `just deploy [addon]` - Deploy add-on(s) to Home Assistant
+
+- **Add-on Justfiles**: Each add-on directory has its own Justfile with add-on-specific commands
+  - `grid-dashboard/Justfile`
+  - `sonos-api/Justfile`
+  - `printer/Justfile`
+  - `new-hass-configs/Justfile`
+
+**When to check for Justfiles:**
+1. Before running any build, test, or deployment command
+2. When setting up a new development environment
+3. When running common operations (tests, builds, installs)
+
+**How to discover available commands:**
+```bash
+# List all available just commands in current directory
+just --list
+
+# Or simply read the Justfile
+cat Justfile
+```
+
+**Exception:** Only use raw commands when:
+- No `just` wrapper exists for the operation
+- You're implementing a new feature that requires direct tool access
+- Debugging requires bypassing the wrapper
+
 ## Architecture
 
 The project consists of several Home Assistant add-ons and configuration tools:
