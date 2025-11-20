@@ -12,6 +12,7 @@ WORKDIR {{ addon.container_workdir }}
 
 RUN apk add --no-cache \
     bash \
+    jq \
     libstdc++ \
     cairo \
     pango \
@@ -52,7 +53,7 @@ FROM node:{{ addon.node_version }}-alpine
 ENV LANG=C.UTF-8
 WORKDIR {{ addon.container_workdir }}
 
-RUN apk add --no-cache bash {% if addon.git_clone %}git patch{% endif %}
+RUN apk add --no-cache bash jq {% if addon.git_clone %}git patch{% endif %}
 
 {% if addon.git_clone %}
 COPY app/ /tmp/app-overlay/

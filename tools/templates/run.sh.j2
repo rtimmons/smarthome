@@ -1,9 +1,24 @@
-#!/usr/bin/with-contenv bashio
+#!/usr/bin/env bash
 set -euo pipefail
+
+OPTIONS_FILE="/data/options.json"
+
+log_info() {
+  echo "[INFO] $*"
+}
+
+config_get() {
+  local key="$1"
+  if [ -f "${OPTIONS_FILE}" ] && command -v jq >/dev/null 2>&1; then
+    jq -er --arg key "${key}" '.[$key] // empty' "${OPTIONS_FILE}" 2>/dev/null || true
+  else
+    echo ""
+  fi
+}
 
 {% for env in addon.run_env %}
 {% if env.from_option %}
-{{ env.env }}="$(bashio::config '{{ env.from_option }}' 2>/dev/null || true)"
+{{ env.env }}="$(config_get '{{ env.from_option }}')"
 if [ -z "{{ '$' + env.env }}" ]; then
   {{ env.env }}={{ env.default | default('') | shquote }}
 fi
@@ -33,21 +48,21 @@ APP_PRESETS_EXAMPLE="{{ addon.container_workdir }}/presets.example.json"
 mkdir -p "${CONFIG_BASE}" "${DATA_BASE}"
 
 # Seed data presets with packaged defaults if present and no user data yet.
-if [ -d "${APP_PRESETS_DIR}" ]; then
-  if [ ! -d "${DATA_PRESETS_DIR}" ] || [ -z "$(ls -A "${DATA_PRESETS_DIR}" 2>/dev/null)" ]; then
-    mkdir -p "${DATA_PRESETS_DIR}"
-    cp -R "${APP_PRESETS_DIR}"/. "${DATA_PRESETS_DIR}/"
-    bashio::log.info "Seeded presets directory from packaged defaults into ${DATA_PRESETS_DIR}"
+  if [ -d "${APP_PRESETS_DIR}" ]; then
+    if [ ! -d "${DATA_PRESETS_DIR}" ] || [ -z "$(ls -A "${DATA_PRESETS_DIR}" 2>/dev/null)" ]; then
+      mkdir -p "${DATA_PRESETS_DIR}"
+      cp -R "${APP_PRESETS_DIR}"/. "${DATA_PRESETS_DIR}/"
+      log_info "Seeded presets directory from packaged defaults into ${DATA_PRESETS_DIR}"
+    fi
   fi
-fi
 
-# Ensure a presets.json exists in data if none provided and a packaged example is available.
-if [ ! -f "${CONFIG_BASE}/presets.json" ] && [ ! -f "${DATA_BASE}/presets.json" ]; then
-  if [ -f "${APP_PRESETS_EXAMPLE}" ]; then
-    cp "${APP_PRESETS_EXAMPLE}" "${DATA_BASE}/presets.json"
-    bashio::log.info "Seeded presets.json from packaged example into ${DATA_BASE}/presets.json"
+  # Ensure a presets.json exists in data if none provided and a packaged example is available.
+  if [ ! -f "${CONFIG_BASE}/presets.json" ] && [ ! -f "${DATA_BASE}/presets.json" ]; then
+    if [ -f "${APP_PRESETS_EXAMPLE}" ]; then
+      cp "${APP_PRESETS_EXAMPLE}" "${DATA_BASE}/presets.json"
+      log_info "Seeded presets.json from packaged example into ${DATA_BASE}/presets.json"
+    fi
   fi
-fi
 
 link_config_file() {
   local src="$1"
@@ -60,7 +75,7 @@ link_config_file() {
 
   rm -f "${dest}"
   ln -s "${src}" "${dest}"
-  bashio::log.info "Using ${label} from ${src}"
+  log_info "Using ${label} from ${src}"
   return 0
 }
 
@@ -75,7 +90,7 @@ link_config_dir() {
 
   rm -rf "${dest}"
   ln -s "${src}" "${dest}"
-  bashio::log.info "Using ${label} from ${src}"
+  log_info "Using ${label} from ${src}"
   return 0
 }
 
@@ -85,43 +100,43 @@ ensure_file() {
 
   if [ ! -f "${path}" ]; then
     echo "{}" > "${path}"
-    bashio::log.info "Created default ${label} at ${path}"
+    log_info "Created default ${label} at ${path}"
   fi
 }
 
 # presets.json
-if ! link_config_file "${CONFIG_BASE}/presets.json" "${APP_PRESETS}" "presets.json"; then
-  if ! link_config_file "${DATA_BASE}/presets.json" "${APP_PRESETS}" "presets.json"; then
-    ensure_file "${DATA_BASE}/presets.json" "presets.json"
-    rm -f "${APP_PRESETS}"
-    ln -s "${DATA_BASE}/presets.json" "${APP_PRESETS}"
-    bashio::log.info "Falling back to ${DATA_BASE}/presets.json for presets.json"
+  if ! link_config_file "${CONFIG_BASE}/presets.json" "${APP_PRESETS}" "presets.json"; then
+    if ! link_config_file "${DATA_BASE}/presets.json" "${APP_PRESETS}" "presets.json"; then
+      ensure_file "${DATA_BASE}/presets.json" "presets.json"
+      rm -f "${APP_PRESETS}"
+      ln -s "${DATA_BASE}/presets.json" "${APP_PRESETS}"
+      log_info "Falling back to ${DATA_BASE}/presets.json for presets.json"
+    fi
   fi
-fi
 
-# presets directory (optional)
-if ! link_config_dir "${CONFIG_PRESETS_DIR}" "${APP_PRESETS_DIR}" "presets directory"; then
-  if ! link_config_dir "${DATA_PRESETS_DIR}" "${APP_PRESETS_DIR}" "presets directory"; then
-    mkdir -p "${DATA_PRESETS_DIR}"
-    rm -rf "${APP_PRESETS_DIR}"
-    ln -s "${DATA_PRESETS_DIR}" "${APP_PRESETS_DIR}"
-    bashio::log.info "Falling back to ${DATA_PRESETS_DIR} for presets directory"
+  # presets directory (optional)
+  if ! link_config_dir "${CONFIG_PRESETS_DIR}" "${APP_PRESETS_DIR}" "presets directory"; then
+    if ! link_config_dir "${DATA_PRESETS_DIR}" "${APP_PRESETS_DIR}" "presets directory"; then
+      mkdir -p "${DATA_PRESETS_DIR}"
+      rm -rf "${APP_PRESETS_DIR}"
+      ln -s "${DATA_PRESETS_DIR}" "${APP_PRESETS_DIR}"
+      log_info "Falling back to ${DATA_PRESETS_DIR} for presets directory"
+    fi
   fi
-fi
 
-# settings.json (optional)
-if ! link_config_file "${CONFIG_BASE}/settings.json" "${APP_SETTINGS}" "settings.json"; then
-  if ! link_config_file "${DATA_BASE}/settings.json" "${APP_SETTINGS}" "settings.json"; then
-    ensure_file "${DATA_BASE}/settings.json" "settings.json"
-    rm -f "${APP_SETTINGS}"
-    ln -s "${DATA_BASE}/settings.json" "${APP_SETTINGS}"
-    bashio::log.info "Falling back to ${DATA_BASE}/settings.json for settings.json"
+  # settings.json (optional)
+  if ! link_config_file "${CONFIG_BASE}/settings.json" "${APP_SETTINGS}" "settings.json"; then
+    if ! link_config_file "${DATA_BASE}/settings.json" "${APP_SETTINGS}" "settings.json"; then
+      ensure_file "${DATA_BASE}/settings.json" "settings.json"
+      rm -f "${APP_SETTINGS}"
+      ln -s "${DATA_BASE}/settings.json" "${APP_SETTINGS}"
+      log_info "Falling back to ${DATA_BASE}/settings.json for settings.json"
+    fi
   fi
-fi
 {% endif -%}
 
 cd {{ addon.container_workdir }}
-bashio::log.info "Starting {{ addon.name }} on port {{ addon.port }}"
+log_info "Starting {{ addon.name }} on port {{ addon.port }}"
 {% if addon.python %}
 exec python -m {{ addon.python_module }}
 {% else %}
