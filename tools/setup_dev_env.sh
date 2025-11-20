@@ -435,7 +435,7 @@ info "Setting up printer service..."
 cd printer
 if [ -f "uv.lock" ]; then
     info "Syncing printer dependencies with uv..."
-    if uv sync > /dev/null 2>&1; then
+    if uv sync --python "$REQUIRED_PYTHON_VERSION" > /dev/null 2>&1; then
         success "printer dependencies synced"
     else
         error "Failed to sync printer dependencies"
