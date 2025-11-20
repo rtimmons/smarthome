@@ -385,3 +385,47 @@ export function getSwitchEntity(name: string): string {
 export function getOutletEntity(name: string): string {
   return getDevice("outlets", name).entity;
 }
+
+/**
+ * Helper function to get the paired device name (if it exists)
+ *
+ * For RGBW devices with separate white channels:
+ * - "office_abovetv" returns "office_abovetv_white"
+ * - "office_abovetv_white" returns "office_abovetv"
+ *
+ * Returns null if no paired device exists.
+ */
+export function getPairedDeviceName(deviceName: string): string | null {
+  // Check if this is a _white device
+  if (deviceName.endsWith("_white")) {
+    const baseName = deviceName.replace(/_white$/, "");
+    // Check if the non-white version exists
+    if (devices.lights[baseName]) {
+      return baseName;
+    }
+  } else {
+    // Check if a _white version exists
+    const whiteName = `${deviceName}_white`;
+    if (devices.lights[whiteName]) {
+      return whiteName;
+    }
+  }
+
+  return null;
+}
+
+/**
+ * Helper function to check if a device has a paired device
+ */
+export function hasPairedDevice(deviceName: string): boolean {
+  return getPairedDeviceName(deviceName) !== null;
+}
+
+/**
+ * Helper function to get both a device and its pair (if it exists)
+ * Returns an array of device names [original, paired] or just [original] if no pair exists
+ */
+export function getDeviceWithPair(deviceName: string): string[] {
+  const pairedName = getPairedDeviceName(deviceName);
+  return pairedName ? [deviceName, pairedName] : [deviceName];
+}

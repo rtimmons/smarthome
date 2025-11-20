@@ -3,6 +3,10 @@ tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
 
+# Run tests for config-generator
+test:
+	cd config-generator && npm install && npm test
+
 # Generate Home Assistant configs from TypeScript sources
 generate:
 	cd config-generator && npm install && npm run generate

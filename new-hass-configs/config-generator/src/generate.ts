@@ -10,7 +10,7 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "yaml";
 
-import { devices, getDevice } from "./devices";
+import { devices, getDevice, getPairedDeviceName } from "./devices";
 import { scenes } from "./scenes";
 import { automations } from "./automations";
 import {
@@ -20,6 +20,7 @@ import {
   Action,
   Condition,
   ZWaveJsSceneTrigger,
+  LightState,
 } from "./types";
 
 // ============================================================================
@@ -41,14 +42,55 @@ interface HAScene {
   entities: Record<string, any>;
 }
 
+/**
+ * Expand scene lights to include paired devices
+ *
+ * For each light in the scene, check if it has a paired device (e.g., office_abovetv + office_abovetv_white).
+ * If a paired device exists and is NOT already explicitly defined in the scene, automatically add it
+ * with the same state (on/off) as the original device.
+ *
+ * This ensures that RGBW devices with separate white channels are always synchronized.
+ */
+function expandLightsWithPairs(lights: LightState[]): LightState[] {
+  const result: LightState[] = [...lights];
+  const definedDevices = new Set(lights.map((l) => l.device));
+
+  for (const light of lights) {
+    const pairedDeviceName = getPairedDeviceName(light.device);
+
+    // If there's a paired device and it's not already in the scene, add it
+    if (pairedDeviceName && !definedDevices.has(pairedDeviceName)) {
+      // Create paired light state with same on/off state but only basic properties
+      const pairedLight: LightState = {
+        device: pairedDeviceName,
+        state: light.state || "on",
+      };
+
+      // If the original light is being turned on with brightness, apply brightness to the paired device
+      // (This ensures white channels turn on with the same brightness as the RGBW channel)
+      if (light.state === "on" && light.brightness !== undefined) {
+        pairedLight.brightness = light.brightness;
+      }
+
+      result.push(pairedLight);
+      definedDevices.add(pairedDeviceName);
+    }
+  }
+
+  return result;
+}
+
 function generateScenes(): HAScene[] {
   const output: HAScene[] = [];
 
   for (const [id, scene] of Object.entries(scenes)) {
     const entities: Record<string, any> = {};
 
+    // First, expand scene lights to include paired devices
+    const expandedLights = expandLightsWithPairs(scene.lights);
+
     // Process lights
-    for (const light of scene.lights) {
+    for (const light of expandedLights) {
       try {
         const device = getDevice("lights", light.device);
         const entityState: any = {
