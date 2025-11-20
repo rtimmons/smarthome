@@ -238,6 +238,11 @@ export const devices: DeviceRegistry = {
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
+    bedroom_sconces: {
+      entity: "light.light_bedroom_sconces",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
   },
 
   // ============================================================================
@@ -293,11 +298,11 @@ export const devices: DeviceRegistry = {
       }
     },
 
-    // Bedroom bedside switch - Z-Wave Central Scene device
-    bedroom_switch_bedside: {
-      entity: "switch.bedroom_switch_bedside",
+    // Bedroom sconces switch - Z-Wave Central Scene device (GE/Enbrighten 46203)
+    bedroom_switch_sconces: {
+      entity: "light.light_bedroom_sconces",
       type: "zwave_dimmer_46203",
-      device_id: "TODO_DEVICE_ID",  // TODO: Get actual device_id from Home Assistant
+      device_id: "a5b63da64e115065d5b0ed424de805d5",
       events: {
         singleUp: {
           command_class_name: "Central Scene",
@@ -337,6 +342,13 @@ export const devices: DeviceRegistry = {
     // Living room LED wall
     living_ledwall: {
       entity: "switch.light_living_ledwall",
+      type: "outlet",
+      capabilities: ["on_off"]
+    },
+
+    // Bedroom flamingo power - Controls the flamingo Hue light
+    bedroom_flamingopower: {
+      entity: "switch.light_bedroom_flamingopower",
       type: "outlet",
       capabilities: ["on_off"]
     },

@@ -61,6 +61,40 @@ export const automations: AutomationRegistry = {
   },
 
   // ============================================================================
+  // Bedroom Switch Automations
+  // ============================================================================
+
+  bedroom_switch_doubleup: {
+    alias: "Bedroom Switch - Double Up → High",
+    description: "Turn on all bedroom lights on double-tap up",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "bedroom_switch_sconces",
+      event: "doubleUp"
+    },
+    action: {
+      type: "scene",
+      scene: "bedroom_high"
+    },
+    mode: "single"
+  },
+
+  bedroom_switch_doubledown: {
+    alias: "Bedroom Switch - Double Down → Off",
+    description: "Turn off all bedroom lights on double-tap down",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "bedroom_switch_sconces",
+      event: "doubleDown"
+    },
+    action: {
+      type: "scene",
+      scene: "bedroom_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
   // Office Webhook Automations (Dashboard Scene Buttons)
   // ============================================================================
 
@@ -148,6 +182,66 @@ export const automations: AutomationRegistry = {
     action: {
       type: "scene",
       scene: "bathroom_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
+  // Bedroom Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  bedroom_webhook_high: {
+    alias: "Bedroom Webhook → High",
+    description: "Dashboard button: Bedroom High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bedroom_high"
+    },
+    action: {
+      type: "scene",
+      scene: "bedroom_high"
+    },
+    mode: "single"
+  },
+
+  bedroom_webhook_medium: {
+    alias: "Bedroom Webhook → Medium",
+    description: "Dashboard button: Bedroom Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bedroom_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "bedroom_medium"
+    },
+    mode: "single"
+  },
+
+  bedroom_webhook_low: {
+    alias: "Bedroom Webhook → Low",
+    description: "Dashboard button: Bedroom Low scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bedroom_low"
+    },
+    action: {
+      type: "scene",
+      scene: "bedroom_low"
+    },
+    mode: "single"
+  },
+
+  bedroom_webhook_off: {
+    alias: "Bedroom Webhook → Off",
+    description: "Dashboard button: Bedroom Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_bedroom_off"
+    },
+    action: {
+      type: "scene",
+      scene: "bedroom_off"
     },
     mode: "single"
   },

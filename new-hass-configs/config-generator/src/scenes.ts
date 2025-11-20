@@ -633,6 +633,119 @@ export const scenes: SceneRegistry = {
   },
 
   // ============================================================================
+  // Bedroom Scenes
+  // ============================================================================
+
+  bedroom_high: {
+    name: "Bedroom - High",
+    lights: [
+      {
+        device: "bedroom_sconces",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "bedroom_dresser",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "bedroom_mikedesk",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "bedroom_flamingo",
+        state: "on",
+        brightness: 255
+      }
+    ],
+    switches: {
+      bedroom_flamingopower: "on"
+    }
+  },
+
+  bedroom_medium: {
+    name: "Bedroom - Medium",
+    lights: [
+      {
+        device: "bedroom_sconces",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "bedroom_dresser",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "bedroom_mikedesk",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "bedroom_flamingo",
+        state: "on",
+        brightness: 180
+      }
+    ],
+    switches: {
+      bedroom_flamingopower: "on"
+    }
+  },
+
+  bedroom_low: {
+    name: "Bedroom - Low",
+    lights: [
+      {
+        device: "bedroom_sconces",
+        state: "on",
+        brightness: 50
+      },
+      {
+        device: "bedroom_dresser",
+        state: "off"
+      },
+      {
+        device: "bedroom_mikedesk",
+        state: "off"
+      },
+      {
+        device: "bedroom_flamingo",
+        state: "off"
+      }
+    ],
+    switches: {
+      bedroom_flamingopower: "off"
+    }
+  },
+
+  bedroom_off: {
+    name: "Bedroom - Off",
+    lights: [
+      {
+        device: "bedroom_sconces",
+        state: "off"
+      },
+      {
+        device: "bedroom_dresser",
+        state: "off"
+      },
+      {
+        device: "bedroom_mikedesk",
+        state: "off"
+      },
+      {
+        device: "bedroom_flamingo",
+        state: "off"
+      }
+    ],
+    switches: {
+      bedroom_flamingopower: "off"
+    }
+  },
+
+  // ============================================================================
   // All Off Scene (Generated)
   // ============================================================================
   // This scene automatically includes all lights, switches, and outlets
