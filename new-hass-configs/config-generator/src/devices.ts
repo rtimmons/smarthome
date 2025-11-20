@@ -40,6 +40,11 @@ export const devices: DeviceRegistry = {
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
+    lights_office_abovetv: {
+      entity: "light.light_office_abovetv",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
     office_abovetv_white: {
       entity: "light.light_office_abovetv_white",
       type: "dimmer_light",
@@ -49,6 +54,11 @@ export const devices: DeviceRegistry = {
       entity: "light.office_light_sidetable",
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
+    },
+    office_toggle: {
+      entity: "light.light_office_toggle",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
     },
 
     // Bathroom lights - Z-Wave dimmers with non-dimmable fixtures (on/off only)
@@ -76,6 +86,11 @@ export const devices: DeviceRegistry = {
       entity: "light.bathroom_light_vanitysconces",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
+    },
+    bathroom_abovesauna: {
+      entity: "light.light_bathroom_abovesauna",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
 
     // Living room lights - mix of Hue and Z-Wave
@@ -174,6 +189,31 @@ export const devices: DeviceRegistry = {
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
+    outdoor_cafe: {
+      entity: "light.light_outdoor_cafe",
+      type: "zwave_switch_light",
+      capabilities: ["on_off"]
+    },
+    outdoor_sconces: {
+      entity: "light.light_outdoor_sconces",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
+    },
+    makerroom_main: {
+      entity: "light.light_makerroom_main",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
+    },
+    makerroom_undershelf: {
+      entity: "light.light_makerroom_undershelf",
+      type: "zwave_zen31_rgbw",
+      capabilities: ["brightness", "rgbw_color"]
+    },
+    makerroom_undershelf_white: {
+      entity: "light.light_makerroom_undershelf_white",
+      type: "dimmer_light",
+      capabilities: ["brightness"]
+    },
 
     // Kitchen lights (including dining area)
     kitchen_upper: {
@@ -220,6 +260,21 @@ export const devices: DeviceRegistry = {
       entity: "light.light_dining_abovetable",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
+    },
+    guestbathroom_overhead: {
+      entity: "light.light_guestbathroom_overhead",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
+    },
+    guestbathroom_sconce: {
+      entity: "light.light_guestbathroom_sconce",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
+    },
+    closet_main: {
+      entity: "light.light_closet_main",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
     },
 
     // Bedroom lights - Hue
@@ -335,6 +390,16 @@ export const devices: DeviceRegistry = {
     // Office piano light (controlled as a switch)
     office_pianolight: {
       entity: "switch.light_office_pianolight",
+      type: "outlet",
+      capabilities: ["on_off"]
+    },
+    living_sillleftpower: {
+      entity: "switch.light_living_sillleftpower",
+      type: "outlet",
+      capabilities: ["on_off"]
+    },
+    dining_weenie: {
+      entity: "switch.light_dining_weenie",
       type: "outlet",
       capabilities: ["on_off"]
     },

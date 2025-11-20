@@ -16,6 +16,13 @@ generate:
 	@cat generated/automations.yaml manual/automations.yaml > automations.yaml || cp generated/automations.yaml automations.yaml
 	@echo "Configuration generation complete!"
 
+# Fetch live device inventory from Home Assistant via hass-cli
+inventory:
+	hass-cli --output json device list > device_inventory.json
+	hass-cli --output json entity list > entity_inventory.json
+	@echo "Wrote device inventory to device_inventory.json"
+	@echo "Wrote entity inventory to entity_inventory.json"
+
 # Fetch the Home Assistant YAML configs into current directory
 fetch:
 	rsync -av \

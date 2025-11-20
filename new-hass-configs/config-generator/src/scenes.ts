@@ -43,6 +43,11 @@ export const scenes: SceneRegistry = {
         brightness: 255
       },
       {
+        device: "lights_office_abovetv",
+        state: "on",
+        brightness: 255
+      },
+      {
         device: "office_sidetable",
         state: "on",
         brightness: 255,
@@ -64,6 +69,11 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "office_abovetv_white",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "lights_office_abovetv",
         state: "on",
         brightness: 180
       },
@@ -111,6 +121,10 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "office_abovetv_white",
+        state: "off"
+      },
+      {
+        device: "lights_office_abovetv",
         state: "off"
       },
       {

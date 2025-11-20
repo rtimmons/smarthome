@@ -4,6 +4,10 @@ backups/
 # Generated configs (should be regenerated from TypeScript sources)
 generated/
 
+# inventory helper files (output from just inventory)
+device_inventory.json
+entity_inventory.json
+
 # Merged output files (created from generated/ + manual/)
 scenes.yaml
 automations.yaml
