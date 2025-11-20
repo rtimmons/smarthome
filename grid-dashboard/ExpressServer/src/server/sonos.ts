@@ -15,7 +15,7 @@ const sonosPipe = (route: string, req: RQ, res: RS): void => {
             if (!res.headersSent) {
                 res.status(err.statusCode || 500).json({
                     error: err.message || 'Sonos API request failed',
-                    route: route
+                    route,
                 });
             }
         })
