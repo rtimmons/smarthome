@@ -25,7 +25,7 @@
 just fetch      # Fetch current HA config (now protects local directories)
 just generate   # Generate YAML from TypeScript
 just check      # Validate config (dry-run)
-just push       # Deploy to Home Assistant
+just deploy     # Deploy to Home Assistant
 just backup     # Create timestamped backup
 just backups    # List backups
 just restore    # Restore from backup
@@ -138,7 +138,7 @@ From `HomeAssistantConfig/metaconfig.yaml`:
 9. **Deploy to production**
    ```bash
    just backup "pre-bathroom-migration"  # Safety backup
-   just push  # Deploy and restart HA
+   just deploy  # Deploy and restart HA
    ```
 
 10. **Verify in Home Assistant UI**
@@ -184,7 +184,7 @@ See office devices in `config-generator/src/devices.ts` for examples.
 - [ ] Generator runs without errors (`just generate`)
 - [ ] Config validates (`just check`)
 - [ ] Backup created before deploy
-- [ ] Deployed to HA (`just push`)
+- [ ] Deployed to HA (`just deploy`)
 - [ ] Scenes tested in HA UI
 - [ ] Automations tested with physical switches
 - [ ] No errors in HA logs

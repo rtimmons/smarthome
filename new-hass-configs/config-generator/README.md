@@ -109,7 +109,7 @@ Entity: scene.living_room_high
 3. Define automations in `automations.ts` (reference devices and scenes)
 4. Run `npm run generate` to create YAML files
 5. Generated files output to `../generated/`
-6. Use `just check` and `just push` to deploy
+6. Use `just check` and `just deploy` to deploy
 
 ---
 
@@ -284,7 +284,7 @@ just generate
 just check
 
 # Deploy to Home Assistant
-just push
+just deploy
 ```
 
 ---
@@ -510,6 +510,24 @@ lights: [
 
 When both are explicitly defined, **auto-pairing is skipped** and your explicit settings are used.
 
+#### Verifying Scene Behavior
+
+After deploying scene changes, verify both entities are controlled correctly:
+
+```bash
+# Trigger the scene
+hass-cli service call scene.turn_on --arguments 'entity_id=scene.office_high'
+
+# Check both paired entities are in sync
+hass-cli state get light.light_office_abovecouch
+hass-cli state get light.light_office_abovecouch_white
+```
+
+Both entities should show the same on/off state and brightness. If they don't match:
+1. Check that `generated/scenes.yaml` includes both entities
+2. Run `just deploy` from `new-hass-configs/` to deploy the updated config
+3. Verify the scene was reloaded in Home Assistant
+
 #### Adding New Paired Devices
 
 To add a new RGBW device with automatic pairing:
@@ -639,7 +657,7 @@ npm run build
    ```bash
    cd /path/to/new-hass-configs
    just generate
-   just push
+   just deploy
    ```
 
 3. **Check Home Assistant logs**
@@ -731,7 +749,7 @@ switches: {
 - [ ] Verify room name in dashboard `config.js` matches exactly
 - [ ] Run `just generate`
 - [ ] Run `just check` (optional)
-- [ ] Run `just push`
+- [ ] Run `just deploy`
 - [ ] Test scene buttons in dashboard
 
 ### File Locations

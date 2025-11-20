@@ -34,6 +34,9 @@ deploy addon="all":
 	else \
 		"${PYTHON_CMD}" tools/addon_builder.py deploy "{{addon}}"; \
 	fi
+	@echo ""
+	@echo "Deploying Home Assistant configs..."
+	cd new-hass-configs && just deploy
 
 test addon="all":
 	PYTHON_CMD=$({{python_cmd}}); \

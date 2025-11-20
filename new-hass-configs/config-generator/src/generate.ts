@@ -451,7 +451,7 @@ function main() {
   console.log("\nNext steps:");
   console.log("  1. Review generated files in generated/");
   console.log("  2. Run 'just check' to validate configuration");
-  console.log("  3. Run 'just push' to deploy to Home Assistant");
+  console.log("  3. Run 'just deploy' to deploy to Home Assistant");
 }
 
 // Run generator

@@ -102,7 +102,7 @@ just generate
 just check
 
 # Deploy validated config to Home Assistant
-just push
+just deploy
 
 # Create timestamped backup
 just backup
@@ -135,7 +135,7 @@ just generate
 just check
 
 # 5. Deploy to production
-just push
+just deploy
 ```
 
 ### Emergency Rollback
@@ -174,7 +174,7 @@ export const scenes = {
 ```bash
 just generate  # Generate YAML
 just check     # Validate
-just push      # Deploy
+just deploy    # Deploy
 ```
 
 ### Adding a New Automation
@@ -268,7 +268,7 @@ See detailed guide in [config-generator/README.md](config-generator/README.md) a
 2. Add scenes to `config-generator/src/scenes.ts` (can use helper functions)
 3. Add webhook automations to `config-generator/src/automations.ts` (can use helper functions)
 4. Verify room in dashboard `config.js`
-5. Run `just generate && just push`
+5. Run `just generate && just deploy`
 
 **Example using helpers:**
 ```typescript
@@ -413,7 +413,7 @@ export const devices = {
 5. Create automations in `config-generator/src/automations.ts`
 6. Test: `just generate && just check`
 7. Backup: `just backup "pre-[room]-migration"`
-8. Deploy: `just push`
+8. Deploy: `just deploy`
 9. Verify scenes work in HA UI
 10. Repeat for next room
 
@@ -655,7 +655,7 @@ generate:
 
 ### Automatic Backups
 
-- Run before every `just push`
+- Run before every `just deploy`
 - Stored locally in `backups/` directory
 - Timestamped: `backups/YYYYMMDD-HHMMSS/`
 - Includes full `/config/` directory
@@ -696,7 +696,7 @@ just restore 20250118-143022 --check
 
 ### Emergency Recovery
 
-If Home Assistant fails to start after `just push`:
+If Home Assistant fails to start after `just deploy`:
 
 1. SSH into Home Assistant: `ssh root@homeassistant.local`
 2. Check logs: `ha core logs`
@@ -808,7 +808,7 @@ just generate
 just check
 
 # Test specific scene on HA
-just push
+just deploy
 # Then in HA UI: Developer Tools > Services > scene.turn_on
 
 # Test automation trigger
@@ -826,7 +826,7 @@ just push
 3. Validate entity IDs exist in HA
 4. Check for duplicate IDs
 
-### `just push` restarts but scenes don't work
+### `just deploy` restarts but scenes don't work
 
 1. Verify entity IDs match current HA installation
 2. Check device capabilities (RGBW vs dimmer)
@@ -881,7 +881,7 @@ just fetch     # Get current HA entity IDs
 just generate  # Generate YAML from TypeScript
 just check     # Validate config (dry-run)
 just backup    # Create safety backup
-just push      # Deploy to HA
+just deploy    # Deploy to HA
 ```
 
 ### 📋 Long-term (Phase 4-5)

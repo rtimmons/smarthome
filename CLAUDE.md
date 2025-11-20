@@ -129,8 +129,29 @@ just fetch
 just check
 
 # Deploy configuration to Home Assistant and restart
-just push
+just deploy
 ```
+
+### Interrogating Live Home Assistant System
+
+The `hass-cli` command is available for querying and controlling the live Home Assistant instance:
+
+```bash
+# Check entity state
+hass-cli state get light.light_office_abovecouch
+
+# List entities matching a pattern
+hass-cli state list | grep abovecouch
+
+# Trigger a scene
+hass-cli service call scene.turn_on --arguments 'entity_id=scene.office_high'
+```
+
+**Use cases:**
+- Verifying scene behavior on the live system
+- Checking entity states for debugging
+- Testing automations and services
+- Comparing generated config vs. deployed state
 
 ### Grid Dashboard Development & Deployment
 
@@ -220,6 +241,49 @@ When updating patches for node-sonos-http-api:
 - Patches are auto-applied during Docker build via `tools/templates/Dockerfile.j2`
 - Bump version in `node-sonos-http-api/package.json` to force Docker image rebuild
 - Use `ha addons rebuild local_node_sonos_http_api` to force rebuild without version change
+
+## Scene Configuration
+
+### RGBW Device Pairing
+
+**CRITICAL:** RGBW devices (like Zooz Zen31 dimmers) create two separate entities in Home Assistant:
+- Base entity: `light.light_office_abovecouch` (controls RGB channels)
+- White entity: `light.light_office_abovecouch_white` (controls white channel)
+
+**These entities MUST be kept in sync in all scenes** to ensure consistent behavior. The scene generator automatically handles this via the `expandLightsWithPairs()` function in `config-generator/src/generate.ts:54`.
+
+**How automatic pairing works:**
+1. Define only ONE entity in a scene (either base or `_white`)
+2. The generator automatically adds the paired entity with matching state/brightness
+3. Both entities are included in the deployed scene configuration
+
+**Example from `config-generator/src/scenes.ts`:**
+```typescript
+office_high: {
+  name: "Office - High",
+  lights: [
+    {
+      device: "office_abovecouch_white",  // Only define _white
+      state: "on",
+      brightness: 255
+    }
+    // office_abovecouch is automatically added by expandLightsWithPairs()
+  ]
+}
+```
+
+**Verification:**
+```bash
+# Check generated config includes both entities
+grep -A 20 "Office - High" generated/scenes.yaml
+
+# Verify on live system after deployment
+hass-cli service call scene.turn_on --arguments 'entity_id=scene.office_high'
+hass-cli state get light.light_office_abovecouch
+hass-cli state get light.light_office_abovecouch_white
+```
+
+**Note:** After modifying scenes, always run `just deploy` from `new-hass-configs/` to deploy the updated configuration to Home Assistant.
 
 ## Z-Wave Device Notes
 

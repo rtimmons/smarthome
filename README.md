@@ -48,7 +48,7 @@ just setup
 cd new-hass-configs
 just fetch   # Fetch current config from Home Assistant
 just check   # Validate changes (dry-run)
-just push    # Deploy and restart Home Assistant
+just deploy  # Deploy and restart Home Assistant
 ```
 
 ### Deploy Add-ons

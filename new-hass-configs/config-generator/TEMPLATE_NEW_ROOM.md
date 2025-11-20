@@ -57,7 +57,7 @@ export const automations: AutomationRegistry = {
 ```bash
 cd new-hass-configs
 just generate
-just push
+just deploy
 ```
 
 ---
@@ -336,7 +336,7 @@ rooms: [
 ```bash
 cd new-hass-configs
 just generate
-just push
+just deploy
 ```
 
 ### 6. Test in dashboard
@@ -360,7 +360,7 @@ When adding a new room, verify:
 - [ ] Four scenes created: high, medium, low, off
 - [ ] Three webhooks created: high, medium, off (NOT low)
 - [ ] Ran `just generate` successfully
-- [ ] Ran `just push` successfully
+- [ ] Ran `just deploy` successfully
 - [ ] Tested all three dashboard buttons
 
 ---
@@ -396,7 +396,7 @@ export const scenes: SceneRegistry = {
 
 1. Check generated YAML: `cat new-hass-configs/generated/scenes.yaml | grep {room_id}`
 2. Check merged YAML: `cat new-hass-configs/scenes.yaml | grep {room_id}`
-3. Regenerate: `cd new-hass-configs && just generate && just push`
+3. Regenerate: `cd new-hass-configs && just generate && just deploy`
 
 ### Dashboard button not working
 

@@ -28,7 +28,7 @@ just check
 
 # Deploy to HA
 just backup "pre-[room]-migration"
-just push
+just deploy
 ```
 
 ### Files You'll Edit
@@ -211,7 +211,7 @@ just check
 just backup "pre-bathroom-migration"
 
 # Deploy to Home Assistant
-just push
+just deploy
 ```
 
 ### Step 9: Verify
