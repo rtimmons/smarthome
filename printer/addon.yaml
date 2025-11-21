@@ -39,6 +39,10 @@ options:
   usb_product_id: 33054
   label_output_dir: "/share/printer-labels"
   dev_reload: false
+  public_service_host: "homeassistant.local"
+  public_service_port: "8099"
+  public_service_scheme: "http"
+  public_service_path: "/"
 schema:
   printer_backend: "list(file|brother-network|escpos-usb|escpos-bluetooth)"
   brother_uri: "str?"
@@ -51,6 +55,10 @@ schema:
   usb_product_id: "int?"
   label_output_dir: "str?"
   dev_reload: bool
+  public_service_host: "str?"
+  public_service_port: "str?"
+  public_service_scheme: "str?"
+  public_service_path: "str?"
 translations:
   configuration:
     printer_backend:
@@ -86,6 +94,18 @@ translations:
     dev_reload:
       name: Enable dev reload
       description: Restart Flask automatically when files change (development only).
+    public_service_host:
+      name: Public service host
+      description: Hostname used in QR and print URLs (e.g., homeassistant.local).
+    public_service_port:
+      name: Public service port
+      description: Port used in QR and print URLs (e.g., 8099).
+    public_service_scheme:
+      name: Public service scheme
+      description: Scheme used in QR and print URLs (http or https).
+    public_service_path:
+      name: Public service base path
+      description: Base path for QR/print URLs; typically "/" unless reverse-proxied.
 docs:
   readme: >
     Local add-on that exposes the kitchen label printing Flask UI over Home Assistant ingress. It supports Brother QL network printers, ESC/POS USB or Bluetooth devices, or file-only output that saves generated labels into Home Assistant's /share directory.
@@ -137,5 +157,21 @@ run_env:
   - env: PRINTER_DEV_RELOAD
     from_option: dev_reload
     default: "0"
+  - env: PUBLIC_SERVICE_HOST
+    from_option: public_service_host
+    default: ""
+    optional: true
+  - env: PUBLIC_SERVICE_PORT
+    from_option: public_service_port
+    default: ""
+    optional: true
+  - env: PUBLIC_SERVICE_SCHEME
+    from_option: public_service_scheme
+    default: ""
+    optional: true
+  - env: PUBLIC_SERVICE_PATH
+    from_option: public_service_path
+    default: ""
+    optional: true
 tests:
   - just test

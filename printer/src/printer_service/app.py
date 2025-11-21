@@ -9,6 +9,7 @@ from datetime import date
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Callable, List, Optional, TypeGuard
+from urllib.parse import urlencode, urljoin
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, url_for
 from PIL import Image, UnidentifiedImageError
@@ -121,8 +122,7 @@ def create_app() -> Flask:
         text_value = _best_by_text_value(form_data)
         wants_print = _is_truthy(request.args.get("print"))
         wants_qr_label = _is_truthy(request.args.get("qr_label"))
-        print_params = _best_by_print_params(form_data)
-        print_url = url_for("best_by_route", _external=True, **print_params)
+        print_url = _best_by_print_url(form_data)
         if wants_print:
             config = PrinterConfig.from_env()
             qr_url = print_url if wants_qr_label else None
@@ -470,6 +470,53 @@ def _best_by_print_params(
     return params
 
 
+def _best_by_relative_path() -> str:
+    """Return the Best By route path without any ingress/script prefix."""
+    return "bb"
+
+
+def _base_service_url() -> str:
+    """Resolve the externally reachable base URL for direct (non-ingress) access."""
+    override_host = os.getenv("PUBLIC_SERVICE_HOST")
+    override_port = os.getenv("PUBLIC_SERVICE_PORT") or os.getenv("FLASK_PORT")
+    override_scheme = os.getenv("PUBLIC_SERVICE_SCHEME")
+    base_path = os.getenv("PUBLIC_SERVICE_PATH", "/") or "/"
+
+    host_header = request.host or "localhost"
+    if ":" in host_header:
+        host_only, host_port = host_header.split(":", 1)
+    else:
+        host_only, host_port = host_header, ""
+
+    scheme = override_scheme or request.scheme or "http"
+    host = override_host or host_only
+    port = override_port or host_port
+
+    normalized_path = base_path if base_path.startswith("/") else f"/{base_path}"
+    if not normalized_path.endswith("/"):
+        normalized_path = f"{normalized_path}/"
+
+    netloc = f"{host}:{port}" if port else host
+    return f"{scheme}://{netloc}{normalized_path}"
+
+
+def _build_public_url(path_fragment: str, params: Optional[dict[str, str]] = None) -> str:
+    base_url = _base_service_url()
+    base = base_url if base_url.endswith("/") else f"{base_url}/"
+    url = urljoin(base, path_fragment.lstrip("/"))
+    query = urlencode(params or {})
+    return f"{url}?{query}" if query else url
+
+
+def _best_by_base_url() -> str:
+    return _build_public_url(_best_by_relative_path())
+
+
+def _best_by_print_url(form_data: TemplateFormData, *, include_qr_label: bool = False) -> str:
+    params = _best_by_print_params(form_data, include_qr_label=include_qr_label)
+    return _build_public_url(_best_by_relative_path(), params)
+
+
 def _render_best_by_page(form_data: TemplateFormData):
     template_ref = _best_by_template()
     text_value = _best_by_text_value(form_data)
@@ -483,13 +530,8 @@ def _render_best_by_page(form_data: TemplateFormData):
             base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
-    print_params = _best_by_print_params(form_data)
-    print_url = url_for("best_by_route", _external=True, **print_params)
-    qr_print_url = url_for(
-        "best_by_route",
-        _external=True,
-        **_best_by_print_params(form_data, include_qr_label=True),
-    )
+    print_url = _best_by_print_url(form_data)
+    qr_print_url = _best_by_print_url(form_data, include_qr_label=True)
     qr_caption = f"Print: {text_value}" if text_mode else f"Print Best By +{delta_label.title()}"
 
     normalized_form = _normalized_best_by_form(form_data)
@@ -530,6 +572,7 @@ def _render_best_by_page(form_data: TemplateFormData):
         delta_label=delta_label,
         today_iso=today_iso,
         text_mode=text_mode,
+        best_by_base_url=_best_by_base_url(),
     )
 
 

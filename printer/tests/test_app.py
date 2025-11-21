@@ -30,8 +30,7 @@ BLUEY_EXPECTED_WIDTH_IN = bluey_module.LABEL_HEIGHT_IN
 BLUEY_EXPECTED_HEIGHT_IN = bluey_module.LABEL_WIDTH_IN
 
 
-@pytest.fixture
-def test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+def _build_test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Create an isolated app instance with temporary storage."""
     labels_dir = tmp_path / "labels"
     printer_output = tmp_path / "printer-output.png"
@@ -65,6 +64,19 @@ def test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     app_module = importlib.reload(app_module)
     flask_app = app_module.create_app()
     return app_module, templates_module, flask_app, labels_dir, printer_output
+
+
+@pytest.fixture
+def test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    """Create an isolated app instance with temporary storage."""
+    return _build_test_environment(tmp_path, monkeypatch)
+
+
+@pytest.fixture
+def test_environment_public_port(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("PUBLIC_SERVICE_HOST", "homeassistant.local")
+    monkeypatch.setenv("PUBLIC_SERVICE_PORT", "8099")
+    return _build_test_environment(tmp_path, monkeypatch)
 
 
 def _extract_print_url_page(body: str) -> str:
@@ -689,6 +701,28 @@ def test_bb_page_respects_offset_alias_in_print_url(test_environment: Tuple) -> 
     assert params["offset"] == "2 weeks"
 
 
+def test_bb_page_print_url_uses_public_port_and_path(test_environment_public_port: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment_public_port
+    client = flask_app.test_client()
+
+    response = client.get(
+        "/bb",
+        environ_overrides={
+            "HTTP_HOST": "homeassistant.local:8123",
+            "HTTP_X_INGRESS_PATH": "/api/hassio_ingress/XYZ",
+        },
+    )
+
+    assert response.status_code == 200
+    print_url = _extract_print_url_page(response.get_data(as_text=True))
+    parsed = urlparse(print_url)
+    params = dict(parse_qsl(parsed.query))
+
+    assert parsed.netloc == "homeassistant.local:8099"
+    assert parsed.path == "/bb"
+    assert params["print"] == "true"
+
+
 def test_bb_page_renders_dual_previews(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -719,6 +753,7 @@ def test_bb_endpoint_prints_qr_label_when_requested(test_environment: Tuple) -> 
     assert response.status_code == 200
     assert response.json["status"] == "sent"
     assert response.json["template"] in {"best_by", "bb_2_weeks"}
+
 
 def test_bb_endpoint_supports_text_mode_print(test_environment: Tuple) -> None:
     _, _, flask_app, labels_dir, printer_output = test_environment

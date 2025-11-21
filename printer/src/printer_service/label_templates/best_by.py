@@ -77,9 +77,7 @@ def _trim_text_to_width(text: str, font, max_width: int) -> str:
     return ""
 
 
-def _wrap_overlay_text(
-    text: str, font, max_width: int, max_lines: int
-) -> list[str]:
+def _wrap_overlay_text(text: str, font, max_width: int, max_lines: int) -> list[str]:
     """Wrap overlay text ignoring word boundaries; truncate last line if needed."""
     if max_width <= 0 or max_lines <= 0:
         return []
@@ -141,9 +139,7 @@ def _maybe_apply_overlay(
     if module_px <= 0:
         return qr_image
 
-    max_overlay_modules = int(
-        math.sqrt((modules_count * modules_count) * QR_OVERLAY_MAX_COVERAGE)
-    )
+    max_overlay_modules = int(math.sqrt((modules_count * modules_count) * QR_OVERLAY_MAX_COVERAGE))
     overlay_modules = min(
         max_overlay_modules,
         int(round(modules_count * QR_OVERLAY_WIDTH_RATIO)),
@@ -274,13 +270,9 @@ def _qr_image(
     qr_image.info["qr_overlay_applied"] = False
 
     if target_height_px is not None and target_height_px != qr_image.height:
-        module_px = max(
-            QR_MIN_MODULE_PX, int(round(target_height_px / max(total_modules, 1)))
-        )
+        module_px = max(QR_MIN_MODULE_PX, int(round(target_height_px / max(total_modules, 1))))
         target_size_px = max(qr_image.width, total_modules * module_px)
-        qr_image = qr_image.resize(
-            (target_size_px, target_size_px), resample=Image.NEAREST
-        )
+        qr_image = qr_image.resize((target_size_px, target_size_px), resample=Image.NEAREST)
 
     qr_image = _maybe_apply_overlay(
         qr_image,

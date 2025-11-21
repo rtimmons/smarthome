@@ -49,11 +49,11 @@ Best By Label
         }
         .bb-preview-trigger img {
             display: block;
-            width: 100%;
+            width: auto;
+            max-width: 100%;
             height: auto;
-            max-height: clamp(260px, 50vh, 420px);
-            background-color: #fff;
-            border-radius: 6px;
+            margin: 0 auto;
+            object-fit: contain;
         }
         .bb-preview-note {
             margin: 0;
@@ -138,7 +138,7 @@ Best By Label
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('labelForm');
-    const baseUrl = '{{ url_for("best_by_route", _external=True) }}';
+    const baseUrl = '{{ best_by_base_url }}';
     const baseInput = document.getElementById('baseDate');
     const deltaInput = document.getElementById('delta');
     const textInput = document.getElementById('textValue');
