@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
+import math
 from typing import Optional, Tuple
 
 import qrcode  # type: ignore[import-untyped]
@@ -12,13 +13,25 @@ from printer_service.label_templates import helper as helper
 from printer_service.label_templates.base import TemplateDefinition, TemplateFormData
 
 FONT_POINTS = 48
-QR_CAPTION_POINTS = 28
-QR_TARGET_HEIGHT_IN = 0.5
+QR_CAPTION_POINTS = 22
+QR_TARGET_HEIGHT_IN = 0.24
+QR_MIN_MODULE_PX = 2
 HORIZONTAL_PADDING = 20
 MIN_LENGTH_PX = bluey_label.CANVAS_HEIGHT_PX // 2  # keep length tight but readable
 MARGIN_TOTAL_PX = int(round(QL810W_DPI / 8))  # add 1/8" total margin to text height
-QR_MARGIN_PX = 14
-QR_GAP_PX = 10
+QR_MARGIN_PX = 8
+QR_GAP_PX = 0
+QR_OVERLAY_MAX_COVERAGE = 0.32  # keep masked area within the high error-correction budget
+QR_OVERLAY_WIDTH_RATIO = 0.9
+QR_OVERLAY_MIN_MODULES = 6
+QR_OVERLAY_PADDING_MODULES = 1
+QR_OVERLAY_FONT_POINTS = 24
+QR_OVERLAY_MIN_FONT_POINTS = 8
+QR_OVERLAY_LINE_GAP_PX = 0
+QR_OVERLAY_MAX_LINES = 5
+QR_OVERLAY_STROKE_PX = 1
+QR_OVERLAY_X_BIAS = -0.08  # shift left (fraction of QR width)
+QR_OVERLAY_Y_BIAS = -0.08  # shift up (fraction of QR height)
 
 DEFAULT_DELTA_LABEL = "2 weeks"
 DEFAULT_DELTA = timedelta(days=14)
@@ -37,6 +50,156 @@ def _measure_text_size(text: str, font) -> tuple[int, int]:
     width = int(round(bbox[2] - bbox[0]))
     height = int(round(bbox[3] - bbox[1]))
     return width, height
+
+
+def _trim_text_to_width(text: str, font, max_width: int) -> str:
+    if max_width <= 0:
+        return ""
+    if _measure_text_size(text, font)[0] <= max_width:
+        return text
+
+    ellipsis = "..."
+    ellipsis_width, _ = _measure_text_size(ellipsis, font)
+    if ellipsis_width > max_width:
+        # Fall back to the smallest visible slice we can fit.
+        for char in text:
+            if _measure_text_size(char, font)[0] <= max_width:
+                return char
+        return ""
+
+    for end in range(len(text), 0, -1):
+        candidate = text[:end].rstrip()
+        if not candidate:
+            continue
+        candidate_with_ellipsis = f"{candidate}{ellipsis}"
+        if _measure_text_size(candidate_with_ellipsis, font)[0] <= max_width:
+            return candidate_with_ellipsis
+    return ""
+
+
+def _wrap_overlay_text(
+    text: str, font, max_width: int, max_lines: int
+) -> list[str]:
+    """Wrap overlay text ignoring word boundaries; truncate last line if needed."""
+    if max_width <= 0 or max_lines <= 0:
+        return []
+    cleaned = text.strip()
+    if not cleaned:
+        return []
+
+    lines: list[str] = []
+    current = ""
+    for char in cleaned:
+        proposed = f"{current}{char}"
+        if _measure_text_size(proposed, font)[0] <= max_width:
+            current = proposed
+        else:
+            if current:
+                lines.append(current)
+            current = char
+            if len(lines) == max_lines - 1:
+                break
+
+    if current and len(lines) < max_lines:
+        lines.append(current)
+
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+
+    if len(lines) == max_lines and len(cleaned) > sum(len(line) for line in lines):
+        # Trim the last line so it still fits when we had to stop early.
+        last = _trim_text_to_width(lines[-1], font, max_width)
+        lines[-1] = last
+    return lines
+
+
+def _measure_text_block_height(lines: list[str], font) -> int:
+    if not lines:
+        return 0
+    height = sum(_measure_text_size(line, font)[1] for line in lines)
+    height += QR_OVERLAY_LINE_GAP_PX * (len(lines) - 1)
+    return height
+
+
+def _maybe_apply_overlay(
+    qr_image: Image.Image,
+    overlay_text: str | None,
+    *,
+    modules_count: int,
+    quiet_zone_modules: int,
+) -> Image.Image:
+    if not overlay_text:
+        return qr_image
+    normalized_text = " ".join(overlay_text.split())
+    if not normalized_text or modules_count <= 0:
+        return qr_image
+
+    total_modules = modules_count + (quiet_zone_modules * 2)
+    if total_modules <= 0:
+        return qr_image
+    module_px = qr_image.width // total_modules
+    if module_px <= 0:
+        return qr_image
+
+    max_overlay_modules = int(
+        math.sqrt((modules_count * modules_count) * QR_OVERLAY_MAX_COVERAGE)
+    )
+    overlay_modules = min(
+        max_overlay_modules,
+        int(round(modules_count * QR_OVERLAY_WIDTH_RATIO)),
+        modules_count,
+    )
+    if overlay_modules < QR_OVERLAY_MIN_MODULES:
+        return qr_image
+
+    overlay_size_px = overlay_modules * module_px
+    padding_px = QR_OVERLAY_PADDING_MODULES * module_px
+    content_box_px = overlay_size_px - (padding_px * 2)
+    if content_box_px <= 0:
+        return qr_image
+
+    font = None
+    wrapped_lines: list[str] = []
+    text_height_px = 0
+    max_text_width = int(round(content_box_px * QR_OVERLAY_WIDTH_RATIO))
+    max_text_height = content_box_px
+    for points in range(QR_OVERLAY_FONT_POINTS, QR_OVERLAY_MIN_FONT_POINTS - 1, -2):
+        candidate_font = helper.load_font(size_points=points)
+        lines = _wrap_overlay_text(
+            normalized_text, candidate_font, max_text_width, QR_OVERLAY_MAX_LINES
+        )
+        text_height = _measure_text_block_height(lines, candidate_font)
+        if lines and text_height <= max_text_height:
+            font = candidate_font
+            wrapped_lines = lines
+            text_height_px = text_height
+            break
+    if font is None or not wrapped_lines or text_height_px <= 0:
+        return qr_image
+
+    qr_with_overlay = qr_image.copy()
+    draw = ImageDraw.Draw(qr_with_overlay)
+    text_top = (qr_image.height - text_height_px) // 2
+    bias_y = int(qr_image.height * QR_OVERLAY_Y_BIAS)
+    y = max(0, min(qr_image.height - text_height_px, text_top + bias_y))
+    for line in wrapped_lines:
+        line_width, line_height = _measure_text_size(line, font)
+        base_x = (qr_image.width - line_width) // 2
+        bias_x = int(qr_image.width * QR_OVERLAY_X_BIAS)
+        x = max(0, min(qr_image.width - line_width, base_x + bias_x))
+        draw.text(
+            (x, y),
+            line,
+            fill=0,
+            font=font,
+            stroke_width=QR_OVERLAY_STROKE_PX,
+            stroke_fill=255,
+        )
+        y += line_height + QR_OVERLAY_LINE_GAP_PX
+
+    qr_with_overlay.info.update(qr_image.info)
+    qr_with_overlay.info["qr_overlay_applied"] = True
+    return qr_with_overlay
 
 
 def _today() -> date:
@@ -90,36 +253,59 @@ def compute_best_by(form_data: TemplateFormData) -> Tuple[date, date, str]:
     return base_date, base_date + delta, delta_label
 
 
-def _qr_image(qr_url: str, target_height_px: Optional[int] = None) -> Image.Image:
+def _qr_image(
+    qr_url: str, target_height_px: Optional[int] = None, overlay_text: str | None = None
+) -> Image.Image:
     qr = qrcode.QRCode(
         version=3,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,
         border=1,
-        box_size=4,
+        box_size=2,
     )
     qr.add_data(qr_url)
     qr.make(fit=True)
     qr_image = qr.make_image(fill_color="black", back_color="white").convert("L")
-    if target_height_px is None or target_height_px == qr_image.height:
-        return qr_image
-    return qr_image.resize((target_height_px, target_height_px), resample=Image.NEAREST)
+    modules_count = qr.modules_count
+    quiet_zone_modules = qr.border
+    total_modules = modules_count + (quiet_zone_modules * 2)
+
+    qr_image.info["modules_count"] = modules_count
+    qr_image.info["quiet_zone_modules"] = quiet_zone_modules
+    qr_image.info["qr_overlay_applied"] = False
+
+    if target_height_px is not None and target_height_px != qr_image.height:
+        module_px = max(
+            QR_MIN_MODULE_PX, int(round(target_height_px / max(total_modules, 1)))
+        )
+        target_size_px = max(qr_image.width, total_modules * module_px)
+        qr_image = qr_image.resize(
+            (target_size_px, target_size_px), resample=Image.NEAREST
+        )
+
+    qr_image = _maybe_apply_overlay(
+        qr_image,
+        overlay_text,
+        modules_count=modules_count,
+        quiet_zone_modules=quiet_zone_modules,
+    )
+    return qr_image
 
 
 def _render_qr_label(*, qr_url: str, caption: str, template_slug: str) -> Image.Image:
-    qr_height_px = max(int(round(QR_TARGET_HEIGHT_IN * QL810W_DPI)), 120)
-    qr_image = _qr_image(qr_url, target_height_px=qr_height_px)
+    qr_height_px = max(int(round(QR_TARGET_HEIGHT_IN * QL810W_DPI)), 70)
+    qr_image = _qr_image(
+        qr_url,
+        target_height_px=qr_height_px,
+        overlay_text=caption or "Print Best By +2 Weeks",
+    )
 
-    font = helper.load_font(size_points=QR_CAPTION_POINTS)
-    text_width, text_height = _measure_text_size(caption, font)
-
-    width_px = max(qr_image.width + (QR_MARGIN_PX * 2), text_width + (QR_MARGIN_PX * 2))
-    height_px = QR_MARGIN_PX + qr_image.height + QR_GAP_PX + text_height + QR_MARGIN_PX
+    width_px = qr_image.width + (QR_MARGIN_PX * 2)
+    height_px = QR_MARGIN_PX + qr_image.height + QR_MARGIN_PX
 
     renderer = helper.LabelDrawingHelper(width=width_px, height=height_px)
     qr_left = (width_px - qr_image.width) // 2
     renderer.canvas.paste(qr_image, (qr_left, QR_MARGIN_PX))
-    renderer.advance(QR_MARGIN_PX + qr_image.height + QR_GAP_PX)
-    renderer.draw_centered_text(text=caption, font=font, warn_if_past_bottom=None)
+    renderer.advance(QR_MARGIN_PX + qr_image.height)
 
     spec = BrotherLabelSpec(
         code=bluey_label.LABEL_SPEC.code,

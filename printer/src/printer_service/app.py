@@ -138,8 +138,7 @@ def create_app() -> Flask:
                 base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
             except ValueError as exc:
                 return jsonify({"error": str(exc)}), 400
-            has_custom = len(print_params) > 1
-            qr_text = "Print" if not has_custom else f"Print Best By +{delta_label.title()}"
+            qr_text = f"Print Best By +{delta_label.title()}"
             return _send_best_by_print(
                 form_data=form_data,
                 config=config,
@@ -618,7 +617,7 @@ def _data_url_for_image(image: Image.Image) -> str:
 
 
 def main() -> None:
-    host = os.getenv("FLASK_HOST", "0.0.0.0")
+    host = os.getenv("FLASK_HOST", "::")
     port = int(os.getenv("FLASK_PORT", "8099"))
     reload_enabled = _should_enable_dev_reload()
     extra_files = _dev_extra_files() if reload_enabled else None

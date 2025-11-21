@@ -95,7 +95,7 @@ docs:
     Preferred: use the add-on ingress link from the Home Assistant sidebar (Supervisor → Printer Service → Open Web UI). Optional: map port 8099 to reach it directly via http://<ha-host>:8099/.
 run_env:
   - env: FLASK_HOST
-    value: "0.0.0.0"
+    value: "::"
   - env: FLASK_PORT
     value: "8099"
   - env: LABEL_OUTPUT_DIR

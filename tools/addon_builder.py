@@ -298,7 +298,16 @@ ADDON_ID="local_{slug}"
 REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
 
-ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
+if ha addons info "${{ADDON_ID}}" --raw-json >/tmp/addon_info.json 2>/dev/null; then
+  installed="true"
+else
+  installed="false"
+fi
+
+if [ "${{installed}}" = "true" ]; then
+  ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
+fi
+
 rm -rf "${{REMOTE_ADDON_DIR}}"
 mkdir -p "/addons"
 tar -xzf "${{REMOTE_TAR}}" -C "/addons"
@@ -306,7 +315,7 @@ rm -f "${{REMOTE_TAR}}"
 
 ha addons reload
 sleep 2
-if ha addons info "${{ADDON_ID}}" >/dev/null 2>&1; then
+if [ "${{installed}}" = "true" ]; then
   ha addons rebuild "${{ADDON_ID}}"
 else
   ha addons install "${{ADDON_ID}}"

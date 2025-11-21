@@ -187,7 +187,7 @@ fi
 
 export LABEL_OUTPUT_DIR
 export PRINTER_OUTPUT_PATH="${LABEL_OUTPUT_DIR}/latest.png"
-export FLASK_HOST="0.0.0.0"
+export FLASK_HOST="::"
 export FLASK_PORT="8099"
 
 mkdir -p "${LABEL_OUTPUT_DIR}"
