@@ -61,17 +61,27 @@ Best By Label
             word-break: break-all;
         }
     </style>
-    <p class="bb-help">Generate and print a Best By label offset from a chosen base date. The <code>baseDate</code>, <code>offset</code>, and <code>print</code> query parameters are all supported on <code>/bb</code>.</p>
-    <label for="baseDate">
-        Base date (YYYY-MM-DD, optional)
-        <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}">
-    </label>
-    <label for="delta">
-        Offset (days, weeks, months, or years)
-        <input type="text" id="delta" name="Offset" value="{{ delta_value }}" placeholder="2 weeks">
-        <small>Example values: <code>2 weeks</code>, <code>10 days</code>, or <code>1 month</code>. Defaults to 2 weeks.</small>
-    </label>
-    <p class="bb-help">Best By date: <strong>{{ best_by_date }}</strong> ({{ delta_label }} from {{ base_date_value }}). Press enter to refresh the previews.</p>
+    {% if text_mode %}
+        <p class="bb-help">Create a Best By label from a plain text payload. The QR label will preserve your <code>?text</code> query.</p>
+        <label for="textValue">
+            Label text
+            <input type="text" id="textValue" name="Text" value="{{ text_value }}" placeholder="Best By 2025-12-01">
+            <small><code>?text=A+B+C</code> becomes <strong>A B C</strong> on the label.</small>
+        </label>
+        <p class="bb-help"><a href="{{ url_for('best_by_route') }}">Switch to date-offset mode</a></p>
+    {% else %}
+        <p class="bb-help">Generate and print a Best By label offset from a chosen base date. The <code>baseDate</code>, <code>offset</code>, and <code>print</code> query parameters are all supported on <code>/bb</code>. Set <code>?text=Your+Message</code> to switch into custom-text mode.</p>
+        <label for="baseDate">
+            Base date (YYYY-MM-DD, optional)
+            <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}">
+        </label>
+        <label for="delta">
+            Offset (days, weeks, months, or years)
+            <input type="text" id="delta" name="Offset" value="{{ delta_value }}" placeholder="2 weeks">
+            <small>Example values: <code>2 weeks</code>, <code>10 days</code>, or <code>1 month</code>. Defaults to 2 weeks.</small>
+        </label>
+        <p class="bb-help">Best By date: <strong>{{ best_by_date }}</strong> ({{ delta_label }} from {{ base_date_value }}). Press enter to refresh the previews.</p>
+    {% endif %}
 {% endblock %}
 
 {% block preview_area %}
@@ -81,17 +91,25 @@ Best By Label
         <div class="bb-preview-grid">
             <article class="bb-preview-card">
                 <div class="bb-preview-meta">
-                    <h4>Best By label</h4>
-                    <p>Best By: <strong>{{ best_by_date }}</strong></p>
+                    <h4>{% if text_mode %}Text label{% else %}Best By label{% endif %}</h4>
+                    {% if text_mode %}
+                        <p>Text: <strong>{{ text_value }}</strong></p>
+                    {% else %}
+                        <p>Best By: <strong>{{ best_by_date }}</strong></p>
+                    {% endif %}
                 </div>
                 <button type="button"
                         class="bb-preview-trigger"
                         data-print-url="{{ print_url }}"
                         data-include-qr="false"
-                        aria-label="Print Best By label for {{ best_by_date }}">
+                        aria-label="{% if text_mode %}Print Best By label for text {{ text_value }}{% else %}Print Best By label for {{ best_by_date }}{% endif %}">
                     <img src="{{ best_by_preview_url }}" alt="Preview of the Best By label">
                 </button>
-                <p class="bb-preview-note">Base date {{ base_date_value }}, offset <code>{{ delta_label }}</code>.</p>
+                {% if text_mode %}
+                    <p class="bb-preview-note">Text payload: <code>{{ text_value }}</code></p>
+                {% else %}
+                    <p class="bb-preview-note">Base date {{ base_date_value }}, offset <code>{{ delta_label }}</code>.</p>
+                {% endif %}
             </article>
             <article class="bb-preview-card">
                 <div class="bb-preview-meta">
@@ -123,15 +141,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = '{{ url_for("best_by_route", _external=True) }}';
     const baseInput = document.getElementById('baseDate');
     const deltaInput = document.getElementById('delta');
+    const textInput = document.getElementById('textValue');
     const previewButtons = Array.from(document.querySelectorAll('.bb-preview-trigger'));
     const todayIso = '{{ today_iso }}';
     const DEFAULT_DELTA = '2 weeks';
+    const textMode = {{ 'true' if text_mode else 'false' }};
 
     if (form) {
         form.method = 'get';
         form.action = baseUrl;
         if (baseInput && baseInput.name) {
             baseInput.dataset.defaultName = baseInput.name;
+        }
+        if (textInput && textInput.name) {
+            textInput.dataset.defaultName = textInput.name;
         }
         form.addEventListener('submit', () => {
             const normalizeField = (input, defaultValue) => {
@@ -145,6 +168,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     input.setAttribute('name', input.dataset.defaultName);
                 }
             };
+            if (textMode) {
+                normalizeField(textInput, '');
+                return;
+            }
             normalizeField(baseInput, todayIso);
         });
     }
@@ -154,13 +181,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (includePrint) {
             params.set('print', 'true');
         }
-        if (baseInput && baseInput.value && baseInput.value !== todayIso) {
-            params.set('baseDate', baseInput.value);
-        }
-        if (deltaInput && deltaInput.value) {
-            const trimmed = deltaInput.value.trim();
-            if (trimmed && trimmed.toLowerCase() !== DEFAULT_DELTA) {
-                params.set('offset', trimmed);
+        if (textMode) {
+            if (textInput) {
+                const trimmed = textInput.value.trim();
+                if (trimmed) {
+                    params.set('text', trimmed);
+                }
+            }
+        } else {
+            if (baseInput && baseInput.value && baseInput.value !== todayIso) {
+                params.set('baseDate', baseInput.value);
+            }
+            if (deltaInput && deltaInput.value) {
+                const trimmed = deltaInput.value.trim();
+                if (trimmed && trimmed.toLowerCase() !== DEFAULT_DELTA) {
+                    params.set('offset', trimmed);
+                }
             }
         }
         if (includeQr) {
@@ -203,6 +239,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let message = includeQr ? 'QR label sent.' : 'Best By label sent.';
         if (payload.best_by_date) {
             message += `\nBest By: ${payload.best_by_date}`;
+        }
+        if (payload.text) {
+            message += `\nText: ${payload.text}`;
         }
         if (metricsSummary) {
             message += `\nSize: ${metricsSummary}.`;

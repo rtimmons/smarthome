@@ -131,6 +131,24 @@ def _render_qr_label(*, qr_url: str, caption: str, template_slug: str) -> Image.
     return result
 
 
+def _render_text_label(*, text: str, template_slug: str) -> Image.Image:
+    if not text.strip():
+        raise ValueError("Text must not be empty.")
+    font = helper.load_font(size_points=FONT_POINTS)
+    text_width, text_height = _measure_text_size(text, font)
+    width_px = max(text_width + (HORIZONTAL_PADDING * 2), MIN_LENGTH_PX)
+    height_px = max(text_height + MARGIN_TOTAL_PX, text_height + 1)
+
+    renderer = helper.LabelDrawingHelper(width=width_px, height=height_px)
+    top = max((height_px - text_height) // 2, 0)
+    renderer.draw_centered_text(text=text, font=font, top=top)
+
+    result = renderer.finalize()
+    result.info["template_slug"] = template_slug
+    result.info["text"] = text
+    return result
+
+
 class Template(TemplateDefinition):
     def __init__(self) -> None:
         super().__init__()
@@ -162,6 +180,18 @@ class Template(TemplateDefinition):
                 printable_px=image.size,
                 tape_size_mm=bluey_label.LABEL_SPEC.tape_size_mm,
             )
+            return image
+
+        text_value = form_data.get_str("Text", "text")
+        if text_value:
+            normalized_text = " ".join(text_value.split())
+            image = _render_text_label(text=normalized_text, template_slug=self.slug)
+            self._last_spec = BrotherLabelSpec(
+                code=bluey_label.LABEL_SPEC.code,
+                printable_px=image.size,
+                tape_size_mm=bluey_label.LABEL_SPEC.tape_size_mm,
+            )
+            image.info["text"] = normalized_text
             return image
 
         base_date, best_by_date, delta_label = compute_best_by(form_data)
@@ -198,6 +228,7 @@ __all__ = [
     "compute_best_by",
     "describe_delta",
     "_qr_image",
+    "_render_text_label",
     "_resolve_base_date",
     "_parse_delta_string",
     "_resolve_delta",

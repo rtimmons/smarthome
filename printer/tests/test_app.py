@@ -720,6 +720,54 @@ def test_bb_endpoint_prints_qr_label_when_requested(test_environment: Tuple) -> 
     assert response.json["status"] == "sent"
     assert response.json["template"] in {"best_by", "bb_2_weeks"}
 
+def test_bb_endpoint_supports_text_mode_print(test_environment: Tuple) -> None:
+    _, _, flask_app, labels_dir, printer_output = test_environment
+    client = flask_app.test_client()
+
+    response = client.get(
+        "/bb",
+        query_string={"print": "true", "text": "Best+By+2025-12-01"},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json
+    assert payload["text"] == "Best By 2025-12-01"
+    assert "best_by_date" not in payload
+    assert printer_output.exists()
+    assert not list(labels_dir.glob("*.png"))
+
+
+def test_bb_endpoint_rejects_text_and_date_mix(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get(
+        "/bb",
+        query_string={"text": "Custom", "baseDate": "2025-02-10"},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 400
+    assert "Text cannot be combined" in response.json["error"]
+
+
+def test_bb_page_switches_to_text_mode(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get("/bb", query_string={"text": "Alpha+Beta"})
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert 'id="textValue"' in body
+    assert 'id="baseDate"' not in body
+    print_url = _extract_print_url_page(body)
+    parsed = urlparse(print_url)
+    params = dict(parse_qsl(parsed.query))
+    assert params["text"] == "Alpha Beta"
+    assert params["print"] == "true"
+
 
 def test_print_cools_down_after_jobs(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch

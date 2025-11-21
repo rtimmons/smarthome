@@ -118,23 +118,32 @@ def create_app() -> Flask:
             form_data = _best_by_form_data_from_request()
         except LabelPayloadError as exc:
             return jsonify({"error": str(exc)}), exc.status_code
+        text_value = _best_by_text_value(form_data)
         wants_print = _is_truthy(request.args.get("print"))
         wants_qr_label = _is_truthy(request.args.get("qr_label"))
         print_params = _best_by_print_params(form_data)
         print_url = url_for("best_by_route", _external=True, **print_params)
         if wants_print:
             config = PrinterConfig.from_env()
+            qr_url = print_url if wants_qr_label else None
+            if text_value:
+                qr_text = f"Print: {text_value}" if wants_qr_label else None
+                return _send_best_by_print(
+                    form_data=form_data,
+                    config=config,
+                    qr_url=qr_url,
+                    qr_text=qr_text,
+                )
             try:
                 base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
             except ValueError as exc:
                 return jsonify({"error": str(exc)}), 400
             has_custom = len(print_params) > 1
             qr_text = "Print" if not has_custom else f"Print Best By +{delta_label.title()}"
-            qr_url = print_url
             return _send_best_by_print(
                 form_data=form_data,
                 config=config,
-                qr_url=qr_url if wants_qr_label else None,
+                qr_url=qr_url,
                 qr_text=qr_text if wants_qr_label else None,
                 base_date=base_date,
                 best_by_date=best_by_date,
@@ -353,6 +362,8 @@ def _best_by_form_data_from_request() -> TemplateFormData:
             ("delta", "Delta"),
             ("Offset", "Delta"),
             ("offset", "Delta"),
+            ("Text", "Text"),
+            ("text", "Text"),
         ):
             if key in payload and canonical not in data:
                 value = payload[key]
@@ -370,11 +381,20 @@ def _best_by_form_data_from_request() -> TemplateFormData:
         ("Delta", "Delta"),
         ("offset", "Delta"),
         ("Offset", "Delta"),
+        ("text", "Text"),
+        ("Text", "Text"),
     ):
         candidate = request.args.get(key)
         if candidate and canonical not in data:
             data[canonical] = candidate
-    return TemplateFormData(data)
+    form_data = TemplateFormData(data)
+    text_value = _best_by_text_value(form_data)
+    if text_value:
+        has_base = bool(form_data.get_str("BaseDate", "base_date"))
+        has_delta = bool(form_data.get_str("Delta", "delta"))
+        if has_base or has_delta:
+            raise LabelPayloadError("Text cannot be combined with base/offset dates.")
+    return _normalized_best_by_form(form_data)
 
 
 def _best_by_template() -> label_templates.LabelTemplate:
@@ -400,12 +420,33 @@ def _delta_param_name_from_request(default: str = "offset") -> str:
     return default
 
 
+def _best_by_text_value(form_data: TemplateFormData) -> str:
+    raw = form_data.get_str("Text", "text")
+    decoded = raw.replace("+", " ")
+    return " ".join(decoded.split())
+
+
+def _normalized_best_by_form(form_data: TemplateFormData) -> TemplateFormData:
+    text_value = _best_by_text_value(form_data)
+    if not text_value:
+        return form_data
+    data = dict(form_data.items())
+    data["Text"] = text_value
+    return TemplateFormData(data)
+
+
 def _best_by_print_params(
     form_data: TemplateFormData,
     *,
     include_qr_label: bool = False,
 ) -> dict[str, str]:
     params: dict[str, str] = {"print": "true"}
+    text_value = _best_by_text_value(form_data)
+    if text_value:
+        params["text"] = text_value
+        if include_qr_label:
+            params["qr_label"] = "true"
+        return params
     raw_request_keys = _request_arg_keys_lower()
     base_date_raw = form_data.get_str("BaseDate", "base_date")
     if base_date_raw:
@@ -432,11 +473,17 @@ def _best_by_print_params(
 
 def _render_best_by_page(form_data: TemplateFormData):
     template_ref = _best_by_template()
-    try:
-        base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
+    text_value = _best_by_text_value(form_data)
+    text_mode = bool(text_value)
+    base_date: Optional[date] = None
+    best_by_date: Optional[date] = None
+    delta_label: str = best_by.DEFAULT_DELTA_LABEL
     delta_value = form_data.get_str("Delta", "delta") or best_by.DEFAULT_DELTA_LABEL
+    if not text_mode:
+        try:
+            base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
     print_params = _best_by_print_params(form_data)
     print_url = url_for("best_by_route", _external=True, **print_params)
     qr_print_url = url_for(
@@ -444,14 +491,19 @@ def _render_best_by_page(form_data: TemplateFormData):
         _external=True,
         **_best_by_print_params(form_data, include_qr_label=True),
     )
-    qr_caption = f"Print Best By +{delta_label.title()}"
+    qr_caption = f"Print: {text_value}" if text_mode else f"Print Best By +{delta_label.title()}"
 
+    normalized_form = _normalized_best_by_form(form_data)
     try:
-        base_label_preview = template_ref.render(form_data)
+        base_label_preview = template_ref.render(normalized_form)
         qr_label_preview_data = _data_url_for_image(
             template_ref.render(
                 TemplateFormData(
-                    {**dict(form_data.items()), "QrUrl": print_url, "QrText": qr_caption}
+                    {
+                        **dict(normalized_form.items()),
+                        "QrUrl": print_url,
+                        "QrText": qr_caption,
+                    }
                 )
             )
         )
@@ -459,15 +511,18 @@ def _render_best_by_page(form_data: TemplateFormData):
         return jsonify({"error": str(exc)}), 400
     today_iso = best_by._today().isoformat()
     best_by_preview_url = _data_url_for_image(base_label_preview)
+    base_date_value = base_date.isoformat() if base_date else today_iso
+    best_by_date_value = best_by_date.strftime("%Y-%m-%d") if best_by_date else ""
 
     return render_template(
         template_ref.form_template,
         templates=label_templates.all_templates(),
         active_template=template_ref,
         form_context=template_ref.form_context(),
-        base_date_value=base_date.isoformat(),
+        base_date_value=base_date_value,
         delta_value=delta_value,
-        best_by_date=best_by_date.strftime("%Y-%m-%d"),
+        best_by_date=best_by_date_value,
+        text_value=text_value,
         print_url=print_url,
         qr_print_url=qr_print_url,
         qr_label_preview_url=qr_label_preview_data,
@@ -475,6 +530,7 @@ def _render_best_by_page(form_data: TemplateFormData):
         qr_caption=qr_caption,
         delta_label=delta_label,
         today_iso=today_iso,
+        text_mode=text_mode,
     )
 
 
@@ -488,15 +544,18 @@ def _send_best_by_print(
     best_by_date: Optional[date] = None,
     delta_label: Optional[str] = None,
 ):
-    try:
-        computed_base, computed_best_by, computed_delta = best_by.compute_best_by(form_data)
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    base_date = base_date or computed_base
-    best_by_date = best_by_date or computed_best_by
-    delta_label = delta_label or computed_delta
+    text_value = _best_by_text_value(form_data)
+    if not text_value:
+        try:
+            computed_base, computed_best_by, computed_delta = best_by.compute_best_by(form_data)
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        base_date = base_date or computed_base
+        best_by_date = best_by_date or computed_best_by
+        delta_label = delta_label or computed_delta
 
-    payload_data = dict(form_data.items())
+    normalized_form = _normalized_best_by_form(form_data)
+    payload_data = dict(normalized_form.items())
     if qr_url:
         payload_data["QrUrl"] = qr_url
     if qr_text:
@@ -525,11 +584,19 @@ def _send_best_by_print(
     response_payload.update(
         {
             "template": template_ref.slug,
-            "best_by_date": best_by_date.strftime("%Y-%m-%d"),
-            "base_date": base_date.strftime("%Y-%m-%d"),
-            "delta": delta_label,
         }
     )
+    if text_value:
+        response_payload["text"] = text_value
+    else:
+        assert best_by_date is not None and base_date is not None and delta_label is not None
+        response_payload.update(
+            {
+                "best_by_date": best_by_date.strftime("%Y-%m-%d"),
+                "base_date": base_date.strftime("%Y-%m-%d"),
+                "delta": delta_label,
+            }
+        )
     return jsonify(response_payload)
 
 

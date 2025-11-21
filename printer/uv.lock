@@ -438,6 +438,7 @@ dependencies = [
     { name = "pillow" },
     { name = "pytest" },
     { name = "python-escpos" },
+    { name = "qrcode" },
 ]
 
 [package.metadata]
@@ -448,6 +449,7 @@ requires-dist = [
     { name = "pillow", specifier = ">=9.5,<10" },
     { name = "pytest" },
     { name = "python-escpos" },
+    { name = "qrcode" },
 ]
 
 [[package]]
