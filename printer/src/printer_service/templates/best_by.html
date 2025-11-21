@@ -1,0 +1,225 @@
+{% extends "base.html" %}
+
+{% block form_attributes %}data-disable-default-handlers="true"{% endblock %}
+
+{% block form_heading %}
+Best By Label
+{% endblock %}
+
+{% block form_fields %}
+    <style>
+        .bb-help {
+            color: #3a3d52;
+        }
+        .bb-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .bb-preview-card {
+            border: 1px solid #dce2f1;
+            border-radius: 10px;
+            padding: 0.9rem;
+            background: linear-gradient(160deg, #f6f8ff 0%, #eef3ff 100%);
+            box-shadow: 0 6px 16px rgba(24, 50, 100, 0.06);
+            display: grid;
+            gap: 0.6rem;
+        }
+        .bb-preview-meta h4 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+        .bb-preview-meta p {
+            margin: 0.15rem 0 0;
+            color: #4a4c5f;
+        }
+        .bb-preview-trigger {
+            background: none;
+            border: 1px dashed #9bb5ee;
+            border-radius: 8px;
+            padding: 0.35rem;
+            cursor: pointer;
+            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+        }
+        .bb-preview-trigger:hover,
+        .bb-preview-trigger:focus-visible {
+            border-color: #1b73e7;
+            box-shadow: 0 0 0 4px rgba(27, 115, 231, 0.15);
+            transform: translateY(-2px);
+        }
+        .bb-preview-trigger img {
+            display: block;
+            width: 100%;
+            height: auto;
+            max-height: clamp(260px, 50vh, 420px);
+            background-color: #fff;
+            border-radius: 6px;
+        }
+        .bb-preview-note {
+            margin: 0;
+            color: #4a4c5f;
+            word-break: break-all;
+        }
+    </style>
+    <p class="bb-help">Generate and print a Best By label offset from a chosen base date. The <code>baseDate</code>, <code>offset</code>, and <code>print</code> query parameters are all supported on <code>/bb</code>.</p>
+    <label for="baseDate">
+        Base date (YYYY-MM-DD, optional)
+        <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}">
+    </label>
+    <label for="delta">
+        Offset (days, weeks, months, or years)
+        <input type="text" id="delta" name="Offset" value="{{ delta_value }}" placeholder="2 weeks">
+        <small>Example values: <code>2 weeks</code>, <code>10 days</code>, or <code>1 month</code>. Defaults to 2 weeks.</small>
+    </label>
+    <p class="bb-help">Best By date: <strong>{{ best_by_date }}</strong> ({{ delta_label }} from {{ base_date_value }}). Press enter to refresh the previews.</p>
+{% endblock %}
+
+{% block preview_area %}
+    <section id="bbPreviewPanel" class="preview" aria-live="polite">
+        <h3>Preview</h3>
+        <p class="preview-status">Click a preview to send it to the printer directly.</p>
+        <div class="bb-preview-grid">
+            <article class="bb-preview-card">
+                <div class="bb-preview-meta">
+                    <h4>Best By label</h4>
+                    <p>Best By: <strong>{{ best_by_date }}</strong></p>
+                </div>
+                <button type="button"
+                        class="bb-preview-trigger"
+                        data-print-url="{{ print_url }}"
+                        data-include-qr="false"
+                        aria-label="Print Best By label for {{ best_by_date }}">
+                    <img src="{{ best_by_preview_url }}" alt="Preview of the Best By label">
+                </button>
+                <p class="bb-preview-note">Base date {{ base_date_value }}, offset <code>{{ delta_label }}</code>.</p>
+            </article>
+            <article class="bb-preview-card">
+                <div class="bb-preview-meta">
+                    <h4>QR label</h4>
+                    <p>{{ qr_caption }}</p>
+                </div>
+                <button type="button"
+                        class="bb-preview-trigger"
+                        data-print-url="{{ qr_print_url }}"
+                        data-include-qr="true"
+                        aria-label="Print QR label that triggers the Best By label">
+                    <img src="{{ qr_label_preview_url }}" alt="Preview of the QR code label">
+                </button>
+                <p class="bb-preview-note">QR targets <code>{{ print_url }}</code></p>
+                <p class="bb-preview-note">Print URL: <code>{{ print_url }}</code></p>
+            </article>
+        </div>
+    </section>
+{% endblock %}
+
+{% block form_actions %}
+<p>This template prints directly from the previews; labels are not persisted to the gallery.</p>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const form = document.getElementById('labelForm');
+    const baseUrl = '{{ url_for("best_by_route", _external=True) }}';
+    const baseInput = document.getElementById('baseDate');
+    const deltaInput = document.getElementById('delta');
+    const previewButtons = Array.from(document.querySelectorAll('.bb-preview-trigger'));
+    const todayIso = '{{ today_iso }}';
+    const DEFAULT_DELTA = '2 weeks';
+
+    if (form) {
+        form.method = 'get';
+        form.action = baseUrl;
+        if (baseInput && baseInput.name) {
+            baseInput.dataset.defaultName = baseInput.name;
+        }
+        form.addEventListener('submit', () => {
+            const normalizeField = (input, defaultValue) => {
+                if (!input) {
+                    return;
+                }
+                const trimmed = input.value.trim();
+                if (!trimmed || trimmed === defaultValue) {
+                    input.removeAttribute('name');
+                } else if (input.dataset.defaultName) {
+                    input.setAttribute('name', input.dataset.defaultName);
+                }
+            };
+            normalizeField(baseInput, todayIso);
+        });
+    }
+
+    function buildParams({ includePrint = false, includeQr = false } = {}) {
+        const params = new URLSearchParams();
+        if (includePrint) {
+            params.set('print', 'true');
+        }
+        if (baseInput && baseInput.value && baseInput.value !== todayIso) {
+            params.set('baseDate', baseInput.value);
+        }
+        if (deltaInput && deltaInput.value) {
+            const trimmed = deltaInput.value.trim();
+            if (trimmed && trimmed.toLowerCase() !== DEFAULT_DELTA) {
+                params.set('offset', trimmed);
+            }
+        }
+        if (includeQr) {
+            params.set('qr_label', 'true');
+        }
+        return params;
+    }
+
+    function buildUrl(options) {
+        const params = buildParams(options);
+        const query = params.toString();
+        return query ? `${baseUrl}?${query}` : baseUrl;
+    }
+
+    function bestPrintUrl(includeQr) {
+        const dataAttr = includeQr ? 'true' : 'false';
+        const button = previewButtons.find((node) => node.dataset.includeQr === dataAttr);
+        if (button && button.dataset.printUrl) {
+            return button.dataset.printUrl;
+        }
+        return buildUrl({ includePrint: true, includeQr });
+    }
+
+    async function sendPrint(includeQr) {
+        if (typeof requestJson !== 'function') {
+            window.alert('Printing helpers are unavailable.');
+            return;
+        }
+        const targetUrl = bestPrintUrl(includeQr);
+        const result = await requestJson(targetUrl);
+        if (!result.ok) {
+            window.alert(result.error || 'Unable to send this label to the printer.');
+            return;
+        }
+        const payload = result.data || {};
+        const warnings = typeof parseWarnings === 'function' ? parseWarnings(payload) : [];
+        const metricsSummary = typeof formatMetricsSummary === 'function'
+            ? formatMetricsSummary(payload.metrics)
+            : '';
+        let message = includeQr ? 'QR label sent.' : 'Best By label sent.';
+        if (payload.best_by_date) {
+            message += `\nBest By: ${payload.best_by_date}`;
+        }
+        if (metricsSummary) {
+            message += `\nSize: ${metricsSummary}.`;
+        }
+        if (warnings.length) {
+            message += `\n\nWarnings:\n- ${warnings.join('\n- ')}`;
+        }
+        window.alert(message);
+    }
+
+    previewButtons.forEach((button) => {
+        button.addEventListener('click', (event) => {
+            event.preventDefault();
+            const includeQr = button.dataset.includeQr === 'true';
+            sendPrint(includeQr);
+        });
+    });
+});
+</script>
+{% endblock %}

@@ -190,18 +190,20 @@
     <main>
         <section>
             <h2>{% block form_heading %}{{ active_template.display_name }}{% endblock %}</h2>
-            <form id="labelForm" data-template="{{ active_template.slug }}">
+            <form id="labelForm" data-template="{{ active_template.slug }}" {% block form_attributes %}{% endblock %}>
                 <div class="form-grid">
                     <div class="form-fields">
                         {% block form_fields %}{% endblock %}
                     </div>
-                    <section id="previewContainer" class="preview" aria-live="polite">
-                        <h3>Preview</h3>
-                        <div class="preview-frame">
-                            <p id="livePreviewStatus" class="preview-status">Start filling out the form to see your label.</p>
-                            <img id="livePreviewImage" class="preview-image" src="" alt="Live label preview" hidden>
-                        </div>
-                    </section>
+                    {% block preview_area %}
+                        <section id="previewContainer" class="preview" aria-live="polite">
+                            <h3>Preview</h3>
+                            <div class="preview-frame">
+                                <p id="livePreviewStatus" class="preview-status">Start filling out the form to see your label.</p>
+                                <img id="livePreviewImage" class="preview-image" src="" alt="Live label preview" hidden>
+                            </div>
+                        </section>
+                    {% endblock %}
                 </div>
                 {% block form_actions %}
                 <button type="submit">Save Label</button>
@@ -214,5 +216,6 @@
         </section>
     </main>
     <script src="{{ url_for('static', filename='app.js') }}" defer></script>
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

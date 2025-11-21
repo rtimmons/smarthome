@@ -1,5 +1,6 @@
 const labelsContainer = document.getElementById('labels');
 const form = document.getElementById('labelForm');
+const disableDefaultFormHandlers = !!(form && form.dataset.disableDefaultHandlers === 'true');
 const previewContainer = document.getElementById('previewContainer');
 const previewImage = document.getElementById('livePreviewImage');
 const previewStatus = document.getElementById('livePreviewStatus');
@@ -245,7 +246,7 @@ function setPreviewLoading() {
 }
 
 async function requestPreview() {
-    if (!form || !previewContainer) {
+    if (!form || !previewContainer || disableDefaultFormHandlers) {
         return;
     }
     const payload = buildTemplatePayload();
@@ -372,7 +373,7 @@ async function requestPreview() {
 }
 
 function schedulePreview() {
-    if (!form) {
+    if (!form || disableDefaultFormHandlers) {
         return;
     }
     if (previewTimerId) {
@@ -438,7 +439,7 @@ async function refreshLabels() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (form) {
+    if (form && !disableDefaultFormHandlers) {
         form.addEventListener('submit', handleSubmit);
         form.addEventListener('input', schedulePreview);
         form.addEventListener('change', schedulePreview);
@@ -446,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (labelsContainer) {
         refreshLabels();
     }
-    if (form && previewContainer) {
+    if (form && previewContainer && !disableDefaultFormHandlers) {
         schedulePreview();
     }
 });

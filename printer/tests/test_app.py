@@ -1,12 +1,15 @@
 from __future__ import annotations
 
+import html
 import importlib
 import io
+import re
 import sys
 import types
 from datetime import date
 from pathlib import Path
 from typing import Tuple
+from urllib.parse import parse_qsl, urlparse
 
 import pytest
 from PIL import Image, ImageDraw, ImageFont
@@ -62,6 +65,12 @@ def test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     app_module = importlib.reload(app_module)
     flask_app = app_module.create_app()
     return app_module, templates_module, flask_app, labels_dir, printer_output
+
+
+def _extract_print_url_page(body: str) -> str:
+    match = re.search(r"Print URL:\s*<code>([^<]+)</code>", body, flags=re.IGNORECASE)
+    assert match is not None
+    return html.unescape(match.group(1))
 
 
 def test_create_label_persists_file_and_lists_recent(
@@ -172,7 +181,7 @@ def test_print_existing_label_invokes_dispatch(
     app_module, templates_module, flask_app, labels_dir, _ = test_environment
     client = flask_app.test_client()
 
-    template_slug = templates_module.default_template().slug
+    template_slug = templates_module.get_template("kitchen_label_printer").slug
     create = client.post(
         "/labels",
         json={"template": template_slug, "data": {"line1": "Batch"}},
@@ -402,10 +411,10 @@ def test_send_to_brother_normalizes_network_scheme(monkeypatch: pytest.MonkeyPat
     assert fake_calls["uri"] == "tcp://192.168.1.50:9100"
 
 
-def test_bb2w_dispatch_uses_supported_brother_code(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_best_by_dispatch_uses_supported_brother_code(monkeypatch: pytest.MonkeyPatch) -> None:
     label_module = importlib.reload(importlib.import_module("printer_service.label"))
-    bb2w_module = importlib.import_module("printer_service.label_templates.bb_2_weeks")
-    monkeypatch.setattr(bb2w_module, "_today", lambda: date(2025, 11, 17))
+    best_by_module = importlib.import_module("printer_service.label_templates.best_by")
+    monkeypatch.setattr(best_by_module, "_today", lambda: date(2025, 11, 17))
 
     observed = {}
 
@@ -441,7 +450,7 @@ def test_bb2w_dispatch_uses_supported_brother_code(monkeypatch: pytest.MonkeyPat
     monkeypatch.setitem(sys.modules, "brother_ql.conversion", conversion_module)
     monkeypatch.setitem(sys.modules, "brother_ql.raster", raster_module)
 
-    template = importlib.reload(bb2w_module).TEMPLATE
+    template = importlib.reload(best_by_module).TEMPLATE
     image = template.render(TemplateFormData({}))
     target_spec = template.preferred_label_spec()
 
@@ -452,7 +461,7 @@ def test_bb2w_dispatch_uses_supported_brother_code(monkeypatch: pytest.MonkeyPat
 
     label_module.dispatch_image(image, config, target_spec=target_spec)
 
-    assert observed["label_code"] == bb2w_module.bluey_label.LABEL_SPEC.code
+    assert observed["label_code"] == best_by_module.bluey_label.LABEL_SPEC.code
 
 
 def test_analyze_label_image_honors_target_spec_override() -> None:
@@ -538,16 +547,18 @@ def test_print_uses_stored_label_spec_metadata(test_environment: Tuple) -> None:
     assert not payload.get("warnings")
 
 
-def test_bb2w_endpoint_creates_and_prints_label(
+def test_bb_endpoint_creates_and_prints_label(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _, _, flask_app, labels_dir, printer_output = test_environment
     client = flask_app.test_client()
 
-    bb2w_module = importlib.import_module("printer_service.label_templates.bb_2_weeks")
-    monkeypatch.setattr(bb2w_module, "_today", lambda: date(2025, 11, 17))
+    best_by_module = importlib.import_module("printer_service.label_templates.best_by")
+    monkeypatch.setattr(best_by_module, "_today", lambda: date(2025, 11, 17))
 
-    response = client.post("/bb2w", headers={"Accept": "application/json"})
+    response = client.get(
+        "/bb", query_string={"print": "true"}, headers={"Accept": "application/json"}
+    )
 
     assert response.status_code == 200
     payload = response.json
@@ -565,36 +576,171 @@ def test_bb2w_endpoint_creates_and_prints_label(
     assert metrics["height_px"] >= min_height
     assert metrics["width_px"] >= min_width
     assert metrics["fits_target"] is True
-
-    label_info = payload["label"]
-    stored_path = labels_dir / label_info["name"]
-    assert stored_path.exists()
+    assert not list(labels_dir.glob("*.png"))
     assert printer_output.exists()
 
 
-def test_bb2w_endpoint_accepts_base_date_override(test_environment: Tuple) -> None:
-    _, _, flask_app, _, _ = test_environment
+def test_bb_endpoint_accepts_base_date_override(test_environment: Tuple) -> None:
+    _, _, flask_app, labels_dir, printer_output = test_environment
     client = flask_app.test_client()
 
-    response = client.post(
-        "/bb2w",
-        json={"base_date": "2025-02-10"},
+    response = client.get(
+        "/bb",
+        query_string={"print": "true", "baseDate": "2025-02-10"},
         headers={"Accept": "application/json"},
     )
 
     assert response.status_code == 200
     assert response.json["best_by_date"] == "2025-02-24"
+    assert printer_output.exists()
+    assert not list(labels_dir.glob("*.png"))
 
 
-def test_bb2w_endpoint_rejects_invalid_base_date(test_environment: Tuple) -> None:
+def test_bb_endpoint_accepts_delta_override(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
     _, _, flask_app, _, _ = test_environment
     client = flask_app.test_client()
 
-    response = client.post(
-        "/bb2w",
-        json={"BaseDate": "invalid-date"},
+    best_by_module = importlib.import_module("printer_service.label_templates.best_by")
+    monkeypatch.setattr(best_by_module, "_today", lambda: date(2025, 5, 1))
+
+    response = client.get(
+        "/bb",
+        query_string={"print": "true", "delta": "3 weeks"},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    assert response.json["best_by_date"] == "2025-05-22"
+
+
+def test_bb2w_route_remains_supported(test_environment: Tuple) -> None:
+    _, _, flask_app, labels_dir, printer_output = test_environment
+    client = flask_app.test_client()
+
+    response = client.post("/bb2w", headers={"Accept": "application/json"})
+    assert response.status_code == 200
+    assert response.json["status"] == "sent"
+    assert response.json["template"] in {"best_by", "bb_2_weeks"}
+    assert printer_output.exists()
+    assert not list(labels_dir.glob("*.png"))
+
+
+def test_bb_endpoint_rejects_invalid_base_date(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get(
+        "/bb",
+        query_string={"print": "true", "BaseDate": "invalid-date"},
         headers={"Accept": "application/json"},
     )
 
     assert response.status_code == 400
     assert "BaseDate" in response.json["error"]
+
+
+def test_bb_page_print_url_excludes_default_params(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get("/bb")
+
+    assert response.status_code == 200
+    print_url = _extract_print_url_page(response.get_data(as_text=True))
+    parsed = urlparse(print_url)
+    params = dict(parse_qsl(parsed.query))
+
+    assert params == {"print": "true"}
+
+
+def test_bb_page_print_url_includes_explicit_params(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get(
+        "/bb",
+        query_string={"baseDate": "2025-02-10", "delta": "1 month"},
+    )
+
+    assert response.status_code == 200
+    print_url = _extract_print_url_page(response.get_data(as_text=True))
+    parsed = urlparse(print_url)
+    params = dict(parse_qsl(parsed.query))
+
+    assert params["print"] == "true"
+    assert params["baseDate"] == "2025-02-10"
+    assert params["delta"] == "1 month"
+
+
+def test_bb_page_respects_offset_alias_in_print_url(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get("/bb", query_string={"offset": "2 weeks"})
+
+    assert response.status_code == 200
+    print_url = _extract_print_url_page(response.get_data(as_text=True))
+    parsed = urlparse(print_url)
+    params = dict(parse_qsl(parsed.query))
+
+    assert params["print"] == "true"
+    assert params["offset"] == "2 weeks"
+
+
+def test_bb_page_renders_dual_previews(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    best_by_module = importlib.import_module("printer_service.label_templates.best_by")
+    monkeypatch.setattr(best_by_module, "_today", lambda: date(2025, 11, 20))
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get("/bb")
+
+    assert response.status_code == 200
+    body = response.get_data(as_text=True)
+    assert "2025-12-04" in body
+    images = re.findall(r"src=\"(data:image/png;base64,[^\"]+)\"", body)
+    assert len(images) >= 2
+
+
+def test_bb_endpoint_prints_qr_label_when_requested(test_environment: Tuple) -> None:
+    _, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    response = client.get(
+        "/bb",
+        query_string={"print": "true", "qr_label": "true"},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    assert response.json["status"] == "sent"
+    assert response.json["template"] in {"best_by", "bb_2_weeks"}
+
+
+def test_print_cools_down_after_jobs(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, _, flask_app, _, _ = test_environment
+    client = flask_app.test_client()
+
+    current_time = {"value": 100.0}
+
+    def fake_now():
+        return current_time["value"]
+
+    monkeypatch.setattr(app_module, "_now", fake_now)
+    app_module._last_print_at = None
+
+    first = client.get("/bb", query_string={"print": "true"})
+    assert first.status_code == 200
+
+    second = client.get("/bb", query_string={"print": "true"})
+    assert second.status_code == 429
+
+    current_time["value"] += app_module.PRINT_COOLDOWN_SECONDS + 0.1
+    third = client.get("/bb", query_string={"print": "true"})
+    assert third.status_code == 200

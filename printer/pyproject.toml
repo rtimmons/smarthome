@@ -10,6 +10,7 @@ dependencies = [
     "python-escpos",
     "pytest",
     "cairosvg",
+    "qrcode",
 ]
 
 [project.scripts]

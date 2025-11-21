@@ -16,7 +16,8 @@ from pkgutil import iter_modules
 from types import ModuleType
 from typing import Dict, List, Optional
 
-_INTERNAL_MODULES = {"base", "helper"}
+_INTERNAL_MODULES = {"base", "helper", "bb_2_weeks"}
+_ALIAS_SLUGS = {"bb_2_weeks": "best_by"}
 
 from PIL import Image
 
@@ -107,8 +108,9 @@ def all_templates() -> List[LabelTemplate]:
 
 def get_template(slug: str) -> LabelTemplate:
     """Return the template associated with ``slug``."""
+    resolved = _ALIAS_SLUGS.get(slug, slug)
     try:
-        return _TEMPLATES[slug]
+        return _TEMPLATES[resolved]
     except KeyError as exc:
         raise KeyError(f"Unknown template '{slug}'.") from exc
 
