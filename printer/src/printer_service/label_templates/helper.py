@@ -464,7 +464,11 @@ class LabelDrawingHelper:
         font: FontType,
         side_margin: int = 0,
         vertical_margin: int = 0,
+        top_margin: int | None = None,
+        bottom_margin: int | None = None,
         spacing: int = 0,
+        min_top_y: int | None = None,
+        center: bool = True,
         width_warning: str | None = None,
     ) -> None:
         """Draw rotated ``text`` along both edges, repeating down the label."""
@@ -481,13 +485,29 @@ class LabelDrawingHelper:
         left_mask = mask.rotate(90, expand=True)
         right_mask = mask.rotate(-90, expand=True)
 
-        available_height = max(0, self._height - (vertical_margin * 2))
-        positions = _centered_repeat_positions(
-            available_height=available_height,
-            block_height=left_mask.height,
-            spacing=spacing,
-            top_offset=vertical_margin,
-        )
+        top_gap = vertical_margin if top_margin is None else top_margin
+        if min_top_y is not None and min_top_y > top_gap:
+            top_gap = min_top_y
+        bottom_gap = vertical_margin if bottom_margin is None else bottom_margin
+        available_height = max(0, self._height - top_gap - bottom_gap)
+        if not center:
+            positions: list[int] = []
+            current = top_gap
+            block_and_spacing = left_mask.height + spacing
+            while available_height >= left_mask.height and current + left_mask.height <= (
+                top_gap + available_height
+            ):
+                positions.append(current)
+                current += block_and_spacing
+                if current > top_gap + available_height:
+                    break
+        else:
+            positions = _centered_repeat_positions(
+                available_height=available_height,
+                block_height=left_mask.height,
+                spacing=spacing,
+                top_offset=top_gap,
+            )
 
         left_x = side_margin
         right_x = self._width - side_margin - right_mask.width

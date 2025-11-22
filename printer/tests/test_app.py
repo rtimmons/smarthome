@@ -30,6 +30,30 @@ BLUEY_EXPECTED_WIDTH_IN = bluey_module.LABEL_HEIGHT_IN
 BLUEY_EXPECTED_HEIGHT_IN = bluey_module.LABEL_WIDTH_IN
 
 
+def _count_runs(strip: Image.Image) -> int:
+    width, height = strip.size
+    pixels = strip.load()
+    assert pixels is not None
+    has_ink = []
+    for y in range(height):
+        row_has_ink = False
+        for x in range(width):
+            if pixels[x, y] == 0:
+                row_has_ink = True
+                break
+        has_ink.append(row_has_ink)
+
+    runs = 0
+    in_run = False
+    for row_has_ink in has_ink:
+        if row_has_ink and not in_run:
+            runs += 1
+            in_run = True
+        elif not row_has_ink and in_run:
+            in_run = False
+    return runs
+
+
 def _build_test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Create an isolated app instance with temporary storage."""
     labels_dir = tmp_path / "labels"
@@ -308,35 +332,40 @@ def test_bluey_initials_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> N
 
     image = bluey_template.render(TemplateFormData({"Initials": "ABC"}))
 
-    def count_runs(strip: Image.Image) -> int:
-        width, height = strip.size
-        pixels = strip.load()
-        assert pixels is not None
-        has_ink = []
-        for y in range(height):
-            row_has_ink = False
-            for x in range(width):
-                if pixels[x, y] == 0:
-                    row_has_ink = True
-                    break
-            has_ink.append(row_has_ink)
-
-        runs = 0
-        in_run = False
-        for row_has_ink in has_ink:
-            if row_has_ink and not in_run:
-                runs += 1
-                in_run = True
-            elif not row_has_ink and in_run:
-                in_run = False
-        return runs
-
     strip_width = 80
-    left_runs = count_runs(image.crop((0, 0, strip_width, image.height)))
-    right_runs = count_runs(image.crop((image.width - strip_width, 0, image.width, image.height)))
+    left_runs = _count_runs(image.crop((0, 0, strip_width, image.height)))
+    right_runs = _count_runs(image.crop((image.width - strip_width, 0, image.width, image.height)))
 
     assert left_runs == right_runs
     assert left_runs >= 4
+
+
+def test_bluey_initials_clip_count_when_title_is_wide(monkeypatch: pytest.MonkeyPatch) -> None:
+    helper_module = importlib.import_module("printer_service.label_templates.helper")
+    bluey_template = importlib.reload(
+        importlib.import_module("printer_service.label_templates.bluey_label_2")
+    ).TEMPLATE
+
+    monkeypatch.setattr(helper_module, "load_font", lambda size_points: ImageFont.load_default())
+    monkeypatch.setattr(helper_module, "draw_background_symbol", lambda *args, **kwargs: None)
+
+    strip_width = 80
+    narrow_image = bluey_template.render(
+        TemplateFormData({"Line1": "Foo", "Line2": "Bar", "Initials": "FP"})
+    )
+    narrow_runs = _count_runs(narrow_image.crop((0, 0, strip_width, narrow_image.height)))
+
+    wide_image = bluey_template.render(
+        TemplateFormData({"Line1": "W" * 140, "Line2": "Bar", "Initials": "FP"})
+    )
+    wide_runs_left = _count_runs(wide_image.crop((0, 0, strip_width, wide_image.height)))
+    wide_runs_right = _count_runs(
+        wide_image.crop((wide_image.width - strip_width, 0, wide_image.width, wide_image.height))
+    )
+
+    assert wide_runs_left == wide_runs_right
+    assert wide_runs_left >= 1
+    assert wide_runs_left < narrow_runs
 
 
 @pytest.mark.parametrize("bluey_slug", ["bluey_label", "bluey_label_2"])

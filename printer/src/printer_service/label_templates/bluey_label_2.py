@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import helper as helper
@@ -86,8 +86,11 @@ class Template(TemplateDefinition):
         title_font = helper.load_font(size_points=TITLE_FONT_POINTS)
         initials_font = helper.load_font(size_points=INITIALS_FONT_POINTS)
         date_font = helper.load_font(size_points=DATE_FONT_POINTS)
+        max_title_width = 0
 
         if line1:
+            line1_metrics = renderer.measure_text(text=line1, font=title_font)
+            max_title_width = max(max_title_width, line1_metrics.width)
             renderer.draw_centered_text(
                 text=line1,
                 font=title_font,
@@ -97,6 +100,8 @@ class Template(TemplateDefinition):
         if line2:
             if line1:
                 renderer.advance(LINE2_OFFSET)
+            line2_metrics = renderer.measure_text(text=line2, font=title_font)
+            max_title_width = max(max_title_width, line2_metrics.width)
             renderer.draw_centered_text(
                 text=line2,
                 font=title_font,
@@ -107,11 +112,33 @@ class Template(TemplateDefinition):
         renderer.advance(SYMBOL_SECTION_SPACING)
 
         if initials:
+            initials_top_margin: Optional[int] = None
+            initials_min_top: Optional[int] = None
+            initials_center = True
+            bbox = renderer.draw.textbbox((0, 0), initials, font=initials_font)
+            text_width = int(round(bbox[2] - bbox[0]))
+            text_height = int(round(bbox[3] - bbox[1]))
+            if text_width > 0 and text_height > 0:
+                mask = Image.new("L", (text_width, text_height), color=0)
+                mask_draw = ImageDraw.Draw(mask)
+                mask_draw.text((-bbox[0], -bbox[1]), initials, font=initials_font, fill=255)
+                left_mask = mask.rotate(90, expand=True)
+                initials_footprint = INITIALS_SIDE_MARGIN + left_mask.width
+                remaining_width = CANVAS_WIDTH_PX - (2 * initials_footprint)
+                should_clip = max_title_width > remaining_width
+                if should_clip:
+                    safe_top = max(INITIALS_VERTICAL_MARGIN, renderer.current_y)
+                    initials_top_margin = safe_top
+                    initials_min_top = safe_top
+                    initials_center = False
             renderer.draw_repeating_side_text(
                 text=initials,
                 font=initials_font,
                 side_margin=INITIALS_SIDE_MARGIN,
                 vertical_margin=INITIALS_VERTICAL_MARGIN,
+                top_margin=initials_top_margin,
+                min_top_y=initials_min_top,
+                center=initials_center,
                 spacing=INITIALS_SIDE_SPACING,
                 width_warning="Initials are wider than the label and will be clipped.",
             )
