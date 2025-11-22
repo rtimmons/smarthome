@@ -385,7 +385,8 @@ export const scenes: SceneRegistry = {
       }
     ],
     switches: {
-      living_ledwall: "on"
+      living_ledwall: "on",
+      living_sillleftpower: "on"
     }
   },
 
@@ -454,7 +455,8 @@ export const scenes: SceneRegistry = {
       }
     ],
     switches: {
-      living_ledwall: "off"
+      living_ledwall: "off",
+      living_sillleftpower: "off"
     }
   },
 
@@ -473,7 +475,8 @@ export const scenes: SceneRegistry = {
       }
     ],
     switches: {
-      living_ledwall: "off"
+      living_ledwall: "off",
+      living_sillleftpower: "off"
     }
   },
 
@@ -538,7 +541,8 @@ export const scenes: SceneRegistry = {
       }
     ],
     switches: {
-      living_ledwall: "off"
+      living_ledwall: "off",
+      living_sillleftpower: "off"
     }
   },
 
