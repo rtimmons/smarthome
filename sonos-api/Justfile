@@ -1,7 +1,17 @@
+import "../tools/just/nvm.just"
+
 set shell := ["bash", "-lc"]
 
+setup:
+	{{nvm_use}}; \
+	npm install
+
+test:
+	{{nvm_use}}; \
+	npm run build
+
 ha-addon:
-    python ../tools/addon_builder.py build sonos-api
+	python ../tools/addon_builder.py build sonos-api
 
 deploy:
-    python ../tools/addon_builder.py deploy sonos-api
+	python ../tools/addon_builder.py deploy sonos-api

@@ -12,4 +12,11 @@ if ! command -v node >/dev/null 2>&1; then
     exit 1
 fi
 
-node "${CHECK_SCRIPT}"
+if ! node "${CHECK_SCRIPT}"; then
+    status=$?
+    if [ "$status" -eq 2 ]; then
+        echo "[node-sonos-http-api] UDP socket creation failed (likely sandboxed env); skipping multicast probe." >&2
+        exit 0
+    fi
+    exit "$status"
+fi

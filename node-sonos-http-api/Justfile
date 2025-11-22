@@ -1,7 +1,38 @@
+import "../tools/just/nvm.just"
+
 set shell := ["bash", "-lc"]
 
+setup:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd .. && pwd))}"
+	if [ -x "$REPO_ROOT/.venv/bin/python" ]; then
+		PY="$REPO_ROOT/.venv/bin/python"
+	elif command -v python3 >/dev/null 2>&1; then
+		PY=$(command -v python3)
+	elif command -v python >/dev/null 2>&1; then
+		PY=$(command -v python)
+	else
+		echo "Python not found; run 'just setup-build-tools' from the repo root." >&2
+		exit 1
+	fi
+
+	echo "Running pre-setup hook..."
+	"$PY" "$REPO_ROOT/tools/addon_hooks.py" run node-sonos-http-api pre_setup
+
+	if [ ! -d node-sonos-http-api ]; then
+		echo "Cloning upstream node-sonos-http-api..."
+		git clone https://github.com/jishi/node-sonos-http-api.git node-sonos-http-api
+	fi
+
+	{{nvm_use}}; \
+	cd node-sonos-http-api && npm install
+
+test:
+	@echo "No tests defined for node-sonos-http-api; skipping."
+
 ha-addon:
-    python ../tools/addon_builder.py build node-sonos-http-api
+	python ../tools/addon_builder.py build node-sonos-http-api
 
 deploy:
-    python ../tools/addon_builder.py deploy node-sonos-http-api
+	python ../tools/addon_builder.py deploy node-sonos-http-api

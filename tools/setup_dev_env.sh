@@ -442,92 +442,14 @@ fi
 
 echo ""
 
-# 5. Setup node-sonos-http-api (special case)
-info "Setting up node-sonos-http-api..."
-
-SONOS_DIR="node-sonos-http-api"
-SONOS_UPSTREAM="$SONOS_DIR/node-sonos-http-api"
-
-if [ -d "$SONOS_UPSTREAM" ]; then
-    success "Upstream node-sonos-http-api already cloned"
+# 5. Run per-add-on setup recipes
+info "Running add-on setup recipes..."
+if "$REPO_ROOT/tools/run_for_addons.sh" setup; then
+    success "Add-on setup completed"
 else
-    info "Cloning upstream node-sonos-http-api..."
-    if git clone https://github.com/jishi/node-sonos-http-api.git "$SONOS_UPSTREAM"; then
-        success "Upstream repository cloned"
-    else
-        error "Failed to clone upstream repository"
-        ERRORS=$((ERRORS + 1))
-    fi
+    error "Add-on setup failed; see logs above"
+    ERRORS=$((ERRORS + 1))
 fi
-
-if [ -d "$SONOS_UPSTREAM" ]; then
-    info "Installing node-sonos-http-api dependencies..."
-    cd "$SONOS_UPSTREAM"
-    if npm install > /dev/null 2>&1; then
-        success "node-sonos-http-api dependencies installed"
-    else
-        error "Failed to install node-sonos-http-api dependencies"
-        ERRORS=$((ERRORS + 1))
-    fi
-    cd "$REPO_ROOT"
-fi
-
-echo ""
-
-# 6. Setup sonos-api
-info "Setting up sonos-api..."
-
-cd sonos-api
-if [ -d "node_modules" ]; then
-    success "sonos-api dependencies already installed"
-else
-    info "Installing sonos-api dependencies..."
-    if npm install > /dev/null 2>&1; then
-        success "sonos-api dependencies installed"
-    else
-        error "Failed to install sonos-api dependencies"
-        ERRORS=$((ERRORS + 1))
-    fi
-fi
-cd "$REPO_ROOT"
-
-echo ""
-
-# 7. Setup grid-dashboard
-info "Setting up grid-dashboard..."
-
-cd grid-dashboard/ExpressServer
-if [ -d "node_modules" ]; then
-    success "grid-dashboard dependencies already installed"
-else
-    info "Installing grid-dashboard dependencies..."
-    if npm install > /dev/null 2>&1; then
-        success "grid-dashboard dependencies installed"
-    else
-        error "Failed to install grid-dashboard dependencies"
-        ERRORS=$((ERRORS + 1))
-    fi
-fi
-cd "$REPO_ROOT"
-
-echo ""
-
-# 8. Setup printer
-info "Setting up printer service..."
-
-cd printer
-if [ -f "uv.lock" ]; then
-    info "Syncing printer dependencies with uv..."
-    if uv sync --python "$REQUIRED_PYTHON_VERSION" > /dev/null 2>&1; then
-        success "printer dependencies synced"
-    else
-        error "Failed to sync printer dependencies"
-        ERRORS=$((ERRORS + 1))
-    fi
-else
-    warn "uv.lock not found in printer/"
-fi
-cd "$REPO_ROOT"
 
 echo ""
 
