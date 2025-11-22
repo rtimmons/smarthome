@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import cast
 
 import pytest
-from PIL import Image
+from PIL import Image, ImageFont
 
 from printer_service.label_templates import helper
 
@@ -186,3 +186,53 @@ def test_draw_background_symbol_validates_alpha_percent(
         helper.draw_background_symbol(
             canvas=canvas, slug="icon", directory=tmp_path, alpha_percent=200
         )
+
+
+def test_draw_repeating_side_text_supports_mask_dithering() -> None:
+    width = 160
+    height = 120
+    font = ImageFont.load_default()
+
+    def build_image(mask_dither: int | None) -> Image.Image:
+        builder = helper.LabelDrawingHelper(width=width, height=height)
+        builder.draw_repeating_side_text(
+            text="ABC",
+            font=font,
+            side_margin=8,
+            vertical_margin=10,
+            spacing=6,
+            opacity_percent=50,
+            mask_dither=mask_dither,
+        )
+        return builder.canvas.convert("1", dither=Image.Dither.NONE)
+
+    with_dither = build_image(Image.Dither.ORDERED)
+    without_dither = build_image(None)
+
+    def count_runs(strip: Image.Image) -> int:
+        pixels = strip.load()
+        assert pixels is not None
+        runs = 0
+        in_run = False
+        for y in range(strip.height):
+            row_has_ink = any(pixels[x, y] == 0 for x in range(strip.width))
+            if row_has_ink and not in_run:
+                runs += 1
+                in_run = True
+            elif not row_has_ink and in_run:
+                in_run = False
+        return runs
+
+    strip_width = 50
+    dither_runs_left = count_runs(with_dither.crop((0, 0, strip_width, with_dither.height)))
+    dither_runs_right = count_runs(
+        with_dither.crop(
+            (with_dither.width - strip_width, 0, with_dither.width, with_dither.height)
+        )
+    )
+    assert dither_runs_left == dither_runs_right >= 4
+
+    with_dither_black = sum(1 for value in with_dither.getdata() if value == 0)
+    without_dither_black = sum(1 for value in without_dither.getdata() if value == 0)
+    assert with_dither_black > 0
+    assert with_dither_black < without_dither_black

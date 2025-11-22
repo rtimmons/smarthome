@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import helper as helper
@@ -77,8 +77,10 @@ class Template(TemplateDefinition):
         package_date = helper.normalize_date(raw_value=package_date_raw)
 
         renderer = LabelDrawingHelper(width=CANVAS_WIDTH_PX, height=CANVAS_HEIGHT_PX)
+
+        background_canvas = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=255)
         helper.draw_background_symbol(
-            canvas=renderer.canvas,
+            canvas=background_canvas,
             slug=symbol_slug,
             alpha_percent=BACKGROUND_ALPHA_PERCENT,
         )
@@ -143,6 +145,7 @@ class Template(TemplateDefinition):
                 spacing=INITIALS_SIDE_SPACING,
                 width_warning="Initials are wider than the label and will be clipped.",
                 opacity_percent=INITIALS_OPACITY_PERCENT,
+                mask_dither=Image.Dither.ORDERED,
             )
 
         if package_date:
@@ -162,8 +165,11 @@ class Template(TemplateDefinition):
                 height_warning="Date text exceeds label height and may be clipped.",
             )
 
-        portrait_canvas = renderer.canvas
-        result = portrait_canvas.convert("1")
+        # Keep dithering on the background to preserve the faint symbol, but render text without
+        # dithering so the repeated side text stays symmetric on both edges.
+        background_result = background_canvas.convert("1", dither=Image.FLOYDSTEINBERG)
+        foreground_result = renderer.canvas.convert("1", dither=Image.NONE)
+        result = ImageChops.darker(background_result, foreground_result)
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result

@@ -471,6 +471,7 @@ class LabelDrawingHelper:
         center: bool = True,
         width_warning: str | None = None,
         opacity_percent: int = 100,
+        mask_dither: int | None = None,
     ) -> None:
         """Draw rotated ``text`` along both edges, repeating down the label."""
         bbox = self._draw.textbbox((0, 0), text, font=font)
@@ -489,6 +490,9 @@ class LabelDrawingHelper:
             if clamped_opacity == 100
             else mask.point(lambda value: int(round(value * clamped_opacity / 100)))
         )
+
+        if mask_dither is not None:
+            effective_mask = effective_mask.convert("1", dither=mask_dither)
 
         left_mask = effective_mask.rotate(90, expand=True)
         right_mask = effective_mask.rotate(-90, expand=True)
