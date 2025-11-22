@@ -232,17 +232,6 @@ The device's command class must be manually updated. If not done correctly you w
 				<Value type="int" genre="user" instance="1" index="1" label="Top Button Scene" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="-2147483648" max="2147483647" value="7860" />
 				<Value type="int" genre="user" instance="1" index="2" label="Bottom Button Scene" units="" read_only="false" write_only="false" verify_changes="false" poll_intensity="0" min="-2147483648" max="2147483647" value="7860" />
 </CommandClass>
-3. The metaconfig.yaml entry should have double/triple properties:
-```
-- name: office_switch_main
-  type: dimmer switch 46203
-  node_id: 41
-  on_up_double: scene_office_high
-  on_down_double: scene_office_off
-  on_triple_up: scene_all_high
-  on_triple_down: scene_all_off
-```
-
 ## Adding Zooz Zen31 RGBW Dimmer
 By default the device is added with the wrong specific setting. It needs to be changed from 2 to 1 so that a light entity is created
 

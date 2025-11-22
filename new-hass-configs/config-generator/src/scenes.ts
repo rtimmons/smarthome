@@ -4,8 +4,7 @@
  * This file defines all scenes in the smart home system.
  * Scenes describe desired states for lights and other devices.
  *
- * TODO: Migrate scenes from legacy metaconfig.yaml
- *       Reference devices using logical names from devices.ts
+ * TODO: Fill out scenes for remaining rooms using devices.ts as the source of truth
  */
 
 import { SceneRegistry, Scene } from "./types";

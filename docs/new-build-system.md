@@ -72,7 +72,7 @@ Developer → just ha-addon grid-dashboard → just deploy grid-dashboard
 **Python packages:**
 - `printer/` - Python 3.12, uses uv
 - `new-hass-configs/config-generator/` - TypeScript config generator
-- `new-hass-configs/MetaHassConfig/` - **LEGACY** (to be removed)
+- `new-hass-configs/MetaHassConfig/` - **REMOVED** legacy Python generator
 
 ### Current Strengths
 
@@ -847,10 +847,8 @@ git commit -m "Consolidate Justfiles using imports
 
 #### Tasks
 
-1. **Remove legacy Python config generator**
-   ```bash
-   rm -rf new-hass-configs/MetaHassConfig/
-   ```
+1. **Remove legacy Python config generator** (DONE)
+   - `new-hass-configs/MetaHassConfig/` removed from repository
 
 2. **Remove duplicate printer scripts**
    ```bash
@@ -908,10 +906,9 @@ just deploy grid-dashboard
 
 ```bash
 git add docs/ CLAUDE.md
-git rm -r new-hass-configs/MetaHassConfig/ printer/scripts/ tools/dev_orchestrator.py.bak tools/manage_ports.py.bak tools/addon_hooks.py
+git rm -r printer/scripts/ tools/dev_orchestrator.py.bak tools/manage_ports.py.bak tools/addon_hooks.py
 git commit -m "Final cleanup and documentation update
 
-- Remove legacy MetaHassConfig (~300 lines)
 - Remove duplicate printer scripts (473 lines)
 - Remove old orchestrator backups (750 lines)
 - Update CLAUDE.md with new build system

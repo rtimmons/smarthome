@@ -4,8 +4,7 @@
  * This file defines all automations in the smart home system.
  * Automations connect triggers (events) to actions (what to do).
  *
- * TODO: Migrate automations from legacy metaconfig.yaml
- *       Reference devices and scenes using logical names from devices.ts and scenes.ts
+ * TODO: Add remaining automations using logical device/scene names from devices.ts and scenes.ts
  */
 
 import { AutomationRegistry } from "./types";

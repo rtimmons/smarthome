@@ -32,8 +32,6 @@ fetch:
 		--filter='protect generated/' \
 		--filter='protect manual/' \
 		--filter='protect backups/' \
-		--filter='protect HomeAssistantConfig/***' \
-		--filter='protect MetaHassConfig/***' \
 		--filter='protect .git/***' \
 		--include '*/' \
 		--include '*.yaml' \
@@ -84,8 +82,6 @@ check:
 		--exclude 'generated/' \
 		--exclude 'manual/' \
 		--exclude 'backups/' \
-		--exclude 'HomeAssistantConfig/' \
-		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:"{{tmp_dir}}"/
@@ -148,8 +144,6 @@ check:
 		--exclude 'generated/' \
 		--exclude 'manual/' \
 		--exclude 'backups/' \
-		--exclude 'HomeAssistantConfig/' \
-		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:/config/ \
@@ -184,8 +178,6 @@ deploy:
 		--exclude 'generated/' \
 		--exclude 'manual/' \
 		--exclude 'backups/' \
-		--exclude 'HomeAssistantConfig/' \
-		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:"{{tmp_dir}}"/
@@ -242,8 +234,6 @@ deploy:
 		--exclude 'generated/' \
 		--exclude 'manual/' \
 		--exclude 'backups/' \
-		--exclude 'HomeAssistantConfig/' \
-		--exclude 'MetaHassConfig/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:/config/

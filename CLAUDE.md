@@ -59,9 +59,7 @@ The project consists of several Home Assistant add-ons and configuration tools:
 2. **sonos-api** - Home Assistant add-on providing a custom Sonos API wrapper
 3. **node-sonos-http-api** - Home Assistant add-on for node-sonos-http-api integration
 4. **printer** - Home Assistant add-on for kitchen label printing (Python/Flask)
-5. **new-hass-configs** - Home Assistant configuration files including automations and scenes
-6. **new-hass-configs/MetaHassConfig** - Python tool that generates Home Assistant configuration from a metaconfig.yaml file
-7. **new-hass-configs/HomeAssistantConfig** - Legacy Home Assistant configs (being phased out in favor of new-hass-configs)
+5. **new-hass-configs** - Home Assistant configuration managed by a TypeScript generator plus manual overrides
 
 ### Add-on Configuration
 
@@ -189,17 +187,6 @@ just ha-addon
 just deploy
 ```
 
-### MetaHassConfig Development (Legacy)
-
-```bash
-cd new-hass-configs/MetaHassConfig
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-python setup.py develop
-hassmetagen ../HomeAssistantConfig/metaconfig.yaml  # Generate Home Assistant config
-```
-
 ## Deployment Process
 
 1. Home Assistant runs at hostname `homeassistant.local` (accessed via SSH on port 22)
@@ -210,8 +197,9 @@ hassmetagen ../HomeAssistantConfig/metaconfig.yaml  # Generate Home Assistant co
 
 ## Important Files
 
-- `new-hass-configs/metaconfig.yaml` - Legacy master configuration for Home Assistant entities
 - `new-hass-configs/configuration.yaml` - Main Home Assistant configuration
+- `new-hass-configs/Justfile` - fetch/generate/check/deploy automation
+- `new-hass-configs/config-generator/src/` - TypeScript source for devices, scenes, and automations
 - `grid-dashboard/ExpressServer/src/server/index.ts` - Main Express server entry point for dashboard
 - `sonos-api/src/server/index.ts` - Sonos API wrapper entry point
 - `docs/` - Documentation including setup guides, Sonos routing, and ingress fixes
@@ -289,4 +277,3 @@ hass-cli state get light.light_office_abovecouch_white
 
 - Dimmer switch 46203 requires manual command class updates for scene support (see README.md:134-163)
 - Zooz Zen31 RGBW Dimmer needs specific setting changes after adding (see README.md:165-171)
-

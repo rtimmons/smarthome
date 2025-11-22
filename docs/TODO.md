@@ -18,14 +18,13 @@
 - [ ] Standardize on Python 3.11 or 3.12 across all components
 - [ ] Update .python-version file
 - [ ] Update Ansible python39 role to install correct version
-- [ ] Replace deprecated `nose` with `pytest` in MetaHassConfig
 - [ ] Update PyYAML from 5.3 to 6.x
 
 ## 🟡 Architecture Modernization (High Priority)
 
 ### 4. Home Assistant Integration
 - [ ] Research current Home Assistant best practices
-- [ ] Evaluate migration from custom metaconfig to native HA config
+- [ ] Evaluate migration from custom generator to native HA config
 - [ ] Migrate from custom Z-Wave XML config to Home Assistant's Z-Wave JS
 - [ ] Update from Home Assistant 2021.9.7 to current version
 - [ ] Consider MQTT for device communication
@@ -49,7 +48,6 @@
 ### 7. Containerization
 - [ ] Investigate deployment via ProxMox https://www.proxmox.com/en/
 - [ ] Create Dockerfile for ExpressServer
-- [ ] Create Dockerfile for MetaHassConfig
 - [ ] Set up docker-compose for local development
 - [ ] Add Docker build to deployment process
 - [ ] Document container-based deployment

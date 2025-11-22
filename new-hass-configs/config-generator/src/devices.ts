@@ -4,8 +4,8 @@
  * This file defines all physical devices in the smart home system.
  * It maps logical device names to their Home Assistant entity IDs and capabilities.
  *
- * TODO: Populate this registry with actual devices from the legacy metaconfig.yaml
- *       after running `just fetch` to get current entity names from Z-Wave JS.
+ * TODO: Populate this registry with all devices discovered via `just fetch`
+ *       using the current Home Assistant entity names.
  */
 
 import { DeviceRegistry } from "./types";
