@@ -470,6 +470,7 @@ class LabelDrawingHelper:
         min_top_y: int | None = None,
         center: bool = True,
         width_warning: str | None = None,
+        opacity_percent: int = 100,
     ) -> None:
         """Draw rotated ``text`` along both edges, repeating down the label."""
         bbox = self._draw.textbbox((0, 0), text, font=font)
@@ -482,8 +483,15 @@ class LabelDrawingHelper:
         mask_draw = ImageDraw.Draw(mask)
         mask_draw.text((-bbox[0], -bbox[1]), text, font=font, fill=255)
 
-        left_mask = mask.rotate(90, expand=True)
-        right_mask = mask.rotate(-90, expand=True)
+        clamped_opacity = max(0, min(opacity_percent, 100))
+        effective_mask = (
+            mask
+            if clamped_opacity == 100
+            else mask.point(lambda value: int(round(value * clamped_opacity / 100)))
+        )
+
+        left_mask = effective_mask.rotate(90, expand=True)
+        right_mask = effective_mask.rotate(-90, expand=True)
 
         top_gap = vertical_margin if top_margin is None else top_margin
         if min_top_y is not None and min_top_y > top_gap:

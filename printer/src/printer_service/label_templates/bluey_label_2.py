@@ -39,9 +39,10 @@ INITIALS_SIDE_SPACING = 10
 
 # Font sizes balance hierarchy without overrunning the 1.3" height.
 TITLE_FONT_POINTS = 60
-INITIALS_FONT_POINTS = 60
+INITIALS_FONT_POINTS = 48
 DATE_FONT_POINTS = 36
 BACKGROUND_ALPHA_PERCENT = 25
+INITIALS_OPACITY_PERCENT = 50
 
 
 class Template(TemplateDefinition):
@@ -141,6 +142,7 @@ class Template(TemplateDefinition):
                 center=initials_center,
                 spacing=INITIALS_SIDE_SPACING,
                 width_warning="Initials are wider than the label and will be clipped.",
+                opacity_percent=INITIALS_OPACITY_PERCENT,
             )
 
         if package_date:
