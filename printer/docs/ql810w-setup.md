@@ -1,5 +1,8 @@
 # Brother QL-810W Network Printing
 
+## Agent Notes
+- Follow the repo-wide expectations in `../../CLAUDE.md#agent-expectations-repo-wide` (sandbox/git-lock permission, use `just`/env wrappers, “prepare to commit” steps).
+
 These steps walk through preparing a Brother QL-810W so the `brother_ql` backend can talk to it over Wi‑Fi using the raw TCP port (`tcp://<ip>:9100`). The printer ships with direct-USB enabled but network printing disabled, so a little one-time setup is required.
 
 ## 1. Connect the printer to your network
@@ -32,7 +35,7 @@ export BROTHER_PRINTER_URI=tcp://<printer-ip>:9100
 Restart `just start` (or your process manager) after updating the environment.
 
 ## 5. Send a test label
-- Visit `http://localhost:5000/`, pick a template, and print.
+- Visit `http://localhost:8099/` (override with `FLASK_PORT`), pick a template, and print.
 - The service will stream raster instructions to the printer. If you still see timeouts, double-check the URI, firewall rules, and that the printer is awake (it sleeps quickly but wakes when you open the cover or press Feed).
 
 ### Troubleshooting

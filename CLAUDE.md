@@ -2,6 +2,11 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Agent Expectations (repo-wide)
+- You start in a sandbox: request permission before `git add` or any command that would take the git lock.
+- Prefer `just …` or the provided environment wrappers (`.venv`, `nvm`, etc.) for Python/Node tooling; avoid unmanaged binaries.
+- “Prepare to commit” means stage all changes (with permission), run `just test`, and place the proposed commit message in `./msg` without staging that file.
+
 ## Project Overview
 
 This is a smart home automation system that integrates with Home Assistant, Sonos, Hue lights, and Z-Wave devices. The system is structured as a collection of Home Assistant add-ons providing custom web interfaces and API endpoints for smart home control.
