@@ -163,8 +163,7 @@ class Template(TemplateDefinition):
             )
 
         portrait_canvas = renderer.canvas
-        # Disable dithering to keep the repeated side text consistent on both edges.
-        result = portrait_canvas.convert("1", dither=Image.NONE)
+        result = portrait_canvas.convert("1")
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result
