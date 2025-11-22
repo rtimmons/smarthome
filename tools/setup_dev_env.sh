@@ -418,7 +418,22 @@ rm -f "$SONOS_CHECK_LOG"
 
 echo ""
 
-# 4. Setup repo-level Python dependencies
+# 4. Verify SSH access to Home Assistant host (needed for deploy)
+HA_HOST=${HA_HOST:-homeassistant.local}
+HA_PORT=${HA_PORT:-22}
+HA_USER=${HA_USER:-root}
+info "Checking SSH access to Home Assistant (${HA_USER}@${HA_HOST}:${HA_PORT})..."
+if ssh -o BatchMode=yes -o ConnectTimeout=5 -p "$HA_PORT" "$HA_USER@$HA_HOST" "exit 0" >/dev/null 2>&1; then
+    success "SSH to Home Assistant is reachable"
+else
+    warn "Could not SSH to ${HA_USER}@${HA_HOST}:${HA_PORT}."
+    warn "If Home Assistant is up, add your public key (e.g., contents of ~/.ssh/id_rsa.pub) to the authorized_keys field in the Supervisor SSH add-on config: http://${HA_HOST}:8123/hassio/addon/core_ssh/config"
+    ERRORS=$((ERRORS + 1))
+fi
+
+echo ""
+
+# 5. Setup repo-level Python dependencies
 info "Setting up repo-level Python dependencies..."
 
 if [ -z "$PYTHON_BIN" ]; then
@@ -443,7 +458,7 @@ fi
 
 echo ""
 
-# 5. Run per-add-on setup recipes
+# 6. Run per-add-on setup recipes
 info "Running add-on setup recipes..."
 if "$REPO_ROOT/tools/run_for_addons.sh" setup; then
     success "Add-on setup completed"
