@@ -13,6 +13,23 @@ deploy-preflight:
 		echo "Missing .nvmrc; cannot select Node runtime." >&2
 		exit 1
 	fi
+	python_major_minor="3.12"
+	if [ -f ".python-version" ]; then
+		python_version_raw=$(tr -d '[:space:]' < .python-version | awk -F. '{print $1"."$2}' || true)
+		if [ -n "${python_version_raw:-}" ]; then
+			python_major_minor="$python_version_raw"
+		fi
+	fi
+	python_formula="python@${python_major_minor}"
+	if ! command -v python3 >/dev/null 2>&1; then
+		if command -v brew >/dev/null 2>&1; then
+			echo "Installing ${python_formula} via Homebrew (one-time)..." >&2
+			HOMEBREW_NO_AUTO_UPDATE=1 brew install "${python_formula}"
+		else
+			echo "Missing required tool: python3" >&2
+			exit 1
+		fi
+	fi
 	{{nvm_use}}
 	expected=$(tr -d ' \t\r\n' < .nvmrc)
 	current=$(nvm current)
@@ -28,7 +45,12 @@ deploy-preflight:
 	done
 
 setup-build-tools:
-	if [ ! -d .venv ]; then python3 -m venv .venv; fi
+	#!/usr/bin/env bash
+	set -euo pipefail
+	if [ ! -x ".venv/bin/python3" ]; then
+		rm -rf .venv
+		python3 -m venv .venv
+	fi
 	. .venv/bin/activate && pip install -r requirements.txt
 
 ha-addon addon="all":

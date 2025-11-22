@@ -425,14 +425,15 @@ if [ -z "$PYTHON_BIN" ]; then
     error "Skipping Python virtual environment setup because no interpreter was found"
     ERRORS=$((ERRORS + 1))
 else
-    if [ ! -d ".venv" ]; then
+    if [ ! -x ".venv/bin/python3" ]; then
         info "Creating Python virtual environment..."
+        rm -rf .venv
         "$PYTHON_BIN" -m venv .venv
         success "Virtual environment created"
     fi
 
     info "Installing Python dependencies..."
-    if .venv/bin/pip install -r requirements.txt > /dev/null 2>&1; then
+    if .venv/bin/pip install -r requirements.txt; then
         success "Python dependencies installed"
     else
         error "Failed to install Python dependencies"

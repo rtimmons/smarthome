@@ -55,6 +55,16 @@ just deploy  # Deploy and restart Home Assistant
 
 ### Deploy Add-ons
 
+Fresh macOS (Homebrew + git already installed):
+
+```bash
+brew install just
+git clone https://github.com/rtimmons/smarthome.git
+cd smarthome
+# Defaults: HA_HOST=homeassistant.local, HA_PORT=22, HA_USER=root
+just deploy  # bootstraps nvm + Node from .nvmrc, ensures python3, sets up .venv
+```
+
 From the repo root:
 
 ```bash
