@@ -25,6 +25,51 @@ error() {
     echo -e "${RED}✗${NC} $1"
 }
 
+brew_formula_installed() {
+    local formula="$1"
+    command -v brew >/dev/null 2>&1 && HOMEBREW_NO_AUTO_UPDATE=1 brew list --formula "$formula" >/dev/null 2>&1
+}
+
+print_brew_post_install_notes() {
+    local formula="$1"
+    if ! brew_formula_installed "$formula"; then
+        return
+    fi
+
+    local parser=""
+    if command -v python3 >/dev/null 2>&1; then
+        parser="python3"
+    elif command -v python >/dev/null 2>&1; then
+        parser="python"
+    fi
+
+    local caveats=""
+    if [ -n "$parser" ]; then
+        caveats=$(HOMEBREW_NO_AUTO_UPDATE=1 brew info --json=v2 "$formula" 2>/dev/null | "$parser" - <<'PY'
+import json
+import sys
+
+try:
+    data = json.load(sys.stdin)
+    formula = data.get("formulae", [{}])[0]
+    caveats = formula.get("caveats", "").strip()
+    if caveats:
+        print(caveats)
+except Exception:
+    pass
+PY
+)
+    fi
+
+    if [ -n "$caveats" ]; then
+        warn "Homebrew post-install notes for $formula:"
+        echo "$caveats"
+    else
+        warn "Homebrew info for $formula:"
+        HOMEBREW_NO_AUTO_UPDATE=1 brew info "$formula"
+    fi
+}
+
 # Banner
 echo ""
 echo "╭────────────────────────────────────────────────────╮"
@@ -79,10 +124,19 @@ elif [ -s "/usr/local/opt/nvm/nvm.sh" ]; then
     source "/usr/local/opt/nvm/nvm.sh"
 fi
 
+NVM_BREW_INSTALLED=0
+if brew_formula_installed "nvm"; then
+    NVM_BREW_INSTALLED=1
+fi
+
+NVM_AVAILABLE=0
 # Check if nvm is available
 if ! command -v nvm &> /dev/null; then
     warn "nvm not found"
-    if command -v brew &> /dev/null; then
+    if [ $NVM_BREW_INSTALLED -eq 1 ]; then
+        warn "Homebrew reports nvm is installed, but 'nvm' is not available in this shell"
+        print_brew_post_install_notes "nvm"
+    elif command -v brew &> /dev/null; then
         warn "Installing nvm via Homebrew..."
         if brew install nvm; then
             success "nvm installed"
@@ -101,13 +155,17 @@ if ! command -v nvm &> /dev/null; then
     fi
 fi
 
+if command -v nvm &> /dev/null; then
+    NVM_AVAILABLE=1
+fi
+
 # Now check Node.js version
 REQUIRED_NODE_VERSION="v20.18.2"
 if [ -f ".nvmrc" ]; then
     REQUIRED_NODE_VERSION=$(cat .nvmrc)
 fi
 
-if command -v nvm &> /dev/null; then
+if [ $NVM_AVAILABLE -eq 1 ]; then
     info "Using nvm to manage Node.js version..."
     if nvm install "$REQUIRED_NODE_VERSION" &> /dev/null; then
         nvm use "$REQUIRED_NODE_VERSION" &> /dev/null
@@ -129,15 +187,29 @@ else
     ERRORS=$((ERRORS + 1))
 fi
 
+if [ $NVM_AVAILABLE -eq 0 ]; then
+    error "nvm is required but not available in this shell; ensure it is installed and sourced"
+    [ $NVM_BREW_INSTALLED -eq 1 ] && print_brew_post_install_notes "nvm"
+    ERRORS=$((ERRORS + 1))
+fi
+
 echo ""
 
 # 3. Check and setup pyenv + Python
 info "Checking Python version management..."
 
+PYENV_BREW_INSTALLED=0
+if brew_formula_installed "pyenv"; then
+    PYENV_BREW_INSTALLED=1
+fi
+
 # Try to initialize pyenv if it exists
 if command -v pyenv &> /dev/null; then
     eval "$(pyenv init -)"
     success "pyenv is available"
+elif [ $PYENV_BREW_INSTALLED -eq 1 ]; then
+    warn "Homebrew reports pyenv is installed, but 'pyenv' is not available in this shell"
+    print_brew_post_install_notes "pyenv"
 elif command -v brew &> /dev/null; then
     warn "pyenv not found - installing via Homebrew..."
     if brew install pyenv; then
@@ -148,6 +220,11 @@ elif command -v brew &> /dev/null; then
     fi
 else
     info "pyenv not available (using system Python)"
+fi
+
+PYENV_AVAILABLE=0
+if command -v pyenv &> /dev/null; then
+    PYENV_AVAILABLE=1
 fi
 
 # Determine required Python version
@@ -211,7 +288,7 @@ if [ -n "$BREW_PYTHON_BIN" ]; then
 fi
 
 # Try to install/use correct Python version with pyenv
-if command -v pyenv &> /dev/null; then
+if [ $PYENV_AVAILABLE -eq 1 ]; then
     info "Using pyenv to manage Python version..."
     PYENV_HAS_VERSION=0
     if pyenv versions --bare | grep -q "^${REQUIRED_PYTHON_VERSION}$"; then
@@ -286,6 +363,12 @@ if [ -n "$PYTHON_BIN" ]; then
     success "Python $PYTHON_VERSION is available via $PYTHON_BIN"
 else
     error "Python 3 not found"
+    ERRORS=$((ERRORS + 1))
+fi
+
+if [ $PYENV_AVAILABLE -eq 0 ]; then
+    error "pyenv is required but not available in this shell; ensure it is installed and initialized"
+    [ $PYENV_BREW_INSTALLED -eq 1 ] && print_brew_post_install_notes "pyenv"
     ERRORS=$((ERRORS + 1))
 fi
 
