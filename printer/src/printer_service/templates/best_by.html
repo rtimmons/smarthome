@@ -9,7 +9,7 @@ Best By Label
 {% block form_fields %}
     <style>
         .bb-help {
-            color: #3a3d52;
+            color: var(--muted-color);
         }
         .bb-preview-grid {
             display: grid;
@@ -17,11 +17,11 @@ Best By Label
             gap: 1rem;
         }
         .bb-preview-card {
-            border: 1px solid #dce2f1;
+            border: 1px solid var(--border-color);
             border-radius: 10px;
             padding: 0.9rem;
-            background: linear-gradient(160deg, #f6f8ff 0%, #eef3ff 100%);
-            box-shadow: 0 6px 16px rgba(24, 50, 100, 0.06);
+            background: linear-gradient(160deg, var(--surface-color) 0%, var(--preview-bg) 100%);
+            box-shadow: var(--shadow);
             display: grid;
             gap: 0.6rem;
         }
@@ -31,11 +31,11 @@ Best By Label
         }
         .bb-preview-meta p {
             margin: 0.15rem 0 0;
-            color: #4a4c5f;
+            color: var(--muted-color);
         }
         .bb-preview-trigger {
             background: none;
-            border: 1px dashed #9bb5ee;
+            border: 1px dashed var(--border-color);
             border-radius: 8px;
             padding: 0.35rem;
             cursor: pointer;
@@ -43,8 +43,8 @@ Best By Label
         }
         .bb-preview-trigger:hover,
         .bb-preview-trigger:focus-visible {
-            border-color: #1b73e7;
-            box-shadow: 0 0 0 4px rgba(27, 115, 231, 0.15);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(44, 111, 227, 0.2);
             transform: translateY(-2px);
         }
         .bb-preview-trigger img {
@@ -54,11 +54,26 @@ Best By Label
             height: auto;
             margin: 0 auto;
             object-fit: contain;
+            transition: filter 0.15s ease-in-out;
         }
         .bb-preview-note {
             margin: 0;
-            color: #4a4c5f;
+            color: var(--muted-color);
             word-break: break-all;
+        }
+        :root[data-theme="dark"] .bb-preview-card,
+        :root.theme-dark .bb-preview-card {
+            background: linear-gradient(160deg, var(--surface-color) 0%, var(--preview-bg) 100%);
+        }
+        :root[data-theme="dark"] .bb-preview-trigger img,
+        :root.theme-dark .bb-preview-trigger img {
+            filter: invert(1) brightness(1.1) contrast(1.05);
+        }
+        :root[data-theme="dark"] .bb-preview-trigger img:hover,
+        :root.theme-dark .bb-preview-trigger img:hover,
+        :root[data-theme="dark"] .bb-preview-trigger img:focus-visible,
+        :root.theme-dark .bb-preview-trigger img:focus-visible {
+            filter: none !important;
         }
     </style>
     {% if text_mode %}

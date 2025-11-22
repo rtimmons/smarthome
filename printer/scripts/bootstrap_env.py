@@ -23,6 +23,8 @@ def main() -> None:
     pip("install", "--no-cache-dir", "--force-reinstall", "cairocffi==1.7.1")
     pip("install", "ruff", "mypy")
     pip("install", "-e", str(root))
+    # Ensure Playwright browsers are available for end-to-end tests.
+    subprocess.check_call([sys.executable, "-m", "playwright", "install", "chromium"])
 
 
 if __name__ == "__main__":

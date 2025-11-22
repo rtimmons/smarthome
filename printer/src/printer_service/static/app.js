@@ -4,11 +4,14 @@ const disableDefaultFormHandlers = !!(form && form.dataset.disableDefaultHandler
 const previewContainer = document.getElementById('previewContainer');
 const previewImage = document.getElementById('livePreviewImage');
 const previewStatus = document.getElementById('livePreviewStatus');
+const themeSelect = document.getElementById('themeSelect');
 
 let previewAbortController = null;
 let previewTimerId = null;
 let lastPreviewPayloadKey = '';
 const PREVIEW_DEBOUNCE_MS = 250;
+const THEME_STORAGE_KEY = 'printer-theme';
+const THEME_OPTIONS = ['light', 'dark', 'system'];
 
 function parseWarnings(payload) {
     if (!payload || !Array.isArray(payload.warnings)) {
@@ -385,6 +388,101 @@ function schedulePreview() {
     }, PREVIEW_DEBOUNCE_MS);
 }
 
+function getStoredThemePreference() {
+    try {
+        const saved = localStorage.getItem(THEME_STORAGE_KEY);
+        if (saved && THEME_OPTIONS.includes(saved)) {
+            return saved;
+        }
+    } catch (storageError) {
+        // Ignore storage issues and fall back to system.
+    }
+    return 'system';
+}
+
+function getSystemTheme() {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+        return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    }
+    return 'light';
+}
+
+function applyTheme(preference) {
+    const resolvedTheme = preference === 'system' ? getSystemTheme() : preference;
+    const root = document.documentElement;
+    root.dataset.theme = resolvedTheme;
+    root.dataset.themePreference = preference;
+    root.style.colorScheme = resolvedTheme;
+    root.classList.toggle('theme-dark', resolvedTheme === 'dark');
+    root.classList.toggle('theme-light', resolvedTheme === 'light');
+    if (themeSelect && themeSelect.value !== preference) {
+        themeSelect.value = preference;
+    }
+}
+
+function persistTheme(preference) {
+    try {
+        localStorage.setItem(THEME_STORAGE_KEY, preference);
+    } catch (storageError) {
+        // Storage may be unavailable; ignore and continue.
+    }
+}
+
+function handleThemeChange(event) {
+    const preference = event && event.target ? event.target.value : 'system';
+    const next = THEME_OPTIONS.includes(preference) ? preference : 'system';
+    persistTheme(next);
+    applyTheme(next);
+}
+
+function bindSystemThemeListener() {
+    if (typeof window === 'undefined' || !window.matchMedia) {
+        return;
+    }
+    const media = window.matchMedia('(prefers-color-scheme: dark)');
+    const listener = () => {
+        const preference = getStoredThemePreference();
+        if (preference === 'system') {
+            applyTheme('system');
+        }
+    };
+    if (typeof media.addEventListener === 'function') {
+        media.addEventListener('change', listener);
+    } else if (typeof media.addListener === 'function') {
+        media.addListener(listener);
+    }
+}
+
+function initTheme() {
+    const initialPreference = getStoredThemePreference();
+    applyTheme(initialPreference);
+    if (themeSelect) {
+        themeSelect.value = initialPreference;
+        themeSelect.addEventListener('change', handleThemeChange);
+    }
+    bindSystemThemeListener();
+}
+
+function installHoverFilterReset() {
+    const selector = '.preview-image, .label-card img, .bb-preview-trigger img';
+    function handleEnter(event) {
+        const target = event.target && event.target.closest ? event.target.closest(selector) : null;
+        if (target) {
+            target.classList.add('no-filter');
+        }
+    }
+    function handleLeave(event) {
+        const target = event.target && event.target.closest ? event.target.closest(selector) : null;
+        if (target) {
+            target.classList.remove('no-filter');
+        }
+    }
+    document.addEventListener('pointerover', handleEnter);
+    document.addEventListener('pointerout', handleLeave);
+    document.addEventListener('focusin', handleEnter);
+    document.addEventListener('focusout', handleLeave);
+}
+
 async function handleSubmit(event) {
     event.preventDefault();
     const payload = buildTemplatePayload();
@@ -437,6 +535,9 @@ async function refreshLabels() {
     }
     renderLabels(result.labels.slice(0, 100));
 }
+
+initTheme();
+installHoverFilterReset();
 
 document.addEventListener('DOMContentLoaded', () => {
     if (form && !disableDefaultFormHandlers) {

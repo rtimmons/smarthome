@@ -9,6 +9,8 @@ dependencies = [
     "brother-ql",
     "python-escpos",
     "pytest",
+    "playwright",
+    "pytest-playwright",
     "cairosvg",
     "qrcode",
 ]
