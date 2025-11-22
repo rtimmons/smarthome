@@ -8,11 +8,15 @@ dependencies = [
     "pillow>=9.5,<10",
     "brother-ql",
     "python-escpos",
+    "cairosvg",
+    "qrcode",
+]
+
+[project.optional-dependencies]
+test = [
     "pytest",
     "playwright",
     "pytest-playwright",
-    "cairosvg",
-    "qrcode",
 ]
 
 [project.scripts]

@@ -166,7 +166,7 @@ check: preflight
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 
 # Deploy the current config to Home Assistant and restart (skipping buggy validation).
-deploy: preflight
+deploy: generate preflight
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \

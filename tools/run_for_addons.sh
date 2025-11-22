@@ -63,6 +63,14 @@ $addons_output
 EOF
 fi
 
+has_recipe() {
+  local dir="$1" target="$2"
+  just --justfile "$dir/Justfile" --working-directory "$dir" --color never --list 2>/dev/null \
+    | tail -n +2 \
+    | awk '{print $1}' \
+    | grep -Fxq "$target"
+}
+
 run_recipe() {
   local dir="$1"
 
@@ -71,11 +79,17 @@ run_recipe() {
     return
   fi
 
-  # Check if the recipe exists in the add-on Justfile.
-  if just --justfile "$dir/Justfile" --working-directory "$dir" --color never --list 2>/dev/null \
-    | tail -n +2 \
-    | awk '{print $1}' \
-    | grep -Fxq "$recipe"; then
+  if [ "$recipe" = "deploy" ]; then
+    # Run common pre-deploy steps when they exist to ensure artifacts are fresh.
+    for pre in generate build test ha-addon; do
+      if has_recipe "$dir" "$pre"; then
+        echo "==> ${dir}: just $pre (pre-deploy)"
+        just --justfile "$dir/Justfile" --working-directory "$dir" "$pre"
+      fi
+    done
+  fi
+
+  if has_recipe "$dir" "$recipe"; then
     echo "==> ${dir}: just $recipe"
     just --justfile "$dir/Justfile" --working-directory "$dir" "$recipe"
   else
