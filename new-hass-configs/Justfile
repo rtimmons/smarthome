@@ -2,6 +2,17 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
+rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***'"
+
+preflight:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	for bin in rsync ssh; do
+		if ! command -v "$bin" >/dev/null 2>&1; then
+			echo "Missing required tool: $bin" >&2
+			exit 1
+		fi
+	done
 
 # Run tests for config-generator
 test:
@@ -24,9 +35,10 @@ inventory:
 	@echo "Wrote entity inventory to entity_inventory.json"
 
 # Fetch the Home Assistant YAML configs into current directory
-fetch:
+fetch: preflight
 	rsync -av \
 		--delete \
+		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		--filter='protect config-generator/' \
 		--filter='protect generated/' \
@@ -55,10 +67,11 @@ fetch:
 		root@homeassistant.local:/config/ .
 
 # Validate the current config on Home Assistant and show what would change (no apply).
-check:
+check: preflight
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \
+		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		--include '*/' \
 		--include '*.yaml' \
@@ -92,6 +105,7 @@ check:
 		mkdir -p \"\${backup_dir}\" && \
 		rsync -a --delete /config/ \"\${backup_dir}\"/  && \
 		rsync -av --delete --prune-empty-dirs \
+			{{rsync_protect_filters}} \
 			--include '*/' \
 			--include '*.yaml' \
 			--include '*.yml' \
@@ -121,6 +135,7 @@ check:
 		fi"
 	echo "Diff against /config (dry-run):"
 	rsync -av --delete --itemize-changes --dry-run \
+		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		--include '*/' \
 		--include '*.yaml' \
@@ -151,10 +166,11 @@ check:
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 
 # Deploy the current config to Home Assistant and restart (skipping buggy validation).
-deploy:
+deploy: preflight
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \
+		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		--include '*/' \
 		--include '*.yaml' \
@@ -188,6 +204,7 @@ deploy:
 		mkdir -p \"\${backup_dir}\" && \
 		rsync -a --delete /config/ \"\${backup_dir}\"/  && \
 		rsync -av --delete --prune-empty-dirs \
+			{{rsync_protect_filters}} \
 			--include '*/' \
 			--include '*.yaml' \
 			--include '*.yml' \
@@ -211,6 +228,7 @@ deploy:
 		rm -rf \"\${backup_dir}\""
 	rsync -av \
 		--delete \
+		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		--include '*/' \
 		--include '*.yaml' \
