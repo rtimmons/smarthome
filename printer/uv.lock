@@ -623,11 +623,15 @@ dependencies = [
     { name = "cairosvg" },
     { name = "flask" },
     { name = "pillow" },
+    { name = "python-escpos" },
+    { name = "qrcode" },
+]
+
+[package.optional-dependencies]
+test = [
     { name = "playwright" },
     { name = "pytest" },
     { name = "pytest-playwright" },
-    { name = "python-escpos" },
-    { name = "qrcode" },
 ]
 
 [package.metadata]
@@ -636,12 +640,13 @@ requires-dist = [
     { name = "cairosvg" },
     { name = "flask" },
     { name = "pillow", specifier = ">=9.5,<10" },
-    { name = "playwright" },
-    { name = "pytest" },
-    { name = "pytest-playwright" },
+    { name = "playwright", marker = "extra == 'test'" },
+    { name = "pytest", marker = "extra == 'test'" },
+    { name = "pytest-playwright", marker = "extra == 'test'" },
     { name = "python-escpos" },
     { name = "qrcode" },
 ]
+provides-extras = ["test"]
 
 [[package]]
 name = "pycparser"

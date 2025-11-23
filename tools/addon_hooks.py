@@ -36,7 +36,7 @@ def run_hook(addon: str, hook: str, if_missing_ok: bool) -> int:
         return 1
 
     hook_path = _resolve_hook(addon_dir, hook)
-    if not hook_path.exists():
+    if hook_path is None or not hook_path.exists():
         if if_missing_ok:
             return 0
         print(f"Hook '{hook}' not found for addon '{addon}'. Expected at {hook_path}.", file=sys.stderr)

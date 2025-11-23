@@ -6,7 +6,7 @@
   "scripts": {
     "start": "ts-node src/server/index.ts",
     "stop": "pkill -f smhexprsrv",
-    "dev": "supervisor -p 200 -RV --debug -x npm start",
+    "dev": "supervisor -p 200 -RV -x npm start",
     "test": "ts-mocha -p ./tsconfig.json --recursive ./src/**/*.spec.ts",
     "check": "gts check",
     "clean": "gts clean",

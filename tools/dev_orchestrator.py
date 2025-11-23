@@ -12,6 +12,7 @@ import os
 import shutil
 import signal
 import socket
+import subprocess
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -99,7 +100,6 @@ class AddonConfig:
             # Add Homebrew library paths for cairo
             if shutil.which("brew"):
                 try:
-import subprocess
                     brew_prefix = subprocess.check_output(["brew", "--prefix"], text=True).strip()
                     cairo_lib = f"{brew_prefix}/lib"
 
@@ -308,14 +308,16 @@ class ServiceProcess:
         """Check if prerequisites are met to start this service."""
         # Check for node_modules if Node.js service
         if not self.addon.is_python:
-            # Check in the working directory (might be different from source_dir for upstream clones)
+            # Only enforce node_modules when this looks like a Node project.
             working_dir = self.addon.get_working_dir()
-            node_modules = working_dir / "node_modules"
-            if not node_modules.exists():
-                self._log("[yellow]⚠️  node_modules not found. Run 'npm install' first.[/yellow]")
-                self._log(f"[yellow]   cd {working_dir} && npm install[/yellow]")
-                self.failure_reason = "Missing node_modules (run npm install)"
-                return False
+            package_json = working_dir / "package.json"
+            if package_json.exists():
+                node_modules = working_dir / "node_modules"
+                if not node_modules.exists():
+                    self._log("[yellow]⚠️  node_modules not found. Run 'just setup' (or npm install for this add-on).[/yellow]")
+                    self._log(f"[yellow]   cd {working_dir} && npm install[/yellow]")
+                    self.failure_reason = "Missing node_modules (run just setup / npm install)"
+                    return False
 
         # Check for venv/uv setup if Python service
         if self.addon.is_python:
