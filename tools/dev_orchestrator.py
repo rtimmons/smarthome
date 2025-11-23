@@ -86,6 +86,8 @@ class AddonConfig:
                 deps.add("sonos-api")
             if "local-grid-dashboard" in default_val:
                 deps.add("grid-dashboard")
+            if "mongodb://mongodb:" in default_val or "mongodb:27017" in default_val:
+                deps.add("mongodb")
         return deps
 
     def build_env_vars(self) -> Dict[str, str]:
@@ -129,6 +131,7 @@ import subprocess
                 default = default.replace("http://local-node-sonos-http-api:5005", "http://localhost:5005")
                 default = default.replace("http://local-sonos-api:5006", "http://localhost:5006")
                 default = default.replace("http://local-grid-dashboard:3000", "http://localhost:3000")
+                default = default.replace("mongodb://mongodb:27017", "mongodb://localhost:27017")
                 default = default.replace("/share/printer-labels", "/tmp/printer-labels")
 
                 if default or not env_spec.get("optional", False):
@@ -147,6 +150,10 @@ import subprocess
 
     def get_start_command(self) -> List[str]:
         """Determine the command to start this addon in dev mode."""
+        # Special case for MongoDB - use justfile
+        if self.key == "mongodb":
+            return ["just", "start"]
+
         if self.is_python:
             # Python service - check for script in pyproject.toml
             pyproject_path = self.source_dir / "pyproject.toml"

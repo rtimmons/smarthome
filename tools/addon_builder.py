@@ -168,6 +168,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "usb": raw.get("usb", False),
             "audio": raw.get("audio", False),
             "gpio": raw.get("gpio", False),
+            "custom_dockerfile": raw.get("custom_dockerfile", False),
             # Runtime versions from .nvmrc and .python-version
             "node_version": runtime_versions["node"],
             "node_major": runtime_versions["node_major"],
@@ -256,8 +257,22 @@ def build_addon(addon_key: str) -> Path:
 
     env = jinja_env()
     write_file(addon_root / "config.yaml", render_template(env, "config.yaml.j2", context))
-    write_file(addon_root / "Dockerfile", render_template(env, "Dockerfile.j2", context))
-    write_file(addon_root / "run.sh", render_template(env, "run.sh.j2", context))
+
+    # Handle custom Dockerfile
+    if addon.get("custom_dockerfile", False):
+        custom_dockerfile = addon["source_dir"] / "Dockerfile"
+        if not custom_dockerfile.exists():
+            raise click.ClickException(f"custom_dockerfile is set but {custom_dockerfile} not found")
+        shutil.copy2(custom_dockerfile, addon_root / "Dockerfile")
+    else:
+        write_file(addon_root / "Dockerfile", render_template(env, "Dockerfile.j2", context))
+
+    # Handle custom run.sh
+    custom_run_sh = addon["source_dir"] / "run.sh"
+    if custom_run_sh.exists():
+        shutil.copy2(custom_run_sh, addon_root / "run.sh")
+    else:
+        write_file(addon_root / "run.sh", render_template(env, "run.sh.j2", context))
     os.chmod(addon_root / "run.sh", 0o755)
     write_file(addon_root / "README.md", render_template(env, "README.md.j2", context))
     write_file(addon_root / "DOCS.md", render_template(env, "DOCS.md.j2", context))

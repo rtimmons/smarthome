@@ -1,0 +1,5 @@
+# Local MongoDB data directory
+data/
+
+# Homebrew MongoDB data
+*.log

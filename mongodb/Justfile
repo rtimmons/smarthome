@@ -1,0 +1,68 @@
+set shell := ["bash", "-lc"]
+
+tools_python := "../.venv/bin/python"
+data_dir := "data"
+
+ensure-tools-venv:
+    set -e; \
+    if [ ! -x "{{tools_python}}" ]; then \
+        (cd .. && python3 -m venv .venv); \
+    fi; \
+    if ! "{{tools_python}}" -c "import importlib.util, sys; missing=[m for m in ('click','yaml','jinja2','rich') if importlib.util.find_spec(m) is None]; sys.exit(1 if missing else 0)"; then \
+        (cd .. && "{{tools_python}}" -m pip install -r requirements.txt); \
+    fi
+
+setup:
+    #!/usr/bin/env bash
+    set -e
+    if ! command -v brew >/dev/null 2>&1; then
+        echo "Homebrew is required for local MongoDB on macOS"
+        exit 1
+    fi
+
+    # Install MongoDB Community Edition via Homebrew
+    if ! brew list --formula mongodb-community@8.0 >/dev/null 2>&1; then
+        echo "Installing MongoDB Community Edition 8.x..."
+        brew tap mongodb/brew
+        brew install mongodb-community@8.0
+    fi
+
+    # Create local data directory
+    mkdir -p {{data_dir}}
+    echo "MongoDB setup complete. Use 'just start' to run locally."
+
+start:
+    #!/usr/bin/env bash
+    set -e
+
+    if ! command -v mongod >/dev/null 2>&1; then
+        echo "MongoDB not found. Run 'just setup' first."
+        exit 1
+    fi
+
+    # Create data directory if it doesn't exist
+    mkdir -p {{data_dir}}
+
+    # Start MongoDB with local data directory
+    echo "Starting MongoDB on port 27017..."
+    echo "Data directory: $(pwd)/{{data_dir}}"
+    echo "Connection string: mongodb://localhost:27017/"
+    echo ""
+    echo "Press Ctrl+C to stop"
+    echo ""
+    # Use --quiet to reduce startup warnings (optional)
+    # Remove --quiet to see all logs for debugging
+    mongod --bind_ip 127.0.0.1 --port 27017 --dbpath {{data_dir}}
+
+test:
+    @echo "No tests configured for MongoDB add-on"
+
+ha-addon:
+    set -e; \
+    just ensure-tools-venv; \
+    "{{tools_python}}" ../tools/addon_builder.py build mongodb
+
+deploy:
+    set -e; \
+    just ensure-tools-venv; \
+    "{{tools_python}}" ../tools/addon_builder.py deploy mongodb

@@ -1,0 +1,39 @@
+slug: mongodb
+name: MongoDB
+description: MongoDB Community Edition database server for Home Assistant add-ons
+url: https://github.com/rtimmons/smarthome
+container_workdir: /data/db
+homeassistant_min: "2024.6.0"
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: false
+ports:
+  "27017": 27017
+ports_description:
+  "27017": MongoDB default port
+map:
+  - type: data
+    read_only: false
+options:
+  mongodb_version: "8"
+schema:
+  mongodb_version: "str?"
+translations:
+  configuration:
+    mongodb_version:
+      name: MongoDB version
+      description: MongoDB major version to use (default is 8)
+docs:
+  readme: >
+    MongoDB Community Edition database server for use by other Home Assistant add-ons.
+    Data is stored in the add-on's data directory and included in Home Assistant backups.
+  docs: >
+    This add-on provides MongoDB Community Edition 8.x as a database service for other add-ons.
+    The database listens on port 27017 and is accessible to other add-ons via mongodb:27017.
+  access: >
+    Other add-ons can connect to MongoDB using the connection string: mongodb://mongodb:27017/
+run_env:
+  - env: MONGO_INITDB_DATABASE
+    value: "smarthome"
+custom_dockerfile: true
