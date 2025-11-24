@@ -1,0 +1,43 @@
+{
+  "name": "snapshot-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Daily snapshot API feeding the printer add-on.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "dev:once": "tsx src/server.ts",
+    "start": "node --enable-source-maps dist/server.js",
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts",
+    "fmt": "prettier --check .",
+    "fmt:write": "prettier --write .",
+    "test": "vitest run",
+    "test:watch": "vitest watch",
+    "check": "npm run lint && npm run fmt && npm run typecheck && npm run test"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "dotenv": "^16.4.5",
+    "fastify": "^4.28.1",
+    "fastify-type-provider-zod": "^2.1.0",
+    "zod": "^3.23.8",
+    "zod-openapi": "^5.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.9",
+    "@typescript-eslint/eslint-plugin": "^7.16.1",
+    "@typescript-eslint/parser": "^7.16.1",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "prettier": "^3.3.3",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.3",
+    "vitest": "^2.0.5"
+  }
+}

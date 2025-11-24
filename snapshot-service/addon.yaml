@@ -1,0 +1,33 @@
+slug: snapshot_service
+name: Snapshot Service
+description: Backend snapshot API that feeds the printer add-on.
+url: https://github.com/rtimmons/smarthome
+copy:
+  - src
+  - package-lock.json
+  - package.json
+  - tsconfig.json
+  - tsconfig.build.json
+  - Justfile
+  - vitest.config.ts
+  - .eslintrc.cjs
+  - prettier.config.cjs
+  - README.md
+container_workdir: /opt/snapshot-service/app
+npm_build: true
+homeassistant_min: "2024.6.0"
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: false
+ports:
+  "4010": 4010
+ports_description:
+  "4010": Snapshot API
+environment:
+  NODE_OPTIONS: "--enable-source-maps"
+run_env:
+  - env: PORT
+    value: "4010"
+tests:
+  - npm run build

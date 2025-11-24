@@ -2,7 +2,7 @@
 Backend add-on that returns a fully shaped daily snapshot JSON for the `printer` UI to render (no client-side intelligence needed). Uses TypeScript + Fastify for speed, safety, and easy local development.
 
 ## Tech stack
-- Node.js 20 (per repo `.nvmrc`), TypeScript, Fastify (or Express if preferred), pnpm.
+- Node.js 20 (per repo `.nvmrc`), TypeScript, Fastify (or Express if preferred), npm (corepack-enabled; pnpm also fine).
 - Runtime validation + OpenAPI from one source (e.g., Zod + zod-openapi).
 - Testing: Vitest + Supertest, tsx for watch mode, msw-style mocks for outbound APIs.
 - Tooling: ESLint + Prettier + type-check + coverage in CI; Husky/lint-staged optional.
@@ -27,11 +27,18 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
    - Add feature flags for sections (weather/calendar/schedule/reminders/commute/habits/metrics).
 5) **Operations**  
    - Structured logging, request IDs, healthcheck (`/healthz`), metrics-ready hook (Prom/StatsD).  
-   - Configurable port/bind address; minimal runtime image (node:20-slim + pnpm prune).  
+   - Configurable port/bind address; minimal runtime image (node:20-slim + npm prune).  
    - Add-on packaging: `addon.yaml`, container build, and hook into root `tools/addon_builder.py`.
 
+## Local dev (first cut)
+- `cd snapshot-service`
+- `just setup` (installs npm deps via corepack)
+- `just dev` (Fastify + tsx watch on port 4010)
+- `just test` / `just lint` / `just typecheck` / `just fmt` / `just build`
+- The first `npm install` will generate `package-lock.json`, which is required for Docker/add-on builds.
+
 ## First success criteria (`just dev`)
-- `just dev` runs Fastify in watch mode and serves `GET /snapshot` returning a static fixture from `fixtures/snapshot.json`.  
+- `just dev` runs Fastify in watch mode on port 4010 and serves `GET /snapshot` returning a static fixture from `src/fixtures/snapshot.json`.  
 - Lint/test pass; `just test snapshot-service` (or equivalent) runs Vitest suite over the fixture and schema.  
 - Printer add-on can hit `http://localhost:<port>/snapshot` and render without any extra logic.
 

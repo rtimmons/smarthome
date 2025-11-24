@@ -1,0 +1,37 @@
+set shell := ["bash", "-lc"]
+
+port := "4010"
+
+setup:
+	set -e
+	npm install
+
+dev:
+	set -e
+	if [ ! -d "node_modules" ]; then just setup; fi
+	PORT={{port}} npm run dev
+
+test:
+	set -e
+	if [ ! -d "node_modules" ]; then just setup; fi
+	npm run test
+
+lint:
+	set -e
+	if [ ! -d "node_modules" ]; then just setup; fi
+	npm run lint
+
+fmt:
+	set -e
+	if [ ! -d "node_modules" ]; then just setup; fi
+	npm run fmt
+
+typecheck:
+	set -e
+	if [ ! -d "node_modules" ]; then just setup; fi
+	npm run typecheck
+
+build:
+	set -e
+	if [ ! -d "node_modules" ]; then just setup; fi
+	npm run build
