@@ -11,18 +11,26 @@ Subclass :class:`TemplateDefinition` and provide concrete implementations of
 
 from abc import ABC, abstractmethod
 from collections.abc import ItemsView, Iterator, Mapping
-from typing import Optional, Protocol, TypeAlias, TypeVar
+from typing import Optional, Protocol, Sequence, Mapping as TypingMapping, TypeAlias, TypeVar
 
 from PIL import Image
 
 from printer_service.label_specs import BrotherLabelSpec
 
-TemplateFormValue: TypeAlias = str | int | float | bool | None
+TemplateFormValue: TypeAlias = (
+    str
+    | int
+    | float
+    | bool
+    | None
+    | Sequence["TemplateFormValue"]
+    | TypingMapping[str, "TemplateFormValue"]
+)
 """Normalized values accepted within template form submissions.
 
-The alias lives in :mod:`base` so template implementations can import it
-without triggering the discovery side effects performed in
-``printer_service.label_templates.__init__``.
+This alias supports nested JSON-compatible structures so complex payloads (for
+example widget lists) can flow straight from a caller to the template. Lists and
+mappings must themselves contain only :data:`TemplateFormValue` entries.
 """
 
 _T = TypeVar("_T")

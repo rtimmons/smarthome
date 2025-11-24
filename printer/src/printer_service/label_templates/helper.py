@@ -37,7 +37,10 @@ from typing import (
     TypeAlias,
 )
 
-import cairosvg
+try:
+    import cairosvg  # type: ignore[import-untyped]
+except OSError:
+    cairosvg = None  # type: ignore[assignment]
 from PIL import Image, ImageDraw, ImageFont
 
 FontType: TypeAlias = ImageFont.FreeTypeFont | ImageFont.ImageFont
@@ -321,10 +324,10 @@ def _draw_symbol(
 
 # Provide low-level image finalisation for components that operate outside the stateful helper.
 def _finalize_label_image(
-    canvas: Image.Image, warnings: Sequence[str] | None = None
+    canvas: Image.Image, warnings: Sequence[str] | None = None, *, monochrome: bool = True
 ) -> Image.Image:
-    """Convert ``canvas`` to 1-bit mode and attach optional warning metadata."""
-    result = canvas.convert("1")
+    """Convert ``canvas`` to the desired mode and attach optional warning metadata."""
+    result = canvas.convert("1") if monochrome else canvas.convert("RGB")
     if warnings:
         result.info["label_warnings"] = list(warnings)
     return result
@@ -530,12 +533,14 @@ class LabelDrawingHelper:
             self._canvas.paste(0, (left_x, y), left_mask)
             self._canvas.paste(0, (max(0, right_x), y), right_mask)
 
-    def finalize(self) -> Image.Image:
-        return _finalize_label_image(self._canvas, self._warnings)
+    def finalize(self, *, monochrome: bool = True) -> Image.Image:
+        return _finalize_label_image(self._canvas, self._warnings, monochrome=monochrome)
 
 
 @lru_cache(maxsize=128)
 def _render_svg_symbol_cached(path: Path, output_width: int) -> Image.Image:
+    if cairosvg is None:
+        raise RuntimeError("cairosvg is required to render SVG symbols but is not installed.")
     buffer = io.BytesIO()
     cairosvg.svg2png(url=str(path), write_to=buffer, output_width=output_width)
     buffer.seek(0)

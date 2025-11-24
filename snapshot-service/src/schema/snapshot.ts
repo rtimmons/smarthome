@@ -78,7 +78,26 @@ export const SnapshotSchema = z.object({
     .optional(),
   habits: z.array(HabitSchema).optional(),
   metrics: MetricsSchema.optional(),
-  tips: z.array(z.string()).optional()
+  tips: z.array(z.string()).optional(),
+  widgets: z
+    .array(
+      z.discriminatedUnion("type", [
+        z.object({
+          type: z.literal("date_heading"),
+          payload: z.object({
+            iso_date: z.string(),
+            weekday: z.string(),
+            label: z.string()
+          })
+        }),
+        z.object({
+          type: z.literal("calendar_month"),
+          payload: CalendarMonthSchema
+        })
+      ])
+    )
+    .optional()
 });
 
 export type Snapshot = z.infer<typeof SnapshotSchema>;
+export type SnapshotWidget = Snapshot["widgets"] extends (infer T)[] ? T : never;

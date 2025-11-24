@@ -91,5 +91,70 @@
     { "label": "Meds AM", "checked": false }
   ],
   "metrics": { "glucose_mg_dL": 96, "hydration_cups": 1 },
-  "tips": ["Do 2h deep work before noon"]
+  "tips": ["Do 2h deep work before noon"],
+  "widgets": [
+    {
+      "type": "date_heading",
+      "payload": {
+        "iso_date": "2024-09-10",
+        "weekday": "Tuesday",
+        "label": "Tue Sep 10, 2024"
+      }
+    },
+    {
+      "type": "calendar_month",
+      "payload": {
+        "year": 2024,
+        "month": 9,
+        "month_label": "September",
+        "weeks": [
+          [
+            { "day": 1, "status": "past" },
+            { "day": 2, "status": "past" },
+            { "day": 3, "status": "past" },
+            { "day": 4, "status": "past" },
+            { "day": 5, "status": "past" },
+            { "day": 6, "status": "past" },
+            { "day": 7, "status": "past" }
+          ],
+          [
+            { "day": 8, "status": "past" },
+            { "day": 9, "status": "past" },
+            { "day": 10, "status": "today" },
+            { "day": 11, "status": "future" },
+            { "day": 12, "status": "future" },
+            { "day": 13, "status": "future" },
+            { "day": 14, "status": "future" }
+          ],
+          [
+            { "day": 15, "status": "future" },
+            { "day": 16, "status": "future" },
+            { "day": 17, "status": "future" },
+            { "day": 18, "status": "future" },
+            { "day": 19, "status": "future" },
+            { "day": 20, "status": "future" },
+            { "day": 21, "status": "future" }
+          ],
+          [
+            { "day": 22, "status": "future" },
+            { "day": 23, "status": "future" },
+            { "day": 24, "status": "future" },
+            { "day": 25, "status": "future" },
+            { "day": 26, "status": "future" },
+            { "day": 27, "status": "future" },
+            { "day": 28, "status": "future" }
+          ],
+          [
+            { "day": 29, "status": "future" },
+            { "day": 30, "status": "future" },
+            { "status": "empty" },
+            { "status": "empty" },
+            { "status": "empty" },
+            { "status": "empty" },
+            { "status": "empty" }
+          ]
+        ]
+      }
+    }
+  ]
 }

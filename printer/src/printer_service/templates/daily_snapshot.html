@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block form_heading %}
+Daily Snapshot
+{% endblock %}
+
+{% block form_fields %}
+    <label for="widgets">
+        Widgets JSON
+        <textarea id="widgets" name="widgets" rows="10" placeholder='[{{ "{\"type\":\"date_heading\",\"payload\":{\"label\":\"Tue Sep 10, 2024\"}}" }}]'>{{ form_context.example_widgets_json }}</textarea>
+        <small>Paste the widget array from snapshot-service (types: <code>date_heading</code>, <code>calendar_month</code>).</small>
+    </label>
+{% endblock %}

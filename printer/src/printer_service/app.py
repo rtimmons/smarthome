@@ -8,7 +8,7 @@ from collections.abc import Mapping
 from datetime import date
 from io import BytesIO
 from pathlib import Path
-from typing import Any, Callable, List, Optional, TypeGuard
+from typing import Any, Callable, List, Optional, Sequence, TypeGuard
 from urllib.parse import urlencode, urljoin
 
 from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, url_for
@@ -689,7 +689,16 @@ def _coerce_template_form_data(candidate: object) -> TemplateFormData:
 
 
 def _is_template_form_value(value: object) -> TypeGuard[TemplateFormValue]:
-    return value is None or isinstance(value, (str, int, float, bool))
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return True
+    if isinstance(value, Mapping):
+        return all(
+            isinstance(key, str) and _is_template_form_value(item_value)
+            for key, item_value in value.items()
+        )
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+        return all(_is_template_form_value(item) for item in value)
+    return False
 
 
 def _should_enable_dev_reload() -> bool:
