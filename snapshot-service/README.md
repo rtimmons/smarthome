@@ -42,6 +42,11 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
 - Lint/test pass; `just test snapshot-service` (or equivalent) runs Vitest suite over the fixture and schema.  
 - Printer add-on can hit `http://localhost:<port>/snapshot` and render without any extra logic.
 
+## Receipt checklist flow
+- `GET /receipt/upload` renders the upload UI used by the printed checklist QR.
+- `POST /receipt/analyze` accepts a photo (multipart field `receipt`) and returns which checkboxes were checked.
+- See `docs/receipt.md` for layout, processing details, and a quick demo (`cd snapshot-service && ./check.sh --print` to generate/print a checklist).
+
 ## Proposed JSON shape (fixture example)
 ```json
 {

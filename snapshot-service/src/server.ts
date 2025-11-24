@@ -2,13 +2,14 @@ import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
 import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
 
-import { snapshotFixture } from "./fixtures/snapshot";
-import { SnapshotSchema } from "./schema/snapshot";
+import { snapshotFixture } from "./fixtures/snapshot.js";
+import { SnapshotSchema } from "./schema/snapshot.js";
+import { registerReceiptRoutes } from "./receipt/routes.js";
 
 const DEFAULT_PORT = 4010;
 const DEFAULT_HOST = "0.0.0.0";
 
-export function buildServer() {
+export async function buildServer() {
   const app = Fastify({
     logger: {
       level: process.env.LOG_LEVEL || "info"
@@ -36,6 +37,8 @@ export function buildServer() {
     async () => snapshotFixture
   );
 
+  await registerReceiptRoutes(app);
+
   return app;
 }
 
@@ -43,7 +46,7 @@ export async function start() {
   const port = Number.parseInt(process.env.PORT || `${DEFAULT_PORT}`, 10);
   const host = process.env.HOST || DEFAULT_HOST;
 
-  const app = buildServer();
+  const app = await buildServer();
   try {
     await app.listen({ port, host });
     app.log.info({ port, host }, "Snapshot service started");

@@ -1,12 +1,13 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { buildServer } from "../src/server";
-import { snapshotFixture } from "../src/fixtures/snapshot";
+import { buildServer } from "../src/server.js";
+import { snapshotFixture } from "../src/fixtures/snapshot.js";
 
 describe("snapshot-service server", () => {
-  const app = buildServer();
+  let app: Awaited<ReturnType<typeof buildServer>>;
 
   beforeAll(async () => {
+    app = await buildServer();
     await app.ready();
   });
 

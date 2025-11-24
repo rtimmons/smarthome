@@ -25,6 +25,7 @@ from datetime import datetime
 from functools import lru_cache
 from pathlib import Path
 from typing import (
+    Any,
     Iterable,
     List,
     MutableSequence,
@@ -38,12 +39,14 @@ from typing import (
 )
 
 try:
-    import cairosvg  # type: ignore[import-untyped]
-except OSError:
-    cairosvg = None  # type: ignore[assignment]
+    import cairosvg as _cairosvg
+except (OSError, ImportError):
+    _cairosvg = None
+cairosvg: Any | None = _cairosvg
 from PIL import Image, ImageDraw, ImageFont
 
 FontType: TypeAlias = ImageFont.FreeTypeFont | ImageFont.ImageFont
+ColorValue: TypeAlias = int | tuple[int, int, int] | tuple[int, int, int, int]
 
 from .base import TemplateFormValue
 
@@ -167,7 +170,7 @@ def _draw_centered_text(
     font: FontType,
     canvas_width: int,
     top: int,
-    fill: int = 0,
+    fill: ColorValue = 0,
     advance: bool = True,
     margin_bottom: int = 0,
     warnings: MutableSequence[str] | None = None,
@@ -342,7 +345,7 @@ class LabelDrawingHelper:
         width: int,
         height: int,
         mode: str = "L",
-        color: int = 255,
+        color: ColorValue = 255,
     ) -> None:
         canvas = Image.new(mode, (width, height), color)
         draw = ImageDraw.Draw(canvas)
@@ -396,7 +399,7 @@ class LabelDrawingHelper:
         text: str,
         font: FontType,
         top: Optional[int] = None,
-        fill: int = 0,
+        fill: ColorValue = 0,
         advance: bool = True,
         margin_bottom: int = 0,
         warn_if_wider_than: Literal["auto"] | int | None = "auto",
