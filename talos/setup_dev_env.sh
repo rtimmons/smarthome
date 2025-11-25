@@ -148,7 +148,18 @@ elif [ ! -x "$NVM_USE_SCRIPT" ]; then
     ERRORS=$((ERRORS + 1))
 else
     NODE_SETUP_LOG=$(mktemp)
-    if NVM_VERSION_FILE="$NVM_VERSION_FILE" NVM_DIR="$NVM_DIR" bash "$NVM_USE_SCRIPT" >"$NODE_SETUP_LOG" 2>&1; then
+    nvm_attempt() {
+        NVM_VERSION_FILE="$NVM_VERSION_FILE" NVM_DIR="$NVM_DIR" bash "$NVM_USE_SCRIPT" >"$NODE_SETUP_LOG" 2>&1
+    }
+
+    if ! nvm_attempt; then
+        warn "Retrying nvm initialization after ensuring Homebrew nvm is installed..."
+        if command -v brew >/dev/null 2>&1; then
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install nvm >/dev/null 2>&1 || true
+        fi
+    fi
+
+    if nvm_attempt; then
         NODE_BIN_DIR="$NVM_DIR/versions/node/$REQUIRED_NODE_VERSION/bin"
         if [ -x "$NODE_BIN_DIR/node" ]; then
             PATH="$NODE_BIN_DIR:$PATH"
@@ -161,15 +172,37 @@ else
             success "Node.js is active via nvm"
         fi
     else
-        error "Failed to initialize Node.js via nvm; see logs below"
-        if [ -s "$NODE_SETUP_LOG" ]; then
-            while IFS= read -r line; do
-                warn "nvm: $line"
-            done < "$NODE_SETUP_LOG"
-        else
-            warn "nvm: no output captured from $NVM_USE_SCRIPT"
+        warn "Failed to initialize Node.js via nvm; attempting Homebrew node fallback..."
+        if command -v brew >/dev/null 2>&1; then
+            NODE_MAJOR=$(echo "$REQUIRED_NODE_VERSION" | sed 's/^v//' | cut -d. -f1)
+            BREW_NODE_FORMULA="node@${NODE_MAJOR}"
+            if ! brew list --formula "$BREW_NODE_FORMULA" >/dev/null 2>&1; then
+                HOMEBREW_NO_AUTO_UPDATE=1 brew install "$BREW_NODE_FORMULA" || true
+            fi
+            BREW_NODE_PREFIX=$(brew --prefix "$BREW_NODE_FORMULA" 2>/dev/null || echo "")
+            if [ -n "$BREW_NODE_PREFIX" ] && [ -x "$BREW_NODE_PREFIX/bin/node" ]; then
+                PATH="$BREW_NODE_PREFIX/bin:$PATH"
+                export PATH
+                ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
+                if [ -n "$ACTIVE_NODE_VERSION" ]; then
+                    warn "Using Homebrew $BREW_NODE_FORMULA (Node $ACTIVE_NODE_VERSION) as fallback; nvm did not initialize."
+                fi
+            fi
         fi
-        ERRORS=$((ERRORS + 1))
+
+        if [ -n "${ACTIVE_NODE_VERSION:-}" ]; then
+            success "Node.js is available via Homebrew fallback"
+        else
+            error "Failed to initialize Node.js via nvm; see logs below"
+            if [ -s "$NODE_SETUP_LOG" ]; then
+                while IFS= read -r line; do
+                    warn "nvm: $line"
+                done < "$NODE_SETUP_LOG"
+            else
+                warn "nvm: no output captured from $NVM_USE_SCRIPT"
+            fi
+            ERRORS=$((ERRORS + 1))
+        fi
     fi
     rm -f "$NODE_SETUP_LOG"
 fi
