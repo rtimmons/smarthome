@@ -50,7 +50,7 @@ The setup script will automatically install:
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # Install system dependencies
-brew install cairo nvm pyenv
+brew install cairo nvm pyenv xz
 
 # Install the correct Node version
 # Note: nvm and pyenv are initialized automatically by just commands - no shell profile setup needed

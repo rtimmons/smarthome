@@ -107,9 +107,22 @@ if command -v brew &> /dev/null; then
             ERRORS=$((ERRORS + 1))
         fi
     fi
+
+    # Check for xz (needed for Python _lzma during pyenv builds)
+    if brew list xz &> /dev/null; then
+        success "xz is installed"
+    else
+        warn "xz not found - installing via Homebrew (needed for Python _lzma)..."
+        if brew install xz; then
+            success "xz installed successfully"
+        else
+            error "Failed to install xz"
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
 else
     warn "Homebrew not found. Please install from https://brew.sh"
-    warn "Then run: brew install cairo"
+    warn "Then run: brew install cairo xz"
     ERRORS=$((ERRORS + 1))
 fi
 
@@ -215,6 +228,11 @@ if command -v pyenv &> /dev/null; then
         # Use all CPU cores for parallel compilation
         NCPU=$(sysctl -n hw.ncpu 2>/dev/null || echo 4)
         info "Using $NCPU CPU cores for parallel compilation..."
+        xz_prefix=$(brew --prefix xz 2>/dev/null || echo "${BREW_PREFIX:-/usr/local}")
+        zlib_prefix=$(brew --prefix zlib 2>/dev/null || echo "${BREW_PREFIX:-/usr/local}")
+        export LDFLAGS="${LDFLAGS:-} -L${xz_prefix}/lib -L${zlib_prefix}/lib"
+        export CPPFLAGS="${CPPFLAGS:-} -I${xz_prefix}/include -I${zlib_prefix}/include"
+        export PKG_CONFIG_PATH="${PKG_CONFIG_PATH:-}${PKG_CONFIG_PATH:+:}${xz_prefix}/lib/pkgconfig:${zlib_prefix}/lib/pkgconfig"
         if MAKE_OPTS="-j$NCPU" pyenv install "$REQUIRED_PYTHON_VERSION"; then
             success "Python $REQUIRED_PYTHON_VERSION installed"
         else
