@@ -48,7 +48,7 @@ Controls Python version for:
 ### Docker/Production
 
 **Build process (`just ha-addon`, `just deploy`):**
-1. `tools/addon_builder.py` reads `.nvmrc` and `.python-version`
+1. `talos addon build` reads `.nvmrc` and `.python-version`
 2. Passes versions to Dockerfile template
 3. Dockerfile uses specific base images:
    - Node addons: `FROM node:20.18.2-alpine`

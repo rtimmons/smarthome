@@ -28,7 +28,7 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
 5) **Operations**  
    - Structured logging, request IDs, healthcheck (`/healthz`), metrics-ready hook (Prom/StatsD).  
    - Configurable port/bind address; minimal runtime image (node:20-slim + npm prune).  
-   - Add-on packaging: `addon.yaml`, container build, and hook into root `tools/addon_builder.py`.
+   - Add-on packaging: `addon.yaml`, container build, and hook into root `talos` CLI.
 
 ## Local dev (first cut)
 - `cd snapshot-service`

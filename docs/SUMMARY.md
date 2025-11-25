@@ -14,7 +14,7 @@ A complete local development environment for all Home Assistant add-ons that:
 ## 📁 Files Created/Modified
 
 ### New Files
-- `tools/dev_orchestrator.py` - Main orchestration script (450+ lines)
+- `talos/src/talos/dev.py` - Main orchestration script (450+ lines)
 - `grid-dashboard/addon.yaml` - Add-on configuration
 - `sonos-api/addon.yaml` - Add-on configuration
 - `node-sonos-http-api/addon.yaml` - Add-on configuration
@@ -25,14 +25,10 @@ A complete local development environment for all Home Assistant add-ons that:
 - `docs/SUMMARY.md` - This file
 
 ### Modified Files
-- `tools/addon_builder.py` - Now discovers add-ons from `*/addon.yaml`
+- `talos/src/talos/addon_builder.py` - Discovers add-ons from `*/addon.yaml`
 - `Justfile` - Added `just dev` command
-- `requirements.txt` - Added `tomli==2.0.1`
 - `.gitignore` - Excluded old `tools/addons.yaml`
 - `CLAUDE.md` - Documented new workflow
-
-### Deprecated
-- `tools/addons.yaml` → Backed up as `tools/addons.yaml.backup`
 
 ## ✨ Key Features
 
@@ -181,7 +177,7 @@ Potential improvements (not implemented):
 
 ## 🙏 Notes for Future You
 
-- The orchestrator is in `tools/dev_orchestrator.py`
+- The orchestrator is in `talos/src/talos/dev.py`
 - Each add-on's config is in its own `addon.yaml`
 - Add new add-ons by creating `new-addon/addon.yaml` - they're auto-discovered
 - The build system still works: `just ha-addon <name>`, `just deploy <name>`

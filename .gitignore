@@ -2,3 +2,29 @@
 build/
 tools/addons.yaml
 node-sonos-http-api/node-sonos-http-api/
+
+# JetBrains IDEs (IntelliJ IDEA, WebStorm, PyCharm, etc.)
+# Keep shared project configuration but ignore user-specific settings
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/**/usage.statistics.xml
+.idea/**/dictionaries
+.idea/**/shelf
+.idea/**/aws.xml
+.idea/**/contentModel.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
+.idea/**/dbnavigator.xml
+
+# Sensitive or local-only configuration
+.idea/**/gradle.xml
+.idea/**/libraries
+
+# User-specific files
+*.iws
+*.iml.bak
+*.idea_modules/

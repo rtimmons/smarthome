@@ -349,6 +349,7 @@ def _render_image_from_payload(
     raise LabelPayloadError("Provide 'template'.")
 
 
+# TODO: move best by label and related code its own python module `printer/src/printer_service/best_by.py`. There should not be best-by-specific code in this file.
 def _best_by_form_data_from_request() -> TemplateFormData:
     data: dict[str, TemplateFormValue] = {}
     payload = request.get_json(silent=True)

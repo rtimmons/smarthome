@@ -231,7 +231,7 @@ When updating patches for node-sonos-http-api:
 - Make changes to the cloned files
 - Generate patches with `diff -Naur a/ b/` format (for `-p1` compatibility)
 - Place patch files in `node-sonos-http-api/patches/`
-- Patches are auto-applied during Docker build via `tools/templates/Dockerfile.j2`
+- Patches are auto-applied during Docker build via `talos/src/talos/templates/Dockerfile.j2`
 - Bump version in `node-sonos-http-api/package.json` to force Docker image rebuild
 - Use `ha addons rebuild local_node_sonos_http_api` to force rebuild without version change
 

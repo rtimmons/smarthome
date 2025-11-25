@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 from __future__ import annotations
 
 import base64
@@ -16,16 +15,14 @@ import yaml
 from jinja2 import Environment, FileSystemLoader
 from rich.console import Console
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE_DIR = REPO_ROOT / "tools" / "templates"
-BUILD_ROOT = REPO_ROOT / "build" / "home-assistant-addon"
+from .paths import ADDON_BUILD_ROOT, REPO_ROOT, TEMPLATE_DIR
 
 console = Console()
 
 
 def discover_addons() -> Dict[str, Any]:
     """Discover all addons by finding */addon.yaml files in the repo."""
-    addons = {}
+    addons: Dict[str, Any] = {}
     for addon_yaml in REPO_ROOT.glob("*/addon.yaml"):
         addon_dir = addon_yaml.parent
         addon_key = addon_dir.name
@@ -36,10 +33,7 @@ def discover_addons() -> Dict[str, Any]:
 
         # Derive source_dir from addon location
         # If there's a source_subdir, use that as the working directory
-        if "source_subdir" in data:
-            source_dir = addon_dir / data["source_subdir"]
-        else:
-            source_dir = addon_dir
+        source_dir = addon_dir / data.get("source_subdir", "") if data.get("source_subdir") else addon_dir
 
         data["source_dir"] = source_dir
         addons[addon_key] = data
@@ -62,11 +56,12 @@ def read_package_version(path: Path) -> str:
 def read_pyproject_version(path: Path) -> str:
     try:
         import tomllib
-    except ImportError:
+    except ImportError:  # pragma: no cover - Py<3.11 fallback
         try:
             import tomli as tomllib  # type: ignore
         except ImportError:
             import re
+
             raw = path.read_text()
             match = re.search(r'^version\s*=\s*"(?P<version>[^"]+)"', raw, re.MULTILINE)
             return match.group("version") if match else "0.0.0"
@@ -84,25 +79,22 @@ def default_yaml(data: Dict[str, Any]) -> str:
 
 def read_runtime_versions() -> Dict[str, str]:
     """Read runtime versions from .nvmrc and .python-version files."""
-    versions = {}
+    versions: Dict[str, str] = {}
 
-    # Read Node version from .nvmrc
     nvmrc_path = REPO_ROOT / ".nvmrc"
     if nvmrc_path.exists():
         node_version = nvmrc_path.read_text().strip()
-        # Convert v20.18.2 to 20.18.2 for Docker image tags
-        versions["node"] = node_version.lstrip('v')
-        versions["node_major"] = node_version.lstrip('v').split('.')[0]
+        versions["node"] = node_version.lstrip("v")
+        versions["node_major"] = node_version.lstrip("v").split(".")[0]
     else:
         versions["node"] = "20.18.2"
         versions["node_major"] = "20"
 
-    # Read Python version from .python-version
     python_version_path = REPO_ROOT / ".python-version"
     if python_version_path.exists():
         python_version = python_version_path.read_text().strip()
         versions["python"] = python_version
-        versions["python_minor"] = '.'.join(python_version.split('.')[:2])  # 3.9.0 -> 3.9
+        versions["python_minor"] = ".".join(python_version.split(".")[:2])
     else:
         versions["python"] = "3.9.0"
         versions["python_minor"] = "3.9"
@@ -112,15 +104,13 @@ def read_runtime_versions() -> Dict[str, str]:
 
 def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
     if addon_key not in manifest:
-        raise click.ClickException(f"Addon '{addon_key}' not found in {MANIFEST_PATH}")
+        raise click.ClickException(f"Addon '{addon_key}' not found in manifest")
 
     raw = manifest[addon_key]
     source_dir = REPO_ROOT / raw["source_dir"]
 
-    # Read runtime versions from version files
     runtime_versions = read_runtime_versions()
 
-    # Determine version based on project type
     if raw.get("python", False):
         version_from = source_dir / "pyproject.toml"
         version = read_pyproject_version(version_from) if version_from.exists() else "0.0.0"
@@ -169,7 +159,6 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "audio": raw.get("audio", False),
             "gpio": raw.get("gpio", False),
             "custom_dockerfile": raw.get("custom_dockerfile", False),
-            # Runtime versions from .nvmrc and .python-version
             "node_version": runtime_versions["node"],
             "node_major": runtime_versions["node_major"],
             "python_version": runtime_versions["python"],
@@ -222,7 +211,7 @@ def write_file(path: Path, content: str) -> None:
 
 def generate_placeholder_images(addon_root: Path) -> None:
     placeholder = base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAIwAAACMCAYAAAB1Hg1ZAAAABmJLR0QA/wD/AP+gvaeTAAABhUlEQVR4nO3aPW7CMBQG4M3lDAZhgXcwiAIwJgrAHRhBsENwDozBCnSlYB5iM5dfHpuO83I5ZrSX7/y3t59n9/PNHtq5VABERERERERERETkFy8A+gN1M1vHM/4O1Zhq6B3QK9jFrZqdd3kc1oAuY4ZrXtUa6PbUDrCOatbfRQuwN1kHtrTxBEcX3W6DBZR264yugPVkHYqVvRCuwR1kHarkgAV6HoUDLVKixj0J6gDtZB2Klb0QrsEdZB2rpJAFel6FAy1SosY9CeoA7WQdiplFRAb0DuoA7WQdiqW0gZ6BzUBoqVNRCewO6CDtZD0qVn0gY6BzUBoqVNRCewO6CDtZD0qVn0gY6BzUBoqVNRCewO6CDtZB2KpbSBnoHNAaKlT0QnsDugg7WQ9Kla9ICNUAZ7Bf0yu9oJvhYpoRERERERERERkd4TB5g2bgDW2lzQAAAABJRU5ErkJggg=="
+        "iVBORw0KGgoAAAANSUhEUgAAAIwAAACMCAYAAAB1Hg1ZAAAABmJLR0QA/wD/AP+gvaeTAAABhUlEQVR4nO3aPW7CMBQG4M3lDAZhgXcwiAIwJgrAHRhBsENwDozBCnSlYB5iM5dfHpuO83I5ZrSX7/y3t59n9/PNHtq5VABERERERERERETkFy8A+gN1M1vHM/4O1Zhq6B3QK9jFrZqdd3kc1oAuY4ZrXtUa6PbUDrCOatbfRQuwN1kHtrTxBEcX3W6DBZR264yugPVkHYqVvRCuwR1kHarkgAV6HoUDLVKixj0J6gDtZB2Klb0QrsEdZB2rpJAFel6FAy1SosY9CeoA7WQdiqW0gZ6BzUBoqVNRCewO6CDtZD0qVn0gY6BzUBoqVNRCewO6CDtZD0qVn0gY6BzUBoqVNRCewO6CDtZB2KpbSBnoHNAaKlT0QnsDugg7WQ9Kla9ICNUAZ7Bf0yu9oJvhYpoRERERERERERkd4TB5g2bgDW2lzQAAAABJRU5ErkJggg=="
     )
     for name in ("icon.png", "logo.png"):
         target = addon_root / name
@@ -231,8 +220,8 @@ def generate_placeholder_images(addon_root: Path) -> None:
 
 
 def make_tarball(addon_root: Path, slug: str) -> Path:
-    BUILD_ROOT.mkdir(parents=True, exist_ok=True)
-    archive = BUILD_ROOT / f"{slug}.tar.gz"
+    ADDON_BUILD_ROOT.mkdir(parents=True, exist_ok=True)
+    archive = ADDON_BUILD_ROOT / f"{slug}.tar.gz"
     if archive.exists():
         archive.unlink()
     with tarfile.open(archive, "w:gz") as tar:
@@ -244,7 +233,7 @@ def build_addon(addon_key: str) -> Path:
     manifest = load_manifest()
     context = build_context(addon_key, manifest)
     addon = context["addon"]
-    addon_root = BUILD_ROOT / addon["slug"]
+    addon_root = ADDON_BUILD_ROOT / addon["slug"]
     app_root = addon_root / "app"
     translations_root = addon_root / "translations"
 
@@ -258,7 +247,6 @@ def build_addon(addon_key: str) -> Path:
     env = jinja_env()
     write_file(addon_root / "config.yaml", render_template(env, "config.yaml.j2", context))
 
-    # Handle custom Dockerfile
     if addon.get("custom_dockerfile", False):
         custom_dockerfile = addon["source_dir"] / "Dockerfile"
         if not custom_dockerfile.exists():
@@ -267,7 +255,6 @@ def build_addon(addon_key: str) -> Path:
     else:
         write_file(addon_root / "Dockerfile", render_template(env, "Dockerfile.j2", context))
 
-    # Handle custom run.sh
     custom_run_sh = addon["source_dir"] / "run.sh"
     if custom_run_sh.exists():
         shutil.copy2(custom_run_sh, addon_root / "run.sh")
@@ -342,44 +329,6 @@ ha addons start "${{ADDON_ID}}" || true
     console.print(f"[green]Deployed[/green] {addon_key} to {ha_host}")
 
 
-@click.group()
-def cli() -> None:
-    """Home Assistant add-on builder."""
-
-
-@cli.command("list")
-def list_addons() -> None:
-    manifest = load_manifest()
-    for key, cfg in manifest.items():
-        console.print(f"- {key}: slug={cfg.get('slug')} port={list((cfg.get('ports') or {}).keys())}")
-
-
-@cli.command("names")
-@click.option("--json", "as_json", is_flag=True, help="Output as JSON array.")
-def addon_names(as_json: bool) -> None:
-    names = list(load_manifest().keys())
-    if as_json:
-        console.print(json.dumps(names))
-    else:
-        console.print(" ".join(names))
-
-
-@cli.command()
-@click.argument("addon")
-def build(addon: str) -> None:
-    build_addon(addon)
-
-
-@cli.command()
-@click.argument("addon")
-@click.option("--ha-host", envvar="HA_HOST", default="homeassistant.local", show_default=True)
-@click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
-@click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
-@click.option("--dry-run", is_flag=True, help="Print commands without executing.")
-def deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool) -> None:
-    deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run)
-
-
 def run_tests(addon_key: str) -> None:
     manifest = load_manifest()
     context = build_context(addon_key, manifest)
@@ -394,11 +343,27 @@ def run_tests(addon_key: str) -> None:
     console.print(f"[green]Tests passed[/green] for {addon_key}")
 
 
-@cli.command()
-@click.argument("addon")
-def test(addon: str) -> None:
+def list_addons() -> None:
+    manifest = load_manifest()
+    for key, cfg in manifest.items():
+        console.print(f"- {key}: slug={cfg.get('slug')} port={list((cfg.get('ports') or {}).keys())}")
+
+
+def addon_names(as_json: bool = False) -> None:
+    names = list(load_manifest().keys())
+    if as_json:
+        console.print(json.dumps(names))
+    else:
+        console.print(" ".join(names))
+
+
+def run_build(addon: str) -> None:
+    build_addon(addon)
+
+
+def run_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool) -> None:
+    deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run)
+
+
+def run_test(addon: str) -> None:
     run_tests(addon)
-
-
-if __name__ == "__main__":
-    cli()

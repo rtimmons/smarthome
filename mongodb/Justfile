@@ -1,16 +1,6 @@
 set shell := ["bash", "-lc"]
 
-tools_python := "../.venv/bin/python"
 data_dir := "data"
-
-ensure-tools-venv:
-    set -e; \
-    if [ ! -x "{{tools_python}}" ]; then \
-        (cd .. && python3 -m venv .venv); \
-    fi; \
-    if ! "{{tools_python}}" -c "import importlib.util, sys; missing=[m for m in ('click','yaml','jinja2','rich') if importlib.util.find_spec(m) is None]; sys.exit(1 if missing else 0)"; then \
-        (cd .. && "{{tools_python}}" -m pip install -r requirements.txt); \
-    fi
 
 setup:
     #!/usr/bin/env bash
@@ -59,10 +49,10 @@ test:
 
 ha-addon:
     set -e; \
-    just ensure-tools-venv; \
-    "{{tools_python}}" ../tools/addon_builder.py build mongodb
+    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
+    ../talos/build/bin/talos addon build mongodb
 
 deploy:
     set -e; \
-    just ensure-tools-venv; \
-    "{{tools_python}}" ../tools/addon_builder.py deploy mongodb
+    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
+    ../talos/build/bin/talos addon deploy mongodb

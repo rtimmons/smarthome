@@ -154,10 +154,10 @@ printer/addon.yaml            ✓
 
 ✅ **Build Tools**
 ```
-tools/addon_builder.py       ✓ (reads version files)
-tools/dev_orchestrator.py    ✓ (discovers addons)
-tools/setup_dev_env.sh       ✓ (uses nvm/pyenv)
-tools/templates/Dockerfile.j2 ✓ (uses version vars)
+talos/src/talos/addon_builder.py        ✓ (reads version files)
+talos/src/talos/dev.py                  ✓ (discovers addons)
+talos/setup_dev_env.sh                  ✓ (uses nvm/pyenv)
+talos/src/talos/templates/Dockerfile.j2 ✓ (uses version vars)
 ```
 
 ✅ **Documentation**
@@ -178,9 +178,9 @@ All files are built on these consistent assumptions:
 
 1. **Version Source**: `.nvmrc` and `.python-version` are single source of truth
 2. **Addon Discovery**: Glob `*/addon.yaml` finds all addons
-3. **Build Process**: `tools/addon_builder.py` reads versions and generates Dockerfiles
-4. **Setup Process**: `tools/setup_dev_env.sh` uses nvm/pyenv to install versions
-5. **Dev Process**: `tools/dev_orchestrator.py` discovers and orchestrates services
+3. **Build Process**: `talos addon build` reads versions and generates Dockerfiles
+4. **Setup Process**: `talos/setup_dev_env.sh` uses nvm/pyenv to install versions
+5. **Dev Process**: `talos dev` discovers and orchestrates services
 6. **Naming**: Root commands are `just setup` and `just dev`
 7. **Backward Compatibility**: All existing `just deploy` commands still work
 

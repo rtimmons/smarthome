@@ -1,18 +1,15 @@
-#!/usr/bin/env python3
-"""Utility helpers for inspecting or killing processes bound to add-on ports."""
 from __future__ import annotations
 
 import os
 import signal
 import subprocess
-import sys
 from pathlib import Path
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Set
 
 import click
 import yaml
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+from .paths import REPO_ROOT
 
 
 def _load_addon_ports() -> Dict[str, Set[int]]:
@@ -89,14 +86,7 @@ def _describe_pid(pid: int) -> str:
         return "unknown"
 
 
-@click.group()
-def cli():
-    """Manage processes bound to add-on ports."""
-
-
-@cli.command()
-def list():  # pylint: disable=redefined-builtin
-    """List add-ons and the ports they require."""
+def list_ports() -> None:
     port_map = _load_addon_ports()
     if not port_map:
         click.echo("No add-on ports discovered.")
@@ -108,10 +98,7 @@ def list():  # pylint: disable=redefined-builtin
         click.echo(f"  • {addon}: {ports}")
 
 
-@cli.command()
-@click.option("--force", "force_kill", is_flag=True, help="Use SIGKILL instead of SIGTERM.")
-def kill(force_kill: bool):
-    """Terminate any processes using add-on ports."""
+def kill_ports(force_kill: bool) -> None:
     port_map = _load_addon_ports()
     unique_ports = _collect_unique_ports(port_map)
 
@@ -140,7 +127,7 @@ def kill(force_kill: bool):
                 click.echo(f"  → PID {pid} no longer exists")
             except PermissionError:
                 click.echo(f"  → Permission denied when trying to kill PID {pid}")
-            except Exception as exc:  # pylint: disable=broad-except
+            except Exception as exc:
                 click.echo(f"  → Failed to kill PID {pid}: {exc}")
 
     if killed_any:
@@ -149,7 +136,3 @@ def kill(force_kill: bool):
         click.echo("Some processes could not be terminated. Try rerunning with elevated permissions or kill them manually.")
     else:
         click.echo("No running processes were using the configured ports.")
-
-
-if __name__ == "__main__":
-    cli()

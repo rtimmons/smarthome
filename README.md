@@ -42,6 +42,9 @@ See `docs/dev-setup.md` for details.
 just setup
 ```
 
+The isolated build/orchestration CLI (`talos`) lives under `talos/build/bin`. If you want to use it
+directly, run `./talos/build.sh` once and add `./talos/build/bin` to your `PATH`.
+
 ### Home Assistant Configuration
 
 ```bash

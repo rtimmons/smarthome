@@ -1,10 +1,7 @@
-import "./tools/just/nvm.just"
+import "./talos/just/nvm.just"
 
 set shell := ["bash", "-lc"]
-python_bin := ".venv/bin/python"
-addon_runner := "tools/run_for_addons.sh"
-
-python_cmd := "if [ -x \"" + python_bin + "\" ]; then echo \"" + python_bin + "\"; elif command -v python3 >/dev/null 2>&1; then command -v python3; else command -v python || true; fi"
+talos_bin := "talos/build/bin/talos"
 
 deploy-preflight:
 	#!/usr/bin/env bash
@@ -44,52 +41,43 @@ deploy-preflight:
 		fi
 	done
 
-setup-build-tools:
+talos-build:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	if [ ! -x ".venv/bin/python3" ]; then
-		rm -rf .venv
-		python3 -m venv .venv
-	fi
-	. .venv/bin/activate && pip install -r requirements.txt
+	./talos/build.sh
 
-ha-addon addon="all":
+ha-addon addon="all": talos-build
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-	"{{addon_runner}}" ha-addon "${args[@]}"
+	"{{talos_bin}}" addons run ha-addon "${args[@]}"
 
-deploy addon="all": deploy-preflight setup-build-tools
+deploy addon="all": deploy-preflight talos-build
 	{{nvm_use}}; \
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-	"{{addon_runner}}" deploy "${args[@]}"
+	"{{talos_bin}}" addons run deploy "${args[@]}"
 	@echo ""
 	@echo "Deploying Home Assistant configs..."
 	cd new-hass-configs && just deploy
 
 test addon="all":
-	args=(); \
-	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-	"{{addon_runner}}" test "${args[@]}"
+		@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
+		( cd talos && build/venv/bin/python -m pip install -e '.[test]' >/dev/null && build/venv/bin/python -m pytest tests ); \
+		args=(); \
+		if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
+		"{{talos_bin}}" addons run test "${args[@]}"
 
 addons:
-	PYTHON_CMD=$({{python_cmd}}); \
-	if [ -z "$PYTHON_CMD" ]; then \
-		echo "Python not found. Run 'just setup' first."; \
-		exit 1; \
-	fi; \
-	"$PYTHON_CMD" tools/addon_builder.py list
+	if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
+	"{{talos_bin}}" addon list
 
 setup:
-	@bash tools/setup_dev_env.sh
+	@bash talos/setup_dev_env.sh
 
 kill:
-	PYTHON_CMD=$({{python_cmd}}); \
-	if [ -z "$PYTHON_CMD" ]; then \
-		echo "Python not found. Run 'just setup' first."; \
-		exit 1; \
-	fi; \
-	"$PYTHON_CMD" tools/manage_ports.py kill
+	if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
+	"{{talos_bin}}" ports kill
 
 dev:
-	.venv/bin/python tools/dev_orchestrator.py
+	if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
+	"{{talos_bin}}" dev

@@ -1,4 +1,4 @@
-import "../tools/just/nvm.just"
+import "../talos/just/nvm.just"
 
 set shell := ["bash", "-lc"]
 config_env := "XDG_CONFIG_HOME=$PWD/.config"
@@ -13,10 +13,12 @@ test:
 	cd ExpressServer && mkdir -p .config && {{no_update}} {{config_env}} npm test && {{no_update}} {{config_env}} npm run check
 
 ha-addon:
-	python ../tools/addon_builder.py build grid-dashboard
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build grid-dashboard
 
 deploy:
-	python ../tools/addon_builder.py deploy grid-dashboard
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon deploy grid-dashboard
 
 report:
 	set -e

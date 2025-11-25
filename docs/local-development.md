@@ -86,7 +86,7 @@ A new development orchestrator (Python script or Justfile recipes) will:
 
 ### Phase 2: Service Startup Infrastructure
 - [x] Refactor to decentralized `*/addon.yaml` structure
-- [ ] Create `tools/dev_orchestrator.py` to discover addon.yaml files
+- [ ] Create Talos dev orchestrator to discover addon.yaml files
 - [ ] Implement service dependency resolution
 - [ ] Add environment variable interpolation from `run_env` configs
 - [ ] Create individual service launchers with correct runtimes
@@ -128,9 +128,9 @@ A new development orchestrator (Python script or Justfile recipes) will:
 - ✅ Mapped service dependencies
 - ✅ Located existing dev scripts
 - ✅ Refactored to decentralized `*/addon.yaml` structure (supports cross-repo symlinks)
-- ✅ Updated `tools/addon_builder.py` to discover add-ons via globbing
+- ✅ Added Talos add-on builder that discovers add-ons via globbing
 - ✅ Tested build process with new structure
-- ✅ Created `tools/dev_orchestrator.py` with full orchestration
+- ✅ Created Talos dev orchestrator with full orchestration
 - ✅ Implemented add-on discovery from `*/addon.yaml`
 - ✅ Dependency graph resolution and startup ordering
 - ✅ Environment variable interpolation and localhost URL mapping
@@ -214,10 +214,10 @@ just dev
 The goal is to avoid containers entirely and run natively on macOS for faster iteration. This also ensures the local environment closely matches what runs in the add-on containers.
 
 ### Why Python for Orchestration?
-- Existing build tooling (`tools/addon_builder.py`) already uses Python
+- Talos build tooling already uses Python
 - Excellent process management libraries (subprocess, asyncio)
 - Easy log multiplexing and formatting
-- YAML parsing for `tools/addons.yaml`
+- YAML parsing for add-on manifests
 
 ### Local vs Production Environment Differences
 | Aspect | Production (Add-on) | Local Development |
@@ -251,7 +251,7 @@ printer/
   src/                # Source is in same directory
 ```
 
-The `tools/addon_builder.py` discovers add-ons by globbing `*/addon.yaml`, enabling:
+The Talos add-on builder discovers add-ons by globbing `*/addon.yaml`, enabling:
 - Decentralized configuration (each add-on owns its config)
 - Cross-repository symlinks (symlink an external add-on directory)
 - Easier per-addon development

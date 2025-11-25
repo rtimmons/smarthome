@@ -24,7 +24,9 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
+from .paths import REPO_ROOT
+from . import hooks
+
 console = Console()
 
 # Color palette for service logs
@@ -406,24 +408,10 @@ class ServiceProcess:
 
     def _run_addon_hook(self, hook: str) -> bool:
         """Run a local-dev hook for this add-on if it exists."""
-        hooks_runner = REPO_ROOT / "tools" / "addon_hooks.py"
-        if not hooks_runner.exists():
+        if hooks.run_hook(self.addon.key, hook, if_missing_ok=True):
             return True
 
-        cmd = [sys.executable, str(hooks_runner), "run", self.addon.key, hook, "--if-missing-ok"]
-        result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-
-        if result.returncode == 0:
-            return True
-
-        for stream in (result.stdout, result.stderr):
-            if not stream:
-                continue
-            for line in stream.strip().splitlines():
-                if line:
-                    self._log(f"[yellow]{line}[/yellow]")
-
-        self._log(f"[red]{hook} hook failed with exit code {result.returncode}[/red]")
+        self._log(f"[red]{hook} hook failed[/red]")
         return False
 
     async def stop(self):
@@ -585,17 +573,19 @@ class DevOrchestrator:
 @click.command()
 def main():
     """Run all Home Assistant add-ons locally for development."""
-    orchestrator = DevOrchestrator()
+    sys.exit(run_dev())
 
+
+def run_dev() -> int:
+    """Run the dev orchestrator programmatically."""
+    orchestrator = DevOrchestrator()
     try:
-        exit_code = asyncio.run(orchestrator.run())
+        return asyncio.run(orchestrator.run())
     except KeyboardInterrupt:
-        exit_code = 0
+        return 0
     except Exception as e:
         console.print(f"[red]Fatal error: {e}[/red]")
-        exit_code = 1
-
-    sys.exit(exit_code)
+        return 1
 
 
 if __name__ == "__main__":

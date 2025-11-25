@@ -58,13 +58,15 @@ nvm install
 nvm use
 ```
 
-### 2. Install Python Dependencies
+### 2. Build the Talos Tooling
+
+Talos is the isolated Python toolchain that handles add-on builds and orchestration. See `talos/README.md` for details, but the quick path is:
 
 ```bash
-# From repo root
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+cd talos
+./build.sh
+export PATH="$PWD/build/bin:$PATH"  # optional convenience
+cd ..
 ```
 
 ### 3. Set Up Each Add-on
@@ -113,7 +115,8 @@ Once setup is complete, you can start all services:
 just dev
 ```
 
-This command uses the `.venv` created during setup, so there's no need to activate it manually. If you
+This command uses the Talos CLI installed under `talos/build/bin`, so there's no need to activate a
+virtualenv manually.
 see a port conflict, run `just kill` to terminate any leftover processes that are holding the add-on
 ports open, then retry `just dev`.
 
@@ -173,7 +176,7 @@ If you cannot disable the VPN, add static routes pointing 239.255.255.250/32 and
 
 Each add-on can expose lifecycle hooks under `<addon>/local-dev/hooks/`. Hooks provide a lightweight interface for add-ons to participate in repo-wide workflows without hardcoding paths into `just` recipes or the orchestrator. The following hooks are currently recognized:
 
-- `pre_setup` — executed during `just setup` via `python tools/addon_hooks.py run <addon> pre_setup`. Use this for dependency or environment validation (e.g., Sonos multicast reachability).
+- `pre_setup` — executed during `just setup` via `talos hook run <addon> pre_setup --if-missing-ok`. Use this for dependency or environment validation (e.g., Sonos multicast reachability).
 - `pre_start` — executed by `just dev` immediately before an add-on process is spawned.
 
 Hooks are ordinary executables (shell scripts, Python, etc.) and should exit non-zero to block the workflow with a helpful error message. See `node-sonos-http-api/local-dev/hooks/` for an example.

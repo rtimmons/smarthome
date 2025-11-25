@@ -401,20 +401,45 @@ fi
 
 echo ""
 
-# Validate that SSDP probes can leave this host. VPN/ZeroTrust clients on macOS
-# often install utun routes that block 239.255.255.250/255.255.255.255 traffic,
-# which makes node-sonos-http-api fail with "No system has yet been discovered".
-info "Validating Sonos discovery reachability..."
-SONOS_CHECK_LOG=$(mktemp -t sonos-check.XXXXXX)
-if python tools/addon_hooks.py run node-sonos-http-api pre_setup > "$SONOS_CHECK_LOG" 2>&1; then
-    success "SSDP multicast/broadcast probes were sent successfully"
+info "Ensuring talos CLI is available..."
+TALOS_BIN="$REPO_ROOT/talos/build/bin/talos"
+if talos/build.sh; then
+    if [ -x "$TALOS_BIN" ]; then
+        success "Talos CLI built at $TALOS_BIN"
+    else
+        error "Talos build did not produce $TALOS_BIN"
+        ERRORS=$((ERRORS + 1))
+    fi
 else
-    warn "Sonos discovery test failed:"
-    cat "$SONOS_CHECK_LOG"
-    warn "Disable VPN/ZeroTrust adapters (Tailscale, WARP, corp VPN), turn off 'Private Wi-Fi Address' and 'Limit IP Address Tracking' for your Wi-Fi network, then rerun 'just setup'."
+    error "Failed to build Talos CLI"
     ERRORS=$((ERRORS + 1))
 fi
-rm -f "$SONOS_CHECK_LOG"
+
+echo ""
+
+info "Running add-on pre_setup hooks..."
+ADDON_NAMES=$("$TALOS_BIN" addon names --json 2>/dev/null | python3 - <<'PY' || true
+import json, sys
+try:
+    names = json.load(sys.stdin)
+    if isinstance(names, list):
+        print(" ".join(names))
+except Exception:
+    pass
+PY
+)
+if [ -z "$ADDON_NAMES" ]; then
+    warn "Could not determine add-on list; skipping pre_setup hooks"
+else
+    for addon in $ADDON_NAMES; do
+        if "$TALOS_BIN" hook run "$addon" pre_setup --if-missing-ok; then
+            success "pre_setup hook: $addon"
+        else
+            warn "pre_setup hook failed for $addon"
+            ERRORS=$((ERRORS + 1))
+        fi
+    done
+fi
 
 echo ""
 
@@ -433,34 +458,9 @@ fi
 
 echo ""
 
-# 5. Setup repo-level Python dependencies
-info "Setting up repo-level Python dependencies..."
-
-if [ -z "$PYTHON_BIN" ]; then
-    error "Skipping Python virtual environment setup because no interpreter was found"
-    ERRORS=$((ERRORS + 1))
-else
-    if [ ! -x ".venv/bin/python3" ]; then
-        info "Creating Python virtual environment..."
-        rm -rf .venv
-        "$PYTHON_BIN" -m venv .venv
-        success "Virtual environment created"
-    fi
-
-    info "Installing Python dependencies..."
-    if .venv/bin/pip install -r requirements.txt; then
-        success "Python dependencies installed"
-    else
-        error "Failed to install Python dependencies"
-        ERRORS=$((ERRORS + 1))
-    fi
-fi
-
-echo ""
-
-# 6. Run per-add-on setup recipes
+# 5. Run per-add-on setup recipes
 info "Running add-on setup recipes..."
-if "$REPO_ROOT/tools/run_for_addons.sh" setup; then
+if "$TALOS_BIN" addons run setup; then
     success "Add-on setup completed"
 else
     error "Add-on setup failed; see logs above"

@@ -1,5 +1,7 @@
 # Build System Migration Plan
 
+> Note: The legacy tooling referenced below (`tools/*`) has since been replaced by the Talos CLI under `talos/`. This document is kept for historical context.
+
 **Status:** Planning
 **Goal:** Reduce infrastructure code from ~2,200 lines to <100 lines by adopting monorepo tooling and native build systems
 **Constraints:**
