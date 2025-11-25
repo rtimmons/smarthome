@@ -135,6 +135,23 @@ just check
 just deploy
 ```
 
+### Lifecycle Hooks
+
+Add-ons can provide lifecycle hooks in `<addon>/local-dev/hooks/` to validate **add-on-specific** prerequisites:
+
+- **`pre_setup`** - Run during `just setup` to validate add-on-specific requirements
+- **`pre_start`** - Run before starting service in `just dev` to ensure service can start
+
+**Design principle**: Hooks validate only add-on-specific concerns. General runtime environment (Node.js, Python, system dependencies) is validated by talos itself.
+
+**Current hooks**:
+- **node-sonos-http-api**: Validates Sonos multicast network reachability (SSDP protocol requirement)
+- **printer**: Validates pkg-config cairo configuration (cairocffi Python binding requirement)
+- **grid-dashboard**: No hooks needed (only requires Node.js, which talos handles)
+- **sonos-api**: No hooks needed (only requires Node.js, which talos handles)
+
+See [docs/hooks-guide.md](docs/hooks-guide.md) for complete documentation.
+
 ### Interrogating Live Home Assistant System
 
 The `hass-cli` command is available for querying and controlling the live Home Assistant instance:
