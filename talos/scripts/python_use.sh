@@ -26,54 +26,53 @@ fi
 
 PY_VERSION="$(tr -d '[:space:]' < "$PY_VERSION_FILE")"
 TALOS_PYTHON_BIN=""
-PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
 
-ensure_pyenv_available() {
-  if command -v pyenv >/dev/null 2>&1; then
-    return 0
-  fi
+# Initialize pyenv if present, prefer user installation.
+if [ -z "${PYENV_ROOT:-}" ] && [ -d "$HOME/.pyenv" ]; then
+  export PYENV_ROOT="$HOME/.pyenv"
+fi
+if [ -n "${PYENV_ROOT:-}" ] && [ -d "$PYENV_ROOT/bin" ]; then
+  export PATH="$PYENV_ROOT/bin:$PATH"
+fi
+if command -v pyenv >/dev/null 2>&1; then
+  eval "$(pyenv init -)" >/dev/null 2>&1 || true
+fi
 
-  if [ "${TALOS_PYENV_SKIP_INSTALL:-0}" = "1" ]; then
-    return 1
-  fi
+if ! command -v pyenv >/dev/null 2>&1; then
+  echo "pyenv is required to manage Python versions. Install pyenv and run: pyenv install $PY_VERSION" >&2
+  exit 1
+fi
 
-  if command -v brew >/dev/null 2>&1; then
-    echo "Installing pyenv via Homebrew (one-time)..." >&2
-    if HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv >/dev/null; then
-      return 0
-    fi
-  fi
-
-  return 1
-}
-
-if ensure_pyenv_available; then
-  # Prefer pyenv-managed Python; install quietly if missing.
-  PYENV_VERSION="$PY_VERSION" pyenv install -s "$PY_VERSION" >/dev/null 2>&1 || true
-  TALOS_PYTHON_BIN="$(PYENV_VERSION="$PY_VERSION" pyenv which python 2>/dev/null || true)"
-  if [ -z "${TALOS_PYTHON_BIN:-}" ]; then
-    echo "pyenv could not provide Python $PY_VERSION; ensure it is installed (pyenv install $PY_VERSION)." >&2
+if ! pyenv versions --bare 2>/dev/null | grep -qx "$PY_VERSION"; then
+  echo "Installing Python $PY_VERSION via pyenv (one-time)..." >&2
+  if ! pyenv install -s "$PY_VERSION"; then
+    echo "pyenv install $PY_VERSION failed; install it manually." >&2
     exit 1
   fi
-else
-  if command -v python3 >/dev/null 2>&1; then
-    TALOS_PYTHON_BIN="$(command -v python3)"
-  fi
+fi
 
-  if [ -z "${TALOS_PYTHON_BIN:-}" ]; then
-    echo "Python $PY_VERSION not found; install via pyenv or your package manager." >&2
-    exit 1
-  fi
+pyenv_root="$(pyenv root 2>/dev/null || true)"
+if [ -z "$pyenv_root" ]; then
+  pyenv_root="$HOME/.pyenv"
+fi
 
-  actual_version="$("$TALOS_PYTHON_BIN" --version 2>&1 | awk 'NR==1{print $2}')"
-  required_major_minor="$(echo "$PY_VERSION" | cut -d. -f1-2)"
-  actual_major_minor="$(echo "$actual_version" | cut -d. -f1-2)"
+version_dir="$pyenv_root/versions/$PY_VERSION"
+candidate_bin="$version_dir/bin/python"
 
-  if [ "$required_major_minor" != "$actual_major_minor" ]; then
-    echo "Python version mismatch: required $PY_VERSION (major.minor $required_major_minor), found $actual_version at $TALOS_PYTHON_BIN" >&2
-    echo "Install the required version via pyenv (preferred) or adjust your PATH." >&2
-    exit 1
-  fi
+if [ ! -x "$candidate_bin" ]; then
+  echo "pyenv could not locate Python $PY_VERSION in $version_dir; verify your pyenv installation." >&2
+  exit 1
+fi
+
+export PYENV_VERSION="$PY_VERSION"
+export PATH="$version_dir/bin:$PATH"
+TALOS_PYTHON_BIN="$candidate_bin"
+actual_version="$("$TALOS_PYTHON_BIN" --version 2>&1 | awk 'NR==1{print $2}')"
+actual_mm="$(echo "$actual_version" | cut -d. -f1-2)"
+required_mm="$(echo "$PY_VERSION" | cut -d. -f1-2)"
+if [ "$actual_mm" != "$required_mm" ]; then
+  echo "pyenv resolved to $actual_version (expected $PY_VERSION); adjust your pyenv install." >&2
+  exit 1
 fi
 
 export TALOS_PYTHON_VERSION="$PY_VERSION"

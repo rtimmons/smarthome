@@ -8,7 +8,7 @@ def _env_with_stubbed_path(tmp_path: Path) -> dict[str, str]:
     env = {key: value for key, value in subprocess.os.environ.items()}
     env["PATH"] = f"{tmp_path}/bin:/usr/bin:/bin"
     env["HOME"] = str(tmp_path / "home")
-    env["TALOS_PYENV_SKIP_INSTALL"] = "1"
+    env.pop("PYENV_VERSION", None)
     return env
 
 
@@ -25,6 +25,15 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
 
     required_version = "9.9.9"
 
+    pyenv_root = tmp_path / "pyenvroot"
+    pyenv_root.mkdir()
+    env["PYENV_ROOT"] = str(pyenv_root)
+
+    python_bin = pyenv_root / "versions" / required_version / "bin" / "python"
+    python_bin.parent.mkdir(parents=True, exist_ok=True)
+    python_bin.write_text('#!/usr/bin/env bash\necho "Python 9.9.9"\n', encoding="utf-8")
+    python_bin.chmod(0o755)
+
     pyenv = tmp_path / "bin" / "pyenv"
     pyenv.write_text(
         "\n".join(
@@ -33,18 +42,20 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
                 f'echo "$@" >> "{pyenv_log}"',
                 'case "$1" in',
                 "  versions)",
-                f'    echo "{required_version}"',
+                f'    echo \"{required_version}\"",
                 "    ;;",
                 "  install)",
                 "    exit 0",
                 "    ;;",
                 "  which)",
-                f'    echo "{shim_python}"',
+                f'    echo \"{python_bin}\"',
                 "    ;;",
                 "  root)",
-                f'    echo "{tmp_path}/pyenv"',
+                f'    echo \"{pyenv_root}\"',
                 "    ;;",
-                "esac",
+                "  init)",
+                "    ;;",
+            "esac",
             ]
         )
         + "\n",
@@ -68,10 +79,10 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
     assert proc.stdout.strip() == str(shim_python)
     log_lines = pyenv_log.read_text(encoding="utf-8").strip().splitlines()
     assert "versions --bare" in log_lines[0]
-    assert "which python" in log_lines[-1]
+    assert "which" in log_lines[-1]
 
 
-def test_python_use_errors_on_mismatch_without_pyenv(tmp_path: Path):
+def test_python_use_requires_pyenv_when_missing(tmp_path: Path):
     script = Path(__file__).resolve().parents[1] / "scripts" / "python_use.sh"
     env = _env_with_stubbed_path(tmp_path)
 
@@ -110,7 +121,7 @@ def test_python_use_errors_on_mismatch_without_pyenv(tmp_path: Path):
     )
 
     assert proc.returncode != 0
-    assert "Python version mismatch" in proc.stderr
+    assert "pyenv is required" in proc.stderr
 
 
 def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
@@ -128,6 +139,15 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
     shim_python = tmp_path / "shims" / "python"
     shim_python.parent.mkdir(parents=True, exist_ok=True)
 
+    pyenv_root = tmp_path / "pyenvroot"
+    pyenv_root.mkdir()
+    env["PYENV_ROOT"] = str(pyenv_root)
+
+    python_bin = pyenv_root / "versions" / "3.12.12" / "bin" / "python"
+    python_bin.parent.mkdir(parents=True, exist_ok=True)
+    python_bin.write_text('#!/usr/bin/env bash\necho "Python 3.12.12"\n', encoding="utf-8")
+    python_bin.chmod(0o755)
+
     pyenv = tmp_path / "bin" / "pyenv"
     pyenv.write_text(
         "\n".join(
@@ -138,11 +158,16 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
                 "  install)",
                 "    exit 0",
                 "    ;;",
+                "  versions)",
+                '    echo "3.12.12"',
+                "    ;;",
                 "  which)",
-                f'    echo "{shim_python}"',
+                f'    echo "{python_bin}"',
                 "    ;;",
                 "  root)",
-                f'    echo "{tmp_path}/pyenv"',
+                f'    echo \"{pyenv_root}\"',
+                "    ;;",
+                "  init)",
                 "    ;;",
                 "esac",
             ]
