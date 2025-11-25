@@ -118,84 +118,26 @@ echo ""
 # 2. Check and setup nvm + Node.js
 info "Checking Node.js version management..."
 
-# Try to load nvm if it exists
-export NVM_DIR="$HOME/.nvm"
-if [ -s "$NVM_DIR/nvm.sh" ]; then
-    source "$NVM_DIR/nvm.sh"
-elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
-    # Homebrew location on Apple Silicon
-    source "/opt/homebrew/opt/nvm/nvm.sh"
-elif [ -s "/usr/local/opt/nvm/nvm.sh" ]; then
-    # Homebrew location on Intel
-    source "/usr/local/opt/nvm/nvm.sh"
-fi
+NVM_VERSION_FILE="$REPO_ROOT/.nvmrc"
+NVM_USE_SCRIPT="$REPO_ROOT/talos/scripts/nvm_use.sh"
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+mkdir -p "$NVM_DIR"
 
-NVM_BREW_INSTALLED=0
-if brew_formula_installed "nvm"; then
-    NVM_BREW_INSTALLED=1
-fi
-
-NVM_AVAILABLE=0
-# Check if nvm is available
-if ! command -v nvm &> /dev/null; then
-    warn "nvm not found"
-    if [ $NVM_BREW_INSTALLED -eq 1 ]; then
-        warn "Homebrew reports nvm is installed, but 'nvm' is not available in this shell"
-        print_brew_post_install_notes "nvm"
-    elif command -v brew &> /dev/null; then
-        warn "Installing nvm via Homebrew..."
-        if brew install nvm; then
-            success "nvm installed"
-            # Create nvm directory
-            mkdir -p "$HOME/.nvm"
-            # Try to source again
-            [ -s "/opt/homebrew/opt/nvm/nvm.sh" ] && source "/opt/homebrew/opt/nvm/nvm.sh"
-            [ -s "/usr/local/opt/nvm/nvm.sh" ] && source "/usr/local/opt/nvm/nvm.sh"
-        else
-            error "Failed to install nvm via Homebrew"
-            ERRORS=$((ERRORS + 1))
-        fi
+if [ ! -f "$NVM_VERSION_FILE" ]; then
+    error "Missing $NVM_VERSION_FILE; cannot select Node runtime."
+    ERRORS=$((ERRORS + 1))
+elif [ ! -x "$NVM_USE_SCRIPT" ]; then
+    error "Missing helper script: $NVM_USE_SCRIPT"
+    ERRORS=$((ERRORS + 1))
+elif NVM_VERSION_FILE="$NVM_VERSION_FILE" bash "$NVM_USE_SCRIPT"; then
+    ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
+    if [ -n "$ACTIVE_NODE_VERSION" ]; then
+        success "Node.js $ACTIVE_NODE_VERSION is active via nvm"
     else
-        error "Cannot install nvm without Homebrew"
-        ERRORS=$((ERRORS + 1))
-    fi
-fi
-
-if command -v nvm &> /dev/null; then
-    NVM_AVAILABLE=1
-fi
-
-# Now check Node.js version
-REQUIRED_NODE_VERSION="v20.18.2"
-if [ -f ".nvmrc" ]; then
-    REQUIRED_NODE_VERSION=$(cat .nvmrc)
-fi
-
-if [ $NVM_AVAILABLE -eq 1 ]; then
-    info "Using nvm to manage Node.js version..."
-    if nvm install "$REQUIRED_NODE_VERSION" &> /dev/null; then
-        nvm use "$REQUIRED_NODE_VERSION" &> /dev/null
-        success "Node.js $REQUIRED_NODE_VERSION is active"
-    else
-        error "Failed to install Node.js $REQUIRED_NODE_VERSION via nvm"
-        ERRORS=$((ERRORS + 1))
-    fi
-elif command -v node &> /dev/null; then
-    CURRENT_NODE_VERSION=$(node --version)
-    if [ "$CURRENT_NODE_VERSION" = "$REQUIRED_NODE_VERSION" ]; then
-        success "Node.js $CURRENT_NODE_VERSION is installed"
-    else
-        warn "Node.js version mismatch: current=$CURRENT_NODE_VERSION, required=$REQUIRED_NODE_VERSION"
-        warn "Install nvm to manage Node versions: brew install nvm"
+        success "Node.js is active via nvm"
     fi
 else
-    error "Node.js not found and nvm unavailable"
-    ERRORS=$((ERRORS + 1))
-fi
-
-if [ $NVM_AVAILABLE -eq 0 ]; then
-    error "nvm is required but not available in this shell; ensure it is installed and sourced"
-    [ $NVM_BREW_INSTALLED -eq 1 ] && print_brew_post_install_notes "nvm"
+    error "Failed to initialize Node.js via nvm; see logs above"
     ERRORS=$((ERRORS + 1))
 fi
 
