@@ -7,7 +7,15 @@ import tomllib
 
 
 def pip(*args: str) -> None:
-    subprocess.check_call([sys.executable, "-m", "pip", *args])
+    base_cmd = [
+        sys.executable,
+        "-m",
+        "pip",
+        "--quiet",
+        "--disable-pip-version-check",
+        "--no-color",
+    ]
+    subprocess.check_call([*base_cmd, *args])
 
 
 def main() -> None:

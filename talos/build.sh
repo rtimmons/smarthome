@@ -8,12 +8,16 @@ cd "$SCRIPT_DIR"
 PYTHON_BIN="${PYTHON:-python3}"
 mkdir -p build
 
+export PIP_DISABLE_PIP_VERSION_CHECK=1
+export PIP_NO_COLOR=1
+
 if [ ! -x "build/venv/bin/python" ]; then
   "$PYTHON_BIN" -m venv build/venv
 fi
 
-build/venv/bin/python -m pip install --upgrade pip
-build/venv/bin/python -m pip install -e .
+# Quiet successful installs; stderr still shows failures
+build/venv/bin/python -m pip install --upgrade pip >/dev/null
+build/venv/bin/python -m pip install -e . >/dev/null
 
 # Expose a stable bin path
 (cd build && ln -sfn venv/bin bin)

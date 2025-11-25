@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from click.testing import CliRunner
 
 from talos import cli
@@ -18,3 +20,13 @@ def test_dev_command_invokes_run_dev(monkeypatch):
 
     assert result.exit_code == 0
     assert called["count"] == 1
+
+
+def test_addon_names_json_outputs_manifest():
+    result = CliRunner().invoke(cli.app, ["addon", "names", "--json"])
+
+    assert result.exit_code == 0
+    names = json.loads(result.output.strip())
+    assert isinstance(names, list)
+    for expected in ("grid-dashboard", "sonos-api", "printer"):
+        assert expected in names

@@ -8,6 +8,10 @@ YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
+# Keep npm installs quiet about audits/funding during setup runs
+export NPM_CONFIG_AUDIT=false
+export NPM_CONFIG_FUND=false
+
 # Helper functions
 info() {
     echo -e "${BLUE}ℹ${NC} $1"
@@ -418,7 +422,11 @@ fi
 echo ""
 
 info "Running add-on pre_setup hooks..."
-ADDON_NAMES=$("$TALOS_BIN" addon names --json 2>/dev/null | python3 - <<'PY' || true
+ADDON_NAMES_ERR=$(mktemp)
+ADDON_NAMES_JSON=$("$TALOS_BIN" addon names --json 2>"$ADDON_NAMES_ERR") || ADDON_NAMES_STATUS=$?
+ADDON_NAMES_STATUS=${ADDON_NAMES_STATUS:-0}
+ADDON_NAMES=$(
+    printf '%s' "$ADDON_NAMES_JSON" | python3 - <<'PY'
 import json, sys
 try:
     names = json.load(sys.stdin)
@@ -428,8 +436,31 @@ except Exception:
     pass
 PY
 )
-if [ -z "$ADDON_NAMES" ]; then
+if [ $ADDON_NAMES_STATUS -ne 0 ] || [ -z "$ADDON_NAMES" ]; then
+    # Fallback: find */addon.yaml without relying on talos CLI
+    FALLBACK_NAMES=$(
+        find "$REPO_ROOT" -maxdepth 2 -name addon.yaml -print0 2>/dev/null \
+            | while IFS= read -r -d '' file; do
+                basename "$(dirname "$file")"
+            done \
+            | sort -u \
+            | tr '\n' ' ' \
+            | sed 's/[[:space:]]*$//'
+    )
+    if [ -n "$FALLBACK_NAMES" ]; then
+        info "Using fallback add-on discovery"
+        ADDON_NAMES="$FALLBACK_NAMES"
+        ADDON_NAMES_STATUS=0
+    fi
+fi
+
+if [ $ADDON_NAMES_STATUS -ne 0 ] || [ -z "$ADDON_NAMES" ]; then
     warn "Could not determine add-on list; skipping pre_setup hooks"
+    if [ -s "$ADDON_NAMES_ERR" ]; then
+        while IFS= read -r line; do
+            warn "talos: $line"
+        done < "$ADDON_NAMES_ERR"
+    fi
 else
     for addon in $ADDON_NAMES; do
         if "$TALOS_BIN" hook run "$addon" pre_setup --if-missing-ok; then
@@ -440,6 +471,7 @@ else
         fi
     done
 fi
+rm -f "$ADDON_NAMES_ERR"
 
 echo ""
 

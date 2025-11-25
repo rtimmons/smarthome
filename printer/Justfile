@@ -8,14 +8,7 @@ ensure-venv:
     if [ ! -d "{{venv}}" ]; then python3 -m venv "{{venv}}"; fi
 
 setup:
-    set -e; \
-    brew_prefix="$(brew --prefix)"; \
-    brew list --formula cairo >/dev/null 2>&1 || brew install cairo; \
-    export PKG_CONFIG_PATH="${brew_prefix}/lib/pkgconfig:${brew_prefix}/share/pkgconfig:${PKG_CONFIG_PATH:-}"; \
-    just ensure-venv; \
-    if [ ! -x "{{python}}" ]; then python3 -m venv "{{venv}}"; fi; \
-    if [ ! -x "{{venv}}/bin/pip" ]; then "{{python}}" -m ensurepip --upgrade; fi; \
-    "{{python}}" scripts/bootstrap_env.py
+    @./scripts/setup.sh
 
 start:
     set -e; \
