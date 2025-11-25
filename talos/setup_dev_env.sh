@@ -11,6 +11,8 @@ NC='\033[0m' # No Color
 # Keep npm installs quiet about audits/funding during setup runs
 export NPM_CONFIG_AUDIT=false
 export NPM_CONFIG_FUND=false
+export NPM_CONFIG_LOGLEVEL=error
+export NPM_CONFIG_PROGRESS=false
 
 # Helper functions
 info() {

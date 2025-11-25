@@ -8,7 +8,8 @@ ensure-venv:
     if [ ! -d "{{venv}}" ]; then python3 -m venv "{{venv}}"; fi
 
 setup:
-    @./scripts/setup.sh
+    @REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"; \
+    bash "$REPO_ROOT/printer/scripts/setup.sh"
 
 start:
     set -e; \
