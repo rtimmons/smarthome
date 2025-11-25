@@ -13,15 +13,17 @@ just setup
 This will automatically:
 - ✓ Check for and install Homebrew (if on macOS)
 - ✓ Check for and install system dependencies (cairo)
-- ✓ Check for and install `nvm` (Node Version Manager)
-- ✓ Check for and install `pyenv` (Python Version Manager)
-- ✓ Install correct Node.js version (v20.18.2) via nvm
-- ✓ Install correct Python version (from `.python-version`) via Homebrew (and link it into pyenv)
+- ✓ Check for and install `nvm` (Node Version Manager) via Homebrew
+- ✓ Check for and install `pyenv` (Python Version Manager) via Homebrew
+- ✓ Install correct Node.js version (from `.nvmrc`) via nvm
+- ✓ Install correct Python version (from `.python-version`) via pyenv
 - ✓ Install `uv` package manager via Homebrew or pip
 - ✓ Clone node-sonos-http-api upstream repository
 - ✓ Install all npm dependencies for each service
 - ✓ Sync Python dependencies with uv
 - ✓ Create Python virtual environment
+
+**No shell profile modifications required** - the setup script handles nvm/pyenv initialization automatically.
 
 If the setup completes successfully, you're ready to run `just dev`!
 
@@ -33,10 +35,10 @@ If `just setup` encounters issues or you prefer manual setup:
 
 The setup script will automatically install:
 - **Homebrew**: macOS package manager
-- **nvm**: Node Version Manager
-- **pyenv**: Python Version Manager
+- **nvm**: Node Version Manager (via Homebrew)
+- **pyenv**: Python Version Manager (via Homebrew)
 - **Node.js**: v20.18.2 (via nvm)
-- **Python**: 3.12.12 or compatible (via Homebrew + pyenv)
+- **Python**: 3.12.12 (via pyenv)
 - **npm**: Comes with Node.js
 - **uv**: Python package manager
 - **cairo**: System library for printer service
@@ -47,15 +49,11 @@ The setup script will automatically install:
 # Install Homebrew (macOS)
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# Install cairo
-brew install cairo
-
-# Install nvm if you don't have it
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+# Install system dependencies
+brew install cairo nvm pyenv
 
 # Install the correct Node version
-nvm install
-nvm use
+# Note: nvm and pyenv are initialized automatically by just commands - no shell profile setup needed
 ```
 
 ### 2. Build the Talos Tooling

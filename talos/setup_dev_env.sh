@@ -122,6 +122,10 @@ NVM_VERSION_FILE="$REPO_ROOT/.nvmrc"
 NVM_USE_SCRIPT="$REPO_ROOT/talos/scripts/nvm_use.sh"
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 mkdir -p "$NVM_DIR"
+REQUIRED_NODE_VERSION="v20.18.2"
+if [ -f "$NVM_VERSION_FILE" ]; then
+    REQUIRED_NODE_VERSION=$(tr -d '[:space:]' < "$NVM_VERSION_FILE")
+fi
 
 if [ ! -f "$NVM_VERSION_FILE" ]; then
     error "Missing $NVM_VERSION_FILE; cannot select Node runtime."
@@ -129,16 +133,32 @@ if [ ! -f "$NVM_VERSION_FILE" ]; then
 elif [ ! -x "$NVM_USE_SCRIPT" ]; then
     error "Missing helper script: $NVM_USE_SCRIPT"
     ERRORS=$((ERRORS + 1))
-elif NVM_VERSION_FILE="$NVM_VERSION_FILE" bash "$NVM_USE_SCRIPT"; then
-    ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
-    if [ -n "$ACTIVE_NODE_VERSION" ]; then
-        success "Node.js $ACTIVE_NODE_VERSION is active via nvm"
-    else
-        success "Node.js is active via nvm"
-    fi
 else
-    error "Failed to initialize Node.js via nvm; see logs above"
-    ERRORS=$((ERRORS + 1))
+    NODE_SETUP_LOG=$(mktemp)
+    if NVM_VERSION_FILE="$NVM_VERSION_FILE" NVM_DIR="$NVM_DIR" bash "$NVM_USE_SCRIPT" >"$NODE_SETUP_LOG" 2>&1; then
+        NODE_BIN_DIR="$NVM_DIR/versions/node/$REQUIRED_NODE_VERSION/bin"
+        if [ -x "$NODE_BIN_DIR/node" ]; then
+            PATH="$NODE_BIN_DIR:$PATH"
+            export PATH
+        fi
+        ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
+        if [ -n "$ACTIVE_NODE_VERSION" ]; then
+            success "Node.js $ACTIVE_NODE_VERSION is active via nvm"
+        else
+            success "Node.js is active via nvm"
+        fi
+    else
+        error "Failed to initialize Node.js via nvm; see logs below"
+        if [ -s "$NODE_SETUP_LOG" ]; then
+            while IFS= read -r line; do
+                warn "nvm: $line"
+            done < "$NODE_SETUP_LOG"
+        else
+            warn "nvm: no output captured from $NVM_USE_SCRIPT"
+        fi
+        ERRORS=$((ERRORS + 1))
+    fi
+    rm -f "$NODE_SETUP_LOG"
 fi
 
 echo ""
@@ -146,177 +166,68 @@ echo ""
 # 3. Check and setup pyenv + Python
 info "Checking Python version management..."
 
-PYENV_BREW_INSTALLED=0
-if brew_formula_installed "pyenv"; then
-    PYENV_BREW_INSTALLED=1
-fi
-
-# Try to initialize pyenv if it exists
-if command -v pyenv &> /dev/null; then
-    eval "$(pyenv init -)"
-    success "pyenv is available"
-elif [ $PYENV_BREW_INSTALLED -eq 1 ]; then
-    warn "Homebrew reports pyenv is installed, but 'pyenv' is not available in this shell"
-    print_brew_post_install_notes "pyenv"
-elif command -v brew &> /dev/null; then
-    warn "pyenv not found - installing via Homebrew..."
-    if brew install pyenv; then
-        success "pyenv installed"
-        eval "$(pyenv init -)"
-    else
-        warn "Failed to install pyenv (continuing with system Python)"
-    fi
-else
-    info "pyenv not available (using system Python)"
-fi
-
-PYENV_AVAILABLE=0
-if command -v pyenv &> /dev/null; then
-    PYENV_AVAILABLE=1
-fi
-
 # Determine required Python version
 REQUIRED_PYTHON_VERSION="3.12.12"
 if [ -f ".python-version" ]; then
     REQUIRED_PYTHON_VERSION=$(cat .python-version)
 fi
 
-IFS='.' read -r PYTHON_MAJOR PYTHON_MINOR _ <<< "$REQUIRED_PYTHON_VERSION"
-PYTHON_MAJOR_MINOR="${PYTHON_MAJOR}.${PYTHON_MINOR:-0}"
-BREW_PYTHON_FORMULA="python@${PYTHON_MAJOR_MINOR}"
-BREW_PYTHON_PREFIX=""
-BREW_PYTHON_BIN=""
-PYTHON_BIN=""
-
-# Prefer Homebrew's Python to avoid compiling from source
-if command -v brew &> /dev/null; then
-    info "Checking Homebrew for Python $REQUIRED_PYTHON_VERSION..."
-    if HOMEBREW_NO_AUTO_UPDATE=1 brew list "$BREW_PYTHON_FORMULA" &> /dev/null; then
-        success "$BREW_PYTHON_FORMULA is installed"
+# Install pyenv via Homebrew if needed
+if ! command -v pyenv &> /dev/null; then
+    if command -v brew &> /dev/null; then
+        warn "pyenv not found - installing via Homebrew..."
+        if HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv; then
+            success "pyenv installed via Homebrew"
+        else
+            error "Failed to install pyenv via Homebrew"
+            ERRORS=$((ERRORS + 1))
+        fi
     else
-        warn "$BREW_PYTHON_FORMULA not found - installing via Homebrew..."
-        if HOMEBREW_NO_AUTO_UPDATE=1 brew install "$BREW_PYTHON_FORMULA"; then
-            success "$BREW_PYTHON_FORMULA installed"
-        else
-            warn "Failed to install $BREW_PYTHON_FORMULA via Homebrew"
-        fi
-    fi
-
-    BREW_PYTHON_PREFIX=$(HOMEBREW_NO_AUTO_UPDATE=1 brew --prefix "$BREW_PYTHON_FORMULA" 2>/dev/null || true)
-    if [ -n "$BREW_PYTHON_PREFIX" ]; then
-        for candidate in \
-            "$BREW_PYTHON_PREFIX/bin/python${PYTHON_MAJOR_MINOR}" \
-            "$BREW_PYTHON_PREFIX/bin/python${PYTHON_MAJOR}" \
-            "$BREW_PYTHON_PREFIX/bin/python3" \
-            "$BREW_PYTHON_PREFIX/libexec/bin/python${PYTHON_MAJOR_MINOR}" \
-            "$BREW_PYTHON_PREFIX/libexec/bin/python3" \
-            "$BREW_PYTHON_PREFIX/bin/python"; do
-            if [ -x "$candidate" ]; then
-                BREW_PYTHON_BIN="$candidate"
-                break
-            fi
-        done
-
-        if [ -n "$BREW_PYTHON_BIN" ]; then
-            BREW_PYTHON_VERSION=$("$BREW_PYTHON_BIN" --version 2>/dev/null | awk '{print $2}')
-            if [ "$BREW_PYTHON_VERSION" = "$REQUIRED_PYTHON_VERSION" ]; then
-                success "Homebrew Python $BREW_PYTHON_VERSION detected at $BREW_PYTHON_BIN"
-            else
-                warn "Homebrew $BREW_PYTHON_FORMULA provides $BREW_PYTHON_VERSION (expected $REQUIRED_PYTHON_VERSION)"
-                BREW_PYTHON_BIN=""
-            fi
-        else
-            warn "Homebrew $BREW_PYTHON_FORMULA installed but Python binary not found"
-        fi
+        error "pyenv is required but Homebrew is not available. Install pyenv from https://github.com/pyenv/pyenv"
+        ERRORS=$((ERRORS + 1))
     fi
 fi
 
-if [ -n "$BREW_PYTHON_BIN" ]; then
-    PYTHON_BIN="$BREW_PYTHON_BIN"
+# Initialize pyenv (no shell profile modifications needed)
+if command -v pyenv &> /dev/null; then
+    eval "$(pyenv init -)"
+    success "pyenv is available"
+else
+    error "pyenv is required but not available"
+    ERRORS=$((ERRORS + 1))
 fi
 
-# Try to install/use correct Python version with pyenv
-if [ $PYENV_AVAILABLE -eq 1 ]; then
-    info "Using pyenv to manage Python version..."
-    PYENV_HAS_VERSION=0
+# Install required Python version if needed
+if command -v pyenv &> /dev/null; then
     if pyenv versions --bare | grep -q "^${REQUIRED_PYTHON_VERSION}$"; then
-        PYENV_HAS_VERSION=1
-    fi
-
-    if [ $PYENV_HAS_VERSION -eq 0 ] && [ -n "$BREW_PYTHON_BIN" ] && [ -n "$BREW_PYTHON_PREFIX" ]; then
-        PYENV_ROOT_DIR=$(pyenv root)
-        PYENV_VERSION_DIR="$PYENV_ROOT_DIR/versions/$REQUIRED_PYTHON_VERSION"
-        if [ ! -d "$PYENV_VERSION_DIR" ]; then
-            info "Linking Homebrew Python into pyenv at $PYENV_VERSION_DIR..."
-            mkdir -p "$PYENV_VERSION_DIR"
-            if command -v rsync &> /dev/null; then
-                if rsync -a "$BREW_PYTHON_PREFIX"/ "$PYENV_VERSION_DIR"/ > /dev/null 2>&1; then
-                    PYENV_HAS_VERSION=1
-                fi
-            else
-                if cp -R "$BREW_PYTHON_PREFIX"/. "$PYENV_VERSION_DIR"/; then
-                    PYENV_HAS_VERSION=1
-                fi
-            fi
-
-            if [ $PYENV_HAS_VERSION -eq 1 ]; then
-                if [ -x "$PYENV_VERSION_DIR/bin/python3" ] && [ ! -e "$PYENV_VERSION_DIR/bin/python" ]; then
-                    ln -sf python3 "$PYENV_VERSION_DIR/bin/python"
-                fi
-                if [ -x "$PYENV_VERSION_DIR/bin/pip3" ] && [ ! -e "$PYENV_VERSION_DIR/bin/pip" ]; then
-                    ln -sf pip3 "$PYENV_VERSION_DIR/bin/pip"
-                fi
-                success "Homebrew Python linked into pyenv"
-            else
-                warn "Failed to copy Homebrew Python into pyenv"
-                rm -rf "$PYENV_VERSION_DIR" 2>/dev/null || true
-            fi
-        fi
-    fi
-
-    if [ $PYENV_HAS_VERSION -eq 0 ]; then
+        success "Python $REQUIRED_PYTHON_VERSION is already installed via pyenv"
+    else
         info "Installing Python $REQUIRED_PYTHON_VERSION via pyenv..."
         # Use all CPU cores for parallel compilation
         NCPU=$(sysctl -n hw.ncpu 2>/dev/null || echo 4)
         info "Using $NCPU CPU cores for parallel compilation..."
         if MAKE_OPTS="-j$NCPU" pyenv install "$REQUIRED_PYTHON_VERSION"; then
             success "Python $REQUIRED_PYTHON_VERSION installed"
-            PYENV_HAS_VERSION=1
         else
-            warn "Failed to install Python $REQUIRED_PYTHON_VERSION via pyenv"
+            error "Failed to install Python $REQUIRED_PYTHON_VERSION via pyenv"
+            ERRORS=$((ERRORS + 1))
         fi
     fi
 
-    if [ $PYENV_HAS_VERSION -eq 1 ]; then
+    # Set local Python version
+    if pyenv versions --bare | grep -q "^${REQUIRED_PYTHON_VERSION}$"; then
         pyenv local "$REQUIRED_PYTHON_VERSION"
-        success "Python $REQUIRED_PYTHON_VERSION is active"
-        PYENV_PYTHON_BIN=$(pyenv which python3 2>/dev/null || pyenv which python 2>/dev/null || true)
-        if [ -n "$PYENV_PYTHON_BIN" ]; then
-            PYTHON_BIN="$PYENV_PYTHON_BIN"
+        PYTHON_BIN=$(pyenv which python3 2>/dev/null || pyenv which python 2>/dev/null || true)
+        if [ -n "$PYTHON_BIN" ]; then
+            PYTHON_VERSION=$("$PYTHON_BIN" --version | awk '{print $2}')
+            success "Python $PYTHON_VERSION is active via pyenv"
+        else
+            error "Failed to locate Python binary from pyenv"
+            ERRORS=$((ERRORS + 1))
         fi
     fi
-fi
-
-# Check if Python is available
-if [ -z "$PYTHON_BIN" ]; then
-    if command -v python3 &> /dev/null; then
-        PYTHON_BIN=$(command -v python3)
-    elif command -v python &> /dev/null; then
-        PYTHON_BIN=$(command -v python)
-    fi
-fi
-
-if [ -n "$PYTHON_BIN" ]; then
-    PYTHON_VERSION=$("$PYTHON_BIN" --version | awk '{print $2}')
-    success "Python $PYTHON_VERSION is available via $PYTHON_BIN"
 else
-    error "Python 3 not found"
-    ERRORS=$((ERRORS + 1))
-fi
-
-if [ $PYENV_AVAILABLE -eq 0 ]; then
-    error "pyenv is required but not available in this shell; ensure it is installed and initialized"
-    [ $PYENV_BREW_INSTALLED -eq 1 ] && print_brew_post_install_notes "pyenv"
+    error "Cannot manage Python version without pyenv"
     ERRORS=$((ERRORS + 1))
 fi
 

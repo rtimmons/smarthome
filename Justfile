@@ -10,23 +10,25 @@ deploy-preflight:
 		echo "Missing .nvmrc; cannot select Node runtime." >&2
 		exit 1
 	fi
-	python_major_minor="3.12"
-	if [ -f ".python-version" ]; then
-		python_version_raw=$(tr -d '[:space:]' < .python-version | awk -F. '{print $1"."$2}' || true)
-		if [ -n "${python_version_raw:-}" ]; then
-			python_major_minor="$python_version_raw"
-		fi
+	if [ ! -f ".python-version" ]; then
+		echo "Missing .python-version; cannot select Python runtime." >&2
+		exit 1
 	fi
-	python_formula="python@${python_major_minor}"
-	if ! command -v python3 >/dev/null 2>&1; then
-		if command -v brew >/dev/null 2>&1; then
-			echo "Installing ${python_formula} via Homebrew (one-time)..." >&2
-			HOMEBREW_NO_AUTO_UPDATE=1 brew install "${python_formula}"
-		else
-			echo "Missing required tool: python3" >&2
-			exit 1
-		fi
+	# Ensure pyenv is available
+	if ! command -v pyenv >/dev/null 2>&1; then
+		echo "pyenv is required but not available. Run 'just setup' first." >&2
+		exit 1
 	fi
+	# Initialize pyenv (no shell profile modifications needed)
+	eval "$(pyenv init -)"
+	# Check Python version
+	required_python=$(tr -d '[:space:]' < .python-version)
+	if ! pyenv versions --bare | grep -q "^${required_python}$"; then
+		echo "Python ${required_python} not installed via pyenv. Run 'just setup' first." >&2
+		exit 1
+	fi
+	pyenv local "$required_python"
+	# Check Node version
 	{{nvm_use}}
 	expected=$(tr -d ' \t\r\n' < .nvmrc)
 	current=$(nvm current)
@@ -34,6 +36,7 @@ deploy-preflight:
 		echo "Node version mismatch (expected ${expected}, got ${current}). Run 'nvm install' then retry." >&2
 		exit 1
 	fi
+	# Check required tools
 	for bin in python3 rsync ssh scp tar; do
 		if ! command -v "$bin" >/dev/null 2>&1; then
 			echo "Missing required tool: $bin" >&2

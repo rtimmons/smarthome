@@ -83,12 +83,18 @@ The build system automatically discovers add-ons by globbing for `*/addon.yaml` 
 
 Runtime versions are managed via **single source of truth** files:
 - **`.nvmrc`** - Node.js version (e.g., `v20.18.2`)
-- **`.python-version`** - Python version (e.g., `3.9.0`)
+- **`.python-version`** - Python version (e.g., `3.12.12`)
 
 These files control versions in:
 - ✅ Local development (nvm/pyenv)
 - ✅ Docker images (base image selection)
 - ✅ Documentation (auto-generated comments)
+
+**Version managers used:**
+- **nvm** - Manages Node.js versions (installed via Homebrew)
+- **pyenv** - Manages Python versions (installed via Homebrew)
+
+Both tools are automatically installed and configured by `just setup` - **no shell profile modifications required**. The setup script handles initialization via `eval "$(nvm/pyenv init -)"` automatically.
 
 To upgrade a runtime version, simply update the file and run `just setup` (local) or `just ha-addon` (Docker). See `docs/version-management.md` for details.
 

@@ -25,21 +25,23 @@ Controls Node.js version for:
 ```
 
 Controls Python version for:
-- ✅ Local development (via Homebrew + pyenv)
+- ✅ Local development (via pyenv)
 - ✅ Docker images (via base image selection)
 - ✅ CI/CD pipelines (if configured)
-
-**Note**: Older Python versions (3.9.x) may fail to build on modern macOS due to architecture changes. The setup script installs the requested version via Homebrew (fast prebuilt bottles), links it into pyenv, and only compiles from source when Homebrew isn't available.
 
 ## How It Works
 
 ### Local Development
 
 **Setup script (`just setup`):**
-1. Reads `.nvmrc` to determine required Node.js version
-2. Uses nvm to install and activate that version
-3. Reads `.python-version` to determine required Python version
-4. Uses Homebrew to install and link that version into pyenv (and compiles from source only if Homebrew isn't available)
+1. Installs nvm (via Homebrew) if not available
+2. Reads `.nvmrc` to determine required Node.js version
+3. Uses nvm to install and activate that version
+4. Installs pyenv (via Homebrew) if not available
+5. Reads `.python-version` to determine required Python version
+6. Uses pyenv to install and activate that version
+
+**No shell profile modifications required** - nvm and pyenv are initialized automatically by the setup and dev scripts.
 
 **Dev orchestrator (`just dev`):**
 - Services run with the versions installed by nvm/pyenv
