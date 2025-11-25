@@ -65,4 +65,9 @@ if [ "$(nvm version "$required" 2>/dev/null || echo N/A)" = "N/A" ]; then
   nvm install "$required"
 fi
 
-nvm use --silent "$required" >/dev/null || { echo "nvm use failed; ensure $required is installed" >&2; exit 1; }
+# If the version is still not present, attempt install once more then fail loudly.
+if ! nvm use --silent "$required" >/dev/null 2>&1; then
+  echo "Node $required not active; installing now via nvm..." >&2
+  nvm install "$required"
+  nvm use --silent "$required" >/dev/null || { echo "nvm use failed after install; check nvm setup" >&2; exit 1; }
+fi
