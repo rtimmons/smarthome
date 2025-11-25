@@ -44,13 +44,31 @@ ensure_nvm() {
 load_nvm() {
   if [ -s "$NVM_DIR/nvm.sh" ]; then
     . "$NVM_DIR/nvm.sh"
-  elif [ -s "/opt/homebrew/opt/nvm/nvm.sh" ]; then
-    . "/opt/homebrew/opt/nvm/nvm.sh"
-  elif [ -s "/usr/local/opt/nvm/nvm.sh" ]; then
-    . "/usr/local/opt/nvm/nvm.sh"
-  else
-    return 1
+    return 0
   fi
+
+  # Homebrew installs nvm under its prefix; prefer that if NVM_DIR is empty.
+  if command -v brew >/dev/null 2>&1; then
+    local brew_prefix
+    brew_prefix="$(brew --prefix nvm 2>/dev/null || true)"
+    if [ -n "$brew_prefix" ] && [ -s "$brew_prefix/nvm.sh" ]; then
+      mkdir -p "$NVM_DIR"
+      ln -sf "$brew_prefix/nvm.sh" "$NVM_DIR/nvm.sh"
+      . "$brew_prefix/nvm.sh"
+      return 0
+    fi
+  fi
+
+  for candidate in "/opt/homebrew/opt/nvm/nvm.sh" "/usr/local/opt/nvm/nvm.sh"; do
+    if [ -s "$candidate" ]; then
+      mkdir -p "$NVM_DIR"
+      ln -sf "$candidate" "$NVM_DIR/nvm.sh"
+      . "$candidate"
+      return 0
+    fi
+  done
+
+  return 1
 }
 
 ensure_nvm
