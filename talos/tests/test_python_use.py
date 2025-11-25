@@ -20,9 +20,6 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
     (tmp_path / "home").mkdir(parents=True, exist_ok=True)
 
     pyenv_log = tmp_path / "pyenv.log"
-    shim_python = tmp_path / "shims" / "python"
-    shim_python.parent.mkdir(parents=True, exist_ok=True)
-
     required_version = "9.9.9"
 
     pyenv_root = tmp_path / "pyenvroot"
@@ -76,7 +73,7 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
         check=True,
     )
 
-    assert proc.stdout.strip() == str(shim_python)
+    assert proc.stdout.strip() == str(python_bin)
     log_lines = pyenv_log.read_text(encoding="utf-8").strip().splitlines()
     assert "versions --bare" in log_lines[0]
     assert "which" in log_lines[-1]
@@ -136,14 +133,12 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
     system_python.chmod(0o755)
 
     pyenv_log = tmp_path / "pyenv.log"
-    shim_python = tmp_path / "shims" / "python"
-    shim_python.parent.mkdir(parents=True, exist_ok=True)
+    python_bin = pyenv_root = tmp_path / "pyenvroot" / "versions" / "3.12.12" / "bin" / "python"
 
     pyenv_root = tmp_path / "pyenvroot"
     pyenv_root.mkdir()
     env["PYENV_ROOT"] = str(pyenv_root)
 
-    python_bin = pyenv_root / "versions" / "3.12.12" / "bin" / "python"
     python_bin.parent.mkdir(parents=True, exist_ok=True)
     python_bin.write_text('#!/usr/bin/env bash\necho "Python 3.12.12"\n', encoding="utf-8")
     python_bin.chmod(0o755)
@@ -190,5 +185,67 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
         check=True,
     )
 
-    # Should use pyenv shim, not system python3
-    assert proc.stdout.strip() == str(shim_python)
+    # Should use pyenv python, not system python3
+    assert proc.stdout.strip() == str(python_bin)
+
+
+def test_python_use_installs_if_bin_missing(tmp_path: Path):
+    script = Path(__file__).resolve().parents[1] / "scripts" / "python_use.sh"
+    env = _env_with_stubbed_path(tmp_path)
+
+    (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "home").mkdir(parents=True, exist_ok=True)
+
+    pyenv_log = tmp_path / "pyenv.log"
+    required_version = "8.8.8"
+
+    pyenv_root = tmp_path / "pyenvroot"
+    pyenv_root.mkdir()
+    env["PYENV_ROOT"] = str(pyenv_root)
+
+    python_bin = pyenv_root / "versions" / required_version / "bin" / "python"
+    # leave missing; install will create
+
+    pyenv = tmp_path / "bin" / "pyenv"
+    pyenv.write_text(
+        "\n".join(
+            [
+                "#!/usr/bin/env bash",
+                f'echo "$@" >> "{pyenv_log}"',
+                'case "$1" in',
+                "  versions)",
+                f'    echo \"{required_version}\"',
+                "    ;;",
+                "  install)",
+                f'    mkdir -p \"{python_bin.parent}\" && echo \"#!/usr/bin/env bash\" > \"{python_bin}\" && echo \"echo Python {required_version}\" >> \"{python_bin}\" && chmod +x \"{python_bin}\"',
+                "    ;;",
+                "  which)",
+                f'    echo \"{python_bin}\"',
+                "    ;;",
+                "  root)",
+                f'    echo \"{pyenv_root}\"',
+                "    ;;",
+                "  init)",
+                "    ;;",
+            "esac",
+            ]
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    pyenv.chmod(0o755)
+
+    workdir = tmp_path / "work"
+    workdir.mkdir()
+    (workdir / ".python-version").write_text(f"{required_version}\n", encoding="utf-8")
+
+    proc = subprocess.run(
+        ["bash", "-c", f'source \"{script}\" && echo \"$TALOS_PYTHON_BIN\"'],
+        cwd=workdir,
+        env=env,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+    assert proc.stdout.strip() == str(python_bin)

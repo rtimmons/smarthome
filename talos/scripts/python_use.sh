@@ -43,12 +43,9 @@ if ! command -v pyenv >/dev/null 2>&1; then
   exit 1
 fi
 
-if ! pyenv versions --bare 2>/dev/null | grep -qx "$PY_VERSION"; then
-  echo "Installing Python $PY_VERSION via pyenv (one-time)..." >&2
-  if ! pyenv install -s "$PY_VERSION"; then
-    echo "pyenv install $PY_VERSION failed; install it manually." >&2
-    exit 1
-  fi
+PYENV_HAS_INSTALL=0
+if pyenv commands 2>/dev/null | grep -qx install; then
+  PYENV_HAS_INSTALL=1
 fi
 
 pyenv_root="$(pyenv root 2>/dev/null || true)"
@@ -57,11 +54,42 @@ if [ -z "$pyenv_root" ]; then
 fi
 
 version_dir="$pyenv_root/versions/$PY_VERSION"
+needs_install=0
+if ! pyenv versions --bare 2>/dev/null | grep -qx "$PY_VERSION"; then
+  needs_install=1
+fi
+if [ ! -x "$version_dir/bin/python" ]; then
+  needs_install=1
+fi
+
+if [ $needs_install -eq 1 ]; then
+  if [ $PYENV_HAS_INSTALL -ne 1 ]; then
+    echo "pyenv install plugin not found; install it and run: pyenv install $PY_VERSION" >&2
+    exit 1
+  fi
+  echo "Installing Python $PY_VERSION via pyenv (one-time)..." >&2
+  if ! pyenv install -s "$PY_VERSION"; then
+    echo "pyenv install $PY_VERSION failed; install it manually." >&2
+    exit 1
+  fi
+  pyenv rehash >/dev/null 2>&1 || true
+fi
+
+version_dir="$pyenv_root/versions/$PY_VERSION"
 candidate_bin="$version_dir/bin/python"
 
 if [ ! -x "$candidate_bin" ]; then
-  echo "pyenv could not locate Python $PY_VERSION in $version_dir; verify your pyenv installation." >&2
-  exit 1
+  echo "pyenv could not locate Python $PY_VERSION in $version_dir; retrying install..." >&2
+  if [ $PYENV_HAS_INSTALL -ne 1 ]; then
+    echo "pyenv install plugin not found; install it and run: pyenv install $PY_VERSION" >&2
+    exit 1
+  fi
+  pyenv uninstall -f "$PY_VERSION" >/dev/null 2>&1 || true
+  if ! pyenv install -s "$PY_VERSION"; then
+    echo "pyenv install $PY_VERSION failed; install it manually (pyenv uninstall -f $PY_VERSION; pyenv install $PY_VERSION)." >&2
+    exit 1
+  fi
+  pyenv rehash >/dev/null 2>&1 || true
 fi
 
 export PYENV_VERSION="$PY_VERSION"
