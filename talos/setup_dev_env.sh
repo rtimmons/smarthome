@@ -172,12 +172,20 @@ if [ -f ".python-version" ]; then
     REQUIRED_PYTHON_VERSION=$(cat .python-version)
 fi
 
+# Ensure Homebrew bin directories are in PATH
+if command -v brew &> /dev/null; then
+    BREW_PREFIX=$(brew --prefix 2>/dev/null || echo "/usr/local")
+    export PATH="$BREW_PREFIX/bin:$PATH"
+fi
+
 # Install pyenv via Homebrew if needed
 if ! command -v pyenv &> /dev/null; then
     if command -v brew &> /dev/null; then
         warn "pyenv not found - installing via Homebrew..."
         if HOMEBREW_NO_AUTO_UPDATE=1 brew install pyenv; then
             success "pyenv installed via Homebrew"
+            # After fresh install, ensure it's in PATH
+            export PATH="$BREW_PREFIX/bin:$PATH"
         else
             error "Failed to install pyenv via Homebrew"
             ERRORS=$((ERRORS + 1))
@@ -190,6 +198,7 @@ fi
 
 # Initialize pyenv (no shell profile modifications needed)
 if command -v pyenv &> /dev/null; then
+    export PYENV_ROOT="${PYENV_ROOT:-$HOME/.pyenv}"
     eval "$(pyenv init -)"
     success "pyenv is available"
 else
@@ -214,9 +223,11 @@ if command -v pyenv &> /dev/null; then
         fi
     fi
 
-    # Set local Python version
+    # Set local Python version and verify it's active
     if pyenv versions --bare | grep -q "^${REQUIRED_PYTHON_VERSION}$"; then
         pyenv local "$REQUIRED_PYTHON_VERSION"
+        # Re-initialize pyenv after setting local version to ensure PATH is updated
+        eval "$(pyenv init -)"
         PYTHON_BIN=$(pyenv which python3 2>/dev/null || pyenv which python 2>/dev/null || true)
         if [ -n "$PYTHON_BIN" ]; then
             PYTHON_VERSION=$("$PYTHON_BIN" --version | awk '{print $2}')
@@ -261,17 +272,38 @@ fi
 echo ""
 
 info "Ensuring talos CLI is available..."
-TALOS_BIN="$REPO_ROOT/talos/build/bin/talos"
-if PYTHON="$PYTHON_BIN" talos/build.sh; then
-    if [ -x "$TALOS_BIN" ]; then
-        success "Talos CLI built at $TALOS_BIN"
-    else
-        error "Talos build did not produce $TALOS_BIN"
+
+# Verify Python version before building talos
+if [ -z "$PYTHON_BIN" ]; then
+    error "PYTHON_BIN is not set - cannot build talos"
+    ERRORS=$((ERRORS + 1))
+else
+    ACTIVE_PYTHON_VERSION=$("$PYTHON_BIN" --version 2>&1 | awk '{print $2}')
+    info "Building talos with Python $ACTIVE_PYTHON_VERSION at $PYTHON_BIN"
+
+    # Check if Python meets minimum version requirement (>= 3.10)
+    PYTHON_MAJOR=$(echo "$ACTIVE_PYTHON_VERSION" | cut -d. -f1)
+    PYTHON_MINOR=$(echo "$ACTIVE_PYTHON_VERSION" | cut -d. -f2)
+    if [ "$PYTHON_MAJOR" -lt 3 ] || ([ "$PYTHON_MAJOR" -eq 3 ] && [ "$PYTHON_MINOR" -lt 10 ]); then
+        error "Python $ACTIVE_PYTHON_VERSION does not meet talos requirement (>= 3.10)"
+        error "Expected to use $REQUIRED_PYTHON_VERSION but found $ACTIVE_PYTHON_VERSION"
         ERRORS=$((ERRORS + 1))
     fi
-else
-    error "Failed to build Talos CLI"
-    ERRORS=$((ERRORS + 1))
+fi
+
+if [ $ERRORS -eq 0 ]; then
+    TALOS_BIN="$REPO_ROOT/talos/build/bin/talos"
+    if PYTHON="$PYTHON_BIN" talos/build.sh; then
+        if [ -x "$TALOS_BIN" ]; then
+            success "Talos CLI built at $TALOS_BIN"
+        else
+            error "Talos build did not produce $TALOS_BIN"
+            ERRORS=$((ERRORS + 1))
+        fi
+    else
+        error "Failed to build Talos CLI"
+        ERRORS=$((ERRORS + 1))
+    fi
 fi
 
 echo ""
