@@ -33,7 +33,7 @@ deploy-preflight:
 	expected=$(tr -d ' \t\r\n' < .nvmrc)
 	current=$(nvm current)
 	if [ "${current#v}" != "${expected#v}" ]; then
-		echo "Node version mismatch (expected ${expected}, got ${current}). Run 'nvm install' then retry." >&2
+		echo "Node version mismatch (expected ${expected}, got ${current}). Re-run 'just setup' (or 'bash talos/scripts/nvm_use.sh') so the repo bootstraps the correct Node version without relying on your shell profile." >&2
 		exit 1
 	fi
 	# Check required tools

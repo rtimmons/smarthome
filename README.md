@@ -24,6 +24,8 @@ just setup
 just dev
 ```
 
+These commands source the repo's own nvm/pyenv wrappers, so they don't depend on your shell profile; the only expectation is that `brew` is already on `PATH`.
+
 If `just dev` reports that a port is already in use, run `just kill` to free the shared add-on ports
 before retrying.
 

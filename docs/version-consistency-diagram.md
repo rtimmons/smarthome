@@ -24,24 +24,33 @@
 │   ↓              │          │   ↓              │
 │ setup_dev_env.sh │          │ addon_builder.py │
 │   ↓              │          │   ↓              │
-│ • nvm install    │          │ read_runtime_    │
-│   20.18.2        │          │ versions()       │
-│ • pyenv install  │          │   ↓              │
-│   3.9.0          │          │ Dockerfile.j2    │
+│ • talos/scripts/ │          │ read_runtime_    │
+│   nvm_use.sh     │          │ versions()       │
+│   (installs      │          │   ↓              │
+│   Node from      │          │ Dockerfile.j2    │
+│   .nvmrc, no     │          │   ↓              │
+│   shell profile  │          │                  │
+│   needed)        │          │                  │
+│ • pyenv install  │          │                  │
+│   3.12.12        │          │                  │
 │                  │          │   ↓              │
 │ just dev         │          │ FROM node:       │
 │   ↓              │          │ 20.18.2-alpine   │
 │ dev_orchestrator │          │ FROM python:     │
-│   ↓              │          │ 3.9-alpine       │
+│   ↓              │          │ 3.12-alpine      │
 │ Runs services    │          │                  │
 │ with nvm/pyenv   │          │ Deployed to      │
-│ versions         │          │ Home Assistant   │
+│ versions (no     │          │ Home Assistant   │
+│ shell profile    │          │                  │
+│ required)        │          │                  │
 └──────────────────┘          └──────────────────┘
 
         ✅                              ✅
    Node v20.18.2                  Node v20.18.2
    Python 3.12.12                 Python 3.12.12
 ```
+
+All local steps source the repo's bootstrap script (`talos/scripts/nvm_use.sh`) so Node is initialized without touching the user's shell profile; the only assumption is that `brew` is already on `PATH`. Python is handled by `talos/setup_dev_env.sh` using pyenv directly.
 
 ## Upgrade Flow
 
@@ -90,7 +99,7 @@ Version file updated
     ↓ (immediate)
 ├─→ just setup (10-60 seconds)
 │       ↓
-│   nvm installs new Node
+│   talos/scripts/nvm_use.sh installs new Node (sources nvm itself)
 │       ↓
 │   just dev uses new version
 │

@@ -32,6 +32,8 @@ This runs `talos/setup_dev_env.sh` which:
 - Runs `pre_setup` hooks for all add-ons
 - Installs dependencies for each add-on
 
+All of this bootstraps nvm/pyenv directly inside the scripts—no shell profile initialization is required beyond having `brew` available on `PATH`.
+
 ### Manual Talos Build
 
 If you only need to rebuild talos:

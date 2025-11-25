@@ -22,6 +22,7 @@ just deploy grid-dashboard
 ```
 
 All `just` commands automatically ensure talos is built.
+They also source the repo's nvm/pyenv wrappers themselves, so nothing in your shell profile is required beyond `brew` being on `PATH`.
 
 ## Manual Build
 

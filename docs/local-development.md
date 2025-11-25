@@ -68,7 +68,7 @@ A new development orchestrator (Python script or Justfile recipes) will:
 5. Handle graceful shutdown of all services
 
 ### Runtime Management
-- **Node.js**: Use `nvm` to ensure v20.18.2 (from `.nvmrc`)
+- **Node.js**: Managed by `talos/scripts/nvm_use.sh` (sources nvm itself) to ensure v20.18.2 from `.nvmrc` without shell profile tweaks
 - **Python**: Use `uv` or venv with Python 3.10+ (from `.python-version` and pyproject.toml)
 
 ### File Watching
@@ -229,7 +229,7 @@ The goal is to avoid containers entirely and run natively on macOS for faster it
 | Ingress | Via HA supervisor | Direct port access |
 
 ### Runtime Version Management
-- **Node**: Use `nvm use` with `.nvmrc` (v20.18.2)
+- **Node**: Use the repo wrapper (`talos/scripts/nvm_use.sh`) which sources nvm directly and pins to `.nvmrc` (v20.18.2) without requiring shell init files
 - **Python**: Use `uv` with `pyproject.toml` requirements, or fallback to venv with `.python-version`
 
 ## Configuration Structure

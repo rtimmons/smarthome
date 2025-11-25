@@ -143,7 +143,7 @@ All add-ons now follow the same pattern:
 ### 4. Developer Experience
 New developers get immediate, actionable feedback:
 - "Node.js version mismatch" with exact versions
-- "Run this command to fix: nvm install && nvm use"
+- "Rerun just setup (or bash talos/scripts/nvm_use.sh) to install the pinned Node version without touching your shell profile"
 - Links to documentation when needed
 
 ### 5. Documentation
