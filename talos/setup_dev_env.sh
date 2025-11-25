@@ -409,7 +409,7 @@ echo ""
 
 info "Ensuring talos CLI is available..."
 TALOS_BIN="$REPO_ROOT/talos/build/bin/talos"
-if talos/build.sh; then
+if PYTHON="$PYTHON_BIN" talos/build.sh; then
     if [ -x "$TALOS_BIN" ]; then
         success "Talos CLI built at $TALOS_BIN"
     else
