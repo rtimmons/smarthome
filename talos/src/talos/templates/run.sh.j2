@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-OPTIONS_FILE="/data/options.json"
+OPTIONS_FILE="{{ paths.ha_options }}"
 
 log_info() {
   echo "[INFO] $*"
@@ -36,8 +36,8 @@ export {{ env.env }}
 
 {% if addon.key == "node-sonos-http-api" -%}
 # Keep node-sonos-http-api config files in a predictable, user-editable location.
-CONFIG_BASE="/config/node-sonos-http-api"
-DATA_BASE="/data/node-sonos-http-api"
+CONFIG_BASE="{{ paths.ha_config }}/node-sonos-http-api"
+DATA_BASE="{{ paths.ha_data }}/node-sonos-http-api"
 APP_PRESETS="{{ addon.container_workdir }}/presets.json"
 APP_SETTINGS="{{ addon.container_workdir }}/settings.json"
 APP_PRESETS_DIR="{{ addon.container_workdir }}/presets"

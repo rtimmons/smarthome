@@ -70,9 +70,10 @@ This document summarizes the improvements made to talos to make it a world-class
 - Hooks validate prerequisites and provide helpful error messages
 - Hook documentation centralized in USAGE.md
 
-⚠️ **Path handling in templates**
-- Templates hardcode some paths instead of using variables
-- Could be more consistent about path construction
+✅ **Path handling in templates**
+- All paths now defined as variables in build context
+- Templates consistently use path variables instead of hardcoded values
+- Easy to customize paths in one central location
 
 #### Error Handling
 ⚠️ **Deployment error handling**
@@ -157,6 +158,32 @@ Templates moved to correct location as per `pyproject.toml`:
 - Package configuration correctly includes templates via hatchling
 
 All documentation reflects this structure.
+
+### 4. Consistent Path Handling in Templates ✅
+
+**What**: Centralized all path definitions used in templates into build context variables
+
+**Problem**: Templates hardcoded paths like `/opt/venv`, `/tmp/app-overlay`, `/data/options.json`, `/config`, `/data`, `/root`, and `/addons` instead of using variables. This made it harder to customize paths and reduced consistency across templates.
+
+**Solution**:
+- Added `paths` dictionary to build context in `addon_builder.py:124-137`
+- Defined container paths: `venv`, `tmp_overlay`, `ha_options`, `ha_config`, `ha_data`
+- Defined deployment paths: `remote_home`, `remote_addons`
+- Updated all templates to use `{{ paths.variable_name }}` instead of hardcoded paths
+- Fixed `TEMPLATE_DIR` in `paths.py` to use `PACKAGE_ROOT / "templates"`
+
+**Files Modified**:
+- `talos/src/talos/addon_builder.py` - Added paths dictionary to context
+- `talos/src/talos/paths.py` - Fixed TEMPLATE_DIR to point to correct location
+- `talos/src/talos/templates/Dockerfile.j2` - Updated venv and tmp_overlay paths
+- `talos/src/talos/templates/run.sh.j2` - Updated ha_options, ha_config, ha_data paths
+- `talos/src/talos/addon_builder.py:deploy_addon()` - Updated remote paths
+
+**Impact**:
+- Single source of truth for all container and deployment paths
+- Easy to customize paths without editing multiple templates
+- Better consistency and maintainability
+- Self-documenting (each path has an inline comment explaining its purpose)
 
 ## Recommendations for Future Improvements
 

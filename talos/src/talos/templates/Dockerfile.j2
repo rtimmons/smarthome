@@ -37,12 +37,12 @@ RUN apk add --no-cache \
     freetype-dev \
     libpng-dev \
     libffi-dev \
-  && python3 -m venv /opt/venv \
-  && /opt/venv/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
+  && python3 -m venv {{ paths.venv }} \
+  && {{ paths.venv }}/bin/pip install --no-cache-dir --upgrade pip setuptools wheel
 
-ENV PATH="/opt/venv/bin:${PATH}"
+ENV PATH="{{ paths.venv }}/bin:${PATH}"
 COPY app/ {{ addon.container_workdir }}/
-RUN /opt/venv/bin/pip install --no-cache-dir {{ addon.container_workdir }}/ \
+RUN {{ paths.venv }}/bin/pip install --no-cache-dir {{ addon.container_workdir }}/ \
   && find {{ addon.container_workdir }}/ -type f -name '*.pyc' -delete \
   && find {{ addon.container_workdir }}/ -type d -name '__pycache__' -delete \
   && apk del .build-deps
@@ -56,7 +56,7 @@ WORKDIR {{ addon.container_workdir }}
 RUN apk add --no-cache bash jq {% if addon.git_clone %}git patch{% endif %}
 
 {% if addon.git_clone %}
-COPY app/ /tmp/app-overlay/
+COPY app/ {{ paths.tmp_overlay }}/
 RUN set -e; \
   for i in 1 2 3 4 5; do \
     git clone {{ addon.git_clone.repo | shquote }} {{ addon.git_clone.target | shquote }} {% if addon.git_clone.ref %}&& cd {{ addon.git_clone.target | shquote }} && git checkout {{ addon.git_clone.ref | shquote }} && cd / {% endif %} \
@@ -65,8 +65,8 @@ RUN set -e; \
   cd {{ addon.git_clone.target | shquote }} \
   && npm install --production \
   && npm cache clean --force \
-  && if [ -d /tmp/app-overlay ]; then cp -R /tmp/app-overlay/. {{ addon.git_clone.target | shquote }}/; fi \
-  && if [ -d /tmp/app-overlay/patches ]; then for patch in /tmp/app-overlay/patches/*.patch; do [ -f "$patch" ] && patch -p1 < "$patch" && echo "Applied patch: $patch"; done; fi
+  && if [ -d {{ paths.tmp_overlay }} ]; then cp -R {{ paths.tmp_overlay }}/. {{ addon.git_clone.target | shquote }}/; fi \
+  && if [ -d {{ paths.tmp_overlay }}/patches ]; then for patch in {{ paths.tmp_overlay }}/patches/*.patch; do [ -f "$patch" ] && patch -p1 < "$patch" && echo "Applied patch: $patch"; done; fi
 {% else %}
 COPY app/ {{ addon.container_workdir }}/
 RUN npm ci {% if addon.npm_build %}&& npm run build {% endif %}&& npm cache clean --force

@@ -38,8 +38,11 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
                 "#!/usr/bin/env bash",
                 f'echo "$@" >> "{pyenv_log}"',
                 'case "$1" in',
+                "  commands)",
+                "    echo install",
+                "    ;;",
                 "  versions)",
-                f'    echo \"{required_version}\"",
+                f'    echo \"{required_version}\"',
                 "    ;;",
                 "  install)",
                 "    exit 0",
@@ -75,8 +78,10 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
 
     assert proc.stdout.strip() == str(python_bin)
     log_lines = pyenv_log.read_text(encoding="utf-8").strip().splitlines()
-    assert "versions --bare" in log_lines[0]
-    assert "which" in log_lines[-1]
+    # pyenv init is called first, then versions --bare, then which
+    assert "init -" in log_lines[0]
+    assert any("versions --bare" in line for line in log_lines)
+    assert any("root" in line for line in log_lines)
 
 
 def test_python_use_requires_pyenv_when_missing(tmp_path: Path):
@@ -125,6 +130,9 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
     script = Path(__file__).resolve().parents[1] / "scripts" / "python_use.sh"
     env = _env_with_stubbed_path(tmp_path)
 
+    (tmp_path / "bin").mkdir(parents=True, exist_ok=True)
+    (tmp_path / "home").mkdir(parents=True, exist_ok=True)
+
     # System python reports 3.13
     system_python = tmp_path / "bin" / "python3"
     system_python.write_text(
@@ -150,6 +158,9 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
                 "#!/usr/bin/env bash",
                 f'echo "$@" >> "{pyenv_log}"',
                 'case "$1" in',
+                "  commands)",
+                "    echo install",
+                "    ;;",
                 "  install)",
                 "    exit 0",
                 "    ;;",
@@ -177,7 +188,7 @@ def test_python_use_prefers_pyenv_even_if_system_mismatch(tmp_path: Path):
     (workdir / ".python-version").write_text("3.12.12\n", encoding="utf-8")
 
     proc = subprocess.run(
-        ["bash", "-c", f'source "{script}" && echo \"$TALOS_PYTHON_BIN\""],
+        ["bash", "-c", f'source "{script}" && echo "$TALOS_PYTHON_BIN"'],
         cwd=workdir,
         env=env,
         capture_output=True,
@@ -213,6 +224,9 @@ def test_python_use_installs_if_bin_missing(tmp_path: Path):
                 "#!/usr/bin/env bash",
                 f'echo "$@" >> "{pyenv_log}"',
                 'case "$1" in',
+                "  commands)",
+                "    echo install",
+                "    ;;",
                 "  versions)",
                 f'    echo \"{required_version}\"',
                 "    ;;",

@@ -10,6 +10,6 @@ TALOS_ROOT = PACKAGE_ROOT.parents[1]
 # Repository root
 REPO_ROOT = TALOS_ROOT.parent
 # Template directory for add-on generation
-TEMPLATE_DIR = TALOS_ROOT / "templates"
+TEMPLATE_DIR = PACKAGE_ROOT / "templates"
 # Build artifacts directory for add-ons
 ADDON_BUILD_ROOT = REPO_ROOT / "build" / "home-assistant-addon"

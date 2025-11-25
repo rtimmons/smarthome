@@ -121,6 +121,21 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
     ports = raw.get("ports") or {}
     port = int(next(iter(ports.keys()))) if ports else None
 
+    # Container paths (used in Dockerfile and run.sh templates)
+    container_paths = {
+        "venv": "/opt/venv",  # Python virtual environment location
+        "tmp_overlay": "/tmp/app-overlay",  # Temporary overlay for git clone operations
+        "ha_options": "/data/options.json",  # Home Assistant options file
+        "ha_config": "/config",  # Home Assistant config mount point
+        "ha_data": "/data",  # Home Assistant data mount point
+    }
+
+    # Deployment paths (used for remote Home Assistant operations)
+    deploy_paths = {
+        "remote_home": "/root",  # Home directory on Home Assistant host
+        "remote_addons": "/addons",  # Add-ons directory on Home Assistant host
+    }
+
     context = {
         "addon": {
             "key": addon_key,
@@ -163,6 +178,10 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "node_major": runtime_versions["node_major"],
             "python_version": runtime_versions["python"],
             "python_minor": runtime_versions["python_minor"],
+        },
+        "paths": {
+            **container_paths,
+            **deploy_paths,
         },
         "ports_yaml": default_yaml({f"{k}/tcp": v for k, v in ports.items()}),
         "ports_desc_yaml": default_yaml({f"{k}/tcp": v for k, v in raw.get("ports_description", {}).items()}),
@@ -285,10 +304,11 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
     manifest = load_manifest()
     context = build_context(addon_key, manifest)
     addon = context["addon"]
+    paths = context["paths"]
     archive = build_addon(addon_key)
     slug = addon["slug"]
-    remote_tar = f"/root/{slug}.tar.gz"
-    remote_addon_dir = f"/addons/{slug}"
+    remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
+    remote_addon_dir = f"{paths['remote_addons']}/{slug}"
 
     scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
     run_cmd(scp_cmd, dry_run=dry_run)
@@ -311,8 +331,8 @@ if [ "${{installed}}" = "true" ]; then
 fi
 
 rm -rf "${{REMOTE_ADDON_DIR}}"
-mkdir -p "/addons"
-tar -xzf "${{REMOTE_TAR}}" -C "/addons"
+mkdir -p "{paths['remote_addons']}"
+tar -xzf "${{REMOTE_TAR}}" -C "{paths['remote_addons']}"
 rm -f "${{REMOTE_TAR}}"
 
 ha addons reload
