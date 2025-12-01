@@ -44,9 +44,6 @@ ensure_nvm() {
 load_nvm() {
   local candidates=()
 
-  # User/local install
-  candidates+=("$NVM_DIR/nvm.sh")
-
   # Homebrew installation paths
   if command -v brew >/dev/null 2>&1; then
     local brew_prefix
@@ -59,7 +56,14 @@ load_nvm() {
     candidates+=("/opt/homebrew/opt/nvm/nvm.sh" "/usr/local/opt/nvm/nvm.sh")
   fi
 
+  # User/local install (check last to prefer Homebrew on macOS)
+  candidates+=("$NVM_DIR/nvm.sh")
+
   for candidate in "${candidates[@]}"; do
+    # Skip if candidate is the symlink we're trying to create (prevents circular symlinks)
+    if [ "$candidate" = "$NVM_DIR/nvm.sh" ] && [ -L "$candidate" ]; then
+      continue
+    fi
     if [ -s "$candidate" ]; then
       mkdir -p "$NVM_DIR"
       ln -sf "$candidate" "$NVM_DIR/nvm.sh"
