@@ -60,9 +60,10 @@ if [ ! -f "$NVM_SH" ]; then
   error_exit ${LINENO} "nvm.sh still not found at $NVM_SH after setup"
 fi
 
-echo "[nvm_use] Sourcing nvm.sh..." >&2
-# Source nvm (disable errexit and ERR trap temporarily to handle nvm.sh's internal logic)
-# nvm.sh has its own error handling and may return non-zero in normal operation
+echo "[nvm_use] Sourcing nvm.sh with --no-use..." >&2
+# Source nvm with --no-use flag to prevent auto-activation of .nvmrc versions
+# On fresh machines, nvm.sh tries to auto-activate the version in .nvmrc during sourcing,
+# which fails if Node.js isn't installed yet. --no-use prevents this behavior.
 
 # Create a temporary file to capture nvm.sh stderr
 NVM_SOURCE_LOG=$(mktemp)
@@ -72,7 +73,7 @@ trap - ERR
 
 # Redirect stderr to temp file while sourcing, then restore stderr
 exec 3>&2 2>"$NVM_SOURCE_LOG"
-. "$NVM_SH"
+. "$NVM_SH" --no-use
 SOURCE_EXIT=$?
 exec 2>&3 3>&-
 
