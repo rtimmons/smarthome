@@ -61,11 +61,14 @@ if [ ! -f "$NVM_SH" ]; then
 fi
 
 echo "[nvm_use] Sourcing nvm.sh..." >&2
-# Source nvm (disable errexit temporarily to handle nvm.sh's internal logic)
-set +e
+# Source nvm (disable errexit and ERR trap temporarily to handle nvm.sh's internal logic)
+# nvm.sh has its own error handling and may return non-zero in normal operation
+set +eE
+trap - ERR
 . "$NVM_SH"
 SOURCE_EXIT=$?
 set -e
+trap 'error_exit ${LINENO} "Script failed"' ERR
 
 if [ $SOURCE_EXIT -ne 0 ]; then
   error_exit ${LINENO} "Failed to source $NVM_SH (exit code: $SOURCE_EXIT)"
