@@ -95,7 +95,22 @@ info "Checking system dependencies..."
 if command -v brew &> /dev/null; then
     success "Homebrew is installed"
 
-    # Check for cairo (needed by printer service)
+    # Check for image processing libraries (needed by printer service's Pillow dependency)
+    for lib in jpeg libtiff libpng; do
+        if brew list "$lib" &> /dev/null; then
+            success "$lib is installed"
+        else
+            warn "$lib not found - installing via Homebrew (needed for Pillow)..."
+            if brew install "$lib"; then
+                success "$lib installed successfully"
+            else
+                error "Failed to install $lib"
+                ERRORS=$((ERRORS + 1))
+            fi
+        fi
+    done
+
+    # Check for cairo (needed by printer service's cairosvg dependency)
     if brew list cairo &> /dev/null; then
         success "cairo is installed"
     else
@@ -122,7 +137,7 @@ if command -v brew &> /dev/null; then
     fi
 else
     warn "Homebrew not found. Please install from https://brew.sh"
-    warn "Then run: brew install cairo xz"
+    warn "Then run: brew install jpeg libtiff libpng cairo xz"
     ERRORS=$((ERRORS + 1))
 fi
 
