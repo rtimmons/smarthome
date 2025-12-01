@@ -13,18 +13,29 @@ def test_nvm_use_script_referenced_in_justfile():
 def test_nvm_use_prefers_local_nvmrc(tmp_path: Path):
     script = Path(__file__).resolve().parents[1] / "scripts" / "nvm_use.sh"
 
+    # Create a fake git repo root
+    repo_root = tmp_path / "repo"
+    repo_root.mkdir()
+    (repo_root / ".git").mkdir()
+    (repo_root / ".nvmrc").write_text("v9.9.9\n", encoding="utf-8")
+
     env = {k: v for k, v in subprocess.os.environ.items()}
     env["PATH"] = "/usr/bin:/bin"
     env["HOME"] = str(tmp_path / "home")
+    env["REPO_ROOT"] = str(repo_root)  # Override REPO_ROOT for testing
 
-    nvm_dir = tmp_path / "nvm"
-    nvm_dir.mkdir()
+    # Create self-contained nvm directory structure at expected location
+    build_dir = repo_root / "build"
+    nvm_dir = build_dir / "nvm"
+    nvm_src_dir = nvm_dir / "nvm-src"
+    nvm_src_dir.mkdir(parents=True)
+
     log_path = tmp_path / "log"
-    env["NVM_DIR"] = str(nvm_dir)
     env["NVM_TEST_LOG"] = str(log_path)
     env["NVM_TEST_VERSION"] = "v9.9.9"
 
-    nvm_sh = nvm_dir / "nvm.sh"
+    # Create fake nvm.sh in the expected location
+    nvm_sh = nvm_src_dir / "nvm.sh"
     nvm_sh.write_text(
         """
 #!/usr/bin/env bash
@@ -44,7 +55,7 @@ nvm() {
     )
     nvm_sh.chmod(0o755)
 
-    local_dir = tmp_path / "work"
+    local_dir = repo_root / "work"
     local_dir.mkdir()
     (local_dir / ".nvmrc").write_text("v9.9.9\n", encoding="utf-8")
 

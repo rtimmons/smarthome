@@ -6,6 +6,7 @@ talos_bin := "talos/build/bin/talos"
 deploy-preflight:
 	#!/usr/bin/env bash
 	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 	if [ ! -f ".nvmrc" ]; then
 		echo "Missing .nvmrc; cannot select Node runtime." >&2
 		exit 1
@@ -28,12 +29,13 @@ deploy-preflight:
 		exit 1
 	fi
 	pyenv local "$required_python"
-	# Check Node version
+	# Check Node version using self-contained nvm
+	export NVM_DIR="$REPO_ROOT/build/nvm"
 	{{nvm_use}}
 	expected=$(tr -d ' \t\r\n' < .nvmrc)
 	current=$(nvm current)
 	if [ "${current#v}" != "${expected#v}" ]; then
-		echo "Node version mismatch (expected ${expected}, got ${current}). Re-run 'just setup' (or 'bash talos/scripts/nvm_use.sh') so the repo bootstraps the correct Node version without relying on your shell profile." >&2
+		echo "Node version mismatch (expected ${expected}, got ${current}). Re-run 'just setup' to install the correct Node version via self-contained nvm." >&2
 		exit 1
 	fi
 	# Check required tools
@@ -55,6 +57,8 @@ ha-addon addon="all": talos-build
 	"{{talos_bin}}" addons run ha-addon "${args[@]}"
 
 deploy addon="all": deploy-preflight talos-build
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
+	export NVM_DIR="$REPO_ROOT/build/nvm"; \
 	{{nvm_use}}; \
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \

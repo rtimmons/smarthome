@@ -132,9 +132,11 @@ echo ""
 info "Checking Node.js version management..."
 
 NVM_VERSION_FILE="$REPO_ROOT/.nvmrc"
+NVM_SETUP_SCRIPT="$REPO_ROOT/talos/scripts/setup_nvm.sh"
 NVM_USE_SCRIPT="$REPO_ROOT/talos/scripts/nvm_use.sh"
-export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
-mkdir -p "$NVM_DIR"
+
+# Use self-contained nvm directory (not in user's home)
+export NVM_DIR="$REPO_ROOT/build/nvm"
 REQUIRED_NODE_VERSION="v20.18.2"
 if [ -f "$NVM_VERSION_FILE" ]; then
     REQUIRED_NODE_VERSION=$(tr -d '[:space:]' < "$NVM_VERSION_FILE")
@@ -143,57 +145,34 @@ fi
 if [ ! -f "$NVM_VERSION_FILE" ]; then
     error "Missing $NVM_VERSION_FILE; cannot select Node runtime."
     ERRORS=$((ERRORS + 1))
+elif [ ! -x "$NVM_SETUP_SCRIPT" ]; then
+    error "Missing setup script: $NVM_SETUP_SCRIPT"
+    ERRORS=$((ERRORS + 1))
 elif [ ! -x "$NVM_USE_SCRIPT" ]; then
     error "Missing helper script: $NVM_USE_SCRIPT"
     ERRORS=$((ERRORS + 1))
 else
-    NODE_SETUP_LOG=$(mktemp)
-    nvm_attempt() {
-        NVM_VERSION_FILE="$NVM_VERSION_FILE" NVM_DIR="$NVM_DIR" bash "$NVM_USE_SCRIPT" >"$NODE_SETUP_LOG" 2>&1
-    }
-
-    if ! nvm_attempt; then
-        warn "Retrying nvm initialization after ensuring Homebrew nvm is installed..."
-        if command -v brew >/dev/null 2>&1; then
-            HOMEBREW_NO_AUTO_UPDATE=1 brew install nvm >/dev/null 2>&1 || true
-        fi
-    fi
-
-    if nvm_attempt; then
-        NODE_BIN_DIR="$NVM_DIR/versions/node/$REQUIRED_NODE_VERSION/bin"
-        if [ -x "$NODE_BIN_DIR/node" ]; then
-            PATH="$NODE_BIN_DIR:$PATH"
-            export PATH
-        fi
-        ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
-        if [ -n "$ACTIVE_NODE_VERSION" ]; then
-            success "Node.js $ACTIVE_NODE_VERSION is active via nvm"
-        else
-            success "Node.js is active via nvm"
-        fi
+    # Install self-contained nvm if needed
+    if ! bash "$NVM_SETUP_SCRIPT"; then
+        error "Failed to setup self-contained nvm"
+        ERRORS=$((ERRORS + 1))
     else
-        warn "Failed to initialize Node.js via nvm; attempting Homebrew node fallback..."
-        if command -v brew >/dev/null 2>&1; then
-            NODE_MAJOR=$(echo "$REQUIRED_NODE_VERSION" | sed 's/^v//' | cut -d. -f1)
-            BREW_NODE_FORMULA="node@${NODE_MAJOR}"
-            if ! brew list --formula "$BREW_NODE_FORMULA" >/dev/null 2>&1; then
-                HOMEBREW_NO_AUTO_UPDATE=1 brew install "$BREW_NODE_FORMULA" || true
-            fi
-            BREW_NODE_PREFIX=$(brew --prefix "$BREW_NODE_FORMULA" 2>/dev/null || echo "")
-            if [ -n "$BREW_NODE_PREFIX" ] && [ -x "$BREW_NODE_PREFIX/bin/node" ]; then
-                PATH="$BREW_NODE_PREFIX/bin:$PATH"
+        # Use the self-contained nvm to install and activate Node.js
+        NODE_SETUP_LOG=$(mktemp)
+        if NVM_VERSION_FILE="$NVM_VERSION_FILE" bash "$NVM_USE_SCRIPT" >"$NODE_SETUP_LOG" 2>&1; then
+            NODE_BIN_DIR="$NVM_DIR/versions/node/$REQUIRED_NODE_VERSION/bin"
+            if [ -x "$NODE_BIN_DIR/node" ]; then
+                PATH="$NODE_BIN_DIR:$PATH"
                 export PATH
-                ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
-                if [ -n "$ACTIVE_NODE_VERSION" ]; then
-                    warn "Using Homebrew $BREW_NODE_FORMULA (Node $ACTIVE_NODE_VERSION) as fallback; nvm did not initialize."
-                fi
             fi
-        fi
-
-        if [ -n "${ACTIVE_NODE_VERSION:-}" ]; then
-            success "Node.js is available via Homebrew fallback"
+            ACTIVE_NODE_VERSION=$(node --version 2>/dev/null || true)
+            if [ -n "$ACTIVE_NODE_VERSION" ]; then
+                success "Node.js $ACTIVE_NODE_VERSION is active via self-contained nvm"
+            else
+                success "Node.js is active via self-contained nvm"
+            fi
         else
-            error "Failed to initialize Node.js via nvm; see logs below"
+            error "Failed to initialize Node.js via self-contained nvm; see logs below"
             if [ -s "$NODE_SETUP_LOG" ]; then
                 while IFS= read -r line; do
                     warn "nvm: $line"
@@ -203,8 +182,8 @@ else
             fi
             ERRORS=$((ERRORS + 1))
         fi
+        rm -f "$NODE_SETUP_LOG"
     fi
-    rm -f "$NODE_SETUP_LOG"
 fi
 
 echo ""
