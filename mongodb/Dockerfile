@@ -17,8 +17,15 @@ VOLUME /data
 # Expose MongoDB port
 EXPOSE 27017
 
+# Home Assistant addons run as root, so we need to override the mongo image's
+# entrypoint which tries to switch to the mongodb user
+# Run as root to avoid permission issues
+USER root
+
 # Copy custom run script
 COPY run.sh /
 RUN chmod a+x /run.sh
 
+# Override the mongo image's ENTRYPOINT to avoid user switching
+ENTRYPOINT []
 CMD ["/run.sh"]

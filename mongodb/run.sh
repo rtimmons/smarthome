@@ -29,13 +29,16 @@ if [ -z "${MONGO_INITDB_DATABASE}" ]; then
 fi
 export MONGO_INITDB_DATABASE
 
-# Ensure data directory exists and has correct permissions
-mkdir -p /data/db
-chown -R mongodb:mongodb /data/db
+# Create journal directory in tmpfs and symlink it to /data
+mkdir -p /tmp/mongodb/journal
+ln -sf /tmp/mongodb/journal /data/journal
 
 log_info "Starting MongoDB Community Edition ${MONGODB_VERSION}"
-log_info "Database directory: /data/db"
+log_info "Database directory: /data"
+log_info "Journal directory (tmpfs): /tmp/mongodb/journal"
 log_info "Initial database: ${MONGO_INITDB_DATABASE}"
 
-# Start MongoDB
-exec mongod --bind_ip_all --dbpath /data/db
+# Start MongoDB as root (Home Assistant addon security model)
+# Run with --bind_ip_all to allow connections from other addons
+# Use /data directly as dbpath (not /data/db) to avoid permission issues
+exec mongod --bind_ip_all --dbpath /data

@@ -2,12 +2,14 @@ slug: mongodb
 name: MongoDB
 description: MongoDB Community Edition database server for Home Assistant add-ons
 url: https://github.com/rtimmons/smarthome
-container_workdir: /data/db
 homeassistant_min: "2024.6.0"
 ingress: false
 homeassistant_api: false
 auth_api: false
 host_network: false
+full_access: true
+tmpfs:
+  - /tmp/mongodb
 ports:
   "27017": 27017
 ports_description:
