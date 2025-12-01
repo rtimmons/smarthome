@@ -63,16 +63,37 @@ fi
 echo "[nvm_use] Sourcing nvm.sh..." >&2
 # Source nvm (disable errexit and ERR trap temporarily to handle nvm.sh's internal logic)
 # nvm.sh has its own error handling and may return non-zero in normal operation
+
+# Create a temporary file to capture nvm.sh stderr
+NVM_SOURCE_LOG=$(mktemp)
+
 set +eE
 trap - ERR
+
+# Redirect stderr to temp file while sourcing, then restore stderr
+exec 3>&2 2>"$NVM_SOURCE_LOG"
 . "$NVM_SH"
 SOURCE_EXIT=$?
+exec 2>&3 3>&-
+
 set -e
 trap 'error_exit ${LINENO} "Script failed"' ERR
 
 if [ $SOURCE_EXIT -ne 0 ]; then
+  echo "[nvm_use] nvm.sh failed with exit code $SOURCE_EXIT" >&2
+  if [ -s "$NVM_SOURCE_LOG" ]; then
+    echo "[nvm_use] nvm.sh error output:" >&2
+    cat "$NVM_SOURCE_LOG" >&2
+  else
+    echo "[nvm_use] nvm.sh produced no error output (silent failure)" >&2
+    echo "[nvm_use] This usually means a command inside nvm.sh failed without printing an error" >&2
+    echo "[nvm_use] Common causes: missing dependencies (curl/wget), PATH issues, or shell incompatibilities" >&2
+  fi
+  rm -f "$NVM_SOURCE_LOG"
   error_exit ${LINENO} "Failed to source $NVM_SH (exit code: $SOURCE_EXIT)"
 fi
+
+rm -f "$NVM_SOURCE_LOG"
 
 # Verify nvm is available
 echo "[nvm_use] Verifying nvm command is available..." >&2
