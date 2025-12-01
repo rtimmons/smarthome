@@ -320,15 +320,8 @@ ADDON_ID="local_{slug}"
 REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
 
-if ha addons info "${{ADDON_ID}}" --raw-json >/tmp/addon_info.json 2>/dev/null; then
-  installed="true"
-else
-  installed="false"
-fi
-
-if [ "${{installed}}" = "true" ]; then
-  ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
-fi
+ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
+ha addons uninstall "${{ADDON_ID}}" >/dev/null 2>&1 || true
 
 rm -rf "${{REMOTE_ADDON_DIR}}"
 mkdir -p "{paths['remote_addons']}"
@@ -337,11 +330,7 @@ rm -f "${{REMOTE_TAR}}"
 
 ha addons reload
 sleep 2
-if [ "${{installed}}" = "true" ]; then
-  ha addons rebuild "${{ADDON_ID}}"
-else
-  ha addons install "${{ADDON_ID}}"
-fi
+ha addons install "${{ADDON_ID}}"
 ha addons start "${{ADDON_ID}}" || true
 """
     ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
