@@ -35,6 +35,7 @@ QR_OVERLAY_Y_BIAS = -0.08  # shift up (fraction of QR height)
 
 DEFAULT_DELTA_LABEL = "2 weeks"
 DEFAULT_DELTA = timedelta(days=14)
+DEFAULT_PREFIX = "Best By: "
 _DELTA_MULTIPLIERS = {
     "day": 1,
     "week": 7,
@@ -239,14 +240,27 @@ def _resolve_delta(form_data: TemplateFormData) -> Tuple[timedelta, str]:
     return _parse_delta_string(raw_delta or None)
 
 
+def _resolve_prefix(form_data: TemplateFormData) -> str:
+    # Use .get() instead of .get_str() to preserve spaces
+    # Check if prefix was explicitly provided (even if empty)
+    if "Prefix" in form_data:
+        raw_prefix = form_data.get("Prefix")
+        return str(raw_prefix) if raw_prefix is not None else ""
+    if "prefix" in form_data:
+        raw_prefix = form_data.get("prefix")
+        return str(raw_prefix) if raw_prefix is not None else ""
+    return DEFAULT_PREFIX
+
+
 def describe_delta(form_data: TemplateFormData) -> str:
     return _resolve_delta(form_data)[1]
 
 
-def compute_best_by(form_data: TemplateFormData) -> Tuple[date, date, str]:
+def compute_best_by(form_data: TemplateFormData) -> Tuple[date, date, str, str]:
     base_date = _resolve_base_date(form_data)
     delta, delta_label = _resolve_delta(form_data)
-    return base_date, base_date + delta, delta_label
+    prefix = _resolve_prefix(form_data)
+    return base_date, base_date + delta, delta_label, prefix
 
 
 def _qr_image(
@@ -372,8 +386,8 @@ class Template(TemplateDefinition):
             image.info["text"] = normalized_text
             return image
 
-        base_date, best_by_date, delta_label = compute_best_by(form_data)
-        text = f"Best By: {best_by_date.strftime('%Y-%m-%d')}"
+        base_date, best_by_date, delta_label, prefix = compute_best_by(form_data)
+        text = f"{prefix}{best_by_date.strftime('%Y-%m-%d')}"
 
         font = helper.load_font(size_points=FONT_POINTS)
         text_width, text_height = _measure_text_size(text, font)
@@ -403,11 +417,13 @@ __all__ = [
     "TEMPLATE",
     "DEFAULT_DELTA",
     "DEFAULT_DELTA_LABEL",
+    "DEFAULT_PREFIX",
     "compute_best_by",
     "describe_delta",
     "_qr_image",
     "_render_text_label",
     "_resolve_base_date",
+    "_resolve_prefix",
     "_parse_delta_string",
     "_resolve_delta",
     "_today",

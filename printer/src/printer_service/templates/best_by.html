@@ -95,6 +95,15 @@ Best By Label
             <input type="text" id="delta" name="Offset" value="{{ delta_value }}" placeholder="2 weeks">
             <small>Example values: <code>2 weeks</code>, <code>10 days</code>, or <code>1 month</code>. Defaults to 2 weeks.</small>
         </label>
+        <label for="useCustomPrefix" style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="useCustomPrefix" style="width: auto; margin: 0;">
+            <span>Use custom prefix</span>
+        </label>
+        <label for="prefix" id="prefixLabel" style="display: none;">
+            Label prefix
+            <input type="text" id="prefix" name="Prefix" value="{{ prefix_value }}" placeholder="Best By: " disabled>
+            <small>Text before the date. Examples: <code>Best By: </code>, <code>Made </code>, <code>Expires: </code>. Leave empty for no prefix.</small>
+        </label>
         <p class="bb-help">Best By date: <strong>{{ best_by_date }}</strong> ({{ delta_label }} from {{ base_date_value }}). Press enter to refresh the previews.</p>
     {% endif %}
 {% endblock %}
@@ -146,7 +155,8 @@ Best By Label
 {% endblock %}
 
 {% block form_actions %}
-<p>This template prints directly from the previews; labels are not persisted to the gallery.</p>
+<button type="submit">Refresh Previews</button>
+<p style="margin-top: 0.5rem; color: var(--muted-color); font-size: 0.9rem;">This template prints directly from the previews; labels are not persisted to the gallery.</p>
 {% endblock %}
 
 {% block extra_scripts %}
@@ -156,11 +166,37 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseUrl = '{{ best_by_base_url }}';
     const baseInput = document.getElementById('baseDate');
     const deltaInput = document.getElementById('delta');
+    const prefixInput = document.getElementById('prefix');
+    const prefixLabel = document.getElementById('prefixLabel');
+    const useCustomPrefixCheckbox = document.getElementById('useCustomPrefix');
     const textInput = document.getElementById('textValue');
     const previewButtons = Array.from(document.querySelectorAll('.bb-preview-trigger'));
     const todayIso = '{{ today_iso }}';
     const DEFAULT_DELTA = '2 weeks';
+    const DEFAULT_PREFIX = 'Best By: ';
     const textMode = {{ 'true' if text_mode else 'false' }};
+    const hasCustomPrefix = {{ 'true' if prefix_value != 'Best By: ' else 'false' }};
+
+    // Handle custom prefix checkbox
+    function updatePrefixFieldVisibility() {
+        if (!useCustomPrefixCheckbox || !prefixInput || !prefixLabel) return;
+        const isCustom = useCustomPrefixCheckbox.checked;
+        if (isCustom) {
+            prefixLabel.style.display = 'grid';
+            prefixInput.disabled = false;
+        } else {
+            prefixLabel.style.display = 'none';
+            prefixInput.disabled = true;
+        }
+    }
+
+    if (useCustomPrefixCheckbox && !textMode) {
+        // Initialize checkbox state based on whether we have a custom prefix
+        useCustomPrefixCheckbox.checked = hasCustomPrefix;
+        updatePrefixFieldVisibility();
+
+        useCustomPrefixCheckbox.addEventListener('change', updatePrefixFieldVisibility);
+    }
 
     if (form) {
         form.method = 'get';
@@ -168,16 +204,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (baseInput && baseInput.name) {
             baseInput.dataset.defaultName = baseInput.name;
         }
+        if (prefixInput && prefixInput.name) {
+            prefixInput.dataset.defaultName = prefixInput.name;
+        }
         if (textInput && textInput.name) {
             textInput.dataset.defaultName = textInput.name;
         }
         form.addEventListener('submit', () => {
-            const normalizeField = (input, defaultValue) => {
+            const normalizeField = (input, defaultValue, shouldTrim = true) => {
                 if (!input) {
                     return;
                 }
-                const trimmed = input.value.trim();
-                if (!trimmed || trimmed === defaultValue) {
+                const value = shouldTrim ? input.value.trim() : input.value;
+                if (!value || value === defaultValue) {
                     input.removeAttribute('name');
                 } else if (input.dataset.defaultName) {
                     input.setAttribute('name', input.dataset.defaultName);
@@ -188,6 +227,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             normalizeField(baseInput, todayIso);
+            // Only include prefix if custom prefix checkbox is checked
+            if (useCustomPrefixCheckbox && useCustomPrefixCheckbox.checked) {
+                if (prefixInput && prefixInput.dataset.defaultName) {
+                    prefixInput.setAttribute('name', prefixInput.dataset.defaultName);
+                }
+            } else {
+                if (prefixInput) {
+                    prefixInput.removeAttribute('name');
+                }
+            }
         });
     }
 
@@ -212,6 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (trimmed && trimmed.toLowerCase() !== DEFAULT_DELTA) {
                     params.set('offset', trimmed);
                 }
+            }
+            // Only include prefix if custom prefix checkbox is checked
+            if (useCustomPrefixCheckbox && useCustomPrefixCheckbox.checked && prefixInput) {
+                params.set('prefix', prefixInput.value);
             }
         }
         if (includeQr) {

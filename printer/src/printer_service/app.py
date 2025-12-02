@@ -135,10 +135,10 @@ def create_app() -> Flask:
                     qr_text=qr_text,
                 )
             try:
-                base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
+                base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
             except ValueError as exc:
                 return jsonify({"error": str(exc)}), 400
-            qr_text = f"Print Best By +{delta_label.title()}"
+            qr_text = f"Print {prefix}+{delta_label.title()}"
             return _send_best_by_print(
                 form_data=form_data,
                 config=config,
@@ -364,6 +364,8 @@ def _best_by_form_data_from_request() -> TemplateFormData:
             ("offset", "Delta"),
             ("Text", "Text"),
             ("text", "Text"),
+            ("Prefix", "Prefix"),
+            ("prefix", "Prefix"),
         ):
             if key in payload and canonical not in data:
                 value = payload[key]
@@ -383,9 +385,12 @@ def _best_by_form_data_from_request() -> TemplateFormData:
         ("Offset", "Delta"),
         ("text", "Text"),
         ("Text", "Text"),
+        ("prefix", "Prefix"),
+        ("Prefix", "Prefix"),
     ):
         candidate = request.args.get(key)
-        if candidate and canonical not in data:
+        # Use 'is not None' to allow empty strings (e.g., prefix="")
+        if candidate is not None and canonical not in data:
             data[canonical] = candidate
     form_data = TemplateFormData(data)
     text_value = _best_by_text_value(form_data)
@@ -466,6 +471,15 @@ def _best_by_print_params(
             delta_value = best_by.DEFAULT_DELTA
         if delta_value != best_by.DEFAULT_DELTA or provided_delta_param:
             params[delta_param_name] = delta_raw.strip()
+    # Use .get() instead of .get_str() to preserve spaces in prefix
+    # Include prefix if explicitly provided (even if empty)
+    provided_prefix_param = "prefix" in raw_request_keys
+    if "Prefix" in form_data or "prefix" in form_data:
+        prefix_raw = form_data.get("Prefix") if "Prefix" in form_data else form_data.get("prefix")
+        prefix_value = str(prefix_raw) if prefix_raw is not None else ""
+        # Only include in params if it's different from default OR was explicitly provided
+        if prefix_value != best_by.DEFAULT_PREFIX or provided_prefix_param:
+            params["prefix"] = prefix_value
     if include_qr_label:
         params["qr_label"] = "true"
     return params
@@ -526,14 +540,27 @@ def _render_best_by_page(form_data: TemplateFormData):
     best_by_date: Optional[date] = None
     delta_label: str = best_by.DEFAULT_DELTA_LABEL
     delta_value = form_data.get_str("Delta", "delta") or best_by.DEFAULT_DELTA_LABEL
+    # Use .get() instead of .get_str() to preserve spaces in prefix
+    # Check if prefix was explicitly provided (even if empty)
+    if "Prefix" in form_data:
+        prefix_value = str(form_data.get("Prefix")) if form_data.get("Prefix") is not None else ""
+    elif "prefix" in form_data:
+        prefix_value = str(form_data.get("prefix")) if form_data.get("prefix") is not None else ""
+    else:
+        prefix_value = best_by.DEFAULT_PREFIX
     if not text_mode:
         try:
-            base_date, best_by_date, delta_label = best_by.compute_best_by(form_data)
+            base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
+            prefix_value = prefix
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
     print_url = _best_by_print_url(form_data)
     qr_print_url = _best_by_print_url(form_data, include_qr_label=True)
-    qr_caption = f"Print: {text_value}" if text_mode else f"Print Best By +{delta_label.title()}"
+    if text_mode:
+        qr_caption = f"Print: {text_value}"
+    else:
+        # Use the actual prefix in the QR caption
+        qr_caption = f"Print {prefix_value}+{delta_label.title()}"
 
     normalized_form = _normalized_best_by_form(form_data)
     try:
@@ -563,6 +590,7 @@ def _render_best_by_page(form_data: TemplateFormData):
         form_context=template_ref.form_context(),
         base_date_value=base_date_value,
         delta_value=delta_value,
+        prefix_value=prefix_value,
         best_by_date=best_by_date_value,
         text_value=text_value,
         print_url=print_url,
@@ -590,7 +618,9 @@ def _send_best_by_print(
     text_value = _best_by_text_value(form_data)
     if not text_value:
         try:
-            computed_base, computed_best_by, computed_delta = best_by.compute_best_by(form_data)
+            computed_base, computed_best_by, computed_delta, computed_prefix = (
+                best_by.compute_best_by(form_data)
+            )
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         base_date = base_date or computed_base
