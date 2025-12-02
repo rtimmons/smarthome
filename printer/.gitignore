@@ -3,3 +3,4 @@ label-output/
 .venv/
 developers.home-assistant/
 build/
+tests/baselines/DIFF_*.png

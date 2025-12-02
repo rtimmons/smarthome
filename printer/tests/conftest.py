@@ -43,3 +43,13 @@ def _install_fake_cairosvg() -> None:
 
 
 _install_fake_cairosvg()
+
+
+def pytest_addoption(parser):
+    """Add custom pytest option for regenerating baselines."""
+    parser.addoption(
+        "--regenerate-baselines",
+        action="store_true",
+        default=False,
+        help="Regenerate all baseline images for visual regression tests",
+    )
