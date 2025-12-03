@@ -2,7 +2,7 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
-rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***'"
+rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***'"
 
 preflight:
 	#!/usr/bin/env bash
