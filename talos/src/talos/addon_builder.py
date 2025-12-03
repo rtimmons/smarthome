@@ -310,6 +310,8 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
     remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
     remote_addon_dir = f"{paths['remote_addons']}/{slug}"
 
+    has_ingress = "true" if addon.get("ingress") else "false"
+
     scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
     run_cmd(scp_cmd, dry_run=dry_run)
 
@@ -331,6 +333,21 @@ rm -f "${{REMOTE_TAR}}"
 ha addons reload
 sleep 2
 ha addons install "${{ADDON_ID}}"
+
+SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
+if [ -n "${{SUPERVISOR_TOKEN}}" ]; then
+  OPTIONS_JSON='{{"watchdog": true'
+  if [ "{has_ingress}" = "true" ]; then
+    OPTIONS_JSON+=', "ingress_panel": true'
+  fi
+  OPTIONS_JSON+='}}'
+  curl -sSf -H "Authorization: Bearer ${{SUPERVISOR_TOKEN}}" -H "Content-Type: application/json" \\
+    -X POST -d "${{OPTIONS_JSON}}" http://supervisor/addons/"${{ADDON_ID}}"/options >/dev/null || \\
+    echo "Warning: failed to set add-on options for ${{ADDON_ID}}" >&2
+else
+  echo "Warning: SUPERVISOR_TOKEN not set; skipping add-on options for ${{ADDON_ID}}" >&2
+fi
+
 ha addons start "${{ADDON_ID}}" || true
 """
     ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
