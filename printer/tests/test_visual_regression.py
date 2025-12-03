@@ -449,6 +449,66 @@ def test_bluey_label_2_default(regenerate_baselines):
     assert_visual_match(image, "bluey_2_default.png", regenerate=regenerate_baselines)
 
 
+def test_bluey_label_2_repeated_titles(regenerate_baselines):
+    """Bluey label 2 repeats the title block with padding."""
+    template = bluey_label_2.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Leftovers",
+            "Line2": "Casserole",
+            "Initials": "xy",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_2_repeated_titles.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_2_long_text(regenerate_baselines):
+    """Bluey label 2 with long text that pushes width/height warnings."""
+    template = bluey_label_2.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Extremely long casserole name that will clip on the label",
+            "Line2": "Another long line to stress layout and spacing",
+            "Initials": "ABCDEFGH",
+            "PackageDate": "11/17/25",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_2_long_text.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_2_missing_symbol(regenerate_baselines):
+    """Bluey label 2 falls back gracefully when symbol choice is missing."""
+    template = bluey_label_2.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Fallback",
+            "SymbolName": "",
+            "Initials": "xy",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_2_missing_symbol.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_2_initials_only(regenerate_baselines):
+    """Bluey label 2 renders side initials when title lines are missing."""
+    template = bluey_label_2.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Initials": "SIDE",
+            "PackageDate": "11/17/25",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_2_initials_only.png", regenerate=regenerate_baselines)
+
+
 # =============================================================================
 # Daily Snapshot Tests (if applicable)
 # =============================================================================

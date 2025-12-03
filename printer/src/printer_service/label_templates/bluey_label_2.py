@@ -36,6 +36,7 @@ SYMBOL_SECTION_SPACING = 10
 INITIALS_SIDE_MARGIN = 10
 INITIALS_VERTICAL_MARGIN = 18
 INITIALS_SIDE_SPACING = 10
+TITLE_REPEAT_COUNT = 3
 
 # Font sizes balance hierarchy without overrunning the 1.3" height.
 TITLE_FONT_POINTS = 60
@@ -43,6 +44,7 @@ INITIALS_FONT_POINTS = 48
 DATE_FONT_POINTS = 36
 BACKGROUND_ALPHA_PERCENT = 25
 INITIALS_OPACITY_PERCENT = 50
+TITLE_BLOCK_PADDING = int(round(0.16 * QL810W_DPI))
 
 
 class Template(TemplateDefinition):
@@ -89,28 +91,40 @@ class Template(TemplateDefinition):
         title_font = helper.load_font(size_points=TITLE_FONT_POINTS)
         initials_font = helper.load_font(size_points=INITIALS_FONT_POINTS)
         date_font = helper.load_font(size_points=DATE_FONT_POINTS)
-        max_title_width = 0
+        title_lines = []
 
         if line1:
-            line1_metrics = renderer.measure_text(text=line1, font=title_font)
-            max_title_width = max(max_title_width, line1_metrics.width)
-            renderer.draw_centered_text(
-                text=line1,
-                font=title_font,
-                width_warning="Line 1 is wider than the label and will be clipped.",
-                height_warning="Text exceeds label height and may be clipped.",
+            title_lines.append(
+                (
+                    line1,
+                    renderer.measure_text(text=line1, font=title_font),
+                    "Line 1",
+                )
             )
         if line2:
-            if line1:
-                renderer.advance(LINE2_OFFSET)
-            line2_metrics = renderer.measure_text(text=line2, font=title_font)
-            max_title_width = max(max_title_width, line2_metrics.width)
-            renderer.draw_centered_text(
-                text=line2,
-                font=title_font,
-                width_warning="Line 2 is wider than the label and will be clipped.",
-                height_warning="Text exceeds label height and may be clipped.",
+            title_lines.append(
+                (
+                    line2,
+                    renderer.measure_text(text=line2, font=title_font),
+                    "Line 2",
+                )
             )
+
+        max_title_width = max((metrics.width for _, metrics, _ in title_lines), default=0)
+
+        if title_lines:
+            for repeat_index in range(TITLE_REPEAT_COUNT):
+                for line_index, (text, _metrics, label_name) in enumerate(title_lines):
+                    renderer.draw_centered_text(
+                        text=text,
+                        font=title_font,
+                        width_warning=f"{label_name} is wider than the label and will be clipped.",
+                        height_warning="Text exceeds label height and may be clipped.",
+                    )
+                    if line_index == 0 and len(title_lines) > 1:
+                        renderer.advance(LINE2_OFFSET)
+                if repeat_index < TITLE_REPEAT_COUNT - 1:
+                    renderer.advance(TITLE_BLOCK_PADDING)
 
         renderer.advance(SYMBOL_SECTION_SPACING)
 
