@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Callable, List, Optional, Sequence, TypeGuard
 from urllib.parse import urlencode, urljoin
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, send_file, url_for
+from flask import Flask, abort, jsonify, redirect, render_template, request, url_for
 from PIL import Image, UnidentifiedImageError
 
 from . import label_templates
@@ -22,8 +22,6 @@ from .label import (
     LabelMetrics,
     analyze_label_image,
     dispatch_image,
-    label_spec_from_metadata,
-    save_label_image,
 )
 
 
@@ -82,138 +80,46 @@ def _is_truthy(raw: Optional[str]) -> bool:
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    output_dir = Path(os.getenv("LABEL_OUTPUT_DIR", "label-output")).resolve()
-    output_dir.mkdir(parents=True, exist_ok=True)
     app.wsgi_app = _IngressPrefixMiddleware(app.wsgi_app)  # type: ignore[method-assign]
 
     @app.get("/")
     def index():
         default = label_templates.default_template()
-        return redirect(url_for("show_template", template_slug=default.slug))
+        return redirect(url_for("bb_route", template=default.slug))
 
     @app.get("/templates/<template_slug>")
     def show_template(template_slug: str):
         slug = _coerce_slug(template_slug)
-        best_by_template = _best_by_template()
-        if slug == best_by_template.slug:
-            target = url_for("best_by_route")
-            query = request.query_string.decode("utf-8")
-            if query:
-                target = f"{target}?{query}"
-            return redirect(target)
-        try:
-            active = label_templates.get_template(slug)
-        except KeyError:
-            abort(404)
-        templates = label_templates.all_templates()
-        return render_template(
-            active.form_template,
-            templates=templates,
-            active_template=active,
-            form_context=active.form_context(),
-        )
+        return redirect(url_for("bb_route", template=slug))
 
     @app.get("/bb")
-    def best_by_route():
-        try:
-            form_data = _best_by_form_data_from_request()
-        except LabelPayloadError as exc:
-            return jsonify({"error": str(exc)}), exc.status_code
-        text_value = _best_by_text_value(form_data)
-        wants_print = _is_truthy(request.args.get("print"))
-        wants_qr_label = _is_truthy(request.args.get("qr_label"))
-        print_url = _best_by_print_url(form_data)
-        if wants_print:
-            config = PrinterConfig.from_env()
-            qr_url = print_url if wants_qr_label else None
-            if text_value:
-                qr_text = f"Print: {text_value}" if wants_qr_label else None
-                return _send_best_by_print(
-                    form_data=form_data,
-                    config=config,
-                    qr_url=qr_url,
-                    qr_text=qr_text,
-                )
-            try:
-                base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
-            except ValueError as exc:
-                return jsonify({"error": str(exc)}), 400
-            qr_text = f"Print {prefix}+{delta_label.title()}"
-            return _send_best_by_print(
-                form_data=form_data,
-                config=config,
-                qr_url=qr_url,
-                qr_text=qr_text if wants_qr_label else None,
-                base_date=base_date,
-                best_by_date=best_by_date,
-                delta_label=delta_label,
-            )
-        return _render_best_by_page(form_data)
+    def bb_route():
+        template = _template_from_request(default_template=_best_by_template())
+        if _is_truthy(request.args.get("print")):
+            return _print_from_request(template)
+        return _render_bb_page(template)
 
-    @app.get("/labels")
-    def list_labels():
-        return jsonify({"labels": _recent_labels(output_dir)})
-
-    @app.post("/labels")
-    def create_label():
+    @app.post("/bb/preview")
+    def preview_bb():
         payload = request.get_json(silent=True) or {}
         try:
-            image, template = _render_image_from_payload(payload)
+            template, form_data = _template_and_form_from_payload(payload)
+            preview = _build_preview_payload(template, form_data)
         except LabelPayloadError as exc:
             return jsonify({"error": str(exc)}), exc.status_code
-        target_spec = template.preferred_label_spec()
-        metrics = analyze_label_image(image, target_spec=target_spec)
-        path = save_label_image(
-            image,
-            output_dir,
-            target_spec=target_spec,
-        )
-        label = _serialize_label(path)
-        return jsonify(
-            {
-                "status": "stored",
-                "label": label,
-                "metrics": metrics.to_dict(),
-                "warnings": metrics.warnings,
-            }
-        )
+        return jsonify(preview)
 
-    @app.post("/bb2w")
-    def create_and_print_bb2w():
-        config = PrinterConfig.from_env()
-        try:
-            form_data = _best_by_form_data_from_request()
-        except LabelPayloadError as exc:
-            return jsonify({"error": str(exc)}), exc.status_code
-        return _send_best_by_print(form_data=form_data, config=config)
-
-    @app.post("/labels/preview")
-    def preview_label():
+    @app.post("/bb/print")
+    def print_bb():
         payload = request.get_json(silent=True) or {}
         try:
-            image, template = _render_image_from_payload(payload)
+            template, form_data = _template_and_form_from_payload(payload)
         except LabelPayloadError as exc:
             return jsonify({"error": str(exc)}), exc.status_code
-        metrics = analyze_label_image(image, target_spec=template.preferred_label_spec())
-        data_url = _data_url_for_image(image)
-        return jsonify(
-            {
-                "status": "preview",
-                "image": data_url,
-                "metrics": metrics.to_dict(),
-                "warnings": metrics.warnings,
-            }
-        )
-
-    @app.get("/labels/<path:filename>")
-    def serve_label(filename: str):
-        safe_name = _safe_filename(filename)
-        path = (output_dir / safe_name).resolve()
-        if not str(path).startswith(str(output_dir)):
-            abort(403)
-        if not path.exists():
-            abort(404)
-        return send_file(path, mimetype="image/png")
+        include_qr_label = False
+        if isinstance(payload, Mapping) and "qr_label" in payload:
+            include_qr_label = _is_truthy(str(payload.get("qr_label")))
+        return _dispatch_print(template, form_data, include_qr_label=include_qr_label)
 
     @app.post("/print")
     def print_route():
@@ -246,33 +152,20 @@ def create_app() -> Flask:
                 ), 400
             config.backend = candidate
 
-        image: Optional[Image.Image] = None
-        template_ref: Optional[label_templates.LabelTemplate] = None
-        stored_spec = None
-        if "filename" in payload:
-            safe_name = _safe_filename(str(payload["filename"]))
-            path = output_dir / safe_name
-            try:
-                image = _load_stored_label(path)
-            except LabelPayloadError as exc:
-                return jsonify({"error": str(exc)}), exc.status_code
-            stored_spec = label_spec_from_metadata(image)
-        else:
-            cooldown = _cooldown_response()
-            if cooldown is not None:
-                return cooldown
-            try:
-                image, template_ref = _render_image_from_payload(payload)
-            except LabelPayloadError as exc:
-                return jsonify({"error": str(exc)}), exc.status_code
-        if image is None:  # pragma: no cover - defensive guard
-            return jsonify({"error": "Unable to prepare label image."}), 500
-        target_spec = template_ref.preferred_label_spec() if template_ref else stored_spec
+        cooldown = _cooldown_response()
+        if cooldown is not None:
+            return cooldown
+        try:
+            image, template_ref = _render_image_from_payload(payload)
+        except LabelPayloadError as exc:
+            return jsonify({"error": str(exc)}), exc.status_code
+        target_spec = template_ref.preferred_label_spec() if template_ref else None
         metrics = analyze_label_image(image, config, target_spec=target_spec)
         try:
             result = dispatch_image(image, config, target_spec=target_spec)
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
+        _mark_print_sent()
         return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
     return app
@@ -297,26 +190,6 @@ def _success_payload(
     return payload
 
 
-def _safe_filename(raw: str) -> str:
-    return Path(raw).name
-
-
-def _serialize_label(path: Path) -> dict:
-    stat = path.stat()
-    return {
-        "name": path.name,
-        "url": url_for("serve_label", filename=path.name),
-        "mtime": stat.st_mtime,
-    }
-
-
-def _recent_labels(directory: Path, limit: int = 100) -> List[dict]:
-    files = [(path, path.stat().st_mtime) for path in directory.glob("*.png") if path.is_file()]
-    files.sort(key=lambda item: item[1], reverse=True)
-    top = [path for path, _ in files[:limit]]
-    return [_serialize_label(path) for path in top]
-
-
 def _coerce_slug(raw: object) -> str:
     return str(raw or "").strip().lower()
 
@@ -327,26 +200,270 @@ class LabelPayloadError(Exception):
         self.status_code = status_code
 
 
+def _template_from_request(
+    default_template: label_templates.LabelTemplate,
+) -> label_templates.LabelTemplate:
+    slug = _coerce_slug(
+        request.args.get("tpl") or request.args.get("template") or request.args.get("template_slug")
+    )
+    if slug:
+        try:
+            return label_templates.get_template(slug)
+        except KeyError:
+            abort(404)
+    return default_template
+
+
+def _template_and_form_from_payload(
+    payload: Mapping[str, object],
+) -> tuple[label_templates.LabelTemplate, TemplateFormData]:
+    slug = ""
+    if "tpl" in payload:
+        slug = _coerce_slug(payload.get("tpl"))
+    elif "template" in payload:
+        slug = _coerce_slug(payload.get("template"))
+    else:
+        raise LabelPayloadError("Provide 'template'.")
+    try:
+        template = label_templates.get_template(slug)
+    except KeyError:
+        raise LabelPayloadError("Unknown template.")
+    form_data = _coerce_template_form_data(payload.get("data"))
+    if template.slug == _best_by_template().slug:
+        form_data = _normalized_best_by_form(form_data)
+    return template, form_data
+
+
+def _form_data_from_args(template: label_templates.LabelTemplate) -> TemplateFormData:
+    if template.slug == _best_by_template().slug:
+        return _best_by_form_data_from_request()
+    control_params = {"tpl", "template", "template_slug", "print", "qr_label", "qr"}
+    data: dict[str, TemplateFormValue] = {}
+    for key in request.args:
+        if key.lower() in control_params:
+            continue
+        values = request.args.getlist(key)
+        if len(values) == 1:
+            data[key] = values[0]
+        else:
+            data[key] = values
+    return TemplateFormData(data)
+
+
+def _build_preview_payload(
+    template: label_templates.LabelTemplate, form_data: TemplateFormData
+) -> dict:
+    try:
+        label_image = template.render(form_data)
+    except ValueError as exc:
+        raise LabelPayloadError(str(exc))
+    label_metrics = analyze_label_image(label_image, target_spec=template.preferred_label_spec())
+    print_url = _print_url_for_template(template, form_data)
+    qr_caption = _qr_caption_for_template(template, form_data)
+    try:
+        qr_image = _render_qr_label_image(template, form_data, print_url, qr_caption)
+    except ValueError as exc:
+        raise LabelPayloadError(str(exc))
+    qr_template = _best_by_template()
+    qr_metrics = analyze_label_image(qr_image, target_spec=qr_template.preferred_label_spec())
+
+    payload: dict[str, object] = {
+        "status": "preview",
+        "template": template.slug,
+        "print_url": print_url,
+        "qr_print_url": _print_url_for_template(template, form_data, include_qr_label=True),
+        "qr_caption": qr_caption,
+        "label": {
+            "image": _data_url_for_image(label_image),
+            "metrics": label_metrics.to_dict(),
+            "warnings": label_metrics.warnings,
+        },
+        "qr": {
+            "image": _data_url_for_image(qr_image),
+            "metrics": qr_metrics.to_dict(),
+            "warnings": qr_metrics.warnings,
+        },
+    }
+    if template.slug == _best_by_template().slug:
+        try:
+            base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
+            payload["best_by"] = {
+                "base_date": base_date.isoformat(),
+                "best_by_date": best_by_date.strftime("%Y-%m-%d"),
+                "delta_label": delta_label,
+                "prefix": prefix,
+                "text": _best_by_text_value(form_data),
+            }
+        except ValueError:
+            pass
+    return payload
+
+
 def _render_image_from_payload(
     payload: Mapping[str, object],
 ) -> tuple[Image.Image, label_templates.LabelTemplate]:
-    if "template" in payload:
-        slug = _coerce_slug(payload.get("template"))
+    if "template" not in payload:
+        if "lines" in payload:
+            raise LabelPayloadError(
+                "Raw 'lines' payloads are no longer supported. Submit a template slug instead."
+            )
+        raise LabelPayloadError("Provide 'template'.")
+    template, form_data = _template_and_form_from_payload(payload)
+    try:
+        image = template.render(form_data)
+    except ValueError as exc:
+        raise LabelPayloadError(str(exc))
+    return image, template
+
+
+def _print_from_request(template: label_templates.LabelTemplate):
+    try:
+        form_data = _form_data_from_args(template)
+    except LabelPayloadError as exc:
+        return jsonify({"error": str(exc)}), exc.status_code
+    include_qr_label = _is_truthy(request.args.get("qr") or request.args.get("qr_label"))
+    return _dispatch_print(template, form_data, include_qr_label=include_qr_label)
+
+
+def _render_bb_page(template: label_templates.LabelTemplate):
+    return render_template(
+        template.form_template,
+        templates=label_templates.all_templates(),
+        active_template=template,
+        form_context=template.form_context(),
+        initial_query=request.args,
+    )
+
+
+def _render_print_image(
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+    *,
+    include_qr_label: bool,
+) -> tuple[Image.Image, Optional[LabelMetrics], Optional[label_templates.LabelTemplate]]:
+    if include_qr_label:
+        print_url = _print_url_for_template(template, form_data)
+        qr_caption = _qr_caption_for_template(template, form_data)
+        qr_image = _render_qr_label_image(template, form_data, print_url, qr_caption)
+        qr_template = _best_by_template()
+        metrics = analyze_label_image(qr_image, target_spec=qr_template.preferred_label_spec())
+        return qr_image, metrics, qr_template
+    try:
+        image = template.render(form_data)
+    except ValueError as exc:
+        raise LabelPayloadError(str(exc))
+    metrics = analyze_label_image(image, target_spec=template.preferred_label_spec())
+    return image, metrics, template
+
+
+def _dispatch_print(
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+    *,
+    include_qr_label: bool,
+):
+    cooldown = _cooldown_response()
+    if cooldown is not None:
+        return cooldown
+    config = PrinterConfig.from_env()
+    try:
+        image, metrics, metrics_template = _render_print_image(
+            template, form_data, include_qr_label=include_qr_label
+        )
+    except LabelPayloadError as exc:
+        return jsonify({"error": str(exc)}), exc.status_code
+    target_spec = metrics_template.preferred_label_spec() if metrics_template else None
+    try:
+        result = dispatch_image(image, config, target_spec=target_spec)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    _mark_print_sent()
+    response_payload = _success_payload(
+        result, warnings=metrics.warnings if metrics else None, metrics=metrics
+    )
+    response_payload["template"] = template.slug
+    if include_qr_label:
+        response_payload["qr_label"] = True
+    if template.slug == _best_by_template().slug:
+        text_value = _best_by_text_value(form_data)
+        if text_value:
+            response_payload["text"] = text_value
+        else:
+            try:
+                base_date, best_by_date, delta_label, _prefix = best_by.compute_best_by(form_data)
+                response_payload.update(
+                    {
+                        "best_by_date": best_by_date.strftime("%Y-%m-%d"),
+                        "base_date": base_date.strftime("%Y-%m-%d"),
+                        "delta": delta_label,
+                    }
+                )
+            except ValueError:
+                pass
+    return jsonify(response_payload)
+
+
+def _qr_caption_for_template(
+    template: label_templates.LabelTemplate, form_data: TemplateFormData
+) -> str:
+    best_by_template = _best_by_template()
+    if template.slug == best_by_template.slug:
+        text_value = _best_by_text_value(form_data)
+        if text_value:
+            return f"Print: {text_value}"
         try:
-            template = label_templates.get_template(slug)
-        except KeyError:
-            raise LabelPayloadError("Unknown template.")
-        form_data = _coerce_template_form_data(payload.get("data"))
-        try:
-            image = template.render(form_data)
+            _base_date, _best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
         except ValueError as exc:
             raise LabelPayloadError(str(exc))
-        return image, template
-    if "lines" in payload:
-        raise LabelPayloadError(
-            "Raw 'lines' payloads are no longer supported. Submit a template slug instead."
-        )
-    raise LabelPayloadError("Provide 'template'.")
+        return f"Print {prefix}+{delta_label.title()}"
+    explicit = form_data.get_str("QrText", "qr_text")
+    if explicit:
+        return explicit
+    headline = form_data.get_str("Line1", "line1") or form_data.get_str("Title", "title")
+    if headline:
+        return f"Print {template.display_name}: {headline}"
+    return f"Print {template.display_name}"
+
+
+def _render_qr_label_image(
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+    print_url: str,
+    qr_caption: str,
+) -> Image.Image:
+    qr_template = _best_by_template()
+    qr_form_data = TemplateFormData({"QrUrl": print_url, "QrText": qr_caption})
+    return qr_template.render(qr_form_data)
+
+
+def _query_params_from_form_data(form_data: TemplateFormData) -> dict[str, object]:
+    params: dict[str, object] = {}
+    for key, value in form_data.items():
+        if isinstance(value, Mapping):
+            params[key] = str(value)
+        elif isinstance(value, Sequence) and not isinstance(value, (str, bytes, bytearray)):
+            params[key] = [str(item) for item in value]
+        elif value is None:
+            params[key] = ""
+        else:
+            params[key] = str(value)
+    return params
+
+
+def _print_url_for_template(
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+    *,
+    include_qr_label: bool = False,
+) -> str:
+    params = {
+        **_query_params_from_form_data(form_data),
+        "tpl": template.slug,
+        "print": "true",
+    }
+    if include_qr_label:
+        params["qr"] = "true"
+    return _build_public_url(_best_by_relative_path(), params)
 
 
 # TODO: move best by label and related code its own python module `printer/src/printer_service/best_by.py`. There should not be best-by-specific code in this file.
@@ -440,51 +557,6 @@ def _normalized_best_by_form(form_data: TemplateFormData) -> TemplateFormData:
     return TemplateFormData(data)
 
 
-def _best_by_print_params(
-    form_data: TemplateFormData,
-    *,
-    include_qr_label: bool = False,
-) -> dict[str, str]:
-    params: dict[str, str] = {"print": "true"}
-    text_value = _best_by_text_value(form_data)
-    if text_value:
-        params["text"] = text_value
-        if include_qr_label:
-            params["qr_label"] = "true"
-        return params
-    raw_request_keys = _request_arg_keys_lower()
-    base_date_raw = form_data.get_str("BaseDate", "base_date")
-    if base_date_raw:
-        try:
-            parsed_base = date.fromisoformat(base_date_raw)
-        except ValueError:
-            parsed_base = None
-        if parsed_base and parsed_base != best_by._today():
-            params["baseDate"] = parsed_base.isoformat()
-    delta_raw = form_data.get_str("Delta", "delta")
-    delta_param_name = _delta_param_name_from_request()
-    provided_delta_param = delta_param_name in raw_request_keys
-    if delta_raw:
-        try:
-            delta_value, _ = best_by._parse_delta_string(delta_raw)
-        except ValueError:
-            delta_value = best_by.DEFAULT_DELTA
-        if delta_value != best_by.DEFAULT_DELTA or provided_delta_param:
-            params[delta_param_name] = delta_raw.strip()
-    # Use .get() instead of .get_str() to preserve spaces in prefix
-    # Include prefix if explicitly provided (even if empty)
-    provided_prefix_param = "prefix" in raw_request_keys
-    if "Prefix" in form_data or "prefix" in form_data:
-        prefix_raw = form_data.get("Prefix") if "Prefix" in form_data else form_data.get("prefix")
-        prefix_value = str(prefix_raw) if prefix_raw is not None else ""
-        # Only include in params if it's different from default OR was explicitly provided
-        if prefix_value != best_by.DEFAULT_PREFIX or provided_prefix_param:
-            params["prefix"] = prefix_value
-    if include_qr_label:
-        params["qr_label"] = "true"
-    return params
-
-
 def _best_by_relative_path() -> str:
     """Return the Best By route path without any ingress/script prefix."""
     return "bb"
@@ -515,172 +587,12 @@ def _base_service_url() -> str:
     return f"{scheme}://{netloc}{normalized_path}"
 
 
-def _build_public_url(path_fragment: str, params: Optional[dict[str, str]] = None) -> str:
+def _build_public_url(path_fragment: str, params: Optional[Mapping[str, object]] = None) -> str:
     base_url = _base_service_url()
     base = base_url if base_url.endswith("/") else f"{base_url}/"
     url = urljoin(base, path_fragment.lstrip("/"))
-    query = urlencode(params or {})
+    query = urlencode(params or {}, doseq=True)
     return f"{url}?{query}" if query else url
-
-
-def _best_by_base_url() -> str:
-    return _build_public_url(_best_by_relative_path())
-
-
-def _best_by_print_url(form_data: TemplateFormData, *, include_qr_label: bool = False) -> str:
-    params = _best_by_print_params(form_data, include_qr_label=include_qr_label)
-    return _build_public_url(_best_by_relative_path(), params)
-
-
-def _render_best_by_page(form_data: TemplateFormData):
-    template_ref = _best_by_template()
-    text_value = _best_by_text_value(form_data)
-    text_mode = bool(text_value)
-    base_date: Optional[date] = None
-    best_by_date: Optional[date] = None
-    delta_label: str = best_by.DEFAULT_DELTA_LABEL
-    delta_value = form_data.get_str("Delta", "delta") or best_by.DEFAULT_DELTA_LABEL
-    # Use .get() instead of .get_str() to preserve spaces in prefix
-    # Check if prefix was explicitly provided (even if empty)
-    if "Prefix" in form_data:
-        prefix_value = str(form_data.get("Prefix")) if form_data.get("Prefix") is not None else ""
-    elif "prefix" in form_data:
-        prefix_value = str(form_data.get("prefix")) if form_data.get("prefix") is not None else ""
-    else:
-        prefix_value = best_by.DEFAULT_PREFIX
-    if not text_mode:
-        try:
-            base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
-            prefix_value = prefix
-        except ValueError as exc:
-            return jsonify({"error": str(exc)}), 400
-    print_url = _best_by_print_url(form_data)
-    qr_print_url = _best_by_print_url(form_data, include_qr_label=True)
-    if text_mode:
-        qr_caption = f"Print: {text_value}"
-    else:
-        # Use the actual prefix in the QR caption
-        qr_caption = f"Print {prefix_value}+{delta_label.title()}"
-
-    normalized_form = _normalized_best_by_form(form_data)
-    try:
-        base_label_preview = template_ref.render(normalized_form)
-        qr_label_preview_data = _data_url_for_image(
-            template_ref.render(
-                TemplateFormData(
-                    {
-                        **dict(normalized_form.items()),
-                        "QrUrl": print_url,
-                        "QrText": qr_caption,
-                    }
-                )
-            )
-        )
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    today_iso = best_by._today().isoformat()
-    best_by_preview_url = _data_url_for_image(base_label_preview)
-    base_date_value = base_date.isoformat() if base_date else today_iso
-    best_by_date_value = best_by_date.strftime("%Y-%m-%d") if best_by_date else ""
-
-    return render_template(
-        template_ref.form_template,
-        templates=label_templates.all_templates(),
-        active_template=template_ref,
-        form_context=template_ref.form_context(),
-        base_date_value=base_date_value,
-        delta_value=delta_value,
-        prefix_value=prefix_value,
-        best_by_date=best_by_date_value,
-        text_value=text_value,
-        print_url=print_url,
-        qr_print_url=qr_print_url,
-        qr_label_preview_url=qr_label_preview_data,
-        best_by_preview_url=best_by_preview_url,
-        qr_caption=qr_caption,
-        delta_label=delta_label,
-        today_iso=today_iso,
-        text_mode=text_mode,
-        best_by_base_url=_best_by_base_url(),
-    )
-
-
-def _send_best_by_print(
-    form_data: TemplateFormData,
-    *,
-    config: PrinterConfig,
-    qr_url: Optional[str] = None,
-    qr_text: Optional[str] = None,
-    base_date: Optional[date] = None,
-    best_by_date: Optional[date] = None,
-    delta_label: Optional[str] = None,
-):
-    text_value = _best_by_text_value(form_data)
-    if not text_value:
-        try:
-            computed_base, computed_best_by, computed_delta, computed_prefix = (
-                best_by.compute_best_by(form_data)
-            )
-        except ValueError as exc:
-            return jsonify({"error": str(exc)}), 400
-        base_date = base_date or computed_base
-        best_by_date = best_by_date or computed_best_by
-        delta_label = delta_label or computed_delta
-
-    normalized_form = _normalized_best_by_form(form_data)
-    payload_data = dict(normalized_form.items())
-    if qr_url:
-        payload_data["QrUrl"] = qr_url
-    if qr_text:
-        payload_data["QrText"] = qr_text
-    payload_form = TemplateFormData(payload_data)
-    template_ref = _best_by_template()
-
-    cooldown = _cooldown_response()
-    if cooldown is not None:
-        return cooldown
-
-    try:
-        image = template_ref.render(payload_form)
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-
-    target_spec = template_ref.preferred_label_spec()
-    metrics = analyze_label_image(image, config, target_spec=target_spec)
-    try:
-        dispatch_target = dispatch_image(image, config, target_spec=target_spec)
-    except ValueError as exc:
-        return jsonify({"error": str(exc)}), 400
-    _mark_print_sent()
-
-    response_payload = _success_payload(dispatch_target, warnings=metrics.warnings, metrics=metrics)
-    response_payload.update(
-        {
-            "template": template_ref.slug,
-        }
-    )
-    if text_value:
-        response_payload["text"] = text_value
-    else:
-        assert best_by_date is not None and base_date is not None and delta_label is not None
-        response_payload.update(
-            {
-                "best_by_date": best_by_date.strftime("%Y-%m-%d"),
-                "base_date": base_date.strftime("%Y-%m-%d"),
-                "delta": delta_label,
-            }
-        )
-    return jsonify(response_payload)
-
-
-def _load_stored_label(path: Path) -> Image.Image:
-    if not path.exists():
-        raise LabelPayloadError("Label not found.", status_code=404)
-    try:
-        with Image.open(path) as stored:
-            return stored.copy()
-    except (UnidentifiedImageError, OSError) as exc:
-        raise LabelPayloadError("Stored label is unreadable.", status_code=500) from exc
 
 
 def _data_url_for_image(image: Image.Image) -> str:

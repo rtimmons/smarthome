@@ -1,7 +1,5 @@
 {% extends "base.html" %}
 
-{% block form_attributes %}data-disable-default-handlers="true"{% endblock %}
-
 {% block form_heading %}
 Best By Label
 {% endblock %}
@@ -11,81 +9,24 @@ Best By Label
         .bb-help {
             color: var(--muted-color);
         }
-        .bb-preview-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 1rem;
-        }
-        .bb-preview-card {
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            padding: 0.9rem;
-            background: linear-gradient(160deg, var(--surface-color) 0%, var(--preview-bg) 100%);
-            box-shadow: var(--shadow);
-            display: grid;
-            gap: 0.6rem;
-        }
-        .bb-preview-meta h4 {
-            margin: 0;
-            font-size: 1.05rem;
-        }
-        .bb-preview-meta p {
-            margin: 0.15rem 0 0;
-            color: var(--muted-color);
-        }
-        .bb-preview-trigger {
-            background: none;
-            border: 1px dashed var(--border-color);
-            border-radius: 8px;
-            padding: 0.35rem;
-            cursor: pointer;
-            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
-        }
-        .bb-preview-trigger:hover,
-        .bb-preview-trigger:focus-visible {
-            border-color: var(--accent-color);
-            box-shadow: 0 0 0 4px rgba(44, 111, 227, 0.2);
-            transform: translateY(-2px);
-        }
-        .bb-preview-trigger img {
-            display: block;
-            width: auto;
-            max-width: 100%;
-            height: auto;
-            margin: 0 auto;
-            object-fit: contain;
-            transition: filter 0.15s ease-in-out;
-        }
-        .bb-preview-note {
-            margin: 0;
-            color: var(--muted-color);
-            word-break: break-all;
-        }
-        :root[data-theme="dark"] .bb-preview-card,
-        :root.theme-dark .bb-preview-card {
-            background: linear-gradient(160deg, var(--surface-color) 0%, var(--preview-bg) 100%);
-        }
-        :root[data-theme="dark"] .bb-preview-trigger img,
-        :root.theme-dark .bb-preview-trigger img {
-            filter: invert(1) brightness(1.1) contrast(1.05);
-        }
-        :root[data-theme="dark"] .bb-preview-trigger img:hover,
-        :root.theme-dark .bb-preview-trigger img:hover,
-        :root[data-theme="dark"] .bb-preview-trigger img:focus-visible,
-        :root.theme-dark .bb-preview-trigger img:focus-visible {
-            filter: none !important;
-        }
     </style>
+    {% set text_seed = (initial_query.get('text') or initial_query.get('Text') or '') | string | trim %}
+    {% set text_mode = text_seed | length > 0 %}
+    {% set base_date_value = (initial_query.get('BaseDate') or initial_query.get('baseDate') or form_context.base_date_default) | string %}
+    {% set delta_value = (initial_query.get('Offset') or initial_query.get('offset') or initial_query.get('Delta') or initial_query.get('delta') or form_context.delta_default) | string %}
+    {% set prefix_value = (initial_query.get('Prefix') or initial_query.get('prefix') or form_context.prefix_default) | string %}
+    {% set has_custom_prefix = prefix_value != form_context.prefix_default %}
+
     {% if text_mode %}
-        <p class="bb-help">Create a Best By label from a plain text payload. The QR label will preserve your <code>?text</code> query.</p>
+        <p class="bb-help">Create a Best By label from a plain text payload. The QR label will trigger this text print.</p>
         <label for="textValue">
             Label text
-            <input type="text" id="textValue" name="Text" value="{{ text_value }}" placeholder="Best By 2025-12-01">
+            <input type="text" id="textValue" name="Text" value="{{ text_seed }}" placeholder="Best By 2025-12-01">
             <small><code>?text=A+B+C</code> becomes <strong>A B C</strong> on the label.</small>
         </label>
-        <p class="bb-help"><a href="{{ url_for('best_by_route') }}">Switch to date-offset mode</a></p>
+        <p class="bb-help"><a href="{{ url_for('bb_route', tpl=active_template.slug) }}">Switch to date-offset mode</a></p>
     {% else %}
-        <p class="bb-help">Generate and print a Best By label offset from a chosen base date. The <code>baseDate</code>, <code>offset</code>, and <code>print</code> query parameters are all supported on <code>/bb</code>. Set <code>?text=Your+Message</code> to switch into custom-text mode.</p>
+        <p class="bb-help">Generate and print a Best By label offset from a chosen base date. Use <code>?baseDate</code> and <code>?offset</code> query params to prefill.</p>
         <label for="baseDate">
             Base date (YYYY-MM-DD, optional)
             <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}">
@@ -96,90 +37,37 @@ Best By Label
             <small>Example values: <code>2 weeks</code>, <code>10 days</code>, or <code>1 month</code>. Defaults to 2 weeks.</small>
         </label>
         <label for="useCustomPrefix" style="display: flex; align-items: center; gap: 0.5rem;">
-            <input type="checkbox" id="useCustomPrefix" style="width: auto; margin: 0;">
+            <input type="checkbox" id="useCustomPrefix" style="width: auto; margin: 0;" {% if has_custom_prefix %}checked{% endif %}>
             <span>Use custom prefix</span>
         </label>
-        <label for="prefix" id="prefixLabel" style="display: none;">
+        <label for="prefix" id="prefixLabel" style="{% if not has_custom_prefix %}display: none;{% endif %}">
             Label prefix
-            <input type="text" id="prefix" name="Prefix" value="{{ prefix_value }}" placeholder="Best By: " disabled>
+            <input type="text" id="prefix" name="Prefix" value="{{ prefix_value }}" placeholder="Best By: " {% if not has_custom_prefix %}disabled{% endif %}>
             <small>Text before the date. Examples: <code>Best By: </code>, <code>Made </code>, <code>Expires: </code>. Leave empty for no prefix.</small>
         </label>
-        <p class="bb-help">Best By date: <strong>{{ best_by_date }}</strong> ({{ delta_label }} from {{ base_date_value }}). Press enter to refresh the previews.</p>
+        <p class="bb-help">Best By date: <strong id="bestByDateValue">{{ form_context.base_date_default }}</strong>. Previews print directly; labels are not stored.</p>
     {% endif %}
 {% endblock %}
 
-{% block preview_area %}
-    <section id="bbPreviewPanel" class="preview" aria-live="polite">
-        <h3>Preview</h3>
-        <p class="preview-status">Click a preview to send it to the printer directly.</p>
-        <div class="bb-preview-grid">
-            <article class="bb-preview-card">
-                <div class="bb-preview-meta">
-                    <h4>{% if text_mode %}Text label{% else %}Best By label{% endif %}</h4>
-                    {% if text_mode %}
-                        <p>Text: <strong>{{ text_value }}</strong></p>
-                    {% else %}
-                        <p>Best By: <strong>{{ best_by_date }}</strong></p>
-                    {% endif %}
-                </div>
-                <button type="button"
-                        class="bb-preview-trigger"
-                        data-print-url="{{ print_url }}"
-                        data-include-qr="false"
-                        aria-label="{% if text_mode %}Print Best By label for text {{ text_value }}{% else %}Print Best By label for {{ best_by_date }}{% endif %}">
-                    <img src="{{ best_by_preview_url }}" alt="Preview of the Best By label">
-                </button>
-                {% if text_mode %}
-                    <p class="bb-preview-note">Text payload: <code>{{ text_value }}</code></p>
-                {% else %}
-                    <p class="bb-preview-note">Base date {{ base_date_value }}, offset <code>{{ delta_label }}</code>.</p>
-                {% endif %}
-            </article>
-            <article class="bb-preview-card">
-                <div class="bb-preview-meta">
-                    <h4>QR label</h4>
-                    <p>{{ qr_caption }}</p>
-                </div>
-                <button type="button"
-                        class="bb-preview-trigger"
-                        data-print-url="{{ qr_print_url }}"
-                        data-include-qr="true"
-                        aria-label="Print QR label that triggers the Best By label">
-                    <img src="{{ qr_label_preview_url }}" alt="Preview of the QR code label">
-                </button>
-                <p class="bb-preview-note">QR targets <code>{{ print_url }}</code></p>
-                <p class="bb-preview-note">Print URL: <code>{{ print_url }}</code></p>
-            </article>
-        </div>
-    </section>
-{% endblock %}
-
 {% block form_actions %}
-<button type="submit">Refresh Previews</button>
-<p style="margin-top: 0.5rem; color: var(--muted-color); font-size: 0.9rem;">This template prints directly from the previews; labels are not persisted to the gallery.</p>
+    {{ super() }}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', () => {
-    const form = document.getElementById('labelForm');
-    const baseUrl = '{{ best_by_base_url }}';
-    const baseInput = document.getElementById('baseDate');
-    const deltaInput = document.getElementById('delta');
+    const useCustomPrefixCheckbox = document.getElementById('useCustomPrefix');
     const prefixInput = document.getElementById('prefix');
     const prefixLabel = document.getElementById('prefixLabel');
-    const useCustomPrefixCheckbox = document.getElementById('useCustomPrefix');
     const textInput = document.getElementById('textValue');
-    const previewButtons = Array.from(document.querySelectorAll('.bb-preview-trigger'));
-    const todayIso = '{{ today_iso }}';
-    const DEFAULT_DELTA = '2 weeks';
-    const DEFAULT_PREFIX = 'Best By: ';
-    const textMode = {{ 'true' if text_mode else 'false' }};
-    const hasCustomPrefix = {{ 'true' if prefix_value != 'Best By: ' else 'false' }};
+    const baseInput = document.getElementById('baseDate');
+    const deltaInput = document.getElementById('delta');
+    const defaultPrefix = '{{ form_context.prefix_default }}';
+    const todayIso = '{{ form_context.base_date_default }}';
+    const defaultDelta = '{{ form_context.delta_default }}';
 
-    // Handle custom prefix checkbox
     function updatePrefixFieldVisibility() {
-        if (!useCustomPrefixCheckbox || !prefixInput || !prefixLabel) return;
+        if (!useCustomPrefixCheckbox || !prefixLabel || !prefixInput) return;
         const isCustom = useCustomPrefixCheckbox.checked;
         if (isCustom) {
             prefixLabel.style.display = 'grid';
@@ -187,146 +75,28 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             prefixLabel.style.display = 'none';
             prefixInput.disabled = true;
+            prefixInput.value = defaultPrefix;
         }
     }
 
-    if (useCustomPrefixCheckbox && !textMode) {
-        // Initialize checkbox state based on whether we have a custom prefix
-        useCustomPrefixCheckbox.checked = hasCustomPrefix;
+    if (useCustomPrefixCheckbox) {
         updatePrefixFieldVisibility();
-
         useCustomPrefixCheckbox.addEventListener('change', updatePrefixFieldVisibility);
     }
 
-    if (form) {
-        form.method = 'get';
-        form.action = baseUrl;
-        if (baseInput && baseInput.name) {
-            baseInput.dataset.defaultName = baseInput.name;
-        }
-        if (prefixInput && prefixInput.name) {
-            prefixInput.dataset.defaultName = prefixInput.name;
-        }
-        if (textInput && textInput.name) {
-            textInput.dataset.defaultName = textInput.name;
-        }
+    if (baseInput && !baseInput.value) {
+        baseInput.value = todayIso;
+    }
+    if (deltaInput && !deltaInput.value) {
+        deltaInput.value = defaultDelta;
+    }
+
+    const form = document.getElementById('labelForm');
+    if (form && textInput) {
         form.addEventListener('submit', () => {
-            const normalizeField = (input, defaultValue, shouldTrim = true) => {
-                if (!input) {
-                    return;
-                }
-                const value = shouldTrim ? input.value.trim() : input.value;
-                if (!value || value === defaultValue) {
-                    input.removeAttribute('name');
-                } else if (input.dataset.defaultName) {
-                    input.setAttribute('name', input.dataset.defaultName);
-                }
-            };
-            if (textMode) {
-                normalizeField(textInput, '');
-                return;
-            }
-            normalizeField(baseInput, todayIso);
-            // Only include prefix if custom prefix checkbox is checked
-            if (useCustomPrefixCheckbox && useCustomPrefixCheckbox.checked) {
-                if (prefixInput && prefixInput.dataset.defaultName) {
-                    prefixInput.setAttribute('name', prefixInput.dataset.defaultName);
-                }
-            } else {
-                if (prefixInput) {
-                    prefixInput.removeAttribute('name');
-                }
-            }
+            textInput.value = textInput.value.split(/\s+/).join(' ').trim();
         });
     }
-
-    function buildParams({ includePrint = false, includeQr = false } = {}) {
-        const params = new URLSearchParams();
-        if (includePrint) {
-            params.set('print', 'true');
-        }
-        if (textMode) {
-            if (textInput) {
-                const trimmed = textInput.value.trim();
-                if (trimmed) {
-                    params.set('text', trimmed);
-                }
-            }
-        } else {
-            if (baseInput && baseInput.value && baseInput.value !== todayIso) {
-                params.set('baseDate', baseInput.value);
-            }
-            if (deltaInput && deltaInput.value) {
-                const trimmed = deltaInput.value.trim();
-                if (trimmed && trimmed.toLowerCase() !== DEFAULT_DELTA) {
-                    params.set('offset', trimmed);
-                }
-            }
-            // Only include prefix if custom prefix checkbox is checked
-            if (useCustomPrefixCheckbox && useCustomPrefixCheckbox.checked && prefixInput) {
-                params.set('prefix', prefixInput.value);
-            }
-        }
-        if (includeQr) {
-            params.set('qr_label', 'true');
-        }
-        return params;
-    }
-
-    function buildUrl(options) {
-        const params = buildParams(options);
-        const query = params.toString();
-        return query ? `${baseUrl}?${query}` : baseUrl;
-    }
-
-    function bestPrintUrl(includeQr) {
-        const dataAttr = includeQr ? 'true' : 'false';
-        const button = previewButtons.find((node) => node.dataset.includeQr === dataAttr);
-        if (button && button.dataset.printUrl) {
-            return button.dataset.printUrl;
-        }
-        return buildUrl({ includePrint: true, includeQr });
-    }
-
-    async function sendPrint(includeQr) {
-        if (typeof requestJson !== 'function') {
-            window.alert('Printing helpers are unavailable.');
-            return;
-        }
-        const targetUrl = bestPrintUrl(includeQr);
-        const result = await requestJson(targetUrl);
-        if (!result.ok) {
-            window.alert(result.error || 'Unable to send this label to the printer.');
-            return;
-        }
-        const payload = result.data || {};
-        const warnings = typeof parseWarnings === 'function' ? parseWarnings(payload) : [];
-        const metricsSummary = typeof formatMetricsSummary === 'function'
-            ? formatMetricsSummary(payload.metrics)
-            : '';
-        let message = includeQr ? 'QR label sent.' : 'Best By label sent.';
-        if (payload.best_by_date) {
-            message += `\nBest By: ${payload.best_by_date}`;
-        }
-        if (payload.text) {
-            message += `\nText: ${payload.text}`;
-        }
-        if (metricsSummary) {
-            message += `\nSize: ${metricsSummary}.`;
-        }
-        if (warnings.length) {
-            message += `\n\nWarnings:\n- ${warnings.join('\n- ')}`;
-        }
-        window.alert(message);
-    }
-
-    previewButtons.forEach((button) => {
-        button.addEventListener('click', (event) => {
-            event.preventDefault();
-            const includeQr = button.dataset.includeQr === 'true';
-            sendPrint(includeQr);
-        });
-    });
 });
 </script>
 {% endblock %}

@@ -1,14 +1,22 @@
-const labelsContainer = document.getElementById('labels');
 const form = document.getElementById('labelForm');
 const disableDefaultFormHandlers = !!(form && form.dataset.disableDefaultHandlers === 'true');
 const previewContainer = document.getElementById('previewContainer');
-const previewImage = document.getElementById('livePreviewImage');
+const labelPreviewImage = document.getElementById('labelPreviewImage');
+const qrPreviewImage = document.getElementById('qrPreviewImage');
 const previewStatus = document.getElementById('livePreviewStatus');
+const labelPreviewWarnings = document.getElementById('labelPreviewWarnings');
+const qrPreviewWarnings = document.getElementById('qrPreviewWarnings');
+const qrCaptionNode = document.getElementById('qrCaption');
+const labelPreviewSummary = document.getElementById('labelPreviewSummary');
+const bestByDateValue = document.getElementById('bestByDateValue');
 const themeSelect = document.getElementById('themeSelect');
+const printTriggers = Array.from(document.querySelectorAll('.print-trigger'));
 
 let previewAbortController = null;
 let previewTimerId = null;
 let lastPreviewPayloadKey = '';
+let lastLabelPrintUrl = '';
+let lastQrPrintUrl = '';
 const PREVIEW_DEBOUNCE_MS = 250;
 const THEME_STORAGE_KEY = 'printer-theme';
 const THEME_OPTIONS = ['light', 'dark', 'system'];
@@ -73,6 +81,10 @@ const BASE_PATH = (() => {
     if (idx > 0) {
         return path.slice(0, idx);
     }
+    const bbIdx = path.indexOf('/bb');
+    if (bbIdx > 0) {
+        return path.slice(0, bbIdx);
+    }
     if (path.startsWith('/api/hassio_ingress/')) {
         // Fallback: strip trailing component to keep ingress prefix.
         const parts = path.split('/');
@@ -125,78 +137,6 @@ function createAbortController() {
     return null;
 }
 
-async function fetchLabels() {
-    const result = await requestJson('/labels');
-    if (!result.ok) {
-        return { ok: false, error: result.error || 'Failed to load labels.', labels: [] };
-    }
-    const labels = Array.isArray(result.data && result.data.labels) ? result.data.labels : [];
-    return { ok: true, error: null, labels };
-}
-
-function formatTimestamp(seconds) {
-    const date = new Date(seconds * 1000);
-    return date.toLocaleString();
-}
-
-function renderLabels(labels) {
-    if (!labels.length) {
-        labelsContainer.classList.add('empty-state');
-        labelsContainer.textContent = 'No labels yet.';
-        return;
-    }
-
-    labelsContainer.classList.remove('empty-state');
-    labelsContainer.textContent = '';
-
-    labels.forEach((label) => {
-        const card = document.createElement('div');
-        card.className = 'label-card';
-
-        const img = document.createElement('img');
-        img.src = `${label.url}?v=${label.mtime}`;
-        img.alt = label.name;
-        img.title = 'Click to send to printer';
-        img.addEventListener('click', () => confirmAndPrint(label));
-
-        const timeElement = document.createElement('time');
-        timeElement.dateTime = new Date(label.mtime * 1000).toISOString();
-        timeElement.textContent = formatTimestamp(label.mtime);
-
-        card.appendChild(img);
-        card.appendChild(timeElement);
-        labelsContainer.appendChild(card);
-    });
-}
-
-async function confirmAndPrint(label) {
-    const ok = window.confirm(`Send "${label.name}" to the printer?`);
-    if (!ok) return;
-
-    const result = await requestJson('/print', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ filename: label.name }),
-    });
-
-    if (!result.ok) {
-        window.alert(result.error || 'Unexpected error while printing.');
-        return;
-    }
-
-    const payloadData = result.data || {};
-    const warnings = parseWarnings(payloadData);
-    const metricsSummary = formatMetricsSummary(payloadData.metrics);
-    let message = 'Label sent to printer.';
-    if (metricsSummary) {
-        message += `\nSize: ${metricsSummary}.`;
-    }
-    if (warnings.length) {
-        message += `\n\nWarnings:\n- ${warnings.join('\n- ')}`;
-    }
-    window.alert(message);
-}
-
 function formDataToObject(formElement) {
     const formData = new FormData(formElement);
     const data = {};
@@ -236,16 +176,43 @@ function setPreviewLoading() {
     if (!previewStatus) {
         return;
     }
-    previewStatus.textContent = 'Rendering preview…';
+    previewStatus.textContent = 'Rendering previews…';
     previewStatus.classList.remove('preview-status--error');
-    if (previewImage) {
-        if (previewImage.dataset.hasPreview === 'true') {
-            previewImage.hidden = false;
-            previewImage.classList.add('preview-image--loading');
-        } else {
-            previewImage.hidden = true;
+    [labelPreviewImage, qrPreviewImage].forEach((image) => {
+        if (!image) {
+            return;
         }
+        if (image.dataset.hasPreview === 'true') {
+            image.hidden = false;
+            image.classList.add('preview-image--loading');
+        } else {
+            image.hidden = true;
+        }
+    });
+}
+
+function updatePreviewImage(target, payload) {
+    if (!target) {
+        return;
     }
+    const imageData = payload && payload.image;
+    if (imageData) {
+        target.src = imageData;
+        target.hidden = false;
+        target.dataset.hasPreview = 'true';
+        target.classList.remove('preview-image--loading');
+    } else {
+        target.hidden = true;
+        target.dataset.hasPreview = 'false';
+    }
+}
+
+function updateWarnings(target, warnings) {
+    if (!target) {
+        return;
+    }
+    const safeWarnings = parseWarnings({ warnings });
+    target.textContent = safeWarnings.length ? `Warnings: ${safeWarnings.join(' ')}` : '';
 }
 
 async function requestPreview() {
@@ -262,7 +229,13 @@ async function requestPreview() {
     }
 
     const payloadKey = JSON.stringify(payload);
-    if (payloadKey === lastPreviewPayloadKey && previewImage && !previewImage.hidden) {
+    if (
+        payloadKey === lastPreviewPayloadKey &&
+        labelPreviewImage &&
+        labelPreviewImage.dataset.hasPreview === 'true' &&
+        qrPreviewImage &&
+        qrPreviewImage.dataset.hasPreview === 'true'
+    ) {
         return;
     }
     lastPreviewPayloadKey = payloadKey;
@@ -284,40 +257,37 @@ async function requestPreview() {
         fetchOptions.signal = controller.signal;
     }
 
-    const result = await requestJson('/labels/preview', fetchOptions);
+    const result = await requestJson('/bb/preview', fetchOptions);
 
     if (previewAbortController !== controller) {
         return;
     }
 
-    if (result.aborted) {
-        if (previewImage) {
-            if (previewImage.dataset.hasPreview === 'true') {
-                previewImage.hidden = false;
-                previewImage.classList.remove('preview-image--loading');
-            } else {
-                previewImage.hidden = true;
+    const clearLoadingState = () => {
+        [labelPreviewImage, qrPreviewImage].forEach((image) => {
+            if (!image) {
+                return;
             }
-        }
+            if (image.dataset.hasPreview === 'true') {
+                image.hidden = false;
+                image.classList.remove('preview-image--loading');
+            } else {
+                image.hidden = true;
+            }
+        });
         if (previewContainer) {
             previewContainer.removeAttribute('aria-busy');
         }
+    };
+
+    if (result.aborted) {
+        clearLoadingState();
         previewAbortController = null;
         return;
     }
 
     if (!result.ok) {
-        if (previewImage) {
-            if (previewImage.dataset.hasPreview === 'true') {
-                previewImage.hidden = false;
-                previewImage.classList.remove('preview-image--loading');
-            } else {
-                previewImage.hidden = true;
-            }
-        }
-        if (previewContainer) {
-            previewContainer.removeAttribute('aria-busy');
-        }
+        clearLoadingState();
         if (previewStatus) {
             previewStatus.textContent = result.error || 'Preview unavailable.';
             previewStatus.classList.add('preview-status--error');
@@ -326,50 +296,36 @@ async function requestPreview() {
         return;
     }
 
-    const previewData = result.data && result.data.image ? result.data.image : null;
-    if (!previewData) {
-        if (previewImage) {
-            if (previewImage.dataset.hasPreview === 'true') {
-                previewImage.hidden = false;
-                previewImage.classList.remove('preview-image--loading');
-            } else {
-                previewImage.hidden = true;
-            }
-        }
-        if (previewContainer) {
-            previewContainer.removeAttribute('aria-busy');
-        }
-        if (previewStatus) {
-            previewStatus.textContent = 'Preview response is missing an image.';
-            previewStatus.classList.add('preview-status--error');
-        }
-        previewAbortController = null;
-        return;
-    }
+    const data = result.data || {};
+    const labelPayload = data.label || {};
+    const qrPayload = data.qr || {};
 
-    if (previewImage) {
-        previewImage.src = previewData;
-        previewImage.hidden = false;
-        previewImage.dataset.hasPreview = 'true';
-        previewImage.classList.remove('preview-image--loading');
-    }
-    if (previewContainer) {
-        previewContainer.removeAttribute('aria-busy');
-    }
-    const warnings = parseWarnings(result.data);
+    lastLabelPrintUrl = typeof data.print_url === 'string' ? data.print_url : '';
+    lastQrPrintUrl = typeof data.qr_print_url === 'string' ? data.qr_print_url : '';
+
+    updatePreviewImage(labelPreviewImage, labelPayload);
+    updatePreviewImage(qrPreviewImage, qrPayload);
+    updateWarnings(labelPreviewWarnings, labelPayload.warnings || []);
+    updateWarnings(qrPreviewWarnings, qrPayload.warnings || []);
+    clearLoadingState();
+
     if (previewStatus) {
         previewStatus.textContent = '';
         previewStatus.classList.remove('preview-status--error');
         const label = document.createElement('span');
         label.className = 'preview-status__label';
-        label.textContent = 'Preview';
+        label.textContent = 'Previews ready';
         previewStatus.appendChild(label);
-        if (warnings.length) {
-            const warningNode = document.createElement('span');
-            warningNode.className = 'preview-status__warnings';
-            warningNode.textContent = warnings.join(' ');
-            previewStatus.appendChild(warningNode);
-        }
+    }
+    if (qrCaptionNode) {
+        qrCaptionNode.textContent = data.qr_caption || 'Scan to trigger the label.';
+    }
+    if (labelPreviewSummary) {
+        const summaryMetrics = labelPayload.metrics ? formatMetricsSummary(labelPayload.metrics) : '';
+        labelPreviewSummary.textContent = summaryMetrics ? `Size: ${summaryMetrics}` : 'Click to print the label.';
+    }
+    if (bestByDateValue && data.best_by && data.best_by.best_by_date) {
+        bestByDateValue.textContent = data.best_by.best_by_date;
     }
 
     previewAbortController = null;
@@ -464,7 +420,7 @@ function initTheme() {
 }
 
 function installHoverFilterReset() {
-    const selector = '.preview-image, .label-card img, .bb-preview-trigger img';
+    const selector = '.preview-image, .bb-preview-trigger img';
     function handleEnter(event) {
         const target = event.target && event.target.closest ? event.target.closest(selector) : null;
         if (target) {
@@ -483,29 +439,50 @@ function installHoverFilterReset() {
     document.addEventListener('focusout', handleLeave);
 }
 
+function bindPrintTriggers() {
+    printTriggers.forEach((node) => {
+        node.addEventListener('click', (event) => {
+            event.preventDefault();
+            const target = node.dataset.printTarget === 'qr' ? 'qr' : 'label';
+            sendPrint(target);
+        });
+    });
+}
+
 async function handleSubmit(event) {
     event.preventDefault();
-    const payload = buildTemplatePayload();
-    if (!payload) {
-        window.alert('Template information is missing from the form.');
-        return;
+    await sendPrint('label');
+}
+
+async function sendPrint(target) {
+    const useQr = target === 'qr';
+    const printUrl = useQr ? lastQrPrintUrl : lastLabelPrintUrl;
+    let result = null;
+    if (printUrl) {
+        result = await requestJson(printUrl);
+    } else {
+        const payload = buildTemplatePayload();
+        if (!payload) {
+            window.alert('Template information is missing from the form.');
+            return;
+        }
+        payload.qr_label = useQr;
+        result = await requestJson('/bb/print', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
     }
 
-    const result = await requestJson('/labels', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-    });
-
-    if (!result.ok) {
-        window.alert(result.error || 'Unexpected error while saving label.');
+    if (!result || !result.ok) {
+        window.alert((result && result.error) || 'Unexpected error while printing.');
         return;
     }
 
     const payloadData = result.data || {};
     const warnings = parseWarnings(payloadData);
     const metricsSummary = formatMetricsSummary(payloadData.metrics);
-    let message = 'Label saved.';
+    let message = useQr ? 'QR label sent.' : 'Label sent.';
     if (metricsSummary) {
         message += `\nSize: ${metricsSummary}.`;
     }
@@ -513,27 +490,6 @@ async function handleSubmit(event) {
         message += `\n\nWarnings:\n- ${warnings.join('\n- ')}`;
     }
     window.alert(message);
-    form.reset();
-    const firstFocusable = form.querySelector('input, select, textarea');
-    if (firstFocusable) {
-        firstFocusable.focus();
-    }
-    lastPreviewPayloadKey = '';
-    schedulePreview();
-    await refreshLabels();
-}
-
-async function refreshLabels() {
-    if (!labelsContainer) {
-        return;
-    }
-    const result = await fetchLabels();
-    if (!result.ok) {
-        labelsContainer.classList.add('empty-state');
-        labelsContainer.textContent = result.error || 'Unable to load labels.';
-        return;
-    }
-    renderLabels(result.labels.slice(0, 100));
 }
 
 initTheme();
@@ -545,9 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.addEventListener('input', schedulePreview);
         form.addEventListener('change', schedulePreview);
     }
-    if (labelsContainer) {
-        refreshLabels();
-    }
+    bindPrintTriggers();
     if (form && previewContainer && !disableDefaultFormHandlers) {
         schedulePreview();
     }

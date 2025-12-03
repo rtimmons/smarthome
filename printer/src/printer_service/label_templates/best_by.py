@@ -10,7 +10,11 @@ from PIL import Image, ImageDraw
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import bluey_label
 from printer_service.label_templates import helper as helper
-from printer_service.label_templates.base import TemplateDefinition, TemplateFormData
+from printer_service.label_templates.base import (
+    TemplateContext,
+    TemplateDefinition,
+    TemplateFormData,
+)
 
 FONT_POINTS = 48
 QR_CAPTION_POINTS = 22
@@ -353,6 +357,13 @@ class Template(TemplateDefinition):
     @property
     def form_template(self) -> str:
         return self.default_form_template()
+
+    def get_form_context(self) -> TemplateContext:
+        return {
+            "base_date_default": _today().isoformat(),
+            "delta_default": DEFAULT_DELTA_LABEL,
+            "prefix_default": DEFAULT_PREFIX,
+        }
 
     def preferred_label_spec(self) -> BrotherLabelSpec:
         return self._last_spec or bluey_label.LABEL_SPEC

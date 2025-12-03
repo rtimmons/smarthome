@@ -119,11 +119,41 @@
             margin: 0 0 0.5rem;
             font-size: 1rem;
         }
-        .preview-frame {
+        .bb-preview-grid {
             display: grid;
-            justify-items: center;
-            gap: 0.5rem;
-            min-height: clamp(360px, 60vh, 520px);
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1rem;
+        }
+        .bb-preview-card {
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 0.9rem;
+            background: linear-gradient(160deg, var(--surface-color) 0%, var(--preview-bg) 100%);
+            box-shadow: var(--shadow);
+            display: grid;
+            gap: 0.6rem;
+        }
+        .bb-preview-meta h4 {
+            margin: 0;
+            font-size: 1.05rem;
+        }
+        .bb-preview-meta p {
+            margin: 0.15rem 0 0;
+            color: var(--muted-color);
+        }
+        .bb-preview-trigger {
+            background: none;
+            border: 1px dashed var(--border-color);
+            border-radius: 8px;
+            padding: 0.35rem;
+            cursor: pointer;
+            transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease-in-out;
+        }
+        .bb-preview-trigger:hover,
+        .bb-preview-trigger:focus-visible {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(44, 111, 227, 0.2);
+            transform: translateY(-2px);
         }
         .preview-image {
             max-width: 100%;
@@ -137,7 +167,7 @@
             display: block;
             margin: 0 auto;
             transform-origin: center center;
-            max-height: clamp(360px, 60vh, 540px);
+            max-height: clamp(320px, 55vh, 520px);
         }
         .preview-image.preview-image--loading {
             opacity: 0.4;
@@ -158,6 +188,11 @@
             color: #b3261e;
             display: block;
             margin-top: 0.2rem;
+        }
+        .bb-preview-note {
+            margin: 0;
+            color: var(--muted-color);
+            word-break: break-word;
         }
         @media (max-width: 720px) {
             .form-grid {
@@ -194,44 +229,6 @@
         button:hover {
             background-color: var(--accent-strong);
         }
-        #labels {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 240px));
-            gap: 1rem;
-        }
-        .label-card {
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 0.75rem;
-            text-align: center;
-            background-color: var(--label-panel-bg);
-            box-shadow: var(--shadow);
-            min-height: clamp(360px, 55vh, 520px);
-        }
-        .label-card img {
-            max-width: 100%;
-            width: auto;
-            height: auto;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            cursor: pointer;
-            background-color: var(--surface-color);
-            display: block;
-            margin: 0 auto;
-            transform-origin: center center;
-            transition: transform 0.2s ease-in-out, filter 0.2s ease-in-out;
-            max-height: clamp(320px, 50vh, 520px);
-        }
-        .label-card time {
-            display: block;
-            margin-top: 0.5rem;
-            font-size: 0.8rem;
-            color: var(--muted-color);
-        }
-        .empty-state {
-            color: var(--muted-color);
-            font-style: italic;
-        }
         .theme-toggle {
             margin-left: auto;
             display: inline-flex;
@@ -262,8 +259,8 @@
         }
         :root[data-theme="dark"] .preview-image,
         :root.theme-dark .preview-image,
-        :root[data-theme="dark"] .label-card img,
-        :root.theme-dark .label-card img {
+        :root[data-theme="dark"] .bb-preview-trigger img,
+        :root.theme-dark .bb-preview-trigger img {
             filter: invert(1) brightness(1.1) contrast(1.05);
         }
         .no-filter {
@@ -283,7 +280,7 @@
     <header>
         <nav aria-label="Label templates">
             {% for template in templates %}
-                <a href="{{ url_for('show_template', template_slug=template.slug) }}"
+                <a href="{{ url_for('bb_route', tpl=template.slug) }}"
                    class="{% if template.slug == active_template.slug %}active{% endif %}">
                     {{ template.display_name }}
                 </a>
@@ -308,22 +305,47 @@
                     </div>
                     {% block preview_area %}
                         <section id="previewContainer" class="preview" aria-live="polite">
-                            <h3>Preview</h3>
-                            <div class="preview-frame">
-                                <p id="livePreviewStatus" class="preview-status">Start filling out the form to see your label.</p>
-                                <img id="livePreviewImage" class="preview-image" src="" alt="Live label preview" hidden>
+                            <h3>Previews</h3>
+                            <p id="livePreviewStatus" class="preview-status">Start filling out the form to see your label.</p>
+                            <div class="bb-preview-grid">
+                                <article class="bb-preview-card">
+                                    <div class="bb-preview-meta">
+                                        <h4>Main label</h4>
+                                        <p id="labelPreviewSummary" class="bb-preview-note">Click to print the label.</p>
+                                    </div>
+                                    <button type="button"
+                                            class="bb-preview-trigger print-trigger"
+                                            data-print-target="label"
+                                            aria-label="Print the main label preview">
+                                        <img id="labelPreviewImage" class="preview-image" src="" alt="Preview of the label" hidden>
+                                    </button>
+                                    <p id="labelPreviewWarnings" class="bb-preview-note"></p>
+                                </article>
+                                <article class="bb-preview-card">
+                                    <div class="bb-preview-meta">
+                                        <h4>QR label</h4>
+                                        <p id="qrCaption" class="bb-preview-note">Scan to trigger the main label.</p>
+                                    </div>
+                                    <button type="button"
+                                            class="bb-preview-trigger print-trigger"
+                                            data-print-target="qr"
+                                            aria-label="Print the QR label preview">
+                                        <img id="qrPreviewImage" class="preview-image" src="" alt="Preview of the QR code label" hidden>
+                                    </button>
+                                    <p id="qrPreviewWarnings" class="bb-preview-note"></p>
+                                </article>
                             </div>
                         </section>
                     {% endblock %}
                 </div>
                 {% block form_actions %}
-                <button type="submit">Save Label</button>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                    <button type="submit" class="print-trigger" data-print-target="label">Print Label</button>
+                    <button type="button" id="printQrActionButton" class="print-trigger" data-print-target="qr">Print QR Label</button>
+                </div>
+                <p style="margin-top: 0.5rem; color: var(--muted-color); font-size: 0.9rem;">Previews refresh automatically as you edit.</p>
                 {% endblock %}
             </form>
-        </section>
-        <section>
-            <h3>Recent Labels</h3>
-            <div id="labels" class="empty-state">Loading…</div>
         </section>
     </main>
     <script src="{{ url_for('static', filename='app.js') }}" defer></script>
