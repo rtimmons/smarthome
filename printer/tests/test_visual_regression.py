@@ -250,7 +250,7 @@ def test_best_by_custom_text(mock_best_by_date, regenerate_baselines):
 
 
 def test_best_by_qr_code_simple(mock_best_by_date, regenerate_baselines):
-    """Best By label with QR code (no overlay text)."""
+    """Best By label with QR code (uses default caption)."""
     template = best_by.TEMPLATE
     form_data = TemplateFormData(
         {
@@ -267,7 +267,7 @@ def test_best_by_qr_code_simple(mock_best_by_date, regenerate_baselines):
 
 
 def test_best_by_qr_code_with_text(mock_best_by_date, regenerate_baselines):
-    """Best By label with QR code and overlay text."""
+    """Best By label with QR code and caption text."""
     template = best_by.TEMPLATE
     form_data = TemplateFormData(
         {
@@ -283,7 +283,7 @@ def test_best_by_qr_code_with_text(mock_best_by_date, regenerate_baselines):
 
 
 def test_best_by_qr_code_long_text(mock_best_by_date, regenerate_baselines):
-    """Best By label with QR code and long overlay text (tests wrapping)."""
+    """Best By label with QR code and long caption text (tests wrapping)."""
     template = best_by.TEMPLATE
     form_data = TemplateFormData(
         {
@@ -295,6 +295,44 @@ def test_best_by_qr_code_long_text(mock_best_by_date, regenerate_baselines):
     image = template.render(form_data)
     assert_visual_match(
         image, "best_by_qr_long_text.png", tolerance=0.001, regenerate=regenerate_baselines
+    )
+
+
+def test_best_by_qr_code_caption_from_url(mock_best_by_date, regenerate_baselines):
+    """Best By label builds a detailed caption from the QR URL when caption is empty."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "QrUrl": "http://[::1]:8099/bb?Line1=Durban&Line2=Poison&SymbolName=awake&Initials=DP&PackageDate=07%2F20%2F25&tpl=bluey_label_2&print=true",
+            "QrText": "",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image,
+        "best_by_qr_caption_from_url.png",
+        tolerance=0.001,
+        regenerate=regenerate_baselines,
+    )
+
+
+def test_best_by_qr_code_caption_from_url_lion(mock_best_by_date, regenerate_baselines):
+    """Best By label builds a detailed caption from a Bluey Label 2 QR URL."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "QrUrl": "http://[::1]:8099/bb?Line1=Lion&Line2=Mane&SymbolName=awake&Initials=LM&PackageDate=07%2F11%2F25&tpl=bluey_label_2&print=true",
+            "QrText": "",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image,
+        "best_by_qr_caption_lion_mane.png",
+        tolerance=0.001,
+        regenerate=regenerate_baselines,
     )
 
 
@@ -507,6 +545,40 @@ def test_bluey_label_2_initials_only(regenerate_baselines):
 
     image = template.render(form_data)
     assert_visual_match(image, "bluey_2_initials_only.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_2_full_fields(regenerate_baselines):
+    """Bluey label 2 with typical filled inputs."""
+    template = bluey_label_2.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Durban",
+            "Line2": "Poison",
+            "SymbolName": "awake",
+            "Initials": "DP",
+            "PackageDate": "07/20/25",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_2_full_fields.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_2_alt_symbol(regenerate_baselines):
+    """Bluey label 2 with alternate symbol and initials."""
+    template = bluey_label_2.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Party Snacks",
+            "Line2": "Label",
+            "SymbolName": "balloon-2",
+            "Initials": "PS",
+            "PackageDate": "12/31/25",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_2_alt_symbol.png", regenerate=regenerate_baselines)
 
 
 # =============================================================================
