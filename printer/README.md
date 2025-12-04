@@ -16,6 +16,11 @@ just start        # Starts just the printer service
 
 The printer service will be available at http://localhost:8099
 
+## TODO
+
+1. Make the URL params shorter or perhaps just remove them entirely and instead just have them be ordered params and keep the order consistent over time. So `/bb?t=abc&v=1&p=a,b,c` for `t` being the template name, `v` being a version for backward-compatibility if we change the order or template names or params/order, and `p` being a comma-separated list of the params, being careful to handle the case where the params have commas themselves. We don't need to be backward-compatible with old URLs for this update.
+1. Make the print URL (`?print=true`) render the HTML that then uses javascript to trigger the actual print with a countdown timer. This way the user can preview and modify the label from the QR code before printing it.
+
 ## Development
 
 ### Running Tests
