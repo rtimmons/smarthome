@@ -150,7 +150,20 @@ def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
     template_slug = _normalize_caption_piece(
         _extract_query_value(query, "tpl", "template"), title_case=True
     )
+    prefix_override = _normalize_caption_piece(_extract_query_value(query, "Prefix", "prefix"))
     details: list[str] = []
+
+    effective_delta_label = delta_label
+    delta_raw = _extract_query_value(query, "Delta", "delta", "Offset", "offset")
+    if delta_raw:
+        try:
+            _, parsed_delta_label = _parse_delta_string(delta_raw)
+            effective_delta_label = parsed_delta_label
+        except ValueError:
+            pass
+
+    if template_slug.lower().startswith("best by") and effective_delta_label:
+        details.append(f"+{effective_delta_label.title()}")
 
     detail_keys = [
         ("Line1", False),
@@ -167,14 +180,16 @@ def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
             details.append(value)
 
     if template_slug:
-        prefix = f"Print {template_slug}"
+        prefix_label = prefix_override if prefix_override else template_slug
+        prefix = f"Print {prefix_label}"
     elif provided:
         prefix = provided
     else:
-        prefix = f"Print Best By +{delta_label.title()}"
+        prefix = f"Print Best By +{effective_delta_label.title()}"
 
     if details:
-        return f"{prefix}: {', '.join(details)}"
+        separator = ": " if not prefix.rstrip().endswith(":") else " "
+        return f"{prefix}{separator}{', '.join(details)}"
     if provided:
         return provided
     return prefix
@@ -217,7 +232,7 @@ def _resolve_base_date(form_data: TemplateFormData) -> date:
 
 
 def _resolve_delta(form_data: TemplateFormData) -> Tuple[timedelta, str]:
-    raw_delta = form_data.get_str("Delta", "delta")
+    raw_delta = form_data.get_str("Delta", "delta") or form_data.get_str("Offset", "offset")
     return _parse_delta_string(raw_delta or None)
 
 

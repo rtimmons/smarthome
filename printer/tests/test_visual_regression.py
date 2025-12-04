@@ -249,6 +249,52 @@ def test_best_by_custom_text(mock_best_by_date, regenerate_baselines):
     assert_visual_match(image, "best_by_custom_text.png", regenerate=regenerate_baselines)
 
 
+def test_best_by_offset_three_weeks(regenerate_baselines):
+    """Best By label with explicit base date and 3-week offset."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "BaseDate": "2025-12-04",
+            "Offset": "3 weeks",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "best_by_offset_three_weeks.png", regenerate=regenerate_baselines)
+
+
+def test_best_by_prefix_zero_offset(regenerate_baselines):
+    """Best By label with prefix override and zero offset."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "BaseDate": "2025-12-04",
+            "Offset": "0",
+            "Prefix": "Made: ",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "best_by_prefix_zero_offset.png", regenerate=regenerate_baselines)
+
+
+def test_best_by_prefix_double_colon_zero_offset(regenerate_baselines):
+    """Best By label with double-colon prefix and zero offset."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "BaseDate": "2025-12-04",
+            "Offset": "0",
+            "Prefix": "Made:: ",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image, "best_by_prefix_double_colon_zero_offset.png", regenerate=regenerate_baselines
+    )
+
+
 def test_best_by_qr_code_simple(mock_best_by_date, regenerate_baselines):
     """Best By label with QR code (uses default caption)."""
     template = best_by.TEMPLATE
@@ -331,6 +377,82 @@ def test_best_by_qr_code_caption_from_url_lion(mock_best_by_date, regenerate_bas
     assert_visual_match(
         image,
         "best_by_qr_caption_lion_mane.png",
+        tolerance=0.001,
+        regenerate=regenerate_baselines,
+    )
+
+
+def test_best_by_qr_code_caption_from_offset(mock_best_by_date, regenerate_baselines):
+    """Best By label shows the offset embedded in the QR URL."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "QrUrl": "http://[::1]:8099/bb?BaseDate=2025-12-04&Offset=2+Months&tpl=best_by&print=true",
+            "QrText": "",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image,
+        "best_by_qr_offset_two_months.png",
+        tolerance=0.001,
+        regenerate=regenerate_baselines,
+    )
+
+
+def test_best_by_qr_code_caption_from_delta(mock_best_by_date, regenerate_baselines):
+    """Best By label shows the delta embedded in the QR URL."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "QrUrl": "http://[::1]:8099/bb?BaseDate=2025-12-04&Delta=3+weeks&tpl=best_by&print=true",
+            "QrText": "",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image,
+        "best_by_qr_delta_three_weeks.png",
+        tolerance=0.001,
+        regenerate=regenerate_baselines,
+    )
+
+
+def test_best_by_qr_code_caption_with_prefix(mock_best_by_date, regenerate_baselines):
+    """Best By label respects prefix override in QR caption."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "QrUrl": "http://[::1]:8099/bb?BaseDate=2025-12-04&Offset=0&Prefix=Made%3A+&tpl=best_by&print=true",
+            "QrText": "",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image,
+        "best_by_qr_caption_prefix_zero_offset.png",
+        tolerance=0.001,
+        regenerate=regenerate_baselines,
+    )
+
+
+def test_best_by_qr_code_caption_with_double_colon_prefix(mock_best_by_date, regenerate_baselines):
+    """Best By label respects double-colon prefix in QR caption."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "QrUrl": "http://[::1]:8099/bb?BaseDate=2025-12-04&Offset=0&Prefix=Made%3A%3A+&tpl=best_by&print=true",
+            "QrText": "",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image,
+        "best_by_qr_caption_prefix_double_colon_zero_offset.png",
         tolerance=0.001,
         regenerate=regenerate_baselines,
     )
