@@ -18,12 +18,13 @@ from printer_service.label_templates.base import (
 
 FONT_POINTS = 48
 QR_CAPTION_POINTS = 22
-QR_TARGET_HEIGHT_IN = 0.24
+# Target a ~0.5\" printed QR so it stays readable while keeping the label compact.
+QR_TARGET_HEIGHT_IN = 0.5
 QR_MIN_MODULE_PX = 2
 HORIZONTAL_PADDING = 20
 MIN_LENGTH_PX = bluey_label.CANVAS_HEIGHT_PX // 2  # keep length tight but readable
 MARGIN_TOTAL_PX = int(round(QL810W_DPI / 8))  # add 1/8" total margin to text height
-QR_MARGIN_PX = 8
+QR_MARGIN_PX = 2
 QR_GAP_PX = 0
 QR_OVERLAY_MAX_COVERAGE = 0.32  # keep masked area within the high error-correction budget
 QR_OVERLAY_WIDTH_RATIO = 0.9
@@ -271,10 +272,10 @@ def _qr_image(
     qr_url: str, target_height_px: Optional[int] = None, overlay_text: str | None = None
 ) -> Image.Image:
     qr = qrcode.QRCode(
-        version=3,
+        version=None,
         error_correction=qrcode.constants.ERROR_CORRECT_H,
         border=1,
-        box_size=2,
+        box_size=1,
     )
     qr.add_data(qr_url)
     qr.make(fit=True)
@@ -302,24 +303,26 @@ def _qr_image(
 
 
 def _render_qr_label(*, qr_url: str, caption: str, template_slug: str) -> Image.Image:
-    qr_height_px = max(int(round(QR_TARGET_HEIGHT_IN * QL810W_DPI)), 70)
+    width_px, height_px = bluey_label.LABEL_SPEC.printable_px
+    max_qr_height_px = max(height_px - (QR_MARGIN_PX * 2), 1)
+    qr_height_px = min(max_qr_height_px, max(int(round(QR_TARGET_HEIGHT_IN * QL810W_DPI)), 40))
     qr_image = _qr_image(
         qr_url,
         target_height_px=qr_height_px,
         overlay_text=caption or "Print Best By +2 Weeks",
     )
 
-    width_px = qr_image.width + (QR_MARGIN_PX * 2)
-    height_px = QR_MARGIN_PX + qr_image.height + QR_MARGIN_PX
-
-    renderer = helper.LabelDrawingHelper(width=width_px, height=height_px)
-    qr_left = (width_px - qr_image.width) // 2
-    renderer.canvas.paste(qr_image, (qr_left, QR_MARGIN_PX))
-    renderer.advance(QR_MARGIN_PX + qr_image.height)
+    # Render onto the Bluey tape width but shrink the label length to the QR
+    # height plus a tiny inset so we don't waste tape.
+    qr_label_height_px = min(height_px, qr_image.height + (QR_MARGIN_PX * 2))
+    renderer = helper.LabelDrawingHelper(width=width_px, height=qr_label_height_px)
+    qr_left = QR_MARGIN_PX
+    qr_top = QR_MARGIN_PX
+    renderer.canvas.paste(qr_image, (qr_left, qr_top))
 
     spec = BrotherLabelSpec(
         code=bluey_label.LABEL_SPEC.code,
-        printable_px=(width_px, height_px),
+        printable_px=(width_px, qr_label_height_px),
         tape_size_mm=bluey_label.LABEL_SPEC.tape_size_mm,
     )
     result = renderer.finalize()

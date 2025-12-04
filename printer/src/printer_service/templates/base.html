@@ -194,6 +194,22 @@
             color: var(--muted-color);
             word-break: break-word;
         }
+        .bb-preview-url {
+            display: flex;
+            gap: 0.35rem;
+            align-items: baseline;
+            flex-wrap: wrap;
+        }
+        .bb-preview-url__label {
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        .bb-preview-url__link {
+            color: var(--text-color);
+            text-decoration: underline;
+            font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+            word-break: break-all;
+        }
         @media (max-width: 720px) {
             .form-grid {
                 grid-template-columns: 1fr;
@@ -332,6 +348,15 @@
                                             aria-label="Print the QR label preview">
                                         <img id="qrPreviewImage" class="preview-image" src="" alt="Preview of the QR code label" hidden>
                                     </button>
+                                    <p id="qrPreviewUrl" class="bb-preview-note bb-preview-url" hidden>
+                                        <span class="bb-preview-url__label">URL</span>
+                                        <a id="qrPreviewUrlLink"
+                                           class="bb-preview-url__link"
+                                           href=""
+                                           target="_blank"
+                                           rel="noreferrer noopener">
+                                        </a>
+                                    </p>
                                     <p id="qrPreviewWarnings" class="bb-preview-note"></p>
                                 </article>
                             </div>

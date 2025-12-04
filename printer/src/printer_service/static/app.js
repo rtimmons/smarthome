@@ -7,6 +7,8 @@ const previewStatus = document.getElementById('livePreviewStatus');
 const labelPreviewWarnings = document.getElementById('labelPreviewWarnings');
 const qrPreviewWarnings = document.getElementById('qrPreviewWarnings');
 const qrCaptionNode = document.getElementById('qrCaption');
+const qrPreviewUrlRow = document.getElementById('qrPreviewUrl');
+const qrPreviewUrlLink = document.getElementById('qrPreviewUrlLink');
 const labelPreviewSummary = document.getElementById('labelPreviewSummary');
 const bestByDateValue = document.getElementById('bestByDateValue');
 const themeSelect = document.getElementById('themeSelect');
@@ -215,6 +217,22 @@ function updateWarnings(target, warnings) {
     target.textContent = safeWarnings.length ? `Warnings: ${safeWarnings.join(' ')}` : '';
 }
 
+function updateQrPreviewUrl(url) {
+    if (!qrPreviewUrlRow || !qrPreviewUrlLink) {
+        return;
+    }
+    const normalized = typeof url === 'string' ? url.trim() : '';
+    if (normalized) {
+        qrPreviewUrlRow.hidden = false;
+        qrPreviewUrlLink.textContent = normalized;
+        qrPreviewUrlLink.href = normalized;
+    } else {
+        qrPreviewUrlRow.hidden = true;
+        qrPreviewUrlLink.textContent = '';
+        qrPreviewUrlLink.removeAttribute('href');
+    }
+}
+
 async function requestPreview() {
     if (!form || !previewContainer || disableDefaultFormHandlers) {
         return;
@@ -292,6 +310,7 @@ async function requestPreview() {
             previewStatus.textContent = result.error || 'Preview unavailable.';
             previewStatus.classList.add('preview-status--error');
         }
+        updateQrPreviewUrl('');
         previewAbortController = null;
         return;
     }
@@ -302,11 +321,13 @@ async function requestPreview() {
 
     lastLabelPrintUrl = typeof data.print_url === 'string' ? data.print_url : '';
     lastQrPrintUrl = typeof data.qr_print_url === 'string' ? data.qr_print_url : '';
+    const qrTargetUrl = typeof data.print_url === 'string' ? data.print_url : '';
 
     updatePreviewImage(labelPreviewImage, labelPayload);
     updatePreviewImage(qrPreviewImage, qrPayload);
     updateWarnings(labelPreviewWarnings, labelPayload.warnings || []);
     updateWarnings(qrPreviewWarnings, qrPayload.warnings || []);
+    updateQrPreviewUrl(qrTargetUrl);
     clearLoadingState();
 
     if (previewStatus) {
