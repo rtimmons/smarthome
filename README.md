@@ -85,6 +85,16 @@ just test
 
 To target a single add-on: append its name, e.g. `just deploy sonos-api` or `just ha-addon grid-dashboard`.
 
+### Printer Add-on Container Build (podman)
+
+Catch container build errors before deploying to Home Assistant:
+
+```bash
+just printer-image  # builds the talos payload + podman image (tagged printer-service:local)
+# Optional: match a specific architecture for podman build
+PRINTER_DOCKER_PLATFORM=linux/arm64 just printer-image
+```
+
 ## Documentation
 
 See the [docs/](./docs/) directory for detailed documentation:
@@ -106,6 +116,9 @@ See [CLAUDE.md](./CLAUDE.md) for detailed development commands and architecture 
 - Follow [setup steps](./docs/setup.md)
 
 ## TODO
+
+- Add a `just` command that locally builds the printer add-on Docker image so build failures surface before deploy.
+- Stop relying on the system Python; add a pyenv-style bootstrap (mirroring the self-contained nvm setup) inside the repo so Python is pinned and managed locally.
 
 - 2022-11-28: Maybe try out Phoenix personal radio station thing https://github.com/pncnmnp/phoenix10.1
 

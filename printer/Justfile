@@ -36,6 +36,27 @@ fmt:
     if [ ! -d "{{venv}}" ]; then just setup; fi
     "{{python}}" -m ruff format .
 
+build:
+    set -euo pipefail; \
+    REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"; \
+    talos_bin="$REPO_ROOT/talos/build/bin/talos"; \
+    if [ ! -x "$talos_bin" ]; then "$REPO_ROOT/talos/build.sh"; fi; \
+    "$talos_bin" addon build printer; \
+    addon_dir="$REPO_ROOT/build/home-assistant-addon/printer_service"; \
+    if [ ! -d "$addon_dir" ]; then \
+        echo "Add-on build output missing at $addon_dir" >&2; \
+        exit 1; \
+    fi; \
+    if ! command -v podman >/dev/null 2>&1; then \
+        echo "podman is required to build the printer add-on image" >&2; \
+        exit 1; \
+    fi; \
+    platform_flag=(); \
+    if [ -n "${PRINTER_DOCKER_PLATFORM:-}" ]; then \
+        platform_flag+=(--platform "${PRINTER_DOCKER_PLATFORM}"); \
+    fi; \
+    podman build "${platform_flag[@]}" -t printer-service:local "$addon_dir"
+
 ha-addon:
     set -e; \
     if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \

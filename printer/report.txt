@@ -1,0 +1,703 @@
+=========================================
+HOME ASSISTANT ADD-ON DIAGNOSTIC REPORT
+Generated: Thu Dec  4 17:57:27 EST 2025
+=========================================
+
+=== 1. Directory Structure: /addons/ ===
+Directory /addons exists
+/addons/:
+total 44
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 .
+drwxr-xr-x    1 root     root          4096 Dec  4 17:27 ..
+-rwxr-xr-x    1 501      dialout        163 Nov 18 13:55 ._grid_dashboard
+-rwxr-xr-x    1 501      dialout        163 Nov 18 12:54 ._node_sonos_http_api
+-rwxr-xr-x    1 501      dialout        163 Nov 20 19:45 ._printer_service
+-rwxr-xr-x    1 501      dialout        163 Nov 18 12:55 ._sonos_api
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 grid_dashboard
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 mongodb
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 node_sonos_http_api
+drwxr-xr-x    4 501      dialout       4096 Dec  4 17:51 printer_service
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 sonos_api
+
+/addons/grid_dashboard:
+total 52
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout         54 Dec  4 16:21 CHANGELOG.md
+-rw-r--r--    1 501      dialout        900 Dec  4 16:21 DOCS.md
+-rw-r--r--    1 501      dialout        424 Dec  4 16:21 Dockerfile
+-rw-r--r--    1 501      dialout        245 Dec  4 16:21 README.md
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 app
+-rw-r--r--    1 501      dialout        518 Dec  4 16:21 apparmor.txt
+-rw-r--r--    1 501      dialout        798 Dec  4 16:21 config.yaml
+-rw-r--r--    1 501      dialout        391 Dec  4 16:21 icon.png
+-rw-r--r--    1 501      dialout        391 Dec  4 16:21 logo.png
+-rwxr-xr-x    1 501      dialout        802 Dec  4 16:21 run.sh
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 translations
+
+/addons/grid_dashboard/app:
+total 200
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout     177284 Dec  1 16:18 package-lock.json
+-rw-r--r--    1 501      dialout       1470 Nov 23 18:23 package.json
+-rw-r--r--    1 501      dialout         82 Nov 20 13:33 prettier.config.js
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 src
+-rw-r--r--    1 501      dialout        332 Nov 20 13:33 tsconfig.json
+
+/addons/grid_dashboard/app/src:
+total 20
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 ..
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 public
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 server
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 types
+
+/addons/grid_dashboard/app/src/public:
+total 24
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 ..
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 css
+-rw-r--r--    1 501      dialout          0 Nov 20 13:33 favicon.ico
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 img
+-rw-r--r--    1 501      dialout       1637 Nov 20 13:33 index.html
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 js
+
+/addons/grid_dashboard/app/src/public/css:
+total 292
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout      22102 Nov 20 13:33 bootstrap-responsive.css
+-rw-r--r--    1 501      dialout      16840 Nov 20 13:33 bootstrap-responsive.min.css
+-rw-r--r--    1 501      dialout     127343 Nov 20 13:33 bootstrap.css
+-rw-r--r--    1 501      dialout     106006 Nov 20 13:33 bootstrap.min.css
+-rw-r--r--    1 501      dialout        243 Nov 20 13:33 log.css
+-rw-r--r--    1 501      dialout        915 Nov 20 13:33 styles.css
+
+/addons/grid_dashboard/app/src/public/img:
+total 36
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout       8777 Nov 20 13:33 glyphicons-halflings-white.png
+-rw-r--r--    1 501      dialout      12799 Nov 20 13:33 glyphicons-halflings.png
+
+/addons/grid_dashboard/app/src/public/js:
+total 76
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout       6399 Nov 20 13:33 app.js
+-rw-r--r--    1 501      dialout        478 Nov 20 13:33 blind-controller-i2c.js
+-rw-r--r--    1 501      dialout        420 Nov 20 13:33 blind-controller.js
+-rw-r--r--    1 501      dialout       2001 Nov 20 13:33 cellview.js
+-rw-r--r--    1 501      dialout      12446 Nov 20 13:33 config.js
+-rw-r--r--    1 501      dialout        998 Nov 20 13:33 cookie.js
+-rw-r--r--    1 501      dialout       2651 Nov 20 13:33 gridview.js
+-rw-r--r--    1 501      dialout       1052 Nov 20 13:33 light-controller.js
+-rw-r--r--    1 501      dialout       1933 Nov 20 13:33 listeners.js
+-rw-r--r--    1 501      dialout        936 Nov 20 13:33 main.js
+-rw-r--r--    1 501      dialout       2533 Nov 20 13:33 music-controller.js
+-rw-r--r--    1 501      dialout       1204 Nov 20 13:33 pubsub.js
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 vendor
+
+/addons/grid_dashboard/app/src/public/js/vendor:
+total 468
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout      61884 Nov 20 13:33 bootstrap.js
+-rw-r--r--    1 501      dialout      28631 Nov 20 13:33 bootstrap.min.js
+-rw-r--r--    1 501      dialout      25965 Nov 20 13:33 fastclick.js
+-rw-r--r--    1 501      dialout     282766 Nov 20 13:33 jquery.js
+-rw-r--r--    1 501      dialout      58319 Nov 20 13:33 underscore.js
+
+/addons/grid_dashboard/app/src/server:
+total 36
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout        430 Nov 20 13:33 cache.spec.ts
+-rw-r--r--    1 501      dialout       1608 Nov 20 13:33 cache.ts
+-rw-r--r--    1 501      dialout        563 Nov 20 13:33 config.ts
+-rw-r--r--    1 501      dialout        628 Nov 20 13:33 hass.ts
+-rw-r--r--    1 501      dialout       1177 Nov 20 13:33 index.ts
+-rw-r--r--    1 501      dialout       1466 Nov 20 13:33 redirs.ts
+-rw-r--r--    1 501      dialout       1892 Nov 20 13:53 sonos.ts
+
+/addons/grid_dashboard/app/src/types:
+total 12
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 16:21 ..
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 sonos
+
+/addons/grid_dashboard/app/src/types/sonos:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    3 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout       1503 Nov 20 13:33 index.ts
+
+/addons/grid_dashboard/translations:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout        307 Dec  4 16:21 en.yaml
+
+/addons/mongodb:
+total 52
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout         54 Dec  4 16:21 CHANGELOG.md
+-rw-r--r--    1 501      dialout        743 Dec  4 16:21 DOCS.md
+-rw-r--r--    1 501      dialout        794 Dec  1 15:01 Dockerfile
+-rw-r--r--    1 501      dialout        202 Dec  4 16:21 README.md
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 app
+-rw-r--r--    1 501      dialout        504 Dec  4 16:21 apparmor.txt
+-rw-r--r--    1 501      dialout        548 Dec  4 16:21 config.yaml
+-rw-r--r--    1 501      dialout        391 Dec  4 16:21 icon.png
+-rw-r--r--    1 501      dialout        391 Dec  4 16:21 logo.png
+-rwxr-xr-x    1 501      dialout       1314 Dec  1 15:05 run.sh
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 translations
+
+/addons/mongodb/app:
+total 8
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 ..
+
+/addons/mongodb/translations:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:21 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 ..
+-rw-r--r--    1 501      dialout        120 Dec  4 16:21 en.yaml
+
+/addons/node_sonos_http_api:
+total 52
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 .
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout         54 Dec  4 16:22 CHANGELOG.md
+-rw-r--r--    1 501      dialout        773 Dec  4 16:22 DOCS.md
+-rw-r--r--    1 501      dialout        921 Dec  4 16:22 Dockerfile
+-rw-r--r--    1 501      dialout        144 Dec  4 16:22 README.md
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 app
+-rw-r--r--    1 501      dialout        504 Dec  4 16:22 apparmor.txt
+-rw-r--r--    1 501      dialout        614 Dec  4 16:22 config.yaml
+-rw-r--r--    1 501      dialout        391 Dec  4 16:22 icon.png
+-rw-r--r--    1 501      dialout        391 Dec  4 16:22 logo.png
+-rwxr-xr-x    1 501      dialout       3783 Dec  4 16:22 run.sh
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:22 translations
+
+/addons/node_sonos_http_api/app:
+total 20
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 ..
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:22 patches
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:22 presets
+-rw-r--r--    1 501      dialout        694 Nov 20 13:33 presets.example.json
+
+/addons/node_sonos_http_api/app/patches:
+total 16
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:22 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 ..
+-rw-r--r--    1 501      dialout       1259 Nov 20 13:33 group-error-handling.patch
+-rw-r--r--    1 501      dialout        558 Nov 20 13:33 server-crash-prevention.patch
+
+/addons/node_sonos_http_api/app/presets:
+total 20
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:22 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 ..
+-rw-r--r--    1 501      dialout        218 Nov 20 13:33 Bedroom-tv.json
+-rw-r--r--    1 501      dialout        252 Nov 20 13:33 Living Room-tv.json
+-rw-r--r--    1 501      dialout        127 Nov 20 13:33 Office-tv.json
+
+/addons/node_sonos_http_api/translations:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  4 16:22 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 ..
+-rw-r--r--    1 501      dialout        158 Dec  4 16:22 en.yaml
+
+/addons/printer_service:
+total 52
+drwxr-xr-x    4 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout         54 Dec  4 17:51 CHANGELOG.md
+-rw-r--r--    1 501      dialout        906 Dec  4 17:51 DOCS.md
+-rw-r--r--    1 501      dialout       1183 Dec  4 17:51 Dockerfile
+-rw-r--r--    1 501      dialout        295 Dec  4 17:51 README.md
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 app
+-rw-r--r--    1 501      dialout        512 Dec  4 17:51 apparmor.txt
+-rw-r--r--    1 501      dialout       1486 Dec  4 17:51 config.yaml
+-rw-r--r--    1 501      dialout        391 Dec  4 17:51 icon.png
+-rw-r--r--    1 501      dialout        391 Dec  4 17:51 logo.png
+-rwxr-xr-x    1 501      dialout       2972 Dec  4 17:51 run.sh
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 translations
+
+/addons/printer_service/app:
+total 184
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout        886 Nov 22 00:49 pyproject.toml
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 src
+-rw-r--r--    1 501      dialout     169433 Nov 23 18:21 uv.lock
+
+/addons/printer_service/app/src:
+total 12
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 ..
+drwxr-xr-x    5 501      dialout       4096 Dec  4 17:51 printer_service
+
+/addons/printer_service/app/src/printer_service:
+total 68
+drwxr-xr-x    5 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout        112 Nov 20 19:55 __init__.py
+-rw-r--r--    1 501      dialout      23641 Dec  3 18:03 app.py
+-rw-r--r--    1 501      dialout      13480 Nov 21 20:07 label.py
+-rw-r--r--    1 501      dialout       2815 Nov 20 19:55 label_specs.py
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 label_templates
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 static
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 templates
+
+/addons/printer_service/app/src/printer_service/label_templates:
+total 112
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout       4485 Nov 20 19:55 __init__.py
+-rw-r--r--    1 501      dialout       5757 Nov 23 19:31 base.py
+-rw-r--r--    1 501      dialout        257 Nov 20 19:55 bb_2_weeks.py
+-rw-r--r--    1 501      dialout      15673 Dec  4 14:31 best_by.py
+-rw-r--r--    1 501      dialout       5688 Nov 20 19:55 bluey_label.py
+-rw-r--r--    1 501      dialout       7869 Dec  3 15:14 bluey_label_2.py
+-rw-r--r--    1 501      dialout      11721 Nov 23 19:31 daily_snapshot.py
+-rw-r--r--    1 501      dialout      18281 Nov 23 19:33 helper.py
+-rw-r--r--    1 501      dialout       1709 Dec  2 15:25 kitchen_label_printer.py
+-rw-r--r--    1 501      dialout      10251 Nov 23 20:00 receipt_checklist.py
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 svg_symbols
+
+/addons/printer_service/app/src/printer_service/label_templates/svg_symbols:
+total 40
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    3 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout       1068 Nov 20 19:55 awake.svg
+-rw-r--r--    1 501      dialout       1124 Nov 20 19:55 balloon-1.svg
+-rw-r--r--    1 501      dialout       3390 Nov 20 19:55 balloon-2.svg
+-rw-r--r--    1 501      dialout        349 Nov 20 19:55 balloon.svg
+-rw-r--r--    1 501      dialout       5027 Nov 20 19:55 sleep-svgrepo-com.svg
+-rw-r--r--    1 501      dialout        360 Nov 20 19:55 sleep.svg
+-rw-r--r--    1 501      dialout        830 Nov 20 19:55 sun.svg
+
+/addons/printer_service/app/src/printer_service/static:
+total 28
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout      17489 Dec  3 18:27 app.js
+
+/addons/printer_service/app/src/printer_service/templates:
+total 48
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    5 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout      14492 Dec  3 18:27 base.html
+-rw-r--r--    1 501      dialout       4888 Dec  3 18:03 best_by.html
+-rw-r--r--    1 501      dialout       1075 Nov 20 19:55 bluey_label.html
+-rw-r--r--    1 501      dialout        519 Nov 23 19:22 daily_snapshot.html
+-rw-r--r--    1 501      dialout        513 Nov 20 19:55 kitchen_label_printer.html
+-rw-r--r--    1 501      dialout       1514 Nov 23 19:35 receipt_checklist.html
+
+/addons/printer_service/translations:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  4 17:51 .
+drwxr-xr-x    4 501      dialout       4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout       1634 Dec  4 17:51 en.yaml
+
+/addons/sonos_api:
+total 52
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 ..
+-rw-r--r--    1 501      dialout         54 Dec  3 18:25 CHANGELOG.md
+-rw-r--r--    1 501      dialout        836 Dec  3 18:25 DOCS.md
+-rw-r--r--    1 501      dialout        431 Dec  3 18:25 Dockerfile
+-rw-r--r--    1 501      dialout        170 Dec  3 18:25 README.md
+drwxr-xr-x    3 501      dialout       4096 Dec  3 18:25 app
+-rw-r--r--    1 501      dialout        508 Dec  3 18:25 apparmor.txt
+-rw-r--r--    1 501      dialout        568 Dec  3 18:25 config.yaml
+-rw-r--r--    1 501      dialout        391 Dec  3 18:25 icon.png
+-rw-r--r--    1 501      dialout        391 Dec  3 18:25 logo.png
+-rwxr-xr-x    1 501      dialout        623 Dec  3 18:25 run.sh
+drwxr-xr-x    2 501      dialout       4096 Dec  3 18:25 translations
+
+/addons/sonos_api/app:
+total 84
+drwxr-xr-x    3 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 ..
+-rw-r--r--    1 501      dialout      63177 Dec  1 16:18 package-lock.json
+-rw-r--r--    1 501      dialout        912 Nov 20 13:33 package.json
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 src
+-rw-r--r--    1 501      dialout        401 Nov 20 13:33 tsconfig.json
+
+/addons/sonos_api/app/src:
+total 16
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    3 501      dialout       4096 Dec  3 18:25 ..
+drwxr-xr-x    2 501      dialout       4096 Dec  3 18:25 server
+drwxr-xr-x    3 501      dialout       4096 Dec  3 18:25 types
+
+/addons/sonos_api/app/src/server:
+total 20
+drwxr-xr-x    2 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 ..
+-rw-r--r--    1 501      dialout        370 Nov 20 13:33 config.ts
+-rw-r--r--    1 501      dialout        819 Nov 20 13:33 index.ts
+-rw-r--r--    1 501      dialout       3643 Nov 20 13:33 sonos.ts
+
+/addons/sonos_api/app/src/types:
+total 12
+drwxr-xr-x    3 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 ..
+drwxr-xr-x    2 501      dialout       4096 Dec  3 18:25 sonos
+
+/addons/sonos_api/app/src/types/sonos:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    3 501      dialout       4096 Dec  3 18:25 ..
+-rw-r--r--    1 501      dialout       1503 Nov 20 13:33 index.ts
+
+/addons/sonos_api/translations:
+total 12
+drwxr-xr-x    2 501      dialout       4096 Dec  3 18:25 .
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 ..
+-rw-r--r--    1 501      dialout        152 Dec  3 18:25 en.yaml
+
+=== 2. Directory Structure: /addons/printer_local/ ===
+Directory /addons/printer_local does NOT exist
+
+=== 3. repository.yaml content ===
+File /addons/printer_local/repository.yaml does NOT exist
+
+=== 4. printer_service/config.yaml content ===
+File /addons/printer_local/printer_service/config.yaml does NOT exist
+
+=== 5. Available add-ons (ha addons) ===
+addons:
+- advanced: false
+  available: true
+  build: false
+  description: Control a Z-Wave network with Home Assistant Z-Wave JS
+  detached: false
+  homeassistant: 2025.5.0
+  icon: true
+  logo: true
+  name: Z-Wave JS
+  repository: core
+  slug: core_zwave_js
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/home-assistant/addons/tree/master/zwave_js
+  version: 0.27.0
+  version_latest: 0.27.0
+- advanced: true
+  available: true
+  build: false
+  description: Allow logging in remotely to Home Assistant using SSH
+  detached: false
+  homeassistant: null
+  icon: true
+  logo: true
+  name: Terminal & SSH
+  repository: core
+  slug: core_ssh
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/home-assistant/addons/tree/master/ssh
+  version: 9.20.1
+  version_latest: 9.20.1
+- advanced: false
+  available: true
+  build: false
+  description: Zero config VPN for building secure networks
+  detached: false
+  homeassistant: null
+  icon: true
+  logo: true
+  name: Tailscale
+  repository: a0d7b954
+  slug: a0d7b954_tailscale
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/hassio-addons/addon-tailscale
+  version: 0.26.1
+  version_latest: 0.26.1
+- advanced: false
+  available: true
+  build: false
+  description: Build your own smart home devices using ESPHome, no programming experience
+    required
+  detached: false
+  homeassistant: null
+  icon: true
+  logo: true
+  name: ESPHome Device Builder
+  repository: 5c53de3b
+  slug: 5c53de3b_esphome
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://esphome.io/
+  version: 2025.11.3
+  version_latest: 2025.11.3
+- advanced: false
+  available: true
+  build: true
+  description: Proxy API for node-sonos-http-api with custom routes and helpers.
+  detached: false
+  homeassistant: 2024.6.0
+  icon: true
+  logo: true
+  name: Sonos API
+  repository: local
+  slug: local_sonos_api
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/rtimmons/smarthome
+  version: 1.0.0
+  version_latest: 1.0.0
+- advanced: false
+  available: true
+  build: true
+  description: Dashboard UI with Sonos shortcuts and Home Assistant webhook helpers.
+  detached: false
+  homeassistant: 2024.6.0
+  icon: true
+  logo: true
+  name: Grid Dashboard
+  repository: local
+  slug: local_grid_dashboard
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/rtimmons/smarthome
+  version: 1.0.0
+  version_latest: 1.0.0
+- advanced: false
+  available: true
+  build: true
+  description: MongoDB Community Edition database server for Home Assistant add-ons
+  detached: false
+  homeassistant: 2024.6.0
+  icon: true
+  logo: true
+  name: MongoDB
+  repository: local
+  slug: local_mongodb
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/rtimmons/smarthome
+  version: 0.0.0
+  version_latest: 0.0.0
+- advanced: false
+  available: true
+  build: true
+  description: The actual node-sonos-http-api server for controlling Sonos speakers
+    via HTTP.
+  detached: false
+  homeassistant: 2024.6.0
+  icon: true
+  logo: true
+  name: Node Sonos HTTP API
+  repository: local
+  slug: local_node_sonos_http_api
+  stage: stable
+  state: started
+  system_managed: false
+  update_available: false
+  url: https://github.com/jishi/node-sonos-http-api
+  version: 1.0.2
+  version_latest: 1.0.2
+
+=== 6. Add-on info (ha addons info printer_service) ===
+Error: Addon printer_service does not exist
+Add-on 'printer_service' not found or command failed
+
+=== 7. Supervisor info ===
+addons:
+- icon: true
+  name: Z-Wave JS
+  repository: core
+  slug: core_zwave_js
+  state: started
+  update_available: false
+  version: 0.27.0
+  version_latest: 0.27.0
+- icon: true
+  name: Terminal & SSH
+  repository: core
+  slug: core_ssh
+  state: started
+  update_available: false
+  version: 9.20.1
+  version_latest: 9.20.1
+- icon: true
+  name: Tailscale
+  repository: a0d7b954
+  slug: a0d7b954_tailscale
+  state: started
+  update_available: false
+  version: 0.26.1
+  version_latest: 0.26.1
+- icon: true
+  name: ESPHome Device Builder
+  repository: 5c53de3b
+  slug: 5c53de3b_esphome
+  state: started
+  update_available: false
+  version: 2025.11.3
+  version_latest: 2025.11.3
+- icon: true
+  name: Sonos API
+  repository: local
+  slug: local_sonos_api
+  state: started
+  update_available: false
+  version: 1.0.0
+  version_latest: 1.0.0
+- icon: true
+  name: Grid Dashboard
+  repository: local
+  slug: local_grid_dashboard
+  state: started
+  update_available: false
+  version: 1.0.0
+  version_latest: 1.0.0
+- icon: true
+  name: MongoDB
+  repository: local
+  slug: local_mongodb
+  state: started
+  update_available: false
+  version: 0.0.0
+  version_latest: 0.0.0
+- icon: true
+  name: Node Sonos HTTP API
+  repository: local
+  slug: local_node_sonos_http_api
+  state: started
+  update_available: false
+  version: 1.0.2
+  version_latest: 1.0.2
+addons_repositories:
+- name: Local add-ons
+  slug: local
+- name: Official add-ons
+  slug: core
+- name: Music Assistant
+  slug: d5369777
+- name: ESPHome
+  slug: 5c53de3b
+- name: Home Assistant Community Add-ons
+  slug: a0d7b954
+arch: amd64
+auto_update: true
+channel: stable
+country: US
+debug: false
+debug_block: false
+detect_blocking_io: false
+diagnostics: false
+healthy: true
+ip_address: 172.30.32.2
+logging: info
+supported: true
+timezone: America/New_York
+update_available: false
+version: 2025.12.2
+version_latest: 2025.12.2
+wait_boot: 5
+
+=== 8. Check for any local add-on repositories ===
+Checking common local add-on paths:
+  - /addons:
+total 44
+drwxr-xr-x    7 root     root          4096 Dec  4 17:51 .
+drwxr-xr-x    1 root     root          4096 Dec  4 17:27 ..
+-rwxr-xr-x    1 501      dialout        163 Nov 18 13:55 ._grid_dashboard
+-rwxr-xr-x    1 501      dialout        163 Nov 18 12:54 ._node_sonos_http_api
+-rwxr-xr-x    1 501      dialout        163 Nov 20 19:45 ._printer_service
+-rwxr-xr-x    1 501      dialout        163 Nov 18 12:55 ._sonos_api
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 grid_dashboard
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:21 mongodb
+drwxr-xr-x    4 501      dialout       4096 Dec  4 16:22 node_sonos_http_api
+drwxr-xr-x    4 501      dialout       4096 Dec  4 17:51 printer_service
+drwxr-xr-x    4 501      dialout       4096 Dec  3 18:25 sonos_api
+  - /usr/share/hassio/addons/local:
+    Does not exist
+  - /data/addons/local:
+    Does not exist
+
+=== 9. Supervisor logs (last 50 lines) ===
+[32m2025-12-04 17:28:05.748 INFO (MainThread) [supervisor.host.sound] Updating PulseAudio information[0m
+[32m2025-12-04 17:28:05.754 INFO (MainThread) [supervisor.host.manager] Host information reload completed[0m
+[32m2025-12-04 17:30:19.385 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:30:19.391 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:30:19.415 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:30:21.430 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:32:40.657 INFO (MainThread) [supervisor.api.middleware.security] /network/info access from core_ssh[0m
+[32m2025-12-04 17:32:40.659 INFO (MainThread) [supervisor.api.middleware.security] /host/info access from core_ssh[0m
+[32m2025-12-04 17:32:40.662 INFO (MainThread) [supervisor.api.middleware.security] /core/info access from core_ssh[0m
+[32m2025-12-04 17:33:48.697 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:33:48.704 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:33:48.727 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:33:50.739 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:34:39.081 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:44:37.591 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:44:37.597 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:44:37.621 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:44:39.632 INFO (MainThread) [supervisor.api.middleware.security] /addons/local_printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:45:36.288 INFO (MainThread) [supervisor.api.middleware.security] /network/info access from core_ssh[0m
+[32m2025-12-04 17:45:36.289 INFO (MainThread) [supervisor.api.middleware.security] /host/info access from core_ssh[0m
+[32m2025-12-04 17:45:36.292 INFO (MainThread) [supervisor.api.middleware.security] /core/info access from core_ssh[0m
+[32m2025-12-04 17:46:02.665 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:46:02.671 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:46:02.694 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:46:04.705 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:48:09.428 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:48:09.435 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:48:09.462 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:48:11.473 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:49:52.317 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:49:52.323 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:49:52.347 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:49:54.360 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:51:12.727 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/stop access from core_ssh[0m
+[32m2025-12-04 17:51:12.733 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/uninstall access from core_ssh[0m
+[32m2025-12-04 17:51:12.759 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:51:14.769 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/install access from core_ssh[0m
+[32m2025-12-04 17:51:50.636 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:51:54.878 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:52:01.298 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:52:17.621 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/logs access from core_ssh[0m
+[32m2025-12-04 17:53:14.022 INFO (MainThread) [supervisor.api.middleware.security] /supervisor/reload access from core_ssh[0m
+[32m2025-12-04 17:53:14.023 INFO (MainThread) [supervisor.resolution.evaluate] Starting system evaluation with state running[0m
+[32m2025-12-04 17:53:14.064 INFO (MainThread) [supervisor.resolution.evaluate] System evaluation complete[0m
+[32m2025-12-04 17:53:14.075 INFO (MainThread) [supervisor.updater] Fetching update data from https://version.home-assistant.io/stable.json[0m
+[32m2025-12-04 17:53:24.614 INFO (MainThread) [supervisor.api.middleware.security] /supervisor/logs access from core_ssh[0m
+[32m2025-12-04 17:57:27.767 INFO (MainThread) [supervisor.api.middleware.security] /addons access from core_ssh[0m
+[32m2025-12-04 17:57:27.775 INFO (MainThread) [supervisor.api.middleware.security] /addons/printer_service/info access from core_ssh[0m
+[32m2025-12-04 17:57:27.781 INFO (MainThread) [supervisor.api.middleware.security] /supervisor/info access from core_ssh[0m
+[32m2025-12-04 17:57:27.791 INFO (MainThread) [supervisor.api.middleware.security] /supervisor/logs access from core_ssh[0m
+
+=== 10. Check repository files in all /addons subdirectories ===
+Found: /addons/grid_dashboard/config.yaml
+Found: /addons/sonos_api/config.yaml
+Found: /addons/node_sonos_http_api/config.yaml
+Found: /addons/printer_service/config.yaml
+Found: /addons/mongodb/config.yaml
+
+=========================================
+END OF DIAGNOSTIC REPORT
+=========================================

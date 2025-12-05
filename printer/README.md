@@ -16,6 +16,21 @@ just start        # Starts just the printer service
 
 The printer service will be available at http://localhost:8099
 
+## Build the Home Assistant Add-on Image (podman)
+
+Build the talos add-on payload and a local podman image to catch Dockerfile issues before deploying:
+
+```bash
+# From repo root
+just printer-image
+
+# Or from printer/
+just build
+
+# Optional: match a specific architecture for podman build
+PRINTER_DOCKER_PLATFORM=linux/arm64 just printer-image
+```
+
 ## TODO
 
 1. Make the URL params shorter or perhaps just remove them entirely and instead just have them be ordered params and keep the order consistent over time. So `/bb?t=abc&v=1&p=a,b,c` for `t` being the template name, `v` being a version for backward-compatibility if we change the order or template names or params/order, and `p` being a comma-separated list of the params, being careful to handle the case where the params have commas themselves. We don't need to be backward-compatible with old URLs for this update.

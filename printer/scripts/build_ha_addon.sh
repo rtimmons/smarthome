@@ -136,6 +136,13 @@ RUN \
     gdk-pixbuf \
     ttf-dejavu \
     libjpeg-turbo \
+    libwebp \
+    lcms2 \
+    openjpeg \
+    tiff \
+    libxcb \
+    harfbuzz \
+    fribidi \
     zlib \
     freetype \
     libpng \
@@ -150,6 +157,13 @@ RUN \
     pango-dev \
     gdk-pixbuf-dev \
     libjpeg-turbo-dev \
+    libwebp-dev \
+    lcms2-dev \
+    openjpeg-dev \
+    tiff-dev \
+    libxcb-dev \
+    harfbuzz-dev \
+    fribidi-dev \
     zlib-dev \
     freetype-dev \
     libpng-dev \

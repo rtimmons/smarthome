@@ -51,6 +51,12 @@ talos-build:
 	set -euo pipefail
 	./talos/build.sh
 
+printer-image:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+	just --justfile "${REPO_ROOT}/printer/Justfile" --working-directory "${REPO_ROOT}/printer" build
+
 ha-addon addon="all": talos-build
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \

@@ -9,6 +9,10 @@ from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Sequence
 
 from PIL import Image, PngImagePlugin
 
+# Pillow 10 removed Image.ANTIALIAS; keep an alias for older deps (brother_ql).
+if not hasattr(Image, "ANTIALIAS") and hasattr(Image, "Resampling"):
+    Image.ANTIALIAS = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
+
 from printer_service.label_specs import (
     QL810W_DPI,
     BrotherLabelSpec,
