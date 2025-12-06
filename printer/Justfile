@@ -51,11 +51,11 @@ build:
         echo "podman is required to build the printer add-on image" >&2; \
         exit 1; \
     fi; \
-    platform_flag=(); \
     if [ -n "${PRINTER_DOCKER_PLATFORM:-}" ]; then \
-        platform_flag+=(--platform "${PRINTER_DOCKER_PLATFORM}"); \
-    fi; \
-    podman build "${platform_flag[@]}" -t printer-service:local "$addon_dir"
+        podman build --platform "${PRINTER_DOCKER_PLATFORM}" -t printer-service:local "$addon_dir"; \
+    else \
+        podman build -t printer-service:local "$addon_dir"; \
+    fi
 
 ha-addon:
     set -e; \

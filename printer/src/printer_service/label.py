@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import warnings
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from importlib import import_module
@@ -9,9 +10,23 @@ from typing import Any, Dict, Iterable, List, MutableMapping, Optional, Sequence
 
 from PIL import Image, PngImagePlugin
 
-# Pillow 10 removed Image.ANTIALIAS; keep an alias for older deps (brother_ql).
-if not hasattr(Image, "ANTIALIAS") and hasattr(Image, "Resampling"):
-    Image.ANTIALIAS = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
+
+def _ensure_antialias_alias(image: Any = Image) -> None:
+    """Expose Image.ANTIALIAS without leaking Pillow's deprecation warning."""
+    if not hasattr(image, "Resampling"):
+        return
+    needs_alias = False
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", DeprecationWarning)
+        try:
+            getattr(image, "ANTIALIAS")
+        except (AttributeError, DeprecationWarning):
+            needs_alias = True
+    if needs_alias:
+        image.ANTIALIAS = image.Resampling.LANCZOS
+
+
+_ensure_antialias_alias()
 
 from printer_service.label_specs import (
     QL810W_DPI,
