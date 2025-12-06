@@ -35,3 +35,10 @@ build:
 	set -e
 	if [ ! -d "node_modules" ]; then just setup; fi
 	npm run build
+
+container-test:
+	@echo "==> Container test: snapshot-service uses Home Assistant's container build system"
+	@echo "==> Verifying add-on build completes successfully..."
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build snapshot-service
+	@echo "==> Add-on build test passed - ready for deployment"

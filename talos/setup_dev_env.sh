@@ -407,7 +407,55 @@ rm -f "$ADDON_NAMES_ERR"
 
 echo ""
 
-# 4. Verify SSH access to Home Assistant host (needed for deploy)
+# 4. Check and setup container runtime (podman preferred, docker fallback)
+info "Checking container runtime..."
+
+CONTAINER_RUNTIME_SCRIPT="$REPO_ROOT/talos/scripts/container_runtime.sh"
+if [ ! -x "$CONTAINER_RUNTIME_SCRIPT" ]; then
+    error "Container runtime script not found: $CONTAINER_RUNTIME_SCRIPT"
+    ERRORS=$((ERRORS + 1))
+else
+    if "$CONTAINER_RUNTIME_SCRIPT" check; then
+        # Runtime is available, get the command
+        DETECTED_RUNTIME=$("$CONTAINER_RUNTIME_SCRIPT" detect 2>/dev/null || true)
+        if [ -n "$DETECTED_RUNTIME" ]; then
+            success "Using container runtime: $DETECTED_RUNTIME"
+
+            # For podman, verify machine is working
+            if [ "$DETECTED_RUNTIME" = "podman" ]; then
+                info "Verifying podman machine..."
+                if "$CONTAINER_RUNTIME_SCRIPT" verify; then
+                    success "podman machine verified working"
+                else
+                    warn "podman machine not working, attempting to fix..."
+                    if "$CONTAINER_RUNTIME_SCRIPT" setup-machine; then
+                        success "podman machine setup completed"
+                    else
+                        error "Failed to setup podman machine"
+                        ERRORS=$((ERRORS + 1))
+                    fi
+                fi
+            fi
+        fi
+    else
+        # No runtime available, try to install podman
+        warn "No container runtime found (podman or docker)"
+        info "Attempting to install podman via Homebrew..."
+        if "$CONTAINER_RUNTIME_SCRIPT" install; then
+            success "Container runtime setup completed"
+        else
+            error "Failed to setup container runtime"
+            error "Please install podman or docker manually:"
+            error "  macOS: brew install podman"
+            error "  Linux: https://podman.io/getting-started/installation"
+            ERRORS=$((ERRORS + 1))
+        fi
+    fi
+fi
+
+echo ""
+
+# 5. Verify SSH access to Home Assistant host (needed for deploy)
 HA_HOST=${HA_HOST:-homeassistant.local}
 HA_PORT=${HA_PORT:-22}
 HA_USER=${HA_USER:-root}
@@ -422,7 +470,7 @@ fi
 
 echo ""
 
-# 5. Run per-add-on setup recipes
+# 6. Run per-add-on setup recipes
 info "Running add-on setup recipes..."
 if "$TALOS_BIN" addons run setup; then
     success "Add-on setup completed"

@@ -52,6 +52,13 @@ ha-addon:
     if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
     ../talos/build/bin/talos addon build mongodb
 
+container-test:
+	@echo "==> Container test: mongodb uses Home Assistant's container build system"
+	@echo "==> Verifying add-on build completes successfully..."
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build mongodb
+	@echo "==> Add-on build test passed - ready for deployment"
+
 deploy:
     set -e; \
     if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \

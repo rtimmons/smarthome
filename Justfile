@@ -90,14 +90,21 @@ deploy addon="all": deploy-preflight talos-build
 	cd new-hass-configs && just deploy
 
 test addon="all":
-		@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
+		@set -e; \
+		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		( cd talos && build/venv/bin/python -m pip install -e '.[test]' >/dev/null && build/venv/bin/python -m pytest tests ); \
 		args=(); \
 		if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
 		if [ ${#args[@]} -eq 0 ]; then \
 			"{{talos_bin}}" addons run test; \
+			echo ""; \
+			echo "Running container build tests..."; \
+			"{{talos_bin}}" addons run container-test; \
 		else \
 			"{{talos_bin}}" addons run test "${args[@]}"; \
+			echo ""; \
+			echo "Running container build tests..."; \
+			"{{talos_bin}}" addons run container-test "${args[@]}"; \
 		fi
 
 addons:

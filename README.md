@@ -85,20 +85,23 @@ just test
 
 To target a single add-on: append its name, e.g. `just deploy sonos-api` or `just ha-addon grid-dashboard`.
 
-### Printer Add-on Container Build (podman)
+### Printer Add-on Container Build
 
 Catch container build errors before deploying to Home Assistant:
 
 ```bash
-just printer-image  # builds the talos payload + podman image (tagged printer-service:local)
-# Optional: match a specific architecture for podman build
+just printer-image  # builds the talos payload + container image (tagged printer-service:local)
+# Optional: match a specific architecture for container build
 PRINTER_DOCKER_PLATFORM=linux/arm64 just printer-image
 ```
+
+The system automatically detects and uses `podman` (preferred) or `docker` (fallback). Container runtime is installed automatically during `just setup` if needed.
 
 ## Documentation
 
 See the [docs/](./docs/) directory for detailed documentation:
 - [setup.md](./docs/setup.md) - Initial setup instructions
+- [container-runtime.md](./docs/container-runtime.md) - Container runtime management (podman/docker)
 - [sonos-addons-overview.md](./docs/sonos-addons-overview.md) - Overview of Sonos add-on architecture
 - [sonos-routing-guide.md](./docs/sonos-routing-guide.md) - Guide to Sonos API routing
 - [ingress-fixes.md](./docs/ingress-fixes.md) - Home Assistant ingress integration fixes

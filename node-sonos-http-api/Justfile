@@ -28,6 +28,13 @@ ha-addon:
 	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
 	../talos/build/bin/talos addon build node-sonos-http-api
 
+container-test:
+	@echo "==> Container test: node-sonos-http-api uses Home Assistant's container build system"
+	@echo "==> Verifying add-on build completes successfully..."
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build node-sonos-http-api
+	@echo "==> Add-on build test passed - ready for deployment"
+
 deploy:
 	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
 	../talos/build/bin/talos addon deploy node-sonos-http-api

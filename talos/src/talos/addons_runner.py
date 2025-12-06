@@ -70,7 +70,7 @@ def run_recipes(recipe: str, addons: Iterable[str]) -> None:
             continue
 
         if recipe == "deploy":
-            for pre in ("generate", "build", "test", "ha-addon"):
+            for pre in ("generate", "build", "test", "ha-addon", "container-test"):
                 if _has_recipe(addon_dir, pre):
                     click.echo(f"==> {addon_name}: just {pre} (pre-deploy)")
                     _run_just(addon_dir, pre)
