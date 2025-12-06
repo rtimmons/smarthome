@@ -70,3 +70,74 @@ deploy:
 report:
     set -e
     scripts/diagnose_ha_addon.sh
+
+# Visual diff commands for regression testing
+visual-diff pattern="":
+    scripts/visual-diff.sh {{pattern}}
+
+visual-diff-all pattern="":
+    scripts/visual-diff.sh --all {{pattern}}
+
+visual-diff-summary pattern="":
+    scripts/visual-diff.sh --summary {{pattern}}
+
+visual-diff-grid pattern="":
+    scripts/visual-diff.sh --grid {{pattern}}
+
+visual-diff-clean pattern="":
+    scripts/visual-diff.sh --clean {{pattern}}
+
+# Generate enhanced visual diff with difference highlighting
+visual-diff-enhanced baseline current output:
+    scripts/generate-visual-diff.py "{{baseline}}" "{{current}}" "{{output}}"
+
+# Show help for visual diff commands
+visual-diff-help:
+    @echo "📋 Visual Diff Commands for Printer Label Testing"
+    @echo ""
+    @echo "🔍 Review Commands:"
+    @echo "  just visual-diff [pattern]         - Interactive review of visual differences"
+    @echo "  just visual-diff-all [pattern]     - Show all differences non-interactively"
+    @echo "  just visual-diff-summary [pattern] - Quick summary of differences"
+    @echo "  just visual-diff-grid [pattern]    - Thumbnail grid overview (iTerm2)"
+    @echo ""
+    @echo "🎯 Advanced Commands:"
+    @echo "  just visual-diff-enhanced <baseline> <current> <output> - Generate enhanced diff"
+    @echo ""
+    @echo "🧹 Cleanup Commands:"
+    @echo "  just visual-diff-clean [pattern]  - Remove diff files (with confirmation)"
+    @echo ""
+    @echo "🔧 Integration:"
+    @echo "  just test-visual                  - Run visual tests and show any diffs"
+    @echo "  just test-visual-update           - Run tests and update baselines"
+    @echo ""
+    @echo "💡 Examples:"
+    @echo "  just visual-diff receipt           - Review only receipt-related diffs"
+    @echo "  just visual-diff-grid              - Thumbnail overview of all differences"
+    @echo "  just visual-diff-summary           - Quick text summary of all differences"
+    @echo "  just visual-diff-clean receipt     - Clean only receipt diff files"
+    @echo ""
+    @echo "ℹ️  Pattern filtering works on any part of the filename (e.g., 'receipt', 'best_by', 'qr')"
+
+# Run visual regression tests and show diffs if any
+test-visual:
+    #!/usr/bin/env bash
+    set -e
+    if [ ! -d "{{venv}}" ]; then just setup; fi
+    echo "🧪 Running visual regression tests..."
+    if "{{python}}" -m pytest tests/test_visual_regression.py -v; then
+        echo "✅ All visual tests passed!"
+    else
+        echo ""
+        echo "❌ Visual tests failed. Showing differences..."
+        scripts/visual-diff.sh --summary
+    fi
+
+# Run visual tests and update baselines for any failures
+test-visual-update:
+    #!/usr/bin/env bash
+    set -e
+    if [ ! -d "{{venv}}" ]; then just setup; fi
+    echo "🧪 Running visual regression tests with baseline updates..."
+    "{{python}}" -m pytest tests/test_visual_regression.py --regenerate-baselines -v
+    echo "✅ Visual tests completed and baselines updated!"
