@@ -60,7 +60,11 @@ printer-image:
 ha-addon addon="all": talos-build
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-	"{{talos_bin}}" addons run ha-addon "${args[@]}"
+	if [ ${#args[@]} -eq 0 ]; then \
+		"{{talos_bin}}" addons run ha-addon; \
+	else \
+		"{{talos_bin}}" addons run ha-addon "${args[@]}"; \
+	fi
 
 deploy addon="all": deploy-preflight talos-build
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
@@ -68,7 +72,11 @@ deploy addon="all": deploy-preflight talos-build
 	{{nvm_use}}; \
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-	"{{talos_bin}}" addons run deploy "${args[@]}"
+	if [ ${#args[@]} -eq 0 ]; then \
+		"{{talos_bin}}" addons run deploy; \
+	else \
+		"{{talos_bin}}" addons run deploy "${args[@]}"; \
+	fi
 	@echo ""
 	@echo "Deploying Home Assistant configs..."
 	cd new-hass-configs && just deploy
@@ -78,7 +86,11 @@ test addon="all":
 		( cd talos && build/venv/bin/python -m pip install -e '.[test]' >/dev/null && build/venv/bin/python -m pytest tests ); \
 		args=(); \
 		if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-		"{{talos_bin}}" addons run test "${args[@]}"
+		if [ ${#args[@]} -eq 0 ]; then \
+			"{{talos_bin}}" addons run test; \
+		else \
+			"{{talos_bin}}" addons run test "${args[@]}"; \
+		fi
 
 addons:
 	if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
