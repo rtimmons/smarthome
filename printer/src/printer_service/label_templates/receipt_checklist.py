@@ -9,6 +9,7 @@ from urllib.parse import urlencode, urljoin
 
 import qrcode  # type: ignore[import-untyped]
 from PIL import Image, ImageDraw
+from PIL.Image import Resampling
 
 from printer_service.label_specs import QL810W_DPI, BrotherLabelSpec, resolve_brother_label_spec
 from printer_service.label_templates import helper
@@ -271,7 +272,7 @@ def _draw_upload_text(renderer: helper.LabelDrawingHelper, qr_url: str) -> None:
     max_width = LAYOUT.width_px - (LAYOUT.qr_margin * 2)
     text_lines = _wrap_text(f"Upload: {qr_url}", draw, META_FONT, max_width)
     left = LAYOUT.qr_margin
-    line_height = META_FONT.size + 2
+    line_height = getattr(META_FONT, "size", 24) + 2
     total_height = len(text_lines) * line_height
     qr_bottom = LAYOUT.height_px - LAYOUT.qr_margin
     top = max(LAYOUT.qr_margin, qr_bottom - total_height - 6)
@@ -293,7 +294,7 @@ def _qr_image(qr_url: str, target_height_px: int) -> Image.Image:
     if qr_image.height != target_height_px:
         qr_image = qr_image.resize(
             (int(round(qr_image.width * target_height_px / qr_image.height)), target_height_px),
-            resample=Image.NEAREST,
+            resample=Resampling.NEAREST,
         )
     qr_image.info["qr_url"] = qr_url
     return qr_image

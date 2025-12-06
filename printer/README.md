@@ -16,9 +16,9 @@ just start        # Starts just the printer service
 
 The printer service will be available at http://localhost:8099
 
-## Build the Home Assistant Add-on Image (podman)
+## Build the Home Assistant Add-on Image
 
-Build the talos add-on payload and a local podman image to catch Dockerfile issues before deploying:
+Build the talos add-on payload and a local container image to catch Dockerfile issues before deploying:
 
 ```bash
 # From repo root
@@ -27,9 +27,11 @@ just printer-image
 # Or from printer/
 just build
 
-# Optional: match a specific architecture for podman build
+# Optional: match a specific architecture for container build
 PRINTER_DOCKER_PLATFORM=linux/arm64 just printer-image
 ```
+
+The system automatically detects and uses `podman` (preferred) or `docker` (fallback). See [../docs/container-runtime.md](../docs/container-runtime.md) for details.
 
 ## TODO
 

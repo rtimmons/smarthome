@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from PIL import Image, ImageChops, ImageDraw
+from PIL.Image import Dither
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import helper as helper
@@ -181,8 +182,8 @@ class Template(TemplateDefinition):
 
         # Keep dithering on the background to preserve the faint symbol, but render text without
         # dithering so the repeated side text stays symmetric on both edges.
-        background_result = background_canvas.convert("1", dither=Image.FLOYDSTEINBERG)
-        foreground_result = renderer.canvas.convert("1", dither=Image.NONE)
+        background_result = background_canvas.convert("1", dither=Dither.FLOYDSTEINBERG)
+        foreground_result = renderer.canvas.convert("1", dither=Dither.NONE)
         result = ImageChops.darker(background_result, foreground_result)
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)

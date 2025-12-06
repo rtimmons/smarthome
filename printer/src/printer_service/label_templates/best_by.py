@@ -7,6 +7,7 @@ from typing import Optional, Tuple
 
 import qrcode  # type: ignore[import-untyped]
 from PIL import Image, ImageDraw
+from PIL.Image import Resampling
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import bluey_label
@@ -279,7 +280,7 @@ def _qr_image(qr_url: str, target_height_px: Optional[int] = None) -> Image.Imag
     if target_height_px is not None and target_height_px != qr_image.height:
         module_px = max(QR_MIN_MODULE_PX, int(math.ceil(target_height_px / max(total_modules, 1))))
         target_size_px = max(qr_image.width, total_modules * module_px)
-        qr_image = qr_image.resize((target_size_px, target_size_px), resample=Image.NEAREST)
+        qr_image = qr_image.resize((target_size_px, target_size_px), resample=Resampling.NEAREST)
 
     qr_image.info["qr_overlay_applied"] = False
     return qr_image

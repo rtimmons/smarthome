@@ -44,6 +44,7 @@ except (OSError, ImportError):
     _cairosvg = None
 cairosvg: Any | None = _cairosvg
 from PIL import Image, ImageDraw, ImageFont
+from PIL.Image import Dither
 
 FontType: TypeAlias = ImageFont.FreeTypeFont | ImageFont.ImageFont
 ColorValue: TypeAlias = int | tuple[int, int, int] | tuple[int, int, int, int]
@@ -477,7 +478,7 @@ class LabelDrawingHelper:
         center: bool = True,
         width_warning: str | None = None,
         opacity_percent: int = 100,
-        mask_dither: int | None = None,
+        mask_dither: Dither | None = None,
     ) -> None:
         """Draw rotated ``text`` along both edges, repeating down the label."""
         bbox = self._draw.textbbox((0, 0), text, font=font)
@@ -497,8 +498,9 @@ class LabelDrawingHelper:
             else mask.point(lambda value: int(round(value * clamped_opacity / 100)))
         )
 
-        if mask_dither is not None:
-            effective_mask = effective_mask.convert("1", dither=mask_dither)
+        # Always convert to 1-bit mode, but use dithering only if specified
+        dither_mode = mask_dither if mask_dither is not None else Dither.NONE
+        effective_mask = effective_mask.convert("1", dither=dither_mode)
 
         left_mask = effective_mask.rotate(90, expand=True)
         right_mask = effective_mask.rotate(-90, expand=True)

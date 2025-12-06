@@ -47,20 +47,53 @@ build:
         echo "Add-on build output missing at $addon_dir" >&2; \
         exit 1; \
     fi; \
-    if ! command -v podman >/dev/null 2>&1; then \
-        echo "podman is required to build the printer add-on image" >&2; \
+    container_runtime_script="$REPO_ROOT/talos/scripts/container_runtime.sh"; \
+    if [ ! -x "$container_runtime_script" ]; then \
+        echo "Container runtime script not found: $container_runtime_script" >&2; \
         exit 1; \
     fi; \
     if [ -n "${PRINTER_DOCKER_PLATFORM:-}" ]; then \
-        podman build --platform "${PRINTER_DOCKER_PLATFORM}" -t printer-service:local "$addon_dir"; \
+        "$container_runtime_script" build printer-service:local "$addon_dir" "${PRINTER_DOCKER_PLATFORM}"; \
     else \
-        podman build -t printer-service:local "$addon_dir"; \
+        "$container_runtime_script" build printer-service:local "$addon_dir"; \
     fi
 
 ha-addon:
     set -e; \
     if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
     ../talos/build/bin/talos addon build printer
+
+container-test:
+    set -euo pipefail; \
+    echo "==> Testing container build before deployment..."; \
+    REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"; \
+    talos_bin="$REPO_ROOT/talos/build/bin/talos"; \
+    if [ ! -x "$talos_bin" ]; then "$REPO_ROOT/talos/build.sh"; fi; \
+    "$talos_bin" addon build printer; \
+    addon_dir="$REPO_ROOT/build/home-assistant-addon/printer_service"; \
+    if [ ! -d "$addon_dir" ]; then \
+        echo "Add-on build output missing at $addon_dir" >&2; \
+        exit 1; \
+    fi; \
+    container_runtime_script="$REPO_ROOT/talos/scripts/container_runtime.sh"; \
+    if [ ! -x "$container_runtime_script" ]; then \
+        echo "Container runtime script not found: $container_runtime_script" >&2; \
+        exit 1; \
+    fi; \
+    echo "==> Building container image for testing..."; \
+    if [ -n "${PRINTER_DOCKER_PLATFORM:-}" ]; then \
+        "$container_runtime_script" build printer-service:test "$addon_dir" "${PRINTER_DOCKER_PLATFORM}"; \
+    else \
+        "$container_runtime_script" build printer-service:test "$addon_dir"; \
+    fi; \
+    echo "==> Testing container can start..."; \
+    runtime_cmd=$("$container_runtime_script" cmd); \
+    if timeout 30 "$runtime_cmd" run --rm printer-service:test python -c "import printer_service; print('Container test passed')"; then \
+        echo "==> Container test passed - ready for deployment"; \
+    else \
+        echo "==> Container test failed - deployment aborted" >&2; \
+        exit 1; \
+    fi
 
 deploy:
     set -e; \
