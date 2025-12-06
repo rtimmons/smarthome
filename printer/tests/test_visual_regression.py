@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Tuple
 
@@ -199,6 +199,16 @@ def regenerate_baselines(request):
 def mock_best_by_date(monkeypatch):
     """Fix the current date for best_by tests."""
     monkeypatch.setattr(best_by, "_today", lambda: date(2025, 11, 17))
+
+
+@pytest.fixture
+def mock_receipt_datetime(monkeypatch):
+    """Fix the current date/time for receipt checklist tests."""
+    fixed_date = date(2025, 12, 6)
+    fixed_datetime = datetime(2025, 12, 6, 9, 30, 0)
+    monkeypatch.setattr(receipt_checklist, "_today", lambda: fixed_date)
+    monkeypatch.setattr(receipt_checklist, "_now", lambda: fixed_datetime)
+    return fixed_date
 
 
 def test_best_by_simple_date(mock_best_by_date, regenerate_baselines):
@@ -525,7 +535,7 @@ def test_kitchen_label_long_text(regenerate_baselines):
 # =============================================================================
 
 
-def test_receipt_default_items(regenerate_baselines):
+def test_receipt_default_items(mock_receipt_datetime, regenerate_baselines):
     """Receipt checklist with default items."""
     template = receipt_checklist.TEMPLATE
     form_data = TemplateFormData(
@@ -547,7 +557,7 @@ def test_receipt_default_items(regenerate_baselines):
     assert_visual_match(image, "receipt_default.png", regenerate=regenerate_baselines)
 
 
-def test_receipt_custom_items(regenerate_baselines):
+def test_receipt_custom_items(mock_receipt_datetime, regenerate_baselines):
     """Receipt checklist with custom items."""
     template = receipt_checklist.TEMPLATE
     form_data = TemplateFormData(
@@ -565,7 +575,7 @@ def test_receipt_custom_items(regenerate_baselines):
     assert_visual_match(image, "receipt_custom.png", regenerate=regenerate_baselines)
 
 
-def test_receipt_with_qr(regenerate_baselines):
+def test_receipt_with_qr(mock_receipt_datetime, regenerate_baselines):
     """Receipt checklist with QR code."""
     template = receipt_checklist.TEMPLATE
     form_data = TemplateFormData(

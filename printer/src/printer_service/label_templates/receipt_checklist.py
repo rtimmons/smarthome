@@ -54,6 +54,14 @@ def _normalize_items(raw: Iterable[str]) -> list[str]:
     return helper.sanitize_lines([item for item in raw][:MAX_ITEMS])
 
 
+def _today() -> date:
+    return date.today()
+
+
+def _now() -> datetime:
+    return datetime.now()
+
+
 @dataclass(frozen=True)
 class ReceiptLayout:
     width_px: int = WIDTH_PX
@@ -86,7 +94,7 @@ class Template(TemplateDefinition):
         return LABEL_SPEC
 
     def get_form_context(self) -> dict:
-        today = date.today().strftime("%Y-%m-%d")
+        today = _today().strftime("%Y-%m-%d")
         return {
             "default_items": _default_items(),
             "default_date": today,
@@ -98,11 +106,11 @@ class Template(TemplateDefinition):
 
     def render(self, form_data: TemplateFormData) -> Image.Image:
         items = _normalize_items(_iter_items(form_data))
-        receipt_date = form_data.get_str("date") or date.today().isoformat()
+        receipt_date = form_data.get_str("date") or _today().isoformat()
         qr_base = form_data.get_str("qr_base") or os.getenv(
             "RECEIPT_QR_BASE_URL", "http://localhost:4010/receipt/upload"
         )
-        receipt_id = form_data.get_str("receipt_id") or datetime.now().strftime("%Y%m%d")
+        receipt_id = form_data.get_str("receipt_id") or _now().strftime("%Y%m%d")
         qr_url = _build_qr_url(
             base=qr_base,
             receipt_date=receipt_date,
