@@ -49,6 +49,14 @@ deploy-preflight:
 talos-build:
 	#!/usr/bin/env bash
 	set -euo pipefail
+	# Ensure pyenv is initialized before building talos
+	if ! command -v pyenv >/dev/null 2>&1; then
+		echo "pyenv is required but not available. Run 'just setup' first." >&2
+		exit 1
+	fi
+	eval "$(pyenv init -)"
+	required_python=$(tr -d '[:space:]' < .python-version)
+	pyenv local "$required_python"
 	./talos/build.sh
 
 printer-image:

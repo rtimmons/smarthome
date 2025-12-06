@@ -5,7 +5,9 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
-PYTHON_BIN="${PYTHON:-python3}"
+# Source Python version management to ensure we use the correct Python version
+source "$SCRIPT_DIR/scripts/python_use.sh"
+PYTHON_BIN="$TALOS_PYTHON_BIN"
 mkdir -p build
 
 export PIP_DISABLE_PIP_VERSION_CHECK=1
