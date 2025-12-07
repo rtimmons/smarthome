@@ -112,6 +112,14 @@ Deploys an add-on to Home Assistant:
 6. Rebuilds or installs the add-on
 7. Starts the add-on
 
+Deploys use `ha addons rebuild` when the add-on already exists so persistent data
+in `/data/addons/data/<slug>/` stays intact (no uninstall). If the add-on is not
+yet installed—or if a rebuild fails—it falls back to `ha addons install` to
+stay idempotent for first-time deploys. After deploy, if a primary port is
+defined (first entry in `ports`), deploy will ensure the host port mapping is
+present using the Supervisor API (`ha addons info` + `curl` POST to
+`/addons/<id>/options`, requires `jq` and `SUPERVISOR_TOKEN` on the Supervisor host).
+
 **Options:**
 - `--ha-host <host>` - Home Assistant hostname (default: `homeassistant.local`)
 - `--ha-port <port>` - SSH port (default: `22`)

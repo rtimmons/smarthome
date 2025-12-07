@@ -343,7 +343,8 @@ addon_builder.py deploy_addon():
      - Stop add-on if running
      - Extract tarball to /addons/
      - Reload add-on list
-     - Rebuild or install add-on
+     - Rebuild or install add-on (no uninstall, so /data/addons/data contents stay intact; if rebuild fails/missing it installs)
+     - Ensure primary host port is mapped if defined (keeps direct access working alongside ingress; uses Supervisor API with `jq` + `curl`)
      - Start add-on
 ```
 

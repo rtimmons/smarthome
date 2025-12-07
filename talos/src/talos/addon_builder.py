@@ -307,6 +307,7 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
     paths = context["paths"]
     archive = build_addon(addon_key)
     slug = addon["slug"]
+    port = addon.get("port")
     remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
     remote_addon_dir = f"{paths['remote_addons']}/{slug}"
 
@@ -315,7 +316,8 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
     scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
     run_cmd(scp_cmd, dry_run=dry_run)
 
-    remote_script = f"""
+    remote_script_parts = [
+        f"""
 set -euo pipefail
 ADDON_SLUG="{slug}"
 ADDON_ID="local_{slug}"
@@ -323,26 +325,50 @@ REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
 
 ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
-ha addons uninstall "${{ADDON_ID}}" >/dev/null 2>&1 || true
 
 rm -rf "${{REMOTE_ADDON_DIR}}"
 mkdir -p "{paths['remote_addons']}"
-tar -xzf "${{REMOTE_TAR}}" -C "{paths['remote_addons']}"
-rm -f "${{REMOTE_TAR}}"
+tar -xzf "{remote_tar}" -C "{paths['remote_addons']}"
+rm -f "{remote_tar}"
 
 ha addons reload
 sleep 2
-ha addons install "${{ADDON_ID}}"
+if ha addons info "${{ADDON_ID}}" >/dev/null 2>&1; then
+  if ! ha addons rebuild "${{ADDON_ID}}"; then
+    echo "Rebuild failed; attempting install for ${{ADDON_ID}}" >&2
+    ha addons install "${{ADDON_ID}}"
+  fi
+else
+  ha addons install "${{ADDON_ID}}"
+fi
+"""
+    ]
 
+    need_port_mapping = "false"
+    if port:
+        remote_script_parts.append(
+            f"""
+CURRENT_PORT="$(ha addons info "${{ADDON_ID}}" --raw-json 2>/dev/null | jq -r '.network["{port}/tcp"] // empty' || true)"
+if [ -z "${{CURRENT_PORT}}" ] || [ "${{CURRENT_PORT}}" = "null" ]; then
+  need_port_mapping="true"
+fi
+"""
+        )
+
+    remote_script_parts.append(
+        f"""
 SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
 if [ -n "${{SUPERVISOR_TOKEN}}" ]; then
   OPTIONS_JSON='{{"watchdog": true'
   if [ "{has_ingress}" = "true" ]; then
     OPTIONS_JSON+=', "ingress_panel": true'
   fi
+  if [ "{'true' if bool(port) else 'false'}" = "true" ] && [ "$need_port_mapping" = "true" ]; then
+    OPTIONS_JSON+=', "network": {{"{port}/tcp": {port}}}'
+  fi
   OPTIONS_JSON+='}}'
-  curl -sSf -H "Authorization: Bearer ${{SUPERVISOR_TOKEN}}" -H "Content-Type: application/json" \\
-    -X POST -d "${{OPTIONS_JSON}}" http://supervisor/addons/"${{ADDON_ID}}"/options >/dev/null || \\
+  curl -sSf -H "Authorization: Bearer ${{SUPERVISOR_TOKEN}}" -H "Content-Type: application/json" \
+    -X POST -d "${{OPTIONS_JSON}}" http://supervisor/addons/"${{ADDON_ID}}"/options >/dev/null || \
     echo "Warning: failed to set add-on options for ${{ADDON_ID}}" >&2
 else
   echo "Warning: SUPERVISOR_TOKEN not set; skipping add-on options for ${{ADDON_ID}}" >&2
@@ -350,6 +376,10 @@ fi
 
 ha addons start "${{ADDON_ID}}" || true
 """
+    )
+
+    remote_script = "\n".join(remote_script_parts)
+
     ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
     run_cmd(ssh_cmd, dry_run=dry_run)
     console.print(f"[green]Deployed[/green] {addon_key} to {ha_host}")
