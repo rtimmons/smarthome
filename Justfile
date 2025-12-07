@@ -74,20 +74,81 @@ ha-addon addon="all": talos-build
 		"{{talos_bin}}" addons run ha-addon "${args[@]}"; \
 	fi
 
-deploy addon="all": deploy-preflight talos-build
+deploy addon="all" *args="": deploy-preflight talos-build
+	@echo "🚀 Starting enhanced deployment..."
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
 	export NVM_DIR="$REPO_ROOT/build/nvm"; \
 	{{nvm_use}}; \
-	args=(); \
-	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
-	if [ ${#args[@]} -eq 0 ]; then \
-		"{{talos_bin}}" addons run deploy; \
+	deploy_args=(); \
+	extra_args=({{args}}); \
+	if [ "{{addon}}" != "all" ]; then deploy_args+=("{{addon}}"); fi; \
+	if [ ${#deploy_args[@]} -eq 0 ]; then \
+		"{{talos_bin}}" addons deploy "${extra_args[@]}"; \
 	else \
-		"{{talos_bin}}" addons run deploy "${args[@]}"; \
+		"{{talos_bin}}" addons deploy "${deploy_args[@]}" "${extra_args[@]}"; \
 	fi
 	@echo ""
-	@echo "Deploying Home Assistant configs..."
+	@echo "🏠 Deploying Home Assistant configs..."
 	cd new-hass-configs && just deploy
+	@echo ""
+	@echo "✅ Deployment completed successfully!"
+
+# Deploy with verbose output for troubleshooting
+deploy-verbose addon="all": deploy-preflight talos-build
+	@echo "🚀 Starting enhanced deployment (verbose mode)..."
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
+	export NVM_DIR="$REPO_ROOT/build/nvm"; \
+	{{nvm_use}}; \
+	deploy_args=(); \
+	if [ "{{addon}}" != "all" ]; then deploy_args+=("{{addon}}"); fi; \
+	if [ ${#deploy_args[@]} -eq 0 ]; then \
+		"{{talos_bin}}" addons deploy --verbose; \
+	else \
+		"{{talos_bin}}" addons deploy "${deploy_args[@]}" --verbose; \
+	fi
+	@echo ""
+	@echo "🏠 Deploying Home Assistant configs..."
+	cd new-hass-configs && just deploy
+	@echo ""
+	@echo "✅ Deployment completed successfully!"
+
+# Dry run deployment to see what would be deployed
+deploy-dry-run addon="all":
+	@just deploy-preflight >/dev/null 2>&1
+	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
+	@echo "🔍 Dry run deployment preview..."
+	@set -e; \
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
+	export NVM_DIR="$$REPO_ROOT/build/nvm"; \
+	{{nvm_use}} >/dev/null 2>&1; \
+	if [ "{{addon}}" != "all" ]; then \
+		"{{talos_bin}}" addons deploy "{{addon}}" --dry-run; \
+	else \
+		"{{talos_bin}}" addons deploy --dry-run; \
+	fi
+	@echo ""
+	@echo "🏠 Home Assistant configs would also be deployed"
+	@echo ""
+	@echo "📋 This was a dry run - no changes were made"
+
+# Detailed dry run with verbose output for troubleshooting
+deploy-dry-run-verbose addon="all":
+	@just deploy-preflight >/dev/null 2>&1
+	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
+	@echo "🔍 Detailed dry run deployment preview..."
+	@set -e; \
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
+	export NVM_DIR="$$REPO_ROOT/build/nvm"; \
+	{{nvm_use}} >/dev/null 2>&1; \
+	if [ "{{addon}}" != "all" ]; then \
+		"{{talos_bin}}" addons deploy "{{addon}}" --dry-run --verbose; \
+	else \
+		"{{talos_bin}}" addons deploy --dry-run --verbose; \
+	fi
+	@echo ""
+	@echo "🏠 Home Assistant configs would also be deployed"
+	@echo ""
+	@echo "📋 This was a detailed dry run - no changes were made"
 
 test addon="all":
 		@set -e; \

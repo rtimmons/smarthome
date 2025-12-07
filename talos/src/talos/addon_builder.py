@@ -7,6 +7,8 @@ import shlex
 import shutil
 import subprocess
 import tarfile
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -14,10 +16,119 @@ import click
 import yaml
 from jinja2 import Environment, FileSystemLoader
 from rich.console import Console
+from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .paths import ADDON_BUILD_ROOT, REPO_ROOT, TEMPLATE_DIR
 
 console = Console()
+
+
+class DeploymentError(Exception):
+    """Enhanced deployment error with context and troubleshooting info."""
+
+    def __init__(self, message: str, error_type: str = "DEPLOYMENT_ERROR",
+                 context: Optional[Dict[str, Any]] = None,
+                 troubleshooting_steps: Optional[List[str]] = None):
+        super().__init__(message)
+        self.error_type = error_type
+        self.context = context or {}
+        self.troubleshooting_steps = troubleshooting_steps or []
+        self.timestamp = datetime.now()
+
+    def display_error(self):
+        """Display a rich error message with troubleshooting info."""
+        console.print(f"\n[red]❌ Deployment Error: {self.error_type}[/red]")
+        console.print(f"\n[bold]Details:[/bold]")
+        console.print(f"  {self.args[0]}")
+
+        if self.context:
+            console.print(f"\n[bold]Context:[/bold]")
+            for key, value in self.context.items():
+                console.print(f"  • {key}: {value}")
+
+        if self.troubleshooting_steps:
+            console.print(f"\n[bold]Troubleshooting Steps:[/bold]")
+            for i, step in enumerate(self.troubleshooting_steps, 1):
+                console.print(f"  {i}. {step}")
+
+        console.print(f"\n[dim]Timestamp: {self.timestamp.isoformat()}[/dim]")
+
+
+def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) -> None:
+    """Validate that deployment prerequisites are met."""
+    console.print("🔍 [bold]Validating deployment prerequisites...[/bold]")
+
+    # Test SSH connectivity
+    try:
+        result = run_cmd([
+            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+            "-o", "ConnectTimeout=10",
+            "-o", "BatchMode=yes",
+            "echo 'SSH connection successful'"
+        ], verbose=False, capture_output=True)
+        console.print("  ✓ SSH connection established")
+    except subprocess.CalledProcessError as e:
+        raise DeploymentError(
+            f"Cannot establish SSH connection to {ha_host}:{ha_port}",
+            error_type="SSH_CONNECTION_FAILED",
+            context={
+                "host": ha_host,
+                "port": ha_port,
+                "user": ha_user,
+                "exit_code": e.returncode
+            },
+            troubleshooting_steps=[
+                f"Verify SSH access: ssh -p {ha_port} {ha_user}@{ha_host}",
+                "Check if Home Assistant is running",
+                "Verify network connectivity",
+                "Check SSH key authentication"
+            ]
+        )
+
+    # Check Home Assistant health
+    try:
+        result = run_cmd([
+            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+            "ha core info --raw-json"
+        ], verbose=False, capture_output=True)
+
+        ha_info = json.loads(result.stdout)
+        if ha_info.get("data", {}).get("state") != "running":
+            raise DeploymentError(
+                "Home Assistant core is not running",
+                error_type="HA_CORE_NOT_RUNNING",
+                context={"state": ha_info.get("data", {}).get("state")},
+                troubleshooting_steps=[
+                    "Check Home Assistant status: ha core info",
+                    "Start Home Assistant: ha core start",
+                    "Check system logs: ha supervisor logs"
+                ]
+            )
+        console.print("  ✓ Home Assistant core is running")
+    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError) as e:
+        raise DeploymentError(
+            "Cannot verify Home Assistant health",
+            error_type="HA_HEALTH_CHECK_FAILED",
+            troubleshooting_steps=[
+                "Check Home Assistant status: ha core info",
+                "Verify supervisor is running: ha supervisor info",
+                "Check system logs for errors"
+            ]
+        )
+
+    # Check disk space
+    try:
+        result = run_cmd([
+            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+            "df -h / | tail -1 | awk '{print $4}'"
+        ], verbose=False, capture_output=True)
+
+        free_space = result.stdout.strip()
+        console.print(f"  ✓ Disk space available: {free_space}")
+    except subprocess.CalledProcessError:
+        console.print("  ⚠️  Could not check disk space")
+
+    console.print("✅ [green]Prerequisites validation passed[/green]\n")
 
 
 def discover_addons() -> Dict[str, Any]:
@@ -293,96 +404,275 @@ def build_addon(addon_key: str) -> Path:
     return archive
 
 
-def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None) -> None:
-    console.print(f"[cyan]$ {' '.join(cmd)}[/cyan]" + (f" (cwd={cwd})" if cwd else ""))
+def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, verbose: bool = True, capture_output: bool = False) -> subprocess.CompletedProcess:
+    """Run a command with improved error handling and output control."""
+    # Only show commands in verbose mode, and make dry-run output much more concise
+    if verbose and not dry_run:
+        console.print(f"[cyan]$ {' '.join(cmd)}[/cyan]" + (f" (cwd={cwd})" if cwd else ""))
+
     if dry_run:
-        return
-    subprocess.run(cmd, check=True, cwd=str(cwd) if cwd else None)
+        # For dry run, only show high-level operations, not individual commands
+        if verbose:
+            console.print(f"[dim]Would run: {' '.join(cmd)}[/dim]")
+        return subprocess.CompletedProcess(cmd, 0, "", "")
+
+    try:
+        result = subprocess.run(
+            cmd,
+            check=True,
+            cwd=str(cwd) if cwd else None,
+            capture_output=capture_output,
+            text=True if capture_output else None
+        )
+        return result
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]Command failed with exit code {e.returncode}[/red]")
+        if capture_output and e.stdout:
+            console.print(f"[red]stdout:[/red] {e.stdout}")
+        if capture_output and e.stderr:
+            console.print(f"[red]stderr:[/red] {e.stderr}")
+        raise
 
 
-def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool) -> None:
-    manifest = load_manifest()
-    context = build_context(addon_key, manifest)
-    addon = context["addon"]
-    paths = context["paths"]
-    archive = build_addon(addon_key)
-    slug = addon["slug"]
-    port = addon.get("port")
-    remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
-    remote_addon_dir = f"{paths['remote_addons']}/{slug}"
+def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool = False) -> None:
+    """Deploy an add-on with enhanced error handling and validation."""
+    try:
+        manifest = load_manifest()
+        context = build_context(addon_key, manifest)
+        addon = context["addon"]
+        paths = context["paths"]
+        slug = addon["slug"]
+        port = addon.get("port")
 
-    has_ingress = "true" if addon.get("ingress") else "false"
+        if dry_run:
+            # Concise dry-run output showing deployment plan
+            console.print(f"📋 [bold]Deployment Plan for {addon_key}:[/bold]")
+            console.print(f"  • Add-on: {addon_key} (slug: {slug})")
+            console.print(f"  • Target: {ha_user}@{ha_host}:{ha_port}")
+            console.print(f"  • Version: {addon.get('version', 'unknown')}")
+            if port:
+                console.print(f"  • Port: {port}")
+            if addon.get("ingress"):
+                console.print(f"  • Ingress: enabled")
 
-    scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
-    run_cmd(scp_cmd, dry_run=dry_run)
+            console.print(f"\n[dim]Operations that would be performed:[/dim]")
+            console.print(f"  1. Build add-on locally")
+            console.print(f"  2. Upload to {ha_host}")
+            console.print(f"  3. Stop existing add-on (if running)")
+            console.print(f"  4. Install/rebuild add-on")
+            console.print(f"  5. Configure add-on options")
+            console.print(f"  6. Start add-on")
+            console.print(f"  7. Verify add-on health")
 
-    remote_script_parts = [
-        f"""
+            console.print(f"\n[yellow]This is a dry run - no changes would be made[/yellow]")
+            return
+
+        # Validate prerequisites for real deployments
+        validate_deployment_prerequisites(ha_host, ha_port, ha_user)
+
+        console.print(f"🔨 [bold]Building {addon_key}...[/bold]")
+        archive = build_addon(addon_key)
+
+        remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
+        remote_addon_dir = f"{paths['remote_addons']}/{slug}"
+        has_ingress = "true" if addon.get("ingress") else "false"
+
+        console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
+
+        # Upload addon tarball
+        scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
+        try:
+            run_cmd(scp_cmd, dry_run=dry_run, verbose=verbose)
+            console.print(f"  ✓ Uploaded {addon_key} tarball")
+        except subprocess.CalledProcessError as e:
+            raise DeploymentError(
+                f"Failed to upload {addon_key} to {ha_host}",
+                error_type="UPLOAD_FAILED",
+                context={
+                    "addon": addon_key,
+                    "host": ha_host,
+                    "exit_code": e.returncode
+                },
+                troubleshooting_steps=[
+                    f"Check SSH connectivity: ssh -p {ha_port} {ha_user}@{ha_host}",
+                    "Verify disk space on target system",
+                    "Check file permissions"
+                ]
+            )
+
+        # Create enhanced remote deployment script
+        remote_script = f"""#!/bin/bash
 set -euo pipefail
+
+# Deployment variables
 ADDON_SLUG="{slug}"
 ADDON_ID="local_{slug}"
 REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
 
-ha addons stop "${{ADDON_ID}}" >/dev/null 2>&1 || true
+# Logging function
+log_info() {{
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $1"
+}}
 
-rm -rf "${{REMOTE_ADDON_DIR}}"
+log_error() {{
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2
+}}
+
+# Stop addon if running
+log_info "Stopping add-on $ADDON_ID if running..."
+if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
+    if ! ha addons stop "$ADDON_ID"; then
+        log_error "Failed to stop add-on $ADDON_ID"
+        exit 1
+    fi
+    log_info "Add-on $ADDON_ID stopped successfully"
+else
+    log_info "Add-on $ADDON_ID not currently installed"
+fi
+
+# Extract addon files
+log_info "Extracting add-on files..."
+rm -rf "$REMOTE_ADDON_DIR"
 mkdir -p "{paths['remote_addons']}"
-tar -xzf "{remote_tar}" -C "{paths['remote_addons']}"
-rm -f "{remote_tar}"
+if ! tar -xzf "$REMOTE_TAR" -C "{paths['remote_addons']}"; then
+    log_error "Failed to extract add-on tarball"
+    exit 1
+fi
+rm -f "$REMOTE_TAR"
+log_info "Add-on files extracted successfully"
 
-ha addons reload
+# Reload addon list
+log_info "Reloading add-on list..."
+if ! ha addons reload; then
+    log_error "Failed to reload add-on list"
+    exit 1
+fi
 sleep 2
-if ha addons info "${{ADDON_ID}}" >/dev/null 2>&1; then
-  if ! ha addons rebuild "${{ADDON_ID}}"; then
-    echo "Rebuild failed; attempting install for ${{ADDON_ID}}" >&2
-    ha addons install "${{ADDON_ID}}"
-  fi
+
+# Install or rebuild addon
+log_info "Installing/rebuilding add-on $ADDON_ID..."
+if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
+    log_info "Add-on exists, attempting rebuild..."
+    if ! ha addons rebuild "$ADDON_ID"; then
+        log_info "Rebuild failed, attempting fresh install..."
+        if ! ha addons install "$ADDON_ID"; then
+            log_error "Failed to install add-on $ADDON_ID"
+            exit 1
+        fi
+    fi
 else
-  ha addons install "${{ADDON_ID}}"
+    log_info "Installing new add-on..."
+    if ! ha addons install "$ADDON_ID"; then
+        log_error "Failed to install add-on $ADDON_ID"
+        exit 1
+    fi
 fi
 """
-    ]
 
-    need_port_mapping = "false"
-    if port:
-        remote_script_parts.append(
-            f"""
-CURRENT_PORT="$(ha addons info "${{ADDON_ID}}" --raw-json 2>/dev/null | jq -r '.network["{port}/tcp"] // empty' || true)"
-if [ -z "${{CURRENT_PORT}}" ] || [ "${{CURRENT_PORT}}" = "null" ]; then
-  need_port_mapping="true"
+        # Add port mapping and options configuration
+        if port:
+            remote_script += f"""
+# Check if port mapping is needed
+log_info "Checking port configuration for port {port}..."
+CURRENT_PORT="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.network["{port}/tcp"] // empty' || true)"
+need_port_mapping="false"
+if [ -z "$CURRENT_PORT" ] || [ "$CURRENT_PORT" = "null" ]; then
+    need_port_mapping="true"
+    log_info "Port mapping needed for port {port}"
+else
+    log_info "Port {port} already configured"
 fi
 """
-        )
 
-    remote_script_parts.append(
-        f"""
+        # Add options configuration
+        remote_script += f"""
+# Configure add-on options
+log_info "Configuring add-on options..."
 SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
-if [ -n "${{SUPERVISOR_TOKEN}}" ]; then
-  OPTIONS_JSON='{{"watchdog": true'
-  if [ "{has_ingress}" = "true" ]; then
-    OPTIONS_JSON+=', "ingress_panel": true'
-  fi
-  if [ "{'true' if bool(port) else 'false'}" = "true" ] && [ "$need_port_mapping" = "true" ]; then
-    OPTIONS_JSON+=', "network": {{"{port}/tcp": {port}}}'
-  fi
-  OPTIONS_JSON+='}}'
-  curl -sSf -H "Authorization: Bearer ${{SUPERVISOR_TOKEN}}" -H "Content-Type: application/json" \
-    -X POST -d "${{OPTIONS_JSON}}" http://supervisor/addons/"${{ADDON_ID}}"/options >/dev/null || \
-    echo "Warning: failed to set add-on options for ${{ADDON_ID}}" >&2
+if [ -n "$SUPERVISOR_TOKEN" ]; then
+    OPTIONS_JSON='{{"watchdog": true'
+    if [ "{has_ingress}" = "true" ]; then
+        OPTIONS_JSON+=', "ingress_panel": true'
+    fi
+    if [ "{'true' if bool(port) else 'false'}" = "true" ] && [ "$need_port_mapping" = "true" ]; then
+        OPTIONS_JSON+=', "network": {{"{port}/tcp": {port}}}'
+    fi
+    OPTIONS_JSON+='}}'
+
+    if curl -sSf -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" \\
+        -X POST -d "$OPTIONS_JSON" http://supervisor/addons/"$ADDON_ID"/options >/dev/null; then
+        log_info "Add-on options configured successfully"
+    else
+        log_error "Failed to set add-on options for $ADDON_ID"
+        exit 1
+    fi
 else
-  echo "Warning: SUPERVISOR_TOKEN not set; skipping add-on options for ${{ADDON_ID}}" >&2
+    log_info "SUPERVISOR_TOKEN not set; skipping add-on options configuration"
 fi
 
-ha addons start "${{ADDON_ID}}" || true
+# Start the add-on
+log_info "Starting add-on $ADDON_ID..."
+if ha addons start "$ADDON_ID"; then
+    log_info "Add-on $ADDON_ID started successfully"
+
+    # Wait a moment and verify it's running
+    sleep 3
+    if ha addons info "$ADDON_ID" --raw-json | jq -e '.state == "started"' >/dev/null; then
+        log_info "Add-on $ADDON_ID is running and healthy"
+    else
+        log_error "Add-on $ADDON_ID failed to start properly"
+        exit 1
+    fi
+else
+    log_error "Failed to start add-on $ADDON_ID"
+    exit 1
+fi
+
+log_info "Deployment of $ADDON_ID completed successfully"
 """
-    )
 
-    remote_script = "\n".join(remote_script_parts)
+        # Execute remote deployment script
+        ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
+        try:
+            run_cmd(ssh_cmd, dry_run=dry_run, verbose=verbose)
+            if not dry_run:
+                console.print(f"  ✅ [green]{addon_key} deployed successfully[/green]")
+        except subprocess.CalledProcessError as e:
+            raise DeploymentError(
+                f"Failed to deploy {addon_key} on remote system",
+                error_type="REMOTE_DEPLOYMENT_FAILED",
+                context={
+                    "addon": addon_key,
+                    "host": ha_host,
+                    "exit_code": e.returncode
+                },
+                troubleshooting_steps=[
+                    f"Check add-on logs: ha addons logs local_{slug}",
+                    f"Check add-on info: ha addons info local_{slug}",
+                    "Check supervisor logs: ha supervisor logs",
+                    f"Rebuild add-on: just ha-addon {addon_key}",
+                    "Check Home Assistant system health"
+                ]
+            )
 
-    ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
-    run_cmd(ssh_cmd, dry_run=dry_run)
-    console.print(f"[green]Deployed[/green] {addon_key} to {ha_host}")
+        console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
+
+    except DeploymentError:
+        # Re-raise deployment errors to preserve context
+        raise
+    except Exception as e:
+        # Wrap unexpected errors in DeploymentError
+        raise DeploymentError(
+            f"Unexpected error during {addon_key} deployment: {str(e)}",
+            error_type="UNEXPECTED_ERROR",
+            context={"addon": addon_key, "error": str(e)},
+            troubleshooting_steps=[
+                "Check system logs for more details",
+                "Verify all prerequisites are met",
+                "Try deploying with --verbose for more information"
+            ]
+        )
 
 
 def run_tests(addon_key: str) -> None:
@@ -417,8 +707,8 @@ def run_build(addon: str) -> None:
     build_addon(addon)
 
 
-def run_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool) -> None:
-    deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run)
+def run_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool = False) -> None:
+    deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run, verbose=verbose)
 
 
 def run_test(addon: str) -> None:

@@ -38,8 +38,14 @@ def addon_build(addon: str) -> None:
 @click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
 @click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
 @click.option("--dry-run", is_flag=True, help="Print commands without executing.")
-def addon_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool) -> None:
-    addon_builder.run_deploy(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run)
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+def addon_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool) -> None:
+    """Deploy a single add-on with enhanced error handling."""
+    try:
+        addon_builder.deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run, verbose=verbose)
+    except addon_builder.DeploymentError as e:
+        e.display_error()
+        raise click.ClickException("Deployment failed")
 
 
 @addon.command("test")
@@ -74,6 +80,18 @@ def addons() -> None:
 @click.argument("addons", nargs=-1)
 def addons_run(recipe: str, addons: tuple[str, ...]) -> None:
     addons_runner.run_recipes(recipe, addons)
+
+
+@addons.command("deploy")
+@click.argument("addons", nargs=-1)
+@click.option("--ha-host", envvar="HA_HOST", default="homeassistant.local", show_default=True)
+@click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
+@click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
+@click.option("--dry-run", is_flag=True, help="Print commands without executing.")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+def addons_deploy(addons: tuple[str, ...], ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool) -> None:
+    """Deploy multiple add-ons with enhanced error handling and progress tracking."""
+    addons_runner.run_enhanced_deployment(addons, ha_host, ha_port, ha_user, dry_run, verbose)
 
 
 @app.command(name="dev")
