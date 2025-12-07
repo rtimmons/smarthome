@@ -16,6 +16,9 @@ Guidance for humans and agents working in this repository.
 - Tests: `just test [addon]` runs add-on tests plus container build checks.
 - `talos` lives at `talos/build/bin/talos`; build it with `./talos/build.sh` if a recipe complains.
 
+## Reference repos
+- Upstream Home Assistant references live under `reference-repos/` as submodules; see `reference-repos/AGENTS.md` for purposes, doc entry points, and refresh commands.
+
 ## Home Assistant configuration
 - Everything lives under `new-hass-configs`. Common commands: `just fetch`, `just check`, `just deploy`, and `./iterate.sh` for before/after scene inventories. Access the live system with `hass-cli` when you need to inspect entities or trigger scenes.
 

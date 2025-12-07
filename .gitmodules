@@ -1,0 +1,16 @@
+[submodule "reference-repos/developers.home-assistant"]
+	path = reference-repos/developers.home-assistant
+	url = https://github.com/home-assistant/developers.home-assistant
+	branch = master
+[submodule "reference-repos/home-assistant.io"]
+	path = reference-repos/home-assistant.io
+	url = https://github.com/home-assistant/home-assistant.io
+	branch = current
+[submodule "reference-repos/operating-system"]
+	path = reference-repos/operating-system
+	url = https://github.com/home-assistant/operating-system
+	branch = dev
+[submodule "reference-repos/supervisor"]
+	path = reference-repos/supervisor
+	url = https://github.com/home-assistant/supervisor
+	branch = main
