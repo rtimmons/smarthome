@@ -14,3 +14,4 @@ Upstream Home Assistant repos tracked here as read-only submodules for quick ref
 - `reference-repos/supervisor` — Home Assistant Supervisor runtime and host management. Docs entry: `README.md`, repo `AGENTS.md`, and developer guide at https://developers.home-assistant.io/docs/supervisor/development.
 - `reference-repos/addons` — Official add-ons repo; see `README.md` plus individual add-on `README.md` files for base image usage and metadata conventions.
 - `reference-repos/frontend` — Home Assistant frontend source; start at `README.md` for build/dev commands and links to the upstream frontend developer guide.
+- `reference-repos/just` — Upstream `just` command runner. Docs entry: `README.md` (mirrors the [Just manual](https://just.systems/man/en/)) and the mdBook sources under `book/en/` for recipe syntax, settings, and built-in behaviors when adjusting or troubleshooting `just` workflows here.

@@ -22,3 +22,7 @@
 	path = reference-repos/frontend
 	url = https://github.com/home-assistant/frontend
 	branch = dev
+[submodule "reference-repos/just"]
+	path = reference-repos/just
+	url = https://github.com/casey/just
+	branch = master

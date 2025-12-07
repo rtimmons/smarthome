@@ -38,3 +38,6 @@ For project overview and quick starts, see the repo root [README.md](../README.m
 - Home Assistant OS install steps and recovery: [`reference-repos/home-assistant.io/source/installation/raspberrypi.markdown`](../reference-repos/home-assistant.io/source/installation/raspberrypi.markdown) and [`troubleshooting.markdown`](../reference-repos/home-assistant.io/source/installation/troubleshooting.markdown).
 - Official add-on base images and metadata conventions: [`reference-repos/addons/README.md`](../reference-repos/addons/README.md) plus the individual add-on `README.md` files for examples.
 - Frontend source and ingress/UI expectations: [`reference-repos/frontend/README.md`](../reference-repos/frontend/README.md) and the linked frontend developer guide for build/debug instructions.
+
+## Tooling references (from `reference-repos/`)
+- `just` command runner manual and reference: [`reference-repos/just/README.md`](../reference-repos/just/README.md) and the mdBook sources under `reference-repos/just/book/en/` for recipe syntax, settings, and advanced features used in our `just` workflows.

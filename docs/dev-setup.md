@@ -5,6 +5,8 @@ This guide helps you set up the local development environment for the first time
 - [`reference-repos/developers.home-assistant/docs/add-ons.md`](../reference-repos/developers.home-assistant/docs/add-ons.md) and the `add-ons/` subpages for packaging, testing, and publishing rules that our add-on workflows follow.
 - [`reference-repos/developers.home-assistant/docs/supervisor/development.md`](../reference-repos/developers.home-assistant/docs/supervisor/development.md) for Supervisor API and host behavior assumptions when you need to mirror production.
 
+For the command runner that powers the workflows in this repo, see [`reference-repos/just/README.md`](../reference-repos/just/README.md) and the mdBook sources under [`reference-repos/just/book/en/`](../reference-repos/just/book/en/) for recipe syntax, settings, and built-in behaviors.
+
 ## Quick Setup (Automated)
 
 The easiest way to get started:
