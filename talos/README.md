@@ -129,5 +129,5 @@ talos/
 ## See Also
 
 - [../AGENTS.md](../AGENTS.md) — Full repository development guide
-- [../docs/version-management.md](../docs/version-management.md) — Runtime version management
-- [../docs/dev-setup.md](../docs/dev-setup.md) — Development environment setup
+- [../docs/setup/version-management.md](../docs/setup/version-management.md) — Runtime version management
+- [../docs/setup/dev-setup.md](../docs/setup/dev-setup.md) — Development environment setup

@@ -31,7 +31,7 @@ just build
 PRINTER_DOCKER_PLATFORM=linux/arm64 just printer-image
 ```
 
-The system automatically detects and uses `podman` (preferred) or `docker` (fallback). See [../docs/container-runtime.md](../docs/container-runtime.md) for details.
+The system automatically detects and uses `podman` (preferred) or `docker` (fallback). See [../docs/addon-development/container-runtime.md](../docs/addon-development/container-runtime.md) for details.
 
 ## TODO
 

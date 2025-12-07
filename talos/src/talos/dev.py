@@ -198,7 +198,7 @@ class AddonConfig:
                 upstream_dir = self.source_dir / "node-sonos-http-api"
                 if not upstream_dir.exists():
                     raise ValueError(
-                        f"Upstream repo not found. See docs/dev-setup.md for instructions.\n"
+                        f"Upstream repo not found. See docs/setup/dev-setup.md for instructions.\n"
                         f"   Quick fix: cd {self.source_dir} && "
                         f"git clone https://github.com/jishi/node-sonos-http-api.git"
                     )

@@ -437,5 +437,5 @@ Talos will automatically run this before starting the service in `just dev`.
 
 - [USAGE.md](./USAGE.md) - Complete command reference, common workflows, and troubleshooting
 - [IMPROVEMENTS.md](./IMPROVEMENTS.md) - Recent improvements and recommendations
-- [../../docs/hooks-guide.md](../../docs/hooks-guide.md) - Lifecycle hooks guide and examples
+- [../../docs/addon-development/hooks-guide.md](../../docs/addon-development/hooks-guide.md) - Lifecycle hooks guide and examples
 - [../../AGENTS.md](../../AGENTS.md) - Full repository development guide

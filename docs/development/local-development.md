@@ -4,6 +4,31 @@
 
 This document describes the local development environment for all Home Assistant add-ons in this repository. The goal is to enable fast, iterative development without requiring Docker containers or a Home Assistant instance. For upstream expectations, see [`reference-repos/developers.home-assistant/docs/add-ons/testing.md`](../reference-repos/developers.home-assistant/docs/add-ons/testing.md) and [`communication.md`](../reference-repos/developers.home-assistant/docs/add-ons/communication.md) for how add-ons are validated and exposed by the Supervisor, plus [`reference-repos/developers.home-assistant/docs/supervisor/development.md`](../reference-repos/developers.home-assistant/docs/supervisor/development.md) when mirroring Supervisor APIs locally. Refer to [`reference-repos/addons/README.md`](../reference-repos/addons/README.md) for canonical add-on metadata/base-image patterns and [`reference-repos/frontend/README.md`](../reference-repos/frontend/README.md) when troubleshooting ingress/UI behavior that mirrors Home Assistant’s frontend.
 
+## Home Assistant Standards vs. Local Development
+
+### Official Home Assistant Approach
+The **recommended** Home Assistant development approach uses:
+- **[Devcontainer with full Home Assistant + Supervisor](../reference-repos/developers.home-assistant/docs/add-ons/testing.md)**
+- **[Container-based testing](../reference-repos/developers.home-assistant/docs/add-ons/testing.md#local-build)**
+- **[Supervisor API communication](../reference-repos/developers.home-assistant/docs/add-ons/communication.md)**
+
+### This Repository's Approach
+This repository provides a **custom local development environment** that:
+- Runs add-ons as native processes (not containers)
+- Provides fast iteration without Docker builds
+- Mimics production environment variables and networking
+- Enables unified logging and file watching
+
+**Use this approach for:**
+- Fast add-on development iteration
+- Testing add-on logic without full HA stack
+- Development on resource-constrained machines
+
+**Use the official devcontainer for:**
+- Testing Supervisor API integration
+- Validating ingress behavior
+- Testing with full Home Assistant instance
+- Final validation before publishing
 ## The Challenge
 
 The smart home system consists of 4 Home Assistant add-ons:
@@ -78,14 +103,7 @@ A new development orchestrator (Python script or Justfile recipes) will:
 
 ## Implementation Phases
 
-### Phase 1: Discovery and Documentation ✅
-- [x] Survey all add-ons and their structure
-- [x] Document dependencies and runtime requirements
-- [x] Identify existing dev commands (npm run dev, etc.)
-- [x] Create this documentation file
-
 ### Phase 2: Service Startup Infrastructure
-- [x] Refactor to decentralized `*/addon.yaml` structure
 - [ ] Create Talos dev orchestrator to discover addon.yaml files
 - [ ] Implement service dependency resolution
 - [ ] Add environment variable interpolation from `run_env` configs
@@ -112,32 +130,25 @@ A new development orchestrator (Python script or Justfile recipes) will:
 - [ ] Test full development workflow
 - [ ] Document common development tasks
 
-### Phase 6: Add-on Compatibility
-- [ ] Ensure `just deploy` still works for all add-ons
-- [ ] Verify add-on build process unchanged
-- [ ] Test deployed add-ons on Home Assistant
-- [ ] Update AGENTS.md with new development workflow
-
 ## Current Status
 
-**Phase**: 2 (Infrastructure) ✅ Complete | Ready for Use 🎉
+The local development environment is fully operational with the following capabilities:
 
-**Completed**:
-- ✅ Surveyed all 4 add-ons (node-sonos-http-api, sonos-api, grid-dashboard, printer)
-- ✅ Identified runtime requirements (Node v20.18.2, Python 3.10+)
-- ✅ Mapped service dependencies
-- ✅ Located existing dev scripts
-- ✅ Refactored to decentralized `*/addon.yaml` structure (supports cross-repo symlinks)
-- ✅ Added Talos add-on builder that discovers add-ons via globbing
-- ✅ Tested build process with new structure
-- ✅ Created Talos dev orchestrator with full orchestration
-- ✅ Implemented add-on discovery from `*/addon.yaml`
-- ✅ Dependency graph resolution and startup ordering
-- ✅ Environment variable interpolation and localhost URL mapping
-- ✅ Log multiplexing with service prefixes and timestamps
-- ✅ Process management with graceful shutdown
-- ✅ Prerequisite checking (node_modules, uv.lock)
-- ✅ Added `just dev` command
+- Surveyed all 4 add-ons (node-sonos-http-api, sonos-api, grid-dashboard, printer)
+- Identified runtime requirements (Node v20.18.2, Python 3.10+)
+- Mapped service dependencies
+- Located existing dev scripts
+- Refactored to decentralized `*/addon.yaml` structure (supports cross-repo symlinks)
+- Added Talos add-on builder that discovers add-ons via globbing
+- Tested build process with new structure
+- Created Talos dev orchestrator with full orchestration
+- Implemented add-on discovery from `*/addon.yaml`
+- Dependency graph resolution and startup ordering
+- Environment variable interpolation and localhost URL mapping
+- Log multiplexing with service prefixes and timestamps
+- Process management with graceful shutdown
+- Prerequisite checking (node_modules, uv.lock)
+- Added `just dev` command
 
 **Quick Start**:
 ```bash
@@ -149,14 +160,14 @@ just dev
 ```
 
 **What's Working**:
-- ✅ Addon discovery and configuration parsing
-- ✅ Dependency resolution (node-sonos-http-api → sonos-api → grid-dashboard)
-- ✅ Unified log output with timestamps and color-coded service names
-- ✅ Automatic env var mapping (production URLs → localhost URLs)
-- ✅ Prerequisite validation before starting services
-- ✅ Graceful shutdown on Ctrl+C
+- Addon discovery and configuration parsing
+- Dependency resolution (node-sonos-http-api → sonos-api → grid-dashboard)
+- Unified log output with timestamps and color-coded service names
+- Automatic env var mapping (production URLs → localhost URLs)
+- Prerequisite validation before starting services
+- Graceful shutdown on Ctrl+C
 
-**Known Issues** (see docs/dev-setup.md for solutions):
+**Known Issues** (see [../setup/dev-setup.md](../setup/dev-setup.md) for solutions):
 - 🔧 printer: Requires system library `cairo` (install via `brew install cairo`)
 - 🔧 node-sonos-http-api: Requires upstream git clone (one-time setup)
 - 🔧 All addons: Require `npm install` or `uv sync` before first run
@@ -180,7 +191,7 @@ just dev
 - **Runtime**: Node v20.18.2
 - **Start**: `npm run dev` (uses supervisor)
 - **Env vars**: `PORT=5006`, `APP_PORT=5006`, `SONOS_BASE_URL=http://localhost:5005`
-- **Watch**: ✅ Built-in via supervisor
+- **Watch**: Built-in via supervisor
 - **Dependencies**: node-sonos-http-api
 
 ### grid-dashboard
@@ -190,7 +201,7 @@ just dev
 - **Runtime**: Node v20.18.2
 - **Start**: `npm run dev` (uses supervisor)
 - **Env vars**: `PORT=3000`, `APP_PORT=3000`, `SONOS_BASE_URL=http://localhost:5006`, `HASS_WEBHOOK_BASE=`, `INGRESS_ENTRY=`, `NODE_OPTIONS=--enable-source-maps`
-- **Watch**: ✅ Built-in via supervisor
+- **Watch**: Built-in via supervisor
 - **Dependencies**: sonos-api
 
 ### printer
@@ -205,7 +216,7 @@ just dev
   - `LABEL_OUTPUT_DIR=/tmp/printer-labels` (local override)
   - `PRINTER_BACKEND=file`
   - `PRINTER_DEV_RELOAD=1` (enables Flask auto-reload)
-- **Watch**: ✅ Flask built-in reload with `PRINTER_DEV_RELOAD=1`
+- **Watch**: Flask built-in reload with `PRINTER_DEV_RELOAD=1`
 - **Dependencies**: None
 
 ## Technical Decisions

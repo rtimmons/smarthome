@@ -1,15 +1,40 @@
 # Development Environment Setup
 
-This guide helps you set up the local development environment for the first time. For canonical Home Assistant guidance, see:
-- [`reference-repos/developers.home-assistant/docs/development_environment.mdx`](../reference-repos/developers.home-assistant/docs/development_environment.mdx) for upstream tooling expectations (devcontainer, linting, testing).
-- [`reference-repos/developers.home-assistant/docs/add-ons.md`](../reference-repos/developers.home-assistant/docs/add-ons.md) and the `add-ons/` subpages for packaging, testing, and publishing rules that our add-on workflows follow.
-- [`reference-repos/developers.home-assistant/docs/supervisor/development.md`](../reference-repos/developers.home-assistant/docs/supervisor/development.md) for Supervisor API and host behavior assumptions when you need to mirror production.
+This guide helps you set up the local development environment for the first time.
 
-For the command runner that powers the workflows in this repo, see [`reference-repos/just/README.md`](../reference-repos/just/README.md) and the mdBook sources under [`reference-repos/just/book/en/`](../reference-repos/just/book/en/) for recipe syntax, settings, and built-in behaviors.
+## Home Assistant Development Standards
 
-## Quick Setup (Automated)
+This project follows Home Assistant add-on development standards. **Read the official documentation first:**
 
-The easiest way to get started:
+- **[Home Assistant Development Environment](../reference-repos/developers.home-assistant/docs/development_environment.mdx)** — Official dev environment setup
+- **[Add-on Development Guide](../reference-repos/developers.home-assistant/docs/add-ons.md)** — Add-on development standards
+- **[Add-on Testing](../reference-repos/developers.home-assistant/docs/add-ons/testing.md)** — Testing with devcontainer (recommended)
+- **[Supervisor Development](../reference-repos/developers.home-assistant/docs/supervisor/development.md)** — Supervisor API reference
+
+## Development Approaches
+
+### Option 1: Home Assistant Devcontainer (Recommended)
+
+The **recommended** approach for Home Assistant add-on development is using the official devcontainer:
+
+1. Follow the [official devcontainer setup guide](../reference-repos/developers.home-assistant/docs/add-ons/testing.md)
+2. Copy the [devcontainer.json](https://github.com/home-assistant/devcontainer/raw/main/addons/devcontainer.json) to `.devcontainer/devcontainer.json`
+3. Copy the [tasks.json](https://github.com/home-assistant/devcontainer/raw/main/addons/tasks.json) to `.vscode/tasks.json`
+4. Open in VS Code and "Rebuild and Reopen in Container"
+5. Run the "Start Home Assistant" task to bootstrap Supervisor and Home Assistant
+6. Access Home Assistant at `http://localhost:7123/`
+
+**Benefits:**
+- Full Home Assistant + Supervisor environment
+- Matches production exactly
+- Official testing approach
+- All add-ons available as local add-ons
+
+### Option 2: Local Development (This Repository)
+
+This repository provides a **custom local development environment** for faster iteration without containers:
+
+#### Quick Setup (Automated)
 
 ```bash
 just setup
@@ -31,6 +56,17 @@ This will automatically:
 **No shell profile modifications required** - the setup script handles nvm/pyenv initialization automatically.
 
 If the setup completes successfully, you're ready to run `just dev`!
+
+**Benefits:**
+- Fast iteration without containers
+- Native toolchain performance
+- Unified logging and file watching
+- Matches production environment variables
+
+**Limitations:**
+- Doesn't include full Home Assistant instance
+- No Supervisor API access
+- Limited to add-on development only
 
 ## Manual Setup (If Needed)
 

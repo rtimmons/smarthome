@@ -32,13 +32,13 @@ Guidance for humans and agents working in this repository.
 - `mongodb` — MongoDB add-on; local dev uses Homebrew for the daemon. See `mongodb/AGENTS.md`.
 
 ## Operational notes
-- Lifecycle hooks live in `local-dev/hooks/` per add-on and are documented in `docs/hooks-guide.md`; `node-sonos-http-api` checks Sonos multicast reachability and `printer` validates cairo/pkg-config for label rendering.
+- Lifecycle hooks live in `local-dev/hooks/` per add-on and are documented in `docs/addon-development/hooks-guide.md`; `node-sonos-http-api` checks Sonos multicast reachability and `printer` validates cairo/pkg-config for label rendering.
 - Sonos reliability patches are in `node-sonos-http-api/patches` and are applied during container builds; adjust those patches if you change upstream Sonos behavior.
 - Scenes with paired RGBW entities must keep base + `_white` lights in sync; the generator handles it via `expandLightsWithPairs()` in `new-hass-configs/config-generator/src/generate.ts`.
 
 ## Docs map
-- Start with `docs/README.md` for the index; `docs/dev-setup.md` and `docs/local-development.md` cover local workflows.
-- Container runtime details: `docs/container-runtime.md`.
-- Sonos architecture/routing: `docs/sonos-addons-overview.md`, `docs/sonos-routing-guide.md`.
-- Versioning and runtimes: `docs/version-management.md`.
-- Home Assistant ingress history/fixes: `docs/ingress-fixes.md`.
+- Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
+- Container runtime details: `docs/addon-development/container-runtime.md`.
+- Sonos architecture/routing: `docs/sonos/overview.md`, `docs/sonos/routing-guide.md`.
+- Versioning and runtimes: `docs/setup/version-management.md`.
+- Home Assistant ingress history/fixes: `docs/addon-development/ingress-fixes.md`.

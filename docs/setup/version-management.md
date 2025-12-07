@@ -7,6 +7,44 @@ This project uses **single source of truth** files for runtime versions to ensur
 - **`.nvmrc`** - Defines Node.js version for all environments
 - **`.python-version`** - Defines Python version for all environments
 
+## Architecture Diagram
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                   Version Source Files                       │
+│                                                              │
+│   .nvmrc                     .python-version                 │
+│   ┌──────────┐              ┌───────────┐                   │
+│   │ v20.18.2 │              │  3.12.12  │                   │
+│   └──────────┘              └───────────┘                   │
+└─────────────────────────────────────────────────────────────┘
+                        │
+                        │ Read by all tools
+                        ▼
+        ┌───────────────┴───────────────┐
+        │                               │
+        ▼                               ▼
+┌──────────────────┐          ┌──────────────────┐
+│ Local Dev        │          │ Docker/Prod      │
+│                  │          │                  │
+│ just setup       │          │ just ha-addon    │
+│   ↓              │          │   ↓              │
+│ setup_dev_env.sh │          │ addon_builder.py │
+│   ↓              │          │   ↓              │
+│ • talos/scripts/ │          │ read_runtime_    │
+│   nvm_use.sh     │          │ versions()       │
+│   (installs      │          │   ↓              │
+│   Node from      │          │ Dockerfile.j2    │
+│   .nvmrc)        │          │ templates        │
+│                  │          │                  │
+│ • talos/scripts/ │          │ FROM node:{{ ... │
+│   pyenv_use.sh   │          │ FROM python:{{ ..│
+│   (installs      │          │                  │
+│   Python from    │          │                  │
+│   .python-ver)   │          │                  │
+└──────────────────┘          └──────────────────┘
+```
+
 ## Version Files
 
 ### `.nvmrc`
@@ -15,9 +53,9 @@ v20.18.2
 ```
 
 Controls Node.js version for:
-- ✅ Local development (via nvm)
-- ✅ Docker images (via base image selection)
-- ✅ CI/CD pipelines (if configured)
+- Local development (via nvm)
+- Docker images (via base image selection)
+- CI/CD pipelines (if configured)
 
 ### `.python-version`
 ```
@@ -25,9 +63,9 @@ Controls Node.js version for:
 ```
 
 Controls Python version for:
-- ✅ Local development (via pyenv)
-- ✅ Docker images (via base image selection)
-- ✅ CI/CD pipelines (if configured)
+- Local development (via pyenv)
+- Docker images (via base image selection)
+- CI/CD pipelines (if configured)
 
 ## How It Works
 
@@ -101,7 +139,7 @@ just deploy    # Deploys to Home Assistant
 
 ## Version Consistency Guarantees
 
-### ✅ Guaranteed Consistency
+### Guaranteed Consistency
 
 - **Node.js version** in Docker exactly matches `.nvmrc`
 - **Python version** in Docker exactly matches `.python-version` (minor version)

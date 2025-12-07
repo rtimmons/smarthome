@@ -32,7 +32,9 @@ just deploy  # Deploy and restart Home Assistant
 ./iterate.sh # Capture before/after inventories while applying a scene
 ```
 
-## Docs
-- Agent/developer guide: `AGENTS.md`
-- Documentation index: `docs/README.md` (setup, dev workflow, container runtime, Sonos architecture/routing, ingress fixes, version management)
-- Roadmap and historical notes: `docs/TODO.md`
+## Documentation
+- **[AGENTS.md](AGENTS.md)** — Developer guide and operational procedures
+- **[docs/README.md](docs/README.md)** — Complete documentation index
+- **[docs/operations/improvements.md](docs/operations/improvements.md)** — Comprehensive improvements roadmap
+- **[docs/setup/dev-setup.md](docs/setup/dev-setup.md)** — Development environment setup
+- **[docs/development/local-development.md](docs/development/local-development.md)** — Local development workflow

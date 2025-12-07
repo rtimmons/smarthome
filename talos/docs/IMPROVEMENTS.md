@@ -1,8 +1,12 @@
 # Talos Improvements Summary
 
+> **📋 STATUS**: This document summarizes completed improvements to the talos build system.
+> **Last Updated**: 2025-11-25
+> **Scope**: Talos-specific improvements and recommendations
+> **Note**: For comprehensive project improvements, see **[../../docs/operations/improvements.md](../../docs/operations/improvements.md)**
+
 This document summarizes the improvements made to talos to make it a world-class build tool.
 
-**Date**: 2025-11-25
 **Goal**: Make talos robust, self-contained, well-documented, and consistent across the ecosystem
 
 ## Assessment
@@ -186,6 +190,8 @@ All documentation reflects this structure.
 - Self-documenting (each path has an inline comment explaining its purpose)
 
 ## Recommendations for Future Improvements
+
+> **📋 NOTE**: These talos-specific recommendations have been incorporated into the comprehensive project roadmap at **[../../docs/operations/improvements.md](../../docs/operations/improvements.md)**. See that document for prioritized implementation planning.
 
 ### Short Term (Low Effort, High Impact)
 

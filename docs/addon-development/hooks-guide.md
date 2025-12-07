@@ -400,5 +400,5 @@ Run after deploying to Home Assistant to:
 
 - [talos/docs/ARCHITECTURE.md](../talos/docs/ARCHITECTURE.md) - Lifecycle hooks architecture
 - [talos/docs/USAGE.md](../talos/docs/USAGE.md) - Hook command usage
-- [dev-setup.md](./dev-setup.md) - Development environment setup (uses hooks)
+- [../setup/dev-setup.md](../setup/dev-setup.md) - Development environment setup (uses hooks)
 - [../AGENTS.md](../AGENTS.md) - Repository development guide

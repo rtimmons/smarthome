@@ -677,7 +677,7 @@ build/venv/bin/python -m pytest tests
 
 - [ARCHITECTURE.md](./ARCHITECTURE.md) - Talos design and internals
 - [IMPROVEMENTS.md](./IMPROVEMENTS.md) - Recent improvements and recommendations
-- [../../docs/hooks-guide.md](../../docs/hooks-guide.md) - Lifecycle hooks guide
-- [../../docs/version-management.md](../../docs/version-management.md) - Runtime version management
-- [../../docs/dev-setup.md](../../docs/dev-setup.md) - Development environment setup
+- [../../docs/addon-development/hooks-guide.md](../../docs/addon-development/hooks-guide.md) - Lifecycle hooks guide
+- [../../docs/setup/version-management.md](../../docs/setup/version-management.md) - Runtime version management
+- [../../docs/setup/dev-setup.md](../../docs/setup/dev-setup.md) - Development environment setup
 - [../../AGENTS.md](../../AGENTS.md) - Full repository development guide
