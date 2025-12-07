@@ -112,7 +112,13 @@ addons:
 	"{{talos_bin}}" addon list
 
 setup:
-	@bash talos/setup_dev_env.sh
+	@set -euo pipefail; \
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
+	cd "$REPO_ROOT"; \
+	if git submodule status >/dev/null 2>&1; then \
+		git submodule update --init --recursive; \
+	fi; \
+	bash talos/setup_dev_env.sh
 
 kill:
 	if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
