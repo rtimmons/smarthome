@@ -1,0 +1,66 @@
+slug: tinyurl_service
+name: TinyURL Service
+description: Create and manage short links with visit stats, backed by the MongoDB add-on.
+url: https://github.com/rtimmons/smarthome
+copy:
+  - src
+  - public
+  - package.json
+  - package-lock.json
+  - tsconfig.json
+  - tsconfig.build.json
+  - Justfile
+  - .eslintrc.cjs
+  - prettier.config.cjs
+  - vitest.config.ts
+  - README.md
+container_workdir: /opt/tinyurl-service/app
+npm_build: true
+homeassistant_min: "2024.6.0"
+ingress: true
+ingress_entry: "/"
+panel_icon: "mdi:link-variant"
+panel_title: "Tiny URLs"
+homeassistant_api: false
+auth_api: false
+host_network: false
+ports:
+  "4100": 4100
+ports_description:
+  "4100": "Tiny URL web UI, API, and redirect endpoint (also available via ingress)."
+environment:
+  NODE_OPTIONS: "--enable-source-maps"
+run_env:
+  - env: PORT
+    value: "4100"
+  - env: HOST
+    value: "0.0.0.0"
+  - env: MONGODB_URL
+    from_option: mongodb_url
+    default: "mongodb://addon_local_mongodb:27017/tinyurl"
+    optional: true
+  - env: PUBLIC_BASE_URL
+    from_option: public_base_url
+    default: ""
+    optional: true
+docs:
+  readme: >
+    Tiny URL management UI and API backed by the MongoDB add-on. Create short links, view visit counts
+    and the last 10 access timestamps, reset stats, and delete links. Redirect endpoint is available at
+    /<slug> and the UI/API are served over Home Assistant ingress or port 4100.
+  docs: >
+    This add-on exposes a tiny URL service using MongoDB as its datastore. The UI lets you create and
+    manage short links, inspect access history, reset counters, and delete entries. Redirects are served
+    from /<slug>; the UI and API run behind ingress or on the mapped host port.
+  access: >
+    Preferred: use the add-on ingress link from the Home Assistant sidebar (Supervisor → Tiny URLs →
+    Open Web UI). Optional: access directly via http://<ha-host>:4100/ and use redirects at
+    http://<ha-host>:4100/<slug>.
+options:
+  mongodb_url: "mongodb://addon_local_mongodb:27017/tinyurl"
+  public_base_url: ""
+schema:
+  mongodb_url: "str?"
+  public_base_url: "str?"
+tests:
+  - npm run build

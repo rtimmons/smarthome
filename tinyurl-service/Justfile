@@ -1,0 +1,78 @@
+import "../talos/just/nvm.just"
+
+set shell := ["bash", "-lc"]
+config_env := "XDG_CONFIG_HOME=$PWD/.config"
+no_update := "NO_UPDATE_NOTIFIER=1"
+port := "4100"
+
+setup:
+	{{nvm_use}}; \
+	npm install
+
+dev:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	PORT={{port}} npm run dev
+
+test:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	{{no_update}} {{config_env}} npm run check
+
+lint:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	{{no_update}} {{config_env}} npm run lint
+
+fmt:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	{{no_update}} {{config_env}} npm run fmt
+
+typecheck:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	{{no_update}} {{config_env}} npm run typecheck
+
+check:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	{{no_update}} {{config_env}} npm run check
+
+build:
+	{{nvm_use}}; \
+	if [ ! -d "node_modules" ]; then just setup; fi; \
+	npm run build
+
+ha-addon:
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build tinyurl-service
+
+container-test:
+	@echo "==> Container test: tinyurl-service uses Home Assistant's container build system"
+	@echo "==> Verifying add-on build completes successfully..."
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build tinyurl-service
+	@echo "==> Add-on build test passed - ready for deployment"
+
+deploy:
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon deploy tinyurl-service
+
+container-run:
+	@echo "==> Building add-on image locally"
+	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
+	../talos/build/bin/talos addon build tinyurl-service
+	@echo "==> Starting container with port 4100 mapped (uses podman if available, else docker)"
+	runtime="$(../talos/scripts/container_runtime.sh cmd)"; \
+	if [ -z "$runtime" ]; then echo "No container runtime found (podman or docker required)"; exit 1; fi; \
+	tag="tinyurl-service-dev:latest"; \
+	build_dir="../build/home-assistant-addon/tinyurl_service"; \
+	if [ ! -d "$build_dir" ]; then echo "Build directory not found at $$build_dir"; exit 1; fi; \
+	"$runtime" build -t "$tag" "$build_dir"; \
+	"$runtime" rm -f tinyurl-service-dev >/dev/null 2>&1 || true; \
+	"$runtime" run --name tinyurl-service-dev --rm -p 4100:4100 \
+		-e PORT=4100 \
+		-e HOST=0.0.0.0 \
+		-e MONGODB_URL="mongodb://localhost:27017/tinyurl" \
+		"$tag"
