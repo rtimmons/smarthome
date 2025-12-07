@@ -14,3 +14,11 @@
 	path = reference-repos/supervisor
 	url = https://github.com/home-assistant/supervisor
 	branch = main
+[submodule "reference-repos/addons"]
+	path = reference-repos/addons
+	url = https://github.com/home-assistant/addons
+	branch = master
+[submodule "reference-repos/frontend"]
+	path = reference-repos/frontend
+	url = https://github.com/home-assistant/frontend
+	branch = dev

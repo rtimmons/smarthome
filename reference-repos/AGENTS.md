@@ -12,3 +12,5 @@ Upstream Home Assistant repos tracked here as read-only submodules for quick ref
 - `reference-repos/home-assistant.io` — Source for the public website and user docs (Jekyll). Docs entry: `README.md`; documentation lives under `source/` (notably `_docs/` and `_integrations/`).
 - `reference-repos/operating-system` — Home Assistant Operating System Buildroot tree and tooling. Docs entry: `Documentation/README.md` (plus the top-level `README.md` overview).
 - `reference-repos/supervisor` — Home Assistant Supervisor runtime and host management. Docs entry: `README.md`, repo `AGENTS.md`, and developer guide at https://developers.home-assistant.io/docs/supervisor/development.
+- `reference-repos/addons` — Official add-ons repo; see `README.md` plus individual add-on `README.md` files for base image usage and metadata conventions.
+- `reference-repos/frontend` — Home Assistant frontend source; start at `README.md` for build/dev commands and links to the upstream frontend developer guide.

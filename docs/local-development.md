@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the local development environment for all Home Assistant add-ons in this repository. The goal is to enable fast, iterative development without requiring Docker containers or a Home Assistant instance.
+This document describes the local development environment for all Home Assistant add-ons in this repository. The goal is to enable fast, iterative development without requiring Docker containers or a Home Assistant instance. For upstream expectations, see [`reference-repos/developers.home-assistant/docs/add-ons/testing.md`](../reference-repos/developers.home-assistant/docs/add-ons/testing.md) and [`communication.md`](../reference-repos/developers.home-assistant/docs/add-ons/communication.md) for how add-ons are validated and exposed by the Supervisor, plus [`reference-repos/developers.home-assistant/docs/supervisor/development.md`](../reference-repos/developers.home-assistant/docs/supervisor/development.md) when mirroring Supervisor APIs locally. Refer to [`reference-repos/addons/README.md`](../reference-repos/addons/README.md) for canonical add-on metadata/base-image patterns and [`reference-repos/frontend/README.md`](../reference-repos/frontend/README.md) when troubleshooting ingress/UI behavior that mirrors Home Assistant’s frontend.
 
 ## The Challenge
 

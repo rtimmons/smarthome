@@ -29,3 +29,12 @@ This directory contains detailed documentation for the smarthome project. Start 
 ## Quick Links
 
 For project overview and quick starts, see the repo root [README.md](../README.md). For contributor/agent guidance, start with [AGENTS.md](../AGENTS.md).
+
+## Upstream Home Assistant references (from `reference-repos/`)
+- Add-on development standards and tutorial: [`reference-repos/developers.home-assistant/docs/add-ons.md`](../reference-repos/developers.home-assistant/docs/add-ons.md) and the deep-dive sections under `add-ons/` (configuration, communication, testing, publishing).
+- Supervisor architecture and developer flow: [`reference-repos/developers.home-assistant/docs/supervisor.md`](../reference-repos/developers.home-assistant/docs/supervisor.md) plus [`supervisor/development.md`](../reference-repos/developers.home-assistant/docs/supervisor/development.md) for host/service expectations.
+- Dev environment expectations: [`reference-repos/developers.home-assistant/docs/development_environment.mdx`](../reference-repos/developers.home-assistant/docs/development_environment.mdx) for upstream tooling, devcontainer defaults, and lint/test hooks.
+- Operating System internals and kernel notes: [`reference-repos/operating-system/Documentation/README.md`](../reference-repos/operating-system/Documentation/README.md) (links through to kernel and build docs).
+- Home Assistant OS install steps and recovery: [`reference-repos/home-assistant.io/source/installation/raspberrypi.markdown`](../reference-repos/home-assistant.io/source/installation/raspberrypi.markdown) and [`troubleshooting.markdown`](../reference-repos/home-assistant.io/source/installation/troubleshooting.markdown).
+- Official add-on base images and metadata conventions: [`reference-repos/addons/README.md`](../reference-repos/addons/README.md) plus the individual add-on `README.md` files for examples.
+- Frontend source and ingress/UI expectations: [`reference-repos/frontend/README.md`](../reference-repos/frontend/README.md) and the linked frontend developer guide for build/debug instructions.
