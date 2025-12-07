@@ -142,7 +142,7 @@ This document summarizes the improvements made to talos to make it a world-class
 All documentation now properly cross-references:
 - `talos/README.md` → `talos/docs/ARCHITECTURE.md`, `talos/docs/USAGE.md`
 - `talos/docs/ARCHITECTURE.md` → `talos/docs/USAGE.md`
-- `talos/docs/USAGE.md` → `talos/docs/ARCHITECTURE.md`, `../../CLAUDE.md`, `../../docs/*.md`
+- `talos/docs/USAGE.md` → `talos/docs/ARCHITECTURE.md`, `../../AGENTS.md`, `../../docs/*.md`
 
 #### Terminology Consistency
 Standardized terminology across all docs:

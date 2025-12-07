@@ -672,4 +672,4 @@ build/venv/bin/python -m pytest tests
 - [../../docs/hooks-guide.md](../../docs/hooks-guide.md) - Lifecycle hooks guide
 - [../../docs/version-management.md](../../docs/version-management.md) - Runtime version management
 - [../../docs/dev-setup.md](../../docs/dev-setup.md) - Development environment setup
-- [../../CLAUDE.md](../../CLAUDE.md) - Full repository development guide
+- [../../AGENTS.md](../../AGENTS.md) - Full repository development guide

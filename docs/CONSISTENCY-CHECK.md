@@ -10,23 +10,7 @@ This document verifies that all configuration files, documentation, and build to
 
 ## Justfile Parsing
 
-All Justfiles parse correctly:
-
-✅ **Root Justfile** (`/Justfile`)
-- Commands: `setup`, `setup-build-tools`, `dev`, `ha-addon`, `deploy`, `test`, `addons`
-- No conflicts or duplicate commands
-
-✅ **grid-dashboard/Justfile**
-- Commands: `deploy`, `ha-addon`, `report`
-
-✅ **sonos-api/Justfile**
-- Commands: `deploy`, `ha-addon`
-
-✅ **node-sonos-http-api/Justfile**
-- Commands: `deploy`, `ha-addon`
-
-✅ **printer/Justfile**
-- Commands: `setup`, `start`, `test`, `fmt`, `ha-addon`, `deploy`, `report`, `ensure-venv`
+All Justfiles parse correctly. Use `just --list` in each directory for the authoritative command list (root Justfile covers setup/dev/test/deploy; add-on Justfiles wrap local setup, test, build, and deploy flows).
 
 ## Add-on Configuration Files
 
@@ -52,6 +36,21 @@ All addon.yaml files discovered and consistent:
 - Port: 8099
 - Type: Python
 
+✅ **snapshot-service/addon.yaml**
+- Slug: `snapshot_service`
+- Port: 4010
+- Type: Node.js
+
+✅ **tinyurl-service/addon.yaml**
+- Slug: `tinyurl_service`
+- Port: 4100
+- Type: Node.js
+
+✅ **mongodb/addon.yaml**
+- Slug: `mongodb`
+- Port: 27017
+- Type: Database service
+
 ## Build System Verification
 
 ✅ **Version Reading**
@@ -72,7 +71,7 @@ FROM python:3.12-alpine
 ```
 
 ✅ **Addon Discovery**
-- All 4 addons discovered via `*/addon.yaml` globbing
+- All add-ons discovered via `*/addon.yaml` globbing
 - Build system correctly identifies Python vs Node addons
 
 ## Documentation Consistency
@@ -91,7 +90,7 @@ All documentation updated to Python 3.12.12:
 - Diagrams show: 3.12.12 ✓
 - Docker examples: python:3.12-alpine ✓
 
-✅ **CLAUDE.md**
+✅ **AGENTS.md**
 - Version management section references .nvmrc and .python-version ✓
 
 ✅ **README.md**
@@ -111,7 +110,7 @@ All documentation updated to Python 3.12.12:
 - Discovers all addons
 
 ✅ **`just addons`**
-- Lists all 4 addons
+- Lists all discovered addons
 - Shows correct slugs and ports
 
 ✅ **`just ha-addon printer`**
@@ -144,6 +143,9 @@ grid-dashboard/addon.yaml     ✓
 sonos-api/addon.yaml          ✓
 node-sonos-http-api/addon.yaml ✓
 printer/addon.yaml            ✓
+snapshot-service/addon.yaml   ✓
+tinyurl-service/addon.yaml    ✓
+mongodb/addon.yaml            ✓
 ```
 
 ✅ **Version Files**
@@ -168,7 +170,7 @@ docs/version-management.md          ✓
 docs/version-consistency-diagram.md ✓
 docs/just-dev-output-example.md     ✓
 docs/SUMMARY.md                     ✓
-CLAUDE.md                           ✓
+AGENTS.md                           ✓
 README.md                           ✓
 ```
 
@@ -221,4 +223,4 @@ The system is ready for use.
 
 ---
 
-Last verified: 2025-11-19
+Last verified: 2025-12-07

@@ -153,7 +153,7 @@ Developer → just ha-addon grid-dashboard → just deploy grid-dashboard
 - **Branch Strategy**: Work in feature branch `refactor/new-build-system`
 - **Rollback**: Keep old infrastructure until migration is 100% complete
 - **Testing**: Verify build + deploy + test for every addon after each iteration
-- **Documentation**: Update CLAUDE.md as we go
+- **Documentation**: Update AGENTS.md as we go
 
 ---
 
@@ -864,7 +864,7 @@ git commit -m "Consolidate Justfiles using imports
    rm tools/addon_hooks.py
    ```
 
-4. **Update `CLAUDE.md`**
+4. **Update `AGENTS.md`**
    - Document new workspace structure
    - Update build system section
    - Document Nx usage
@@ -907,13 +907,13 @@ just deploy grid-dashboard
 #### Commit Point
 
 ```bash
-git add docs/ CLAUDE.md
+git add docs/ AGENTS.md
 git rm -r printer/scripts/ tools/dev_orchestrator.py.bak tools/manage_ports.py.bak tools/addon_hooks.py
 git commit -m "Final cleanup and documentation update
 
 - Remove duplicate printer scripts (473 lines)
 - Remove old orchestrator backups (750 lines)
-- Update CLAUDE.md with new build system
+- Update AGENTS.md with new build system
 - Update docs/dev-setup.md
 - Create docs/architecture.md
 

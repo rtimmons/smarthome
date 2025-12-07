@@ -1,7 +1,7 @@
 # Testing Guide
 
 ## Agent Notes
-- Follow the repo-wide expectations in `../../CLAUDE.md#agent-expectations-repo-wide` (sandbox/git-lock permission, use `just`/env wrappers, "prepare to commit" steps).
+- Follow the repo-wide expectations in `../../AGENTS.md#ground-rules` (sandbox/git-lock permission, use `just`/env wrappers, "prepare to commit" steps).
 
 This document describes the testing infrastructure for the printer service.
 

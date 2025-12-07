@@ -1,4 +1,4 @@
-# AGENTS — tinyurl-service
+# Agents — TinyURL Service
 
 - Start with `../AGENTS.md` for repo-wide expectations.
 - Port: 4100 (requires MongoDB at `mongodb://localhost:27017/tinyurl` in dev).

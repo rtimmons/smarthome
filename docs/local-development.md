@@ -116,7 +116,7 @@ A new development orchestrator (Python script or Justfile recipes) will:
 - [ ] Ensure `just deploy` still works for all add-ons
 - [ ] Verify add-on build process unchanged
 - [ ] Test deployed add-ons on Home Assistant
-- [ ] Update CLAUDE.md with new development workflow
+- [ ] Update AGENTS.md with new development workflow
 
 ## Current Status
 

@@ -128,6 +128,6 @@ talos/
 
 ## See Also
 
-- [../CLAUDE.md](../CLAUDE.md) — Full repository development guide
+- [../AGENTS.md](../AGENTS.md) — Full repository development guide
 - [../docs/version-management.md](../docs/version-management.md) — Runtime version management
 - [../docs/dev-setup.md](../docs/dev-setup.md) — Development environment setup

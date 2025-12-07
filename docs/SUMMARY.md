@@ -28,7 +28,7 @@ A complete local development environment for all Home Assistant add-ons that:
 - `talos/src/talos/addon_builder.py` - Discovers add-ons from `*/addon.yaml`
 - `Justfile` - Added `just dev` command
 - `.gitignore` - Excluded old `tools/addons.yaml`
-- `CLAUDE.md` - Documented new workflow
+- `AGENTS.md` - Documented new workflow
 
 ## ✨ Key Features
 
@@ -125,6 +125,9 @@ That's it! All services start, logs stream to your terminal, and file changes tr
 - Sonos API: http://localhost:5006
 - Node Sonos HTTP API: http://localhost:5005
 - Printer Service: http://localhost:8099
+- Snapshot Service: http://localhost:4010
+- TinyURL Service: http://localhost:4100
+- MongoDB: mongodb://localhost:27017/ (when running locally)
 
 ## 🔧 How It Works
 
@@ -142,7 +145,7 @@ That's it! All services start, logs stream to your terminal, and file changes tr
 ## 📊 Implementation Stats
 
 - **Python LOC**: ~450 (dev_orchestrator.py)
-- **Add-ons supported**: 4 (extensible)
+- **Add-ons supported**: Discovered via `*/addon.yaml` (currently 7)
 - **Documentation pages**: 4
 - **Build system compatibility**: 100% (all existing `just deploy` commands work)
 - **Time to start all services**: ~10 seconds (after initial setup)
@@ -173,7 +176,7 @@ Potential improvements (not implemented):
 - **First-time Setup**: `docs/dev-setup.md`
 - **Example Output**: `docs/just-dev-output-example.md`
 - **Version Management**: `docs/version-management.md`
-- **Quick Reference**: `CLAUDE.md` (updated with dev workflow)
+- **Quick Reference**: `AGENTS.md` (updated with dev workflow)
 
 ## 🙏 Notes for Future You
 

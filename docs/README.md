@@ -1,26 +1,31 @@
 # Documentation
 
-This directory contains detailed documentation for the smarthome project.
+This directory contains detailed documentation for the smarthome project. Start with `AGENTS.md` in the repo root for contributor guidance.
 
 ## Contents
 
-### Setup and Deployment
+### Setup & Local Development
+- [setup.md](setup.md) — Raspberry Pi setup through initial deployment
+- [dev-setup.md](dev-setup.md) — First-time development environment bootstrap
+- [local-development.md](local-development.md) — Orchestrated local dev and service graph
+- [just-dev-output-example.md](just-dev-output-example.md) — Example `just dev` output
 
-- **[setup.md](setup.md)** - Complete Raspberry Pi setup instructions from SD card preparation through initial deployment
+### Architecture & Add-ons
+- [sonos-addons-overview.md](sonos-addons-overview.md) — Sonos add-on architecture
+- [sonos-routing-guide.md](sonos-routing-guide.md) — API routing flow
 
-### Architecture and Design
+### Operations & Reference
+- [container-runtime.md](container-runtime.md) — Podman/Docker runtime details
+- [hooks-guide.md](hooks-guide.md) — Lifecycle hook design and usage
+- [version-management.md](version-management.md) — Node/Python version sourcing
+- [version-consistency-diagram.md](version-consistency-diagram.md) — Runtime pinning diagrams
+- [CONSISTENCY-CHECK.md](CONSISTENCY-CHECK.md) — Current consistency verification snapshot
 
-- **[sonos-addons-overview.md](sonos-addons-overview.md)** - Overview of the three Sonos-related Home Assistant add-ons and their architecture
-- **[sonos-routing-guide.md](sonos-routing-guide.md)** - Detailed routing documentation showing how API calls flow through the add-on stack
-
-### Historical Fixes
-
-- **[ingress-fixes.md](ingress-fixes.md)** - Documentation of the Home Assistant ingress integration fixes, including the double-slash URL issue
-
-### Project Planning
-
-- **[TODO.md](TODO.md)** - Modernization roadmap with security updates, architecture improvements, and migration schedule
+### Historical & Roadmap
+- [ingress-fixes.md](ingress-fixes.md) — Ingress fixes and history
+- [SUMMARY.md](SUMMARY.md) — Local dev implementation summary
+- [TODO.md](TODO.md) — Modernization roadmap and open work
 
 ## Quick Links
 
-For general project information and getting started, see the main [README.md](../README.md) in the repository root.
+For project overview and quick starts, see the repo root [README.md](../README.md). For contributor/agent guidance, start with [AGENTS.md](../AGENTS.md).

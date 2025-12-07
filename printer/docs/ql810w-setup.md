@@ -1,7 +1,7 @@
 # Brother QL-810W Network Printing
 
 ## Agent Notes
-- Follow the repo-wide expectations in `../../CLAUDE.md#agent-expectations-repo-wide` (sandbox/git-lock permission, use `just`/env wrappers, “prepare to commit” steps).
+- Follow the repo-wide expectations in `../../AGENTS.md#ground-rules` (sandbox/git-lock permission, use `just`/env wrappers, “prepare to commit” steps).
 
 These steps walk through preparing a Brother QL-810W so the `brother_ql` backend can talk to it over Wi‑Fi using the raw TCP port (`tcp://<ip>:9100`). The printer ships with direct-USB enabled but network printing disabled, so a little one-time setup is required.
 

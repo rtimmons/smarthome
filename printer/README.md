@@ -135,4 +135,4 @@ printer/
 - [docs/ql810w-setup.md](./docs/ql810w-setup.md) - Brother QL-810W setup
 - [docs/ql810w-troubleshooting.md](./docs/ql810w-troubleshooting.md) - Printer troubleshooting
 
-For project-wide documentation, see the [main repo CLAUDE.md](../CLAUDE.md).
+For project-wide documentation, see the repo guide at `../AGENTS.md`.
