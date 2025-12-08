@@ -35,17 +35,23 @@ def _has_recipe(addon_dir: Path, target: str) -> bool:
 
     lines = result.stdout.splitlines()
     for line in lines[1:]:
-        recipe = line.split()[0]
+        parts = line.split()
+        if not parts:  # Skip empty lines
+            continue
+        recipe = parts[0]
         if recipe == target:
             return True
     return False
 
 
-def _run_just(addon_dir: Path, recipe: str) -> None:
-    subprocess.run(
-        ["just", "--justfile", str(addon_dir / "Justfile"), "--working-directory", str(addon_dir), recipe],
-        check=True,
-    )
+def _run_just(addon_dir: Path, recipe: str, verbose: bool = True) -> None:
+    cmd = ["just", "--justfile", str(addon_dir / "Justfile"), "--working-directory", str(addon_dir), recipe]
+
+    if verbose:
+        subprocess.run(cmd, check=True)
+    else:
+        # Suppress output in non-verbose mode
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
 
 
 def _resolve_addons(explicit: Iterable[str]) -> List[Path]:
@@ -97,9 +103,7 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
                     console.print(f"  ❌ [red]Would fail to deploy {addon_name}: {str(e)}[/red]")
         return
 
-    console.print(f"🚀 [bold]Starting deployment of {len(addon_names)} add-on(s) to {ha_host}[/bold]")
-    if verbose:
-        console.print(f"Add-ons: {', '.join(addon_names)}")
+    console.print(f"🚀 [bold]Deploying {len(addon_names)} add-on(s)[/bold]")
 
     deployment_errors = []
     successful_deployments = []
@@ -127,7 +131,7 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
                         if _has_recipe(addon_dir, pre):
                             if verbose:
                                 console.print(f"  Running {pre} for {addon_name}")
-                            _run_just(addon_dir, pre)
+                            _run_just(addon_dir, pre, verbose=verbose)
 
                 progress.advance(build_task)
 
@@ -155,13 +159,19 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
 
                 except DeploymentError as e:
                     deployment_errors.append((addon_name, str(e)))
+                    # Stop progress bar before displaying error to avoid interference
+                    progress.stop()
                     e.display_error()
+                    progress.start()
                     progress.advance(deploy_task)
                     continue
                 except Exception as e:
                     error_msg = f"Unexpected error deploying {addon_name}: {str(e)}"
                     deployment_errors.append((addon_name, error_msg))
+                    # Stop progress bar before displaying error to avoid interference
+                    progress.stop()
                     console.print(f"  ❌ [red]{error_msg}[/red]")
+                    progress.start()
                     progress.advance(deploy_task)
                     continue
 
@@ -202,10 +212,10 @@ def run_recipes(recipe: str, addons: Iterable[str]) -> None:
             for pre in ("generate", "build", "test", "ha-addon", "container-test"):
                 if _has_recipe(addon_dir, pre):
                     click.echo(f"==> {addon_name}: just {pre} (pre-deploy)")
-                    _run_just(addon_dir, pre)
+                    _run_just(addon_dir, pre, verbose=True)
 
         if _has_recipe(addon_dir, recipe):
             click.echo(f"==> {addon_name}: just {recipe}")
-            _run_just(addon_dir, recipe)
+            _run_just(addon_dir, recipe, verbose=True)
         else:
             click.echo(f"==> {addon_name}: skipping, no '{recipe}' recipe")

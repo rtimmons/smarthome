@@ -1,40 +1,86 @@
+# Node Sonos HTTP API Addon Justfile
+# Upstream Sonos service with local patches for reliability
+
+# Import shared libraries
+import "../talos/just/common.just"
 import "../talos/just/nvm.just"
 
-set shell := ["bash", "-lc"]
+# ============================================================================
+# ADDON-SPECIFIC VARIABLES
+# ============================================================================
 
+# Upstream repository
+upstream_repo := "https://github.com/jishi/node-sonos-http-api.git"
+upstream_dir := "node-sonos-http-api"
+
+# ============================================================================
+# ADDON-SPECIFIC RECIPES
+# ============================================================================
+
+# Set up the node-sonos-http-api development environment
+[group: 'setup']
 setup:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd .. && pwd))}"
-	if [ ! -x "$REPO_ROOT/talos/build/bin/talos" ]; then
-		"$REPO_ROOT/talos/build.sh"
-	fi
+    @echo "🔧 Setting up Node Sonos HTTP API..."
+    @#!/usr/bin/env bash
+    @set -euo pipefail
+    @REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd .. && pwd))}"
+    @if [ ! -x "$REPO_ROOT/talos/build/bin/talos" ]; then \
+        "$REPO_ROOT/talos/build.sh"; \
+    fi
+    @echo "Running pre-setup hook..."
+    @"$REPO_ROOT/talos/build/bin/talos" hook run node-sonos-http-api pre_setup --if-missing-ok
+    @if [ ! -d {{upstream_dir}} ]; then \
+        echo "Cloning upstream node-sonos-http-api..."; \
+        git clone {{upstream_repo}} {{upstream_dir}}; \
+    fi
+    @{{nvm_use}}
+    @cd {{upstream_dir}} && npm install
+    @echo "✅ Node Sonos HTTP API setup complete"
 
-	echo "Running pre-setup hook..."
-	"$REPO_ROOT/talos/build/bin/talos" hook run node-sonos-http-api pre_setup --if-missing-ok
-
-	if [ ! -d node-sonos-http-api ]; then
-		echo "Cloning upstream node-sonos-http-api..."
-		git clone https://github.com/jishi/node-sonos-http-api.git node-sonos-http-api
-	fi
-
-	{{nvm_use}}; \
-	cd node-sonos-http-api && npm install
-
+# Run tests (currently none defined)
+[group: 'test']
 test:
-	@echo "No tests defined for node-sonos-http-api; skipping."
+    @echo "⚠️  No tests defined for node-sonos-http-api; skipping."
 
-ha-addon:
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon build node-sonos-http-api
+# ============================================================================
+# COMMON ADDON RECIPES (using shared functions)
+# ============================================================================
 
-container-test:
-	@echo "==> Container test: node-sonos-http-api uses Home Assistant's container build system"
-	@echo "==> Verifying add-on build completes successfully..."
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon build node-sonos-http-api
-	@echo "==> Add-on build test passed - ready for deployment"
+# Build addon using talos
+[group: 'build']
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build $(just addon-name)
 
-deploy:
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon deploy node-sonos-http-api
+# Deploy addon using talos
+[group: 'deploy']
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy $(just addon-name)
+
+# Deploy addon with verbose output
+[group: 'deploy']
+deploy-verbose: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy $(just addon-name) --verbose
+
+# Deploy addon in dry-run mode
+[group: 'deploy']
+deploy-dry-run: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy $(just addon-name) --dry-run
+
+# Test addon container build
+[group: 'test']
+container-test: ensure-talos validate-addon
+    @echo "==> Container test: $(just addon-name) uses Home Assistant's container build system"
+    @echo "==> Verifying add-on build completes successfully..."
+    @{{talos_bin}} addon build $(just addon-name)
+    @echo "==> Add-on build test passed - ready for deployment"
+
+# Show addon information
+[group: 'info']
+info: validate-addon show-addon-info
+
+# Clean build artifacts
+[group: 'clean']
+clean:
+    @echo "🧹 Cleaning build artifacts for $(just addon-name)..."
+    @rm -rf "{{build_dir}}/home-assistant-addon/$(just addon-name | tr '-' '_')"
+    @echo "✅ Clean complete"

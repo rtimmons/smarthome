@@ -44,7 +44,15 @@ class DeploymentError(Exception):
         if self.context:
             console.print(f"\n[bold]Context:[/bold]")
             for key, value in self.context.items():
-                console.print(f"  • {key}: {value}")
+                if key == "recent_logs" and value and value.strip():
+                    console.print(f"  • {key}:")
+                    # Display logs with proper formatting
+                    log_lines = value.strip().split('\n')
+                    for line in log_lines[-10:]:  # Show last 10 lines
+                        if line.strip():
+                            console.print(f"    [dim]{line}[/dim]")
+                else:
+                    console.print(f"  • {key}: {value}")
 
         if self.troubleshooting_steps:
             console.print(f"\n[bold]Troubleshooting Steps:[/bold]")
@@ -54,38 +62,20 @@ class DeploymentError(Exception):
         console.print(f"\n[dim]Timestamp: {self.timestamp.isoformat()}[/dim]")
 
 
-def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) -> None:
-    """Validate that deployment prerequisites are met."""
-    console.print("🔍 [bold]Validating deployment prerequisites...[/bold]")
-
-    # Test SSH connectivity
+def get_addon_logs(ha_host: str, ha_port: int, ha_user: str, addon_id: str, lines: int = 10) -> str:
+    """Get the last N lines of logs for an add-on."""
     try:
         result = run_cmd([
             "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
-            "-o", "ConnectTimeout=10",
-            "-o", "BatchMode=yes",
-            "echo 'SSH connection successful'"
+            f"ha addons logs {addon_id} --lines {lines}"
         ], verbose=False, capture_output=True)
-        console.print("  ✓ SSH connection established")
-    except subprocess.CalledProcessError as e:
-        raise DeploymentError(
-            f"Cannot establish SSH connection to {ha_host}:{ha_port}",
-            error_type="SSH_CONNECTION_FAILED",
-            context={
-                "host": ha_host,
-                "port": ha_port,
-                "user": ha_user,
-                "exit_code": e.returncode
-            },
-            troubleshooting_steps=[
-                f"Verify SSH access: ssh -p {ha_port} {ha_user}@{ha_host}",
-                "Check if Home Assistant is running",
-                "Verify network connectivity",
-                "Check SSH key authentication"
-            ]
-        )
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return f"Could not retrieve logs for {addon_id}"
 
-    # Check Home Assistant health
+
+def check_ha_core_status(ha_host: str, ha_port: int, ha_user: str) -> dict:
+    """Check Home Assistant core status and return detailed information."""
     try:
         result = run_cmd([
             "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
@@ -93,28 +83,146 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) 
         ], verbose=False, capture_output=True)
 
         ha_info = json.loads(result.stdout)
-        if ha_info.get("data", {}).get("state") != "running":
-            raise DeploymentError(
-                "Home Assistant core is not running",
-                error_type="HA_CORE_NOT_RUNNING",
-                context={"state": ha_info.get("data", {}).get("state")},
-                troubleshooting_steps=[
-                    "Check Home Assistant status: ha core info",
-                    "Start Home Assistant: ha core start",
-                    "Check system logs: ha supervisor logs"
-                ]
-            )
-        console.print("  ✓ Home Assistant core is running")
-    except (subprocess.CalledProcessError, json.JSONDecodeError, KeyError) as e:
+        if ha_info.get("result") != "ok":
+            return {"status": "error", "data": ha_info}
+
+        core_data = ha_info.get("data", {})
+        return {
+            "status": "ok",
+            "version": core_data.get("version"),
+            "update_available": core_data.get("update_available", False),
+            "arch": core_data.get("arch"),
+            "port": core_data.get("port", 8123)
+        }
+    except (subprocess.CalledProcessError, json.JSONDecodeError) as e:
+        return {"status": "error", "error": str(e)}
+
+
+def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) -> None:
+    """
+    Validate that deployment prerequisites are met.
+
+    This function performs comprehensive validation to ensure the deployment
+    environment is ready and safe for deployment operations.
+
+    Args:
+        ha_host: Target Home Assistant host
+        ha_port: SSH port for connection
+        ha_user: SSH user for authentication
+
+    Raises:
+        DeploymentError: If any prerequisite validation fails
+
+    Validation Steps:
+        1. Input parameter validation
+        2. SSH connectivity test with timeout
+        3. Home Assistant core status check
+        4. Disk space availability check
+        5. System resource validation
+    """
+    console.print("🔍 [bold]Validating deployment prerequisites...[/bold]")
+
+    # Input validation with detailed error messages
+    if not ha_host or not isinstance(ha_host, str) or ha_host.strip() == "":
         raise DeploymentError(
-            "Cannot verify Home Assistant health",
-            error_type="HA_HEALTH_CHECK_FAILED",
+            "Invalid or empty host parameter",
+            error_type="INVALID_PARAMETER",
+            context={"parameter": "ha_host", "value": ha_host, "type": type(ha_host).__name__},
             troubleshooting_steps=[
-                "Check Home Assistant status: ha core info",
-                "Verify supervisor is running: ha supervisor info",
-                "Check system logs for errors"
+                "Provide a valid hostname or IP address",
+                "Check environment variable HA_HOST",
+                "Verify network configuration"
             ]
         )
+
+    if not isinstance(ha_port, int) or ha_port <= 0 or ha_port > 65535:
+        raise DeploymentError(
+            "Invalid port parameter",
+            error_type="INVALID_PARAMETER",
+            context={"parameter": "ha_port", "value": ha_port, "valid_range": "1-65535"},
+            troubleshooting_steps=[
+                "Use a valid port number (1-65535)",
+                "Check environment variable HA_PORT",
+                "Verify SSH service configuration"
+            ]
+        )
+
+    if not ha_user or not isinstance(ha_user, str) or ha_user.strip() == "":
+        raise DeploymentError(
+            "Invalid or empty user parameter",
+            error_type="INVALID_PARAMETER",
+            context={"parameter": "ha_user", "value": ha_user, "type": type(ha_user).__name__},
+            troubleshooting_steps=[
+                "Provide a valid SSH username",
+                "Check environment variable HA_USER",
+                "Verify SSH user permissions"
+            ]
+        )
+
+    # Test SSH connectivity with enhanced error handling
+    console.print("  🔗 Testing SSH connectivity...")
+    try:
+        result = run_cmd([
+            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+            "-o", "ConnectTimeout=10",
+            "-o", "BatchMode=yes",
+            "-o", "StrictHostKeyChecking=no",  # For automated deployments
+            "echo 'SSH connection successful'"
+        ], verbose=False, capture_output=True)
+        console.print("  ✓ SSH connection established")
+    except subprocess.CalledProcessError as e:
+        error_details = {
+            "host": ha_host,
+            "port": ha_port,
+            "user": ha_user,
+            "exit_code": e.returncode,
+            "stderr": getattr(e, 'stderr', ''),
+            "command": f"ssh -p {ha_port} {ha_user}@{ha_host}"
+        }
+
+        # Provide specific troubleshooting based on exit code
+        troubleshooting_steps = [
+            f"Test manual connection: ssh -p {ha_port} {ha_user}@{ha_host}",
+            "Check if Home Assistant is running and accessible",
+            "Verify network connectivity and firewall settings",
+            "Ensure SSH key authentication is configured"
+        ]
+
+        if e.returncode == 255:  # SSH connection refused
+            troubleshooting_steps.extend([
+                "Check if SSH add-on is installed and running",
+                "Verify SSH port configuration in Home Assistant",
+                "Check network routing and DNS resolution"
+            ])
+        elif e.returncode == 1:  # Authentication failure
+            troubleshooting_steps.extend([
+                "Verify SSH key is added to authorized_keys",
+                "Check SSH user permissions and home directory",
+                "Test password authentication if keys fail"
+            ])
+
+        raise DeploymentError(
+            f"Cannot establish SSH connection to {ha_host}:{ha_port}",
+            error_type="SSH_CONNECTION_FAILED",
+            context=error_details,
+            troubleshooting_steps=troubleshooting_steps
+        )
+
+    # Check Home Assistant core status
+    core_status = check_ha_core_status(ha_host, ha_port, ha_user)
+    if core_status["status"] != "ok":
+        raise DeploymentError(
+            "Home Assistant core is not responding properly",
+            error_type="HA_CORE_NOT_RUNNING",
+            context=core_status,
+            troubleshooting_steps=[
+                "Check Home Assistant status: ha core info",
+                "Start Home Assistant: ha core start",
+                "Check system logs: ha supervisor logs"
+            ]
+        )
+
+    console.print(f"  ✓ Home Assistant core is running (v{core_status['version']})")
 
     # Check disk space
     try:
@@ -185,7 +293,9 @@ def read_pyproject_version(path: Path) -> str:
 
 
 def default_yaml(data: Dict[str, Any]) -> str:
-    return yaml.safe_dump(data or {}, default_flow_style=False, sort_keys=False).strip() or "{}"
+    if not data:
+        return "{}"
+    return yaml.safe_dump(data, default_flow_style=False, sort_keys=False).strip()
 
 
 def read_runtime_versions() -> Dict[str, str]:
@@ -359,7 +469,7 @@ def make_tarball(addon_root: Path, slug: str) -> Path:
     return archive
 
 
-def build_addon(addon_key: str) -> Path:
+def build_addon(addon_key: str, verbose: bool = False) -> Path:
     manifest = load_manifest()
     context = build_context(addon_key, manifest)
     addon = context["addon"]
@@ -399,8 +509,9 @@ def build_addon(addon_key: str) -> Path:
 
     generate_placeholder_images(addon_root)
     archive = make_tarball(addon_root, addon["slug"])
-    console.print(f"[green]Built[/green] {addon_key} -> {addon_root}")
-    console.print(f"[green]Tarball[/green] {archive}")
+    if verbose:
+        console.print(f"[green]Built[/green] {addon_key} -> {addon_root}")
+        console.print(f"[green]Tarball[/green] {archive}")
     return archive
 
 
@@ -417,19 +528,29 @@ def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, v
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
     try:
-        result = subprocess.run(
-            cmd,
-            check=True,
-            cwd=str(cwd) if cwd else None,
-            capture_output=capture_output,
-            text=True if capture_output else None
-        )
+        # In non-verbose mode, suppress output unless explicitly capturing it
+        if not verbose and not capture_output:
+            result = subprocess.run(
+                cmd,
+                check=True,
+                cwd=str(cwd) if cwd else None,
+                capture_output=True,  # Suppress output in non-verbose mode
+                text=True
+            )
+        else:
+            result = subprocess.run(
+                cmd,
+                check=True,
+                cwd=str(cwd) if cwd else None,
+                capture_output=capture_output,
+                text=True if capture_output else None
+            )
         return result
     except subprocess.CalledProcessError as e:
         console.print(f"[red]Command failed with exit code {e.returncode}[/red]")
-        if capture_output and e.stdout:
+        if e.stdout:
             console.print(f"[red]stdout:[/red] {e.stdout}")
-        if capture_output and e.stderr:
+        if e.stderr:
             console.print(f"[red]stderr:[/red] {e.stderr}")
         raise
 
@@ -470,20 +591,23 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
         # Validate prerequisites for real deployments
         validate_deployment_prerequisites(ha_host, ha_port, ha_user)
 
-        console.print(f"🔨 [bold]Building {addon_key}...[/bold]")
-        archive = build_addon(addon_key)
+        if verbose:
+            console.print(f"🔨 [bold]Building {addon_key}...[/bold]")
+        archive = build_addon(addon_key, verbose=verbose)
 
         remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
         remote_addon_dir = f"{paths['remote_addons']}/{slug}"
         has_ingress = "true" if addon.get("ingress") else "false"
 
-        console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
+        if verbose:
+            console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
 
         # Upload addon tarball
         scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
         try:
             run_cmd(scp_cmd, dry_run=dry_run, verbose=verbose)
-            console.print(f"  ✓ Uploaded {addon_key} tarball")
+            if verbose:
+                console.print(f"  ✓ Uploaded {addon_key} tarball")
         except subprocess.CalledProcessError as e:
             raise DeploymentError(
                 f"Failed to upload {addon_key} to {ha_host}",
@@ -501,6 +625,7 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
             )
 
         # Create enhanced remote deployment script
+        verbose_flag = "true" if verbose else "false"
         remote_script = f"""#!/bin/bash
 set -euo pipefail
 
@@ -509,10 +634,13 @@ ADDON_SLUG="{slug}"
 ADDON_ID="local_{slug}"
 REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
+VERBOSE="{verbose_flag}"
 
 # Logging function
 log_info() {{
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $1"
+    if [ "$VERBOSE" = "true" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $1"
+    fi
 }}
 
 log_error() {{
@@ -522,11 +650,24 @@ log_error() {{
 # Stop addon if running
 log_info "Stopping add-on $ADDON_ID if running..."
 if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-    if ! ha addons stop "$ADDON_ID"; then
-        log_error "Failed to stop add-on $ADDON_ID"
-        exit 1
+    # Check if addon is actually running before trying to stop it
+    ADDON_STATE="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.data.state // "unknown"' || echo "unknown")"
+    if [ "$ADDON_STATE" = "started" ]; then
+        if [ "$VERBOSE" = "true" ]; then
+            if ! ha addons stop "$ADDON_ID"; then
+                log_error "Failed to stop add-on $ADDON_ID"
+                exit 1
+            fi
+        else
+            if ! ha addons stop "$ADDON_ID" >/dev/null 2>&1; then
+                log_error "Failed to stop add-on $ADDON_ID"
+                exit 1
+            fi
+        fi
+        log_info "Add-on $ADDON_ID stopped successfully"
+    else
+        log_info "Add-on $ADDON_ID is not running (state: $ADDON_STATE)"
     fi
-    log_info "Add-on $ADDON_ID stopped successfully"
 else
     log_info "Add-on $ADDON_ID not currently installed"
 fi
@@ -544,9 +685,16 @@ log_info "Add-on files extracted successfully"
 
 # Reload addon list
 log_info "Reloading add-on list..."
-if ! ha addons reload; then
-    log_error "Failed to reload add-on list"
-    exit 1
+if [ "$VERBOSE" = "true" ]; then
+    if ! ha addons reload; then
+        log_error "Failed to reload add-on list"
+        exit 1
+    fi
+else
+    if ! ha addons reload >/dev/null 2>&1; then
+        log_error "Failed to reload add-on list"
+        exit 1
+    fi
 fi
 sleep 2
 
@@ -554,18 +702,35 @@ sleep 2
 log_info "Installing/rebuilding add-on $ADDON_ID..."
 if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
     log_info "Add-on exists, attempting rebuild..."
-    if ! ha addons rebuild "$ADDON_ID"; then
-        log_info "Rebuild failed, attempting fresh install..."
-        if ! ha addons install "$ADDON_ID"; then
-            log_error "Failed to install add-on $ADDON_ID"
-            exit 1
+    if [ "$VERBOSE" = "true" ]; then
+        if ! ha addons rebuild "$ADDON_ID"; then
+            log_info "Rebuild failed, attempting fresh install..."
+            if ! ha addons install "$ADDON_ID"; then
+                log_error "Failed to install add-on $ADDON_ID"
+                exit 1
+            fi
+        fi
+    else
+        if ! ha addons rebuild "$ADDON_ID" >/dev/null 2>&1; then
+            log_info "Rebuild failed, attempting fresh install..."
+            if ! ha addons install "$ADDON_ID" >/dev/null 2>&1; then
+                log_error "Failed to install add-on $ADDON_ID"
+                exit 1
+            fi
         fi
     fi
 else
     log_info "Installing new add-on..."
-    if ! ha addons install "$ADDON_ID"; then
-        log_error "Failed to install add-on $ADDON_ID"
-        exit 1
+    if [ "$VERBOSE" = "true" ]; then
+        if ! ha addons install "$ADDON_ID"; then
+            log_error "Failed to install add-on $ADDON_ID"
+            exit 1
+        fi
+    else
+        if ! ha addons install "$ADDON_ID" >/dev/null 2>&1; then
+            log_error "Failed to install add-on $ADDON_ID"
+            exit 1
+        fi
     fi
 fi
 """
@@ -613,19 +778,28 @@ fi
 
 # Start the add-on
 log_info "Starting add-on $ADDON_ID..."
-if ha addons start "$ADDON_ID"; then
-    log_info "Add-on $ADDON_ID started successfully"
-
-    # Wait a moment and verify it's running
-    sleep 3
-    if ha addons info "$ADDON_ID" --raw-json | jq -e '.state == "started"' >/dev/null; then
-        log_info "Add-on $ADDON_ID is running and healthy"
+if [ "$VERBOSE" = "true" ]; then
+    if ha addons start "$ADDON_ID"; then
+        log_info "Add-on $ADDON_ID started successfully"
     else
-        log_error "Add-on $ADDON_ID failed to start properly"
+        log_error "Failed to start add-on $ADDON_ID"
         exit 1
     fi
 else
-    log_error "Failed to start add-on $ADDON_ID"
+    if ha addons start "$ADDON_ID" >/dev/null 2>&1; then
+        log_info "Add-on $ADDON_ID started successfully"
+    else
+        log_error "Failed to start add-on $ADDON_ID"
+        exit 1
+    fi
+fi
+
+# Wait a moment and verify it's running
+sleep 3
+if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
+    log_info "Add-on $ADDON_ID is running and healthy"
+else
+    log_error "Add-on $ADDON_ID failed to start properly"
     exit 1
 fi
 
@@ -636,16 +810,20 @@ log_info "Deployment of $ADDON_ID completed successfully"
         ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
         try:
             run_cmd(ssh_cmd, dry_run=dry_run, verbose=verbose)
-            if not dry_run:
+            if not dry_run and verbose:
                 console.print(f"  ✅ [green]{addon_key} deployed successfully[/green]")
         except subprocess.CalledProcessError as e:
+            # Capture logs for troubleshooting
+            addon_logs = get_addon_logs(ha_host, ha_port, ha_user, f"local_{slug}", lines=20)
+
             raise DeploymentError(
                 f"Failed to deploy {addon_key} on remote system",
                 error_type="REMOTE_DEPLOYMENT_FAILED",
                 context={
                     "addon": addon_key,
                     "host": ha_host,
-                    "exit_code": e.returncode
+                    "exit_code": e.returncode,
+                    "recent_logs": addon_logs
                 },
                 troubleshooting_steps=[
                     f"Check add-on logs: ha addons logs local_{slug}",
@@ -656,7 +834,11 @@ log_info "Deployment of $ADDON_ID completed successfully"
                 ]
             )
 
-        console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
+        # Always show deployment success, but with different detail levels
+        if verbose:
+            console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
+        else:
+            console.print(f"✅ [green]{addon_key} deployed successfully[/green]")
 
     except DeploymentError:
         # Re-raise deployment errors to preserve context
@@ -704,11 +886,7 @@ def addon_names(as_json: bool = False) -> None:
 
 
 def run_build(addon: str) -> None:
-    build_addon(addon)
-
-
-def run_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool = False) -> None:
-    deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run, verbose=verbose)
+    build_addon(addon, verbose=True)
 
 
 def run_test(addon: str) -> None:

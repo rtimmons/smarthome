@@ -1,26 +1,33 @@
+# Sonos API Addon Justfile
+# Proxy API for node-sonos-http-api with custom routes and helpers
+
+# Import shared libraries
+import "../talos/just/common.just"
 import "../talos/just/nvm.just"
 
-set shell := ["bash", "-lc"]
+# ============================================================================
+# ADDON-SPECIFIC RECIPES
+# ============================================================================
 
+# Set up the sonos-api development environment
+[group: 'setup']
 setup:
-	{{nvm_use}}; \
-	npm install
+    @echo "🔧 Setting up Sonos API..."
+    @{{nvm_use}}
+    @npm install
+    @echo "✅ Sonos API setup complete"
 
+# Build the project (test equivalent)
+[group: 'test']
 test:
-	{{nvm_use}}; \
-	npm run build
+    @echo "🏗️  Building Sonos API..."
+    @{{nvm_use}}
+    @npm run build
+    @echo "✅ Build completed successfully"
 
-ha-addon:
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon build sonos-api
-
-container-test:
-	@echo "==> Container test: sonos-api uses Home Assistant's container build system"
-	@echo "==> Verifying add-on build completes successfully..."
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon build sonos-api
-	@echo "==> Add-on build test passed - ready for deployment"
-
-deploy:
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon deploy sonos-api
+# Run development server
+[group: 'dev']
+dev: setup
+    @echo "🚀 Starting Sonos API development server..."
+    @{{nvm_use}}
+    @npm run dev

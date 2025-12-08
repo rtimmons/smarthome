@@ -1,65 +1,107 @@
-set shell := ["bash", "-lc"]
+# MongoDB Addon Justfile
+# MongoDB database service for Home Assistant addons
 
+# Import shared libraries
+import "../talos/just/common.just"
+
+# ============================================================================
+# ADDON-SPECIFIC VARIABLES
+# ============================================================================
+
+# Local data directory for development
 data_dir := "data"
 
+# ============================================================================
+# ADDON-SPECIFIC RECIPES
+# ============================================================================
+
+# Set up MongoDB development environment
+[group: 'setup']
 setup:
-    #!/usr/bin/env bash
-    set -e
-    if ! command -v brew >/dev/null 2>&1; then
-        echo "Homebrew is required for local MongoDB on macOS"
-        exit 1
+    @echo "🔧 Setting up MongoDB..."
+    @#!/usr/bin/env bash
+    @set -e
+    @if ! command -v brew >/dev/null 2>&1; then \
+        echo "Homebrew is required for local MongoDB on macOS"; \
+        exit 1; \
     fi
-
-    # Install MongoDB Community Edition via Homebrew
-    if ! brew list --formula mongodb-community@8.0 >/dev/null 2>&1; then
-        echo "Installing MongoDB Community Edition 8.x..."
-        brew tap mongodb/brew
-        brew install mongodb-community@8.0
+    @# Install MongoDB Community Edition via Homebrew
+    @if ! brew list --formula mongodb-community@8.0 >/dev/null 2>&1; then \
+        echo "Installing MongoDB Community Edition 8.x..."; \
+        brew tap mongodb/brew; \
+        brew install mongodb-community@8.0; \
     fi
+    @# Create local data directory
+    @mkdir -p {{data_dir}}
+    @echo "✅ MongoDB setup complete. Use 'just start' to run locally."
 
-    # Create local data directory
-    mkdir -p {{data_dir}}
-    echo "MongoDB setup complete. Use 'just start' to run locally."
-
+# Start MongoDB development server
+[group: 'dev']
 start:
-    #!/usr/bin/env bash
-    set -e
-
-    if ! command -v mongod >/dev/null 2>&1; then
-        echo "MongoDB not found. Run 'just setup' first."
-        exit 1
+    @echo "🚀 Starting MongoDB development server..."
+    @#!/usr/bin/env bash
+    @set -e
+    @if ! command -v mongod >/dev/null 2>&1; then \
+        echo "MongoDB not found. Run 'just setup' first."; \
+        exit 1; \
     fi
+    @# Create data directory if it doesn't exist
+    @mkdir -p {{data_dir}}
+    @# Start MongoDB with local data directory
+    @echo "Starting MongoDB on port 27017..."
+    @echo "Data directory: $(pwd)/{{data_dir}}"
+    @echo "Connection string: mongodb://localhost:27017/"
+    @echo ""
+    @echo "Press Ctrl+C to stop"
+    @echo ""
+    @# Use --quiet to reduce startup warnings (optional)
+    @# Remove --quiet to see all logs for debugging
+    @mongod --bind_ip 127.0.0.1 --port 27017 --dbpath {{data_dir}}
 
-    # Create data directory if it doesn't exist
-    mkdir -p {{data_dir}}
-
-    # Start MongoDB with local data directory
-    echo "Starting MongoDB on port 27017..."
-    echo "Data directory: $(pwd)/{{data_dir}}"
-    echo "Connection string: mongodb://localhost:27017/"
-    echo ""
-    echo "Press Ctrl+C to stop"
-    echo ""
-    # Use --quiet to reduce startup warnings (optional)
-    # Remove --quiet to see all logs for debugging
-    mongod --bind_ip 127.0.0.1 --port 27017 --dbpath {{data_dir}}
-
+# Run tests (currently none configured)
+[group: 'test']
 test:
-    @echo "No tests configured for MongoDB add-on"
+    @echo "⚠️  No tests configured for MongoDB add-on"
 
-ha-addon:
-    set -e; \
-    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
-    ../talos/build/bin/talos addon build mongodb
+# ============================================================================
+# COMMON ADDON RECIPES (using shared functions)
+# ============================================================================
 
-container-test:
-	@echo "==> Container test: mongodb uses Home Assistant's container build system"
-	@echo "==> Verifying add-on build completes successfully..."
-	if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi
-	../talos/build/bin/talos addon build mongodb
-	@echo "==> Add-on build test passed - ready for deployment"
+# Build addon using talos
+[group: 'build']
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build $(just addon-name)
 
-deploy:
-    set -e; \
-    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
-    ../talos/build/bin/talos addon deploy mongodb
+# Deploy addon using talos
+[group: 'deploy']
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy $(just addon-name)
+
+# Deploy addon with verbose output
+[group: 'deploy']
+deploy-verbose: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy $(just addon-name) --verbose
+
+# Deploy addon in dry-run mode
+[group: 'deploy']
+deploy-dry-run: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy $(just addon-name) --dry-run
+
+# Test addon container build
+[group: 'test']
+container-test: ensure-talos validate-addon
+    @echo "==> Container test: $(just addon-name) uses Home Assistant's container build system"
+    @echo "==> Verifying add-on build completes successfully..."
+    @{{talos_bin}} addon build $(just addon-name)
+    @echo "==> Add-on build test passed - ready for deployment"
+
+# Show addon information
+[group: 'info']
+info: validate-addon show-addon-info
+
+# Clean build artifacts
+[group: 'clean']
+clean:
+    @echo "🧹 Cleaning build artifacts for $(just addon-name)..."
+    @rm -rf "{{build_dir}}/home-assistant-addon/$(just addon-name | tr '-' '_')"
+    @echo "✅ Clean complete"

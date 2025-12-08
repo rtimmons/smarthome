@@ -1,55 +1,48 @@
-# Grid Dashboard Addon Justfile
-# Modern React dashboard with Sonos shortcuts and Home Assistant webhook helpers
+# [ADDON_NAME] Addon Justfile
+# [ADDON_DESCRIPTION]
 
 # Import shared libraries
-import "../talos/just/common.just"
-import "../talos/just/nvm.just"
+import "./common.just"
+# import "../talos/just/nvm.just"     # For Node.js addons
+# import "../talos/just/python.just"  # For Python addons (careful of conflicts)
 
 # ============================================================================
 # ADDON-SPECIFIC VARIABLES
 # ============================================================================
 
-# Express server directory
-express_dir := "ExpressServer"
-
-# Environment configuration
-config_env := "XDG_CONFIG_HOME=$PWD/.config"
-no_update := "NO_UPDATE_NOTIFIER=1"
+# Add addon-specific variables here
+# example_var := "value"
 
 # ============================================================================
 # ADDON-SPECIFIC RECIPES
 # ============================================================================
 
-# Set up the grid-dashboard development environment
+# Set up the addon development environment
 [group: 'setup']
 setup:
-    @echo "🔧 Setting up Grid Dashboard..."
-    @{{nvm_use}}
-    @cd {{express_dir}} && npm install
-    @echo "✅ Grid Dashboard setup complete"
+    @echo "🔧 Setting up [ADDON_NAME]..."
+    # Add setup logic here
+    @echo "✅ [ADDON_NAME] setup complete"
 
-# Run tests with specific configuration
+# Run tests
 [group: 'test']
 test:
-    @echo "🧪 Running Grid Dashboard tests..."
-    @{{nvm_use}}
-    @cd {{express_dir}} && mkdir -p .config && {{no_update}} {{config_env}} npm test && {{no_update}} {{config_env}} npm run check
+    @echo "🧪 Running [ADDON_NAME] tests..."
+    # Add test logic here
     @echo "✅ Tests passed"
-
-# Generate diagnostic report
-[group: 'debug']
-report:
-    @echo "📊 Generating diagnostic report..."
-    @set -e
-    @scripts/collect_report.sh
-    @echo "✅ Report generated"
 
 # Run development server
 [group: 'dev']
 dev: setup
-    @echo "🚀 Starting Grid Dashboard development server..."
-    @{{nvm_use}}
-    @cd {{express_dir}} && npm run dev
+    @echo "🚀 Starting [ADDON_NAME] development server..."
+    # Add dev server logic here
+
+# Generate diagnostic report (if applicable)
+[group: 'debug']
+report:
+    @echo "📊 Generating [ADDON_NAME] diagnostic report..."
+    # Add report generation logic here
+    @echo "✅ Report generated"
 
 # ============================================================================
 # COMMON ADDON RECIPES (using shared functions)
@@ -93,3 +86,12 @@ clean:
     @echo "🧹 Cleaning build artifacts for $(just addon-name)..."
     @rm -rf "{{build_dir}}/home-assistant-addon/$(just addon-name | tr '-' '_')"
     @echo "✅ Clean complete"
+
+# ============================================================================
+# ALIASES (optional)
+# ============================================================================
+
+# Add common aliases
+alias d := deploy
+alias t := test
+alias s := setup

@@ -44,7 +44,11 @@ map:
 homeassistant: "{{ addon.homeassistant_min }}"
 environment:
 {{ environment_yaml | indent(2, true) }}
+{% if addon.options -%}
 options:
 {{ options_yaml | indent(2, true) }}
+{% endif -%}
+{% if addon.schema -%}
 schema:
 {{ schema_yaml | indent(2, true) }}
+{% endif -%}

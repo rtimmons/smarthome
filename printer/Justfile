@@ -1,18 +1,41 @@
-set shell := ["bash", "-lc"]
+# Printer Service Addon Justfile
+# Label printer service with Brother network printer support and visual regression testing
 
+# Import shared libraries
+import "../talos/just/common.just"
+import "../talos/just/python.just"
+
+# ============================================================================
+# ADDON-SPECIFIC VARIABLES
+# ============================================================================
+
+# Python environment
 venv := ".venv"
 python := ".venv/bin/python"
 
-ensure-venv:
-    set -e
-    if [ ! -d "{{venv}}" ]; then python3 -m venv "{{venv}}"; fi
+# ============================================================================
+# ADDON-SPECIFIC RECIPES
+# ============================================================================
 
-setup:
+# Ensure virtual environment exists
+[private]
+ensure-venv:
+    @set -e
+    @if [ ! -d "{{venv}}" ]; then python3 -m venv "{{venv}}"; fi
+
+# Set up the printer development environment
+[group: 'setup']
+setup-printer:
+    @echo "🔧 Setting up Printer Service..."
     @REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"; \
     bash "$REPO_ROOT/printer/scripts/setup.sh"
+    @echo "✅ Printer Service setup complete"
 
+# Start the printer service in development mode
+[group: 'dev']
 start:
-    set -e; \
+    @echo "🚀 Starting Printer Service..."
+    @set -e; \
     brew_prefix="$(brew --prefix)"; \
     brew_lib="${brew_prefix}/lib"; \
     export LABEL_OUTPUT_DIR="${LABEL_OUTPUT_DIR:-label-output}"; \
@@ -21,23 +44,34 @@ start:
     export DYLD_FALLBACK_LIBRARY_PATH="${brew_lib}:${DYLD_FALLBACK_LIBRARY_PATH:-}"; \
     export PKG_CONFIG_PATH="${brew_prefix}/lib/pkgconfig:${brew_prefix}/share/pkgconfig:${PKG_CONFIG_PATH:-}"; \
     export PRINTER_DEV_RELOAD="${PRINTER_DEV_RELOAD:-1}"; \
-    if [ ! -d "{{venv}}" ]; then just setup; fi; \
+    if [ ! -d "{{venv}}" ]; then just setup-printer; fi; \
     "{{python}}" -m printer_service.app
 
+# Run comprehensive tests (linting, type checking, unit tests)
+[group: 'test']
 test:
-    set -e
-    if [ ! -d "{{venv}}" ]; then just setup; fi
-    "{{python}}" -m ruff format --check .
-    "{{python}}" -m mypy --config-file mypy.toml src/printer_service tests
-    "{{python}}" -m pytest
+    @echo "🧪 Running Printer Service tests..."
+    @set -e
+    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    @"{{python}}" -m ruff format --check .
+    @"{{python}}" -m mypy --config-file mypy.toml src/printer_service tests
+    @"{{python}}" -m pytest
+    @echo "✅ All tests passed"
 
+# Format code with ruff
+[group: 'format']
 fmt:
-    set -e
-    if [ ! -d "{{venv}}" ]; then just setup; fi
-    "{{python}}" -m ruff format .
+    @echo "✨ Formatting code..."
+    @set -e
+    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    @"{{python}}" -m ruff format .
+    @echo "✅ Code formatted"
 
+# Build printer service container locally
+[group: 'build']
 build:
-    set -euo pipefail; \
+    @echo "🏗️  Building Printer Service container..."
+    @set -euo pipefail; \
     REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"; \
     talos_bin="$REPO_ROOT/talos/build/bin/talos"; \
     if [ ! -x "$talos_bin" ]; then "$REPO_ROOT/talos/build.sh"; fi; \
@@ -57,14 +91,20 @@ build:
     else \
         "$container_runtime_script" build printer-service:local "$addon_dir"; \
     fi
+    @echo "✅ Container build complete"
 
+# Build addon using talos (legacy alias)
+[group: 'build']
 ha-addon:
-    set -e; \
+    @set -e; \
     if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
     ../talos/build/bin/talos addon build printer
 
+# Test container build and functionality
+[group: 'test']
 container-test:
-    set -euo pipefail; \
+    @echo "🐳 Testing Printer Service container..."
+    @set -euo pipefail; \
     echo "==> Testing container build before deployment..."; \
     REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}"; \
     talos_bin="$REPO_ROOT/talos/build/bin/talos"; \
@@ -94,35 +134,45 @@ container-test:
         echo "==> Container test failed - deployment aborted" >&2; \
         exit 1; \
     fi
+    @echo "✅ Container test passed"
 
-deploy:
-    set -e; \
-    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
-    ../talos/build/bin/talos addon deploy printer
-
+# Generate diagnostic report
+[group: 'debug']
 report:
-    set -e
-    scripts/diagnose_ha_addon.sh
+    @echo "📊 Generating Printer Service diagnostic report..."
+    @set -e
+    @scripts/diagnose_ha_addon.sh
+    @echo "✅ Diagnostic report generated"
+
+# ============================================================================
+# VISUAL REGRESSION TESTING
+# ============================================================================
 
 # Visual diff commands for regression testing
+[group: 'visual']
 visual-diff pattern="":
-    scripts/visual-diff.sh {{pattern}}
+    @scripts/visual-diff.sh {{pattern}}
 
+[group: 'visual']
 visual-diff-all pattern="":
-    scripts/visual-diff.sh --all {{pattern}}
+    @scripts/visual-diff.sh --all {{pattern}}
 
+[group: 'visual']
 visual-diff-summary pattern="":
-    scripts/visual-diff.sh --summary {{pattern}}
+    @scripts/visual-diff.sh --summary {{pattern}}
 
+[group: 'visual']
 visual-diff-grid pattern="":
-    scripts/visual-diff.sh --grid {{pattern}}
+    @scripts/visual-diff.sh --grid {{pattern}}
 
+[group: 'visual']
 visual-diff-clean pattern="":
-    scripts/visual-diff.sh --clean {{pattern}}
+    @scripts/visual-diff.sh --clean {{pattern}}
 
 # Generate enhanced visual diff with difference highlighting
+[group: 'visual']
 visual-diff-enhanced baseline current output:
-    scripts/generate-visual-diff.py "{{baseline}}" "{{current}}" "{{output}}"
+    @scripts/generate-visual-diff.py "{{baseline}}" "{{current}}" "{{output}}"
 
 # Show help for visual diff commands
 visual-diff-help:
@@ -153,24 +203,26 @@ visual-diff-help:
     @echo "ℹ️  Pattern filtering works on any part of the filename (e.g., 'receipt', 'best_by', 'qr')"
 
 # Run visual regression tests and show diffs if any
+[group: 'test']
 test-visual:
     #!/usr/bin/env bash
-    set -e
-    if [ ! -d "{{venv}}" ]; then just setup; fi
-    echo "🧪 Running visual regression tests..."
-    if "{{python}}" -m pytest tests/test_visual_regression.py -v; then
-        echo "✅ All visual tests passed!"
-    else
-        echo ""
-        echo "❌ Visual tests failed. Showing differences..."
-        scripts/visual-diff.sh --summary
+    @echo "🧪 Running visual regression tests..."
+    @set -e
+    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    @if "{{python}}" -m pytest tests/test_visual_regression.py -v; then \
+        echo "✅ All visual tests passed!"; \
+    else \
+        echo ""; \
+        echo "❌ Visual tests failed. Showing differences..."; \
+        scripts/visual-diff.sh --summary; \
     fi
 
 # Run visual tests and update baselines for any failures
+[group: 'test']
 test-visual-update:
     #!/usr/bin/env bash
-    set -e
-    if [ ! -d "{{venv}}" ]; then just setup; fi
-    echo "🧪 Running visual regression tests with baseline updates..."
-    "{{python}}" -m pytest tests/test_visual_regression.py --regenerate-baselines -v
-    echo "✅ Visual tests completed and baselines updated!"
+    @echo "🧪 Running visual regression tests with baseline updates..."
+    @set -e
+    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    @"{{python}}" -m pytest tests/test_visual_regression.py --regenerate-baselines -v
+    @echo "✅ Visual tests completed and baselines updated!"
