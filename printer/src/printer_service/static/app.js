@@ -23,6 +23,138 @@ const PREVIEW_DEBOUNCE_MS = 250;
 const THEME_STORAGE_KEY = 'printer-theme';
 const THEME_OPTIONS = ['light', 'dark', 'system'];
 
+// Countdown functionality
+let countdownTimer = null;
+let countdownSeconds = 0;
+
+function getCountdownDuration() {
+    // Allow override via URL parameter for testing
+    const urlParams = new URLSearchParams(window.location.search);
+    const testDuration = urlParams.get('countdown_duration');
+    return testDuration ? parseInt(testDuration, 10) : 5; // default 5 seconds
+}
+
+// Countdown functionality
+function checkForPrintParameter() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('print') === 'true') {
+        startCountdown();
+    }
+}
+
+function startCountdown() {
+    const countdownContainer = document.getElementById('printCountdownContainer');
+    const countdownTimerElement = document.getElementById('countdownTimer');
+    const cancelButton = document.getElementById('cancelCountdown');
+
+    if (!countdownContainer || !countdownTimerElement || !cancelButton) {
+        return;
+    }
+
+    countdownSeconds = getCountdownDuration();
+    countdownContainer.style.display = 'block';
+    countdownTimerElement.textContent = countdownSeconds;
+
+    // Set up cancel button
+    cancelButton.addEventListener('click', cancelCountdown);
+
+    // Start the countdown
+    countdownTimer = setInterval(() => {
+        countdownSeconds--;
+        countdownTimerElement.textContent = countdownSeconds;
+
+        if (countdownSeconds <= 0) {
+            clearInterval(countdownTimer);
+            executeAutoPrint();
+        }
+    }, 1000);
+}
+
+function cancelCountdown() {
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+
+    const countdownContainer = document.getElementById('printCountdownContainer');
+    if (countdownContainer) {
+        countdownContainer.style.display = 'none';
+    }
+
+    // Remove print parameter from URL
+    removeUrlParameter('print');
+}
+
+async function executeAutoPrint() {
+    const countdownContainer = document.getElementById('printCountdownContainer');
+    if (countdownContainer) {
+        countdownContainer.style.display = 'none';
+    }
+
+    try {
+        // Build the print request URL with current parameters
+        const url = new URL(window.location);
+        const printUrl = '/bb/execute-print?' + url.searchParams.toString();
+
+        // Execute the print via POST request
+        const response = await fetch(printUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            window.alert(result.error || 'Print failed');
+            return;
+        }
+
+        // Print was successful - remove print parameter and redirect
+        removeUrlParameter('print');
+
+    } catch (error) {
+        console.error('Print error:', error);
+        window.alert('Print failed: ' + error.message);
+    }
+}
+
+function removeUrlParameter(parameter) {
+    const url = new URL(window.location);
+    url.searchParams.delete(parameter);
+    // Also remove countdown_duration if it was used for testing
+    if (parameter === 'print') {
+        url.searchParams.delete('countdown_duration');
+    }
+    window.history.replaceState({}, '', url);
+}
+
+function makePreviewClickable() {
+    const previewTriggers = document.querySelectorAll('.bb-preview-trigger');
+    previewTriggers.forEach((trigger) => {
+        trigger.addEventListener('click', (event) => {
+            event.preventDefault();
+            const target = trigger.dataset.printTarget === 'qr' ? 'qr' : 'label';
+            navigateToPrintUrl(target);
+        });
+    });
+}
+
+function navigateToPrintUrl(target) {
+    const url = new URL(window.location);
+    url.searchParams.set('print', 'true');
+
+    if (target === 'qr') {
+        url.searchParams.set('qr', 'true');
+    } else {
+        url.searchParams.delete('qr');
+        url.searchParams.delete('qr_label');
+    }
+
+    window.location.href = url.toString();
+}
+
 function parseWarnings(payload) {
     if (!payload || !Array.isArray(payload.warnings)) {
         return [];
@@ -30,24 +162,7 @@ function parseWarnings(payload) {
     return payload.warnings.filter((item) => typeof item === 'string' && item.trim().length > 0);
 }
 
-function formatMetricsSummary(metrics) {
-    if (!metrics) {
-        return '';
-    }
-    const widthPx = metrics.width_px;
-    const heightPx = metrics.height_px;
-    if (typeof widthPx !== 'number' || typeof heightPx !== 'number') {
-        return '';
-    }
-    const rawWidthIn = typeof metrics.width_in === 'number' ? metrics.width_in : parseFloat(metrics.width_in);
-    const rawHeightIn = typeof metrics.height_in === 'number' ? metrics.height_in : parseFloat(metrics.height_in);
-    const widthIn = Number.isFinite(rawWidthIn) ? rawWidthIn : null;
-    const heightIn = Number.isFinite(rawHeightIn) ? rawHeightIn : null;
-    if (widthIn === null || heightIn === null) {
-        return `${widthPx}×${heightPx}px`;
-    }
-    return `${widthPx}×${heightPx}px (~${widthIn.toFixed(2)}"×${heightIn.toFixed(2)}")`;
-}
+
 
 function combineHeaders(defaults, overrides) {
     if (!overrides) {
@@ -333,17 +448,12 @@ async function requestPreview() {
     if (previewStatus) {
         previewStatus.textContent = '';
         previewStatus.classList.remove('preview-status--error');
-        const label = document.createElement('span');
-        label.className = 'preview-status__label';
-        label.textContent = 'Previews ready';
-        previewStatus.appendChild(label);
     }
     if (qrCaptionNode) {
         qrCaptionNode.textContent = data.qr_caption || 'Scan to trigger the label.';
     }
     if (labelPreviewSummary) {
-        const summaryMetrics = labelPayload.metrics ? formatMetricsSummary(labelPayload.metrics) : '';
-        labelPreviewSummary.textContent = summaryMetrics ? `Size: ${summaryMetrics}` : 'Click to print the label.';
+        labelPreviewSummary.textContent = 'Click to print the label.';
     }
     if (bestByDateValue && data.best_by && data.best_by.best_by_date) {
         bestByDateValue.textContent = data.best_by.best_by_date;
@@ -502,11 +612,7 @@ async function sendPrint(target) {
 
     const payloadData = result.data || {};
     const warnings = parseWarnings(payloadData);
-    const metricsSummary = formatMetricsSummary(payloadData.metrics);
     let message = useQr ? 'QR label sent.' : 'Label sent.';
-    if (metricsSummary) {
-        message += `\nSize: ${metricsSummary}.`;
-    }
     if (warnings.length) {
         message += `\n\nWarnings:\n- ${warnings.join('\n- ')}`;
     }
@@ -526,4 +632,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form && previewContainer && !disableDefaultFormHandlers) {
         schedulePreview();
     }
+
+    // Initialize countdown functionality
+    checkForPrintParameter();
+    makePreviewClickable();
 });

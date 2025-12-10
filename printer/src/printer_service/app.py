@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import base64
-import math
 import os
-import time
 from collections.abc import Mapping
 from datetime import date
 from io import BytesIO
@@ -40,37 +38,6 @@ class _IngressPrefixMiddleware:
         return self.app(environ, start_response)
 
 
-PRINT_COOLDOWN_SECONDS = 5
-_last_print_at: Optional[float] = None
-
-
-def _now() -> float:
-    return time.monotonic()
-
-
-def _cooldown_remaining() -> float:
-    if _last_print_at is None:
-        return 0.0
-    elapsed = _now() - _last_print_at
-    return max(0.0, PRINT_COOLDOWN_SECONDS - elapsed)
-
-
-def _mark_print_sent() -> None:
-    global _last_print_at
-    _last_print_at = _now()
-
-
-def _cooldown_response():
-    remaining = _cooldown_remaining()
-    if remaining <= 0:
-        return None
-    retry_after = int(math.ceil(remaining))
-    response = jsonify({"error": f"Printer cooling down. Try again in {retry_after}s."})
-    response.status_code = 429
-    response.headers["Retry-After"] = str(retry_after)
-    return response
-
-
 def _is_truthy(raw: Optional[str]) -> bool:
     if raw is None:
         return False
@@ -95,9 +62,14 @@ def create_app() -> Flask:
     @app.get("/bb")
     def bb_route():
         template = _template_from_request(default_template=_best_by_template())
-        if _is_truthy(request.args.get("print")):
-            return _print_from_request(template)
+        # Note: print parameter is now handled by JavaScript countdown, not server-side
         return _render_bb_page(template)
+
+    @app.post("/bb/execute-print")
+    def execute_print_route():
+        """Execute print after countdown completion."""
+        template = _template_from_request(default_template=_best_by_template())
+        return _print_from_request(template)
 
     @app.post("/bb/preview")
     def preview_bb():
@@ -132,15 +104,11 @@ def create_app() -> Flask:
                 image = Image.open(uploaded.stream)
             except (UnidentifiedImageError, OSError):
                 return jsonify({"error": "Uploaded file must be a readable image."}), 400
-            cooldown = _cooldown_response()
-            if cooldown is not None:
-                return cooldown
             metrics = analyze_label_image(image, config)
             try:
                 result = dispatch_image(image, config)
             except ValueError as exc:
                 return jsonify({"error": str(exc)}), 400
-            _mark_print_sent()
             return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
         payload = request.get_json(silent=True) or {}
@@ -152,9 +120,6 @@ def create_app() -> Flask:
                 ), 400
             config.backend = candidate
 
-        cooldown = _cooldown_response()
-        if cooldown is not None:
-            return cooldown
         try:
             image, template_ref = _render_image_from_payload(payload)
         except LabelPayloadError as exc:
@@ -165,7 +130,6 @@ def create_app() -> Flask:
             result = dispatch_image(image, config, target_spec=target_spec)
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
-        _mark_print_sent()
         return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
     return app
@@ -322,7 +286,21 @@ def _print_from_request(template: label_templates.LabelTemplate):
     except LabelPayloadError as exc:
         return jsonify({"error": str(exc)}), exc.status_code
     include_qr_label = _is_truthy(request.args.get("qr") or request.args.get("qr_label"))
-    return _dispatch_print(template, form_data, include_qr_label=include_qr_label)
+
+    # Execute the print
+    print_result = _dispatch_print(template, form_data, include_qr_label=include_qr_label)
+
+    # Check if print was successful (status code 200)
+    if hasattr(print_result, "status_code") and print_result.status_code != 200:
+        return print_result
+    elif isinstance(print_result, tuple) and len(print_result) == 2:
+        # Handle tuple response (response, status_code)
+        response, status_code = print_result
+        if status_code != 200:
+            return print_result
+
+    # Print was successful - return the result directly (JSON response)
+    return print_result
 
 
 def _render_bb_page(template: label_templates.LabelTemplate):
@@ -362,9 +340,6 @@ def _dispatch_print(
     *,
     include_qr_label: bool,
 ):
-    cooldown = _cooldown_response()
-    if cooldown is not None:
-        return cooldown
     config = PrinterConfig.from_env()
     try:
         image, metrics, metrics_template = _render_print_image(
@@ -377,7 +352,6 @@ def _dispatch_print(
         result = dispatch_image(image, config, target_spec=target_spec)
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
-    _mark_print_sent()
     response_payload = _success_payload(
         result, warnings=metrics.warnings if metrics else None, metrics=metrics
     )

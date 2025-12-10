@@ -30,6 +30,10 @@ test:
     "{{python}}" -m ruff format --check .
     "{{python}}" -m mypy --config-file mypy.toml src/printer_service tests
     "{{python}}" -m pytest
+    echo "Running dark mode test separately to avoid asyncio conflicts..."
+    "{{python}}" tests/test_dark_mode_standalone.py
+
+
 
 fmt:
     set -e

@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from PIL import Image
+from PIL import Image, ImageChops, ImageDraw
+from PIL.Image import Dither
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import helper as helper
@@ -30,20 +31,21 @@ LABEL_SPEC = BrotherLabelSpec(
 BASE_TOP_MARGIN = 18
 EXTRA_TOP_MARGIN = int(round(0.25 * QL810W_DPI))  # add ~1/4" of blank space up top
 TOP_MARGIN = BASE_TOP_MARGIN + EXTRA_TOP_MARGIN
-SYMBOL_TARGET_WIDTH = 320
-SYMBOL_HORIZONTAL_MARGIN = max((CANVAS_WIDTH_PX - SYMBOL_TARGET_WIDTH) // 2, 0)
 BOTTOM_MARGIN = 24
 LINE2_OFFSET = 4
 SYMBOL_SECTION_SPACING = 10
-INITIALS_SECTION_SPACING = 6
-INITIALS_LINE_SPACING = 16
-INITIALS_REPEATS_WITH_LINE2 = 1
-INITIALS_REPEATS_BASE = 2
+INITIALS_SIDE_MARGIN = 10
+INITIALS_VERTICAL_MARGIN = 18
+INITIALS_SIDE_SPACING = 10
+TITLE_REPEAT_COUNT = 4
 
 # Font sizes balance hierarchy without overrunning the 1.3" height.
-TITLE_FONT_POINTS = 36
-INITIALS_FONT_POINTS = 45
-DATE_FONT_POINTS = 36
+TITLE_FONT_POINTS = 60
+INITIALS_FONT_POINTS = 48
+DATE_FONT_POINTS = 18
+BACKGROUND_ALPHA_PERCENT = 25
+INITIALS_OPACITY_PERCENT = 50
+TITLE_BLOCK_PADDING = int(round(0.16 * QL810W_DPI))
 
 
 class Template(TemplateDefinition):
@@ -78,49 +80,88 @@ class Template(TemplateDefinition):
         package_date = helper.normalize_date(raw_value=package_date_raw)
 
         renderer = LabelDrawingHelper(width=CANVAS_WIDTH_PX, height=CANVAS_HEIGHT_PX)
+
+        background_canvas = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=255)
+        helper.draw_background_symbol(
+            canvas=background_canvas,
+            slug=symbol_slug,
+            alpha_percent=BACKGROUND_ALPHA_PERCENT,
+        )
         renderer.move_to(TOP_MARGIN)
 
         title_font = helper.load_font(size_points=TITLE_FONT_POINTS)
         initials_font = helper.load_font(size_points=INITIALS_FONT_POINTS)
         date_font = helper.load_font(size_points=DATE_FONT_POINTS)
+        title_lines = []
 
         if line1:
-            renderer.draw_centered_text(
-                text=line1,
-                font=title_font,
-                width_warning="Line 1 is wider than the label and will be clipped.",
-                height_warning="Text exceeds label height and may be clipped.",
+            title_lines.append(
+                (
+                    line1,
+                    renderer.measure_text(text=line1, font=title_font),
+                    "Line 1",
+                )
             )
         if line2:
-            if line1:
-                renderer.advance(LINE2_OFFSET)
-            renderer.draw_centered_text(
-                text=line2,
-                font=title_font,
-                width_warning="Line 2 is wider than the label and will be clipped.",
-                height_warning="Text exceeds label height and may be clipped.",
+            title_lines.append(
+                (
+                    line2,
+                    renderer.measure_text(text=line2, font=title_font),
+                    "Line 2",
+                )
             )
 
+        max_title_width = max((metrics.width for _, metrics, _ in title_lines), default=0)
+
+        if title_lines:
+            for repeat_index in range(TITLE_REPEAT_COUNT):
+                for line_index, (text, _metrics, label_name) in enumerate(title_lines):
+                    renderer.draw_centered_text(
+                        text=text,
+                        font=title_font,
+                        width_warning=f"{label_name} is wider than the label and will be clipped.",
+                        height_warning="Text exceeds label height and may be clipped.",
+                    )
+                    if line_index == 0 and len(title_lines) > 1:
+                        renderer.advance(LINE2_OFFSET)
+                if repeat_index < TITLE_REPEAT_COUNT - 1:
+                    renderer.advance(TITLE_BLOCK_PADDING)
+
         renderer.advance(SYMBOL_SECTION_SPACING)
-        renderer.draw_symbol(
-            slug=symbol_slug,
-            horizontal_margin=SYMBOL_HORIZONTAL_MARGIN,
-            overflow_warning="Symbol extends beyond the label height and may be clipped.",
-        )
 
         if initials:
-            initials_count = INITIALS_REPEATS_WITH_LINE2 if line2 else INITIALS_REPEATS_BASE
-            if initials_count:
-                renderer.advance(INITIALS_SECTION_SPACING)
-
-            for _ in range(initials_count):
-                renderer.draw_centered_text(
-                    text=initials,
-                    font=initials_font,
-                    width_warning="Initials are wider than the label and will be clipped.",
-                    height_warning="Text exceeds label height and may be clipped.",
-                    margin_bottom=INITIALS_LINE_SPACING,
-                )
+            initials_top_margin: Optional[int] = None
+            initials_min_top: Optional[int] = None
+            initials_center = True
+            bbox = renderer.draw.textbbox((0, 0), initials, font=initials_font)
+            text_width = int(round(bbox[2] - bbox[0]))
+            text_height = int(round(bbox[3] - bbox[1]))
+            if text_width > 0 and text_height > 0:
+                mask = Image.new("L", (text_width, text_height), color=0)
+                mask_draw = ImageDraw.Draw(mask)
+                mask_draw.text((-bbox[0], -bbox[1]), initials, font=initials_font, fill=255)
+                left_mask = mask.rotate(90, expand=True)
+                initials_footprint = INITIALS_SIDE_MARGIN + left_mask.width
+                remaining_width = CANVAS_WIDTH_PX - (2 * initials_footprint)
+                should_clip = max_title_width > remaining_width
+                if should_clip:
+                    safe_top = max(INITIALS_VERTICAL_MARGIN, renderer.current_y)
+                    initials_top_margin = safe_top
+                    initials_min_top = safe_top
+                    initials_center = False
+            renderer.draw_repeating_side_text(
+                text=initials,
+                font=initials_font,
+                side_margin=INITIALS_SIDE_MARGIN,
+                vertical_margin=INITIALS_VERTICAL_MARGIN,
+                top_margin=initials_top_margin,
+                min_top_y=initials_min_top,
+                center=initials_center,
+                spacing=INITIALS_SIDE_SPACING,
+                width_warning="Initials are wider than the label and will be clipped.",
+                opacity_percent=INITIALS_OPACITY_PERCENT,
+                mask_dither=Image.Dither.ORDERED,
+            )
 
         if package_date:
             # Measure to anchor the date against the bottom margin; overflow warnings come from the helper.
@@ -139,8 +180,11 @@ class Template(TemplateDefinition):
                 height_warning="Date text exceeds label height and may be clipped.",
             )
 
-        portrait_canvas = renderer.canvas
-        result = portrait_canvas.convert("1")
+        # Keep dithering on the background to preserve the faint symbol, but render text without
+        # dithering so the repeated side text stays symmetric on both edges.
+        background_result = background_canvas.convert("1", dither=Dither.FLOYDSTEINBERG)
+        foreground_result = renderer.canvas.convert("1", dither=Dither.NONE)
+        result = ImageChops.darker(background_result, foreground_result)
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result

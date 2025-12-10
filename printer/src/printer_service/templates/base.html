@@ -180,10 +180,7 @@
         .preview-status.preview-status--error {
             color: var(--danger-color);
         }
-        .preview-status__label {
-            font-weight: 600;
-            display: inline-block;
-        }
+
         .preview-status__warnings {
             color: #b3261e;
             display: block;
@@ -290,6 +287,55 @@
             filter: none !important;
             transform: none;
         }
+
+        /* Print countdown styles */
+        .print-countdown {
+            background: var(--accent-color);
+            color: white;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .countdown-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .countdown-content p {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .countdown-cancel {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .countdown-cancel:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Make preview images clickable */
+        .bb-preview-trigger {
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .bb-preview-trigger:hover {
+            transform: scale(1.02);
+        }
     </style>
 </head>
 <body>
@@ -313,6 +359,13 @@
     </header>
     <main>
         <section>
+            <!-- Countdown container for print=true URLs -->
+            <div id="printCountdownContainer" class="print-countdown" style="display: none;">
+                <div class="countdown-content">
+                    <p>Printing in <span id="countdownTimer">5</span> seconds...</p>
+                    <button type="button" id="cancelCountdown" class="countdown-cancel">Cancel</button>
+                </div>
+            </div>
             <h2>{% block form_heading %}{{ active_template.display_name }}{% endblock %}</h2>
             <form id="labelForm" data-template="{{ active_template.slug }}" {% block form_attributes %}{% endblock %}>
                 <div class="form-grid">
@@ -321,7 +374,7 @@
                     </div>
                     {% block preview_area %}
                         <section id="previewContainer" class="preview" aria-live="polite">
-                            <h3>Previews</h3>
+                            <h3>Previews: Click to Print</h3>
                             <p id="livePreviewStatus" class="preview-status">Start filling out the form to see your label.</p>
                             <div class="bb-preview-grid">
                                 <article class="bb-preview-card">
@@ -364,11 +417,6 @@
                     {% endblock %}
                 </div>
                 {% block form_actions %}
-                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-                    <button type="submit" class="print-trigger" data-print-target="label">Print Label</button>
-                    <button type="button" id="printQrActionButton" class="print-trigger" data-print-target="qr">Print QR Label</button>
-                </div>
-                <p style="margin-top: 0.5rem; color: var(--muted-color); font-size: 0.9rem;">Previews refresh automatically as you edit.</p>
                 {% endblock %}
             </form>
         </section>

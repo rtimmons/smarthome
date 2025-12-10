@@ -57,18 +57,26 @@ For comprehensive testing documentation, see [docs/testing.md](./docs/testing.md
 
 ### Visual Regression Tests
 
-The printer service uses visual regression testing to ensure refactoring doesn't change label rendering:
+The printer service has a comprehensive test suite with 75 tests covering all functionality:
 
 ```bash
-# Run all tests including visual regression
+# Run the full test suite (includes dark mode test)
 just test
+
+# Run only the main pytest suite (74 tests)
+.venv/bin/python -m pytest
 
 # Run only visual regression tests
 .venv/bin/pytest tests/test_visual_regression.py -v
 
 # Regenerate baselines after intentional visual changes
 .venv/bin/pytest tests/test_visual_regression.py --regenerate-baselines -v
+
+# Run dark mode test separately
+python tests/test_dark_mode_standalone.py
 ```
+
+**Note:** The dark mode test runs separately to avoid asyncio conflicts with the main Playwright-based test suite.
 
 See [docs/testing.md](./docs/testing.md) for details.
 
@@ -98,9 +106,8 @@ See [addon.yaml](./addon.yaml) for all available configuration options.
 The printer service supports multiple label templates:
 
 - **best_by** - Date-based labels with QR code support
-- **kitchen_label_printer** - Simple multi-line text labels
 - **receipt_checklist** - Checklist with checkboxes
-- **bluey_label** / **bluey_label_2** - Decorative character labels
+- **bluey_label** - Decorative character labels
 - **daily_snapshot** - Calendar and date display
 
 Templates are auto-discovered from `src/printer_service/label_templates/`.

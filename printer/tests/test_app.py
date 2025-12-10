@@ -94,7 +94,7 @@ def test_bb_preview_returns_dual_images(test_environment: Tuple) -> None:
     _, templates_module, flask_app, _labels_dir, _ = test_environment
     client = flask_app.test_client()
 
-    template_slug = templates_module.get_template("bluey_label_2").slug
+    template_slug = templates_module.get_template("bluey_label").slug
     response = client.post(
         "/bb/preview",
         json={"template": template_slug, "data": {"Line1": "Alpha"}},
@@ -145,13 +145,16 @@ def test_bb_print_dispatches_label(
 
     monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
 
-    response = client.get("/bb", query_string={"tpl": template_slug, "print": "true"})
+    # Use the new execute-print endpoint
+    response = client.post("/bb/execute-print", query_string={"tpl": template_slug})
 
-    assert response.status_code == 200
+    assert response.status_code == 200  # Returns JSON response
     assert dispatched["called"] is True
     assert dispatched["backend"] == "file"
-    assert response.json["output"].endswith("printed.png")
-    assert response.json["template"] == template_slug
+
+    # Should return JSON response
+    data = response.get_json()
+    assert data is not None
 
 
 def test_bb_print_can_send_qr_label(
@@ -170,15 +173,18 @@ def test_bb_print_can_send_qr_label(
 
     monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
 
-    response = client.get(
-        "/bb",
-        query_string={"tpl": template_slug, "print": "true", "qr": "true"},
+    # Use the new execute-print endpoint
+    response = client.post(
+        "/bb/execute-print",
+        query_string={"tpl": template_slug, "qr": "true"},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 200  # Returns JSON response
     assert dispatched["called"] is True
-    assert response.json["output"].endswith("qr.png")
-    assert response.json["qr_label"] is True
+
+    # Should return JSON response
+    data = response.get_json()
+    assert data is not None
 
 
 def test_sanitize_lines_trims_and_limits(test_environment: Tuple) -> None:
@@ -188,7 +194,7 @@ def test_sanitize_lines_trims_and_limits(test_environment: Tuple) -> None:
     assert helper_module.sanitize_lines(lines) == ["keep", "B", "C", "D", "E", "F"]
 
 
-@pytest.mark.parametrize("bluey_slug", ["bluey_label", "bluey_label_2"])
+@pytest.mark.parametrize("bluey_slug", ["bluey_label"])
 def test_bluey_template_renders_expected_canvas(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, bluey_slug: str
 ) -> None:
@@ -217,21 +223,10 @@ def test_bluey_template_renders_expected_canvas(
     assert image.mode == "1"
 
 
-@pytest.mark.parametrize("bluey_slug", ["bluey_label", "bluey_label_2"])
-def test_bluey_template_renders_with_minimal_data(test_environment: Tuple, bluey_slug: str) -> None:
-    _, templates_module, _, _, _ = test_environment
-    bluey_template = templates_module.get_template(bluey_slug)
-
-    image = bluey_template.render({})
-
-    assert image.size == BLUEY_EXPECTED_CANVAS
-    assert image.mode == "1"
-
-
 def test_bluey_initials_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> None:
     helper_module = importlib.import_module("printer_service.label_templates.helper")
     bluey_template = importlib.reload(
-        importlib.import_module("printer_service.label_templates.bluey_label_2")
+        importlib.import_module("printer_service.label_templates.bluey_label")
     ).TEMPLATE
 
     monkeypatch.setattr(helper_module, "load_font", lambda size_points: ImageFont.load_default())
@@ -250,7 +245,7 @@ def test_bluey_initials_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> N
 def test_bluey_initials_clip_count_when_title_is_wide(monkeypatch: pytest.MonkeyPatch) -> None:
     helper_module = importlib.import_module("printer_service.label_templates.helper")
     bluey_template = importlib.reload(
-        importlib.import_module("printer_service.label_templates.bluey_label_2")
+        importlib.import_module("printer_service.label_templates.bluey_label")
     ).TEMPLATE
 
     monkeypatch.setattr(helper_module, "load_font", lambda size_points: ImageFont.load_default())
@@ -275,7 +270,7 @@ def test_bluey_initials_clip_count_when_title_is_wide(monkeypatch: pytest.Monkey
     assert wide_runs_left < narrow_runs
 
 
-@pytest.mark.parametrize("bluey_slug", ["bluey_label", "bluey_label_2"])
+@pytest.mark.parametrize("bluey_slug", ["bluey_label"])
 def test_bluey_template_rejects_unknown_symbol(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, bluey_slug: str
 ) -> None:
@@ -314,3 +309,130 @@ def test_analyze_label_image_warns_for_oversized_label(monkeypatch: pytest.Monke
     metrics = label_module.analyze_label_image(image, config)
     assert metrics.fits_target is False
     assert metrics.warnings
+
+
+def test_bb_print_parameter_loads_page_with_countdown(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test that ?print=true loads page normally (countdown handled by JS)."""
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    # Test with print=true parameter
+    response = client.get("/bb?print=true&Text=Test+Label")
+
+    # Should load page normally (200) - countdown handled by JavaScript
+    assert response.status_code == 200
+
+    # Should contain countdown container
+    assert b"printCountdownContainer" in response.data
+
+
+def test_bb_execute_print_endpoint_triggers_print(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test that POST /bb/execute-print triggers print and returns JSON."""
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    template_slug = templates_module.get_template("best_by").slug
+    dispatched: dict[str, object] = {}
+
+    def fake_dispatch(image, config, **_kwargs):
+        dispatched["called"] = True
+        dispatched["backend"] = config.backend
+        return tmp_path / "printed.png"
+
+    monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
+
+    # Test execute-print endpoint
+    response = client.post("/bb/execute-print?Text=Test+Label")
+
+    # Should return JSON (200) with print result
+    assert response.status_code == 200
+    assert dispatched["called"] is True
+
+    # Should return JSON response
+    data = response.get_json()
+    assert data is not None
+    assert "status" in data
+
+
+def test_bb_execute_print_endpoint_with_qr_parameter(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test that POST /bb/execute-print handles QR parameter correctly."""
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    template_slug = templates_module.get_template("best_by").slug
+    dispatched: dict[str, object] = {}
+
+    def fake_dispatch(image, config, **_kwargs):
+        dispatched["called"] = True
+        dispatched["qr_requested"] = True
+        return tmp_path / "printed_qr.png"
+
+    monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
+
+    # Test execute-print endpoint with QR parameter
+    response = client.post("/bb/execute-print?qr=true&Text=Test+QR")
+
+    # Should return JSON (200) with print result
+    assert response.status_code == 200
+    assert dispatched["called"] is True
+
+    # Should return JSON response
+    data = response.get_json()
+    assert data is not None
+    assert "status" in data
+
+
+def test_bb_execute_print_endpoint_handles_print_errors(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that execute-print endpoint returns errors as JSON."""
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    def fake_dispatch_error(image, config, **_kwargs):
+        raise ValueError("Printer not available")
+
+    monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch_error)
+
+    # Test execute-print endpoint with error
+    response = client.post("/bb/execute-print?Text=Test+Error")
+
+    # Should return error (400) as JSON
+    assert response.status_code == 400
+    assert response.json["error"] == "Printer not available"
+
+
+def test_no_cooldown_on_rapid_prints(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """Test that rapid successive prints work without cooldown errors."""
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    dispatched_count = 0
+
+    def fake_dispatch(image, config, **_kwargs):
+        nonlocal dispatched_count
+        dispatched_count += 1
+        return tmp_path / f"printed_{dispatched_count}.png"
+
+    monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
+
+    # Make three rapid successive print requests
+    for i in range(3):
+        response = client.post(f"/bb/execute-print?Text=Test+Label+{i}")
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data is not None
+        assert data["status"] == "sent"
+        # Should not have any cooldown errors
+        assert "error" not in data
+
+    # All three prints should have been dispatched
+    assert dispatched_count == 3

@@ -21,7 +21,7 @@ class SampleTemplate(TemplateDefinition):
         raise NotImplementedError
 
 
-@pytest.mark.parametrize("slug", ["bluey_label", "bluey_label_2"])
+@pytest.mark.parametrize("slug", ["bluey_label"])
 def test_label_template_wraps_mapping(slug: str):
     template = get_template(slug)
 

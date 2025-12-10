@@ -54,9 +54,7 @@ from PIL import Image
 from printer_service.label_templates import (
     best_by,
     bluey_label,
-    bluey_label_2,
     daily_snapshot,
-    kitchen_label_printer,
     receipt_checklist,
 )
 from printer_service.label_templates.base import TemplateFormData
@@ -469,68 +467,6 @@ def test_best_by_qr_code_caption_with_double_colon_prefix(mock_best_by_date, reg
 
 
 # =============================================================================
-# Kitchen Label Printer Tests
-# =============================================================================
-
-
-def test_kitchen_label_three_lines(regenerate_baselines):
-    """Kitchen label with all three lines filled."""
-    template = kitchen_label_printer.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "line1": "Chicken Soup",
-            "line2": "2025-11-17",
-            "line3": "Shelf 2",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "kitchen_three_lines.png", regenerate=regenerate_baselines)
-
-
-def test_kitchen_label_two_lines(regenerate_baselines):
-    """Kitchen label with only two lines."""
-    template = kitchen_label_printer.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "line1": "Leftovers",
-            "line2": "Nov 17",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "kitchen_two_lines.png", regenerate=regenerate_baselines)
-
-
-def test_kitchen_label_single_line(regenerate_baselines):
-    """Kitchen label with only one line."""
-    template = kitchen_label_printer.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "line1": "FROZEN",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "kitchen_single_line.png", regenerate=regenerate_baselines)
-
-
-def test_kitchen_label_long_text(regenerate_baselines):
-    """Kitchen label with very long text (tests clipping behavior)."""
-    template = kitchen_label_printer.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "line1": "A Very Long Label Name That Should Be Clipped Or Handled Gracefully",
-            "line2": "With Another Long Line",
-            "line3": "And Yet Another",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "kitchen_long_text.png", regenerate=regenerate_baselines)
-
-
-# =============================================================================
 # Receipt Checklist Tests
 # =============================================================================
 
@@ -610,18 +546,9 @@ def test_bluey_label_default(regenerate_baselines):
     assert_visual_match(image, "bluey_default.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_2_default(regenerate_baselines):
-    """Bluey label 2 with default/empty parameters."""
-    template = bluey_label_2.TEMPLATE
-    form_data = TemplateFormData({})
-
-    image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_default.png", regenerate=regenerate_baselines)
-
-
-def test_bluey_label_2_repeated_titles(regenerate_baselines):
-    """Bluey label 2 repeats the title block with padding."""
-    template = bluey_label_2.TEMPLATE
+def test_bluey_label_repeated_titles(regenerate_baselines):
+    """Bluey label repeats the title block with padding."""
+    template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Line1": "Leftovers",
@@ -631,12 +558,12 @@ def test_bluey_label_2_repeated_titles(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_repeated_titles.png", regenerate=regenerate_baselines)
+    assert_visual_match(image, "bluey_repeated_titles.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_2_long_text(regenerate_baselines):
-    """Bluey label 2 with long text that pushes width/height warnings."""
-    template = bluey_label_2.TEMPLATE
+def test_bluey_label_long_text(regenerate_baselines):
+    """Bluey label with long text that pushes width/height warnings."""
+    template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Line1": "Extremely long casserole name that will clip on the label",
@@ -647,12 +574,12 @@ def test_bluey_label_2_long_text(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_long_text.png", regenerate=regenerate_baselines)
+    assert_visual_match(image, "bluey_long_text.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_2_missing_symbol(regenerate_baselines):
-    """Bluey label 2 falls back gracefully when symbol choice is missing."""
-    template = bluey_label_2.TEMPLATE
+def test_bluey_label_missing_symbol(regenerate_baselines):
+    """Bluey label falls back gracefully when symbol choice is missing."""
+    template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Line1": "Fallback",
@@ -662,12 +589,12 @@ def test_bluey_label_2_missing_symbol(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_missing_symbol.png", regenerate=regenerate_baselines)
+    assert_visual_match(image, "bluey_missing_symbol.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_2_initials_only(regenerate_baselines):
-    """Bluey label 2 renders side initials when title lines are missing."""
-    template = bluey_label_2.TEMPLATE
+def test_bluey_label_initials_only(regenerate_baselines):
+    """Bluey label renders side initials when title lines are missing."""
+    template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Initials": "SIDE",
@@ -676,12 +603,12 @@ def test_bluey_label_2_initials_only(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_initials_only.png", regenerate=regenerate_baselines)
+    assert_visual_match(image, "bluey_initials_only.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_2_full_fields(regenerate_baselines):
-    """Bluey label 2 with typical filled inputs."""
-    template = bluey_label_2.TEMPLATE
+def test_bluey_label_full_fields(regenerate_baselines):
+    """Bluey label with typical filled inputs."""
+    template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Line1": "Durban",
@@ -693,12 +620,12 @@ def test_bluey_label_2_full_fields(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_full_fields.png", regenerate=regenerate_baselines)
+    assert_visual_match(image, "bluey_full_fields.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_2_alt_symbol(regenerate_baselines):
-    """Bluey label 2 with alternate symbol and initials."""
-    template = bluey_label_2.TEMPLATE
+def test_bluey_label_alt_symbol(regenerate_baselines):
+    """Bluey label with alternate symbol and initials."""
+    template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Line1": "Party Snacks",
@@ -710,7 +637,7 @@ def test_bluey_label_2_alt_symbol(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(image, "bluey_2_alt_symbol.png", regenerate=regenerate_baselines)
+    assert_visual_match(image, "bluey_alt_symbol.png", regenerate=regenerate_baselines)
 
 
 # =============================================================================
@@ -721,9 +648,13 @@ def test_bluey_label_2_alt_symbol(regenerate_baselines):
 # Add tests here if the template is being used in production.
 
 
-def test_daily_snapshot_placeholder(regenerate_baselines):
-    """Placeholder for daily snapshot tests.
+def test_daily_snapshot_basic(regenerate_baselines):
+    """Test daily snapshot template with basic widget data."""
+    form_data = daily_snapshot.TemplateFormData(
+        {
+            "widgets": '[{"type": "date_heading", "payload": {"label": "Mon Dec 9, 2024"}}, {"type": "calendar_month", "payload": {"year": 2024, "month": 12, "month_label": "December 2024", "weeks": [[{"day": 1, "status": "past"}, {"day": 2, "status": "past"}, {"day": 3, "status": "past"}, {"day": 4, "status": "past"}, {"day": 5, "status": "past"}, {"day": 6, "status": "past"}, {"day": 7, "status": "past"}], [{"day": 8, "status": "past"}, {"day": 9, "status": "today"}, {"day": 10, "status": "future"}, {"day": 11, "status": "future"}, {"day": 12, "status": "future"}, {"day": 13, "status": "future"}, {"day": 14, "status": "future"}]]}}]'
+        }
+    )
 
-    Uncomment and implement when template usage is understood.
-    """
-    pytest.skip("Daily snapshot template not yet tested - add test cases as needed")
+    image = daily_snapshot.Template().render(form_data)
+    assert_visual_match(image, "daily_snapshot_basic.png", regenerate_baselines)
