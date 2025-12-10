@@ -364,6 +364,55 @@ startup: services
 - `grid-dashboard/addon.yaml` has custom ingress configuration
 - May not follow Home Assistant frontend patterns
 
+### 25. Deployment Safety & Rollback Guarantees
+
+**Issue**: Documentation promises atomic deployments, automatic rollback, consolidated `/tmp/deployment-<timestamp>.log` logging, and single-session SSH efficiency, but the current deployment implementation deploys add-ons sequentially with no rollback/state tracking, spawns new SSH/`scp` sessions per add-on, and never writes the documented logs. Operators rely on guarantees that are not actually provided.
+
+**Tasks**:
+- [ ] Implement true batch transaction support with rollback of already deployed add-ons when later items fail
+- [ ] Maintain a single SSH control socket/session per deployment and upload multiple archives without reconnecting
+- [ ] Emit structured deployment logs on disk and surface their location in CLI output
+- [ ] Keep documentation in sync with actual capabilities until parity exists
+
+### 26. Deployment Performance & Scalability
+
+**Issue**: Batch deployments rebuild each add-on twice (once via the pre-deploy Just recipes and again inside `deploy_addon`) and rerun prerequisite validation for every add-on, leading to very slow deployments as the number or size of add-ons grows.
+
+**Tasks**:
+- [ ] Cache build artifacts within a deployment run instead of rebuilding inside each phase
+- [ ] Run `deploy-preflight`/SSH/HA health checks once per deployment (or reuse cached results) instead of per add-on
+- [ ] Provide flags to reuse previous prereq checks when deploying multiple add-ons sequentially
+- [ ] Record deployment timing metrics to catch regressions
+
+### 27. CLI Command Hygiene
+
+**Issue**: `talos addons deploy` is defined twice in `talos/src/talos/cli.py`, so one definition silently overrides the other. This leaves dead code and opens the door to inconsistent behavior.
+
+**Tasks**:
+- [ ] Remove the duplicate command registration and ensure only the enhanced deployment implementation is exposed
+- [ ] Add CLI tests that validate command registration and option handling
+- [ ] Document the command tree in `docs/deployment/enhanced-deployment-guide.md`
+
+### 28. Safe Home Assistant Config Deployment
+
+**Issue**: The Home Assistant config deploy flow hardcodes `root@homeassistant.local:22`, deletes the on-box backup before validating, skips `ha core check`, and always restarts Home Assistant even if errors occur. There is no way to target staging/DR hosts, and failures can leave the system bricked with no automatic rollback.
+
+**Tasks**:
+- [ ] Parameterize host/user/port/secrets for the config deploy recipes
+- [ ] Keep the safety backup until validation and health checks succeed
+- [ ] Reintroduce `ha core check` (or equivalent) before performing the restart
+- [ ] Make full restarts conditional on validation results and support staging deployments
+
+### 29. Decouple Add-on and Config Deployment
+
+**Issue**: `just deploy` always runs the full Home Assistant config pipeline (including TypeScript generation and destructive `rsync --delete`) even when an operator only wants to push an add-on, increasing blast radius and slowing urgent hotfixes.
+
+**Tasks**:
+- [ ] Allow add-on deployments to run without touching configs (e.g., `just deploy --skip-config`)
+- [ ] Provide a dedicated “config deploy” command that can be composed with add-on deploys when needed
+- [ ] Ensure both flows share the same environment parameterization
+- [ ] Document recommended workflows for add-on-only, config-only, and full-stack deployments
+
 ## Implementation Strategy & Migration Plan
 
 ### Phase 1: Critical Security Updates (Weeks 1-2)
