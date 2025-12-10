@@ -159,6 +159,36 @@ talos addon test grid-dashboard
 
 ### Batch Operations
 
+#### Enhanced Batch Deployment
+
+```bash
+talos addons deploy [addon1 addon2 ...]
+```
+
+Deploy multiple add-ons with enhanced error handling, progress tracking, and comprehensive validation.
+
+**Examples:**
+```bash
+# Deploy all add-ons with enhanced deployment system
+talos addons deploy
+
+# Deploy specific add-ons
+talos addons deploy grid-dashboard sonos-api
+
+# Deploy with verbose output for troubleshooting
+talos addons deploy --verbose
+
+# Preview deployment without making changes
+talos addons deploy --dry-run
+```
+
+**Enhanced deployment features:**
+- Prerequisites validation (SSH connectivity, disk space, HA health)
+- Progress tracking with real-time status updates
+- Robust error handling with detailed troubleshooting steps
+- Health verification after deployment
+- Graceful handling of deployment failures
+
 #### Run Just Recipe Across Add-ons
 
 ```bash

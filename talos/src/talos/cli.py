@@ -38,8 +38,14 @@ def addon_build(addon: str) -> None:
 @click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
 @click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
 @click.option("--dry-run", is_flag=True, help="Print commands without executing.")
-def addon_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool) -> None:
-    addon_builder.run_deploy(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run)
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+def addon_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool) -> None:
+    """Deploy a single add-on with enhanced error handling."""
+    try:
+        addon_builder.deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run, verbose=verbose)
+    except addon_builder.DeploymentError as e:
+        e.display_error()
+        raise click.ClickException("Deployment failed")
 
 
 @addon.command("test")
@@ -74,6 +80,87 @@ def addons() -> None:
 @click.argument("addons", nargs=-1)
 def addons_run(recipe: str, addons: tuple[str, ...]) -> None:
     addons_runner.run_recipes(recipe, addons)
+
+
+@addons.command("deploy")
+@click.argument("addons", nargs=-1)
+@click.option("--ha-host", envvar="HA_HOST", default="homeassistant.local", show_default=True)
+@click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
+@click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+@click.option("--dry-run", is_flag=True, help="Print commands without executing.")
+def addons_deploy(addons: tuple[str, ...], ha_host: str, ha_port: int, ha_user: str, verbose: bool, dry_run: bool) -> None:
+    """Deploy multiple add-ons with enhanced error handling and progress tracking."""
+    from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
+    from rich.console import Console
+
+    console = Console()
+
+    # Resolve addons to deploy
+    addon_dirs = addons_runner._resolve_addons(addons)
+    addon_names = [addon_dir.name for addon_dir in addon_dirs]
+
+    if not addon_names:
+        console.print("[yellow]No add-ons to deploy[/yellow]")
+        return
+
+    if dry_run:
+        console.print(f"[bold]🔍 Dry Run: Would deploy {len(addon_names)} add-on(s):[/bold]")
+        for name in addon_names:
+            console.print(f"  • {name}")
+        console.print(f"\n[yellow]This is a dry run - no changes would be made[/yellow]")
+
+        # Show what each addon would do
+        for name in addon_names:
+            try:
+                addon_builder.deploy_addon(name, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=True, verbose=verbose)
+                console.print()
+            except Exception as e:
+                console.print(f"[red]Error planning deployment for {name}: {e}[/red]")
+        return
+
+    # Real deployment with progress tracking
+    console.print(f"[bold]🚀 Deploying {len(addon_names)} add-on(s) to {ha_host}...[/bold]")
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TaskProgressColumn(),
+        console=console,
+        transient=False
+    ) as progress:
+
+        deploy_task = progress.add_task("Deploying add-ons...", total=len(addon_names))
+
+        for i, name in enumerate(addon_names):
+            progress.update(deploy_task, description=f"Deploying {name}...")
+
+            try:
+                addon_builder.deploy_addon(name, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=False, verbose=verbose)
+                progress.update(deploy_task, advance=1)
+                if verbose:
+                    console.print(f"  ✅ {name} deployed successfully")
+            except Exception as e:
+                progress.update(deploy_task, advance=1)
+                console.print(f"  ❌ {name} failed: {e}")
+                if not verbose:
+                    console.print(f"     Run with --verbose for more details")
+                # Continue with other addons instead of failing completely
+
+    console.print(f"[green]✅ Batch deployment completed[/green]")
+
+
+@addons.command("deploy")
+@click.argument("addons", nargs=-1)
+@click.option("--ha-host", envvar="HA_HOST", default="homeassistant.local", show_default=True)
+@click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
+@click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
+@click.option("--dry-run", is_flag=True, help="Print commands without executing.")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+def addons_deploy(addons: tuple[str, ...], ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool) -> None:
+    """Deploy multiple add-ons with enhanced error handling and progress tracking."""
+    addons_runner.run_enhanced_deployment(addons, ha_host, ha_port, ha_user, dry_run, verbose)
 
 
 @app.command(name="dev")

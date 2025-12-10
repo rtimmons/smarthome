@@ -210,7 +210,7 @@ ha-addon addon="all": talos-build
 
 # Deploy add-ons
 deploy addon="all": deploy-preflight talos-build
-    "{{talos_bin}}" addons run deploy {{addon}}
+    "{{talos_bin}}" addons deploy {{addon}}
 
 # Start local dev environment
 dev:
@@ -325,27 +325,28 @@ dev.py (DevOrchestrator):
   9. Wait for Ctrl+C, then gracefully shutdown
 ```
 
-### Deploy Workflow
+### Enhanced Deploy Workflow
 
 ```
 User runs: just deploy grid-dashboard
     ↓
-Justfile calls: talos addons run deploy grid-dashboard
+Justfile calls: talos addons deploy grid-dashboard
     ↓
-grid-dashboard/Justfile "deploy" recipe:
-  1. Runs: talos addon build grid-dashboard (builds tarball)
-  2. Runs: talos addon deploy grid-dashboard
-    ↓
-addon_builder.py deploy_addon():
-  1. Builds tarball if needed
-  2. SCPs tarball to homeassistant.local:/root/
-  3. SSHs to Home Assistant and runs:
-     - Stop add-on if running
-     - Extract tarball to /addons/
-     - Reload add-on list
-     - Rebuild or install add-on (no uninstall, so /data/addons/data contents stay intact; if rebuild fails/missing it installs)
-     - Ensure primary host port is mapped if defined (keeps direct access working alongside ingress; uses Supervisor API with `jq` + `curl`)
-     - Start add-on
+Enhanced deployment system (cli.py addons_deploy):
+  1. Prerequisites validation (SSH, disk space, HA health)
+  2. Progress tracking with real-time updates
+  3. Calls addon_builder.py deploy_addon() for each addon:
+     - Builds tarball with verbose output
+     - SCPs tarball to homeassistant.local:/root/
+     - Executes enhanced remote deployment script:
+       * Stop add-on if running (with state checking)
+       * Extract tarball to /addons/
+       * Reload add-on list with error handling
+       * Rebuild or install add-on (graceful fallback)
+       * Configure add-on options via Supervisor API
+       * Start add-on with health verification
+  4. Deployment summary with success/failure reporting
+  5. Comprehensive error handling with troubleshooting steps
 ```
 
 ## Extension Points

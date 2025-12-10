@@ -45,7 +45,8 @@ add-on runtimes.
 - `talos addon test <name>` — run add-on-defined test hooks
 
 ### Batch Operations
-- `talos addons run <recipe> [addons…]` — run a Just recipe for each add-on (used by `just ha-addon`, `just deploy`, `just test`)
+- `talos addons deploy [addons…]` — enhanced batch deployment with progress tracking and error handling
+- `talos addons run <recipe> [addons…]` — run a Just recipe for each add-on (used by `just ha-addon`, `just test`)
 
 ### Development
 - `talos dev` — start all add-ons locally with orchestration/log mux
