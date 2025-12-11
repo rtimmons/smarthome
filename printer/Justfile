@@ -102,6 +102,27 @@ ha-addon:
     if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
     ../talos/build/bin/talos addon build printer
 
+# Deploy addon using talos
+[group: 'deploy']
+deploy:
+    @set -e; \
+    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
+    ../talos/build/bin/talos addon deploy printer
+
+# Deploy addon with verbose output
+[group: 'deploy']
+deploy-verbose:
+    @set -e; \
+    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
+    ../talos/build/bin/talos addon deploy printer --verbose
+
+# Deploy addon in dry-run mode
+[group: 'deploy']
+deploy-dry-run:
+    @set -e; \
+    if [ ! -x "../talos/build/bin/talos" ]; then ../talos/build.sh; fi; \
+    ../talos/build/bin/talos addon deploy printer --dry-run
+
 # Test container build and functionality
 [group: 'test']
 container-test:
