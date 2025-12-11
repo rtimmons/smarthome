@@ -290,41 +290,132 @@
 
         /* Print countdown styles */
         .print-countdown {
-            background: var(--accent-color);
-            color: white;
-            padding: 1rem;
+            background: var(--surface-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 1.5rem;
             margin-bottom: 1rem;
-            border-radius: 8px;
-            text-align: center;
+            border-radius: 12px;
             box-shadow: var(--shadow);
         }
 
-        .countdown-content {
+        .countdown-header {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 1rem;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .countdown-content p {
+        .countdown-title {
             margin: 0;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .countdown-timer {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
             font-weight: 600;
             font-size: 1.1rem;
         }
 
-        .countdown-cancel {
-            background: rgba(255, 255, 255, 0.2);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+        .countdown-body {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .countdown-preview {
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .countdown-preview h4 {
+            margin: 0;
+            font-size: 1rem;
+            color: var(--text-color);
+        }
+
+        .countdown-preview-image {
+            max-width: 100%;
+            max-height: 120px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--preview-bg);
+            display: block;
+        }
+
+        .countdown-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            min-width: 120px;
+        }
+
+        .countdown-button {
+            padding: 0.75rem 1.25rem;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.9rem;
-            transition: background-color 0.2s ease;
+            font-size: 0.95rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+        }
+
+        .countdown-print {
+            background: var(--accent-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(44, 111, 227, 0.3);
+        }
+
+        .countdown-print:hover {
+            background: var(--accent-strong);
+            transform: translateY(-1px);
+        }
+
+        .countdown-print-large {
+            font-size: 1.1rem;
+            padding: 14px 24px;
+            min-width: 160px;
+            transform: scale(1.25);
+            transform-origin: center;
+        }
+
+        .countdown-print-large:hover {
+            transform: scale(1.25) translateY(-1px);
+        }
+
+        .countdown-timer-inline {
+            font-weight: 500;
+            opacity: 0.9;
+        }
+
+        .countdown-cancel {
+            background: var(--surface-color);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
         }
 
         .countdown-cancel:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: var(--preview-bg);
+        }
+
+        @media (max-width: 600px) {
+            .countdown-body {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .countdown-actions {
+                flex-direction: row;
+                justify-content: center;
+            }
         }
 
         /* Make preview images clickable */
@@ -361,9 +452,22 @@
         <section>
             <!-- Countdown container for print=true URLs -->
             <div id="printCountdownContainer" class="print-countdown" style="display: none;">
-                <div class="countdown-content">
-                    <p>Printing in <span id="countdownTimer">5</span> seconds...</p>
-                    <button type="button" id="cancelCountdown" class="countdown-cancel">Cancel</button>
+                <div class="countdown-header">
+                    <h3 class="countdown-title">Ready to Print</h3>
+                </div>
+                <div class="countdown-body">
+                    <div class="countdown-preview">
+                        <h4 id="countdownPreviewTitle">Label Preview</h4>
+                        <img id="countdownPreviewImage" class="countdown-preview-image" src="" alt="Label preview" style="display: none;">
+                        <p id="countdownPreviewStatus" style="margin: 0; color: var(--muted-color); font-size: 0.9rem;">Loading preview...</p>
+                    </div>
+                    <div class="countdown-actions">
+                        <button type="button" id="printNowButton" class="countdown-button countdown-print countdown-print-large">
+                            <span id="printButtonText">Print Now</span>
+                            <span id="countdownTimer" class="countdown-timer-inline" style="display: none;"> (<span id="countdownSeconds">5</span>s)</span>
+                        </button>
+                        <button type="button" id="cancelCountdown" class="countdown-button countdown-cancel">Cancel</button>
+                    </div>
                 </div>
             </div>
             <h2>{% block form_heading %}{{ active_template.display_name }}{% endblock %}</h2>

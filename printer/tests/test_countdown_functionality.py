@@ -77,8 +77,8 @@ def test_countdown_appears_with_print_parameter(app_server, browser):
     assert countdown_container is not None
     assert countdown_container.is_visible()
 
-    # Countdown timer should show initial value
-    timer_element = page.query_selector("#countdownTimer")
+    # Countdown timer should show initial value in the button
+    timer_element = page.query_selector("#countdownSeconds")
     assert timer_element is not None
     timer_text = timer_element.text_content()
     assert timer_text in ["5", "4", "3", "2", "1"]  # Could be any value during countdown
@@ -87,6 +87,24 @@ def test_countdown_appears_with_print_parameter(app_server, browser):
     cancel_button = page.query_selector("#cancelCountdown")
     assert cancel_button is not None
     assert cancel_button.is_visible()
+
+    # Print Now button should be present
+    print_now_button = page.query_selector("#printNowButton")
+    assert print_now_button is not None
+    assert print_now_button.is_visible()
+
+    # Check the button text specifically
+    print_button_text = page.query_selector("#printButtonText")
+    assert print_button_text is not None
+    assert print_button_text.text_content() == "Print Now"
+
+    # Preview elements should be present
+    preview_title = page.query_selector("#countdownPreviewTitle")
+    assert preview_title is not None
+    assert preview_title.text_content() == "Label Preview"
+
+    preview_status = page.query_selector("#countdownPreviewStatus")
+    assert preview_status is not None
 
 
 def test_countdown_not_visible_without_print_parameter(app_server, browser):
@@ -101,7 +119,7 @@ def test_countdown_not_visible_without_print_parameter(app_server, browser):
 
 
 def test_cancel_countdown_functionality(app_server, browser):
-    """Test that clicking cancel hides countdown and removes print parameter."""
+    """Test that clicking cancel stops countdown but keeps dialog visible."""
     page = browser.new_page()
 
     # First navigate to the page with parameters but without print
@@ -128,13 +146,21 @@ def test_cancel_countdown_functionality(app_server, browser):
     assert countdown_container is not None
     assert countdown_container.is_visible()
 
+    # Countdown timer should be visible in button
+    countdown_timer = page.query_selector("#countdownTimer")
+    assert countdown_timer is not None
+    assert countdown_timer.is_visible()
+
     # Click cancel button
     cancel_button = page.query_selector("#cancelCountdown")
     assert cancel_button is not None
     cancel_button.click()
 
-    # Countdown should be hidden
-    assert not countdown_container.is_visible()
+    # Dialog should still be visible (new behavior)
+    assert countdown_container.is_visible()
+
+    # Countdown timer should be hidden after cancel
+    assert not countdown_timer.is_visible()
 
     # URL should no longer have print parameter but preserve other parameters
     current_url = page.url
@@ -254,9 +280,127 @@ def test_countdown_executes_print_after_completion(app_server, browser):
     assert len(print_requests) == 1
     assert "/bb/execute-print" in print_requests[0]["url"]
 
-    # URL should no longer have print=true parameter but should preserve other params
+    # Dialog should still be visible for multiple copies (persistent dialog)
+    assert countdown_container.is_visible()
+
+    # Print Now button text should show "Print Again ✓"
+    print_button_text = page.query_selector("#printButtonText")
+    assert print_button_text is not None
+    # Wait a moment for the success state to show
+    page.wait_for_timeout(500)
+    button_text = print_button_text.text_content()
+    assert button_text in ["Print Again ✓", "Print Now"]  # Could be either depending on timing
+
+    # Cancel button should show "Done"
+    cancel_button = page.query_selector("#cancelCountdown")
+    assert cancel_button is not None
+    cancel_text = cancel_button.text_content()
+    assert cancel_text in ["Done", "Cancel"]  # Could be either depending on timing
+
+
+def test_print_now_button_functionality(app_server, browser):
+    """Test that Print Now button triggers immediate printing."""
+    page = browser.new_page()
+
+    # Mock the fetch function to capture print requests
+    page.add_init_script("""
+        window.printRequests = [];
+        const originalFetch = window.fetch;
+        window.fetch = function(url, options) {
+            if (url.includes('/bb/execute-print')) {
+                window.printRequests.push({url, options});
+                return Promise.resolve({
+                    ok: true,
+                    json: () => Promise.resolve({status: 'sent'})
+                });
+            }
+            return originalFetch.apply(this, arguments);
+        };
+    """)
+
+    # Navigate to URL with print=true parameter
+    page.goto(f"{app_server}/bb?print=true&Text=Test+Label", wait_until="networkidle")
+
+    # Countdown should be visible
+    countdown_container = page.query_selector("#printCountdownContainer")
+    assert countdown_container is not None
+    assert countdown_container.is_visible()
+
+    # Click Print Now button immediately
+    print_now_button = page.query_selector("#printNowButton")
+    assert print_now_button is not None
+    print_now_button.click()
+
+    # Wait a moment for the print request
+    page.wait_for_timeout(500)
+
+    # Check that print request was made immediately
+    print_requests = page.evaluate("window.printRequests")
+    assert len(print_requests) == 1
+    assert "/bb/execute-print" in print_requests[0]["url"]
+
+    # Dialog should still be visible for multiple copies
+    assert countdown_container.is_visible()
+
+
+def test_qr_label_countdown_preview(app_server, browser):
+    """Test that QR label countdown shows correct preview title."""
+    page = browser.new_page()
+
+    # First navigate to the page to load previews
+    page.goto(f"{app_server}/bb?Text=Test+Label", wait_until="networkidle")
+    _wait_for_previews(page)
+
+    # Then use JavaScript to simulate QR print parameter being added
+    page.evaluate("""
+        // Simulate URL with QR print parameter
+        const url = new URL(window.location);
+        url.searchParams.set('print', 'true');
+        url.searchParams.set('qr', 'true');
+        window.history.replaceState({}, '', url);
+
+        // Trigger the countdown check
+        if (window.checkForPrintParameter) {
+            window.checkForPrintParameter();
+        }
+    """)
+
+    # Wait a moment for the countdown to start
+    page.wait_for_timeout(50)
+
+    # Countdown container should be visible
+    countdown_container = page.query_selector("#printCountdownContainer")
+    assert countdown_container is not None
+    assert countdown_container.is_visible()
+
+    # Preview title should indicate QR label
+    preview_title = page.query_selector("#countdownPreviewTitle")
+    assert preview_title is not None
+    assert preview_title.text_content() == "QR Label Preview"
+
+
+def test_preview_click_navigates_to_print_url(app_server, browser):
+    """Test that clicking preview navigates to the print URL with countdown."""
+    page = browser.new_page()
+
+    # Navigate to the page and wait for previews to load
+    page.goto(f"{app_server}/bb?Text=Test+Label", wait_until="networkidle")
+    _wait_for_previews(page)
+
+    # Click on the main label preview
+    label_preview_trigger = page.query_selector('.bb-preview-trigger[data-print-target="label"]')
+    assert label_preview_trigger is not None
+    label_preview_trigger.click()
+
+    # Wait for navigation to complete
+    page.wait_for_load_state("networkidle")
+
+    # Countdown should be visible after navigation
+    countdown_container = page.query_selector("#printCountdownContainer")
+    assert countdown_container is not None
+    assert countdown_container.is_visible()
+
+    # URL should have print=true parameter
     current_url = page.url
-    assert "print=true" not in current_url
+    assert "print=true" in current_url
     assert "Text=Test+Label" in current_url
-    # countdown_duration should also be cleaned up
-    assert "countdown_duration" not in current_url

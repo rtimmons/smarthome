@@ -26,6 +26,8 @@ const THEME_OPTIONS = ['light', 'dark', 'system'];
 // Countdown functionality
 let countdownTimer = null;
 let countdownSeconds = 0;
+let currentPrintTarget = 'label'; // 'label' or 'qr'
+let countdownPrintData = null; // Store the print data for the countdown
 
 function getCountdownDuration() {
     // Allow override via URL parameter for testing
@@ -38,36 +40,109 @@ function getCountdownDuration() {
 function checkForPrintParameter() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('print') === 'true') {
-        startCountdown();
+        const target = urlParams.get('qr') === 'true' ? 'qr' : 'label';
+        startCountdown(target);
     }
 }
 
-function startCountdown() {
+function startCountdown(printTarget = 'label') {
     const countdownContainer = document.getElementById('printCountdownContainer');
     const countdownTimerElement = document.getElementById('countdownTimer');
+    const countdownSecondsElement = document.getElementById('countdownSeconds');
     const cancelButton = document.getElementById('cancelCountdown');
+    const printNowButton = document.getElementById('printNowButton');
 
-    if (!countdownContainer || !countdownTimerElement || !cancelButton) {
+    if (!countdownContainer || !countdownTimerElement || !countdownSecondsElement || !cancelButton || !printNowButton) {
         return;
     }
 
+    currentPrintTarget = printTarget;
     countdownSeconds = getCountdownDuration();
     countdownContainer.style.display = 'block';
-    countdownTimerElement.textContent = countdownSeconds;
 
-    // Set up cancel button
+    // Show the countdown timer inside the button
+    countdownSecondsElement.textContent = countdownSeconds;
+    countdownTimerElement.style.display = 'inline';
+
+    // Set up button event listeners (remove any existing ones first)
+    cancelButton.removeEventListener('click', cancelCountdown);
+    printNowButton.removeEventListener('click', executePrintNow);
     cancelButton.addEventListener('click', cancelCountdown);
+    printNowButton.addEventListener('click', executePrintNow);
+
+    // Update preview in countdown dialog
+    updateCountdownPreview(printTarget);
 
     // Start the countdown
     countdownTimer = setInterval(() => {
         countdownSeconds--;
-        countdownTimerElement.textContent = countdownSeconds;
+        countdownSecondsElement.textContent = countdownSeconds;
 
         if (countdownSeconds <= 0) {
             clearInterval(countdownTimer);
-            executeAutoPrint();
+            executeCountdownPrint();
         }
     }, 1000);
+}
+
+function updateCountdownPreview(printTarget) {
+    const previewImage = document.getElementById('countdownPreviewImage');
+    const previewTitle = document.getElementById('countdownPreviewTitle');
+    const previewStatus = document.getElementById('countdownPreviewStatus');
+
+    if (!previewImage || !previewTitle || !previewStatus) {
+        return;
+    }
+
+    // Update title based on target
+    previewTitle.textContent = printTarget === 'qr' ? 'QR Label Preview' : 'Label Preview';
+
+    // Get the appropriate preview image source from DOM (fresh lookup)
+    const sourceImageId = printTarget === 'qr' ? 'qrPreviewImage' : 'labelPreviewImage';
+    const sourceImage = document.getElementById(sourceImageId);
+
+    if (sourceImage && sourceImage.src && !sourceImage.hidden && sourceImage.dataset.hasPreview === 'true') {
+        previewImage.src = sourceImage.src;
+        previewImage.style.display = 'block';
+        previewStatus.style.display = 'none';
+    } else {
+        // If preview not available yet, try to wait for it
+        previewImage.style.display = 'none';
+        previewStatus.style.display = 'block';
+        previewStatus.textContent = 'Loading preview...';
+
+        // Try to trigger preview generation if form data is available
+        if (typeof generatePreviews === 'function') {
+            generatePreviews();
+        }
+
+        // Set up a retry mechanism to check for preview availability
+        let retryCount = 0;
+        const maxRetries = 10;
+        const retryInterval = setInterval(() => {
+            const updatedSourceImage = document.getElementById(sourceImageId);
+            if (updatedSourceImage && updatedSourceImage.src && !updatedSourceImage.hidden && updatedSourceImage.dataset.hasPreview === 'true') {
+                previewImage.src = updatedSourceImage.src;
+                previewImage.style.display = 'block';
+                previewStatus.style.display = 'none';
+                clearInterval(retryInterval);
+            } else if (++retryCount >= maxRetries) {
+                previewStatus.textContent = 'Preview not available';
+                clearInterval(retryInterval);
+            }
+        }, 200);
+    }
+}
+
+function executePrintNow() {
+    // Stop the countdown
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+        countdownTimer = null;
+    }
+
+    // Execute the print immediately
+    executeCountdownPrint();
 }
 
 function cancelCountdown() {
@@ -76,19 +151,36 @@ function cancelCountdown() {
         countdownTimer = null;
     }
 
-    const countdownContainer = document.getElementById('printCountdownContainer');
-    if (countdownContainer) {
-        countdownContainer.style.display = 'none';
+    // Hide the countdown timer in the button
+    const countdownTimerElement = document.getElementById('countdownTimer');
+    if (countdownTimerElement) {
+        countdownTimerElement.style.display = 'none';
     }
+
+    // Reset print data but keep dialog visible
+    countdownPrintData = null;
+    currentPrintTarget = 'label';
 
     // Remove print parameter from URL
     removeUrlParameter('print');
 }
 
-async function executeAutoPrint() {
+async function executeCountdownPrint() {
     const countdownContainer = document.getElementById('printCountdownContainer');
-    if (countdownContainer) {
-        countdownContainer.style.display = 'none';
+    const countdownTimerElement = document.getElementById('countdownTimer');
+    const printButtonText = document.getElementById('printButtonText');
+    const printNowButton = document.getElementById('printNowButton');
+    const cancelButton = document.getElementById('cancelCountdown');
+
+    // Update UI to show printing state
+    if (countdownTimerElement) {
+        countdownTimerElement.style.display = 'none';
+    }
+    if (printButtonText) {
+        printButtonText.textContent = 'Printing...';
+    }
+    if (printNowButton) {
+        printNowButton.disabled = true;
     }
 
     try {
@@ -108,16 +200,86 @@ async function executeAutoPrint() {
 
         if (!response.ok) {
             window.alert(result.error || 'Print failed');
+            resetCountdownDialog();
             return;
         }
 
-        // Print was successful - remove print parameter and redirect
-        removeUrlParameter('print');
+        // Print was successful - show success state and keep dialog open for multiple copies
+        showPrintSuccess();
 
     } catch (error) {
         console.error('Print error:', error);
         window.alert('Print failed: ' + error.message);
+        resetCountdownDialog();
     }
+}
+
+function showPrintSuccess() {
+    const countdownTimerElement = document.getElementById('countdownTimer');
+    const printButtonText = document.getElementById('printButtonText');
+    const printNowButton = document.getElementById('printNowButton');
+    const cancelButton = document.getElementById('cancelCountdown');
+
+    // Update UI to show success state
+    if (countdownTimerElement) {
+        countdownTimerElement.style.display = 'none';
+    }
+    if (printButtonText) {
+        printButtonText.textContent = 'Print Again ✓';
+    }
+    if (printNowButton) {
+        printNowButton.disabled = false;
+    }
+    if (cancelButton) {
+        cancelButton.textContent = 'Done';
+    }
+
+    // Auto-reset after a short delay to allow for multiple prints
+    setTimeout(() => {
+        resetCountdownDialog();
+    }, 2000);
+}
+
+function resetCountdownDialog() {
+    const countdownTimerElement = document.getElementById('countdownTimer');
+    const countdownSecondsElement = document.getElementById('countdownSeconds');
+    const printButtonText = document.getElementById('printButtonText');
+    const printNowButton = document.getElementById('printNowButton');
+    const cancelButton = document.getElementById('cancelCountdown');
+
+    // Reset UI to initial state
+    countdownSeconds = getCountdownDuration();
+    if (countdownSecondsElement) {
+        countdownSecondsElement.textContent = countdownSeconds;
+    }
+    if (countdownTimerElement) {
+        countdownTimerElement.style.display = 'inline';
+    }
+    if (printButtonText) {
+        printButtonText.textContent = 'Print Now';
+    }
+    if (printNowButton) {
+        printNowButton.disabled = false;
+    }
+    if (cancelButton) {
+        cancelButton.textContent = 'Cancel';
+    }
+
+    // Restart countdown for next print
+    if (countdownTimer) {
+        clearInterval(countdownTimer);
+    }
+    countdownTimer = setInterval(() => {
+        countdownSeconds--;
+        if (countdownTimerElement) {
+            countdownTimerElement.textContent = countdownSeconds;
+        }
+
+        if (countdownSeconds <= 0) {
+            clearInterval(countdownTimer);
+            executeCountdownPrint();
+        }
+    }, 1000);
 }
 
 function removeUrlParameter(parameter) {

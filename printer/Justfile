@@ -3,7 +3,7 @@
 
 # Import shared libraries
 import "../talos/just/common.just"
-import "../talos/just/python.just"
+# Note: Not importing python.just to avoid recipe conflicts
 
 # ============================================================================
 # ADDON-SPECIFIC VARIABLES
