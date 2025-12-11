@@ -14,6 +14,7 @@ The enhanced deployment system provides robust, production-ready deployment capa
 
 ### 🛡️ **Safety Features**
 - **Pre-deployment Validation**: SSH connectivity, HA core status, disk space
+- **Configuration Sync Protection**: Automatic detection of UI-modified configurations
 - **Health Checking**: Post-deployment verification of add-on state
 - **Atomic Operations**: All-or-nothing deployment strategy
 - **Error Recovery**: Comprehensive error handling with troubleshooting steps
@@ -67,7 +68,31 @@ just deploy-dry-run
 just d grid-dashboard      # deploy
 just dd grid-dashboard     # deploy-dry-run
 just dv grid-dashboard     # deploy-verbose
+just df grid-dashboard     # deploy-force (skip sync checks)
 ```
+
+### Configuration Sync Commands
+
+The deployment system includes bidirectional sync protection for Home Assistant configurations:
+
+```bash
+# Check for configuration drift
+just detect-changes
+
+# Fetch UI changes into repository
+just fetch-config
+
+# Show diff and resolution options
+just reconcile scenes.yaml
+
+# Force deploy (skip sync checks)
+just deploy-force
+
+# Force deploy with backup
+just deploy-force --backup
+```
+
+> **Note**: Standard `just deploy` now includes automatic sync checking. If UI-modified configurations are detected, deployment will be blocked with resolution options. See [Configuration Sync Guide](../development/configuration-sync.md) for details.
 
 ## Architecture
 
@@ -75,8 +100,9 @@ just dv grid-dashboard     # deploy-verbose
 
 1. **Discovery Phase**: Identify add-ons to deploy
 2. **Validation Phase**: Check prerequisites (SSH, HA core, disk space)
-3. **Build Phase**: Build add-on containers if needed
-4. **Deploy Phase**: Upload and install add-ons
+3. **Sync Check Phase**: Detect configuration drift and prevent overwrites
+4. **Build Phase**: Build add-on containers if needed
+5. **Deploy Phase**: Upload and install add-ons
 5. **Health Check Phase**: Verify add-on started successfully
 6. **Reporting Phase**: Display results and capture logs on failure
 

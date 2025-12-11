@@ -21,6 +21,7 @@ This directory contains project-specific documentation for the smarthome reposit
 *Day-to-day development activities and local environment*
 
 - [**local-development.md**](development/local-development.md) — Orchestrated local dev and service graph
+- [**configuration-sync.md**](development/configuration-sync.md) — Bidirectional Home Assistant configuration sync
 - [**development-environment-summary.md**](development/development-environment-summary.md) — Implementation details and architecture
 
 ### 🔧 [Add-on Development](addon-development/) - Home Assistant Integration

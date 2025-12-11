@@ -8,6 +8,7 @@ Modern TypeScript-based configuration management system for Home Assistant with 
 - [Architecture](#architecture)
 - [Quick Start](#quick-start)
 - [Workflows](#workflows)
+- [Bidirectional Sync](#bidirectional-sync)
 - [TypeScript Generator Design](#typescript-generator-design)
 - [Backup Strategy](#backup-strategy)
 
@@ -20,6 +21,7 @@ This directory manages Home Assistant configuration using a modern TypeScript-ba
 - **Type-safe configuration** - Catch errors before deployment
 - **Modern Z-Wave JS support** - Compatible with current Home Assistant
 - **Safe deployment** - Validation and automatic rollback on failure
+- **Bidirectional sync** - Protects UI-created configurations from overwrites
 - **Git-friendly** - Track high-level config, not generated YAML
 
 ### Current Status
@@ -125,9 +127,54 @@ just generate
 # 4. Validate and preview changes
 just check
 
-# 5. Deploy to production
+# 5. Deploy to production (now includes sync protection)
 just deploy
 ```
+
+---
+
+## Bidirectional Sync
+
+The configuration system includes bidirectional sync protection to prevent accidental overwrites of UI-created content.
+
+### Protected Deployment
+
+```bash
+# Standard deployment now includes automatic sync checking
+just deploy
+```
+
+If UI-modified configurations are detected, deployment is blocked with resolution options.
+
+### Handling Conflicts
+
+```bash
+# Option 1: Fetch UI changes into repository (recommended)
+just fetch-config
+git diff && git add . && git commit -m "Sync live HA changes"
+just deploy
+
+# Option 2: Force deploy (loses UI changes)
+just deploy-force
+
+# Option 3: Force deploy with backup
+just deploy-force --backup
+
+# Option 4: Manual reconciliation
+just reconcile scenes.yaml
+```
+
+### Monitoring
+
+```bash
+# Check for configuration drift
+just detect-changes
+
+# Show detailed diff for specific files
+just reconcile automations.yaml
+```
+
+> **📖 Complete Documentation**: See [Configuration Sync Guide](../docs/development/configuration-sync.md) for detailed usage, troubleshooting, and implementation details.
 
 ### Emergency Rollback
 
@@ -484,6 +531,13 @@ If Home Assistant fails to start after `just deploy`:
 2. Check logs: `ha core logs`
 3. Restore from remote backup: `rsync -a /tmp/hass-config-backup/ /config/`
 4. Restart: `ha core restart`
+
+**SSH System Control**: The `ha` command provides comprehensive system management:
+- **Device discovery**: Entity registry at `/config/.storage/core.entity_registry`
+- **System control**: `ha core restart`, `ha core info`, `ha core check`
+- **Logs**: `ha core logs`, `ha supervisor logs`
+- **Backups**: `ha backups list`, `ha backups new --name "backup-name"`
+- **Add-ons**: `ha addons list`, `ha addons info addon-name`
 
 Or use local backups:
 

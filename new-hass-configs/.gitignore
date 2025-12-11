@@ -1,5 +1,6 @@
 # Backups (local only)
 backups/
+.last-backup
 
 # Generated configs (should be regenerated from TypeScript sources)
 generated/

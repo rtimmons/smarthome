@@ -281,6 +281,30 @@ dev:
 	@"{{talos_bin}}" dev
 
 # ============================================================================
+# CONFIGURATION SYNC
+# ============================================================================
+
+# Fetch live Home Assistant configuration changes into repository
+[group: 'config']
+fetch-config *args="":
+	@cd new-hass-configs && just fetch-config {{args}}
+
+# Detect configuration drift between repository and live system
+[group: 'config']
+detect-changes:
+	@cd new-hass-configs && just detect-changes
+
+# Show diff and reconciliation options for a config file
+[group: 'config']
+reconcile FILE:
+	@cd new-hass-configs && just reconcile {{FILE}}
+
+# Force deploy with optional backup (skips sync checks)
+[group: 'deploy']
+deploy-force *args="":
+	@cd new-hass-configs && just deploy-force {{args}}
+
+# ============================================================================
 # ALIASES FOR COMMON COMMANDS
 # ============================================================================
 
@@ -288,6 +312,11 @@ dev:
 alias d := deploy
 alias dd := deploy-dry-run
 alias dv := deploy-verbose
+alias df := deploy-force
+
+# Aliases for configuration sync
+alias fc := fetch-config
+alias dc := detect-changes
 
 # Aliases for testing
 alias t := test

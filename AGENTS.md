@@ -21,6 +21,8 @@ Guidance for humans and agents working in this repository.
 
 ## Home Assistant configuration
 - Everything lives under `new-hass-configs`. Common commands: `just fetch`, `just check`, `just deploy`, and `./iterate.sh` for before/after scene inventories. Access the live system with `hass-cli` when you need to inspect entities or trigger scenes.
+- **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The `ha` command is available for system control, device discovery, entity inspection, logs, backups, and more. Entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
+- **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The `ha` command is available for system control, device discovery, entity inspection, logs, backups, and more. Entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
 
 ## Add-ons at a glance
 - `grid-dashboard` (port 3000) — Main dashboard UI. See `grid-dashboard/AGENTS.md`.

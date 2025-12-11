@@ -186,6 +186,7 @@ interface HACondition {
 }
 
 interface HAAutomation {
+  id?: string;
   alias: string;
   description?: string;
   trigger: HATrigger | HATrigger[];
@@ -393,6 +394,7 @@ function generateAutomations(): HAAutomation[] {
   for (const [id, automation] of Object.entries(automations)) {
     try {
       const haAutomation: HAAutomation = {
+        id,
         alias: automation.alias,
         ...(automation.description && { description: automation.description }),
         trigger: Array.isArray(automation.trigger)

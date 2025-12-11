@@ -1,7 +1,8 @@
 # Manual automations (not generated from TypeScript)
 # Add any hand-written automations here that are not suitable for the generator
 
-- alias: Living Hallway Switch - Double Up → Living Room High
+- id: living_hallway_switch_double_up_living_room_high
+  alias: Living Hallway Switch - Double Up → Living Room High
   description: Turn on Living Room High scene on double-tap up
   trigger:
     platform: event
@@ -17,7 +18,8 @@
       entity_id: scene.living_room_high
   mode: single
 
-- alias: Living Hallway Switch - Double Down → All Off
+- id: living_hallway_switch_double_down_all_off
+  alias: Living Hallway Switch - Double Down → All Off
   description: Turn off all lights on double-tap down
   trigger:
     platform: event
@@ -33,7 +35,8 @@
       entity_id: scene.all_off
   mode: single
 
-- alias: Kitchen Hanging Switch - Double Up → Kitchen High
+- id: kitchen_hanging_switch_double_up_kitchen_high
+  alias: Kitchen Hanging Switch - Double Up → Kitchen High
   description: Turn on Kitchen High scene on double-tap up
   trigger:
     platform: event
@@ -49,7 +52,8 @@
       entity_id: scene.kitchen_high
   mode: single
 
-- alias: Kitchen Hanging Switch - Double Down → Kitchen Off
+- id: kitchen_hanging_switch_double_down_kitchen_off
+  alias: Kitchen Hanging Switch - Double Down → Kitchen Off
   description: Turn off Kitchen lights on double-tap down
   trigger:
     platform: event
@@ -64,3 +68,25 @@
     target:
       entity_id: scene.kitchen_off
   mode: single
+
+- id: closet_presence_lighting
+  alias: "Closet Presence Lighting"
+  description: "Automatically control closet lighting based on human presence detection"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.human_sensor_presence
+      from: "off"
+      to: "on"
+  action:
+    - alias: "Turn on office high scene (as example)"
+      service: scene.turn_on
+      target:
+        entity_id: scene.office_high
+    - alias: "Wait a bit"
+      delay:
+        minutes: 3
+    - alias: "Turn off closet lights"
+      service: light.turn_off
+      target:
+        entity_id: light.light_closet_main
+  mode: restart
