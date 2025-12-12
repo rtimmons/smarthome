@@ -553,7 +553,7 @@ def test_bluey_label_repeated_titles(regenerate_baselines):
         {
             "Line1": "Leftovers",
             "Line2": "Casserole",
-            "Initials": "xy",
+            "Side": "xy",
         }
     )
 
@@ -568,8 +568,8 @@ def test_bluey_label_long_text(regenerate_baselines):
         {
             "Line1": "Extremely long casserole name that will clip on the label",
             "Line2": "Another long line to stress layout and spacing",
-            "Initials": "ABCDEFGH",
-            "PackageDate": "11/17/25",
+            "Side": "ABCDEFGH",
+            "Bottom": "11/17/25",
         }
     )
 
@@ -584,7 +584,7 @@ def test_bluey_label_missing_symbol(regenerate_baselines):
         {
             "Line1": "Fallback",
             "SymbolName": "",
-            "Initials": "xy",
+            "Side": "xy",
         }
     )
 
@@ -593,12 +593,12 @@ def test_bluey_label_missing_symbol(regenerate_baselines):
 
 
 def test_bluey_label_initials_only(regenerate_baselines):
-    """Bluey label renders side initials when title lines are missing."""
+    """Bluey label renders side text when title lines are missing."""
     template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
-            "Initials": "SIDE",
-            "PackageDate": "11/17/25",
+            "Side": "SIDE",
+            "Bottom": "11/17/25",
         }
     )
 
@@ -614,8 +614,8 @@ def test_bluey_label_full_fields(regenerate_baselines):
             "Line1": "Durban",
             "Line2": "Poison",
             "SymbolName": "awake",
-            "Initials": "DP",
-            "PackageDate": "07/20/25",
+            "Side": "DP",
+            "Bottom": "07/20/25",
         }
     )
 
@@ -624,20 +624,103 @@ def test_bluey_label_full_fields(regenerate_baselines):
 
 
 def test_bluey_label_alt_symbol(regenerate_baselines):
-    """Bluey label with alternate symbol and initials."""
+    """Bluey label with alternate symbol and side text."""
     template = bluey_label.TEMPLATE
     form_data = TemplateFormData(
         {
             "Line1": "Party Snacks",
             "Line2": "Label",
             "SymbolName": "balloon-2",
-            "Initials": "PS",
-            "PackageDate": "12/31/25",
+            "Side": "PS",
+            "Bottom": "12/31/25",
         }
     )
 
     image = template.render(form_data)
     assert_visual_match(image, "bluey_alt_symbol.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_between_field(regenerate_baselines):
+    """Bluey label with Between field text between Line1 and Line2."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Leftovers",
+            "Line2": "Casserole",
+            "Between": "from yesterday",
+            "Side": "LC",
+            "Bottom": "12/10/25",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_between_field.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_between_only(regenerate_baselines):
+    """Bluey label with Between field but only one title line (should not show Between)."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Single Line",
+            "Between": "should not appear",
+            "Side": "SL",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_between_only.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_inversion_0_percent(regenerate_baselines):
+    """Bluey label with 0% inversion (normal appearance)."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Normal",
+            "Line2": "Label",
+            "Side": "NL",
+            "Bottom": "12/10/25",
+            "Inversion": "0",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_inversion_0.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_inversion_50_percent(regenerate_baselines):
+    """Bluey label with 50% inversion (partial inversion)."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Half",
+            "Line2": "Inverted",
+            "Side": "HI",
+            "Bottom": "12/10/25",
+            "Inversion": "50",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_inversion_50.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_inversion_100_percent(regenerate_baselines):
+    """Bluey label with 100% inversion (fully inverted)."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Fully",
+            "Line2": "Inverted",
+            "Side": "FI",
+            "Bottom": "12/10/25",
+            "Inversion": "100",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_inversion_100.png", regenerate=regenerate_baselines)
 
 
 # =============================================================================

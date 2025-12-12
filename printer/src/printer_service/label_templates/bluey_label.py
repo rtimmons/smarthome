@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import List, Optional
 
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 from PIL.Image import Dither
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
@@ -43,6 +43,7 @@ TITLE_REPEAT_COUNT = 4
 TITLE_FONT_POINTS = 60
 INITIALS_FONT_POINTS = 48
 DATE_FONT_POINTS = 18
+BETWEEN_FONT_POINTS = int(TITLE_FONT_POINTS / 3)  # 1/3 the size of title font
 BACKGROUND_ALPHA_PERCENT = 25
 INITIALS_OPACITY_PERCENT = 50
 TITLE_BLOCK_PADDING = int(round(0.16 * QL810W_DPI))
@@ -70,14 +71,28 @@ class Template(TemplateDefinition):
     def render(self, form_data: TemplateFormData) -> Image.Image:
         line1 = form_data.get_str("Line1", "line1")
         line2 = form_data.get_str("Line2", "line2")
-        initials = form_data.get_str("Initials", "initials")
+        side = form_data.get_str(
+            "Side", "Initials", "side", "initials"
+        )  # Support both new and old field names
+        between = form_data.get_str("Between", "between")
         symbol_choice = form_data.get_str("SymbolName", "symbolname")
-        package_date_raw = form_data.get_str("PackageDate", "packagedate")
+        bottom_raw = form_data.get_str(
+            "Bottom", "PackageDate", "bottom", "packagedate"
+        )  # Support both new and old field names
+        inversion_raw = form_data.get_str("Inversion", "inversion")
 
         options = helper.svg_symbol_options()
         available_slugs = [option["slug"] for option in options]
         symbol_slug = helper.normalize_choice(candidate=symbol_choice, options=available_slugs)
-        package_date = helper.normalize_date(raw_value=package_date_raw)
+        bottom = helper.normalize_date(raw_value=bottom_raw)
+
+        # Parse inversion percentage (0-100)
+        inversion_percent = 0
+        if inversion_raw:
+            try:
+                inversion_percent = max(0, min(100, int(float(inversion_raw))))
+            except (ValueError, TypeError):
+                inversion_percent = 0
 
         renderer = LabelDrawingHelper(width=CANVAS_WIDTH_PX, height=CANVAS_HEIGHT_PX)
 
@@ -92,6 +107,7 @@ class Template(TemplateDefinition):
         title_font = helper.load_font(size_points=TITLE_FONT_POINTS)
         initials_font = helper.load_font(size_points=INITIALS_FONT_POINTS)
         date_font = helper.load_font(size_points=DATE_FONT_POINTS)
+        between_font = helper.load_font(size_points=BETWEEN_FONT_POINTS)
         title_lines = []
 
         if line1:
@@ -122,24 +138,34 @@ class Template(TemplateDefinition):
                         width_warning=f"{label_name} is wider than the label and will be clipped.",
                         height_warning="Text exceeds label height and may be clipped.",
                     )
-                    if line_index == 0 and len(title_lines) > 1:
+                    # Add "Between" text after Line1 if both Line1 and Line2 exist
+                    if line_index == 0 and len(title_lines) > 1 and between:
+                        renderer.advance(LINE2_OFFSET // 2)  # Half the normal spacing
+                        renderer.draw_centered_text(
+                            text=between,
+                            font=between_font,
+                            width_warning="Between text is wider than the label and will be clipped.",
+                            height_warning="Between text exceeds label height and may be clipped.",
+                        )
+                        renderer.advance(LINE2_OFFSET // 2)  # Other half of the spacing
+                    elif line_index == 0 and len(title_lines) > 1:
                         renderer.advance(LINE2_OFFSET)
                 if repeat_index < TITLE_REPEAT_COUNT - 1:
                     renderer.advance(TITLE_BLOCK_PADDING)
 
         renderer.advance(SYMBOL_SECTION_SPACING)
 
-        if initials:
+        if side:
             initials_top_margin: Optional[int] = None
             initials_min_top: Optional[int] = None
             initials_center = True
-            bbox = renderer.draw.textbbox((0, 0), initials, font=initials_font)
+            bbox = renderer.draw.textbbox((0, 0), side, font=initials_font)
             text_width = int(round(bbox[2] - bbox[0]))
             text_height = int(round(bbox[3] - bbox[1]))
             if text_width > 0 and text_height > 0:
                 mask = Image.new("L", (text_width, text_height), color=0)
                 mask_draw = ImageDraw.Draw(mask)
-                mask_draw.text((-bbox[0], -bbox[1]), initials, font=initials_font, fill=255)
+                mask_draw.text((-bbox[0], -bbox[1]), side, font=initials_font, fill=255)
                 left_mask = mask.rotate(90, expand=True)
                 initials_footprint = INITIALS_SIDE_MARGIN + left_mask.width
                 remaining_width = CANVAS_WIDTH_PX - (2 * initials_footprint)
@@ -150,7 +176,7 @@ class Template(TemplateDefinition):
                     initials_min_top = safe_top
                     initials_center = False
             renderer.draw_repeating_side_text(
-                text=initials,
+                text=side,
                 font=initials_font,
                 side_margin=INITIALS_SIDE_MARGIN,
                 vertical_margin=INITIALS_VERTICAL_MARGIN,
@@ -158,26 +184,26 @@ class Template(TemplateDefinition):
                 min_top_y=initials_min_top,
                 center=initials_center,
                 spacing=INITIALS_SIDE_SPACING,
-                width_warning="Initials are wider than the label and will be clipped.",
+                width_warning="Side text is wider than the label and will be clipped.",
                 opacity_percent=INITIALS_OPACITY_PERCENT,
                 mask_dither=Image.Dither.ORDERED,
             )
 
-        if package_date:
-            # Measure to anchor the date against the bottom margin; overflow warnings come from the helper.
-            date_metrics = renderer.measure_text(text=package_date, font=date_font)
+        if bottom:
+            # Measure to anchor the bottom text against the bottom margin; overflow warnings come from the helper.
+            date_metrics = renderer.measure_text(text=bottom, font=date_font)
             date_y = CANVAS_HEIGHT_PX - BOTTOM_MARGIN - date_metrics.height
             height_check: Optional[int] = CANVAS_HEIGHT_PX
             if date_y < 0:
                 height_check = None
             renderer.draw_centered_text(
-                text=package_date,
+                text=bottom,
                 font=date_font,
                 top=date_y,
                 advance=False,
-                width_warning="Date text is wider than the label and will be clipped.",
+                width_warning="Bottom text is wider than the label and will be clipped.",
                 warn_if_past_bottom=height_check,
-                height_warning="Date text exceeds label height and may be clipped.",
+                height_warning="Bottom text exceeds label height and may be clipped.",
             )
 
         # Keep dithering on the background to preserve the faint symbol, but render text without
@@ -185,6 +211,22 @@ class Template(TemplateDefinition):
         background_result = background_canvas.convert("1", dither=Dither.FLOYDSTEINBERG)
         foreground_result = renderer.canvas.convert("1", dither=Dither.NONE)
         result = ImageChops.darker(background_result, foreground_result)
+
+        # Apply inversion if requested (0-100 percentage)
+        if inversion_percent > 0:
+            if inversion_percent >= 100:
+                # Full inversion
+                result = ImageOps.invert(result)
+            else:
+                # Partial inversion: blend original with inverted
+                inverted = ImageOps.invert(result)
+                # Convert to RGB for blending, then back to monochrome
+                result_rgb = result.convert("RGB")
+                inverted_rgb = inverted.convert("RGB")
+                # Blend based on inversion percentage
+                blended = Image.blend(result_rgb, inverted_rgb, inversion_percent / 100.0)
+                result = blended.convert("1", dither=Dither.FLOYDSTEINBERG)
+
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result

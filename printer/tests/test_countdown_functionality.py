@@ -404,3 +404,35 @@ def test_preview_click_navigates_to_print_url(app_server, browser):
     current_url = page.url
     assert "print=true" in current_url
     assert "Text=Test+Label" in current_url
+
+
+def test_preview_click_does_not_fire_legacy_print_fetch(app_server, browser):
+    """Ensure preview clicks no longer trigger legacy print requests."""
+    page = browser.new_page()
+
+    page.add_init_script("""
+        window.__fetchLog = [];
+        const originalFetch = window.fetch;
+        window.fetch = function(input, init) {
+            const url = typeof input === 'string' ? input : (input && input.url) || '';
+            window.__fetchLog.push(url);
+            return originalFetch.apply(this, arguments);
+        };
+    """)
+
+    page.goto(f"{app_server}/bb?Line1=Cadillac", wait_until="networkidle")
+    _wait_for_previews(page)
+
+    # Reset fetch log after initial preview loads
+    page.evaluate("window.__fetchLog = [];")
+
+    label_preview_trigger = page.query_selector('.bb-preview-trigger[data-print-target="label"]')
+    assert label_preview_trigger is not None
+    label_preview_trigger.click()
+
+    # Give countdown dialog time to appear without letting it auto-print
+    page.wait_for_timeout(200)
+
+    fetch_calls = page.evaluate("window.__fetchLog")
+    assert isinstance(fetch_calls, list)
+    assert not any("print=true" in call for call in fetch_calls if isinstance(call, str))

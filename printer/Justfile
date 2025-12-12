@@ -47,6 +47,24 @@ start:
     if [ ! -d "{{venv}}" ]; then just setup-printer; fi; \
     "{{python}}" -m printer_service.app
 
+# Kill any process using the printer service port (8099)
+[group: 'dev']
+kill:
+    @echo "🔍 Checking for processes using port 8099..."
+    @set -e; \
+    port_pid=$(lsof -ti:8099 2>/dev/null || true); \
+    if [ -n "$port_pid" ]; then \
+        echo "📋 Found process(es) using port 8099:"; \
+        for pid in $port_pid; do \
+            ps -p "$pid" -o pid,ppid,command 2>/dev/null || echo "  PID $pid (process details unavailable)"; \
+        done; \
+        echo "💀 Killing process(es)..."; \
+        kill -9 $port_pid; \
+        echo "✅ Process(es) killed successfully"; \
+    else \
+        echo "✅ No processes found using port 8099"; \
+    fi
+
 # Run comprehensive tests (linting, type checking, unit tests)
 [group: 'test']
 test:
@@ -56,8 +74,6 @@ test:
     @"{{python}}" -m ruff format --check .
     @"{{python}}" -m mypy --config-file mypy.toml src/printer_service tests
     @"{{python}}" -m pytest
-    @echo "Running dark mode test separately to avoid asyncio conflicts..."
-    @"{{python}}" tests/test_dark_mode_standalone.py
     @echo "✅ All tests passed"
 
 # Format code with ruff

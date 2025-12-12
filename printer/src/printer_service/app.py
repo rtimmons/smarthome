@@ -167,9 +167,19 @@ class LabelPayloadError(Exception):
 def _template_from_request(
     default_template: label_templates.LabelTemplate,
 ) -> label_templates.LabelTemplate:
+    # Check URL parameters first
     slug = _coerce_slug(
         request.args.get("tpl") or request.args.get("template") or request.args.get("template_slug")
     )
+
+    # If not found in URL params, check form data (for POST requests)
+    if not slug and request.method == "POST":
+        slug = _coerce_slug(
+            request.form.get("tpl")
+            or request.form.get("template")
+            or request.form.get("template_slug")
+        )
+
     if slug:
         try:
             return label_templates.get_template(slug)
