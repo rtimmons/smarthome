@@ -166,6 +166,13 @@ function cancelCountdown() {
     resetCountdownDialog({ hideCountdown: false });
 }
 
+function buildExecutePrintUrl() {
+    const current = new URL(window.location.href);
+    current.searchParams.delete('countdown_duration');
+    const query = current.searchParams.toString();
+    return query ? `/bb/execute-print?${query}` : '/bb/execute-print';
+}
+
 async function executeCountdownPrint() {
     const countdownContainer = document.getElementById('printCountdownContainer');
     const countdownTimerElement = document.getElementById('countdownTimer');
@@ -185,34 +192,14 @@ async function executeCountdownPrint() {
     }
 
     try {
-        // Build the print request URL with current parameters
-        const url = new URL(window.location);
-        const printUrl = '/bb/execute-print?' + url.searchParams.toString();
-
-        // Execute the print via POST request (no body needed, parameters are in URL)
-        const response = await fetch(printUrl, {
-            method: 'POST'
-        });
-
-        if (!response.ok) {
-            let errorMessage = 'Print failed';
-            try {
-                const result = await response.json();
-                errorMessage = result.error || errorMessage;
-            } catch (e) {
-                // If response is not JSON, use status text
-                errorMessage = response.statusText || errorMessage;
-            }
-            window.alert(errorMessage);
+        const printUrl = buildExecutePrintUrl();
+        const result = await requestJson(printUrl, { method: 'POST' });
+        if (!result || !result.ok) {
+            window.alert((result && result.error) || 'Print failed');
             resetCountdownDialog();
             return;
         }
-
-        const result = await response.json();
-
-        // Print was successful - show success state and keep dialog open for multiple copies
         showPrintSuccess();
-
     } catch (error) {
         console.error('Print error:', error);
         window.alert('Print failed: ' + error.message);
