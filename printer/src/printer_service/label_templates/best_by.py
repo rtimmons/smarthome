@@ -166,6 +166,12 @@ def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
     if template_slug.lower().startswith("best by") and effective_delta_label:
         details.append(f"+{effective_delta_label.title()}")
 
+    base_date_value = _normalize_caption_piece(
+        _extract_query_value(query, "BaseDate", "baseDate", "base_date")
+    )
+    if base_date_value:
+        details.append(f"Base {base_date_value}")
+
     detail_keys = [
         ("Line1", False),
         ("Line2", False),

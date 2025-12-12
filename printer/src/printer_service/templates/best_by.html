@@ -12,7 +12,8 @@ Best By Label
     </style>
     {% set text_seed = (initial_query.get('text') or initial_query.get('Text') or '') | string | trim %}
     {% set text_mode = text_seed | length > 0 %}
-    {% set base_date_value = (initial_query.get('BaseDate') or initial_query.get('baseDate') or form_context.base_date_default) | string %}
+    {% set base_date_value = (initial_query.get('BaseDate') or initial_query.get('baseDate') or '') | string %}
+    {% set has_forced_base_date = base_date_value | length > 0 %}
     {% set delta_value = (initial_query.get('Offset') or initial_query.get('offset') or initial_query.get('Delta') or initial_query.get('delta') or form_context.delta_default) | string %}
     {% set prefix_value = (initial_query.get('Prefix') or initial_query.get('prefix') or form_context.prefix_default) | string %}
     {% set has_custom_prefix = prefix_value != form_context.prefix_default %}
@@ -27,9 +28,14 @@ Best By Label
         <p class="bb-help"><a href="{{ url_for('bb_route', tpl=active_template.slug) }}">Switch to date-offset mode</a></p>
     {% else %}
         <p class="bb-help">Generate and print a Best By label offset from a chosen base date. Use <code>?baseDate</code> and <code>?offset</code> query params to prefill.</p>
-        <label for="baseDate">
-            Base date (YYYY-MM-DD, optional)
-            <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}">
+        <label for="useBaseDate" style="display: flex; align-items: center; gap: 0.5rem;">
+            <input type="checkbox" id="useBaseDate" style="width: auto; margin: 0;" {% if has_forced_base_date %}checked{% endif %}>
+            <span>Force base date</span>
+        </label>
+        <label for="baseDate" id="baseDateLabel" style="{% if not has_forced_base_date %}display: none;{% endif %}">
+            Base date (YYYY-MM-DD)
+            <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}" placeholder="{{ form_context.base_date_default }}" {% if not has_forced_base_date %}disabled{% endif %}>
+            <small>Defaults to today's date when not forced.</small>
         </label>
         <label for="delta">
             Offset (days, weeks, months, or years)
@@ -57,10 +63,12 @@ Best By Label
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     const useCustomPrefixCheckbox = document.getElementById('useCustomPrefix');
+    const useBaseDateCheckbox = document.getElementById('useBaseDate');
     const prefixInput = document.getElementById('prefix');
     const prefixLabel = document.getElementById('prefixLabel');
     const textInput = document.getElementById('textValue');
     const baseInput = document.getElementById('baseDate');
+    const baseLabel = document.getElementById('baseDateLabel');
     const deltaInput = document.getElementById('delta');
     const defaultPrefix = '{{ form_context.prefix_default }}';
     const todayIso = '{{ form_context.base_date_default }}';
@@ -84,9 +92,26 @@ document.addEventListener('DOMContentLoaded', () => {
         useCustomPrefixCheckbox.addEventListener('change', updatePrefixFieldVisibility);
     }
 
-    if (baseInput && !baseInput.value) {
-        baseInput.value = todayIso;
+    function updateBaseDateFieldVisibility() {
+        if (!useBaseDateCheckbox || !baseInput || !baseLabel) return;
+        const isForced = useBaseDateCheckbox.checked;
+        if (isForced) {
+            baseLabel.style.display = 'grid';
+            baseInput.disabled = false;
+            if (!baseInput.value) {
+                baseInput.value = todayIso;
+            }
+        } else {
+            baseLabel.style.display = 'none';
+            baseInput.disabled = true;
+        }
     }
+
+    if (useBaseDateCheckbox) {
+        updateBaseDateFieldVisibility();
+        useBaseDateCheckbox.addEventListener('change', updateBaseDateFieldVisibility);
+    }
+
     if (deltaInput && !deltaInput.value) {
         deltaInput.value = defaultDelta;
     }
