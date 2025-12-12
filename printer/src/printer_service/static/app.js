@@ -229,7 +229,7 @@ function showPrintSuccess() {
 
     // Auto-reset after a short delay to allow for multiple prints
     setTimeout(() => {
-        resetCountdownDialog();
+        resetCountdownDialog({ hideCountdown: false });
     }, 2000);
 }
 
@@ -509,11 +509,24 @@ async function requestJson(url, options) {
         return { ok: false, aborted: false, status: null, data: null, error: message };
     }
 
-    const contentType = response.headers && response.headers.get ? response.headers.get('content-type') || '' : '';
-    const isJson = contentType.indexOf('application/json') !== -1;
+    const headerValue = (() => {
+        if (!response || !response.headers) {
+            return '';
+        }
+        if (typeof response.headers.get === 'function') {
+            return response.headers.get('content-type') || '';
+        }
+        const headerKey = Object.keys(response.headers).find(
+            (key) => key.toLowerCase() === 'content-type'
+        );
+        return headerKey ? String(response.headers[headerKey]) : '';
+    })();
+    const expectsJson = normalized.expectJson !== false;
+    const headerIndicatesJson = headerValue.toLowerCase().indexOf('application/json') !== -1;
+    const shouldParseJson = headerIndicatesJson || expectsJson;
     let data = null;
 
-    if (isJson) {
+    if (shouldParseJson && response && typeof response.json === 'function') {
         data = await response.json().catch(() => null);
     }
 
@@ -522,8 +535,14 @@ async function requestJson(url, options) {
         return { ok: false, aborted: false, status: response.status, data, error: message };
     }
 
-    if (normalized.expectJson && !isJson) {
-        return { ok: false, aborted: false, status: response.status, data: null, error: 'Unexpected response format.' };
+    if (expectsJson && data === null && !headerIndicatesJson) {
+        return {
+            ok: false,
+            aborted: false,
+            status: response.status,
+            data: null,
+            error: 'Unexpected response format.'
+        };
     }
 
     return { ok: true, aborted: false, status: response.status, data };
