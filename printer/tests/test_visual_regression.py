@@ -303,6 +303,20 @@ def test_best_by_prefix_double_colon_zero_offset(regenerate_baselines):
     )
 
 
+def test_best_by_prefix_only_base_date_unset(mock_best_by_date, regenerate_baselines):
+    """Best By label omits the date when base date is forced but empty."""
+    template = best_by.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "BaseDate": "",
+            "Prefix": "Test",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "best_by_prefix_only.png", regenerate=regenerate_baselines)
+
+
 def test_best_by_qr_code_simple(mock_best_by_date, regenerate_baselines):
     """Best By label with QR code (uses default caption)."""
     template = best_by.TEMPLATE

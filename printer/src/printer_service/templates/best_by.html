@@ -35,7 +35,7 @@ Best By Label
         <label for="baseDate" id="baseDateLabel" style="{% if not has_forced_base_date %}display: none;{% endif %}">
             Base date (YYYY-MM-DD)
             <input type="date" id="baseDate" name="BaseDate" value="{{ base_date_value }}" placeholder="{{ form_context.base_date_default }}" {% if not has_forced_base_date %}disabled{% endif %}>
-            <small>Defaults to today's date when not forced.</small>
+            <small>Defaults to today's date when not forced. Leave empty to omit the date.</small>
         </label>
         <label for="delta">
             Offset (days, weeks, months, or years)
@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const baseLabel = document.getElementById('baseDateLabel');
     const deltaInput = document.getElementById('delta');
     const defaultPrefix = '{{ form_context.prefix_default }}';
-    const todayIso = '{{ form_context.base_date_default }}';
     const defaultDelta = '{{ form_context.delta_default }}';
 
     function updatePrefixFieldVisibility() {
@@ -98,9 +97,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isForced) {
             baseLabel.style.display = 'grid';
             baseInput.disabled = false;
-            if (!baseInput.value) {
-                baseInput.value = todayIso;
-            }
         } else {
             baseLabel.style.display = 'none';
             baseInput.disabled = true;

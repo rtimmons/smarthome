@@ -261,13 +261,16 @@ def _build_preview_payload(
     if template.slug == _best_by_template().slug:
         try:
             base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
-            payload["best_by"] = {
-                "base_date": base_date.isoformat(),
-                "best_by_date": best_by_date.strftime("%Y-%m-%d"),
+            best_by_payload: dict[str, object] = {
                 "delta_label": delta_label,
                 "prefix": prefix,
                 "text": _best_by_text_value(form_data),
             }
+            if base_date is not None:
+                best_by_payload["base_date"] = base_date.isoformat()
+            if best_by_date is not None:
+                best_by_payload["best_by_date"] = best_by_date.strftime("%Y-%m-%d")
+            payload["best_by"] = best_by_payload
         except ValueError:
             pass
     return payload
@@ -375,13 +378,11 @@ def _dispatch_print(
         else:
             try:
                 base_date, best_by_date, delta_label, _prefix = best_by.compute_best_by(form_data)
-                response_payload.update(
-                    {
-                        "best_by_date": best_by_date.strftime("%Y-%m-%d"),
-                        "base_date": base_date.strftime("%Y-%m-%d"),
-                        "delta": delta_label,
-                    }
-                )
+                if best_by_date is not None:
+                    response_payload["best_by_date"] = best_by_date.strftime("%Y-%m-%d")
+                if base_date is not None:
+                    response_payload["base_date"] = base_date.strftime("%Y-%m-%d")
+                response_payload["delta"] = delta_label
             except ValueError:
                 pass
     return jsonify(response_payload)
@@ -396,9 +397,12 @@ def _qr_caption_for_template(
         if text_value:
             return f"Print: {text_value}"
         try:
-            _base_date, _best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
+            base_date, _best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
         except ValueError as exc:
             raise LabelPayloadError(str(exc))
+        normalized_prefix = prefix.strip() or template.display_name
+        if base_date is None:
+            return f"Print {normalized_prefix}"
         return f"Print {prefix}+{delta_label.title()}"
     explicit = form_data.get_str("QrText", "qr_text")
     if explicit:

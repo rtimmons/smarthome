@@ -761,8 +761,12 @@ async function requestPreview() {
     if (labelPreviewSummary) {
         labelPreviewSummary.textContent = 'Click to print the label.';
     }
-    if (bestByDateValue && data.best_by && data.best_by.best_by_date) {
-        bestByDateValue.textContent = data.best_by.best_by_date;
+    if (bestByDateValue) {
+        if (data.best_by && data.best_by.best_by_date) {
+            bestByDateValue.textContent = data.best_by.best_by_date;
+        } else if (data.best_by) {
+            bestByDateValue.textContent = 'Not set';
+        }
     }
 
     previewAbortController = null;

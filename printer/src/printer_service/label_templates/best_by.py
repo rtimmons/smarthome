@@ -43,6 +43,7 @@ _DELTA_MULTIPLIERS = {
     "month": 30,
     "year": 365,
 }
+_BASE_DATE_KEYS = ("BaseDate", "baseDate", "base_date")
 
 
 def _measure_text_size(text: str, font) -> tuple[int, int]:
@@ -147,7 +148,7 @@ def _extract_query_value(query: dict[str, list[str]], *keys: str) -> str:
 def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
     provided = " ".join((caption or "").split())
     parsed = urllib.parse.urlparse(qr_url)
-    query = urllib.parse.parse_qs(parsed.query)
+    query = urllib.parse.parse_qs(parsed.query, keep_blank_values=True)
     template_slug = _normalize_caption_piece(
         _extract_query_value(query, "tpl", "template"), title_case=True
     )
@@ -163,12 +164,16 @@ def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
         except ValueError:
             pass
 
-    if template_slug.lower().startswith("best by") and effective_delta_label:
-        details.append(f"+{effective_delta_label.title()}")
+    base_date_value = _normalize_caption_piece(_extract_query_value(query, *_BASE_DATE_KEYS))
+    base_date_provided = any(key in query for key in _BASE_DATE_KEYS)
+    base_date_forced_empty = base_date_provided and not base_date_value
 
-    base_date_value = _normalize_caption_piece(
-        _extract_query_value(query, "BaseDate", "baseDate", "base_date")
-    )
+    if (
+        template_slug.lower().startswith("best by")
+        and effective_delta_label
+        and not base_date_forced_empty
+    ):
+        details.append(f"+{effective_delta_label.title()}")
     if base_date_value:
         details.append(f"Base {base_date_value}")
 
@@ -195,7 +200,7 @@ def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
         prefix = f"Print Best By +{effective_delta_label.title()}"
 
     if details:
-        separator = ": " if not prefix.rstrip().endswith(":") else " "
+        separator = " "
         return f"{prefix}{separator}{', '.join(details)}"
     if provided:
         return provided
@@ -228,9 +233,12 @@ def _parse_delta_string(raw: str | None) -> Tuple[timedelta, str]:
     return timedelta(days=days), f"{magnitude} {normalized_unit}"
 
 
-def _resolve_base_date(form_data: TemplateFormData) -> date:
-    raw_base_date = form_data.get_str("BaseDate", "base_date")
-    if raw_base_date:
+def _resolve_base_date(form_data: TemplateFormData) -> Optional[date]:
+    has_explicit_base_date = any(key in form_data for key in _BASE_DATE_KEYS)
+    raw_base_date = form_data.get_str("BaseDate", "base_date", "baseDate")
+    if has_explicit_base_date:
+        if not raw_base_date:
+            return None
         try:
             return date.fromisoformat(raw_base_date)
         except ValueError as exc:
@@ -259,11 +267,14 @@ def describe_delta(form_data: TemplateFormData) -> str:
     return _resolve_delta(form_data)[1]
 
 
-def compute_best_by(form_data: TemplateFormData) -> Tuple[date, date, str, str]:
+def compute_best_by(
+    form_data: TemplateFormData,
+) -> Tuple[Optional[date], Optional[date], str, str]:
     base_date = _resolve_base_date(form_data)
     delta, delta_label = _resolve_delta(form_data)
     prefix = _resolve_prefix(form_data)
-    return base_date, base_date + delta, delta_label, prefix
+    best_by_date = base_date + delta if base_date is not None else None
+    return base_date, best_by_date, delta_label, prefix
 
 
 def _qr_image(qr_url: str, target_height_px: Optional[int] = None) -> Image.Image:
@@ -412,7 +423,7 @@ class Template(TemplateDefinition):
             return image
 
         base_date, best_by_date, delta_label, prefix = compute_best_by(form_data)
-        text = f"{prefix}{best_by_date.strftime('%Y-%m-%d')}"
+        text = prefix if best_by_date is None else f"{prefix}{best_by_date.strftime('%Y-%m-%d')}"
 
         font = helper.load_font(size_points=FONT_POINTS)
         text_width, text_height = _measure_text_size(text, font)
@@ -430,7 +441,10 @@ class Template(TemplateDefinition):
         )
         result = renderer.finalize()
         result.info["template_slug"] = self.slug
-        result.info["best_by_date"] = best_by_date.isoformat()
+        if base_date is not None:
+            result.info["base_date"] = base_date.isoformat()
+        if best_by_date is not None:
+            result.info["best_by_date"] = best_by_date.isoformat()
         result.info["delta_label"] = delta_label
         return result
 
