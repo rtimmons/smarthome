@@ -77,16 +77,24 @@
       entity_id: binary_sensor.human_sensor_presence
       from: "off"
       to: "on"
+  condition:
+    - condition: state
+      entity_id: light.light_closet_main
+      state: "off"
   action:
-    - alias: "Turn on office high scene (as example)"
+    - alias: "Turn on closet high scene when entering"
       service: scene.turn_on
       target:
-        entity_id: scene.office_high
-    - alias: "Wait a bit"
-      delay:
-        minutes: 3
-    - alias: "Turn off closet lights"
-      service: light.turn_off
+        entity_id: scene.closet_high
+    - alias: "Wait until no presence detected for 5 minutes"
+      wait_for_trigger:
+        - platform: state
+          entity_id: binary_sensor.human_sensor_presence
+          to: "off"
+          for:
+            minutes: 5
+    - alias: "Turn off closet scene after timeout"
+      service: scene.turn_on
       target:
-        entity_id: light.light_closet_main
-  mode: restart
+        entity_id: scene.closet_off
+  mode: single

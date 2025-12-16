@@ -306,6 +306,53 @@ export const scenes: SceneRegistry = {
   },
 
   // ============================================================================
+  // Closet Scenes
+  // ============================================================================
+
+  closet_high: {
+    name: "Closet - High",
+    lights: [
+      {
+        device: "closet_main",
+        state: "on",
+        brightness: 255
+      }
+    ]
+  },
+
+  closet_medium: {
+    name: "Closet - Medium",
+    lights: [
+      {
+        device: "closet_main",
+        state: "on",
+        brightness: 180
+      }
+    ]
+  },
+
+  closet_low: {
+    name: "Closet - Low",
+    lights: [
+      {
+        device: "closet_main",
+        state: "on",
+        brightness: 50
+      }
+    ]
+  },
+
+  closet_off: {
+    name: "Closet - Off",
+    lights: [
+      {
+        device: "closet_main",
+        state: "off"
+      }
+    ]
+  },
+
+  // ============================================================================
   // Living Room Scenes
   // ============================================================================
 

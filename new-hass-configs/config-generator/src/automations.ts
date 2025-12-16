@@ -356,6 +356,52 @@ export const automations: AutomationRegistry = {
   },
 
   // ============================================================================
+  // Closet Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  closet_webhook_high: {
+    alias: "Closet Webhook → High",
+    description: "Dashboard button: Closet High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_closet_high"
+    },
+    action: {
+      type: "scene",
+      scene: "closet_high"
+    },
+    mode: "single"
+  },
+
+  closet_webhook_medium: {
+    alias: "Closet Webhook → Medium",
+    description: "Dashboard button: Closet Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_closet_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "closet_medium"
+    },
+    mode: "single"
+  },
+
+  closet_webhook_off: {
+    alias: "Closet Webhook → Off",
+    description: "Dashboard button: Closet Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_closet_off"
+    },
+    action: {
+      type: "scene",
+      scene: "closet_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
   // Bedroom Webhook Automations (Dashboard Scene Buttons)
   // ============================================================================
 
