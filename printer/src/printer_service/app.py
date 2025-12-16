@@ -241,6 +241,28 @@ def _build_preview_payload(
     qr_template = _best_by_template()
     qr_metrics = analyze_label_image(qr_image, target_spec=qr_template.preferred_label_spec())
 
+    # Generate jar label preview if applicable
+    jar_image = None
+    jar_metrics = None
+    supplier = form_data.get_str("Supplier", "supplier")
+    percentage = form_data.get_str("Percentage", "percentage")
+    if supplier or percentage:
+        try:
+            # Create jar form data with QR URL and jar request flag
+            jar_qr_url = _jar_qr_url_for_template(template, form_data)
+            jar_form_data = dict(form_data)
+            jar_form_data["jar_qr_url"] = jar_qr_url
+            jar_form_data["jar_label_request"] = "true"
+            jar_image = template.render(jar_form_data)
+            # Use the custom label spec embedded in the jar image
+            from printer_service.label import label_spec_from_metadata
+
+            jar_spec = label_spec_from_metadata(jar_image)
+            jar_metrics = analyze_label_image(jar_image, target_spec=jar_spec)
+        except ValueError:
+            # If jar rendering fails, skip it
+            pass
+
     payload: dict[str, object] = {
         "status": "preview",
         "template": template.slug,
@@ -258,6 +280,19 @@ def _build_preview_payload(
             "warnings": qr_metrics.warnings,
         },
     }
+
+    # Add jar preview if available
+    if jar_image and jar_metrics:
+        jar_print_url = _print_url_for_template(template, form_data)
+        jar_print_url = jar_print_url.replace("print=true", "jar=true")
+        jar_qr_url = _jar_qr_url_for_template(template, form_data)
+        payload["jar_print_url"] = jar_print_url
+        payload["jar_qr_url"] = jar_qr_url  # URL that matches the QR code (no jar=true)
+        payload["jar"] = {
+            "image": _data_url_for_image(jar_image),
+            "metrics": jar_metrics.to_dict(),
+            "warnings": jar_metrics.warnings,
+        }
     if template.slug == _best_by_template().slug:
         try:
             base_date, best_by_date, delta_label, prefix = best_by.compute_best_by(form_data)
@@ -299,9 +334,12 @@ def _print_from_request(template: label_templates.LabelTemplate):
     except LabelPayloadError as exc:
         return jsonify({"error": str(exc)}), exc.status_code
     include_qr_label = _is_truthy(request.args.get("qr") or request.args.get("qr_label"))
+    include_jar_label = _is_truthy(request.args.get("jar") or request.args.get("jar_label"))
 
     # Execute the print
-    print_result = _dispatch_print(template, form_data, include_qr_label=include_qr_label)
+    print_result = _dispatch_print(
+        template, form_data, include_qr_label=include_qr_label, include_jar_label=include_jar_label
+    )
 
     # Check if print was successful (status code 200)
     if hasattr(print_result, "status_code") and print_result.status_code != 200:
@@ -331,6 +369,7 @@ def _render_print_image(
     form_data: TemplateFormData,
     *,
     include_qr_label: bool,
+    include_jar_label: bool = False,
 ) -> tuple[Image.Image, Optional[LabelMetrics], Optional[label_templates.LabelTemplate]]:
     if include_qr_label:
         print_url = _print_url_for_template(template, form_data)
@@ -339,6 +378,23 @@ def _render_print_image(
         qr_template = _best_by_template()
         metrics = analyze_label_image(qr_image, target_spec=qr_template.preferred_label_spec())
         return qr_image, metrics, qr_template
+    elif include_jar_label:
+        # For jar labels, we need to add the jar QR URL and request flag to the form data
+        jar_qr_url = _jar_qr_url_for_template(template, form_data)
+        # Create a copy of form data with the jar QR URL and request flag
+        jar_form_data = dict(form_data)
+        jar_form_data["jar_qr_url"] = jar_qr_url
+        jar_form_data["jar_label_request"] = "true"
+        try:
+            image = template.render(jar_form_data)
+        except ValueError as exc:
+            raise LabelPayloadError(str(exc))
+        # Use the custom label spec embedded in the jar image
+        from printer_service.label import label_spec_from_metadata
+
+        jar_spec = label_spec_from_metadata(image)
+        metrics = analyze_label_image(image, target_spec=jar_spec)
+        return image, metrics, template
     try:
         image = template.render(form_data)
     except ValueError as exc:
@@ -352,11 +408,15 @@ def _dispatch_print(
     form_data: TemplateFormData,
     *,
     include_qr_label: bool,
+    include_jar_label: bool = False,
 ):
     config = PrinterConfig.from_env()
     try:
         image, metrics, metrics_template = _render_print_image(
-            template, form_data, include_qr_label=include_qr_label
+            template,
+            form_data,
+            include_qr_label=include_qr_label,
+            include_jar_label=include_jar_label,
         )
     except LabelPayloadError as exc:
         return jsonify({"error": str(exc)}), exc.status_code
@@ -451,6 +511,19 @@ def _print_url_for_template(
     }
     if include_qr_label:
         params["qr"] = "true"
+    return _build_public_url(_best_by_relative_path(), params)
+
+
+def _jar_qr_url_for_template(
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+) -> str:
+    """Build QR URL for jar label (excludes print=true parameter)."""
+    params = {
+        **_query_params_from_form_data(form_data),
+        "tpl": template.slug,
+        # Note: jar label QR code does NOT include print=true
+    }
     return _build_public_url(_best_by_relative_path(), params)
 
 

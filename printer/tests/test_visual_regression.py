@@ -737,6 +737,81 @@ def test_bluey_label_inversion_100_percent(regenerate_baselines):
     assert_visual_match(image, "bluey_inversion_100.png", regenerate=regenerate_baselines)
 
 
+def test_bluey_jar_label_basic(regenerate_baselines):
+    """Bluey jar label with basic supplier and percentage fields."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Spice",
+            "Line2": "Mix",
+            "Side": "SM",
+            "Bottom": "12/31/25",
+            "Supplier": "Local Farm",
+            "Percentage": "100%",
+            "jar_label_request": "true",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_jar_basic.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_jar_label_supplier_only(regenerate_baselines):
+    """Bluey jar label with only supplier field (should trigger jar rendering)."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Herbs",
+            "Line2": "Dried",
+            "Side": "HD",
+            "Supplier": "Garden Co",
+            "jar_label_request": "true",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_jar_supplier_only.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_jar_label_percentage_only(regenerate_baselines):
+    """Bluey jar label with only percentage field (should trigger jar rendering)."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Organic",
+            "Line2": "Flour",
+            "Side": "OF",
+            "Bottom": "06/15/25",
+            "Percentage": "95%",
+            "jar_label_request": "true",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_jar_percentage_only.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_jar_label_full_fields(regenerate_baselines):
+    """Bluey jar label with all fields populated."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Premium",
+            "Line2": "Coffee",
+            "SymbolName": "awake",
+            "Side": "PC",
+            "Bottom": "03/20/26",
+            "Supplier": "Mountain Roasters",
+            "Percentage": "100% Arabica",
+            "jar_qr_url": "http://localhost:8099/bb?Line1=Premium&Line2=Coffee&tpl=bluey_label",
+            "jar_label_request": "true",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_jar_full_fields.png", regenerate=regenerate_baselines)
+
+
 # =============================================================================
 # Daily Snapshot Tests (if applicable)
 # =============================================================================

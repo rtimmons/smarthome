@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from typing import List, Optional
 
+import qrcode  # type: ignore[import-untyped]
 from PIL import Image, ImageChops, ImageDraw, ImageOps
-from PIL.Image import Dither
+from PIL.Image import Dither, Resampling
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
 from printer_service.label_templates import helper as helper
@@ -69,6 +70,12 @@ class Template(TemplateDefinition):
         return LABEL_SPEC
 
     def render(self, form_data: TemplateFormData) -> Image.Image:
+        # Check if this is an explicit jar label request
+        jar_request = form_data.get_str("jar_label_request")
+        if jar_request:
+            return self._render_jar_label(form_data)
+
+        # Otherwise render as regular label
         line1 = form_data.get_str("Line1", "line1")
         line2 = form_data.get_str("Line2", "line2")
         side = form_data.get_str(
@@ -230,6 +237,167 @@ class Template(TemplateDefinition):
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result
+
+    def _render_jar_label(self, form_data: TemplateFormData) -> Image.Image:
+        """Render a portrait-oriented jar label with HTML table layout."""
+        # Extract form data
+        line1 = form_data.get_str("Line1", "line1")
+        line2 = form_data.get_str("Line2", "line2")
+        side = form_data.get_str("Side", "Initials", "side", "initials")
+        symbol_choice = form_data.get_str("SymbolName", "symbolname")
+        bottom_raw = form_data.get_str("Bottom", "PackageDate", "bottom", "packagedate")
+        supplier = form_data.get_str("Supplier", "supplier")
+        percentage = form_data.get_str("Percentage", "percentage")
+
+        # Process symbol and bottom date
+        options = helper.svg_symbol_options()
+        available_slugs = [option["slug"] for option in options]
+        symbol_slug = helper.normalize_choice(candidate=symbol_choice, options=available_slugs)
+        bottom = helper.normalize_date(raw_value=bottom_raw)
+
+        # Portrait orientation: rotate main label 90° and reduce short edge by 15%
+        # Main label canvas: 390×720, so jar label should be 720×(390*0.85) = 720×331
+        portrait_width_px = CANVAS_HEIGHT_PX  # 720px (long edge stays same)
+        portrait_height_px = int(CANVAS_WIDTH_PX * 0.85)  # 331px (short edge reduced by 15%)
+
+        # Create renderer with portrait dimensions
+        renderer = LabelDrawingHelper(width=portrait_width_px, height=portrait_height_px)
+
+        # Create background with symbol
+        background_canvas = Image.new("L", (portrait_width_px, portrait_height_px), color=255)
+        helper.draw_background_symbol(
+            canvas=background_canvas,
+            slug=symbol_slug,
+            alpha_percent=BACKGROUND_ALPHA_PERCENT,
+        )
+
+        # Apply background to renderer canvas
+        renderer.canvas.paste(background_canvas, (0, 0))
+
+        # Define fonts with requested size adjustments
+        title_font = helper.load_font(
+            size_points=int(TITLE_FONT_POINTS * 0.8 * 1.1)
+        )  # Increase by 10%
+        side_font = helper.load_font(
+            size_points=int(INITIALS_FONT_POINTS * 0.5)
+        )  # Reduced for better fit
+        supplier_font = helper.load_font(
+            size_points=int(DATE_FONT_POINTS * 0.8 * 3)
+        )  # Triple the size
+        bottom_font = helper.load_font(
+            size_points=int(DATE_FONT_POINTS * 0.8 * 3)
+        )  # Triple the size
+
+        # Layout following HTML table structure:
+        # Row 1: Line1 Line2 (centered, colspan=3) with Side below
+        # Row 2: Supplier/Percentage | QR Code | Bottom
+
+        # Calculate layout dimensions
+        margin = 20
+        row1_height = portrait_height_px // 3
+        row2_height = portrait_height_px - row1_height - margin
+        col_width = (portrait_width_px - 2 * margin) // 3
+
+        # Row 1: Title area (Line1 Line2 + Side)
+        renderer.move_to(margin)
+        title_text = f"{line1} {line2}".strip()
+        title_bottom_y = margin
+        if title_text:
+            title_metrics = renderer.measure_text(text=title_text, font=title_font)
+            renderer.draw_centered_text(
+                text=title_text,
+                font=title_font,
+                width_warning="Title text is wider than the label and will be clipped.",
+            )
+            title_bottom_y = renderer.current_y
+
+        # Position Side text below title with margin
+        if side:
+            side_margin = 8  # Reasonable margin between title and side text
+            renderer.move_to(title_bottom_y + side_margin)
+            renderer.draw_centered_text(
+                text=side,
+                font=side_font,
+                width_warning="Side text is wider than the label and will be clipped.",
+            )
+
+        # Row 2 setup
+        row2_top = row1_height + margin
+
+        # Left column: Supplier and Percentage
+        left_col_x = margin
+        if supplier:
+            renderer.draw.text((left_col_x, row2_top), supplier, fill=0, font=supplier_font)
+        if percentage:
+            supplier_height = renderer.measure_text(text=supplier or "", font=supplier_font).height
+            percentage_y = row2_top + supplier_height + 5
+            renderer.draw.text(
+                (left_col_x, percentage_y), percentage, fill=0, font=supplier_font
+            )  # Uses same tripled font as supplier
+
+        # Center column: QR Code
+        qr_col_x = margin + col_width
+        qr_size = min(col_width - 10, row2_height - 10)  # Leave some padding
+
+        # Generate QR code with form data (excluding print=true)
+        qr_data = self._build_jar_qr_data(form_data)
+        qr_image = self._create_qr_image(qr_data, target_size=qr_size)
+
+        # Center QR code in its column
+        qr_x = qr_col_x + (col_width - qr_image.width) // 2
+        qr_y = row2_top + (row2_height - qr_image.height) // 2
+        renderer.canvas.paste(qr_image, (qr_x, qr_y))
+
+        # Right column: Bottom text
+        right_col_x = margin + 2 * col_width
+        if bottom:
+            # Right-align the bottom text in its column
+            bottom_metrics = renderer.measure_text(text=bottom, font=bottom_font)
+            bottom_x = right_col_x + col_width - bottom_metrics.width - 5
+            renderer.draw.text((bottom_x, row2_top), bottom, fill=0, font=bottom_font)
+
+        result = renderer.finalize()
+        if renderer.warnings:
+            result.info["label_warnings"] = list(renderer.warnings)
+
+        # Set custom label spec for jar labels to avoid dimension warnings
+        jar_spec = BrotherLabelSpec(
+            code="62-jar",  # Custom code for jar labels
+            printable_px=(portrait_width_px, portrait_height_px),  # 720x331
+            tape_size_mm=LABEL_SPEC.tape_size_mm,  # Same physical tape
+        )
+        result.info["label_spec_code"] = jar_spec.code
+        result.info["label_spec_width_px"] = str(jar_spec.printable_px[0])
+        result.info["label_spec_height_px"] = str(jar_spec.printable_px[1])
+
+        return result
+
+    def _build_jar_qr_data(self, form_data: TemplateFormData) -> str:
+        """Build QR code data for jar label (excludes print=true parameter)."""
+        # Get the jar QR URL from form data (set by the backend)
+        jar_qr_url = form_data.get_str("jar_qr_url")
+        if jar_qr_url:
+            return jar_qr_url
+        # Fallback to a basic URL if not provided
+        return "http://localhost:8099/bb"
+
+    def _create_qr_image(self, data: str, target_size: int) -> Image.Image:
+        """Create a QR code image with the specified target size."""
+        qr = qrcode.QRCode(
+            version=None,
+            error_correction=qrcode.constants.ERROR_CORRECT_H,
+            border=1,
+            box_size=1,
+        )
+        qr.add_data(data)
+        qr.make(fit=True)
+        qr_image = qr.make_image(fill_color="black", back_color="white").convert("L")
+
+        # Resize to target size
+        if target_size != qr_image.width:
+            qr_image = qr_image.resize((target_size, target_size), resample=Resampling.NEAREST)
+
+        return qr_image
 
 
 TEMPLATE = Template()

@@ -269,3 +269,94 @@ class TestBlueyLabelIntegration:
         data = response.get_json()
         assert data["template"] == "bluey_label"
         assert data["status"] == "sent"
+
+    def test_bluey_jar_label_form_renders_with_url_params(self, client):
+        """Test that the jar label form is populated with URL parameters."""
+        response = client.get(
+            "/bb?Line1=Spice&Line2=Mix&Side=SM&Bottom=12/31/25&Supplier=Local+Farm&Percentage=100%&tpl=bluey_label"
+        )
+        assert response.status_code == 200
+
+        # Check that form fields are populated with URL parameter values
+        html = response.get_data(as_text=True)
+        assert 'value="Spice"' in html  # Line1
+        assert 'value="Mix"' in html  # Line2
+        assert 'value="SM"' in html  # Side
+        assert 'value="12/31/25"' in html  # Bottom
+        assert 'value="Local Farm"' in html  # Supplier
+        assert 'value="100%"' in html  # Percentage
+
+    def test_bluey_jar_label_preview_api(self, client):
+        """Test preview API with jar label fields."""
+        payload = {
+            "template": "bluey_label",
+            "data": {
+                "Line1": "Herbs",
+                "Line2": "Dried",
+                "Side": "HD",
+                "Supplier": "Garden Co",
+                "Percentage": "95%",
+            },
+        }
+
+        response = client.post(
+            "/bb/preview", data=json.dumps(payload), content_type="application/json"
+        )
+        assert response.status_code == 200
+
+        data = response.get_json()
+        assert data["template"] == "bluey_label"
+        assert data["status"] == "preview"
+        assert "label" in data
+        assert "image" in data["label"]
+        # Should have jar preview when supplier/percentage provided
+        assert "jar" in data
+        assert "image" in data["jar"]
+
+    def test_bluey_jar_label_print_via_execute_print(self, client):
+        """Test jar label printing via execute-print endpoint."""
+        form_data = {
+            "Line1": "Coffee",
+            "Line2": "Beans",
+            "Side": "CB",
+            "Supplier": "Mountain Roasters",
+            "Percentage": "100%",
+            "tpl": "bluey_label",
+            "jar": "true",
+        }
+
+        print_data = "&".join([f"{k}={v}" for k, v in form_data.items()])
+        response = client.post(
+            "/bb/execute-print", data=print_data, content_type="application/x-www-form-urlencoded"
+        )
+        assert response.status_code == 200
+
+        data = response.get_json()
+        assert data["template"] == "bluey_label"
+        assert data["status"] == "sent"
+
+    def test_bluey_regular_label_without_jar_fields(self, client):
+        """Test that regular labels still work when jar fields are empty."""
+        payload = {
+            "template": "bluey_label",
+            "data": {
+                "Line1": "Regular",
+                "Line2": "Label",
+                "Side": "RL",
+                "Bottom": "12/25/25",
+                "Supplier": "",  # Empty jar fields
+                "Percentage": "",
+            },
+        }
+
+        response = client.post(
+            "/bb/preview", data=json.dumps(payload), content_type="application/json"
+        )
+        assert response.status_code == 200
+
+        data = response.get_json()
+        assert data["template"] == "bluey_label"
+        assert data["status"] == "preview"
+        assert "label" in data
+        # Should NOT have jar preview when supplier/percentage are empty
+        assert "jar" not in data

@@ -187,6 +187,43 @@ def test_bb_print_can_send_qr_label(
     assert data is not None
 
 
+def test_bb_print_can_send_jar_label(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    dispatched: dict[str, object] = {}
+
+    def fake_dispatch(image, config, **_kwargs):
+        dispatched["called"] = True
+        dispatched["backend"] = config.backend
+        return tmp_path / "jar.png"
+
+    monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
+
+    # Use the new execute-print endpoint with jar parameter
+    response = client.post(
+        "/bb/execute-print",
+        query_string={
+            "tpl": template_slug,
+            "jar": "true",
+            "Line1": "Test",
+            "Line2": "Jar",
+            "Supplier": "Test Supplier",
+            "Percentage": "100%",
+        },
+    )
+
+    assert response.status_code == 200  # Returns JSON response
+    assert dispatched["called"] is True
+
+    # Should return JSON response
+    data = response.get_json()
+    assert data is not None
+
+
 def test_sanitize_lines_trims_and_limits(test_environment: Tuple) -> None:
     helper_module = importlib.import_module("printer_service.label_templates.helper")
     helper_module = importlib.reload(helper_module)

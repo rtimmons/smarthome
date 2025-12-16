@@ -516,6 +516,28 @@
                                     </p>
                                     <p id="qrPreviewWarnings" class="bb-preview-note"></p>
                                 </article>
+                                <article class="bb-preview-card">
+                                    <div class="bb-preview-meta">
+                                        <h4>Jar label</h4>
+                                        <p id="jarCaption" class="bb-preview-note">Portrait orientation label for jars.</p>
+                                    </div>
+                                    <button type="button"
+                                            class="bb-preview-trigger print-trigger"
+                                            data-print-target="jar"
+                                            aria-label="Print the jar label preview">
+                                        <img id="jarPreviewImage" class="preview-image" src="" alt="Preview of the jar label" hidden>
+                                    </button>
+                                    <p id="jarPreviewUrl" class="bb-preview-note bb-preview-url" hidden>
+                                        <span class="bb-preview-url__label">URL</span>
+                                        <a id="jarPreviewUrlLink"
+                                           class="bb-preview-url__link"
+                                           href=""
+                                           target="_blank"
+                                           rel="noreferrer noopener">
+                                        </a>
+                                    </p>
+                                    <p id="jarPreviewWarnings" class="bb-preview-note"></p>
+                                </article>
                             </div>
                         </section>
                     {% endblock %}

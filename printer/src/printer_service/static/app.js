@@ -9,6 +9,8 @@ const qrPreviewWarnings = document.getElementById('qrPreviewWarnings');
 const qrCaptionNode = document.getElementById('qrCaption');
 const qrPreviewUrlRow = document.getElementById('qrPreviewUrl');
 const qrPreviewUrlLink = document.getElementById('qrPreviewUrlLink');
+const jarPreviewUrlRow = document.getElementById('jarPreviewUrl');
+const jarPreviewUrlLink = document.getElementById('jarPreviewUrlLink');
 const labelPreviewSummary = document.getElementById('labelPreviewSummary');
 const bestByDateValue = document.getElementById('bestByDateValue');
 const themeSelect = document.getElementById('themeSelect');
@@ -89,10 +91,21 @@ function updateCountdownPreview(printTarget) {
     }
 
     // Update title based on target
-    previewTitle.textContent = printTarget === 'qr' ? 'QR Label Preview' : 'Label Preview';
+    let previewTitleText = 'Label Preview'; // default
+    if (printTarget === 'qr') {
+        previewTitleText = 'QR Label Preview';
+    } else if (printTarget === 'jar') {
+        previewTitleText = 'Jar Label Preview';
+    }
+    previewTitle.textContent = previewTitleText;
 
     // Get the appropriate preview image source from DOM (fresh lookup)
-    const sourceImageId = printTarget === 'qr' ? 'qrPreviewImage' : 'labelPreviewImage';
+    let sourceImageId = 'labelPreviewImage'; // default
+    if (printTarget === 'qr') {
+        sourceImageId = 'qrPreviewImage';
+    } else if (printTarget === 'jar') {
+        sourceImageId = 'jarPreviewImage';
+    }
     const sourceImage = document.getElementById(sourceImageId);
 
     if (sourceImage && sourceImage.src && !sourceImage.hidden && sourceImage.dataset.hasPreview === 'true') {
@@ -125,7 +138,12 @@ function updateCountdownPreviewImage(printTarget) {
         return;
     }
 
-    const sourceImageId = printTarget === 'qr' ? 'qrPreviewImage' : 'labelPreviewImage';
+    let sourceImageId = 'labelPreviewImage'; // default
+    if (printTarget === 'qr') {
+        sourceImageId = 'qrPreviewImage';
+    } else if (printTarget === 'jar') {
+        sourceImageId = 'jarPreviewImage';
+    }
     const sourceImage = document.getElementById(sourceImageId);
 
     if (sourceImage && sourceImage.src && !sourceImage.hidden && sourceImage.dataset.hasPreview === 'true') {
@@ -345,6 +363,9 @@ const URLState = {
         if (options.qr) {
             url.searchParams.set('qr', 'true');
         }
+        if (options.jar) {
+            url.searchParams.set('jar', 'true');
+        }
         if (options.countdown_duration) {
             url.searchParams.set('countdown_duration', options.countdown_duration);
         }
@@ -357,9 +378,15 @@ const URLState = {
         const url = this.buildURL(formData, options);
 
         if (useHistory) {
+            let target = 'label';
+            if (options.qr) {
+                target = 'qr';
+            } else if (options.jar) {
+                target = 'jar';
+            }
             window.history.pushState({
                 printState: !!options.print,
-                target: options.qr ? 'qr' : 'label'
+                target: target
             }, '', url.toString());
         } else {
             window.history.replaceState({}, '', url.toString());
@@ -374,7 +401,8 @@ function transitionToPrintState(target) {
     URLState.updateURL(formData, {
         template: templateSlug,
         print: true,
-        qr: target === 'qr'
+        qr: target === 'qr',
+        jar: target === 'jar'
     }, true);
 
     startCountdown(target);
@@ -656,6 +684,22 @@ function updateQrPreviewUrl(url) {
     }
 }
 
+function updateJarPreviewUrl(url) {
+    if (!jarPreviewUrlRow || !jarPreviewUrlLink) {
+        return;
+    }
+    const normalized = typeof url === 'string' ? url.trim() : '';
+    if (normalized) {
+        jarPreviewUrlRow.hidden = false;
+        jarPreviewUrlLink.textContent = normalized;
+        jarPreviewUrlLink.href = normalized;
+    } else {
+        jarPreviewUrlRow.hidden = true;
+        jarPreviewUrlLink.textContent = '';
+        jarPreviewUrlLink.removeAttribute('href');
+    }
+}
+
 async function requestPreview() {
     if (!form || !previewContainer || disableDefaultFormHandlers) {
         return;
@@ -734,6 +778,7 @@ async function requestPreview() {
             previewStatus.classList.add('preview-status--error');
         }
         updateQrPreviewUrl('');
+        updateJarPreviewUrl('');
         previewAbortController = null;
         return;
     }
@@ -741,14 +786,28 @@ async function requestPreview() {
     const data = result.data || {};
     const labelPayload = data.label || {};
     const qrPayload = data.qr || {};
+    const jarPayload = data.jar || {};
 
     const qrTargetUrl = typeof data.print_url === 'string' ? data.print_url : '';
+    const jarTargetUrl = typeof data.jar_qr_url === 'string' ? data.jar_qr_url : '';
 
     updatePreviewImage(labelPreviewImage, labelPayload);
     updatePreviewImage(qrPreviewImage, qrPayload);
+
+    // Update jar preview if available
+    const jarPreviewImage = document.getElementById('jarPreviewImage');
+    const jarPreviewWarnings = document.getElementById('jarPreviewWarnings');
+    if (jarPreviewImage && jarPayload.image) {
+        updatePreviewImage(jarPreviewImage, jarPayload);
+    }
+    if (jarPreviewWarnings) {
+        updateWarnings(jarPreviewWarnings, jarPayload.warnings || []);
+    }
+
     updateWarnings(labelPreviewWarnings, labelPayload.warnings || []);
     updateWarnings(qrPreviewWarnings, qrPayload.warnings || []);
     updateQrPreviewUrl(qrTargetUrl);
+    updateJarPreviewUrl(jarTargetUrl);
     clearLoadingState();
 
     if (previewStatus) {
@@ -884,7 +943,13 @@ function bindPrintTriggers() {
     document.querySelectorAll('.print-trigger').forEach((node) => {
         node.addEventListener('click', (event) => {
             event.preventDefault();
-            const target = node.dataset.printTarget === 'qr' ? 'qr' : 'label';
+            const printTarget = node.dataset.printTarget;
+            let target = 'label'; // default
+            if (printTarget === 'qr') {
+                target = 'qr';
+            } else if (printTarget === 'jar') {
+                target = 'jar';
+            }
             transitionToPrintState(target);
         });
     });

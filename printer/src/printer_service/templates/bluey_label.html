@@ -12,6 +12,8 @@
     {% set between_value = (initial_query.get('Between') or initial_query.get('between') or '') | string %}
     {% set bottom_value = (initial_query.get('Bottom') or initial_query.get('bottom') or initial_query.get('PackageDate') or initial_query.get('packageDate') or '') | string %}
     {% set inversion_value = (initial_query.get('Inversion') or initial_query.get('inversion') or '0') | string %}
+    {% set supplier_value = (initial_query.get('Supplier') or initial_query.get('supplier') or '') | string %}
+    {% set percentage_value = (initial_query.get('Percentage') or initial_query.get('percentage') or '') | string %}
 
     <label for="line1">
         Line 1
@@ -44,5 +46,13 @@
     <label for="inversion">
         Inversion (%)
         <input type="number" id="inversion" name="Inversion" value="{{ inversion_value }}" placeholder="0" min="0" max="100" step="1">
+    </label>
+    <label for="supplier">
+        Supplier
+        <input type="text" id="supplier" name="Supplier" value="{{ supplier_value }}" placeholder="Supplier name">
+    </label>
+    <label for="percentage">
+        Percentage
+        <input type="text" id="percentage" name="Percentage" value="{{ percentage_value }}" placeholder="Percentage">
     </label>
 {% endblock %}
