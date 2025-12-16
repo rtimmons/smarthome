@@ -337,7 +337,10 @@ class Template(TemplateDefinition):
 
         # Center column: QR Code
         qr_col_x = margin + col_width
-        qr_size = min(col_width - 10, row2_height - 10)  # Leave some padding
+        base_qr_size = min(col_width - 10, row2_height - 10)  # Leave some padding
+        qr_size = int(
+            base_qr_size * 1.15 * 1.15
+        )  # Increase QR code size by 15% twice (32.25% total)
 
         # Generate QR code with form data (excluding print=true)
         qr_data = self._build_jar_qr_data(form_data)
@@ -345,7 +348,7 @@ class Template(TemplateDefinition):
 
         # Center QR code in its column
         qr_x = qr_col_x + (col_width - qr_image.width) // 2
-        qr_y = row2_top + (row2_height - qr_image.height) // 2
+        qr_y = row2_top + (row2_height - qr_image.height) // 2 - 5  # Move up by 5 pixels
         renderer.canvas.paste(qr_image, (qr_x, qr_y))
 
         # Right column: Bottom text
@@ -382,7 +385,7 @@ class Template(TemplateDefinition):
         return "http://localhost:8099/bb"
 
     def _create_qr_image(self, data: str, target_size: int) -> Image.Image:
-        """Create a QR code image with the specified target size."""
+        """Create a QR code image with the specified target size, maintaining scannability."""
         qr = qrcode.QRCode(
             version=None,
             error_correction=qrcode.constants.ERROR_CORRECT_H,
@@ -393,9 +396,18 @@ class Template(TemplateDefinition):
         qr.make(fit=True)
         qr_image = qr.make_image(fill_color="black", back_color="white").convert("L")
 
-        # Resize to target size
+        # Use the better resizing approach from best_by.py to maintain scannability
         if target_size != qr_image.width:
-            qr_image = qr_image.resize((target_size, target_size), resample=Resampling.NEAREST)
+            modules_count = qr.modules_count
+            quiet_zone_modules = qr.border
+            total_modules = modules_count + (quiet_zone_modules * 2)
+
+            # Ensure each QR module is at least 2 pixels for scannability
+            QR_MIN_MODULE_PX = 2
+            module_px = max(QR_MIN_MODULE_PX, int(target_size / max(total_modules, 1)))
+            actual_size = total_modules * module_px
+
+            qr_image = qr_image.resize((actual_size, actual_size), resample=Resampling.NEAREST)
 
         return qr_image
 
