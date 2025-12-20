@@ -736,8 +736,14 @@ def _jar_qr_url_for_template(
     form_data: TemplateFormData,
 ) -> str:
     """Build QR URL for jar label (excludes print=true parameter)."""
+    filtered_form_data = TemplateFormData(
+        {key: value for key, value in form_data.items() if key.lower() not in {"jar", "jar_label"}}
+    )
+    preset_slug = _preset_slug_for_form_data(template, filtered_form_data)
+    if preset_slug:
+        return _build_public_url(f"p/{preset_slug}")
     params = {
-        **_query_params_from_form_data(form_data),
+        **_query_params_from_form_data(filtered_form_data),
         "tpl": template.slug,
         # Note: jar label QR code does NOT include print=true
     }

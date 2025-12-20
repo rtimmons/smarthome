@@ -14,6 +14,11 @@ const jarPreviewUrlLink = document.getElementById('jarPreviewUrlLink');
 const labelPreviewSummary = document.getElementById('labelPreviewSummary');
 const bestByDateValue = document.getElementById('bestByDateValue');
 const themeSelect = document.getElementById('themeSelect');
+const presetPanel = document.getElementById('presetPanel');
+const savePresetButton = document.getElementById('savePresetButton');
+const presetStatus = document.getElementById('presetStatus');
+const presetListBody = document.getElementById('presetListBody');
+const presetEmpty = document.getElementById('presetEmpty');
 
 let previewAbortController = null;
 let previewTimerId = null;
@@ -21,6 +26,7 @@ let lastPreviewPayloadKey = '';
 const PREVIEW_DEBOUNCE_MS = 250;
 const THEME_STORAGE_KEY = 'printer-theme';
 const THEME_OPTIONS = ['light', 'dark', 'system'];
+const PRESET_EMPTY_MESSAGE = 'No presets saved yet.';
 
 // Countdown functionality
 let countdownTimer = null;
@@ -576,6 +582,196 @@ async function requestJson(url, options) {
     return { ok: true, aborted: false, status: response.status, data };
 }
 
+function setPresetStatus(message, isError = false) {
+    if (!presetStatus) {
+        return;
+    }
+    presetStatus.textContent = message || '';
+    presetStatus.classList.toggle('preset-status--error', isError);
+}
+
+function setPresetEmpty(message) {
+    if (!presetEmpty) {
+        return;
+    }
+    presetEmpty.textContent = message || PRESET_EMPTY_MESSAGE;
+    presetEmpty.hidden = false;
+}
+
+function clearPresetEmpty() {
+    if (!presetEmpty) {
+        return;
+    }
+    presetEmpty.hidden = true;
+}
+
+function buildPresetOpenUrl(slug) {
+    const prefix = BASE_PATH || '';
+    return `${prefix}/p/${slug}`;
+}
+
+function getPresetTemplateSlug() {
+    if (form && form.dataset.template) {
+        return form.dataset.template;
+    }
+    return URLState.getTemplate();
+}
+
+function buildPresetPayload(name) {
+    return {
+        name,
+        template: getPresetTemplateSlug(),
+        data: getFormStateForUrl(),
+    };
+}
+
+function createPresetCell(content, options = {}) {
+    const cell = document.createElement('div');
+    if (options.className) {
+        cell.className = options.className;
+    }
+    if (options.asCode) {
+        const code = document.createElement('code');
+        code.className = 'preset-code';
+        code.textContent = content;
+        cell.appendChild(code);
+    } else {
+        cell.textContent = content;
+    }
+    return cell;
+}
+
+function createPresetActions(preset) {
+    const actions = document.createElement('div');
+    actions.className = 'preset-row__actions';
+
+    const openButton = document.createElement('button');
+    openButton.type = 'button';
+    openButton.className = 'preset-action';
+    openButton.textContent = 'Open';
+    openButton.addEventListener('click', () => {
+        window.location.assign(buildPresetOpenUrl(preset.slug));
+    });
+
+    const deleteButton = document.createElement('button');
+    deleteButton.type = 'button';
+    deleteButton.className = 'preset-action preset-action--danger';
+    deleteButton.textContent = 'Delete';
+    deleteButton.addEventListener('click', () => {
+        handleDeletePreset(preset);
+    });
+
+    actions.appendChild(openButton);
+    actions.appendChild(deleteButton);
+    return actions;
+}
+
+function renderPresetRow(preset) {
+    const row = document.createElement('div');
+    row.className = 'preset-row';
+    row.setAttribute('role', 'listitem');
+    row.appendChild(createPresetCell(preset.name || 'Untitled'));
+    row.appendChild(createPresetCell(preset.slug || '', { asCode: true }));
+    row.appendChild(createPresetCell(preset.template || '', { asCode: true }));
+    row.appendChild(createPresetActions(preset));
+    return row;
+}
+
+function renderPresets(presets) {
+    if (!presetListBody) {
+        return;
+    }
+    presetListBody.innerHTML = '';
+    if (!Array.isArray(presets) || presets.length === 0) {
+        setPresetEmpty(PRESET_EMPTY_MESSAGE);
+        return;
+    }
+    clearPresetEmpty();
+    presets.forEach((preset) => {
+        presetListBody.appendChild(renderPresetRow(preset));
+    });
+}
+
+async function loadPresets() {
+    if (!presetPanel) {
+        return;
+    }
+    setPresetStatus('Loading presets...', false);
+    const result = await requestJson('/presets');
+    if (!result.ok) {
+        const message = result.error || 'Presets unavailable.';
+        setPresetStatus(message, true);
+        setPresetEmpty(message);
+        if (presetListBody) {
+            presetListBody.innerHTML = '';
+        }
+        return;
+    }
+    setPresetStatus('', false);
+    const payload = result.data || {};
+    renderPresets(payload.presets || []);
+}
+
+async function handleSavePreset() {
+    if (!savePresetButton) {
+        return;
+    }
+    const nameInput = window.prompt('Preset name');
+    if (nameInput === null) {
+        return;
+    }
+    const name = nameInput.trim();
+    if (!name) {
+        setPresetStatus('Preset name is required.', true);
+        return;
+    }
+    savePresetButton.disabled = true;
+    setPresetStatus('Saving preset...', false);
+    const payload = buildPresetPayload(name);
+    const result = await requestJson('/presets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+    savePresetButton.disabled = false;
+    if (!result.ok) {
+        setPresetStatus(result.error || 'Failed to save preset.', true);
+        return;
+    }
+    const saved = result.data && result.data.preset ? result.data.preset : null;
+    setPresetStatus(`Saved "${saved && saved.name ? saved.name : name}".`, false);
+    loadPresets();
+}
+
+async function handleDeletePreset(preset) {
+    if (!preset || !preset.slug) {
+        return;
+    }
+    const label = preset.name || preset.slug;
+    const confirmed = window.confirm(`Delete preset "${label}"?`);
+    if (!confirmed) {
+        return;
+    }
+    setPresetStatus(`Deleting "${label}"...`, false);
+    const result = await requestJson(`/presets/${preset.slug}`, { method: 'DELETE' });
+    if (!result.ok) {
+        setPresetStatus(result.error || 'Failed to delete preset.', true);
+        return;
+    }
+    setPresetStatus(`Deleted "${label}".`, false);
+    loadPresets();
+}
+
+function initPresets() {
+    if (!presetPanel) {
+        return;
+    }
+    if (savePresetButton) {
+        savePresetButton.addEventListener('click', handleSavePreset);
+    }
+    loadPresets();
+}
+
 function createAbortController() {
     if (typeof window !== 'undefined' && window.AbortController) {
         return new window.AbortController();
@@ -973,6 +1169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (form && previewContainer && !disableDefaultFormHandlers) {
         schedulePreview();
     }
+    initPresets();
 
     // Initialize countdown functionality
     checkForPrintParameter();

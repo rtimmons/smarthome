@@ -68,7 +68,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - [x] Wire QR URL generation to prefer preset route when slug exists.
     - Validation: unit/integration test asserting QR preview `print_url` uses `/p/<slug>` when preset exists and full `/bb?...` otherwise.
     - Demo: save preset, refresh preview, confirm QR URL text switches to `/p/<slug>`.
-  - [ ] Update UI (`base.html`, `app.js`) for save + list + delete.
+  - [x] Update UI (`base.html`, `app.js`) for save + list + delete.
     - Validation: Playwright or DOM tests if available; otherwise add app.js unit tests for preset list rendering and deletion flow.
     - Demo: create two presets, verify list order, delete one, ensure UI and DB reflect removal.
   - [ ] Add tests for hashing, storage, routes, QR URL shortening.

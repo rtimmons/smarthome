@@ -214,6 +214,15 @@
             .preview {
                 margin-top: 0.5rem;
             }
+            .preset-row {
+                grid-template-columns: 1fr;
+            }
+            .preset-row--header {
+                display: none;
+            }
+            .preset-row__actions {
+                justify-content: flex-start;
+            }
         }
         label {
             display: grid;
@@ -241,6 +250,106 @@
         }
         button:hover {
             background-color: var(--accent-strong);
+        }
+        .preset-panel {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.85rem;
+            background: var(--label-panel-bg);
+            box-shadow: var(--shadow);
+            display: grid;
+            gap: 0.75rem;
+        }
+        .preset-header h3 {
+            margin: 0;
+            font-size: 1rem;
+        }
+        .preset-header p {
+            margin: 0.25rem 0 0;
+            color: var(--muted-color);
+            font-size: 0.9rem;
+        }
+        .preset-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+        }
+        .preset-status {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--muted-color);
+            min-height: 1.1rem;
+        }
+        .preset-status--error {
+            color: var(--danger-color);
+        }
+        .preset-list {
+            display: grid;
+            gap: 0.35rem;
+        }
+        .preset-list-body {
+            display: grid;
+            gap: 0.35rem;
+        }
+        .preset-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+            gap: 0.6rem;
+            align-items: center;
+            padding: 0.35rem 0.2rem;
+            border-bottom: 1px dashed var(--border-color);
+            font-size: 0.9rem;
+        }
+        .preset-row:last-child {
+            border-bottom: none;
+        }
+        .preset-row--header {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-weight: 600;
+            color: var(--muted-color);
+            border-bottom: 1px solid var(--border-color);
+            padding-top: 0;
+        }
+        .preset-code {
+            font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
+            word-break: break-all;
+        }
+        .preset-row__actions {
+            display: flex;
+            gap: 0.4rem;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .preset-action {
+            background: var(--chip-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.7rem;
+            font-size: 0.85rem;
+            border-radius: 999px;
+            box-shadow: none;
+        }
+        .preset-action:hover {
+            background: var(--accent-color);
+            color: #fff;
+            border-color: transparent;
+        }
+        .preset-action--danger {
+            border-color: rgba(179, 38, 30, 0.35);
+            color: var(--danger-color);
+        }
+        .preset-action--danger:hover {
+            background: var(--danger-color);
+            color: #fff;
+            border-color: transparent;
+        }
+        .preset-empty {
+            margin: 0;
+            color: var(--muted-color);
+            font-size: 0.9rem;
         }
         .theme-toggle {
             margin-left: auto;
@@ -475,6 +584,26 @@
                 <div class="form-grid">
                     <div class="form-fields">
                         {% block form_fields %}{% endblock %}
+                        <section class="preset-panel" id="presetPanel" aria-label="Presets">
+                            <div class="preset-header">
+                                <h3>Presets</h3>
+                                <p>Save common labels to reuse and shorten QR URLs.</p>
+                            </div>
+                            <div class="preset-controls">
+                                <button type="button" id="savePresetButton">Save preset</button>
+                            </div>
+                            <p id="presetStatus" class="preset-status" role="status" aria-live="polite"></p>
+                            <div class="preset-list" id="presetList" role="list">
+                                <div class="preset-row preset-row--header" aria-hidden="true">
+                                    <span>Name</span>
+                                    <span>Slug</span>
+                                    <span>Template</span>
+                                    <span>Actions</span>
+                                </div>
+                                <div id="presetListBody" class="preset-list-body"></div>
+                            </div>
+                            <p id="presetEmpty" class="preset-empty" hidden>No presets saved yet.</p>
+                        </section>
                     </div>
                     {% block preview_area %}
                         <section id="previewContainer" class="preview" aria-live="polite">

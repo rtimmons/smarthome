@@ -232,6 +232,61 @@ def test_bb_preview_qr_url_falls_back_without_preset(
     assert query.get("print") == ["true"]
 
 
+def test_bb_preview_jar_qr_url_uses_preset_slug(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk", "Supplier": "Local Farm", "Percentage": "50%"}
+    preset = store.upsert_preset("Oat Milk", template_slug, params)
+
+    response = client.post(
+        "/bb/preview",
+        json={"template": template_slug, "data": params},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    parsed = urlparse(payload["jar_qr_url"])
+    assert parsed.path.endswith(f"/p/{preset.slug}")
+    assert parsed.query == ""
+
+
+def test_bb_preview_jar_qr_url_falls_back_without_preset(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk", "Supplier": "Local Farm", "Percentage": "50%"}
+
+    response = client.post(
+        "/bb/preview",
+        json={"template": template_slug, "data": params},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    parsed = urlparse(payload["jar_qr_url"])
+    query = parse_qs(parsed.query)
+    assert parsed.path.endswith("/bb")
+    assert "print" not in query
+    assert "jar" not in query
+    assert query.get("tpl") == [template_slug]
+    assert query.get("Supplier") == ["Local Farm"]
+
+
 def test_bb_preview_validates_payload(test_environment: Tuple) -> None:
     _, templates_module, flask_app, _labels_dir, _ = test_environment
     client = flask_app.test_client()
