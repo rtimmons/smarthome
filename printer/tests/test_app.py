@@ -7,6 +7,7 @@ import types
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from PIL import Image, ImageFont
@@ -46,6 +47,10 @@ class FakePresetStore:
 
     def find_by_slug(self, slug: str) -> Preset | None:
         return self._presets.get(slug)
+
+    def find_slug_for_params(self, template_slug: str, params: dict) -> str | None:
+        slug = slug_for_params(template_slug, params)
+        return slug if slug in self._presets else None
 
     def upsert_preset(self, name: str, template_slug: str, params: dict) -> Preset:
         normalized_name = str(name or "").strip()
@@ -173,6 +178,58 @@ def test_bb_preview_returns_dual_images(test_environment: Tuple) -> None:
     assert metrics["height_px"] == BLUEY_EXPECTED_CANVAS[1]
     assert metrics["width_in"] == pytest.approx(BLUEY_EXPECTED_WIDTH_IN, rel=0, abs=0.01)
     assert metrics["height_in"] == pytest.approx(BLUEY_EXPECTED_HEIGHT_IN, rel=0, abs=0.01)
+
+
+def test_bb_preview_uses_preset_slug_for_qr_url(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk"}
+    preset = store.upsert_preset("Oat Milk", template_slug, params)
+
+    response = client.post(
+        "/bb/preview",
+        json={"template": template_slug, "data": params},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    parsed = urlparse(payload["print_url"])
+    assert parsed.path.endswith(f"/p/{preset.slug}")
+    assert parsed.query == ""
+
+
+def test_bb_preview_qr_url_falls_back_without_preset(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Beta"}
+
+    response = client.post(
+        "/bb/preview",
+        json={"template": template_slug, "data": params},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    parsed = urlparse(payload["print_url"])
+    query = parse_qs(parsed.query)
+    assert parsed.path.endswith("/bb")
+    assert query.get("print") == ["true"]
 
 
 def test_bb_preview_validates_payload(test_environment: Tuple) -> None:

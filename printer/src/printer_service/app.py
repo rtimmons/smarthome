@@ -429,7 +429,7 @@ def _build_preview_payload(
     except ValueError as exc:
         raise LabelPayloadError(str(exc))
     label_metrics = analyze_label_image(label_image, target_spec=template.preferred_label_spec())
-    print_url = _print_url_for_template(template, form_data)
+    print_url = _print_url_for_template(template, form_data, prefer_preset=True)
     qr_caption = _qr_caption_for_template(template, form_data)
     try:
         qr_image = _render_qr_label_image(template, form_data, print_url, qr_caption)
@@ -569,7 +569,7 @@ def _render_print_image(
     include_jar_label: bool = False,
 ) -> tuple[Image.Image, Optional[LabelMetrics], Optional[label_templates.LabelTemplate]]:
     if include_qr_label:
-        print_url = _print_url_for_template(template, form_data)
+        print_url = _print_url_for_template(template, form_data, prefer_preset=True)
         qr_caption = _qr_caption_for_template(template, form_data)
         qr_image = _render_qr_label_image(template, form_data, print_url, qr_caption)
         qr_template = _best_by_template()
@@ -700,6 +700,7 @@ def _print_url_for_template(
     form_data: TemplateFormData,
     *,
     include_qr_label: bool = False,
+    prefer_preset: bool = False,
 ) -> str:
     params = {
         **_query_params_from_form_data(form_data),
@@ -708,7 +709,26 @@ def _print_url_for_template(
     }
     if include_qr_label:
         params["qr"] = "true"
+    if prefer_preset and not include_qr_label:
+        preset_slug = _preset_slug_for_form_data(template, form_data)
+        if preset_slug:
+            return _build_public_url(f"p/{preset_slug}")
     return _build_public_url(_best_by_relative_path(), params)
+
+
+def _preset_slug_for_form_data(
+    template: label_templates.LabelTemplate, form_data: TemplateFormData
+) -> Optional[str]:
+    try:
+        store = _get_preset_store()
+    except PresetServiceError:
+        return None
+    try:
+        return store.find_slug_for_params(template.slug, form_data)
+    except Exception:
+        return None
+    finally:
+        store.close()
 
 
 def _jar_qr_url_for_template(

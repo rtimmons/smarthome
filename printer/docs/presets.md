@@ -54,7 +54,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 - Encode: URL-safe base64/base32 without padding (ASCII only).
 
 ## Plan / State
-- Status: Draft
+- Status: In progress
 - Checklist:
   - [x] Confirm MongoDB connection details in local dev (`just dev` root; `../mongodb/AGENTS.md`).
     - Validation: document connection URI/env vars in this file and verify with a one-off health check endpoint or Mongo ping.
@@ -65,7 +65,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - [x] Add Flask endpoints for list/create/delete and `/p/<slug>` redirect.
     - Validation: integration tests in `tests/test_app.py` for CRUD and redirect (200/404 cases).
     - Demo: `curl` create/list/delete + open `/p/<slug>` in browser to confirm redirect.
-  - [ ] Wire QR URL generation to prefer preset route when slug exists.
+  - [x] Wire QR URL generation to prefer preset route when slug exists.
     - Validation: unit/integration test asserting QR preview `print_url` uses `/p/<slug>` when preset exists and full `/bb?...` otherwise.
     - Demo: save preset, refresh preview, confirm QR URL text switches to `/p/<slug>`.
   - [ ] Update UI (`base.html`, `app.js`) for save + list + delete.
