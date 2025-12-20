@@ -35,7 +35,8 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - `slug` (string, URL-safe, derived from 64-bit hash)
   - `name` (string)
   - `template` (string, template slug)
-  - `query` (string, canonical query string) or `params` (object form)
+  - `query` (string, canonical query string)
+  - `params` (object form, optional)
   - `created_at`, `updated_at` (UTC ISO strings)
 
 ## Routing and behavior
@@ -50,8 +51,8 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 
 ## Slug hashing (64-bit, URL-safe)
 - Canonicalize params: stable key order, normalized template slug, list handling, empty values removed.
-- Hash: `blake2b` or `sha256` truncated to 8 bytes (64-bit).
-- Encode: URL-safe base64/base32 without padding (ASCII only).
+- Hash: `blake2b` truncated to 8 bytes (64-bit).
+- Encode: URL-safe base64 without padding (ASCII only).
 
 ## Testing
 - Automated:
