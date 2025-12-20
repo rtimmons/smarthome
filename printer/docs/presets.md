@@ -71,7 +71,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - [x] Update UI (`base.html`, `app.js`) for save + list + delete.
     - Validation: Playwright or DOM tests if available; otherwise add app.js unit tests for preset list rendering and deletion flow.
     - Demo: create two presets, verify list order, delete one, ensure UI and DB reflect removal.
-  - [ ] Add tests for hashing, storage, routes, QR URL shortening.
+  - [x] Add tests for hashing, storage, routes, QR URL shortening.
     - Validation: `just test` passes with new tests.
     - Demo: run targeted tests (pytest -k preset) and review output.
   - [ ] Update docs and any add-on config needed for MongoDB.
