@@ -36,8 +36,9 @@ class BackgroundChanger {
         var artUrl = track.absoluteAlbumArtUri || track.albumArtUri;
         e.Globals.App.setBackgroundImage(artUrl);
 
-        var title = track.title;
-        e.Globals.App.setBanner(title);
+        var subtitle = track.artist || track.stationName;
+        var bannerText = [track.title, subtitle].filter(Boolean).join(' — ');
+        e.Globals.App.setBanner(bannerText);
     }
 }
 

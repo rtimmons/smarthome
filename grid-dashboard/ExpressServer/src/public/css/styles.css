@@ -47,11 +47,36 @@ body {
     white-space: nowrap;
     overflow: hidden;
 }
-.cell div.scroll {
-    animation: marq 10s infinite;
+.state-Music .content {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+}
+.banner-marquee {
+    width: 100%;
+    overflow: hidden;
+}
+.banner-marquee__track {
+    display: inline-block;
+    white-space: nowrap;
+    will-change: transform;
+}
+.banner-marquee__segment {
+    display: inline-flex;
+    align-items: center;
+    padding-right: 3rem;
+}
+.banner-marquee__track--scroll {
+    animation: banner-marquee-scroll 10s linear infinite;
 }
 
-@keyframes marq {
-    0%   { transform: translateX(100%);  }
-    100% { transform: translateX(-100%); }
+@keyframes banner-marquee-scroll {
+    0% {
+        transform: translateX(var(--marquee-start, 0px));
+    }
+    100% {
+        transform: translateX(var(--marquee-end, -100%));
+    }
 }

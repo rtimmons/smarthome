@@ -69,19 +69,90 @@ class App {
         });
     }
 
-    // TODO: move to gridview?
-    setBanner(msg) {
-        if (msg === this.banner) {
+    _ensureBannerTrack() {
+        if (this.$bannerTrack && this.$bannerTrack.length) {
+            return this.$bannerTrack;
+        }
+        var bannerContent = this.$.find('.state-Music .content');
+        if (!bannerContent.length) {
+            return $();
+        }
+        bannerContent.empty();
+        var marquee = $('<div class="banner-marquee"></div>');
+        this.$bannerTrack = $('<div class="banner-marquee__track"></div>');
+        marquee.append(this.$bannerTrack);
+        bannerContent.append(marquee);
+        return this.$bannerTrack;
+    }
+
+    _createBannerSegment(text) {
+        return $('<span class="banner-marquee__segment"></span>').text(text);
+    }
+
+    _restartBannerAnimation($track, segmentWidth) {
+        if (!$track || !$track.length) {
             return;
         }
-        var banner = this.$.find('.state-Music div');
-        if (msg && msg.length >= 19) {
-            banner.addClass('scroll');
-        } else {
-            banner.removeClass('scroll');
+        var wrapper = $track.closest('.banner-marquee');
+        if (!wrapper.length) {
+            return;
         }
-        banner.html(msg);
-        this.banner = msg;
+
+        // Reset animation state so a new track always starts from the right edge.
+        $track.removeClass('banner-marquee__track--scroll');
+
+        var firstSegmentWidth =
+            segmentWidth || $track.children().first().outerWidth(true);
+        if (!firstSegmentWidth) {
+            return;
+        }
+        var start = 0;
+        var end = -firstSegmentWidth;
+        if (!isFinite(end)) {
+            return;
+        }
+
+        $track.css('--marquee-start', start + 'px');
+        $track.css('--marquee-end', end + 'px');
+
+        var distance = start - end; // distance equal to first segment width
+        var pixelsPerSecond = 160;
+        var durationSeconds = Math.max(distance / pixelsPerSecond, 8);
+        $track.css('animation-duration', durationSeconds + 's');
+
+        // Force reflow before enabling the animation class again.
+        void $track[0].offsetWidth;
+
+        $track.addClass('banner-marquee__track--scroll');
+    }
+
+    // TODO: move to gridview?
+    setBanner(msg) {
+        var bannerText = (msg || '').trim();
+        var track = this._ensureBannerTrack();
+        if (!track.length) {
+            return;
+        }
+
+        if (!bannerText) {
+            track.empty();
+            track.removeClass('banner-marquee__track--scroll');
+            this.banner = '';
+            return;
+        }
+
+        if (bannerText === this.banner) {
+            return;
+        }
+
+        track.empty();
+        var segment = this._createBannerSegment(bannerText);
+        var duplicate = segment.clone();
+        track.append(segment, duplicate);
+        track.attr('title', bannerText);
+        var segmentWidth = segment.outerWidth(true);
+        this.banner = bannerText;
+        this._restartBannerAnimation(track, segmentWidth);
     }
 
     // TODO: move to gridview?
