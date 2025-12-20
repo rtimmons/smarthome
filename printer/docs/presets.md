@@ -62,7 +62,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - [x] Add preset storage module (Mongo client, canonicalization, hash/slug helpers).
     - Validation: unit tests for canonicalization (stable key order, list handling, empty values), hash determinism, and slug encoding.
     - Demo: run `.venv/bin/python tests/test_presets.py` to print slug + canonical query for known inputs.
-  - [ ] Add Flask endpoints for list/create/delete and `/p/<slug>` redirect.
+  - [x] Add Flask endpoints for list/create/delete and `/p/<slug>` redirect.
     - Validation: integration tests in `tests/test_app.py` for CRUD and redirect (200/404 cases).
     - Demo: `curl` create/list/delete + open `/p/<slug>` in browser to confirm redirect.
   - [ ] Wire QR URL generation to prefer preset route when slug exists.
@@ -89,5 +89,30 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - Load printer UI, save a preset, reload page, verify list persists.
   - Delete preset and confirm it is removed and `/p/<slug>` 404s.
   - Confirm QR preview URL switches to `/p/<slug>` for saved presets.
+- Manual (curl demo):
+  - Known slug fixture: `hvS2eIbWbE0` for `best_by` + `Text=Fresh Pasta`, `Prefix=Use by`, `Delta=3 days`.
+  - Check missing preset redirect (expect 404 before create):
+    ```bash
+    curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8099/p/hvS2eIbWbE0
+    ```
+  - Create preset (expect 200 with `preset.slug == "hvS2eIbWbE0"` and `preset.query`):
+    ```bash
+    curl -s -X POST http://localhost:8099/presets \
+      -H 'Content-Type: application/json' \
+      -d '{"name":"Fresh Pasta","template":"best_by","data":{"Text":"Fresh Pasta","Prefix":"Use by","Delta":"3 days"}}'
+    ```
+  - Confirm redirect now exists (expect `302` and `/bb?tpl=best_by&Delta=3+days&Prefix=Use+by&Text=Fresh+Pasta`):
+    ```bash
+    curl -s -o /dev/null -w "%{http_code} %{redirect_url}\n" http://localhost:8099/p/hvS2eIbWbE0
+    ```
+  - Delete preset (expect `{"deleted": true, "slug": "hvS2eIbWbE0"}`):
+    ```bash
+    curl -s -X DELETE http://localhost:8099/presets/hvS2eIbWbE0
+    ```
+  - Confirm missing again (expect 404):
+    ```bash
+    curl -s -o /dev/null -w "%{http_code}\n" http://localhost:8099/p/hvS2eIbWbE0
+    ```
+  - If using a different slug, recompute it from the canonical query string rules and substitute it in the commands.
 - Success criteria:
   - QR scannability metric: ensure generated QR images have module size >= 4 px and quiet zone >= 4 modules (compute from QR metadata in `label_templates`), and verify QR payload length for saved presets is materially shorter (e.g., <= 60 chars for typical bluey labels).

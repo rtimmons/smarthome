@@ -4,6 +4,7 @@ import importlib
 import io
 import sys
 import types
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Tuple
 
@@ -13,6 +14,12 @@ from PIL import Image, ImageFont
 from printer_service.label_specs import resolve_brother_label_spec
 from printer_service.label_templates import bluey_label as bluey_module
 from printer_service.label_templates.base import TemplateFormData
+from printer_service.presets import (
+    Preset,
+    canonical_query_string,
+    normalize_template_slug,
+    slug_for_params,
+)
 
 TEST_LABEL_CODE = "29x90"
 TEST_LABEL_SPEC = resolve_brother_label_spec(TEST_LABEL_CODE)
@@ -23,6 +30,50 @@ EXPECTED_CANVAS = (EXPECTED_WIDTH_PX, EXPECTED_HEIGHT_PX)
 BLUEY_EXPECTED_CANVAS = (bluey_module.CANVAS_WIDTH_PX, bluey_module.CANVAS_HEIGHT_PX)
 BLUEY_EXPECTED_WIDTH_IN = bluey_module.LABEL_HEIGHT_IN
 BLUEY_EXPECTED_HEIGHT_IN = bluey_module.LABEL_WIDTH_IN
+
+
+class FakePresetStore:
+    def __init__(self) -> None:
+        self._presets: dict[str, Preset] = {}
+
+    def list_presets(self, *, sort_by: str = "name", limit: int = 200) -> list[Preset]:
+        presets = list(self._presets.values())
+        if sort_by == "updated":
+            presets.sort(key=lambda preset: preset.updated_at, reverse=True)
+        else:
+            presets.sort(key=lambda preset: preset.name)
+        return presets[:limit]
+
+    def find_by_slug(self, slug: str) -> Preset | None:
+        return self._presets.get(slug)
+
+    def upsert_preset(self, name: str, template_slug: str, params: dict) -> Preset:
+        normalized_name = str(name or "").strip()
+        if not normalized_name:
+            raise ValueError("Preset name is required.")
+        template = normalize_template_slug(template_slug)
+        query = canonical_query_string(template, params)
+        slug = slug_for_params(template, params)
+        now = datetime.now(timezone.utc).isoformat()
+        existing = self._presets.get(slug)
+        created_at = existing.created_at if existing else now
+        preset = Preset(
+            slug=slug,
+            name=normalized_name,
+            template=template,
+            query=query,
+            params=dict(params),
+            created_at=created_at,
+            updated_at=now,
+        )
+        self._presets[slug] = preset
+        return preset
+
+    def delete_preset(self, slug: str) -> bool:
+        return self._presets.pop(slug, None) is not None
+
+    def close(self) -> None:
+        return None
 
 
 def _count_runs(strip: Image.Image) -> int:
@@ -83,6 +134,16 @@ def _build_test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     app_module = importlib.reload(app_module)
     flask_app = app_module.create_app()
     return app_module, templates_module, flask_app, labels_dir, printer_output
+
+
+def _use_fake_preset_store(
+    monkeypatch: pytest.MonkeyPatch, app_module: types.ModuleType, store: FakePresetStore
+) -> None:
+    monkeypatch.setattr(
+        app_module.PresetStore,
+        "from_env",
+        classmethod(lambda cls: store),
+    )
 
 
 @pytest.fixture
@@ -473,3 +534,73 @@ def test_no_cooldown_on_rapid_prints(
 
     # All three prints should have been dispatched
     assert dispatched_count == 3
+
+
+def test_presets_create_list_delete(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    response = client.post(
+        "/presets",
+        json={"name": "Oat Milk", "template": template_slug, "data": {"Line1": "Oat Milk"}},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    preset = payload["preset"]
+    assert preset["name"] == "Oat Milk"
+    slug = preset["slug"]
+
+    response = client.get("/presets")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    assert payload["count"] == 1
+    assert payload["presets"][0]["slug"] == slug
+
+    response = client.delete(f"/presets/{slug}")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    assert payload["deleted"] is True
+
+    response = client.get("/presets")
+    payload = response.get_json()
+    assert payload is not None
+    assert payload["count"] == 0
+
+
+def test_preset_redirects_to_bb(test_environment: Tuple, monkeypatch: pytest.MonkeyPatch) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk"}
+    preset = store.upsert_preset("Oat Milk", template_slug, params)
+
+    response = client.get(f"/p/{preset.slug}")
+
+    assert response.status_code == 302
+    expected_query = canonical_query_string(template_slug, params)
+    assert response.headers["Location"].endswith(f"/bb?{expected_query}")
+
+
+def test_preset_missing_returns_404(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, _templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    response = client.get("/p/missing")
+
+    assert response.status_code == 404

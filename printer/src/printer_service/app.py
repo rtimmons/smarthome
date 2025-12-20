@@ -15,6 +15,7 @@ from PIL import Image, UnidentifiedImageError
 from . import label_templates
 from .label_templates import TemplateFormData, TemplateFormValue, best_by
 from .mongo import mongo_health
+from .presets import Preset, PresetStore, canonical_query_string
 from .label import (
     SUPPORTED_BACKENDS,
     PrinterConfig,
@@ -133,6 +134,118 @@ def create_app() -> Flask:
             return jsonify({"error": str(exc)}), 400
         return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
+    @app.get("/presets")
+    def list_presets_route():
+        try:
+            store = _get_preset_store()
+        except PresetServiceError as exc:
+            return jsonify({"error": str(exc)}), exc.status_code
+        try:
+            sort_by = request.args.get("sort", "name").strip().lower() or "name"
+            if sort_by not in {"name", "updated"}:
+                sort_by = "name"
+            presets = store.list_presets(sort_by=sort_by)
+        except Exception as exc:
+            app.logger.warning("Preset list failed: %s", exc)
+            return jsonify({"error": "Preset storage unavailable."}), 503
+        finally:
+            store.close()
+        payload = [_preset_payload(preset) for preset in presets]
+        return jsonify({"presets": payload, "count": len(payload)})
+
+    @app.post("/presets")
+    def save_preset_route():
+        try:
+            store = _get_preset_store()
+        except PresetServiceError as exc:
+            return jsonify({"error": str(exc)}), exc.status_code
+        payload = request.get_json(silent=True) or {}
+        name = _coerce_text(
+            payload.get("name") or request.form.get("name") or request.args.get("name")
+        )
+        if not name:
+            return jsonify({"error": "Preset name is required."}), 400
+        raw_template = (
+            payload.get("template")
+            or payload.get("tpl")
+            or payload.get("template_slug")
+            or request.form.get("template")
+            or request.form.get("tpl")
+            or request.form.get("template_slug")
+            or request.args.get("template")
+            or request.args.get("tpl")
+            or request.args.get("template_slug")
+        )
+        template_slug = _coerce_slug(raw_template)
+        if not template_slug:
+            return jsonify({"error": "Template is required."}), 400
+        try:
+            template = label_templates.get_template(template_slug)
+        except KeyError:
+            return jsonify({"error": "Unknown template."}), 400
+        raw_params = None
+        if "data" in payload:
+            raw_params = payload.get("data")
+        elif "params" in payload:
+            raw_params = payload.get("params")
+        try:
+            form_data = _preset_form_data_from_request(template, raw_params)
+            preset = store.upsert_preset(name, template.slug, form_data)
+        except LabelPayloadError as exc:
+            return jsonify({"error": str(exc)}), exc.status_code
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        except Exception as exc:
+            app.logger.warning("Preset save failed: %s", exc)
+            return jsonify({"error": "Preset storage unavailable."}), 503
+        finally:
+            store.close()
+        return jsonify({"preset": _preset_payload(preset)})
+
+    @app.delete("/presets/<slug>")
+    def delete_preset_route(slug: str):
+        try:
+            store = _get_preset_store()
+        except PresetServiceError as exc:
+            return jsonify({"error": str(exc)}), exc.status_code
+        try:
+            deleted = store.delete_preset(slug)
+        except Exception as exc:
+            app.logger.warning("Preset delete failed: %s", exc)
+            return jsonify({"error": "Preset storage unavailable."}), 503
+        finally:
+            store.close()
+        if not deleted:
+            return jsonify({"error": "Preset not found."}), 404
+        return jsonify({"deleted": True, "slug": slug})
+
+    @app.get("/p/<slug>")
+    def preset_redirect_route(slug: str):
+        try:
+            store = _get_preset_store()
+        except PresetServiceError as exc:
+            return jsonify({"error": str(exc)}), exc.status_code
+        try:
+            preset = store.find_by_slug(slug)
+        except Exception as exc:
+            app.logger.warning("Preset lookup failed: %s", exc)
+            return jsonify({"error": "Preset storage unavailable."}), 503
+        finally:
+            store.close()
+        if preset is None:
+            abort(404)
+        query = preset.query
+        if not query and preset.params is not None:
+            try:
+                form_data = _coerce_template_form_data(preset.params)
+                query = canonical_query_string(preset.template, form_data)
+            except (LabelPayloadError, ValueError):
+                query = ""
+        target = url_for("bb_route")
+        if query:
+            target = f"{target}?{query}"
+        return redirect(target)
+
     mongo_logged = {"done": False}
 
     @app.before_request
@@ -191,8 +304,44 @@ def _success_payload(
     return payload
 
 
+class PresetServiceError(Exception):
+    def __init__(self, message: str, status_code: int = 503) -> None:
+        super().__init__(message)
+        self.status_code = status_code
+
+
+def _get_preset_store() -> PresetStore:
+    try:
+        store = PresetStore.from_env()
+    except ValueError as exc:
+        raise PresetServiceError(str(exc), status_code=500) from exc
+    except RuntimeError as exc:
+        raise PresetServiceError(str(exc), status_code=500) from exc
+    if store is None:
+        raise PresetServiceError("Presets require MONGODB_URL.", status_code=503)
+    return store
+
+
+def _preset_payload(preset: Preset) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "slug": preset.slug,
+        "name": preset.name,
+        "template": preset.template,
+        "query": preset.query,
+        "created_at": preset.created_at,
+        "updated_at": preset.updated_at,
+    }
+    if preset.params is not None:
+        payload["params"] = preset.params
+    return payload
+
+
 def _coerce_slug(raw: object) -> str:
     return str(raw or "").strip().lower()
+
+
+def _coerce_text(raw: object) -> str:
+    return str(raw or "").strip()
 
 
 class LabelPayloadError(Exception):
@@ -243,6 +392,17 @@ def _template_and_form_from_payload(
     if template.slug == _best_by_template().slug:
         form_data = _normalized_best_by_form(form_data)
     return template, form_data
+
+
+def _preset_form_data_from_request(
+    template: label_templates.LabelTemplate, raw_params: object | None
+) -> TemplateFormData:
+    if raw_params is None:
+        return _form_data_from_args(template)
+    form_data = _coerce_template_form_data(raw_params)
+    if template.slug == _best_by_template().slug:
+        form_data = _normalized_best_by_form(form_data)
+    return form_data
 
 
 def _form_data_from_args(template: label_templates.LabelTemplate) -> TemplateFormData:
