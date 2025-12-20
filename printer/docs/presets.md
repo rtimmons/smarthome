@@ -16,6 +16,8 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 - List presets (name, slug, template, actions) below the save controls.
 - Presets can be deleted.
 - Presets are stored in MongoDB (via the mongodb add-on).
+- Presets require `pymongo` as a core dependency (not optional).
+- Use `.venv/bin/python` for helper scripts in this doc so dependencies (including `pymongo`) are available.
 - `/p/<slug>` redirects to the full `/bb?...` URL.
 - Slug is a stable hash of canonical form values, max 64 bits, URL-safe.
 - When generating QR URLs, use `/p/<slug>` if a matching preset exists; otherwise use the full URL.
@@ -57,9 +59,9 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - [x] Confirm MongoDB connection details in local dev (`just dev` root; `../mongodb/AGENTS.md`).
     - Validation: document connection URI/env vars in this file and verify with a one-off health check endpoint or Mongo ping.
     - Demo: run `just dev` (repo root), open printer UI at `http://localhost:8099`, and confirm logs show Mongo connection.
-  - [ ] Add preset storage module (Mongo client, canonicalization, hash/slug helpers).
+  - [x] Add preset storage module (Mongo client, canonicalization, hash/slug helpers).
     - Validation: unit tests for canonicalization (stable key order, list handling, empty values), hash determinism, and slug encoding.
-    - Demo: add a small debug script or REPL snippet in tests to print slug + canonical query for known inputs.
+    - Demo: run `.venv/bin/python tests/test_presets.py` to print slug + canonical query for known inputs.
   - [ ] Add Flask endpoints for list/create/delete and `/p/<slug>` redirect.
     - Validation: integration tests in `tests/test_app.py` for CRUD and redirect (200/404 cases).
     - Demo: `curl` create/list/delete + open `/p/<slug>` in browser to confirm redirect.

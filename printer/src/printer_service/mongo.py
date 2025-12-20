@@ -85,11 +85,11 @@ def _tcp_ping(host: str, port: int, timeout_seconds: float) -> None:
 
 def _driver_ping(config: MongoConfig, timeout_seconds: float) -> None:
     try:
-        from pymongo import MongoClient  # type: ignore[import-not-found]
+        from pymongo import MongoClient
     except Exception:
         _tcp_ping(config.host, config.port, timeout_seconds)
         return
-    client = MongoClient(
+    client: MongoClient = MongoClient(
         config.url,
         serverSelectionTimeoutMS=max(int(timeout_seconds * 1000), 1),
     )
