@@ -49,12 +49,26 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 - Status: Draft
 - Checklist:
   - [ ] Confirm MongoDB connection details in local dev (`just dev` root; `../mongodb/AGENTS.md`).
+    - Validation: document connection URI/env vars in this file and verify with a one-off health check endpoint or Mongo ping.
+    - Demo: run `just dev` (repo root), open printer UI at `http://localhost:8099`, and confirm logs show Mongo connection.
   - [ ] Add preset storage module (Mongo client, canonicalization, hash/slug helpers).
+    - Validation: unit tests for canonicalization (stable key order, list handling, empty values), hash determinism, and slug encoding.
+    - Demo: add a small debug script or REPL snippet in tests to print slug + canonical query for known inputs.
   - [ ] Add Flask endpoints for list/create/delete and `/p/<slug>` redirect.
+    - Validation: integration tests in `tests/test_app.py` for CRUD and redirect (200/404 cases).
+    - Demo: `curl` create/list/delete + open `/p/<slug>` in browser to confirm redirect.
   - [ ] Wire QR URL generation to prefer preset route when slug exists.
+    - Validation: unit/integration test asserting QR preview `print_url` uses `/p/<slug>` when preset exists and full `/bb?...` otherwise.
+    - Demo: save preset, refresh preview, confirm QR URL text switches to `/p/<slug>`.
   - [ ] Update UI (`base.html`, `app.js`) for save + list + delete.
+    - Validation: Playwright or DOM tests if available; otherwise add app.js unit tests for preset list rendering and deletion flow.
+    - Demo: create two presets, verify list order, delete one, ensure UI and DB reflect removal.
   - [ ] Add tests for hashing, storage, routes, QR URL shortening.
+    - Validation: `just test` passes with new tests.
+    - Demo: run targeted tests (pytest -k preset) and review output.
   - [ ] Update docs and any add-on config needed for MongoDB.
+    - Validation: docs reference Mongo env vars, local dev instructions updated, and add-on config validated.
+    - Demo: rebuild container (`just build`) and confirm app starts with Mongo enabled.
 
 ## Test plan
 - Automated:
