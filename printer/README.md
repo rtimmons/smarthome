@@ -97,9 +97,12 @@ PRINTER_BACKEND: "brother-network"
 BROTHER_PRINTER_URI: "tcp://192.168.1.192:9100"
 BROTHER_MODEL: "QL-810W"
 BROTHER_LABEL: "62x29"
+MONGODB_URL: "mongodb://mongodb:27017/smarthome"
 ```
 
-See [addon.yaml](./addon.yaml) for all available configuration options.
+Presets are stored in MongoDB. Configure `mongodb_url` in the add-on options (or
+set `MONGODB_URL` when running locally). See [addon.yaml](./addon.yaml) for all
+available configuration options.
 
 ## Label Templates
 
@@ -139,6 +142,7 @@ printer/
 ## Documentation
 
 - [docs/testing.md](./docs/testing.md) - Comprehensive testing guide
+- [docs/presets.md](./docs/presets.md) - Preset storage and QR shortcuts
 - [docs/ql810w-setup.md](./docs/ql810w-setup.md) - Brother QL-810W setup
 - [docs/ql810w-troubleshooting.md](./docs/ql810w-troubleshooting.md) - Printer troubleshooting
 

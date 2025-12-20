@@ -54,7 +54,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 - Encode: URL-safe base64/base32 without padding (ASCII only).
 
 ## Plan / State
-- Status: In progress
+- Status: Complete
 - Checklist:
   - [x] Confirm MongoDB connection details in local dev (`just dev` root; `../mongodb/AGENTS.md`).
     - Validation: document connection URI/env vars in this file and verify with a one-off health check endpoint or Mongo ping.
@@ -74,7 +74,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - [x] Add tests for hashing, storage, routes, QR URL shortening.
     - Validation: `just test` passes with new tests.
     - Demo: run targeted tests (pytest -k preset) and review output.
-  - [ ] Update docs and any add-on config needed for MongoDB.
+  - [x] Update docs and any add-on config needed for MongoDB.
     - Validation: docs reference Mongo env vars, local dev instructions updated, and add-on config validated.
     - Demo: rebuild container (`just build`) and confirm app starts with Mongo enabled.
 
