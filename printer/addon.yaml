@@ -38,6 +38,7 @@ options:
   usb_vendor_id: 4070
   usb_product_id: 33054
   label_output_dir: "/share/printer-labels"
+  mongodb_url: "mongodb://mongodb:27017/smarthome"
   dev_reload: false
   public_service_host: "homeassistant.local"
   public_service_port: "8099"
@@ -54,6 +55,7 @@ schema:
   usb_vendor_id: "int?"
   usb_product_id: "int?"
   label_output_dir: "str?"
+  mongodb_url: "str?"
   dev_reload: bool
   public_service_host: "str?"
   public_service_port: "str?"
@@ -91,6 +93,9 @@ translations:
     label_output_dir:
       name: Label output directory
       description: Directory where generated labels are stored.
+    mongodb_url:
+      name: MongoDB URL
+      description: Connection string for MongoDB (presets storage).
     dev_reload:
       name: Enable dev reload
       description: Restart Flask automatically when files change (development only).
@@ -121,6 +126,9 @@ run_env:
   - env: LABEL_OUTPUT_DIR
     from_option: label_output_dir
     default: "/share/printer-labels"
+  - env: MONGODB_URL
+    from_option: mongodb_url
+    default: "mongodb://mongodb:27017/smarthome"
   - env: PRINTER_BACKEND
     from_option: printer_backend
     default: "file"

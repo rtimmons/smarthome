@@ -21,6 +21,12 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 - When generating QR URLs, use `/p/<slug>` if a matching preset exists; otherwise use the full URL.
 - Ensure printer add-on works when mongodb is running locally via `just dev` at repo root.
 
+## MongoDB connection
+- Add-on option: `mongodb_url` (env `MONGODB_URL`) for the full Mongo connection string.
+- Local dev default: `mongodb://localhost:27017/smarthome` when `PRINTER_DEV_RELOAD=1`.
+- Add-on expectation: `mongodb://mongodb:27017/smarthome` (talos rewrites to localhost for local dev runs).
+- Health check: `GET /health/mongo` reports connection status; the app logs one Mongo status line on first request.
+
 ## Data model (MongoDB)
 - Collection: `presets`
 - Fields:
@@ -48,7 +54,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 ## Plan / State
 - Status: Draft
 - Checklist:
-  - [ ] Confirm MongoDB connection details in local dev (`just dev` root; `../mongodb/AGENTS.md`).
+  - [x] Confirm MongoDB connection details in local dev (`just dev` root; `../mongodb/AGENTS.md`).
     - Validation: document connection URI/env vars in this file and verify with a one-off health check endpoint or Mongo ping.
     - Demo: run `just dev` (repo root), open printer UI at `http://localhost:8099`, and confirm logs show Mongo connection.
   - [ ] Add preset storage module (Mongo client, canonicalization, hash/slug helpers).

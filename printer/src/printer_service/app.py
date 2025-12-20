@@ -14,6 +14,7 @@ from PIL import Image, UnidentifiedImageError
 
 from . import label_templates
 from .label_templates import TemplateFormData, TemplateFormValue, best_by
+from .mongo import mongo_health
 from .label import (
     SUPPORTED_BACKENDS,
     PrinterConfig,
@@ -131,6 +132,42 @@ def create_app() -> Flask:
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
         return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
+
+    mongo_logged = {"done": False}
+
+    @app.before_request
+    def log_mongo_health_once():
+        if mongo_logged["done"]:
+            return None
+        mongo_logged["done"] = True
+        status = mongo_health()
+        if not status.get("configured"):
+            error = status.get("error")
+            if error:
+                app.logger.warning("MongoDB: config error (%s).", error)
+            else:
+                app.logger.info("MongoDB: disabled (set MONGODB_URL to enable presets).")
+            return None
+        if status.get("ok"):
+            app.logger.info("MongoDB: connected (%s).", status.get("url", "unknown"))
+            return None
+        app.logger.warning(
+            "MongoDB: connection failed (%s): %s",
+            status.get("url", "unknown"),
+            status.get("error", "unknown error"),
+        )
+        return None
+
+    @app.get("/health/mongo")
+    def mongo_health_route():
+        status = mongo_health()
+        ok = status.get("ok")
+        configured = status.get("configured")
+        if configured and ok is False:
+            return jsonify(status), 503
+        if not configured and ok is False:
+            return jsonify(status), 500
+        return jsonify(status)
 
     return app
 
