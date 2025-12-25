@@ -1,11 +1,21 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 
 import printer_service.presets as presets
-from printer_service.presets import PresetStore, canonical_params, canonical_query_string, slug_for_params
+from printer_service.label_templates import TemplateFormValue
+from printer_service.presets import (
+    PresetStore,
+    canonical_params,
+    canonical_query_string,
+    slug_for_params,
+)
+
+if TYPE_CHECKING:
+    from pymongo import MongoClient
+    from pymongo.collection import Collection
 
 
 class FakeDeleteResult:
@@ -84,15 +94,15 @@ class FakeClient:
 
 def _make_store(collection: FakeCollection) -> PresetStore:
     store = PresetStore.__new__(PresetStore)
-    store._client = FakeClient()
-    store._collection = collection
+    store._client = cast("MongoClient", FakeClient())
+    store._collection = cast("Collection", collection)
     return store
 
 
 def test_preset_store_upsert_normalizes_payload() -> None:
     collection = FakeCollection()
     store = _make_store(collection)
-    params = {
+    params: dict[str, TemplateFormValue] = {
         "Line1": " Oat ",
         "Line2": "",
         "Tags": ["b", " ", "a"],
@@ -123,7 +133,7 @@ def test_preset_store_upsert_preserves_created_at(monkeypatch: pytest.MonkeyPatc
         ]
     )
     monkeypatch.setattr(presets, "_utc_now_iso", lambda: next(times))
-    params = {"Line1": "Oat"}
+    params: dict[str, TemplateFormValue] = {"Line1": "Oat"}
 
     first = store.upsert_preset("Oat Milk", "bluey_label", params)
     second = store.upsert_preset("Oat Milk Updated", "bluey_label", params)
@@ -159,7 +169,7 @@ def test_preset_store_list_presets_sorting(monkeypatch: pytest.MonkeyPatch) -> N
 def test_preset_store_find_slug_for_params() -> None:
     collection = FakeCollection()
     store = _make_store(collection)
-    params = {"Line1": "Oat"}
+    params: dict[str, TemplateFormValue] = {"Line1": "Oat"}
     preset = store.upsert_preset("Oat", "bluey_label", params)
 
     assert store.find_slug_for_params("bluey_label", params) == preset.slug
