@@ -8,9 +8,32 @@ dry-run functionality, verbose modes, and error recovery.
 from __future__ import annotations
 
 import subprocess
+import os
+import socket
 import pytest
 from pathlib import Path
 from unittest.mock import Mock, patch
+
+
+def _ha_host_reachable() -> bool:
+    host = os.getenv("HA_HOST", "homeassistant.local")
+    port_value = os.getenv("HA_PORT", "22")
+    try:
+        port = int(port_value)
+    except ValueError:
+        port = 22
+    try:
+        with socket.create_connection((host, port), timeout=0.5):
+            return True
+    except OSError:
+        return False
+
+
+if not _ha_host_reachable():
+    pytest.skip(
+        "Skipping deployment integration tests; Home Assistant host is unreachable.",
+        allow_module_level=True,
+    )
 
 
 @pytest.mark.integration
