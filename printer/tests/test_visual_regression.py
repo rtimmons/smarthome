@@ -637,6 +637,25 @@ def test_bluey_label_full_fields(regenerate_baselines):
     assert_visual_match(image, "bluey_full_fields.png", regenerate=regenerate_baselines)
 
 
+def test_bluey_label_full_fields_super(regenerate_baselines):
+    """Bluey label with typical filled inputs and Line1 set to Super."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Super",
+            "Line2": "Poison",
+            "SymbolName": "awake",
+            "Side": "DP",
+            "Bottom": "07/20/25",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image, "bluey_full_fields_super.png", regenerate=regenerate_baselines
+    )
+
+
 def test_bluey_label_alt_symbol(regenerate_baselines):
     """Bluey label with alternate symbol and side text."""
     template = bluey_label.TEMPLATE

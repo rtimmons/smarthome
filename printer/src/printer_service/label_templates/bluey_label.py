@@ -116,6 +116,12 @@ class Template(TemplateDefinition):
         date_font = helper.load_font(size_points=DATE_FONT_POINTS)
         between_font = helper.load_font(size_points=BETWEEN_FONT_POINTS)
         title_lines = []
+        date_metrics: Optional[helper.Box] = None
+        date_y: Optional[int] = None
+
+        if bottom:
+            date_metrics = renderer.measure_text(text=bottom, font=date_font)
+            date_y = CANVAS_HEIGHT_PX - BOTTOM_MARGIN - date_metrics.height
 
         if line1:
             title_lines.append(
@@ -135,6 +141,37 @@ class Template(TemplateDefinition):
             )
 
         max_title_width = max((metrics.width for _, metrics, _ in title_lines), default=0)
+        title_block_padding = TITLE_BLOCK_PADDING
+
+        if title_lines and date_y is not None:
+            title_block_height = 0
+            between_metrics = None
+            if between and len(title_lines) > 1:
+                between_metrics = renderer.measure_text(text=between, font=between_font)
+            for line_index, (_text, metrics, _label_name) in enumerate(title_lines):
+                title_block_height += metrics.height
+                if line_index == 0 and len(title_lines) > 1:
+                    if between_metrics is not None:
+                        title_block_height += (LINE2_OFFSET // 2)
+                        title_block_height += between_metrics.height
+                        title_block_height += (LINE2_OFFSET // 2)
+                    else:
+                        title_block_height += LINE2_OFFSET
+
+            available_height = date_y - SYMBOL_SECTION_SPACING - TOP_MARGIN
+            if title_block_height > 0 and available_height > 0:
+                total_title_height = (
+                    (TITLE_REPEAT_COUNT * title_block_height)
+                    + (TITLE_BLOCK_PADDING * (TITLE_REPEAT_COUNT - 1))
+                )
+                if total_title_height > available_height:
+                    gaps = max(1, TITLE_REPEAT_COUNT - 1)
+                    max_padding = (
+                        available_height - (TITLE_REPEAT_COUNT * title_block_height)
+                    ) // gaps
+                    title_block_padding = max(
+                        0, min(TITLE_BLOCK_PADDING, max_padding)
+                    )
 
         if title_lines:
             for repeat_index in range(TITLE_REPEAT_COUNT):
@@ -153,12 +190,12 @@ class Template(TemplateDefinition):
                             font=between_font,
                             width_warning="Between text is wider than the label and will be clipped.",
                             height_warning="Between text exceeds label height and may be clipped.",
-                        )
+                            )
                         renderer.advance(LINE2_OFFSET // 2)  # Other half of the spacing
                     elif line_index == 0 and len(title_lines) > 1:
                         renderer.advance(LINE2_OFFSET)
                 if repeat_index < TITLE_REPEAT_COUNT - 1:
-                    renderer.advance(TITLE_BLOCK_PADDING)
+                    renderer.advance(title_block_padding)
 
         renderer.advance(SYMBOL_SECTION_SPACING)
 
@@ -196,10 +233,8 @@ class Template(TemplateDefinition):
                 mask_dither=Image.Dither.ORDERED,
             )
 
-        if bottom:
+        if bottom and date_metrics is not None and date_y is not None:
             # Measure to anchor the bottom text against the bottom margin; overflow warnings come from the helper.
-            date_metrics = renderer.measure_text(text=bottom, font=date_font)
-            date_y = CANVAS_HEIGHT_PX - BOTTOM_MARGIN - date_metrics.height
             height_check: Optional[int] = CANVAS_HEIGHT_PX
             if date_y < 0:
                 height_check = None
