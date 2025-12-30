@@ -68,6 +68,7 @@ def test_mongo_health_success(monkeypatch):
 
 def test_mongo_health_redacts_error(monkeypatch):
     monkeypatch.setenv("MONGODB_URL", "mongodb://user:pass@db.example:27017/app")
+    monkeypatch.setattr(mongo, "_host_resolves", lambda _host, _port: True)
 
     def _failing_ping(config, _timeout):
         raise RuntimeError(f"failed to reach {config.url}")
@@ -80,3 +81,39 @@ def test_mongo_health_redacts_error(monkeypatch):
     assert status["ok"] is False
     assert "mongodb://user:****@db.example:27017/app" in status["error"]
     assert "pass" not in status["error"]
+
+
+def test_load_mongo_configs_expands_hosts(monkeypatch):
+    monkeypatch.setenv("MONGODB_URL", "mongodb://mongodb:27017/app")
+    monkeypatch.delenv("PRINTER_DEV_RELOAD", raising=False)
+    monkeypatch.setattr(mongo, "_host_resolves", lambda _host, _port: True)
+
+    configs = mongo.load_mongo_configs()
+
+    hosts = [config.host for config in configs]
+    assert hosts[0] == "mongodb"
+    assert "addon_local_mongodb" in hosts
+    assert "addon_mongodb" in hosts
+
+
+def test_mongo_health_uses_fallback_host(monkeypatch):
+    monkeypatch.setenv("MONGODB_URL", "mongodb://mongodb:27017/app")
+    monkeypatch.delenv("PRINTER_DEV_RELOAD", raising=False)
+    monkeypatch.setattr(
+        mongo,
+        "_host_resolves",
+        lambda host, _port: host in {"mongodb", "addon_local_mongodb"},
+    )
+
+    def _ping(config, _timeout):
+        if config.host == "mongodb":
+            raise RuntimeError("mongodb:27017 not reachable")
+        return None
+
+    monkeypatch.setattr(mongo, "_driver_ping", _ping)
+
+    status = mongo.mongo_health()
+
+    assert status["configured"] is True
+    assert status["ok"] is True
+    assert status["host"] == "addon_local_mongodb"

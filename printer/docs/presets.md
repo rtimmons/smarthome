@@ -26,7 +26,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 ## MongoDB connection
 - Add-on option: `mongodb_url` (env `MONGODB_URL`) for the full Mongo connection string.
 - Local dev default: `mongodb://localhost:27017/smarthome` when `PRINTER_DEV_RELOAD=1`.
-- Add-on expectation: `mongodb://mongodb:27017/smarthome` (talos rewrites to localhost for local dev runs).
+- Add-on expectation: `mongodb://addon_local_mongodb:27017/smarthome` (Supervisor exposes add-ons as `addon_<slug>`, so use `addon_mongodb` for non-local installs; the service also falls back to `addon_mongodb` and `mongodb`; talos rewrites to localhost for local dev runs).
 - Health check: `GET /health/mongo` reports connection status; the app logs one Mongo status line on first request.
 
 ## Data model (MongoDB)

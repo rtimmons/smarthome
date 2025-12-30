@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import re
 import socket
 import time
 from dataclasses import dataclass
@@ -10,6 +11,7 @@ from urllib.parse import ParseResult, urlparse, urlunparse
 DEFAULT_DB = "smarthome"
 DEFAULT_LOCAL_URL = "mongodb://localhost:27017/smarthome"
 DEFAULT_PORT = 27017
+MONGO_HOST_FALLBACKS = ("addon_local_mongodb", "addon_mongodb", "mongodb")
 
 
 @dataclass(frozen=True)
@@ -55,10 +57,40 @@ def _load_mongo_url() -> tuple[Optional[str], Optional[str]]:
     return None, None
 
 
-def load_mongo_config() -> Optional[MongoConfig]:
+def _expand_mongo_urls(raw: str) -> list[str]:
+    urls = [raw]
+    match = re.match(r"^mongodb:\/\/([^@]+@)?([^/:]+)(:[0-9]+)?(/.*)?$", raw)
+    if not match:
+        return urls
+    auth = match.group(1) or ""
+    host = match.group(2) or ""
+    port = match.group(3) or ""
+    rest = match.group(4) or ""
+    if "," in host:
+        return urls
+    for candidate in MONGO_HOST_FALLBACKS:
+        if candidate == host:
+            continue
+        urls.append(f"mongodb://{auth}{candidate}{port}{rest}")
+    return urls
+
+
+def _host_resolves(host: str, port: int) -> bool:
+    try:
+        socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
+        return True
+    except socket.gaierror:
+        return False
+
+
+def _load_mongo_urls() -> tuple[list[str], Optional[str]]:
     raw, source = _load_mongo_url()
     if not raw or not source:
-        return None
+        return [], None
+    return _expand_mongo_urls(raw), source
+
+
+def _build_mongo_config(raw: str, source: str) -> MongoConfig:
     parsed = urlparse(raw)
     if not parsed.scheme:
         raise ValueError("MONGODB_URL must include a scheme (mongodb://).")
@@ -76,6 +108,22 @@ def load_mongo_config() -> Optional[MongoConfig]:
         database=database,
         source=source,
     )
+
+
+def load_mongo_config() -> Optional[MongoConfig]:
+    urls, source = _load_mongo_urls()
+    if not urls or not source:
+        return None
+    return _build_mongo_config(urls[0], source)
+
+
+def load_mongo_configs() -> list[MongoConfig]:
+    urls, source = _load_mongo_urls()
+    if not urls or not source:
+        return []
+    configs = [_build_mongo_config(url, source) for url in urls]
+    resolved = [config for config in configs if _host_resolves(config.host, config.port)]
+    return resolved or configs
 
 
 def _tcp_ping(host: str, port: int, timeout_seconds: float) -> None:
@@ -101,7 +149,7 @@ def _driver_ping(config: MongoConfig, timeout_seconds: float) -> None:
 
 def mongo_health(timeout_seconds: float = 1.0) -> dict[str, object]:
     try:
-        config = load_mongo_config()
+        configs = load_mongo_configs()
     except ValueError as exc:
         return {
             "configured": False,
@@ -110,7 +158,7 @@ def mongo_health(timeout_seconds: float = 1.0) -> dict[str, object]:
             "source": "env:MONGODB_URL",
         }
 
-    if config is None:
+    if not configs:
         return {
             "configured": False,
             "ok": None,
@@ -118,14 +166,28 @@ def mongo_health(timeout_seconds: float = 1.0) -> dict[str, object]:
 
     start = time.monotonic()
     error: Optional[str] = None
-    ok = True
-    try:
-        _driver_ping(config, timeout_seconds)
-    except Exception as exc:
-        ok = False
-        error = str(exc)
-        if config.url and error:
-            error = error.replace(config.url, config.redacted_url)
+    ok = False
+    config = configs[0]
+    first_error: Optional[str] = None
+    first_error_config = configs[0]
+    for candidate in configs:
+        config = candidate
+        try:
+            _driver_ping(candidate, timeout_seconds)
+            ok = True
+            error = None
+            break
+        except Exception as exc:
+            ok = False
+            error = str(exc)
+            if candidate.url and error:
+                error = error.replace(candidate.url, candidate.redacted_url)
+            if first_error is None:
+                first_error = error
+                first_error_config = candidate
+    if not ok and first_error is not None:
+        error = first_error
+        config = first_error_config
     latency_ms = int((time.monotonic() - start) * 1000)
     database = config.database or (DEFAULT_DB if config.source == "default:local" else None)
     return {
@@ -141,4 +203,4 @@ def mongo_health(timeout_seconds: float = 1.0) -> dict[str, object]:
     }
 
 
-__all__ = ["MongoConfig", "load_mongo_config", "mongo_health"]
+__all__ = ["MongoConfig", "load_mongo_config", "load_mongo_configs", "mongo_health"]

@@ -38,7 +38,7 @@ options:
   usb_vendor_id: 4070
   usb_product_id: 33054
   label_output_dir: "/share/printer-labels"
-  mongodb_url: "mongodb://mongodb:27017/smarthome"
+  mongodb_url: "mongodb://addon_local_mongodb:27017/smarthome"
   dev_reload: false
   public_service_host: "homeassistant.local"
   public_service_port: "8099"
@@ -128,7 +128,7 @@ run_env:
     default: "/share/printer-labels"
   - env: MONGODB_URL
     from_option: mongodb_url
-    default: "mongodb://mongodb:27017/smarthome"
+    default: "mongodb://addon_local_mongodb:27017/smarthome"
   - env: PRINTER_BACKEND
     from_option: printer_backend
     default: "file"

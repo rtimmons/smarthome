@@ -183,3 +183,42 @@ def test_preset_store_delete() -> None:
 
     assert store.delete_preset(preset.slug) is True
     assert store.delete_preset(preset.slug) is False
+
+
+def test_preset_store_exposes_index_helpers() -> None:
+    assert hasattr(PresetStore, "ensure_indexes")
+
+
+def test_get_cached_store_uses_from_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"count": 0}
+
+    def _fake_from_env():
+        calls["count"] += 1
+        return None
+
+    monkeypatch.setattr(presets.PresetStore, "from_env", _fake_from_env)
+
+    presets.reset_cached_store()
+    assert presets.get_cached_store() is None
+    assert calls["count"] == 1
+
+
+def test_cached_store_close_is_noop() -> None:
+    class FakeTrackedClient:
+        def __init__(self) -> None:
+            self.closed = False
+
+        def close(self) -> None:
+            self.closed = True
+
+    store = PresetStore.__new__(PresetStore)
+    store._client = cast("MongoClient", FakeTrackedClient())
+    store._collection = cast("Collection", FakeCollection())
+    store._cached = True
+
+    store.close()
+    assert store._client.closed is False
+
+    store._cached = False
+    store.close()
+    assert store._client.closed is True

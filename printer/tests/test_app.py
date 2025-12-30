@@ -15,6 +15,7 @@ from PIL import Image, ImageFont
 from printer_service.label_specs import resolve_brother_label_spec
 from printer_service.label_templates import bluey_label as bluey_module
 from printer_service.label_templates.base import TemplateFormData
+import printer_service.presets as presets
 from printer_service.presets import (
     Preset,
     canonical_query_string,
@@ -107,6 +108,7 @@ def _count_runs(strip: Image.Image) -> int:
 
 def _build_test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     """Create an isolated app instance with temporary storage."""
+    presets.reset_cached_store()
     labels_dir = tmp_path / "labels"
     printer_output = tmp_path / "printer-output.png"
     monkeypatch.setenv("LABEL_OUTPUT_DIR", str(labels_dir))
@@ -144,6 +146,7 @@ def _build_test_environment(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
 def _use_fake_preset_store(
     monkeypatch: pytest.MonkeyPatch, app_module: types.ModuleType, store: FakePresetStore
 ) -> None:
+    presets.reset_cached_store()
     monkeypatch.setattr(
         app_module.PresetStore,
         "from_env",

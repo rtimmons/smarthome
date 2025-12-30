@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -10,7 +11,7 @@ from typing import TYPE_CHECKING, Optional
 from urllib.parse import urlencode
 
 from .label_templates import TemplateFormValue
-from .mongo import DEFAULT_DB, MongoConfig, load_mongo_config
+from .mongo import DEFAULT_DB, MongoConfig, load_mongo_configs
 
 if TYPE_CHECKING:
     from pymongo import MongoClient
@@ -48,23 +49,35 @@ class PresetStore:
     def __init__(self, client: "MongoClient", database: str) -> None:
         self._client = client
         self._collection: Collection = client[database]["presets"]
+        self._cached = False
 
     @classmethod
     def from_env(cls) -> Optional["PresetStore"]:
-        config = load_mongo_config()
-        if config is None:
+        configs = load_mongo_configs()
+        if not configs:
             return None
         MongoClient = _require_pymongo()
-        client = MongoClient(config.url, serverSelectionTimeoutMS=2000)
-        store = cls(client, _resolve_database(config))
-        store.ensure_indexes()
-        return store
+        last_error: Optional[Exception] = None
+        for config in configs:
+            client = MongoClient(config.url, serverSelectionTimeoutMS=2000)
+            store = cls(client, _resolve_database(config))
+            try:
+                store.ensure_indexes()
+                return store
+            except Exception as exc:
+                last_error = exc
+                client.close()
+        if last_error is not None:
+            raise last_error
+        return None
 
     @property
     def collection(self) -> Collection:
         return self._collection
 
-    def close(self) -> None:
+    def close(self, *, force: bool = False) -> None:
+        if self._cached and not force:
+            return
         self._client.close()
 
     def ensure_indexes(self) -> None:
@@ -136,6 +149,37 @@ class PresetStore:
             return False
         result = self._collection.delete_one({"slug": normalized})
         return result.deleted_count > 0
+
+
+_STORE_LOCK = threading.Lock()
+_STORE: Optional[PresetStore] = None
+
+
+def reset_cached_store() -> None:
+    global _STORE
+    with _STORE_LOCK:
+        if _STORE is not None:
+            try:
+                _STORE.close(force=True)
+            except Exception:
+                pass
+        _STORE = None
+
+
+def get_cached_store() -> Optional[PresetStore]:
+    # Cache the store to avoid reconnecting and reindexing on each request.
+    global _STORE
+    if _STORE is not None:
+        return _STORE
+    with _STORE_LOCK:
+        if _STORE is not None:
+            return _STORE
+        store = PresetStore.from_env()
+        if store is not None:
+            if isinstance(store, PresetStore):
+                store._cached = True
+            _STORE = store
+        return store
 
 
 def normalize_template_slug(raw: object) -> str:
@@ -292,6 +336,8 @@ def _require_pymongo():
 
 
 __all__ = [
+    "get_cached_store",
+    "reset_cached_store",
     "Preset",
     "PresetStore",
     "canonical_params",

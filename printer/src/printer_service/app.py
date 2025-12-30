@@ -15,7 +15,7 @@ from PIL import Image, UnidentifiedImageError
 from . import label_templates
 from .label_templates import TemplateFormData, TemplateFormValue, best_by
 from .mongo import mongo_health
-from .presets import Preset, PresetStore, canonical_query_string
+from .presets import Preset, PresetStore, canonical_query_string, get_cached_store
 from .label import (
     SUPPORTED_BACKENDS,
     PrinterConfig,
@@ -312,7 +312,7 @@ class PresetServiceError(Exception):
 
 def _get_preset_store() -> PresetStore:
     try:
-        store = PresetStore.from_env()
+        store = get_cached_store()
     except ValueError as exc:
         raise PresetServiceError(str(exc), status_code=500) from exc
     except RuntimeError as exc:
