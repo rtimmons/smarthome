@@ -651,9 +651,7 @@ def test_bluey_label_full_fields_super(regenerate_baselines):
     )
 
     image = template.render(form_data)
-    assert_visual_match(
-        image, "bluey_full_fields_super.png", regenerate=regenerate_baselines
-    )
+    assert_visual_match(image, "bluey_full_fields_super.png", regenerate=regenerate_baselines)
 
 
 def test_bluey_label_alt_symbol(regenerate_baselines):

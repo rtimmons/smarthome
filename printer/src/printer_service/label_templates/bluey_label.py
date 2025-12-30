@@ -152,26 +152,23 @@ class Template(TemplateDefinition):
                 title_block_height += metrics.height
                 if line_index == 0 and len(title_lines) > 1:
                     if between_metrics is not None:
-                        title_block_height += (LINE2_OFFSET // 2)
+                        title_block_height += LINE2_OFFSET // 2
                         title_block_height += between_metrics.height
-                        title_block_height += (LINE2_OFFSET // 2)
+                        title_block_height += LINE2_OFFSET // 2
                     else:
                         title_block_height += LINE2_OFFSET
 
             available_height = date_y - SYMBOL_SECTION_SPACING - TOP_MARGIN
             if title_block_height > 0 and available_height > 0:
-                total_title_height = (
-                    (TITLE_REPEAT_COUNT * title_block_height)
-                    + (TITLE_BLOCK_PADDING * (TITLE_REPEAT_COUNT - 1))
+                total_title_height = (TITLE_REPEAT_COUNT * title_block_height) + (
+                    TITLE_BLOCK_PADDING * (TITLE_REPEAT_COUNT - 1)
                 )
                 if total_title_height > available_height:
                     gaps = max(1, TITLE_REPEAT_COUNT - 1)
                     max_padding = (
                         available_height - (TITLE_REPEAT_COUNT * title_block_height)
                     ) // gaps
-                    title_block_padding = max(
-                        0, min(TITLE_BLOCK_PADDING, max_padding)
-                    )
+                    title_block_padding = max(0, min(TITLE_BLOCK_PADDING, max_padding))
 
         if title_lines:
             for repeat_index in range(TITLE_REPEAT_COUNT):
@@ -190,7 +187,7 @@ class Template(TemplateDefinition):
                             font=between_font,
                             width_warning="Between text is wider than the label and will be clipped.",
                             height_warning="Between text exceeds label height and may be clipped.",
-                            )
+                        )
                         renderer.advance(LINE2_OFFSET // 2)  # Other half of the spacing
                     elif line_index == 0 and len(title_lines) > 1:
                         renderer.advance(LINE2_OFFSET)
