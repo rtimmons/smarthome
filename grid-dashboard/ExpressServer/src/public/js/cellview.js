@@ -45,10 +45,24 @@ class CellView {
     }
 
     setContent(c) {
-        this.$element.children('.content').html(c);
+        this.$element.children('.content').html(c || '');
     }
 
     onMessage(e) {}
+
+    updateConfig(nextConfig) {
+        if (this.config.claz) {
+            this.$element.removeClass(this.config.claz);
+        }
+
+        this.config = nextConfig;
+        if (this.config.claz) {
+            this.$element.addClass(this.config.claz);
+        }
+
+        var emoji = this.app.emojiWithName(this.config.emoji);
+        this.setContent(emoji);
+    }
 
     togglesRoom() {
         return this.config.togglesRoom;

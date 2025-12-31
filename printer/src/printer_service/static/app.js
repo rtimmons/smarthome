@@ -19,6 +19,7 @@ const savePresetButton = document.getElementById('savePresetButton');
 const presetStatus = document.getElementById('presetStatus');
 const presetListBody = document.getElementById('presetListBody');
 const presetEmpty = document.getElementById('presetEmpty');
+const backButton = document.getElementById('backButton');
 
 let previewAbortController = null;
 let previewTimerId = null;
@@ -32,6 +33,25 @@ const PRESET_EMPTY_MESSAGE = 'No presets saved yet.';
 let countdownTimer = null;
 let countdownSeconds = 0;
 let currentPrintTarget = 'label'; // 'label' or 'qr'
+let autoBackAfterPrint = false;
+
+function hasPresetReferrer() {
+    return typeof document !== 'undefined' &&
+        typeof document.referrer === 'string' &&
+        document.referrer.includes('/p/');
+}
+
+function resolveBackNavigationStep() {
+    return hasPresetReferrer() ? -2 : -1;
+}
+
+function navigateBackToSource() {
+    if (window.history && window.history.length > 1) {
+        window.history.go(resolveBackNavigationStep());
+        return;
+    }
+    window.location.assign(BASE_PATH || '/');
+}
 function getCountdownDuration() {
     // Allow override via URL parameter for testing
     const urlParams = new URLSearchParams(window.location.search);
@@ -42,6 +62,8 @@ function getCountdownDuration() {
 // Countdown functionality
 function checkForPrintParameter() {
     if (URLState.isPrintState()) {
+        // Grid dashboard's PrinterService opens /p/<slug>?print=true links, so auto-return after success.
+        autoBackAfterPrint = hasPresetReferrer();
         const target = URLState.isQRMode() ? 'qr' : 'label';
         startCountdown(target);
     }
@@ -251,6 +273,14 @@ function showPrintSuccess() {
         cancelButton.textContent = 'Done';
     }
 
+    if (autoBackAfterPrint) {
+        autoBackAfterPrint = false;
+        window.setTimeout(() => {
+            navigateBackToSource();
+        }, 600);
+        return;
+    }
+
     // Auto-reset after a short delay to allow for multiple prints
     setTimeout(() => {
         resetCountdownDialog({ hideCountdown: false });
@@ -303,7 +333,17 @@ const URLState = {
         const formData = {};
 
         // Extract all non-control parameters
-        const controlParams = new Set(['tpl', 'template', 'template_slug', 'print', 'qr', 'qr_label', 'countdown_duration']);
+        const controlParams = new Set([
+            'tpl',
+            'template',
+            'template_slug',
+            'print',
+            'qr',
+            'qr_label',
+            'jar',
+            'jar_label',
+            'countdown_duration'
+        ]);
 
         for (const [key, value] of params.entries()) {
             if (!controlParams.has(key.toLowerCase())) {
@@ -401,6 +441,7 @@ const URLState = {
 };
 
 function transitionToPrintState(target) {
+    autoBackAfterPrint = false;
     const formData = getFormStateForUrl();
     const templateSlug = form && form.dataset.template ? form.dataset.template : URLState.getTemplate();
 
@@ -1058,7 +1099,7 @@ function getStoredThemePreference() {
     } catch (storageError) {
         // Ignore storage issues and fall back to system.
     }
-    return 'system';
+    return 'dark';
 }
 
 function getSystemTheme() {
@@ -1185,6 +1226,12 @@ initTheme();
 installHoverFilterReset();
 
 document.addEventListener('DOMContentLoaded', () => {
+    if (backButton) {
+        backButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            navigateBackToSource();
+        });
+    }
     if (form && !disableDefaultFormHandlers) {
         form.addEventListener('submit', handleSubmit);
         form.addEventListener('input', schedulePreview);
@@ -1205,6 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function handlePopState(event) {
     // Handle browser back/forward navigation using centralized URL state
+    autoBackAfterPrint = false;
     if (URLState.isPrintState()) {
         // User navigated to a print URL - show countdown
         const target = URLState.isQRMode() ? 'qr' : 'label';

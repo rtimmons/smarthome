@@ -9,6 +9,7 @@ class GridView {
         this.cols = config.cols;
         this.rows = config.rows;
         this.zoneCells = {};
+        this.cellsByKey = {};
     }
 
     allCells() {
@@ -59,6 +60,24 @@ class GridView {
         return cell;
     }
 
+    _cellKey(x, y) {
+        return y + ':' + x;
+    }
+
+    updateCells(cells) {
+        var grid = this;
+        cells.forEach(function(config) {
+            var key = grid._cellKey(config.x, config.y);
+            var cell = grid.cellsByKey[key];
+            if (!cell) {
+                throw new Error(
+                    'Unknown cell at (' + config.x + ',' + config.y + ').'
+                );
+            }
+            cell.updateConfig(config);
+        });
+    }
+
     init($win, app) {
         this.app = app;
         var grid = this;
@@ -86,6 +105,7 @@ class GridView {
                 config: b,
             });
             this.cells.push(cell);
+            this.cellsByKey[this._cellKey(b.x, b.y)] = cell;
         });
 
         $win.resize(function() {

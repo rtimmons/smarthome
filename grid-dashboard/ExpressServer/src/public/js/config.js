@@ -22,6 +22,47 @@ const roomTiles = function({ xPos, roomName, emojiName }) {
     ];
 };
 
+const buildCells = function(rows, cols, cells) {
+    const cellMap = {};
+    cells.forEach(cell => {
+        if (cell.x === undefined || cell.y === undefined) {
+            throw new Error('Base cell missing x/y coordinate.');
+        }
+        if (cell.x < 0 || cell.x >= cols || cell.y < 0 || cell.y >= rows) {
+            throw new Error(
+                'Base cell at (' +
+                    cell.x +
+                    ',' +
+                    cell.y +
+                    ') is outside the grid.'
+            );
+        }
+        const key = cell.y + ':' + cell.x;
+        if (cellMap[key]) {
+            throw new Error(
+                'Duplicate base cell at (' + cell.x + ',' + cell.y + ').'
+            );
+        }
+        cellMap[key] = cell;
+    });
+
+    const allCells = [];
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            const key = y + ':' + x;
+            if (cellMap[key]) {
+                allCells.push(cellMap[key]);
+            } else {
+                allCells.push({ w: 1, h: 1, x: x, y: y });
+            }
+        }
+    }
+    return allCells;
+};
+
+const rows = 8;
+const cols = 11;
+
 let roomX = 1;
 
 const config = {
@@ -51,6 +92,7 @@ const config = {
         Ear: '👂🏽',
         Taco: '🌮',
         Speaker: '🔈',
+        Calendar: '📅',
         News: '📰',
         Sun: '🌕',
         Moon: '🌑',
@@ -82,8 +124,9 @@ const config = {
         SteveAoki: '💇🏻‍♂️',
         Robot: '🦾',
     },
-    rows: 8,
-    cols: 11,
+    rows: rows,
+    cols: cols,
+    printerPort: 8099,
     rooms: [
         // This is used by allJoin (double-tap a room).
         // This "should" be implemented in the ExpressAPI
@@ -96,7 +139,7 @@ const config = {
         'Closet',
         'Move',
     ],
-    cells: [
+    cells: buildCells(rows, cols, [
         /*
     Only one room can be "active" at a time.
     The Check/?/X below each room is its indicator. These
@@ -447,6 +490,34 @@ const config = {
         },
 
         // TODO: sleep timer buttons - sonos http API has it built in
-    ],
+    ]),
+    roomOverrides: {
+        // Example overrides:
+        // Office: {
+        //     cells: [
+        //         { x: 6, y: 4, emoji: null, onPress: null },
+        //     ],
+        // },
+        // 'Living Room': {
+        //     cells: [
+        //         {
+        //             x: 6,
+        //             y: 2,
+        //             emoji: 'TV',
+        //             onPress: { action: 'Music.Preset', args: ['living-room-tv'] },
+        //         },
+        //     ],
+        // },
+        Kitchen: {
+            cells: [
+                {
+                    x: 10,
+                    y: 2,
+                    emoji: 'Calendar',
+                    onPress: { action: 'Printer.Preset', args: ['S3nysytjA14'] },
+                },
+            ],
+        },
+    },
     poll: [{ action: 'Music.FetchState', args: [], period: 2000 }],
 };

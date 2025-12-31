@@ -289,9 +289,19 @@ def create_app() -> Flask:
                 query = canonical_query_string(preset.template, form_data)
             except (LabelPayloadError, ValueError):
                 query = ""
+        # Keep control params (print/qr/etc.) so grid-dashboard's PrinterService can drive
+        # /p/<slug>?print=true countdown prints in the printer add-on UI.
+        passthrough: dict[str, str] = {}
+        for key in ("print", "qr", "qr_label", "jar", "jar_label", "countdown_duration"):
+            value = request.args.get(key)
+            if value:
+                passthrough[key] = value
         target = url_for("bb_route")
         if query:
             target = f"{target}?{query}"
+        if passthrough:
+            joiner = "&" if "?" in target else "?"
+            target = f"{target}{joiner}{urlencode(passthrough, doseq=True)}"
         return redirect(target)
 
     mongo_logged = {"done": False}
@@ -456,7 +466,17 @@ def _form_data_from_args(template: label_templates.LabelTemplate) -> TemplateFor
             payload_error=LabelPayloadError,
             is_template_form_value=_is_template_form_value,
         )
-    control_params = {"tpl", "template", "template_slug", "print", "qr_label", "qr"}
+    control_params = {
+        "tpl",
+        "template",
+        "template_slug",
+        "print",
+        "qr_label",
+        "qr",
+        "jar",
+        "jar_label",
+        "countdown_duration",
+    }
     data: dict[str, TemplateFormValue] = {}
     for key in request.args:
         if key.lower() in control_params:

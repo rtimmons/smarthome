@@ -9,6 +9,8 @@ $(() => {
 
     var pubsub = new PubSub();
 
+    ConfigResolver.validateConfig(config);
+
     var grid = new GridView({
         container: container,
         config: config,

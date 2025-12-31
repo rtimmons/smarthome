@@ -68,13 +68,20 @@
             box-shadow: var(--shadow);
             margin-bottom: 1.5rem;
         }
-        nav {
+        .top-nav {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            align-items: center;
+            width: 100%;
+        }
+        .template-nav {
             display: flex;
             gap: 0.75rem;
             flex-wrap: wrap;
             align-items: center;
         }
-        nav a {
+        .template-nav a {
             text-decoration: none;
             padding: 0.45rem 0.9rem;
             border-radius: 999px;
@@ -84,7 +91,7 @@
             border: 1px solid var(--border-color);
             box-shadow: 0 12px 28px -20px rgba(15, 23, 42, 0.35);
         }
-        nav a.active {
+        .template-nav a.active {
             background-color: var(--accent-color);
             color: #fff;
             border-color: transparent;
@@ -250,6 +257,23 @@
         }
         button:hover {
             background-color: var(--accent-strong);
+        }
+        button.nav-button {
+            background-color: var(--chip-bg);
+            color: var(--text-color);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 12px 28px -20px rgba(15, 23, 42, 0.35);
+            padding: 0.45rem 0.9rem;
+            border-radius: 999px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+        button.nav-button:hover {
+            background-color: var(--accent-color);
+            color: #fff;
+            border-color: transparent;
         }
         .preset-panel {
             border: 1px solid var(--border-color);
@@ -562,22 +586,25 @@
 </head>
 <body>
     <header>
-        <nav aria-label="Label templates">
-            {% for template in templates %}
-                <a href="{{ url_for('bb_route', tpl=template.slug) }}"
-                   class="{% if template.slug == active_template.slug %}active{% endif %}">
-                    {{ template.display_name }}
-                </a>
-            {% endfor %}
-        </nav>
-        <div class="theme-toggle" id="themeToggle" role="group" aria-label="Theme">
-            <span class="theme-toggle__label">Theme</span>
-            <div class="theme-toggle__options">
-                <button type="button" class="theme-toggle__option" data-theme="light" aria-label="Light theme" aria-pressed="false">☀️</button>
-                <button type="button" class="theme-toggle__option" data-theme="dark" aria-label="Dark theme" aria-pressed="false">🌙</button>
-                <button type="button" class="theme-toggle__option" data-theme="system" aria-label="System theme" aria-pressed="false">🖥️</button>
+        <nav class="top-nav" aria-label="Printer navigation">
+            <button type="button" id="backButton" class="nav-button nav-button--back" aria-label="Back">⬅️ Back</button>
+            <div class="template-nav" role="list">
+                {% for template in templates %}
+                    <a href="{{ url_for('bb_route', tpl=template.slug) }}"
+                       class="{% if template.slug == active_template.slug %}active{% endif %}">
+                        {{ template.display_name }}
+                    </a>
+                {% endfor %}
             </div>
-        </div>
+            <div class="theme-toggle" id="themeToggle" role="group" aria-label="Theme">
+                <span class="theme-toggle__label">Theme</span>
+                <div class="theme-toggle__options">
+                    <button type="button" class="theme-toggle__option" data-theme="light" aria-label="Light theme" aria-pressed="false">☀️</button>
+                    <button type="button" class="theme-toggle__option" data-theme="dark" aria-label="Dark theme" aria-pressed="false">🌙</button>
+                    <button type="button" class="theme-toggle__option" data-theme="system" aria-label="System theme" aria-pressed="false">🖥️</button>
+                </div>
+            </div>
+        </nav>
     </header>
     <main>
         <section>

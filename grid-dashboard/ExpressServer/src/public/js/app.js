@@ -6,6 +6,7 @@ class App {
         this.$ = args.container;
         this.grid = args.grid;
         this.config = args.config;
+        this.baseConfig = args.config;
         this.rooms = args.config.rooms;
         this.pubsub = args.pubsub;
 
@@ -23,6 +24,11 @@ class App {
             root: '', // Empty root for relative URLs (ingress compatible)
             app: this,
             pubsub: this.pubsub,
+        });
+
+        this.printerController = new PrinterController({
+            app: this,
+            port: this.config.printerPort,
         });
 
         // TODO: move to object-factory
@@ -186,9 +192,25 @@ class App {
         return this.room;
     }
 
+    _applyRoomConfig(roomName) {
+        if (!this.baseConfig || !this.baseConfig.roomOverrides) {
+            return;
+        }
+        var resolved = ConfigResolver.resolveRoomConfig(
+            this.baseConfig,
+            roomName
+        );
+        if (resolved === this.config) {
+            return;
+        }
+        this.config = resolved;
+        this.grid.updateCells(resolved.cells);
+    }
+
     changeRoom(toRoom) {
         var oldRoom = this.room;
         this.room = toRoom;
+        this._applyRoomConfig(toRoom);
         this.pubsub.submit('Room.Changed', {
             FromRoom: oldRoom,
             ToRoom: toRoom,
@@ -266,6 +288,9 @@ class App {
                 break;
             case 'Music.Preset':
                 this.musicController.preset(params[0]);
+                break;
+            case 'Printer.Preset':
+                this.printerController.preset(params[0]);
                 break;
             case 'Music.VolumeUp':
                 this.musicController.volumeUp();

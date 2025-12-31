@@ -14,6 +14,30 @@ from .paths import REPO_ROOT
 console = Console()
 
 
+def _tail_lines(text: str, limit: int = 12) -> List[str]:
+    if not text:
+        return []
+    lines = text.rstrip("\n").splitlines()
+    if len(lines) > limit:
+        return lines[-limit:]
+    return lines
+
+
+def _print_command_output(stdout: str, stderr: str) -> None:
+    stderr_lines = _tail_lines(stderr)
+    stdout_lines = _tail_lines(stdout)
+
+    if stderr_lines:
+        console.print(f"  stderr (last {len(stderr_lines)} lines):")
+        for line in stderr_lines:
+            console.print(f"    {line}", style="dim", markup=False)
+
+    if stdout_lines:
+        console.print(f"  stdout (last {len(stdout_lines)} lines):")
+        for line in stdout_lines:
+            console.print(f"    {line}", style="dim", markup=False)
+
+
 def _has_recipe(addon_dir: Path, target: str) -> bool:
     result = subprocess.run(
         [
@@ -124,22 +148,31 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
             addon_name = addon_dir.name
             progress.update(build_task, description=f"Building {addon_name}...")
 
-            try:
-                # Run pre-deployment steps
-                if (addon_dir / "Justfile").exists():
-                    for pre in ("generate", "build", "test", "ha-addon", "container-test"):
-                        if _has_recipe(addon_dir, pre):
-                            if verbose:
-                                console.print(f"  Running {pre} for {addon_name}")
+            failed_pre = False
+            if (addon_dir / "Justfile").exists():
+                for pre in ("generate", "build", "test", "ha-addon", "container-test"):
+                    if _has_recipe(addon_dir, pre):
+                        if verbose:
+                            console.print(f"  Running {pre} for {addon_name}")
+                        try:
                             _run_just(addon_dir, pre, verbose=verbose)
+                        except subprocess.CalledProcessError as e:
+                            failed_pre = True
+                            error_msg = (
+                                f"Pre-deployment step failed for {addon_name}: "
+                                f"just {pre} (exit {e.returncode})"
+                            )
+                            deployment_errors.append((addon_name, error_msg))
+                            progress.stop()
+                            console.print(f"  ❌ [red]{error_msg}[/red]")
+                            if not verbose:
+                                _print_command_output(e.stdout or "", e.stderr or "")
+                            console.print(f"  Hint: run `just {pre}` in `{addon_name}/` to reproduce.")
+                            progress.start()
+                            break
 
-                progress.advance(build_task)
-
-            except subprocess.CalledProcessError as e:
-                error_msg = f"Pre-deployment step failed for {addon_name}"
-                deployment_errors.append((addon_name, error_msg))
-                console.print(f"  ❌ [red]{error_msg}[/red]")
-                progress.advance(build_task)
+            progress.advance(build_task)
+            if failed_pre:
                 continue
 
         progress.remove_task(build_task)
