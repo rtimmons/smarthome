@@ -8,7 +8,7 @@ import click
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
-from .addon_builder import discover_addons, DeploymentError, deploy_addon
+from .addon_builder import discover_addons, DeploymentError, deploy_addon, validate_deployment_prerequisites
 from .paths import REPO_ROOT
 
 console = Console()
@@ -128,6 +128,7 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         return
 
     console.print(f"🚀 [bold]Deploying {len(addon_names)} add-on(s)[/bold]")
+    validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
 
     deployment_errors = []
     successful_deployments = []
@@ -138,7 +139,8 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         BarColumn(),
         TaskProgressColumn(),
         console=console,
-        transient=not verbose
+        transient=not verbose,
+        disable=not console.is_terminal or not console.is_interactive
     ) as progress:
 
         # Phase 1: Pre-deployment validation and build
@@ -186,7 +188,16 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
                 progress.update(deploy_task, description=f"Deploying {addon_name}...")
 
                 try:
-                    deploy_addon(addon_name, ha_host, ha_port, ha_user, dry_run, verbose)
+                    deploy_addon(
+                        addon_name,
+                        ha_host,
+                        ha_port,
+                        ha_user,
+                        dry_run,
+                        verbose,
+                        validate_prereqs=False,
+                        show_success=verbose
+                    )
                     successful_deployments.append(addon_name)
                     progress.advance(deploy_task)
 

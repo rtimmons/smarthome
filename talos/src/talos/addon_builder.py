@@ -98,7 +98,7 @@ def check_ha_core_status(ha_host: str, ha_port: int, ha_user: str) -> dict:
         return {"status": "error", "error": str(e)}
 
 
-def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) -> None:
+def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str, verbose: bool = False) -> None:
     """
     Validate that deployment prerequisites are met.
 
@@ -120,7 +120,10 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) 
         4. Disk space availability check
         5. System resource validation
     """
-    console.print("🔍 [bold]Validating deployment prerequisites...[/bold]")
+    if verbose:
+        console.print("🔍 [bold]Validating deployment prerequisites...[/bold]")
+    else:
+        console.print("🔍 Validating deployment prerequisites...")
 
     # Input validation with detailed error messages
     if not ha_host or not isinstance(ha_host, str) or ha_host.strip() == "":
@@ -160,7 +163,8 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) 
         )
 
     # Test SSH connectivity with enhanced error handling
-    console.print("  🔗 Testing SSH connectivity...")
+    if verbose:
+        console.print("  🔗 Testing SSH connectivity...")
     try:
         result = run_cmd([
             "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
@@ -169,7 +173,8 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) 
             "-o", "StrictHostKeyChecking=no",  # For automated deployments
             "echo 'SSH connection successful'"
         ], verbose=False, capture_output=True)
-        console.print("  ✓ SSH connection established")
+        if verbose:
+            console.print("  ✓ SSH connection established")
     except subprocess.CalledProcessError as e:
         error_details = {
             "host": ha_host,
@@ -222,7 +227,8 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) 
             ]
         )
 
-    console.print(f"  ✓ Home Assistant core is running (v{core_status['version']})")
+    if verbose:
+        console.print(f"  ✓ Home Assistant core is running (v{core_status['version']})")
 
     # Check disk space
     try:
@@ -232,11 +238,16 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str) 
         ], verbose=False, capture_output=True)
 
         free_space = result.stdout.strip()
-        console.print(f"  ✓ Disk space available: {free_space}")
+        if verbose:
+            console.print(f"  ✓ Disk space available: {free_space}")
     except subprocess.CalledProcessError:
-        console.print("  ⚠️  Could not check disk space")
+        if verbose:
+            console.print("  ⚠️  Could not check disk space")
 
-    console.print("✅ [green]Prerequisites validation passed[/green]\n")
+    if verbose:
+        console.print("✅ [green]Prerequisites validation passed[/green]\n")
+    else:
+        console.print("✅ Prerequisites validation passed")
 
 
 def discover_addons() -> Dict[str, Any]:
@@ -555,7 +566,8 @@ def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, v
         raise
 
 
-def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool = False) -> None:
+def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool,
+                 verbose: bool = False, validate_prereqs: bool = True, show_success: bool = True) -> None:
     """Deploy an add-on with enhanced error handling and validation."""
     try:
         manifest = load_manifest()
@@ -589,7 +601,8 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
             return
 
         # Validate prerequisites for real deployments
-        validate_deployment_prerequisites(ha_host, ha_port, ha_user)
+        if validate_prereqs:
+            validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
 
         if verbose:
             console.print(f"🔨 [bold]Building {addon_key}...[/bold]")
@@ -835,10 +848,11 @@ log_info "Deployment of $ADDON_ID completed successfully"
             )
 
         # Always show deployment success, but with different detail levels
-        if verbose:
-            console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
-        else:
-            console.print(f"✅ [green]{addon_key} deployed successfully[/green]")
+        if show_success:
+            if verbose:
+                console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
+            else:
+                console.print(f"✅ [green]{addon_key} deployed successfully[/green]")
 
     except DeploymentError:
         # Re-raise deployment errors to preserve context
