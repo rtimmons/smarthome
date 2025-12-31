@@ -546,6 +546,8 @@ When running `talos dev`, environment variables are set according to `run_env` i
 |----------------|-----------------|
 | `http://local-<slug>:<port>` | `http://localhost:<port>` |
 | `/share/path` | `/tmp/path` |
+| `mongodb://addon_local_mongodb:27017` | `mongodb://localhost:27017` |
+| `mongodb://addon_mongodb:27017` | `mongodb://localhost:27017` |
 | `mongodb://mongodb:27017` | `mongodb://localhost:27017` |
 
 ### Environment Variables in Production

@@ -89,7 +89,12 @@ class AddonConfig:
                 deps.add("sonos-api")
             if "local-grid-dashboard" in default_val:
                 deps.add("grid-dashboard")
-            if "mongodb://mongodb:" in default_val or "mongodb:27017" in default_val:
+            if (
+                "mongodb://addon_local_mongodb:" in default_val
+                or "mongodb://addon_mongodb:" in default_val
+                or "mongodb://mongodb:" in default_val
+                or "mongodb:27017" in default_val
+            ):
                 deps.add("mongodb")
         return deps
 
@@ -133,6 +138,14 @@ class AddonConfig:
                 default = default.replace("http://local-node-sonos-http-api:5005", "http://localhost:5005")
                 default = default.replace("http://local-sonos-api:5006", "http://localhost:5006")
                 default = default.replace("http://local-grid-dashboard:3000", "http://localhost:3000")
+                default = default.replace(
+                    "mongodb://addon_local_mongodb:27017",
+                    "mongodb://localhost:27017",
+                )
+                default = default.replace(
+                    "mongodb://addon_mongodb:27017",
+                    "mongodb://localhost:27017",
+                )
                 default = default.replace("mongodb://mongodb:27017", "mongodb://localhost:27017")
                 default = default.replace("/share/printer-labels", "/tmp/printer-labels")
 
