@@ -20,22 +20,21 @@ upstream_dir := "node-sonos-http-api"
 # Set up the node-sonos-http-api development environment
 [group: 'setup']
 setup:
-    @echo "🔧 Setting up Node Sonos HTTP API..."
-    @#!/usr/bin/env bash
-    @set -euo pipefail
-    @REPO_ROOT="${REPO_ROOT:-$(git rev-parse --show-toplevel 2>/dev/null || (cd .. && pwd))}"
-    @if [ ! -x "$REPO_ROOT/talos/build/bin/talos" ]; then \
-        "$REPO_ROOT/talos/build.sh"; \
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔧 Setting up Node Sonos HTTP API..."
+    if [ ! -x "{{talos_bin}}" ]; then
+        "{{repo_root}}/talos/build.sh"
     fi
-    @echo "Running pre-setup hook..."
-    @"$REPO_ROOT/talos/build/bin/talos" hook run node-sonos-http-api pre_setup --if-missing-ok
-    @if [ ! -d {{upstream_dir}} ]; then \
-        echo "Cloning upstream node-sonos-http-api..."; \
-        git clone {{upstream_repo}} {{upstream_dir}}; \
+    echo "Running pre-setup hook..."
+    "{{talos_bin}}" hook run node-sonos-http-api pre_setup --if-missing-ok
+    if [ ! -d {{upstream_dir}} ]; then
+        echo "Cloning upstream node-sonos-http-api..."
+        git clone {{upstream_repo}} {{upstream_dir}}
     fi
-    @{{nvm_use}}
-    @cd {{upstream_dir}} && npm install
-    @echo "✅ Node Sonos HTTP API setup complete"
+    {{nvm_use}}
+    cd {{upstream_dir}} && npm install
+    echo "✅ Node Sonos HTTP API setup complete"
 
 # Run tests (currently none defined)
 [group: 'test']
