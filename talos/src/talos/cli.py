@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import os
+
 import click
 
 from . import addon_builder, addons_runner, dev as dev_mod, hooks, manage_ports
+
+DEFAULT_JOBS = max(1, os.cpu_count() or 1)
 
 
 @click.group()
@@ -158,9 +162,18 @@ def addons_deploy(addons: tuple[str, ...], ha_host: str, ha_port: int, ha_user: 
 @click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
 @click.option("--dry-run", is_flag=True, help="Print commands without executing.")
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
-def addons_deploy(addons: tuple[str, ...], ha_host: str, ha_port: int, ha_user: str, dry_run: bool, verbose: bool) -> None:
+@click.option("--jobs", type=int, default=DEFAULT_JOBS, show_default=True, help="Max parallel build jobs.")
+def addons_deploy(
+    addons: tuple[str, ...],
+    ha_host: str,
+    ha_port: int,
+    ha_user: str,
+    dry_run: bool,
+    verbose: bool,
+    jobs: int
+) -> None:
     """Deploy multiple add-ons with enhanced error handling and progress tracking."""
-    addons_runner.run_enhanced_deployment(addons, ha_host, ha_port, ha_user, dry_run, verbose)
+    addons_runner.run_enhanced_deployment(addons, ha_host, ha_port, ha_user, dry_run, verbose, jobs=jobs)
 
 
 @app.command(name="dev")

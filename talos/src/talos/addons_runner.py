@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import os
 import subprocess
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional, Tuple
 
 import click
 from rich.console import Console
@@ -12,6 +14,7 @@ from .addon_builder import discover_addons, DeploymentError, deploy_addon, valid
 from .paths import REPO_ROOT
 
 console = Console()
+PRE_DEPLOY_RECIPES = ("generate", "build", "test", "ha-addon", "container-test")
 
 
 def _tail_lines(text: str, limit: int = 12) -> List[str]:
@@ -68,6 +71,30 @@ def _has_recipe(addon_dir: Path, target: str) -> bool:
     return False
 
 
+def _run_pre_deploy_steps(
+    addon_dir: Path,
+    verbose: bool,
+) -> Tuple[str, Optional[str], Optional[str], Optional[subprocess.CalledProcessError]]:
+    addon_name = addon_dir.name
+    if not (addon_dir / "Justfile").exists():
+        return addon_name, None, None, None
+
+    for pre in PRE_DEPLOY_RECIPES:
+        if _has_recipe(addon_dir, pre):
+            if verbose:
+                console.print(f"  Running {pre} for {addon_name}")
+            try:
+                _run_just(addon_dir, pre, verbose=verbose)
+            except subprocess.CalledProcessError as e:
+                error_msg = (
+                    f"Pre-deployment step failed for {addon_name}: "
+                    f"just {pre} (exit {e.returncode})"
+                )
+                return addon_name, pre, error_msg, e
+
+    return addon_name, None, None, None
+
+
 def _run_just(addon_dir: Path, recipe: str, verbose: bool = True) -> None:
     cmd = ["just", "--justfile", str(addon_dir / "Justfile"), "--working-directory", str(addon_dir), recipe]
 
@@ -95,7 +122,7 @@ def _resolve_addons(explicit: Iterable[str]) -> List[Path]:
 
 
 def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, ha_user: str,
-                          dry_run: bool = False, verbose: bool = False) -> None:
+                          dry_run: bool = False, verbose: bool = False, jobs: int | None = None) -> None:
     """Enhanced deployment with better error handling and progress tracking."""
     addon_dirs = _resolve_addons(addons)
     addon_names = [addon_dir.name for addon_dir in addon_dirs]
@@ -129,6 +156,11 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
 
     console.print(f"🚀 [bold]Deploying {len(addon_names)} add-on(s)[/bold]")
     validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
+    if jobs is None:
+        jobs = os.cpu_count() or 1
+    if jobs < 1:
+        jobs = 1
+    jobs = min(jobs, len(addon_names))
 
     deployment_errors = []
     successful_deployments = []
@@ -146,36 +178,55 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         # Phase 1: Pre-deployment validation and build
         build_task = progress.add_task("Building add-ons...", total=len(addon_names))
 
-        for addon_dir in addon_dirs:
-            addon_name = addon_dir.name
-            progress.update(build_task, description=f"Building {addon_name}...")
+        def record_pre_deploy_failure(
+            addon_name: str,
+            pre: Optional[str],
+            error_msg: str,
+            error: Optional[subprocess.CalledProcessError]
+        ) -> None:
+            deployment_errors.append((addon_name, error_msg))
+            progress.stop()
+            console.print(f"  ❌ [red]{error_msg}[/red]")
+            if not verbose and error is not None:
+                _print_command_output(error.stdout or "", error.stderr or "")
+            if pre:
+                console.print(f"  Hint: run `just {pre}` in `{addon_name}/` to reproduce.")
+            else:
+                console.print(f"  Hint: run the add-on build steps in `{addon_name}/` to reproduce.")
+            progress.start()
 
-            failed_pre = False
-            if (addon_dir / "Justfile").exists():
-                for pre in ("generate", "build", "test", "ha-addon", "container-test"):
-                    if _has_recipe(addon_dir, pre):
-                        if verbose:
-                            console.print(f"  Running {pre} for {addon_name}")
-                        try:
-                            _run_just(addon_dir, pre, verbose=verbose)
-                        except subprocess.CalledProcessError as e:
-                            failed_pre = True
-                            error_msg = (
-                                f"Pre-deployment step failed for {addon_name}: "
-                                f"just {pre} (exit {e.returncode})"
-                            )
-                            deployment_errors.append((addon_name, error_msg))
-                            progress.stop()
-                            console.print(f"  ❌ [red]{error_msg}[/red]")
-                            if not verbose:
-                                _print_command_output(e.stdout or "", e.stderr or "")
-                            console.print(f"  Hint: run `just {pre}` in `{addon_name}/` to reproduce.")
-                            progress.start()
-                            break
+        if jobs == 1:
+            for addon_dir in addon_dirs:
+                addon_name = addon_dir.name
+                progress.update(build_task, description=f"Building {addon_name}...")
 
-            progress.advance(build_task)
-            if failed_pre:
-                continue
+                addon_name, failed_pre, error_msg, error = _run_pre_deploy_steps(addon_dir, verbose)
+                if error_msg:
+                    record_pre_deploy_failure(addon_name, failed_pre, error_msg, error)
+
+                progress.advance(build_task)
+        else:
+            with ThreadPoolExecutor(max_workers=jobs) as executor:
+                futures = {
+                    executor.submit(_run_pre_deploy_steps, addon_dir, verbose): addon_dir
+                    for addon_dir in addon_dirs
+                }
+
+                for future in as_completed(futures):
+                    addon_dir = futures[future]
+                    addon_name = addon_dir.name
+                    progress.update(build_task, description=f"Building {addon_name}...")
+                    try:
+                        addon_name, failed_pre, error_msg, error = future.result()
+                    except Exception as e:
+                        failed_pre = None
+                        error = None
+                        error_msg = f"Pre-deployment step failed for {addon_name}: {str(e)}"
+
+                    if error_msg:
+                        record_pre_deploy_failure(addon_name, failed_pre, error_msg, error)
+
+                    progress.advance(build_task)
 
         progress.remove_task(build_task)
 
