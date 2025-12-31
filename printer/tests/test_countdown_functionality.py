@@ -17,6 +17,8 @@ from werkzeug.serving import make_server
 
 from printer_service.app import create_app
 
+pytestmark = pytest.mark.ui
+
 
 @pytest.fixture(scope="session")
 def app_server():

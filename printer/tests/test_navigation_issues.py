@@ -93,9 +93,7 @@ class TestNavigationIssues:
             "Line1": "Test & Flow",
             "Line2": "Special/Chars",
             "Side": "T&F",
-            "Between": "mid text",
             "Bottom": "12/11/25",
-            "Inversion": "50",
             "tpl": "bluey_label",
         }
 
@@ -158,6 +156,18 @@ class TestNavigationIssues:
 
         # Verify JavaScript is loaded
         assert 'src="/static/app.js"' in html
+
+    def test_theme_picker_markup(self, client):
+        """Test that the theme picker markup is present."""
+        response = client.get("/bb?tpl=bluey_label")
+        assert response.status_code == 200
+
+        html = response.get_data(as_text=True)
+        assert 'id="themeToggle"' in html
+        assert 'data-theme="light"' in html
+        assert 'data-theme="dark"' in html
+        assert 'data-theme="system"' in html
+        assert html.count("theme-toggle__option") >= 3
 
     def test_print_state_url_handling(self, client):
         """Test that print=true URLs still work correctly."""
@@ -280,7 +290,6 @@ class TestEndToEndWorkflows:
             "Line2": "Test",
             "Side": "ST",
             "Bottom": "12/11/25",
-            "Inversion": "15",
             "tpl": "bluey_label",
         }
 
@@ -294,7 +303,6 @@ class TestEndToEndWorkflows:
         assert 'value="Test"' in html
         assert 'value="ST"' in html
         assert 'value="12/11/25"' in html
-        assert 'value="15"' in html
 
         # Test print state preserves all parameters
         print_params = base_params.copy()
@@ -309,7 +317,6 @@ class TestEndToEndWorkflows:
         assert 'value="Test"' in html
         assert 'value="ST"' in html
         assert 'value="12/11/25"' in html
-        assert 'value="15"' in html
 
         # Test QR print state preserves all parameters
         qr_params = print_params.copy()
@@ -324,7 +331,6 @@ class TestEndToEndWorkflows:
         assert 'value="Test"' in html
         assert 'value="ST"' in html
         assert 'value="12/11/25"' in html
-        assert 'value="15"' in html
 
     def test_print_execution_with_preserved_state(self, client):
         """Test that print execution works correctly with preserved form state."""
@@ -335,7 +341,6 @@ class TestEndToEndWorkflows:
             "Side": "PE",
             "SymbolName": "awake",
             "Bottom": "12/11/25",
-            "Inversion": "20",
         }
 
         # Test label print execution

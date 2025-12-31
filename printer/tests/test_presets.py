@@ -35,12 +35,6 @@ def test_canonical_query_orders_keys_and_drops_empty_values() -> None:
             "hvS2eIbWbE0",
         ),
         (
-            "receipt_checklist",
-            {"Items": ["milk", " eggs ", None, ""]},
-            "tpl=receipt_checklist&Items=milk&Items=eggs",
-            "CvC_qI9M81E",
-        ),
-        (
             "bluey_label",
             {"Line1": "Oat Milk", "Line2": {"size": "large", "notes": "  "}},
             "tpl=bluey_label&Line1=Oat+Milk&Line2=%7B%22size%22%3A%22large%22%7D",
@@ -72,7 +66,7 @@ def test_slug_is_deterministic_and_urlsafe() -> None:
 def test_slug_changes_with_form_values() -> None:
     slug_a = slug_for_params("bluey_label", {"Line1": "Alpha"})
     slug_b = slug_for_params("bluey_label", {"Line1": "Bravo"})
-    slug_c = slug_for_params("receipt_checklist", {"Line1": "Alpha"})
+    slug_c = slug_for_params("best_by", {"Text": "Alpha"})
     assert slug_a != slug_b
     assert slug_a != slug_c
 

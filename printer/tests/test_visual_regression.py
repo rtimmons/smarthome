@@ -44,7 +44,7 @@ from __future__ import annotations
 
 import hashlib
 import importlib
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 from typing import Tuple
 
@@ -54,8 +54,6 @@ from PIL import Image
 from printer_service.label_templates import (
     best_by,
     bluey_label,
-    daily_snapshot,
-    receipt_checklist,
 )
 from printer_service.label_templates.base import TemplateFormData
 
@@ -197,16 +195,6 @@ def regenerate_baselines(request):
 def mock_best_by_date(monkeypatch):
     """Fix the current date for best_by tests."""
     monkeypatch.setattr(best_by, "_today", lambda: date(2025, 11, 17))
-
-
-@pytest.fixture
-def mock_receipt_datetime(monkeypatch):
-    """Fix the current date/time for receipt checklist tests."""
-    fixed_date = date(2025, 12, 6)
-    fixed_datetime = datetime(2025, 12, 6, 9, 30, 0)
-    monkeypatch.setattr(receipt_checklist, "_today", lambda: fixed_date)
-    monkeypatch.setattr(receipt_checklist, "_now", lambda: fixed_datetime)
-    return fixed_date
 
 
 def test_best_by_simple_date(mock_best_by_date, regenerate_baselines):
@@ -371,7 +359,7 @@ def test_best_by_qr_code_caption_from_url(mock_best_by_date, regenerate_baseline
     template = best_by.TEMPLATE
     form_data = TemplateFormData(
         {
-            "QrUrl": "http://[::1]:8099/bb?Line1=Durban&Line2=Poison&SymbolName=awake&Initials=DP&PackageDate=07%2F20%2F25&tpl=bluey_label_2&print=true",
+            "QrUrl": "http://[::1]:8099/bb?Line1=Durban&Line2=Poison&SymbolName=awake&Side=DP&Bottom=07%2F20%2F25&tpl=bluey_label&print=true",
             "QrText": "",
         }
     )
@@ -386,11 +374,11 @@ def test_best_by_qr_code_caption_from_url(mock_best_by_date, regenerate_baseline
 
 
 def test_best_by_qr_code_caption_from_url_lion(mock_best_by_date, regenerate_baselines):
-    """Best By label builds a detailed caption from a Bluey Label 2 QR URL."""
+    """Best By label builds a detailed caption from a Bluey label QR URL."""
     template = best_by.TEMPLATE
     form_data = TemplateFormData(
         {
-            "QrUrl": "http://[::1]:8099/bb?Line1=Lion&Line2=Mane&SymbolName=awake&Initials=LM&PackageDate=07%2F11%2F25&tpl=bluey_label_2&print=true",
+            "QrUrl": "http://[::1]:8099/bb?Line1=Lion&Line2=Mane&SymbolName=awake&Side=LM&Bottom=07%2F11%2F25&tpl=bluey_label&print=true",
             "QrText": "",
         }
     )
@@ -477,72 +465,6 @@ def test_best_by_qr_code_caption_with_double_colon_prefix(mock_best_by_date, reg
         "best_by_qr_caption_prefix_double_colon_zero_offset.png",
         tolerance=0.001,
         regenerate=regenerate_baselines,
-    )
-
-
-# =============================================================================
-# Receipt Checklist Tests
-# =============================================================================
-
-
-def test_receipt_default_items(mock_receipt_datetime, regenerate_baselines):
-    """Receipt checklist with default items."""
-    template = receipt_checklist.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "items[]": [
-                "Breakfast",
-                "Lunch",
-                "Dinner",
-                "Meds AM",
-                "Meds PM",
-                "Hydrate x8",
-                "Exercise",
-                "Notes",
-            ],
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "receipt_default.png", regenerate=regenerate_baselines)
-
-
-def test_receipt_custom_items(mock_receipt_datetime, regenerate_baselines):
-    """Receipt checklist with custom items."""
-    template = receipt_checklist.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "items[]": [
-                "Buy milk",
-                "Call dentist",
-                "Pay bills",
-                "Water plants",
-            ],
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "receipt_custom.png", regenerate=regenerate_baselines)
-
-
-def test_receipt_with_qr(mock_receipt_datetime, regenerate_baselines):
-    """Receipt checklist with QR code."""
-    template = receipt_checklist.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "items[]": [
-                "Task 1",
-                "Task 2",
-                "Task 3",
-            ],
-            "qr_base": "https://example.com/checklist/",
-            "date": "2025-11-17",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(
-        image, "receipt_with_qr.png", tolerance=0.001, regenerate=regenerate_baselines
     )
 
 
@@ -671,89 +593,6 @@ def test_bluey_label_alt_symbol(regenerate_baselines):
     assert_visual_match(image, "bluey_alt_symbol.png", regenerate=regenerate_baselines)
 
 
-def test_bluey_label_between_field(regenerate_baselines):
-    """Bluey label with Between field text between Line1 and Line2."""
-    template = bluey_label.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "Line1": "Leftovers",
-            "Line2": "Casserole",
-            "Between": "from yesterday",
-            "Side": "LC",
-            "Bottom": "12/10/25",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "bluey_between_field.png", regenerate=regenerate_baselines)
-
-
-def test_bluey_label_between_only(regenerate_baselines):
-    """Bluey label with Between field but only one title line (should not show Between)."""
-    template = bluey_label.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "Line1": "Single Line",
-            "Between": "should not appear",
-            "Side": "SL",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "bluey_between_only.png", regenerate=regenerate_baselines)
-
-
-def test_bluey_label_inversion_0_percent(regenerate_baselines):
-    """Bluey label with 0% inversion (normal appearance)."""
-    template = bluey_label.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "Line1": "Normal",
-            "Line2": "Label",
-            "Side": "NL",
-            "Bottom": "12/10/25",
-            "Inversion": "0",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "bluey_inversion_0.png", regenerate=regenerate_baselines)
-
-
-def test_bluey_label_inversion_50_percent(regenerate_baselines):
-    """Bluey label with 50% inversion (partial inversion)."""
-    template = bluey_label.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "Line1": "Half",
-            "Line2": "Inverted",
-            "Side": "HI",
-            "Bottom": "12/10/25",
-            "Inversion": "50",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "bluey_inversion_50.png", regenerate=regenerate_baselines)
-
-
-def test_bluey_label_inversion_100_percent(regenerate_baselines):
-    """Bluey label with 100% inversion (fully inverted)."""
-    template = bluey_label.TEMPLATE
-    form_data = TemplateFormData(
-        {
-            "Line1": "Fully",
-            "Line2": "Inverted",
-            "Side": "FI",
-            "Bottom": "12/10/25",
-            "Inversion": "100",
-        }
-    )
-
-    image = template.render(form_data)
-    assert_visual_match(image, "bluey_inversion_100.png", regenerate=regenerate_baselines)
-
-
 def test_bluey_jar_label_basic(regenerate_baselines):
     """Bluey jar label with basic supplier and percentage fields."""
     template = bluey_label.TEMPLATE
@@ -827,23 +666,3 @@ def test_bluey_jar_label_full_fields(regenerate_baselines):
 
     image = template.render(form_data)
     assert_visual_match(image, "bluey_jar_full_fields.png", regenerate=regenerate_baselines)
-
-
-# =============================================================================
-# Daily Snapshot Tests (if applicable)
-# =============================================================================
-
-# Note: daily_snapshot may require complex payload.
-# Add tests here if the template is being used in production.
-
-
-def test_daily_snapshot_basic(regenerate_baselines):
-    """Test daily snapshot template with basic widget data."""
-    form_data = daily_snapshot.TemplateFormData(
-        {
-            "widgets": '[{"type": "date_heading", "payload": {"label": "Mon Dec 9, 2024"}}, {"type": "calendar_month", "payload": {"year": 2024, "month": 12, "month_label": "December 2024", "weeks": [[{"day": 1, "status": "past"}, {"day": 2, "status": "past"}, {"day": 3, "status": "past"}, {"day": 4, "status": "past"}, {"day": 5, "status": "past"}, {"day": 6, "status": "past"}, {"day": 7, "status": "past"}], [{"day": 8, "status": "past"}, {"day": 9, "status": "today"}, {"day": 10, "status": "future"}, {"day": 11, "status": "future"}, {"day": 12, "status": "future"}, {"day": 13, "status": "future"}, {"day": 14, "status": "future"}]]}}]'
-        }
-    )
-
-    image = daily_snapshot.Template().render(form_data)
-    assert_visual_match(image, "daily_snapshot_basic.png", regenerate_baselines)

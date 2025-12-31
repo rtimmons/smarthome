@@ -12,6 +12,7 @@ from urllib.parse import parse_qs, urlparse
 import pytest
 from PIL import Image, ImageFont
 
+import printer_service.best_by as best_by_request
 from printer_service.label_specs import resolve_brother_label_spec
 from printer_service.label_templates import bluey_label as bluey_module
 from printer_service.label_templates.base import TemplateFormData
@@ -209,6 +210,32 @@ def test_bb_preview_uses_preset_slug_for_qr_url(
     assert parsed.query == ""
 
 
+def test_bb_preview_uses_legacy_preset_slug_for_removed_bluey_fields(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    template_slug = templates_module.get_template("bluey_label").slug
+    legacy_params = {"Line1": "Super", "Line2": "Mochi", "Inversion": "0"}
+    preset = store.upsert_preset("Super Mochi", template_slug, legacy_params)
+
+    response = client.post(
+        "/bb/preview",
+        json={"template": template_slug, "data": {"Line1": "Super", "Line2": "Mochi"}},
+        headers={"Accept": "application/json"},
+    )
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    parsed = urlparse(payload["print_url"])
+    assert parsed.path.endswith(f"/p/{preset.slug}")
+    assert parsed.query == ""
+
+
 def test_bb_preview_qr_url_falls_back_without_preset(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -235,6 +262,27 @@ def test_bb_preview_qr_url_falls_back_without_preset(
     assert query.get("print") == ["true"]
 
 
+def test_best_by_request_parses_text_from_query(test_environment: Tuple) -> None:
+    app_module, _templates_module, flask_app, _labels_dir, _ = test_environment
+    with flask_app.test_request_context("/bb?Text=Hello+World"):
+        form_data = best_by_request.best_by_form_data_from_request(
+            payload_error=app_module.LabelPayloadError,
+            is_template_form_value=app_module._is_template_form_value,
+        )
+
+    assert form_data.get_str("Text") == "Hello World"
+
+
+def test_best_by_request_rejects_text_with_base_date(test_environment: Tuple) -> None:
+    app_module, _templates_module, flask_app, _labels_dir, _ = test_environment
+    with flask_app.test_request_context("/bb?Text=Hello&BaseDate=2025-01-01"):
+        with pytest.raises(app_module.LabelPayloadError):
+            best_by_request.best_by_form_data_from_request(
+                payload_error=app_module.LabelPayloadError,
+                is_template_form_value=app_module._is_template_form_value,
+            )
+
+
 def test_bb_preview_jar_qr_url_uses_preset_slug(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -259,6 +307,11 @@ def test_bb_preview_jar_qr_url_uses_preset_slug(
     parsed = urlparse(payload["jar_qr_url"])
     assert parsed.path.endswith(f"/p/{preset.slug}")
     assert parsed.query == ""
+    assert payload["jar"]["image"].startswith("data:image/png;base64,")
+    jar_parsed = urlparse(payload["jar_print_url"])
+    jar_query = parse_qs(jar_parsed.query)
+    assert jar_query.get("jar") == ["true"]
+    assert "print" not in jar_query
 
 
 def test_bb_preview_jar_qr_url_falls_back_without_preset(
@@ -288,6 +341,11 @@ def test_bb_preview_jar_qr_url_falls_back_without_preset(
     assert "jar" not in query
     assert query.get("tpl") == [template_slug]
     assert query.get("Supplier") == ["Local Farm"]
+    assert payload["jar"]["image"].startswith("data:image/png;base64,")
+    jar_parsed = urlparse(payload["jar_print_url"])
+    jar_query = parse_qs(jar_parsed.query)
+    assert jar_query.get("jar") == ["true"]
+    assert "print" not in jar_query
 
 
 def test_bb_preview_validates_payload(test_environment: Tuple) -> None:
@@ -428,15 +486,15 @@ def test_bluey_template_renders_expected_canvas(
             "Line1": "Granddaddy Purp",
             "Line2": "Shelf 2",
             "SymbolName": "Sleep",
-            "Initials": "GDP",
-            "PackageDate": "07/11/25",
+            "Side": "GDP",
+            "Bottom": "07/11/25",
         }
     )
     assert image.size == BLUEY_EXPECTED_CANVAS
     assert image.mode == "1"
 
 
-def test_bluey_initials_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_bluey_side_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> None:
     helper_module = importlib.import_module("printer_service.label_templates.helper")
     bluey_template = importlib.reload(
         importlib.import_module("printer_service.label_templates.bluey_label")
@@ -445,7 +503,7 @@ def test_bluey_initials_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> N
     monkeypatch.setattr(helper_module, "load_font", lambda size_points: ImageFont.load_default())
     monkeypatch.setattr(helper_module, "draw_background_symbol", lambda *args, **kwargs: None)
 
-    image = bluey_template.render(TemplateFormData({"Initials": "ABC"}))
+    image = bluey_template.render(TemplateFormData({"Side": "ABC"}))
 
     strip_width = 80
     left_runs = _count_runs(image.crop((0, 0, strip_width, image.height)))
@@ -455,7 +513,7 @@ def test_bluey_initials_repeat_along_edges(monkeypatch: pytest.MonkeyPatch) -> N
     assert left_runs >= 4
 
 
-def test_bluey_initials_clip_count_when_title_is_wide(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_bluey_side_clip_count_when_title_is_wide(monkeypatch: pytest.MonkeyPatch) -> None:
     helper_module = importlib.import_module("printer_service.label_templates.helper")
     bluey_template = importlib.reload(
         importlib.import_module("printer_service.label_templates.bluey_label")
@@ -466,12 +524,12 @@ def test_bluey_initials_clip_count_when_title_is_wide(monkeypatch: pytest.Monkey
 
     strip_width = 80
     narrow_image = bluey_template.render(
-        TemplateFormData({"Line1": "Foo", "Line2": "Bar", "Initials": "FP"})
+        TemplateFormData({"Line1": "Foo", "Line2": "Bar", "Side": "FP"})
     )
     narrow_runs = _count_runs(narrow_image.crop((0, 0, strip_width, narrow_image.height)))
 
     wide_image = bluey_template.render(
-        TemplateFormData({"Line1": "W" * 140, "Line2": "Bar", "Initials": "FP"})
+        TemplateFormData({"Line1": "W" * 140, "Line2": "Bar", "Side": "FP"})
     )
     wide_runs_left = _count_runs(wide_image.crop((0, 0, strip_width, wide_image.height)))
     wide_runs_right = _count_runs(
@@ -501,8 +559,8 @@ def test_bluey_template_rejects_unknown_symbol(
             {
                 "Line1": "Hybrid",
                 "SymbolName": "Unknown Symbol",
-                "Initials": "HYB",
-                "PackageDate": "07/11/25",
+                "Side": "HYB",
+                "Bottom": "07/11/25",
             }
         )
 

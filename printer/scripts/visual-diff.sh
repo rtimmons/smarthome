@@ -157,15 +157,6 @@ get_template_info() {
                 *) parameters="" ;;
             esac
             ;;
-        receipt_*)
-            template_name="Receipt Checklist"
-            case "$filename" in
-                *custom*) parameters="custom items" ;;
-                *qr*) parameters="with QR code" ;;
-                *default*) parameters="default items" ;;
-                *) parameters="" ;;
-            esac
-            ;;
         bluey_*)
             template_name="Bluey Label"
             case "$filename" in
@@ -181,10 +172,6 @@ get_template_info() {
                 *default*) parameters="default" ;;
                 *) parameters="" ;;
             esac
-            ;;
-        daily_snapshot_*)
-            template_name="Daily Snapshot"
-            parameters="placeholder"
             ;;
         *)
             template_name="Unknown Template"

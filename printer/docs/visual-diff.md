@@ -54,7 +54,6 @@ just test-visual
 All commands support optional pattern filtering:
 
 ```bash
-just visual-diff receipt        # Only receipt-related diffs
 just visual-diff-grid best_by   # Only best_by template diffs
 just visual-diff-clean qr       # Only QR code related diffs
 ```

@@ -14,14 +14,23 @@ The printer service has comprehensive test coverage including:
 
 ## Running Tests
 
-### Run All Tests (Recommended)
+### Run Fast Tests (Recommended for Local Iteration)
+
+```bash
+# From the printer directory
+just test-fast
+```
+
+This runs the standard checks but skips UI/browser tests (marked `ui`).
+
+### Run Full Test Suite
 
 ```bash
 # From the printer directory
 just test
 ```
 
-This runs the full test suite including:
+This runs the full test suite including UI/browser tests:
 - Code formatting checks (ruff)
 - Type checking (mypy)
 - All pytest tests
@@ -37,11 +46,17 @@ For more targeted test runs, use pytest directly:
 # Run only app integration tests
 .venv/bin/pytest tests/test_app.py -v
 
+# Run all non-UI tests
+.venv/bin/pytest -m "not ui" -v
+
+# Run only UI/browser tests
+.venv/bin/pytest -m ui -v
+
 # Run a single test
-.venv/bin/pytest tests/test_visual_regression.py::test_kitchen_label_three_lines -v
+.venv/bin/pytest tests/test_visual_regression.py::test_best_by_simple_date -v
 
 # Run tests matching a keyword
-.venv/bin/pytest tests/ -k kitchen -v
+.venv/bin/pytest tests/ -k bluey -v
 .venv/bin/pytest tests/ -k best_by -v
 ```
 
@@ -65,7 +80,7 @@ Regenerate baselines **only** when you intentionally change the visual output:
 .venv/bin/pytest tests/test_visual_regression.py --regenerate-baselines -v
 
 # Regenerate a specific baseline
-.venv/bin/pytest tests/test_visual_regression.py::test_kitchen_label_three_lines --regenerate-baselines -v
+.venv/bin/pytest tests/test_visual_regression.py::test_best_by_simple_date --regenerate-baselines -v
 ```
 
 **Important:** Review the changes carefully before committing new baselines to git!
@@ -74,38 +89,24 @@ Regenerate baselines **only** when you intentionally change the visual output:
 
 Visual regression tests cover these scenarios:
 
-#### Best By Labels (7 tests)
-- `test_best_by_simple_date` - Default 2-week offset
-- `test_best_by_custom_prefix` - Custom prefix ("Use By: ")
-- `test_best_by_one_month` - 1-month offset
-- `test_best_by_custom_text` - Free-form text override
-- `test_best_by_qr_code_simple` - QR code without overlay
-- `test_best_by_qr_code_with_text` - QR code with short overlay
-- `test_best_by_qr_code_long_text` - QR code with long overlay (tests wrapping)
+#### Best By Labels
+- Default offsets, custom prefixes, and zero-offset variants
+- Custom text overrides
+- QR code variants and caption generation from URLs/offsets
 
-#### Kitchen Labels (4 tests)
-- `test_kitchen_label_three_lines` - All three lines filled
-- `test_kitchen_label_two_lines` - Two lines
-- `test_kitchen_label_single_line` - Single line
-- `test_kitchen_label_long_text` - Very long text (tests clipping)
-
-#### Receipt Checklists (3 tests)
-- `test_receipt_default_items` - Default checklist items
-- `test_receipt_custom_items` - Custom items
-- `test_receipt_with_qr` - Checklist with QR code
-
-#### Bluey Labels (2 tests)
-- `test_bluey_label_default` - bluey_label template
-- `test_bluey_label_2_default` - bluey_label_2 template
+#### Bluey Labels
+- Default/repeated titles, long text, and missing symbol paths
+- Full-field variants and alternate symbols
+- Jar label variants (supplier/percentage/full fields)
 
 ### Understanding Test Failures
 
 When a visual regression test fails:
 
 ```
-AssertionError: Visual regression failure: kitchen_three_lines.png
-  Expected: /path/to/tests/baselines/kitchen_three_lines.png
-  Got: /path/to/tests/baselines/DIFF_kitchen_three_lines.png
+AssertionError: Visual regression failure: best_by_simple_date.png
+  Expected: /path/to/tests/baselines/best_by_simple_date.png
+  Got: /path/to/tests/baselines/DIFF_best_by_simple_date.png
   Image size: expected=(306, 991), got=(306, 991)
   To update all baselines: pytest tests/test_visual_regression.py --regenerate-baselines
 ```
@@ -221,7 +222,7 @@ Then commit the generated baselines to git.
 ✅ **Always commit:**
 - Test files: `tests/test_*.py`
 - Baseline images: `tests/baselines/*.png`
-- This documentation: `TESTING.md`
+- This documentation: `docs/testing.md`
 
 ❌ **Never commit:**
 - Diff images: `tests/baselines/DIFF_*.png` (auto-ignored by `.gitignore`)
@@ -249,8 +250,8 @@ When reviewing PRs with baseline changes:
 
 ## Performance
 
-- **Test suite execution time**: ~2 seconds for all 84 tests
-- **Visual regression tests**: ~0.3 seconds for 16 tests
-- **Baseline generation**: Same as normal test run
+- **Fast path (`just test-fast`)**: Skips UI/browser tests for quicker iteration
+- **UI/browser tests**: Slower and require Playwright browser support
+- **Baseline generation**: Same as normal visual test run
 
-Fast test execution enables rapid iteration during development.
+Use the fast path during local iteration, then run the full suite before shipping.

@@ -26,9 +26,7 @@ class TestBrowserSimulation:
     def test_form_auto_preview_simulation(self, client):
         """Simulate what happens when a user loads a form and JavaScript auto-generates preview."""
         # Step 1: User loads page with URL parameters
-        response = client.get(
-            "/bb?Line1=Auto&Line2=Preview&Side=AP&Between=test&Bottom=12/11/25&Inversion=30&tpl=bluey_label"
-        )
+        response = client.get("/bb?Line1=Auto&Line2=Preview&Side=AP&Bottom=Shelf+2&tpl=bluey_label")
         assert response.status_code == 200
 
         html = response.get_data(as_text=True)
@@ -36,9 +34,7 @@ class TestBrowserSimulation:
         assert 'value="Auto"' in html
         assert 'value="Preview"' in html
         assert 'value="AP"' in html
-        assert 'value="test"' in html
-        assert 'value="12/11/25"' in html
-        assert 'value="30"' in html
+        assert 'value="Shelf 2"' in html
 
         # Step 2: JavaScript would collect form data and send preview request
         # Simulate the JavaScript formDataToObject function
@@ -47,9 +43,7 @@ class TestBrowserSimulation:
             "Line2": "Preview",
             "SymbolName": "awake",  # Default value
             "Side": "AP",
-            "Between": "test",
-            "Bottom": "12/11/25",
-            "Inversion": "30",
+            "Bottom": "Shelf 2",
         }
 
         # Step 3: JavaScript sends preview request
@@ -79,9 +73,7 @@ class TestBrowserSimulation:
             "Line2": "Test",
             "SymbolName": "awake",
             "Side": "PT",
-            "Between": "center",
-            "Bottom": "12/11/25",
-            "Inversion": "50",
+            "Bottom": "Shelf 1",
             "tpl": "bluey_label",  # Include template parameter
         }
 

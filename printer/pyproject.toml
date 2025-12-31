@@ -39,6 +39,9 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 docstring-code-format = true
 
+[tool.pytest.ini_options]
+markers = ["ui: browser-driven UI tests (Playwright)"]
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/printer_service"]
 include = [

@@ -13,7 +13,7 @@ const jarPreviewUrlRow = document.getElementById('jarPreviewUrl');
 const jarPreviewUrlLink = document.getElementById('jarPreviewUrlLink');
 const labelPreviewSummary = document.getElementById('labelPreviewSummary');
 const bestByDateValue = document.getElementById('bestByDateValue');
-const themeSelect = document.getElementById('themeSelect');
+const themeButtons = Array.from(document.querySelectorAll('.theme-toggle__option'));
 const presetPanel = document.getElementById('presetPanel');
 const savePresetButton = document.getElementById('savePresetButton');
 const presetStatus = document.getElementById('presetStatus');
@@ -625,6 +625,14 @@ function buildPresetPayload(name) {
     };
 }
 
+function refreshPreviewAfterPresetSave() {
+    if (!form || !previewContainer || disableDefaultFormHandlers) {
+        return;
+    }
+    lastPreviewPayloadKey = '';
+    requestPreview();
+}
+
 function createPresetCell(content, options = {}) {
     const cell = document.createElement('div');
     if (options.className) {
@@ -741,6 +749,7 @@ async function handleSavePreset() {
     const saved = result.data && result.data.preset ? result.data.preset : null;
     setPresetStatus(`Saved "${saved && saved.name ? saved.name : name}".`, false);
     loadPresets();
+    refreshPreviewAfterPresetSave();
 }
 
 async function handleDeletePreset(preset) {
@@ -1067,9 +1076,7 @@ function applyTheme(preference) {
     root.style.colorScheme = resolvedTheme;
     root.classList.toggle('theme-dark', resolvedTheme === 'dark');
     root.classList.toggle('theme-light', resolvedTheme === 'light');
-    if (themeSelect && themeSelect.value !== preference) {
-        themeSelect.value = preference;
-    }
+    updateThemeToggle(preference);
 }
 
 function persistTheme(preference) {
@@ -1080,8 +1087,25 @@ function persistTheme(preference) {
     }
 }
 
+function updateThemeToggle(preference) {
+    if (!themeButtons.length) {
+        return;
+    }
+    themeButtons.forEach((button) => {
+        const isActive = button.dataset.theme === preference;
+        button.classList.toggle('is-active', isActive);
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+}
+
 function handleThemeChange(event) {
-    const preference = event && event.target ? event.target.value : 'system';
+    const button = event && event.target && event.target.closest
+        ? event.target.closest('.theme-toggle__option')
+        : null;
+    if (!button) {
+        return;
+    }
+    const preference = button.dataset.theme || 'system';
     const next = THEME_OPTIONS.includes(preference) ? preference : 'system';
     persistTheme(next);
     applyTheme(next);
@@ -1108,9 +1132,10 @@ function bindSystemThemeListener() {
 function initTheme() {
     const initialPreference = getStoredThemePreference();
     applyTheme(initialPreference);
-    if (themeSelect) {
-        themeSelect.value = initialPreference;
-        themeSelect.addEventListener('change', handleThemeChange);
+    if (themeButtons.length) {
+        themeButtons.forEach((button) => {
+            button.addEventListener('click', handleThemeChange);
+        });
     }
     bindSystemThemeListener();
 }

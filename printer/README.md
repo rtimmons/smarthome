@@ -15,6 +15,7 @@ just start        # Starts just the printer service
 ```
 
 The printer service will be available at http://localhost:8099
+Use the header emoji picker (☀️/🌙/🖥️) to switch between light, dark, and system themes.
 
 ## Build the Home Assistant Add-on Image
 
@@ -50,20 +51,20 @@ just test
 # For more specific test runs, use pytest directly:
 .venv/bin/pytest tests/ -v                    # All tests with verbose output
 .venv/bin/pytest tests/test_visual_regression.py -v   # Specific file
-.venv/bin/pytest tests/ -k kitchen -v         # Tests matching keyword
+.venv/bin/pytest tests/ -k bluey -v           # Tests matching keyword
 ```
 
 For comprehensive testing documentation, see [docs/testing.md](./docs/testing.md).
 
 ### Visual Regression Tests
 
-The printer service has a comprehensive test suite with 75 tests covering all functionality:
+The printer service has a comprehensive test suite covering all functionality:
 
 ```bash
 # Run the full test suite (includes dark mode test)
 just test
 
-# Run only the main pytest suite (74 tests)
+# Run only the main pytest suite
 .venv/bin/python -m pytest
 
 # Run only visual regression tests
@@ -73,7 +74,7 @@ just test
 .venv/bin/pytest tests/test_visual_regression.py --regenerate-baselines -v
 
 # Run dark mode test separately
-python tests/test_dark_mode_standalone.py
+.venv/bin/python tests/test_dark_mode_standalone.py
 ```
 
 **Note:** The dark mode test runs separately to avoid asyncio conflicts with the main Playwright-based test suite.
@@ -112,9 +113,7 @@ If your MongoDB add-on is installed from a non-local repository, use
 The printer service supports multiple label templates:
 
 - **best_by** - Date-based labels with QR code support
-- **receipt_checklist** - Checklist with checkboxes
-- **bluey_label** - Decorative character labels
-- **daily_snapshot** - Calendar and date display
+- **bluey_label** - Decorative character labels (Line 1/Line 2/Side/Symbol/Bottom free text)
 
 Templates are auto-discovered from `src/printer_service/label_templates/`.
 

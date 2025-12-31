@@ -13,6 +13,7 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 ## Feature overview
 - "Save preset" controls live below the left-side label form.
 - Saving prompts for a name; presets store current URL params (including template).
+- Saving a preset refreshes the preview so the QR URL updates to `/p/<slug>` immediately.
 - Presets list (name, slug, template, actions) lives below the save controls.
 - Presets can be deleted.
 - Presets are stored in MongoDB (via the mongodb add-on).

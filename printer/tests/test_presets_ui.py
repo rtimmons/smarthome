@@ -14,6 +14,8 @@ from printer_service.presets import Preset, canonical_query_string, slug_for_par
 
 app_module = import_module("printer_service.app")
 
+pytestmark = pytest.mark.ui
+
 
 class FakePresetStore:
     def __init__(self) -> None:
@@ -133,6 +135,10 @@ def test_save_and_delete_preset_flow(app_server, fake_store):
     def run(browser):
         page = browser.new_page()
         page.goto(target_url, wait_until="networkidle")
+        page.wait_for_selector("#qrPreviewUrl", state="visible", timeout=5000)
+        initial_href = page.locator("#qrPreviewUrlLink").get_attribute("href")
+        assert initial_href
+        assert "/p/" not in initial_href
 
         def handle_dialog(dialog):
             if dialog.type == "prompt":
@@ -143,6 +149,18 @@ def test_save_and_delete_preset_flow(app_server, fake_store):
         page.on("dialog", handle_dialog)
         page.click("#savePresetButton")
         page.wait_for_selector('#presetListBody .preset-row:has-text("Quick Pick")', timeout=5000)
+        page.wait_for_function(
+            """
+            () => {
+                const link = document.getElementById('qrPreviewUrlLink');
+                return link && link.getAttribute('href') && link.getAttribute('href').includes('/p/');
+            }
+            """,
+            timeout=5000,
+        )
+        updated_href = page.locator("#qrPreviewUrlLink").get_attribute("href")
+        assert updated_href
+        assert "/p/" in updated_href
         assert len(fake_store._presets) == 1
 
         row = page.locator("#presetListBody .preset-row", has_text="Quick Pick")

@@ -178,15 +178,19 @@ def _build_qr_caption(qr_url: str, caption: str, delta_label: str) -> str:
         details.append(f"Base {base_date_value}")
 
     detail_keys = [
-        ("Line1", False),
-        ("Line2", False),
-        ("SymbolName", True),
-        ("Initials", False),
-        ("PackageDate", False),
+        (("Line1",), False),
+        (("Line2",), False),
+        (("SymbolName",), True),
+        (("Side", "Initials"), False),
+        (("Bottom", "PackageDate"), False),
     ]
-    for key, title_case in detail_keys:
+    for keys, title_case in detail_keys:
+        expanded_keys: list[str] = []
+        for key in keys:
+            expanded_keys.append(key)
+            expanded_keys.append(key.lower())
         value = _normalize_caption_piece(
-            _extract_query_value(query, key, key.lower()), title_case=title_case
+            _extract_query_value(query, *expanded_keys), title_case=title_case
         )
         if value:
             details.append(value)

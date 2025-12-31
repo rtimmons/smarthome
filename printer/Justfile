@@ -76,6 +76,17 @@ test:
     @"{{python}}" -m pytest
     @echo "✅ All tests passed"
 
+# Run fast tests (skip UI/browser tests)
+[group: 'test']
+test-fast:
+    @echo "🧪 Running fast Printer Service tests (no UI)..."
+    @set -e
+    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    @"{{python}}" -m ruff format --check .
+    @"{{python}}" -m mypy --config-file mypy.toml src/printer_service tests
+    @"{{python}}" -m pytest -m "not ui"
+    @echo "✅ Fast tests passed"
+
 # Format code with ruff
 [group: 'format']
 fmt:

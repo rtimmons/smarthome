@@ -9,9 +9,7 @@
     {% set line2_value = (initial_query.get('Line2') or initial_query.get('line2') or '') | string %}
     {% set symbol_value = (initial_query.get('SymbolName') or initial_query.get('symbolName') or form_context.default_svg_symbol) | string %}
     {% set side_value = (initial_query.get('Side') or initial_query.get('side') or initial_query.get('Initials') or initial_query.get('initials') or '') | string %}
-    {% set between_value = (initial_query.get('Between') or initial_query.get('between') or '') | string %}
     {% set bottom_value = (initial_query.get('Bottom') or initial_query.get('bottom') or initial_query.get('PackageDate') or initial_query.get('packageDate') or '') | string %}
-    {% set inversion_value = (initial_query.get('Inversion') or initial_query.get('inversion') or '0') | string %}
     {% set supplier_value = (initial_query.get('Supplier') or initial_query.get('supplier') or '') | string %}
     {% set percentage_value = (initial_query.get('Percentage') or initial_query.get('percentage') or '') | string %}
 
@@ -35,17 +33,9 @@
         Side
         <input type="text" id="side" name="Side" value="{{ side_value }}" placeholder="GDP">
     </label>
-    <label for="between">
-        Between
-        <input type="text" id="between" name="Between" value="{{ between_value }}" placeholder="Small text">
-    </label>
     <label for="bottom">
         Bottom
-        <input type="text" id="bottom" name="Bottom" value="{{ bottom_value }}" placeholder="07/11/25">
-    </label>
-    <label for="inversion">
-        Inversion (%)
-        <input type="number" id="inversion" name="Inversion" value="{{ inversion_value }}" placeholder="0" min="0" max="100" step="1">
+        <input type="text" id="bottom" name="Bottom" value="{{ bottom_value }}" placeholder="Bottom text">
     </label>
     <label for="supplier">
         Supplier

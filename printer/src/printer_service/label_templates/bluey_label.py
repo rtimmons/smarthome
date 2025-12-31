@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 import qrcode  # type: ignore[import-untyped]
-from PIL import Image, ImageChops, ImageDraw, ImageOps
+from PIL import Image, ImageChops, ImageDraw
 from PIL.Image import Dither, Resampling
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
@@ -44,7 +44,6 @@ TITLE_REPEAT_COUNT = 4
 TITLE_FONT_POINTS = 60
 INITIALS_FONT_POINTS = 48
 DATE_FONT_POINTS = 18
-BETWEEN_FONT_POINTS = int(TITLE_FONT_POINTS / 3)  # 1/3 the size of title font
 BACKGROUND_ALPHA_PERCENT = 25
 INITIALS_OPACITY_PERCENT = 50
 TITLE_BLOCK_PADDING = int(round(0.16 * QL810W_DPI))
@@ -81,25 +80,15 @@ class Template(TemplateDefinition):
         side = form_data.get_str(
             "Side", "Initials", "side", "initials"
         )  # Support both new and old field names
-        between = form_data.get_str("Between", "between")
         symbol_choice = form_data.get_str("SymbolName", "symbolname")
         bottom_raw = form_data.get_str(
             "Bottom", "PackageDate", "bottom", "packagedate"
         )  # Support both new and old field names
-        inversion_raw = form_data.get_str("Inversion", "inversion")
 
         options = helper.svg_symbol_options()
         available_slugs = [option["slug"] for option in options]
         symbol_slug = helper.normalize_choice(candidate=symbol_choice, options=available_slugs)
-        bottom = helper.normalize_date(raw_value=bottom_raw)
-
-        # Parse inversion percentage (0-100)
-        inversion_percent = 0
-        if inversion_raw:
-            try:
-                inversion_percent = max(0, min(100, int(float(inversion_raw))))
-            except (ValueError, TypeError):
-                inversion_percent = 0
+        bottom = bottom_raw
 
         renderer = LabelDrawingHelper(width=CANVAS_WIDTH_PX, height=CANVAS_HEIGHT_PX)
 
@@ -114,7 +103,6 @@ class Template(TemplateDefinition):
         title_font = helper.load_font(size_points=TITLE_FONT_POINTS)
         initials_font = helper.load_font(size_points=INITIALS_FONT_POINTS)
         date_font = helper.load_font(size_points=DATE_FONT_POINTS)
-        between_font = helper.load_font(size_points=BETWEEN_FONT_POINTS)
         title_lines = []
         date_metrics: Optional[helper.Box] = None
         date_y: Optional[int] = None
@@ -145,18 +133,10 @@ class Template(TemplateDefinition):
 
         if title_lines and date_y is not None:
             title_block_height = 0
-            between_metrics = None
-            if between and len(title_lines) > 1:
-                between_metrics = renderer.measure_text(text=between, font=between_font)
             for line_index, (_text, metrics, _label_name) in enumerate(title_lines):
                 title_block_height += metrics.height
                 if line_index == 0 and len(title_lines) > 1:
-                    if between_metrics is not None:
-                        title_block_height += LINE2_OFFSET // 2
-                        title_block_height += between_metrics.height
-                        title_block_height += LINE2_OFFSET // 2
-                    else:
-                        title_block_height += LINE2_OFFSET
+                    title_block_height += LINE2_OFFSET
 
             available_height = date_y - SYMBOL_SECTION_SPACING - TOP_MARGIN
             if title_block_height > 0 and available_height > 0:
@@ -179,17 +159,7 @@ class Template(TemplateDefinition):
                         width_warning=f"{label_name} is wider than the label and will be clipped.",
                         height_warning="Text exceeds label height and may be clipped.",
                     )
-                    # Add "Between" text after Line1 if both Line1 and Line2 exist
-                    if line_index == 0 and len(title_lines) > 1 and between:
-                        renderer.advance(LINE2_OFFSET // 2)  # Half the normal spacing
-                        renderer.draw_centered_text(
-                            text=between,
-                            font=between_font,
-                            width_warning="Between text is wider than the label and will be clipped.",
-                            height_warning="Between text exceeds label height and may be clipped.",
-                        )
-                        renderer.advance(LINE2_OFFSET // 2)  # Other half of the spacing
-                    elif line_index == 0 and len(title_lines) > 1:
+                    if line_index == 0 and len(title_lines) > 1:
                         renderer.advance(LINE2_OFFSET)
                 if repeat_index < TITLE_REPEAT_COUNT - 1:
                     renderer.advance(title_block_padding)
@@ -251,21 +221,6 @@ class Template(TemplateDefinition):
         foreground_result = renderer.canvas.convert("1", dither=Dither.NONE)
         result = ImageChops.darker(background_result, foreground_result)
 
-        # Apply inversion if requested (0-100 percentage)
-        if inversion_percent > 0:
-            if inversion_percent >= 100:
-                # Full inversion
-                result = ImageOps.invert(result)
-            else:
-                # Partial inversion: blend original with inverted
-                inverted = ImageOps.invert(result)
-                # Convert to RGB for blending, then back to monochrome
-                result_rgb = result.convert("RGB")
-                inverted_rgb = inverted.convert("RGB")
-                # Blend based on inversion percentage
-                blended = Image.blend(result_rgb, inverted_rgb, inversion_percent / 100.0)
-                result = blended.convert("1", dither=Dither.FLOYDSTEINBERG)
-
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result
@@ -285,7 +240,7 @@ class Template(TemplateDefinition):
         options = helper.svg_symbol_options()
         available_slugs = [option["slug"] for option in options]
         symbol_slug = helper.normalize_choice(candidate=symbol_choice, options=available_slugs)
-        bottom = helper.normalize_date(raw_value=bottom_raw)
+        bottom = bottom_raw
 
         # Portrait orientation: rotate main label 90° and reduce short edge by 15%
         # Main label canvas: 390×720, so jar label should be 720×(390*0.85) = 720×331
