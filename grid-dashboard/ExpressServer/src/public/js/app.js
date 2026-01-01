@@ -26,6 +26,12 @@ class App {
             pubsub: this.pubsub,
         });
 
+        this.ledgridController = new LedGridController({
+            requester: this,
+            root: '', // Empty root for relative URLs (ingress compatible)
+            app: this,
+        });
+
         this.printerController = new PrinterController({
             app: this,
             port: this.config.printerPort,
@@ -291,6 +297,12 @@ class App {
                 break;
             case 'Printer.Preset':
                 this.printerController.preset(params[0]);
+                break;
+            case 'LedGrid.Start':
+                this.ledgridController.start(params[0], params[1]);
+                break;
+            case 'LedGrid.Stop':
+                this.ledgridController.stop();
                 break;
             case 'Music.VolumeUp':
                 this.musicController.volumeUp();

@@ -10,6 +10,7 @@ process.title = 'smhexprsrv';
 
 import { appConfig } from './config';
 import { hass } from './hass';
+import { ledgrid } from './ledgrid';
 import { redirs } from './redirs';
 import { sonos } from './sonos';
 
@@ -30,6 +31,7 @@ app.use('/ui', express.static(publicDir));
 app.use(redirs);
 app.use(sonos);
 app.use(hass);
+app.use(ledgrid);
 
 // Serve dashboard at root for ingress (must be last to not override API routes)
 app.use('/', express.static(publicDir));

@@ -7,6 +7,7 @@ const parsePort = (value: string | undefined, fallback: number): number => {
 
 export const appConfig = {
     sonosUrl: env.SONOS_BASE_URL || env.SONOS_URL || 'http://localhost:5005',
+    ledgridUrl: env.LEDGRID_URL || 'http://ledwallleft.local:5000',
     webhookBase:
         env.HASS_WEBHOOK_BASE ||
         (env.SUPERVISOR_TOKEN

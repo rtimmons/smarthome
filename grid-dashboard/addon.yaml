@@ -28,15 +28,20 @@ environment:
   INGRESS_ENTRY: "/api/hassio_ingress"
 options:
   sonos_base_url: "http://local-sonos-api:5006"
+  ledgrid_base_url: "http://ledwallleft.local:5000"
   webhook_base: ""
 schema:
   sonos_base_url: "str?"
+  ledgrid_base_url: "str?"
   webhook_base: "str?"
 translations:
   configuration:
     sonos_base_url:
       name: Sonos API base URL
       description: Base URL for node-sonos-http-api (e.g., http://node-sonos-http-api:5005).
+    ledgrid_base_url:
+      name: LEDGrid API base URL
+      description: Base URL for ledgrid-poc web API (e.g., http://ledwallleft.local:5000).
     webhook_base:
       name: Webhook base URL
       description: Optional override for Home Assistant webhook calls; leave empty to use supervisor proxy.
@@ -58,6 +63,9 @@ run_env:
   - env: SONOS_BASE_URL
     from_option: sonos_base_url
     default: "http://local-sonos-api:5006"
+  - env: LEDGRID_URL
+    from_option: ledgrid_base_url
+    default: "http://ledwallleft.local:5000"
   - env: HASS_WEBHOOK_BASE
     from_option: webhook_base
     default: ""
