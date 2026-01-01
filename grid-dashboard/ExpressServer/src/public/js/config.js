@@ -60,6 +60,29 @@ const buildCells = function(rows, cols, cells) {
     return allCells;
 };
 
+const ledGridButtons = function(yPos) {
+    return [
+        {
+            x: 6,
+            y: yPos,
+            emoji: 'Rainbow',
+            onPress: { action: 'LedGrid.Start', args: ['rainbow'] },
+        },
+        {
+            x: 7,
+            y: yPos,
+            emoji: 'Sparkles',
+            onPress: { action: 'LedGrid.Start', args: ['sparkle'] },
+        },
+        {
+            x: 8,
+            y: yPos,
+            emoji: 'Tetris',
+            onPress: { action: 'LedGrid.Start', args: ['tetris'] },
+        },
+    ];
+};
+
 const rows = 8;
 const cols = 11;
 
@@ -537,28 +560,12 @@ const config = {
         // },
         'Living Room': {
             cells: [
-                {
-                    x: 6,
-                    y: 5,
-                    emoji: 'Rainbow',
-                    onPress: { action: 'LedGrid.Start', args: ['rainbow'] },
-                },
-                {
-                    x: 7,
-                    y: 5,
-                    emoji: 'Sparkles',
-                    onPress: { action: 'LedGrid.Start', args: ['sparkle'] },
-                },
-                {
-                    x: 8,
-                    y: 5,
-                    emoji: 'Tetris',
-                    onPress: { action: 'LedGrid.Start', args: ['tetris'] },
-                },
+                ...ledGridButtons(5),
             ],
         },
         Kitchen: {
             cells: [
+                ...ledGridButtons(5),
                 {
                     x: 10,
                     y: 2,
