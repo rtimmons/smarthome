@@ -508,6 +508,52 @@ export const automations: AutomationRegistry = {
   },
 
   // ============================================================================
+  // Maker Room Webhook Automations (Dashboard Scene Buttons)
+  // ============================================================================
+
+  makerroom_webhook_high: {
+    alias: "Maker Room Webhook → High",
+    description: "Dashboard button: Maker Room High scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_makerroom_high"
+    },
+    action: {
+      type: "scene",
+      scene: "makerroom_high"
+    },
+    mode: "single"
+  },
+
+  makerroom_webhook_medium: {
+    alias: "Maker Room Webhook → Medium",
+    description: "Dashboard button: Maker Room Medium scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_makerroom_medium"
+    },
+    action: {
+      type: "scene",
+      scene: "makerroom_medium"
+    },
+    mode: "single"
+  },
+
+  makerroom_webhook_off: {
+    alias: "Maker Room Webhook → Off",
+    description: "Dashboard button: Maker Room Off scene",
+    trigger: {
+      type: "webhook",
+      webhook_id: "scene_makerroom_off"
+    },
+    action: {
+      type: "scene",
+      scene: "makerroom_off"
+    },
+    mode: "single"
+  },
+
+  // ============================================================================
   // Kitchen Webhook Automations (Dashboard Scene Buttons)
   // ============================================================================
 

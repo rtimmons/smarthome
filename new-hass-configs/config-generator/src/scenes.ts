@@ -593,6 +593,72 @@ export const scenes: SceneRegistry = {
   },
 
   // ============================================================================
+  // Maker Room Scenes
+  // ============================================================================
+
+  makerroom_high: {
+    name: "Maker Room - High",
+    lights: [
+      {
+        device: "makerroom_main",
+        state: "on",
+        brightness: 255
+      },
+      {
+        device: "makerroom_undershelf_white",
+        state: "on",
+        brightness: 255
+      }
+    ]
+  },
+
+  makerroom_medium: {
+    name: "Maker Room - Medium",
+    lights: [
+      {
+        device: "makerroom_main",
+        state: "on",
+        brightness: 180
+      },
+      {
+        device: "makerroom_undershelf_white",
+        state: "on",
+        brightness: 180
+      }
+    ]
+  },
+
+  makerroom_low: {
+    name: "Maker Room - Low",
+    lights: [
+      {
+        device: "makerroom_main",
+        state: "on",
+        brightness: 50
+      },
+      {
+        device: "makerroom_undershelf_white",
+        state: "on",
+        brightness: 50
+      }
+    ]
+  },
+
+  makerroom_off: {
+    name: "Maker Room - Off",
+    lights: [
+      {
+        device: "makerroom_main",
+        state: "off"
+      },
+      {
+        device: "makerroom_undershelf_white",
+        state: "off"
+      }
+    ]
+  },
+
+  // ============================================================================
   // Kitchen Scenes (includes dining area)
   // ============================================================================
 
