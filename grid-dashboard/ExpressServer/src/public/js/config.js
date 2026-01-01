@@ -381,16 +381,16 @@ const config = {
             h: 1,
             y: 5,
             x: 6,
-            emoji: 'Rainbow',
-            onPress: { action: 'LedGrid.Start', args: ['rainbow'] },
+            emoji: null,
+            onPress: null,
         },
         {
             w: 1,
             h: 1,
             y: 5,
             x: 7,
-            emoji: 'Sparkles',
-            onPress: { action: 'LedGrid.Start', args: ['sparkle'] },
+            emoji: null,
+            onPress: null,
         },
         {
             w: 1,
@@ -426,8 +426,8 @@ const config = {
             h: 1,
             y: 5,
             x: 8,
-            emoji: 'Tetris',
-            onPress: { action: 'LedGrid.Start', args: ['tetris'] },
+            emoji: null,
+            onPress: null,
         },
         // {
         //     w: 1,
@@ -535,6 +535,28 @@ const config = {
         //         },
         //     ],
         // },
+        'Living Room': {
+            cells: [
+                {
+                    x: 6,
+                    y: 5,
+                    emoji: 'Rainbow',
+                    onPress: { action: 'LedGrid.Start', args: ['rainbow'] },
+                },
+                {
+                    x: 7,
+                    y: 5,
+                    emoji: 'Sparkles',
+                    onPress: { action: 'LedGrid.Start', args: ['sparkle'] },
+                },
+                {
+                    x: 8,
+                    y: 5,
+                    emoji: 'Tetris',
+                    onPress: { action: 'LedGrid.Start', args: ['tetris'] },
+                },
+            ],
+        },
         Kitchen: {
             cells: [
                 {
