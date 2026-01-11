@@ -98,6 +98,7 @@ const config = {
         Dog: '🐶',
         Chair: '🪑',
         Shower: '🛁',
+        Boat: '⛵️',
         Earth: '🌍',
         Play: '▶️',
         Pause: '⏸',
@@ -375,6 +376,14 @@ const config = {
         //     emoji: 'News',
         //     onPress: {  action: 'Music.Favorite', args: ['Play NPR One'] },
         // },
+        {
+            w: 1,
+            h: 1,
+            y: 4,
+            x: 5,
+            emoji: 'Boat',
+            onPress: { action: 'Music.Favorite', args: ['Rockboat'] },
+        },
         {
             w: 1,
             h: 1,
