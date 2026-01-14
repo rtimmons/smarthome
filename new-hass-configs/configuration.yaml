@@ -16,3 +16,7 @@ automation manual: !include manual/automations.yaml
 automation ui: !include automations.yaml
 script: !include scripts.yaml
 scene: !include scenes.yaml
+rest_command:
+  printer_made_today:
+    url: "http://localhost:8099/bb/execute-print?tpl=best_by&Offset=0&Prefix=Made%3A"
+    method: post

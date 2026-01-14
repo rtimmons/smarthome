@@ -98,3 +98,15 @@
       target:
         entity_id: scene.closet_off
   mode: single
+
+- id: button_3rsb22bz_1_print_made_today
+  alias: Button 3RSB22BZ 1 - Print Made Today
+  description: Print the "Made Today" label preset when the button is pressed.
+  trigger:
+    platform: event
+    event_type: zha_event
+    event_data:
+      device_ieee: "ff:ff:b4:0e:06:06:53:bf"
+  action:
+    service: rest_command.printer_made_today
+  mode: single
