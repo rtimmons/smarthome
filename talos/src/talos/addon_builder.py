@@ -769,21 +769,13 @@ fi
 log_info "Configuring add-on options..."
 SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
 if [ -n "$SUPERVISOR_TOKEN" ]; then
-    OPTIONS_JSON='{{"watchdog": true'
-    if [ "{has_ingress}" = "true" ]; then
-        OPTIONS_JSON+=', "ingress_panel": true'
-    fi
-    if [ "{'true' if bool(port) else 'false'}" = "true" ] && [ "$need_port_mapping" = "true" ]; then
-        OPTIONS_JSON+=', "network": {{"{port}/tcp": {port}}}'
-    fi
-    OPTIONS_JSON+='}}'
+    OPTIONS_JSON='{{"watchdog": true}}'
 
     if curl -sSf -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" \\
         -X POST -d "$OPTIONS_JSON" http://supervisor/addons/"$ADDON_ID"/options >/dev/null; then
         log_info "Add-on options configured successfully"
     else
-        log_error "Failed to set add-on options for $ADDON_ID"
-        exit 1
+        log_info "Warning: could not update add-on options for $ADDON_ID; continuing with current settings"
     fi
 else
     log_info "SUPERVISOR_TOKEN not set; skipping add-on options configuration"

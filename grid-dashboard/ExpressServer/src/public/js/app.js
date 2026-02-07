@@ -185,8 +185,11 @@ class App {
      * [ {members: [list string room names]} ]
      */
     updateZones(zones) {
-        var sameZone = zones.filter(z => z.members.indexOf(this.room) >= 0)[0]
-            .members;
+        var myZone = zones.filter(z => z.members.indexOf(this.room) >= 0)[0];
+        if (!myZone || !Array.isArray(myZone.members)) {
+            return;
+        }
+        var sameZone = myZone.members;
         var arg = {
             on: sameZone,
             off: this.rooms.filter(r => sameZone.indexOf(r) < 0),

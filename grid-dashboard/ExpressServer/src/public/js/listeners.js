@@ -31,7 +31,13 @@ class RoomSaver {
 
 class BackgroundChanger {
     onMessage(e) {
-        var track = e.Event.State.currentTrack;
+        var state = (e.Event && e.Event.State) || {};
+        var track = state.currentTrack;
+        if (!track) {
+            e.Globals.App.setBackgroundImage('');
+            e.Globals.App.setBanner('');
+            return;
+        }
 
         var artUrl = track.absoluteAlbumArtUri || track.albumArtUri;
         e.Globals.App.setBackgroundImage(artUrl);
@@ -45,9 +51,12 @@ class BackgroundChanger {
 class ZoneUpdater {
     // TODO: move to MusicController
     simplify(zones) {
+        if (!Array.isArray(zones)) {
+            return [];
+        }
         return zones.map(zone => {
             return {
-                members: zone.members.map(m => m.roomName),
+                members: (zone.members || []).map(m => m.roomName),
             };
         });
     }

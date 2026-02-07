@@ -62,6 +62,18 @@ class MusicController {
 
     onMessage(e) {}
 
+    parseJsonMaybe(value) {
+        if (typeof value !== 'string') {
+            return value;
+        }
+        try {
+            return JSON.parse(value);
+        } catch (err) {
+            console.log('Failed to parse Sonos response as JSON', err);
+            return null;
+        }
+    }
+
     allJoin(room) {
         let delay = 0;
         this.app.config.rooms
@@ -74,14 +86,22 @@ class MusicController {
 
     fetchState() {
         this.request('sonos', '$room', 'state').done(resp => {
+            var parsed = this.parseJsonMaybe(resp);
+            if (!parsed) {
+                return;
+            }
             this.pubsub.submit('Room.StateObserved', {
-                State: resp,
+                State: parsed,
             });
         });
 
         this.request('sonos', 'zones').done(resp => {
+            var parsed = this.parseJsonMaybe(resp);
+            if (!parsed) {
+                return;
+            }
             this.pubsub.submit('Room.ZonesObserved', {
-                Zones: resp,
+                Zones: parsed,
             });
         });
     }
