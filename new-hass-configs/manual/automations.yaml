@@ -82,17 +82,19 @@
       entity_id: light.light_closet_main
       state: "off"
   action:
-    - alias: "Turn on closet high scene when entering"
-      service: scene.turn_on
+    - alias: "Turn on closet light at 50% brightness when entering"
+      service: light.turn_on
       target:
-        entity_id: scene.closet_high
-    - alias: "Wait until no presence detected for 5 minutes"
+        entity_id: light.light_closet_main
+      data:
+        brightness_pct: 50
+    - alias: "Wait until no presence detected for 30 seconds"
       wait_for_trigger:
         - platform: state
           entity_id: binary_sensor.human_sensor_presence
           to: "off"
           for:
-            minutes: 5
+            seconds: 30
     - alias: "Turn off closet scene after timeout"
       service: scene.turn_on
       target:
