@@ -72,6 +72,17 @@ function expandLightsWithPairs(lights: LightState[]): LightState[] {
         pairedLight.brightness = light.brightness;
       }
 
+      // For *_white -> base Zen31 pairing, explicitly drive the white channel on RGBW entity.
+      // Without this, a brightness-only command can restore the previous RGBW color (including all zeros)
+      // and effectively override the paired white channel as off.
+      if (light.state === "on" && light.device.endsWith("_white")) {
+        const pairedDevice = getDevice("lights", pairedDeviceName);
+        if (pairedDevice.type === "zwave_zen31_rgbw") {
+          const whiteValue = light.brightness ?? 255;
+          pairedLight.rgbw_color = [0, 0, 0, whiteValue];
+        }
+      }
+
       result.push(pairedLight);
       definedDevices.add(pairedDeviceName);
     }

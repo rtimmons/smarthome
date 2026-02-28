@@ -33,6 +33,14 @@ function expandLightsWithPairs(lights: LightState[]): LightState[] {
         pairedLight.brightness = light.brightness;
       }
 
+      if (light.state === "on" && light.device.endsWith("_white")) {
+        const pairedDevice = getDevice("lights", pairedDeviceName);
+        if (pairedDevice.type === "zwave_zen31_rgbw") {
+          const whiteValue = light.brightness ?? 255;
+          pairedLight.rgbw_color = [0, 0, 0, whiteValue];
+        }
+      }
+
       result.push(pairedLight);
       definedDevices.add(pairedDeviceName);
     }

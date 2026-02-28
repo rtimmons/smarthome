@@ -71,6 +71,26 @@ describe("Scene Generation with Pairing", () => {
 
       // RGBW entity should also have brightness
       expect(sceneEntities["light.light_office_abovetv"].brightness).toBe(180);
+      expect(sceneEntities["light.light_office_abovetv"].rgbw_color).toEqual([0, 0, 0, 180]);
+    });
+
+    it("should default paired RGBW white channel to full when _white brightness is omitted", () => {
+      const { generateScenes } = require("./generate-test-helper");
+
+      const testScene = {
+        name: "Test White Default Brightness",
+        lights: [
+          {
+            device: "living_abovetv_white",
+            state: "on",
+          },
+        ],
+      };
+
+      const result = generateScenes({ test_scene: testScene });
+      const sceneEntities = result[0].entities;
+
+      expect(sceneEntities["light.light_living_abovetv"].rgbw_color).toEqual([0, 0, 0, 255]);
     });
 
     it("should turn off both paired devices when one is turned off", () => {

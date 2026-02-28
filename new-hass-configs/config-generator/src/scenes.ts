@@ -469,7 +469,8 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_behindtv_white",
-        state: "off"
+        state: "on",
+        brightness: 51
       },
       {
         device: "living_desklamps",
@@ -489,6 +490,19 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_abovetv_white",
+        state: "on",
+        brightness: 51
+      },
+      {
+        device: "kitchen_dining_nook",
+        state: "off"
+      },
+      {
+        device: "kitchen_dining_nook_white",
+        state: "off"
+      },
+      {
+        device: "kitchen_hanging",
         state: "off"
       },
       {
