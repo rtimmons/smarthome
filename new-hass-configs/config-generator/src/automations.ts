@@ -41,7 +41,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_high"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   office_switch_doubledown: {
@@ -56,7 +56,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_off"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   // ============================================================================
@@ -75,7 +75,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_high"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   bedroom_switch_doubledown: {
@@ -90,7 +90,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_off"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   // ============================================================================
@@ -109,7 +109,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_high"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   guest_bathroom_switch_singleup: {
@@ -139,7 +139,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_off"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   guest_bathroom_switch_singledown: {
@@ -169,7 +169,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_high"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   guest_bathroom_sconce_switch_singleup: {
@@ -199,7 +199,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_off"
     },
-    mode: "single"
+    mode: "restart"
   },
 
   guest_bathroom_sconce_switch_singledown: {

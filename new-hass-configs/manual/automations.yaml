@@ -16,7 +16,7 @@
     service: scene.turn_on
     target:
       entity_id: scene.living_room_high
-  mode: single
+  mode: restart
 
 - id: living_hallway_switch_double_down_all_off
   alias: Living Hallway Switch - Double Down → All Off
@@ -33,7 +33,7 @@
     service: scene.turn_on
     target:
       entity_id: scene.all_off
-  mode: single
+  mode: restart
 
 - id: kitchen_hanging_switch_double_up_kitchen_high
   alias: Kitchen Hanging Switch - Double Up → Kitchen High
@@ -50,7 +50,7 @@
     service: scene.turn_on
     target:
       entity_id: scene.kitchen_high
-  mode: single
+  mode: restart
 
 - id: kitchen_hanging_switch_double_down_kitchen_off
   alias: Kitchen Hanging Switch - Double Down → Kitchen Off
@@ -67,7 +67,7 @@
     service: scene.turn_on
     target:
       entity_id: scene.kitchen_off
-  mode: single
+  mode: restart
 
 - id: closet_presence_lighting
   alias: "Closet Presence Lighting"
