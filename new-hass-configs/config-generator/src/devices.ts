@@ -223,8 +223,8 @@ export const devices: DeviceRegistry = {
     },
     kitchen_upper_white: {
       entity: "light.light_kitchen_upper_white",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
     kitchen_lower: {
       entity: "light.light_kitchen_lower",
@@ -233,8 +233,8 @@ export const devices: DeviceRegistry = {
     },
     kitchen_lower_white: {
       entity: "light.light_kitchen_lower_white",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
+      type: "dimmer_light",
+      capabilities: ["brightness"]
     },
     kitchen_ring: {
       entity: "light.light_kitchen_ring",

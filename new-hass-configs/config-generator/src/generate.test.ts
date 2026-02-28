@@ -210,5 +210,35 @@ describe("Scene Generation with Pairing", () => {
       expect(yamlOutput).toContain("light.light_office_abovetv_white:");
       expect(yamlOutput).toContain("brightness: 255");
     });
+
+    it("should restore kitchen upper/lower brightness in high scenes", () => {
+      const { generateScenes } = require("./generate-test-helper");
+
+      const testScenes = {
+        kitchen_high: {
+          name: "Kitchen - High",
+          lights: [
+            {
+              device: "kitchen_upper_white",
+              state: "on",
+              brightness: 255,
+            },
+            {
+              device: "kitchen_lower_white",
+              state: "on",
+              brightness: 255,
+            },
+          ],
+        },
+      };
+
+      const result = generateScenes(testScenes);
+      const entities = result[0].entities;
+
+      expect(entities["light.light_kitchen_upper_white"].brightness).toBe(255);
+      expect(entities["light.light_kitchen_lower_white"].brightness).toBe(255);
+      expect(entities["light.light_kitchen_upper"].brightness).toBe(255);
+      expect(entities["light.light_kitchen_lower"].brightness).toBe(255);
+    });
   });
 });
