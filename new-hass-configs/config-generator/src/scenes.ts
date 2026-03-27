@@ -974,15 +974,15 @@ function generateAllOffScene(): { all_off: Scene } {
   }
 
   // Collect all switches (except blocklisted ones)
-  for (const [deviceName, _device] of Object.entries(devices.switches)) {
-    if (!blocklist.includes(deviceName)) {
+  for (const [deviceName, device] of Object.entries(devices.switches)) {
+    if (!blocklist.includes(deviceName) && device.includeInAllOff !== false) {
       switches[deviceName] = "off";
     }
   }
 
   // Collect all outlets (except blocklisted ones)
-  for (const [deviceName, _device] of Object.entries(devices.outlets)) {
-    if (!blocklist.includes(deviceName)) {
+  for (const [deviceName, device] of Object.entries(devices.outlets)) {
+    if (!blocklist.includes(deviceName) && device.includeInAllOff !== false) {
       switches[deviceName] = "off";
     }
   }

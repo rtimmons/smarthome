@@ -10,18 +10,22 @@ import * as fs from "fs";
 import * as path from "path";
 import * as yaml from "yaml";
 
-import { devices, getDevice, getPairedDeviceName } from "./devices";
+import { devices, getDevice } from "./devices";
 import { scenes } from "./scenes";
 import { automations } from "./automations";
 import {
-  Scene,
   Automation,
   Trigger,
   Action,
   Condition,
   ZWaveJsSceneTrigger,
-  LightState,
 } from "./types";
+import {
+  HAScene,
+  generateFastScriptsFromRegistry,
+  generateScenesFromRegistry,
+  getFastSceneScriptEntityId,
+} from "./scene-generation";
 
 // ============================================================================
 // Configuration
@@ -30,153 +34,7 @@ import {
 const OUTPUT_DIR = path.join(__dirname, "../../generated");
 const SCENES_OUTPUT = path.join(OUTPUT_DIR, "scenes.yaml");
 const AUTOMATIONS_OUTPUT = path.join(OUTPUT_DIR, "automations.yaml");
-
-// ============================================================================
-// Scene Generation
-// ============================================================================
-
-interface HAScene {
-  id: string;
-  name: string;
-  icon?: string;
-  entities: Record<string, any>;
-}
-
-/**
- * Expand scene lights to include paired devices
- *
- * For each light in the scene, check if it has a paired device (e.g., office_abovetv + office_abovetv_white).
- * If a paired device exists and is NOT already explicitly defined in the scene, automatically add it
- * with the same state (on/off) as the original device.
- *
- * This ensures that RGBW devices with separate white channels are always synchronized.
- */
-function expandLightsWithPairs(lights: LightState[]): LightState[] {
-  const result: LightState[] = [...lights];
-  const definedDevices = new Set(lights.map((l) => l.device));
-
-  for (const light of lights) {
-    const pairedDeviceName = getPairedDeviceName(light.device);
-
-    // If there's a paired device and it's not already in the scene, add it
-    if (pairedDeviceName && !definedDevices.has(pairedDeviceName)) {
-      // Create paired light state with same on/off state but only basic properties
-      const pairedLight: LightState = {
-        device: pairedDeviceName,
-        state: light.state || "on",
-      };
-
-      // If the original light is being turned on with brightness, apply brightness to the paired device
-      // (This ensures white channels turn on with the same brightness as the RGBW channel)
-      if (light.state === "on" && light.brightness !== undefined) {
-        pairedLight.brightness = light.brightness;
-      }
-
-      // For *_white -> base Zen31 pairing, explicitly drive the white channel on RGBW entity.
-      // Without this, a brightness-only command can restore the previous RGBW color (including all zeros)
-      // and effectively override the paired white channel as off.
-      if (light.state === "on" && light.device.endsWith("_white")) {
-        const pairedDevice = getDevice("lights", pairedDeviceName);
-        if (pairedDevice.type === "zwave_zen31_rgbw") {
-          const whiteValue = light.brightness ?? 255;
-          pairedLight.rgbw_color = [0, 0, 0, whiteValue];
-        }
-      }
-
-      result.push(pairedLight);
-      definedDevices.add(pairedDeviceName);
-    }
-  }
-
-  return result;
-}
-
-function generateScenes(): HAScene[] {
-  const output: HAScene[] = [];
-
-  for (const [id, scene] of Object.entries(scenes)) {
-    const entities: Record<string, any> = {};
-
-    // First, expand scene lights to include paired devices
-    const expandedLights = expandLightsWithPairs(scene.lights);
-
-    // Process lights
-    for (const light of expandedLights) {
-      try {
-        const device = getDevice("lights", light.device);
-        const entityState: any = {
-          state: light.state || "on",
-        };
-
-        // For zwave_switch_light devices (on/off only), don't add brightness or color attributes
-        if (device.type !== "zwave_switch_light") {
-          // Add brightness if specified
-          if (light.brightness !== undefined) {
-            entityState.brightness = light.brightness;
-          }
-
-          // Add RGB color if specified
-          if (light.rgb_color) {
-            entityState.rgb_color = light.rgb_color;
-          }
-
-          // Add RGBW color if specified
-          if (light.rgbw_color) {
-            entityState.rgbw_color = light.rgbw_color;
-          }
-
-          // Add color temperature if specified
-          if (light.color_temp) {
-            entityState.color_temp = light.color_temp;
-          }
-
-          // Add white value if specified
-          if (light.white_value !== undefined) {
-            entityState.white_value = light.white_value;
-          }
-
-          // Add transition if specified
-          if (light.transition !== undefined) {
-            entityState.transition = light.transition;
-          }
-        }
-
-        entities[device.entity] = entityState;
-      } catch (error) {
-        console.error(`Error processing light ${light.device} in scene ${id}:`, error);
-        throw error;
-      }
-    }
-
-    // Process switches/outlets if specified
-    if (scene.switches) {
-      for (const [switchName, state] of Object.entries(scene.switches)) {
-        try {
-          let device;
-          // Try switches first, then outlets
-          try {
-            device = getDevice("switches", switchName);
-          } catch {
-            device = getDevice("outlets", switchName);
-          }
-          entities[device.entity] = { state };
-        } catch (error) {
-          console.error(`Error processing switch ${switchName} in scene ${id}:`, error);
-          throw error;
-        }
-      }
-    }
-
-    output.push({
-      id,
-      name: scene.name,
-      ...(scene.icon && { icon: scene.icon }),
-      entities,
-    });
-  }
-
-  return output;
-}
+const SCRIPTS_OUTPUT = path.join(OUTPUT_DIR, "scripts.yaml");
 
 // ============================================================================
 // Automation Generation
@@ -290,9 +148,9 @@ function convertAction(action: Action): HAAction {
   switch (action.type) {
     case "scene":
       return {
-        service: "scene.turn_on",
+        service: "script.turn_on",
         target: {
-          entity_id: `scene.${action.scene}`,
+          entity_id: getFastSceneScriptEntityId(action.scene),
         },
       };
 
@@ -437,6 +295,10 @@ function generateAutomations(): HAAutomation[] {
 // Main Generator
 // ============================================================================
 
+function generateScenes(): HAScene[] {
+  return generateScenesFromRegistry(scenes);
+}
+
 function main() {
   console.log("Home Assistant Configuration Generator");
   console.log("======================================\n");
@@ -452,6 +314,15 @@ function main() {
   const scenesYaml = yaml.stringify(haScenes);
   fs.writeFileSync(SCENES_OUTPUT, scenesYaml, "utf8");
   console.log(`  ✓ Generated ${haScenes.length} scenes -> ${SCENES_OUTPUT}`);
+
+  // Generate fast scene scripts
+  console.log("Generating scripts...");
+  const haScripts = generateFastScriptsFromRegistry(scenes);
+  const scriptsYaml = yaml.stringify(haScripts);
+  fs.writeFileSync(SCRIPTS_OUTPUT, scriptsYaml, "utf8");
+  console.log(
+    `  ✓ Generated ${Object.keys(haScripts).length} scripts -> ${SCRIPTS_OUTPUT}`
+  );
 
   // Generate automations
   console.log("Generating automations...");

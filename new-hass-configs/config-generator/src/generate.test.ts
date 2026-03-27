@@ -5,6 +5,7 @@
 import * as yaml from "yaml";
 import * as fs from "fs";
 import * as path from "path";
+import { scenes } from "./scenes";
 
 // Mock filesystem to prevent actual file writes during tests
 jest.mock("fs");
@@ -229,6 +230,57 @@ describe("Scene Generation with Pairing", () => {
       expect(yamlOutput).toContain("light.light_office_abovetv:");
       expect(yamlOutput).toContain("light.light_office_abovetv_white:");
       expect(yamlOutput).toContain("brightness: 255");
+    });
+
+    it("should generate grouped fast scene calls for living_room_high", () => {
+      const { generateFastCalls } = require("./generate-test-helper");
+
+      const calls = generateFastCalls(scenes.living_room_high);
+
+      expect(calls).toHaveLength(17);
+      expect(
+        calls.find(
+          (call: any) =>
+            call.service === "switch.turn_on" &&
+            call.target.entity_id.includes("switch.light_living_ledwall") &&
+            call.target.entity_id.includes("switch.light_living_sillleftpower")
+        )
+      ).toBeDefined();
+      expect(
+        calls.find(
+          (call: any) =>
+            call.service === "light.turn_on" &&
+            call.data?.brightness === 255 &&
+            call.target.entity_id.length === 1 &&
+            call.target.entity_id[0] === "light.light_living_curtains_white"
+        )
+      ).toBeDefined();
+      expect(
+        calls.find(
+          (call: any) =>
+            call.service === "light.turn_on" &&
+            call.data?.brightness === 255 &&
+            call.target.entity_id.includes("light.living_light_floor") &&
+            call.target.entity_id.includes("light.living_light_nook")
+        )
+      ).toBeDefined();
+    });
+
+    it("should exclude controller-only switches from all_off fast calls", () => {
+      const { generateFastCalls } = require("./generate-test-helper");
+
+      const calls = generateFastCalls(scenes.all_off);
+      const allTargets = calls.flatMap((call: any) => call.target.entity_id);
+
+      expect(allTargets).not.toContain("switch.office_wall_switch");
+      expect(
+        calls.find(
+          (call: any) =>
+            call.service === "light.turn_off" &&
+            call.target.entity_id.length === 1 &&
+            call.target.entity_id[0] === "light.light_living_curtains"
+        )
+      ).toBeDefined();
     });
 
     it("should restore kitchen upper/lower brightness in high scenes", () => {

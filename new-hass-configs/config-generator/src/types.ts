@@ -48,6 +48,7 @@ export interface Device {
   capabilities?: DeviceCapability[];
   events?: Partial<Record<ZWaveEvent, ZWaveEventData>>;
   device_id?: string; // For Z-Wave JS triggers
+  includeInAllOff?: boolean;
 }
 
 export type DeviceCapability =

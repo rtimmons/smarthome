@@ -247,6 +247,21 @@ test-slow:
 # INFORMATION AND UTILITIES
 # ============================================================================
 
+# Diagnose Z-Wave-heavy scene slowness using live cache/log data
+[group: 'info']
+zwave-diagnose *args="":
+	@cd new-hass-configs && just zwave-diagnose {{args}}
+
+# Apply instant/fast ramp settings across the live Z-Wave network
+[group: 'deploy']
+zwave-apply-instant-ramps *args="":
+	@cd new-hass-configs && just zwave-apply-instant-ramps {{args}}
+
+# Verify that instant/fast ramp settings are in effect
+[group: 'validation']
+zwave-verify-instant-ramps *args="":
+	@cd new-hass-configs && just zwave-verify-instant-ramps {{args}}
+
 # List all available addons
 [group: 'info']
 addons:

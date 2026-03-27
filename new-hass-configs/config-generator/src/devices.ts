@@ -308,6 +308,7 @@ export const devices: DeviceRegistry = {
     office_wall_switch: {
       entity: "switch.office_wall_switch",  // TODO: Find actual entity ID
       type: "zwave_dimmer_46203",
+      includeInAllOff: false,
       device_id: "44ca863fc3d89c94bdfb7471c370a932",
       events: {
         singleUp: {
