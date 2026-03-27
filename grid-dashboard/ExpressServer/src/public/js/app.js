@@ -53,6 +53,10 @@ class App {
                 this.musicController.onMessage(e);
             },
         });
+
+        this.bannerAnimationFrame = null;
+        this.bannerAnimationStartedAt = null;
+        this.bannerPixelsPerSecond = 100;
     }
 
     // TODO: move to config class
@@ -101,6 +105,33 @@ class App {
         return $('<span class="banner-marquee__segment"></span>').text(text);
     }
 
+    _stopBannerAnimation() {
+        if (this.bannerAnimationFrame !== null) {
+            this.window.cancelAnimationFrame(this.bannerAnimationFrame);
+            this.bannerAnimationFrame = null;
+        }
+        this.bannerAnimationStartedAt = null;
+    }
+
+    _renderBannerFrame($track, loopWidth, timestamp) {
+        if (!$track || !$track.length || !loopWidth) {
+            return;
+        }
+
+        if (this.bannerAnimationStartedAt === null) {
+            this.bannerAnimationStartedAt = timestamp;
+        }
+
+        var elapsedSeconds = (timestamp - this.bannerAnimationStartedAt) / 1000;
+        var distance =
+            (elapsedSeconds * this.bannerPixelsPerSecond) % loopWidth;
+        $track.css('transform', 'translateX(' + -distance + 'px)');
+
+        this.bannerAnimationFrame = this.window.requestAnimationFrame(ts =>
+            this._renderBannerFrame($track, loopWidth, ts)
+        );
+    }
+
     _restartBannerAnimation($track, segmentWidth) {
         if (!$track || !$track.length) {
             return;
@@ -110,32 +141,21 @@ class App {
             return;
         }
 
-        // Reset animation state so a new track always starts from the right edge.
-        $track.removeClass('banner-marquee__track--scroll');
+        this._stopBannerAnimation();
+        $track.css('transform', 'translateX(0px)');
+        $track.css('width', '');
 
         var firstSegmentWidth =
             segmentWidth || $track.children().first().outerWidth(true);
-        if (!firstSegmentWidth) {
-            return;
-        }
-        var start = 0;
-        var end = -firstSegmentWidth;
-        if (!isFinite(end)) {
+        var wrapperWidth = wrapper.innerWidth();
+        if (!firstSegmentWidth || !wrapperWidth) {
             return;
         }
 
-        $track.css('--marquee-start', start + 'px');
-        $track.css('--marquee-end', end + 'px');
-
-        var distance = start - end; // distance equal to first segment width
-        var pixelsPerSecond = 160;
-        var durationSeconds = Math.max(distance / pixelsPerSecond, 8);
-        $track.css('animation-duration', durationSeconds + 's');
-
-        // Force reflow before enabling the animation class again.
-        void $track[0].offsetWidth;
-
-        $track.addClass('banner-marquee__track--scroll');
+        $track.css('width', firstSegmentWidth * $track.children().length + 'px');
+        this.bannerAnimationFrame = this.window.requestAnimationFrame(ts =>
+            this._renderBannerFrame($track, firstSegmentWidth, ts)
+        );
     }
 
     // TODO: move to gridview?
@@ -148,7 +168,8 @@ class App {
 
         if (!bannerText) {
             track.empty();
-            track.removeClass('banner-marquee__track--scroll');
+            this._stopBannerAnimation();
+            track.css('transform', 'translateX(0px)');
             this.banner = '';
             return;
         }
@@ -159,10 +180,21 @@ class App {
 
         track.empty();
         var segment = this._createBannerSegment(bannerText);
-        var duplicate = segment.clone();
-        track.append(segment, duplicate);
+        var wrapperWidth = track.closest('.banner-marquee').innerWidth() || 0;
+        var probe = segment.clone();
+        track.append(probe);
+        var segmentWidth = probe.outerWidth(true);
+        track.empty();
+
+        var repeatCount = 2;
+        if (segmentWidth > 0 && wrapperWidth > 0) {
+            repeatCount = Math.max(3, Math.ceil(wrapperWidth / segmentWidth) + 2);
+        }
+
+        for (var i = 0; i < repeatCount; i++) {
+            track.append(segment.clone());
+        }
         track.attr('title', bannerText);
-        var segmentWidth = segment.outerWidth(true);
         this.banner = bannerText;
         this._restartBannerAnimation(track, segmentWidth);
     }

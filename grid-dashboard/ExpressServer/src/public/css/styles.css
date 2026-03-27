@@ -57,26 +57,18 @@ body {
 .banner-marquee {
     width: 100%;
     overflow: hidden;
+    position: relative;
 }
 .banner-marquee__track {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     white-space: nowrap;
     will-change: transform;
+    flex-wrap: nowrap;
 }
 .banner-marquee__segment {
     display: inline-flex;
     align-items: center;
-    padding-right: 3rem;
-}
-.banner-marquee__track--scroll {
-    animation: banner-marquee-scroll 10s linear infinite;
-}
-
-@keyframes banner-marquee-scroll {
-    0% {
-        transform: translateX(var(--marquee-start, 0px));
-    }
-    100% {
-        transform: translateX(var(--marquee-end, -100%));
-    }
+    padding-right: 4rem;
+    flex: 0 0 auto;
 }
