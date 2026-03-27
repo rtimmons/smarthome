@@ -3,6 +3,7 @@ tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
 rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***'"
+local_repo_excludes := "--exclude 'config-generator/***' --exclude 'backups/***' --exclude 'inventory_snapshots/***'"
 
 preflight:
 	#!/usr/bin/env bash
@@ -21,6 +22,14 @@ test:
 # Diagnose Z-Wave scene slowness and generate a ramp-normalization plan
 zwave-diagnose *args="": preflight
 	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js diagnose {{args}}
+
+# Capture a timestamped live Z-Wave scene inventory for future diagnosis
+zwave-inventory *args="": preflight
+	timestamp="$(date +%Y%m%d-%H%M%S)"; \
+	output_dir="inventory_snapshots/zwave-scene-audits/$timestamp"; \
+	mkdir -p "$output_dir"; \
+	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js inventory --output-dir "../$output_dir" {{args}}; \
+	echo "Wrote Z-Wave inventory to $output_dir"
 
 # Normalize ramp/dim settings to instant/fast defaults on live Z-Wave devices
 zwave-apply-instant-ramps *args="": preflight
@@ -66,6 +75,7 @@ fetch: preflight
 		--filter='protect generated/' \
 		--filter='protect manual/' \
 		--filter='protect backups/' \
+		--filter='protect inventory_snapshots/***' \
 		--filter='protect .git/***' \
 		--include '*/' \
 		--include '*.yaml' \
@@ -95,6 +105,7 @@ check: preflight
 		--delete \
 		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
+		{{local_repo_excludes}} \
 		--include '*/' \
 		--include '*.yaml' \
 		--include '*.yml' \
@@ -113,10 +124,6 @@ check: preflight
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
-		--exclude 'config-generator/' \
-		--exclude 'generated/' \
-		--exclude 'manual/' \
-		--exclude 'backups/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:"{{tmp_dir}}"/
@@ -159,6 +166,7 @@ check: preflight
 	rsync -av --delete --itemize-changes --dry-run \
 		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
+		{{local_repo_excludes}} \
 		--include '*/' \
 		--include '*.yaml' \
 		--include '*.yml' \
@@ -177,10 +185,6 @@ check: preflight
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
-		--exclude 'config-generator/' \
-		--exclude 'generated/' \
-		--exclude 'manual/' \
-		--exclude 'backups/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:/config/ \
@@ -194,6 +198,7 @@ deploy: generate preflight sync-check
 		--delete \
 		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
+		{{local_repo_excludes}} \
 		--include '*/' \
 		--include '*.yaml' \
 		--include '*.yml' \
@@ -212,10 +217,6 @@ deploy: generate preflight sync-check
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
-		--exclude 'config-generator/' \
-		--exclude 'generated/' \
-		--exclude 'manual/' \
-		--exclude 'backups/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:"{{tmp_dir}}"/
@@ -252,6 +253,7 @@ deploy: generate preflight sync-check
 		--delete \
 		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
+		{{local_repo_excludes}} \
 		--include '*/' \
 		--include '*.yaml' \
 		--include '*.yml' \
@@ -270,10 +272,6 @@ deploy: generate preflight sync-check
 		--exclude '*~' \
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
-		--exclude 'config-generator/' \
-		--exclude 'generated/' \
-		--exclude 'manual/' \
-		--exclude 'backups/' \
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:/config/

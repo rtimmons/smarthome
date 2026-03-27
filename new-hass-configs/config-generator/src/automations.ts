@@ -94,6 +94,25 @@ export const automations: AutomationRegistry = {
   },
 
   // ============================================================================
+  // Living Hallway Switch Automations
+  // ============================================================================
+
+  living_hallway_switch_doubledown: {
+    alias: "Living Hallway Switch - Double Down → All Off",
+    description: "Turn off the full house scene set on hallway switch double-tap down",
+    trigger: {
+      type: "zwave_js_scene",
+      device: "living_hallway_switch",
+      event: "doubleDown"
+    },
+    action: {
+      type: "scene",
+      scene: "all_off"
+    },
+    mode: "restart"
+  },
+
+  // ============================================================================
   // Guest Bathroom Switch Automations
   // ============================================================================
 

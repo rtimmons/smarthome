@@ -1,5 +1,5 @@
 import { getDevice, getPairedDeviceName } from "./devices";
-import { LightState, Scene } from "./types";
+import { Device, LightState, Scene } from "./types";
 
 export interface HAScene {
   id: string;
@@ -24,7 +24,17 @@ export interface HAScript {
   }>;
 }
 
+export interface SceneEntityTarget {
+  entityId: string;
+  entityState: Record<string, any>;
+  sourceDevice: string;
+  device: Device;
+  domain: string;
+  zwaveBacked: boolean;
+}
+
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
+const MAX_ZWAVE_CALLS_PER_STEP = 8;
 
 function stableStringify(value: any): string {
   if (Array.isArray(value)) {
@@ -82,6 +92,10 @@ export function expandLightsWithPairs(lights: LightState[]): LightState[] {
   return result;
 }
 
+function isZWaveBackedDevice(device: Device): boolean {
+  return device.type.startsWith("zwave_") || device.entity.startsWith("light.light_");
+}
+
 function buildLightEntityState(light: LightState): Record<string, any> {
   const device = getDevice("lights", light.device);
   const desiredState = light.state || "on";
@@ -129,11 +143,28 @@ function buildLightEntityState(light: LightState): Record<string, any> {
 
 export function generateSceneEntities(scene: Scene): Record<string, any> {
   const entities: Record<string, any> = {};
+
+  for (const target of generateSceneTargets(scene)) {
+    entities[target.entityId] = target.entityState;
+  }
+
+  return entities;
+}
+
+export function generateSceneTargets(scene: Scene): SceneEntityTarget[] {
+  const targetsByEntityId = new Map<string, SceneEntityTarget>();
   const expandedLights = expandLightsWithPairs(scene.lights);
 
   for (const light of expandedLights) {
     const device = getDevice("lights", light.device);
-    entities[device.entity] = buildLightEntityState(light);
+    targetsByEntityId.set(device.entity, {
+      entityId: device.entity,
+      entityState: buildLightEntityState(light),
+      sourceDevice: light.device,
+      device,
+      domain: "light",
+      zwaveBacked: isZWaveBackedDevice(device),
+    });
   }
 
   if (scene.switches) {
@@ -144,11 +175,19 @@ export function generateSceneEntities(scene: Scene): Record<string, any> {
       } catch {
         device = getDevice("outlets", switchName);
       }
-      entities[device.entity] = { state };
+      const [domain] = device.entity.split(".");
+      targetsByEntityId.set(device.entity, {
+        entityId: device.entity,
+        entityState: { state },
+        sourceDevice: switchName,
+        device,
+        domain,
+        zwaveBacked: isZWaveBackedDevice(device),
+      });
     }
   }
 
-  return entities;
+  return [...targetsByEntityId.values()];
 }
 
 export function generateScenesFromRegistry(
@@ -180,11 +219,11 @@ function buildServiceData(
   return Object.keys(data).length > 0 ? data : undefined;
 }
 
-function shouldIsolateEntity(domain: string, entityId: string): boolean {
-  // Z-Wave light entities under this config use the light.light_* naming pattern.
-  // Sending them as individual parallel calls avoids a slow or failed node
-  // blocking unrelated lights that happen to share the same service payload.
-  return domain === "light" && entityId.startsWith("light.light_");
+function shouldIsolateTarget(target: SceneEntityTarget): boolean {
+  // Keep Z-Wave-backed loads in their own parallel service call so a slow or
+  // unreachable node does not serialize other loads that happen to share the
+  // same payload.
+  return target.zwaveBacked;
 }
 
 export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
@@ -197,8 +236,8 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
     }
   >();
 
-  for (const [entityId, entityState] of Object.entries(generateSceneEntities(scene))) {
-    const [domain] = entityId.split(".");
+  for (const target of generateSceneTargets(scene)) {
+    const { entityId, entityState, domain } = target;
     const desiredState = entityState.state;
 
     if (desiredState !== "on" && desiredState !== "off") {
@@ -207,7 +246,7 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
 
     const service = `${domain}.turn_${desiredState}`;
     const data = buildServiceData(domain, desiredState, entityState);
-    const signature = shouldIsolateEntity(domain, entityId)
+    const signature = shouldIsolateTarget(target)
       ? `${service}|${stableStringify(data ?? {})}|${entityId}`
       : `${service}|${stableStringify(data ?? {})}`;
 
@@ -237,6 +276,47 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
     });
 }
 
+function generateFastSceneSequence(
+  scene: Scene
+): Array<{
+  parallel: HAServiceCall[];
+}> {
+  const calls = generateFastSceneCalls(scene);
+  const targetsByEntityId = new Map(
+    generateSceneTargets(scene).map((target) => [target.entityId, target])
+  );
+  const zwaveCalls: HAServiceCall[] = [];
+  const nonZwaveCalls: HAServiceCall[] = [];
+
+  for (const call of calls) {
+    const hasZwaveTarget = call.target.entity_id.some(
+      (entityId) => targetsByEntityId.get(entityId)?.zwaveBacked
+    );
+
+    if (hasZwaveTarget) {
+      zwaveCalls.push(call);
+    } else {
+      nonZwaveCalls.push(call);
+    }
+  }
+
+  if (zwaveCalls.length <= MAX_ZWAVE_CALLS_PER_STEP) {
+    return [{ parallel: calls }];
+  }
+
+  const sequence: Array<{ parallel: HAServiceCall[] }> = [];
+
+  for (let index = 0; index < zwaveCalls.length; index += MAX_ZWAVE_CALLS_PER_STEP) {
+    const parallel = zwaveCalls.slice(index, index + MAX_ZWAVE_CALLS_PER_STEP);
+    if (index === 0) {
+      parallel.unshift(...nonZwaveCalls);
+    }
+    sequence.push({ parallel });
+  }
+
+  return sequence;
+}
+
 export function generateFastScriptsFromRegistry(
   sceneRegistry: Record<string, Scene>
 ): Record<string, HAScript> {
@@ -246,11 +326,7 @@ export function generateFastScriptsFromRegistry(
       {
         alias: `Fast Scene - ${scene.name}`,
         mode: "restart",
-        sequence: [
-          {
-            parallel: generateFastSceneCalls(scene),
-          },
-        ],
+        sequence: generateFastSceneSequence(scene),
       },
     ])
   );

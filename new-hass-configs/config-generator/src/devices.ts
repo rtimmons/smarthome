@@ -73,7 +73,7 @@ export const devices: DeviceRegistry = {
       capabilities: ["on_off"]
     },
     bathroom_vanityleft: {
-      entity: "light.bathroom_light_vanityleft",
+      entity: "light.light_bathroom_vanityleft",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
@@ -306,7 +306,7 @@ export const devices: DeviceRegistry = {
   switches: {
     // Office wall switch - Z-Wave Central Scene device
     office_wall_switch: {
-      entity: "switch.office_wall_switch",  // TODO: Find actual entity ID
+      entity: "light.light_office_toggle",
       type: "zwave_dimmer_46203",
       includeInAllOff: false,
       device_id: "44ca863fc3d89c94bdfb7471c370a932",
@@ -387,7 +387,7 @@ export const devices: DeviceRegistry = {
     guestbathroom_switch: {
       entity: "light.light_guestbathroom_overhead",
       type: "zwave_dimmer_46203",
-      device_id: "ba4c9a252899cf4f9f2a6acd73f630a1",
+      device_id: "df50c0c6853f8878742f1917f44f3060",
       events: {
         singleUp: {
           command_class_name: "Central Scene",
@@ -416,7 +416,37 @@ export const devices: DeviceRegistry = {
     guestbathroom_sconce_switch: {
       entity: "light.light_guestbathroom_sconce",
       type: "zwave_dimmer_46203",
-      device_id: "6b4c277f5ddb213b6f8e3204aab15fb9",
+      device_id: "59fbd1c8d089fc4b6cab59f7bd20b085",
+      events: {
+        singleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed"
+        },
+        singleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed"
+        },
+        doubleUp: {
+          command_class_name: "Central Scene",
+          property_key_name: "001",
+          value: "KeyPressed2x"
+        },
+        doubleDown: {
+          command_class_name: "Central Scene",
+          property_key_name: "002",
+          value: "KeyPressed2x"
+        }
+      }
+    },
+
+    // Living hallway wall dimmer - used as a scene controller for whole-home off
+    living_hallway_switch: {
+      entity: "light.light_living_hallway",
+      type: "zwave_dimmer_46203",
+      includeInAllOff: false,
+      device_id: "c136100e5d6664e5b6fa256eaeb6c9b3",
       events: {
         singleUp: {
           command_class_name: "Central Scene",

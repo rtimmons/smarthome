@@ -252,6 +252,11 @@ test-slow:
 zwave-diagnose *args="":
 	@cd new-hass-configs && just zwave-diagnose {{args}}
 
+# Capture a timestamped live Z-Wave scene inventory snapshot
+[group: 'info']
+zwave-inventory *args="":
+	@cd new-hass-configs && just zwave-inventory {{args}}
+
 # Apply instant/fast ramp settings across the live Z-Wave network
 [group: 'deploy']
 zwave-apply-instant-ramps *args="":

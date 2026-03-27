@@ -91,6 +91,9 @@ just fetch
 # Generate YAML from TypeScript sources
 just generate
 
+# Capture a timestamped Z-Wave scene/network audit snapshot
+just zwave-inventory
+
 # Validate config and show diff (dry-run, no changes)
 just check
 
@@ -124,10 +127,13 @@ vim src/scenes.ts
 # 3. Generate YAML
 just generate
 
-# 4. Validate and preview changes
+# 4. Capture a live Z-Wave inventory when debugging scene latency
+just zwave-inventory
+
+# 5. Validate and preview changes
 just check
 
-# 5. Deploy to production (now includes sync protection)
+# 6. Deploy to production (now includes sync protection)
 just deploy
 ```
 

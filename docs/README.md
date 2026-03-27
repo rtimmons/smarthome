@@ -35,6 +35,7 @@ This directory contains project-specific documentation for the smarthome reposit
 *System maintenance, verification, and strategic planning*
 
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
+- [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
 
 ### 🎵 [Sonos](sonos/) - Domain-Specific Architecture

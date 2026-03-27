@@ -5,8 +5,14 @@ import * as os from "os";
 import * as path from "path";
 import { execFileSync } from "child_process";
 
+import { devices } from "../devices";
 import { scenes } from "../scenes";
-import { generateFastSceneCalls, generateSceneEntities } from "../scene-generation";
+import {
+  generateFastSceneCalls,
+  generateSceneEntities,
+  generateSceneTargets,
+} from "../scene-generation";
+import { Device } from "../types";
 
 declare const WebSocket: any;
 
@@ -65,6 +71,58 @@ interface SceneSummary {
     entityCount: number;
     data?: Record<string, any>;
   }>;
+}
+
+interface ConfiguredDeviceSummary {
+  category: string;
+  name: string;
+  entityId: string;
+  type: string;
+  deviceId?: string;
+  includeInAllOff: boolean;
+}
+
+interface EntityAuditFinding {
+  category: string;
+  name: string;
+  entityId: string;
+  type: string;
+  issue: string;
+  deviceId?: string;
+  liveDeviceId?: string;
+  livePlatform?: string;
+  relatedEntities?: string[];
+}
+
+interface UnavailableEntityFinding {
+  entityId: string;
+  state: string;
+  sourceDevice?: string;
+  type?: string;
+}
+
+interface SceneAvailabilityFinding {
+  sceneId: string;
+  entities: UnavailableEntityFinding[];
+}
+
+interface SuspiciousLogSummary {
+  counts: Record<string, number>;
+  nodeCounts: Array<{
+    nodeId: number;
+    count: number;
+    deviceName?: string;
+    manufacturer?: string;
+    model?: string;
+    entityIds: string[];
+  }>;
+  examples: Record<string, string>;
+}
+
+interface SceneParallelismFinding {
+  sceneId: string;
+  service: string;
+  entityIds: string[];
 }
 
 const SSH_OPTIONS = [
@@ -593,6 +651,249 @@ function writeJson(filePath: string, value: unknown) {
   fs.writeFileSync(filePath, JSON.stringify(value, null, 2), "utf8");
 }
 
+function fetchStates(options: Options, accessToken: string): JsonObject[] {
+  return JSON.parse(
+    runCommand("curl", [
+      "-sS",
+      `${options.server}/api/states`,
+      "-H",
+      `Authorization: Bearer ${accessToken}`,
+      "-H",
+      "Content-Type: application/json",
+    ])
+  ) as JsonObject[];
+}
+
+function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
+  const entries: ConfiguredDeviceSummary[] = [];
+
+  for (const [category, registry] of Object.entries(devices)) {
+    for (const [name, device] of Object.entries(registry as Record<string, Device>)) {
+      entries.push({
+        category,
+        name,
+        entityId: device.entity,
+        type: device.type,
+        deviceId: device.device_id,
+        includeInAllOff: device.includeInAllOff !== false,
+      });
+    }
+  }
+
+  return entries.sort((left, right) => left.entityId.localeCompare(right.entityId));
+}
+
+function buildEntityAuditFindings(
+  configuredDevices: ConfiguredDeviceSummary[],
+  entityRegistry: JsonObject
+): EntityAuditFinding[] {
+  const entityById = new Map<string, JsonObject>();
+  const entitiesByDeviceId = new Map<string, string[]>();
+
+  for (const entity of entityRegistry.data.entities as JsonObject[]) {
+    entityById.set(entity.entity_id, entity);
+    if (entity.device_id) {
+      const known = entitiesByDeviceId.get(entity.device_id) ?? [];
+      known.push(entity.entity_id);
+      entitiesByDeviceId.set(entity.device_id, known);
+    }
+  }
+
+  const findings: EntityAuditFinding[] = [];
+
+  for (const configured of configuredDevices) {
+    const liveEntity = entityById.get(configured.entityId);
+    if (!liveEntity) {
+      findings.push({
+        category: configured.category,
+        name: configured.name,
+        entityId: configured.entityId,
+        type: configured.type,
+        issue: "configured entity missing from live entity registry",
+        deviceId: configured.deviceId,
+        relatedEntities: configured.deviceId
+          ? [...(entitiesByDeviceId.get(configured.deviceId) ?? [])].sort()
+          : undefined,
+      });
+      continue;
+    }
+
+    if (
+      configured.deviceId &&
+      typeof liveEntity.device_id === "string" &&
+      liveEntity.device_id !== configured.deviceId
+    ) {
+      findings.push({
+        category: configured.category,
+        name: configured.name,
+        entityId: configured.entityId,
+        type: configured.type,
+        issue: "configured device_id does not match the live entity registry",
+        deviceId: configured.deviceId,
+        liveDeviceId: liveEntity.device_id,
+        livePlatform: liveEntity.platform,
+      });
+    }
+  }
+
+  return findings;
+}
+
+function collectUnavailableConfiguredEntities(
+  configuredDevices: ConfiguredDeviceSummary[],
+  states: JsonObject[]
+): UnavailableEntityFinding[] {
+  const stateByEntityId = new Map(states.map((state) => [state.entity_id, state]));
+  const unavailable: UnavailableEntityFinding[] = [];
+
+  for (const configured of configuredDevices) {
+    const state = stateByEntityId.get(configured.entityId);
+    if (!state) {
+      continue;
+    }
+
+    if (state.state !== "unavailable" && state.state !== "unknown") {
+      continue;
+    }
+
+    unavailable.push({
+      entityId: configured.entityId,
+      state: state.state,
+      sourceDevice: configured.name,
+      type: configured.type,
+    });
+  }
+
+  return unavailable.sort((left, right) => left.entityId.localeCompare(right.entityId));
+}
+
+function buildSceneAvailabilityFindings(states: JsonObject[]): SceneAvailabilityFinding[] {
+  const stateByEntityId = new Map(states.map((state) => [state.entity_id, state]));
+  const findings: SceneAvailabilityFinding[] = [];
+
+  for (const [sceneId, scene] of Object.entries(scenes)) {
+    const unavailable: UnavailableEntityFinding[] = [];
+
+    for (const target of generateSceneTargets(scene)) {
+      const state = stateByEntityId.get(target.entityId);
+      if (!state) {
+        continue;
+      }
+
+      if (state.state !== "unavailable" && state.state !== "unknown") {
+        continue;
+      }
+
+      unavailable.push({
+        entityId: target.entityId,
+        state: state.state,
+        sourceDevice: target.sourceDevice,
+        type: target.device.type,
+      });
+    }
+
+    if (unavailable.length > 0) {
+      findings.push({
+        sceneId,
+        entities: unavailable.sort((left, right) => left.entityId.localeCompare(right.entityId)),
+      });
+    }
+  }
+
+  return findings.sort((left, right) => left.sceneId.localeCompare(right.sceneId));
+}
+
+function summarizeSuspiciousLogs(
+  logText: string,
+  nodeMap: Map<number, NodeInfo>
+): SuspiciousLogSummary {
+  const counts = new Map<string, number>();
+  const nodeCounts = new Map<number, number>();
+  const examples = new Map<string, string>();
+  const patterns: Array<[string, RegExp]> = [
+    ["decode_failed", /failed to decode/i],
+    ["nonce_without_transaction", /nonce without an active transaction/i],
+    ["supervision_timeout", /Supervision.*timed out/i],
+    ["no_route", /No route/i],
+    ["timed_out", /timed out/i],
+    ["jammed", /jammed/i],
+    ["invalid_payload", /Dropping message with invalid payload/i],
+  ];
+  const nodePattern = /Node\s+(\d+)/i;
+
+  for (const line of logText.split("\n")) {
+    for (const [key, pattern] of patterns) {
+      if (!pattern.test(line)) {
+        continue;
+      }
+
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+      if (!examples.has(key)) {
+        examples.set(key, line);
+      }
+
+      const match = line.match(nodePattern);
+      if (match) {
+        const nodeId = Number(match[1]);
+        nodeCounts.set(nodeId, (nodeCounts.get(nodeId) ?? 0) + 1);
+      }
+      break;
+    }
+  }
+
+  return {
+    counts: Object.fromEntries([...counts.entries()].sort((left, right) => left[0].localeCompare(right[0]))),
+    nodeCounts: [...nodeCounts.entries()]
+      .sort((left, right) => right[1] - left[1] || left[0] - right[0])
+      .map(([nodeId, count]) => ({
+        nodeId,
+        count,
+        deviceName: nodeMap.get(nodeId)?.name,
+        manufacturer: nodeMap.get(nodeId)?.manufacturer,
+        model: nodeMap.get(nodeId)?.model,
+        entityIds: nodeMap.get(nodeId)?.entityIds ?? [],
+      })),
+    examples: Object.fromEntries(examples.entries()),
+  };
+}
+
+function buildSceneParallelismFindings(sceneIds: string[]): SceneParallelismFinding[] {
+  const ids = sceneIds.length > 0 ? sceneIds : Object.keys(scenes);
+  const findings: SceneParallelismFinding[] = [];
+
+  for (const sceneId of ids) {
+    const scene = scenes[sceneId];
+    if (!scene) {
+      continue;
+    }
+
+    const targetsByEntityId = new Map(
+      generateSceneTargets(scene).map((target) => [target.entityId, target])
+    );
+
+    for (const call of generateFastSceneCalls(scene)) {
+      if (call.target.entity_id.length < 2) {
+        continue;
+      }
+
+      const hasZwaveTarget = call.target.entity_id.some(
+        (entityId) => targetsByEntityId.get(entityId)?.zwaveBacked
+      );
+      if (!hasZwaveTarget) {
+        continue;
+      }
+
+      findings.push({
+        sceneId,
+        service: call.service,
+        entityIds: [...call.target.entity_id].sort(),
+      });
+    }
+  }
+
+  return findings;
+}
+
 async function diagnose(options: Options) {
   const outputDir = ensureOutputDir(options.outputDir);
   const artifactPaths = fetchLiveArtifacts(options, outputDir);
@@ -655,6 +956,113 @@ async function diagnose(options: Options) {
       console.log(`  ${line}`);
     }
   }
+}
+
+async function inventory(options: Options) {
+  const outputDir = ensureOutputDir(options.outputDir);
+  const artifactPaths = fetchLiveArtifacts(options, outputDir);
+  const artifacts = loadArtifacts(artifactPaths);
+  const nodeMap = buildNodeMap(artifacts.deviceRegistry, artifacts.entityRegistry);
+  const sceneSummaries = buildSceneSummaries(options.sceneIds);
+  const cacheRampPlan = buildRampPlan(
+    artifacts.valuesEntries,
+    artifacts.metadataEntries,
+    nodeMap
+  );
+  const accessToken = getAccessToken(options);
+  const liveRampPlan = await filterPendingRampPlanWithLiveValues(
+    options,
+    accessToken,
+    cacheRampPlan
+  );
+  const states = fetchStates(options, accessToken);
+  const configuredDevices = flattenConfiguredDevices();
+  const sceneAvailabilityFindings = buildSceneAvailabilityFindings(states);
+  const configuredUnavailable = collectUnavailableConfiguredEntities(
+    configuredDevices,
+    states
+  );
+  const entityAuditFindings = buildEntityAuditFindings(
+    configuredDevices,
+    artifacts.entityRegistry
+  );
+  const suspiciousLogSummary = summarizeSuspiciousLogs(artifacts.zwaveLog, nodeMap);
+  const sceneParallelismFindings = buildSceneParallelismFindings(options.sceneIds);
+
+  const report = {
+    generated_at: new Date().toISOString(),
+    output_dir: outputDir,
+    summary: {
+      configured_device_count: configuredDevices.length,
+      scene_count: sceneSummaries.length,
+      live_ramp_plan_count: liveRampPlan.length,
+      unavailable_configured_entity_count: configuredUnavailable.length,
+      scenes_with_unavailable_entities: sceneAvailabilityFindings.length,
+      entity_audit_finding_count: entityAuditFindings.length,
+      remaining_grouped_zwave_call_count: sceneParallelismFindings.length,
+      suspicious_log_categories: suspiciousLogSummary.counts,
+    },
+    scene_summaries: sceneSummaries,
+    scene_parallelism_findings: sceneParallelismFindings,
+    scene_availability_findings: sceneAvailabilityFindings,
+    configured_unavailable_entities: configuredUnavailable,
+    entity_audit_findings: entityAuditFindings,
+    suspicious_log_summary: suspiciousLogSummary,
+    live_ramp_plan: liveRampPlan,
+  };
+
+  writeJson(path.join(outputDir, "inventory-report.json"), report);
+  writeJson(path.join(outputDir, "configured-devices.json"), configuredDevices);
+  writeJson(path.join(outputDir, "scene-availability.json"), sceneAvailabilityFindings);
+  writeJson(path.join(outputDir, "entity-audit-findings.json"), entityAuditFindings);
+  writeJson(path.join(outputDir, "suspicious-log-summary.json"), suspiciousLogSummary);
+
+  console.log(`Output directory: ${outputDir}`);
+  console.log("");
+  console.log(
+    `Configured devices: ${configuredDevices.length} | Scenes: ${sceneSummaries.length}`
+  );
+  console.log(`Pending ramp changes: ${liveRampPlan.length}`);
+  console.log(
+    `Unavailable configured entities: ${configuredUnavailable.length} | Scenes impacted: ${sceneAvailabilityFindings.length}`
+  );
+  console.log(
+    `Entity audit findings: ${entityAuditFindings.length} | Remaining grouped Z-Wave calls: ${sceneParallelismFindings.length}`
+  );
+
+  if (configuredUnavailable.length > 0) {
+    console.log("");
+    console.log("Unavailable configured entities:");
+    for (const item of configuredUnavailable.slice(0, 10)) {
+      console.log(`  ${item.entityId} (${item.sourceDevice}) -> ${item.state}`);
+    }
+    if (configuredUnavailable.length > 10) {
+      console.log(`  ... ${configuredUnavailable.length - 10} more`);
+    }
+  }
+
+  if (entityAuditFindings.length > 0) {
+    console.log("");
+    console.log("Top entity audit findings:");
+    for (const finding of entityAuditFindings.slice(0, 10)) {
+      const related =
+        finding.relatedEntities && finding.relatedEntities.length > 0
+          ? ` | related: ${finding.relatedEntities.slice(0, 3).join(", ")}`
+          : "";
+      console.log(`  ${finding.name}: ${finding.issue}${related}`);
+    }
+  }
+
+  if (suspiciousLogSummary.nodeCounts.length > 0) {
+    console.log("");
+    console.log("Noisy Z-Wave nodes:");
+    for (const item of suspiciousLogSummary.nodeCounts.slice(0, 10)) {
+      console.log(`  node ${item.nodeId} (${item.deviceName ?? "unknown"}): ${item.count}`);
+    }
+  }
+
+  console.log("");
+  console.log(`Inventory report: ${path.join(outputDir, "inventory-report.json")}`);
 }
 
 async function fetchConfigParameters(
@@ -821,7 +1229,9 @@ async function verifyInstantRamps(options: Options) {
 async function main() {
   const [command, ...args] = process.argv.slice(2);
   if (!command) {
-    throw new Error("Usage: zwave-scenes <diagnose|apply-instant-ramps|verify-instant-ramps> [options]");
+    throw new Error(
+      "Usage: zwave-scenes <diagnose|inventory|apply-instant-ramps|verify-instant-ramps> [options]"
+    );
   }
 
   const options = parseArgs(args);
@@ -829,6 +1239,9 @@ async function main() {
   switch (command) {
     case "diagnose":
       await diagnose(options);
+      return;
+    case "inventory":
+      await inventory(options);
       return;
     case "apply-instant-ramps":
       await applyInstantRamps(options);

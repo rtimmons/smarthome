@@ -266,6 +266,25 @@ describe("Scene Generation with Pairing", () => {
       ).toBeDefined();
     });
 
+    it("should isolate bathroom Z-Wave loads into individual fast calls", () => {
+      const { generateFastCalls } = require("./generate-test-helper");
+
+      const calls = generateFastCalls(scenes.bathroom_high);
+
+      expect(calls).toHaveLength(5);
+      expect(calls.every((call: any) => call.target.entity_id.length === 1)).toBe(true);
+    });
+
+    it("should not duplicate targets when a paired RGBW entity is already explicit", () => {
+      const { generateFastCalls } = require("./generate-test-helper");
+
+      const calls = generateFastCalls(scenes.office_high);
+      const allTargets = calls.flatMap((call: any) => call.target.entity_id);
+
+      expect(allTargets.filter((entityId: string) => entityId === "light.light_office_abovetv"))
+        .toHaveLength(1);
+    });
+
     it("should exclude controller-only switches from all_off fast calls", () => {
       const { generateFastCalls } = require("./generate-test-helper");
 
@@ -281,6 +300,23 @@ describe("Scene Generation with Pairing", () => {
             call.target.entity_id[0] === "light.light_living_curtains"
         )
       ).toBeDefined();
+    });
+
+    it("should batch large Z-Wave scenes into multiple parallel steps", () => {
+      const { generateFastScripts } = require("./generate-test-helper");
+
+      const scripts = generateFastScripts({ all_off: scenes.all_off });
+      const script = scripts.fast_scene_all_off;
+
+      expect(script.sequence.length).toBeGreaterThan(1);
+      expect(script.sequence[0].parallel.length).toBeGreaterThan(0);
+      expect(
+        script.sequence.flatMap((step: any) => step.parallel).some(
+          (call: any) =>
+            call.service === "switch.turn_off" &&
+            call.target.entity_id.includes("switch.light_office_pianolight")
+        )
+      ).toBe(true);
     });
 
     it("should restore kitchen upper/lower brightness in high scenes", () => {
