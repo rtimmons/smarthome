@@ -14,6 +14,7 @@ import signal
 import socket
 import subprocess
 import sys
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Set, Tuple
@@ -40,6 +41,10 @@ SERVICE_COLORS = [
     "bright_green",
     "bright_yellow",
 ]
+
+RESTART_BACKOFF_SECONDS = 2
+RESTART_RESET_AFTER_SECONDS = 30
+MAX_RESTARTS = 5
 
 
 class AddonConfig:
@@ -318,6 +323,9 @@ class ServiceProcess:
         self.stderr_task: Optional[asyncio.Task] = None
         self.started: bool = False
         self.failure_reason: Optional[str] = None
+        self.stop_requested: bool = False
+        self.restart_count: int = 0
+        self.last_started_at: Optional[float] = None
 
     def _check_prerequisites(self) -> bool:
         """Check if prerequisites are met to start this service."""
@@ -356,6 +364,7 @@ class ServiceProcess:
         """Start the service process."""
         self.started = False
         self.failure_reason = None
+        self.stop_requested = False
 
         # Check prerequisites
         if not self._check_prerequisites():
@@ -394,10 +403,20 @@ class ServiceProcess:
             self.stdout_task = asyncio.create_task(self._capture_output(self.process.stdout, "stdout"))
             self.stderr_task = asyncio.create_task(self._capture_output(self.process.stderr, "stderr"))
             self.started = True
+            self.last_started_at = time.monotonic()
 
         except Exception as e:
             self._log(f"[red]Failed to start: {e}[/red]")
             self.failure_reason = str(e)
+
+    def record_unexpected_exit(self) -> int:
+        """Track crash loops and return the current consecutive restart count."""
+        now = time.monotonic()
+        if self.last_started_at and now - self.last_started_at >= RESTART_RESET_AFTER_SECONDS:
+            self.restart_count = 0
+
+        self.restart_count += 1
+        return self.restart_count
 
     async def _capture_output(self, stream, stream_name: str):
         """Capture and display output from a stream."""
@@ -432,6 +451,7 @@ class ServiceProcess:
         if not self.process:
             return
 
+        self.stop_requested = True
         self._log("Stopping...")
 
         try:
@@ -458,6 +478,7 @@ class DevOrchestrator:
         self.addons: Dict[str, AddonConfig] = {}
         self.processes: Dict[str, ServiceProcess] = {}
         self.shutdown_event = asyncio.Event()
+        self.monitor_tasks: List[asyncio.Task] = []
 
     async def run(self) -> int:
         """Main entry point for running all services. Returns exit code."""
@@ -553,6 +574,11 @@ class DevOrchestrator:
             console.print("\n[yellow]Press Ctrl+C to stop all services.[/yellow]")
             console.print("=" * 60 + "\n")
 
+            self.monitor_tasks = [
+                asyncio.create_task(self._monitor_service(service))
+                for service in running_services
+            ]
+
             # Wait for shutdown
             await self.shutdown_event.wait()
             return exit_code
@@ -561,6 +587,36 @@ class DevOrchestrator:
             console.print("=" * 60 + "\n")
             return 1
 
+    async def _monitor_service(self, service: ServiceProcess):
+        """Restart services that exit unexpectedly during local development."""
+        while not self.shutdown_event.is_set():
+            process = service.process
+            if not process:
+                return
+
+            return_code = await process.wait()
+
+            if self.shutdown_event.is_set() or service.stop_requested:
+                return
+
+            service.started = False
+            restart_count = service.record_unexpected_exit()
+
+            if restart_count > MAX_RESTARTS:
+                service.failure_reason = f"Exited unexpectedly too many times (last code: {return_code})"
+                service._log(
+                    f"[red]Exited with code {return_code}. Restart limit reached; leaving service stopped.[/red]"
+                )
+                return
+
+            delay = RESTART_BACKOFF_SECONDS * restart_count
+            service._log(
+                f"[yellow]Exited with code {return_code}. Restarting in {delay}s "
+                f"(attempt {restart_count}/{MAX_RESTARTS})...[/yellow]"
+            )
+            await asyncio.sleep(delay)
+            await service.start()
+
     async def shutdown(self):
         """Shutdown all services gracefully."""
         if self.shutdown_event.is_set():
@@ -568,6 +624,9 @@ class DevOrchestrator:
 
         self.shutdown_event.set()
         console.print("\n[yellow]Shutting down all services...[/yellow]")
+
+        for task in self.monitor_tasks:
+            task.cancel()
 
         # Stop in reverse order
         for key in reversed(list(self.processes.keys())):

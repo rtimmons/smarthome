@@ -1,0 +1,71 @@
+diff --git a/lib/actions/zones.js b/lib/actions/zones.js
+index 56e94a2..3c5bee7 100644
+--- a/lib/actions/zones.js
++++ b/lib/actions/zones.js
+@@ -1,21 +1,27 @@
+ 'use strict';
+ 
+ function simplifyPlayer(player) {
++  if (!player) {
++    return null;
++  }
++
++  const coordinator = player.coordinator || player;
+   return {
+     uuid: player.uuid,
+     state: player.state,
+     playMode: player.currentPlayMode,
+     roomName: player.roomName,
+-    coordinator: player.coordinator.uuid,
+-    groupState: player.groupState
++    coordinator: coordinator ? coordinator.uuid : null,
++    groupState: coordinator && coordinator.groupState ? coordinator.groupState : player.groupState
+   };
+ }
+ 
+ function simplifyZones(zones) {
+   return zones.map((zone) => {
++    const coordinator = zone.coordinator || zone.members[0] || null;
+     return {
+       uuid: zone.uuid,
+-      coordinator: simplifyPlayer(zone.coordinator),
++      coordinator: simplifyPlayer(coordinator),
+       members: zone.members.map(simplifyPlayer)
+     };
+   });
+@@ -27,4 +33,4 @@ function zones(player) {
+ 
+ module.exports = function (api) {
+   api.registerAction('zones', zones);
+-}
+\ No newline at end of file
++}
+diff --git a/lib/sonos-http-api.js b/lib/sonos-http-api.js
+index fbd09f0..114b5b7 100644
+--- a/lib/sonos-http-api.js
++++ b/lib/sonos-http-api.js
+@@ -133,12 +133,18 @@ function HttpAPI(discovery, settings) {
+     if (settings.webhookType) { typeName = settings.webhookType; }
+     if (settings.webhookData) { dataName = settings.webhookData; }
+ 
+-    const jsonBody = JSON.stringify({
+-      [typeName]: type,
+-      [dataName]: data
+-    });
+-
+-    events.sendEvent(jsonBody);
++    let jsonBody;
++    try {
++      jsonBody = JSON.stringify({
++        [typeName]: type,
++        [dataName]: data
++      });
++      events.sendEvent(jsonBody);
++    } catch (err) {
++      logger.error('Failed to serialize webhook payload for', type);
++      logger.error(err);
++      return;
++    }
+ 
+     if (!settings.webhook) return;
+ 
