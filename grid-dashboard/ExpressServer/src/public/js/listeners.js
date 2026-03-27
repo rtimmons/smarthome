@@ -112,13 +112,39 @@ function formatBannerText(track) {
     return [title, artist].filter(Boolean).join(' — ');
 }
 
+function displayedIntent(status) {
+    if (!status) {
+        return null;
+    }
+
+    return status.activeIntent || status.recentIntent || null;
+}
+
+function intentBannerText(status) {
+    var intent = displayedIntent(status);
+    if (!intent || !intent.message) {
+        return '';
+    }
+
+    return intent.message;
+}
+
+function intentHasError(status) {
+    var intent = displayedIntent(status);
+    if (!intent) {
+        return false;
+    }
+
+    return intent.status === 'failed' || intent.status === 'timed_out';
+}
+
 class BackgroundChanger {
     onMessage(e) {
         var state = (e.Event && e.Event.State) || {};
         var track = state.currentTrack;
         if (!track) {
             e.Globals.App.setBackgroundImage('');
-            e.Globals.App.setBanner('');
+            e.Globals.App.setTrackBanner('');
             return;
         }
 
@@ -126,7 +152,7 @@ class BackgroundChanger {
         e.Globals.App.setBackgroundImage(artUrl);
 
         var bannerText = formatBannerText(track);
-        e.Globals.App.setBanner(bannerText);
+        e.Globals.App.setTrackBanner(bannerText);
     }
 }
 
@@ -177,9 +203,23 @@ class GenericOnDoublePress {
     }
 }
 
+class IntentUpdater {
+    onMessage(e) {
+        var status = e.Event.Status || {};
+        e.Globals.App.grid.updateIntent(status);
+        e.Globals.App.setIntentBanner(
+            intentBannerText(status),
+            intentHasError(status)
+        );
+    }
+}
+
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        displayedIntent: displayedIntent,
         formatBannerText: formatBannerText,
+        intentBannerText: intentBannerText,
+        intentHasError: intentHasError,
         parseSiriusMetadata: parseSiriusMetadata,
     };
 }

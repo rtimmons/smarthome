@@ -33,4 +33,37 @@ describe('listeners banner formatting', () => {
 
         expect(banner).to.equal('Morning Edition — NPR');
     });
+
+    it('prefers the active intent banner over recent intent', () => {
+        const banner = listeners.intentBannerText({
+            activeIntent: {
+                message: 'Joining all to Kitchen (2/8)',
+            },
+            recentIntent: {
+                message: 'Joined all to Bedroom (8/8)',
+            },
+        });
+
+        expect(banner).to.equal('Joining all to Kitchen (2/8)');
+    });
+
+    it('flags timed out intents as errors', () => {
+        const hasError = listeners.intentHasError({
+            recentIntent: {
+                status: 'timed_out',
+                message: 'Join-all to Kitchen timed out',
+            },
+        });
+
+        expect(hasError).to.equal(true);
+    });
+
+    it('clears intent banner when no active or recent intent exists', () => {
+        const banner = listeners.intentBannerText({
+            activeIntent: null,
+            recentIntent: null,
+        });
+
+        expect(banner).to.equal('');
+    });
 });

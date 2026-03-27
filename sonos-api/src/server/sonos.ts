@@ -4,8 +4,13 @@ import rpn = require('request-promise-native');
 import '../types/sonos';
 
 import {appConfig} from './config';
+import {
+  createSonosIntentCoordinator,
+  GroupAllIntentRequest,
+} from './intents';
 
 const app = Router();
+const sonosIntentCoordinator = createSonosIntentCoordinator(appConfig.sonosUrl);
 
 const errorStatus = (err: any): number => {
   const statusCode = Number(err && err.statusCode);
@@ -17,6 +22,18 @@ const errorMessage = (err: any, fallback: string): string => {
     return err.message;
   }
   return fallback;
+};
+
+const isTransientZonesError = (route: string, err: any): boolean => {
+  if (route !== 'zones') {
+    return false;
+  }
+
+  if (err && err.cause && err.cause.code === 'ECONNREFUSED') {
+    return true;
+  }
+
+  return Boolean(err && err.message && String(err.message).indexOf('AggregateError') >= 0);
 };
 
 const proxySonosGet = async (route: string, res: RS): Promise<void> => {
@@ -33,7 +50,13 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
     res.status(response.statusCode).send(response.body);
   } catch (err) {
     const statusCode = errorStatus(err);
-    console.error(`Sonos API upstream error for ${route}:`, err);
+    if (isTransientZonesError(route, err)) {
+      console.warn(
+        `Sonos API upstream transient zones error for ${route}: ${errorMessage(err, 'Sonos upstream request failed')}`
+      );
+    } else {
+      console.error(`Sonos API upstream error for ${route}:`, err);
+    }
     res.status(statusCode).json({
       error: errorMessage(err, 'Sonos upstream request failed'),
       route,
@@ -67,11 +90,25 @@ const wrap = <T>(
   };
 };
 
+const sendJson = (res: RS, statusCode: number, body: unknown): void => {
+  res.status(statusCode).json(body);
+};
+
 app.get('/pause', sonosGet('pause'));
 app.get('/play', sonosGet('play'));
 app.get('/tv', sonosGet('preset/all-tv'));
 app.get('/07', sonosGet('favorite/Zero 7 Radio'));
 app.get('/quiet', sonosGet('groupVolume/7'));
+
+app.post('/intents/sonos/group-all', wrap(async (req: RQ, res: RS) => {
+  const payload = req.body as GroupAllIntentRequest;
+  const intent = sonosIntentCoordinator.createGroupAllIntent(payload);
+  sendJson(res, 202, {intent});
+}));
+
+app.get('/intents/sonos/status', wrap(async (_req: RQ, res: RS) => {
+  sendJson(res, 200, sonosIntentCoordinator.getStatus());
+}));
 
 (() => {
   const rex: RegExp = /sonos\/(.*)$/;
@@ -82,6 +119,11 @@ app.get('/quiet', sonosGet('groupVolume/7'));
       return;
     }
     const rest = match[1];
+    if (sonosIntentCoordinator.isTopologyMutationRoute(rest)) {
+      sonosIntentCoordinator.cancelActiveIntent(
+        `Join-all cancelled by manual Sonos action: ${decodeURIComponent(rest)}`
+      );
+    }
     await proxySonosGet(rest, res);
   }));
 })();

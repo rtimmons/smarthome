@@ -57,6 +57,10 @@ class App {
         this.bannerAnimationFrame = null;
         this.bannerAnimationStartedAt = null;
         this.bannerPixelsPerSecond = 100;
+        this.trackBanner = '';
+        this.intentBanner = '';
+        this.renderedBanner = '';
+        this.intentBannerHasError = false;
     }
 
     // TODO: move to config class
@@ -103,6 +107,10 @@ class App {
 
     _createBannerSegment(text) {
         return $('<span class="banner-marquee__segment"></span>').text(text);
+    }
+
+    _bannerCell() {
+        return this.$.find('.state-Music');
     }
 
     _stopBannerAnimation() {
@@ -158,8 +166,7 @@ class App {
         );
     }
 
-    // TODO: move to gridview?
-    setBanner(msg) {
+    _setRenderedBanner(msg) {
         var bannerText = (msg || '').trim();
         var track = this._ensureBannerTrack();
         if (!track.length) {
@@ -170,11 +177,11 @@ class App {
             track.empty();
             this._stopBannerAnimation();
             track.css('transform', 'translateX(0px)');
-            this.banner = '';
+            this.renderedBanner = '';
             return;
         }
 
-        if (bannerText === this.banner) {
+        if (bannerText === this.renderedBanner) {
             return;
         }
 
@@ -195,8 +202,29 @@ class App {
             track.append(segment.clone());
         }
         track.attr('title', bannerText);
-        this.banner = bannerText;
+        this.renderedBanner = bannerText;
         this._restartBannerAnimation(track, segmentWidth);
+    }
+
+    _refreshBanner() {
+        this._bannerCell().toggleClass('intent-error', this.intentBannerHasError);
+        this._setRenderedBanner(this.intentBanner || this.trackBanner);
+    }
+
+    setTrackBanner(msg) {
+        this.trackBanner = (msg || '').trim();
+        this._refreshBanner();
+    }
+
+    setIntentBanner(msg, hasError) {
+        this.intentBanner = (msg || '').trim();
+        this.intentBannerHasError = Boolean(hasError && this.intentBanner);
+        this._refreshBanner();
+    }
+
+    // TODO: remove after callers migrate to setTrackBanner
+    setBanner(msg) {
+        this.setTrackBanner(msg);
     }
 
     // TODO: move to gridview?

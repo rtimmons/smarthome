@@ -32,6 +32,38 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
     }
 };
 
+const proxySonosRequest = async (
+    method: string,
+    route: string,
+    res: RS,
+    body?: unknown
+): Promise<void> => {
+    const url = `${appConfig.sonosUrl}/${route}`;
+
+    try {
+        const response = await rpn({
+            method,
+            uri: url,
+            body,
+            json: true,
+            resolveWithFullResponse: true,
+            simple: false,
+        });
+
+        res.status(response.statusCode).json(response.body);
+    } catch (err) {
+        const statusCode = Number(err && err.statusCode) || 502;
+        console.error(
+            `Sonos API error for ${method} ${route}:`,
+            (err && err.message) || err
+        );
+        res.status(statusCode).json({
+            error: (err && err.message) || 'Sonos API request failed',
+            route,
+        });
+    }
+};
+
 const sonosGet = (
     routeFactory: string | ((req: RQ) => string)
 ): ((req: RQ, res: RS) => Promise<void>) => {
@@ -49,6 +81,12 @@ app.get('/play', sonosGet('play'));
 app.get('/tv', sonosGet('preset/all-tv'));
 app.get('/07', sonosGet('favorite/Zero 7 Radio'));
 app.get('/quiet', sonosGet('groupVolume/7'));
+app.post('/sonos-intents/group-all', async (req: RQ, res: RS) => {
+    await proxySonosRequest('POST', 'intents/sonos/group-all', res, req.body);
+});
+app.get('/sonos-intents/status', async (_req: RQ, res: RS) => {
+    await proxySonosRequest('GET', 'intents/sonos/status', res);
+});
 
 (() => {
     const rex: RegExp = /sonos\/(.*)$/;

@@ -25,6 +25,19 @@ body {
     background-color: rgba(70, 70, 70, 1);
 }
 
+.cell.intent-target {
+    box-shadow: inset 0 0 0 4px rgba(215, 197, 84, 0.95);
+}
+
+.cell.intent-pending {
+    box-shadow: inset 0 0 0 2px rgba(180, 145, 48, 0.35);
+}
+
+.cell.intent-error {
+    background-color: rgba(128, 43, 43, 0.9);
+    box-shadow: inset 0 0 0 4px rgba(214, 102, 102, 0.95);
+}
+
 .cell:hover {
     border: 1px solid rgba(40, 40, 40, 0.7);
 }
@@ -71,4 +84,8 @@ body {
     align-items: center;
     padding-right: 4rem;
     flex: 0 0 auto;
+}
+
+.state-Music.intent-error {
+    background-color: rgba(128, 43, 43, 0.9);
 }

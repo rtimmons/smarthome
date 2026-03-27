@@ -6,22 +6,24 @@ class MusicController {
         this.pubsub = args.pubsub;
     }
 
-    request() {
-        var args = Array.prototype.slice.call(arguments);
-        const currRoom = this.app.currentRoom();
-        const replaceName = n => n.replace(/\$room/g, currRoom);
-        args = args.map(a => replaceName(a));
-        // Build URL using current page's base path for ingress compatibility
-        var path = args.join('/');
+    resolveUrl(path) {
         if (!this.root) {
-            // Get base path from current location, removing ALL trailing slashes
-            var basePath = window.location.pathname.replace(/\/+$/, ''); // Remove all trailing slashes
-            var url = basePath + '/' + path;
-        } else {
-            var url = [this.root].concat(args).join('/');
+            var basePath = window.location.pathname.replace(/\/+$/, '');
+            return basePath + '/' + path;
         }
 
-        return this.requester.request(url);
+        return [this.root, path].join('/');
+    }
+
+    request() {
+        var args = Array.prototype.slice.call(arguments);
+        var currRoom = this.app.currentRoom();
+        var replaceName = function(n) {
+            return n.replace(/\$room/g, currRoom);
+        };
+        args = args.map(a => replaceName(a));
+        var path = args.join('/');
+        return this.requester.request(this.resolveUrl(path));
     }
 
     pause() {
@@ -75,13 +77,32 @@ class MusicController {
     }
 
     allJoin(room) {
-        let delay = 0;
-        this.app.config.rooms
-            .filter(x => x != room)
-            .forEach(other => {
-                setTimeout(() => this.request('sonos', other, 'join', '$room'), delay);
-                delay += 250; // only 1 request/quarter-second
+        var payload = {
+            targetRoom: room,
+            roomNames: this.app.config.rooms.slice(),
+            requestedFromRoom: this.app.currentRoom(),
+        };
+
+        this.requester.request({
+            url: this.resolveUrl('sonos-intents/group-all'),
+            method: 'POST',
+            contentType: 'application/json',
+            dataType: 'json',
+            data: JSON.stringify(payload),
+        }).done(resp => {
+            var parsed = this.parseJsonMaybe(resp);
+            if (!parsed || !parsed.intent || parsed.intent.status !== 'running') {
+                return;
+            }
+
+            this.pubsub.submit('Intent.StateObserved', {
+                Status: {
+                    activeIntent: parsed.intent,
+                    recentIntent: null,
+                    serverTime: new Date().toISOString(),
+                },
             });
+        });
     }
 
     fetchState() {
@@ -102,6 +123,16 @@ class MusicController {
             }
             this.pubsub.submit('Room.ZonesObserved', {
                 Zones: parsed,
+            });
+        });
+
+        this.request('sonos-intents', 'status').done(resp => {
+            var parsed = this.parseJsonMaybe(resp);
+            if (!parsed) {
+                return;
+            }
+            this.pubsub.submit('Intent.StateObserved', {
+                Status: parsed,
             });
         });
     }

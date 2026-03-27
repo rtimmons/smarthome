@@ -88,4 +88,34 @@ class CellView {
         }
         this.active = isActive;
     }
+
+    clearIntentClasses() {
+        this.$element.removeClass('intent-target intent-pending intent-error');
+        this.$element.css('backgroundColor', '');
+    }
+
+    setIntentClass(claz, enabled) {
+        if (!claz) {
+            return;
+        }
+
+        if (enabled) {
+            this.$element.addClass(claz);
+            return;
+        }
+
+        this.$element.removeClass(claz);
+    }
+
+    setIntentPendingStrength(strength) {
+        if (!strength) {
+            this.$element.css('backgroundColor', '');
+            return;
+        }
+
+        this.$element.css(
+            'backgroundColor',
+            'rgba(122, 93, 31, ' + strength + ')'
+        );
+    }
 }

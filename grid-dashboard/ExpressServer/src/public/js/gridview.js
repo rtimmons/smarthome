@@ -64,6 +64,59 @@ class GridView {
         return y + ':' + x;
     }
 
+    _findRoomCell(roomName) {
+        for (var i = 0; i < this.cells.length; i++) {
+            if (this.cells[i].isActiveForRoom(roomName)) {
+                return this.cells[i];
+            }
+        }
+        return null;
+    }
+
+    _findToggleCell(roomName) {
+        for (var i = 0; i < this.cells.length; i++) {
+            if (this.cells[i].togglesRoom() === roomName) {
+                return this.cells[i];
+            }
+        }
+        return null;
+    }
+
+    updateIntent(status) {
+        var activeIntent = status && status.activeIntent;
+        var pendingStrength = 0;
+
+        this.allCells().forEach(function(cell) {
+            cell.clearIntentClasses();
+        });
+
+        if (!activeIntent) {
+            return;
+        }
+
+        var roomCell = this._findRoomCell(activeIntent.targetRoom);
+        if (roomCell) {
+            roomCell.setIntentClass('intent-target', true);
+        }
+
+        if (!Array.isArray(activeIntent.missingRooms)) {
+            return;
+        }
+
+        pendingStrength = Math.max(
+            0.18,
+            0.82 - ((activeIntent.attemptCount || 0) * 0.08)
+        );
+        activeIntent.missingRooms.forEach(roomName => {
+            var toggleCell = this._findToggleCell(roomName);
+            if (!toggleCell) {
+                return;
+            }
+            toggleCell.setIntentClass('intent-pending', true);
+            toggleCell.setIntentPendingStrength(pendingStrength);
+        });
+    }
+
     updateCells(cells) {
         var grid = this;
         cells.forEach(function(config) {

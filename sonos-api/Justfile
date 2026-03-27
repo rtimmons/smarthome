@@ -20,10 +20,12 @@ setup:
 # Build the project (test equivalent)
 [group: 'test']
 test:
-    @echo "🏗️  Building Sonos API..."
+    @echo "🧪 Running Sonos API tests..."
     @{{nvm_use}}
+    @npm test
+    @echo "🏗️  Building Sonos API..."
     @npm run build
-    @echo "✅ Build completed successfully"
+    @echo "✅ Sonos API checks completed successfully"
 
 # Run development server
 [group: 'dev']
