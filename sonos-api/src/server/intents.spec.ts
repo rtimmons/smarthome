@@ -78,6 +78,7 @@ async function run(): Promise<void> {
   {
     let joinedRooms = ['Kitchen'];
     const joins: Array<{roomName: string; coordinatorRoom: string}> = [];
+    const volumeSets: Array<{roomName: string; volume: number}> = [];
     const coordinator = new SonosIntentCoordinator(
       {
         async getZones(): Promise<Sonos.Zone[]> {
@@ -89,6 +90,54 @@ async function run(): Promise<void> {
             joinedRooms = joinedRooms.concat([roomName]);
           }
         },
+        async getState(): Promise<Sonos.State> {
+          return {
+            volume: 17,
+            mute: false,
+            equalizer: {
+              bass: 0,
+              treble: 0,
+              loudness: false,
+            },
+            currentTrack: {
+              artist: '',
+              title: '',
+              album: '',
+              albumArtUri: '',
+              duration: 0,
+              uri: '',
+              trackUri: '',
+              type: '',
+              stationName: '',
+            },
+            nextTrack: {
+              artist: '',
+              title: '',
+              album: '',
+              albumArtUri: '',
+              duration: 0,
+              uri: '',
+            },
+            trackNo: 0,
+            elapsedTime: 0,
+            elapsedTimeFormatted: '0:00',
+            playbackState: 'STOPPED',
+            playMode: {
+              repeat: 'none' as const,
+              shuffle: false,
+              crossfade: false,
+            },
+            sub: {
+              gain: 0,
+              crossover: 0,
+              polarity: 0,
+              enabled: false,
+            },
+          };
+        },
+        async setVolume(roomName: string, volume: number): Promise<void> {
+          volumeSets.push({roomName, volume});
+        },
       },
       {
         observeDelayMs: 0,
@@ -99,6 +148,7 @@ async function run(): Promise<void> {
 
     const initial = coordinator.createGroupAllIntent(roomRequest);
     assert.equal(initial.status, 'running');
+    coordinator.enableVolumeSync('Bedroom');
     await new Promise(resolve => setTimeout(resolve, 25));
 
     const status = coordinator.getStatus();
@@ -112,6 +162,14 @@ async function run(): Promise<void> {
         {roomName: 'Bedroom', coordinatorRoom: 'Kitchen'},
       ]
     );
+    assert.deepEqual(
+      volumeSets,
+      [
+        {roomName: 'Kitchen', volume: 17},
+        {roomName: 'Kitchen', volume: 17},
+        {roomName: 'Living Room', volume: 17},
+      ]
+    );
   }
 
   {
@@ -121,6 +179,12 @@ async function run(): Promise<void> {
           return [zone('Kitchen', ['Kitchen'])];
         },
         async joinRoom(): Promise<void> {
+          return;
+        },
+        async getState(): Promise<Sonos.State> {
+          throw new Error('unused');
+        },
+        async setVolume(): Promise<void> {
           return;
         },
       },
@@ -153,6 +217,12 @@ async function run(): Promise<void> {
           joins += 1;
           throw new Error('speaker busy');
         },
+        async getState(): Promise<Sonos.State> {
+          throw new Error('unused');
+        },
+        async setVolume(): Promise<void> {
+          return;
+        },
       },
       {
         observeDelayMs: 0,
@@ -182,6 +252,12 @@ async function run(): Promise<void> {
           return [zone('Kitchen', ['Kitchen'])];
         },
         async joinRoom(): Promise<void> {
+          return;
+        },
+        async getState(): Promise<Sonos.State> {
+          throw new Error('unused');
+        },
+        async setVolume(): Promise<void> {
           return;
         },
       }

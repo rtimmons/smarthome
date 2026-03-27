@@ -44,6 +44,10 @@ export interface GroupAllIntent {
   attemptCount: number;
   currentStep: GroupAllIntentStep | null;
   lastError: GroupAllIntentError | null;
+  volumeSync?: {
+    sourceRoom: string;
+    targetVolume?: number;
+  };
   message: string;
 }
 
@@ -57,12 +61,15 @@ export interface SonosIntentStore {
   createGroupAllIntent(req: GroupAllIntentRequest): GroupAllIntent;
   getStatus(): SonosIntentStatusResponse;
   cancelActiveIntent(message: string): GroupAllIntent | null;
+  enableVolumeSync(sourceRoom: string): GroupAllIntent | null;
   isTopologyMutationRoute(route: string): boolean;
 }
 
 interface SonosHttpClient {
   getZones(): Promise<Sonos.Zone[]>;
   joinRoom(roomName: string, coordinatorRoom: string): Promise<void>;
+  getState(roomName: string): Promise<Sonos.State>;
+  setVolume(roomName: string, volume: number): Promise<void>;
 }
 
 interface SonosIntentCoordinatorOptions {
@@ -256,6 +263,24 @@ export class SonosIntentCoordinator implements SonosIntentStore {
     return cloneIntent(cancelled);
   }
 
+  enableVolumeSync(sourceRoom: string): GroupAllIntent | null {
+    if (!this.activeIntent) {
+      return null;
+    }
+
+    this.activeIntent.volumeSync = {
+      sourceRoom,
+      targetVolume: this.activeIntent.volumeSync &&
+          this.activeIntent.volumeSync.sourceRoom === sourceRoom
+        ? this.activeIntent.volumeSync.targetVolume
+        : undefined,
+    };
+    console.log(
+      `[sonos-intents] ${this.activeIntent.id} volume-sync enabled source=${sourceRoom}`
+    );
+    return cloneIntent(this.activeIntent);
+  }
+
   isTopologyMutationRoute(route: string): boolean {
     const trimmed = route.replace(/^\/+/, '');
     const segments = trimmed.split('/').filter(Boolean);
@@ -321,6 +346,8 @@ export class SonosIntentCoordinator implements SonosIntentStore {
         intent.missingRooms = missingRoomsForZone(intent.roomNames, intent.joinedRooms);
         intent.currentStep = null;
         intent.message = buildRunningMessage(intent);
+
+        await this.syncJoinedRoomVolumes(intent, targetZone);
 
         if (intent.missingRooms.length === 0) {
           this.finishIntent(
@@ -408,6 +435,55 @@ export class SonosIntentCoordinator implements SonosIntentStore {
     }
   }
 
+  private async syncJoinedRoomVolumes(
+    intent: GroupAllIntent,
+    targetZone: Sonos.Zone | undefined
+  ): Promise<void> {
+    if (!intent.volumeSync || !targetZone) {
+      return;
+    }
+
+    const sourceRoom = intent.volumeSync.sourceRoom;
+    let sourceVolume = 0;
+
+    try {
+      const sourceState = await this.client.getState(sourceRoom);
+      sourceVolume = sourceState.volume;
+      intent.volumeSync.targetVolume = sourceVolume;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown Sonos state error';
+      intent.lastError = {
+        message: `Volume sync source ${sourceRoom}: ${message}`,
+        at: isoNow(this.now),
+      };
+      return;
+    }
+
+    const roomsToAdjust = targetZone.members.filter(member =>
+      member.roomName !== sourceRoom &&
+      member.state &&
+      member.state.volume !== sourceVolume
+    );
+
+    if (roomsToAdjust.length === 0) {
+      return;
+    }
+
+    await Promise.all(
+      roomsToAdjust.map(async member => {
+        try {
+          await this.client.setVolume(member.roomName, sourceVolume);
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unknown Sonos volume error';
+          intent.lastError = {
+            message: `Volume sync ${member.roomName}: ${message}`,
+            at: isoNow(this.now),
+          };
+        }
+      })
+    );
+  }
+
   private finishIntent(
     intent: GroupAllIntent,
     status: SonosIntentStatusValue,
@@ -485,6 +561,35 @@ export const createSonosIntentCoordinator = (
 
       if (response.statusCode >= 400) {
         throw new Error(`Join request failed with status ${response.statusCode}`);
+      }
+    },
+
+    async getState(roomName: string): Promise<Sonos.State> {
+      const response = await rpn({
+        method: 'GET',
+        uri: `${sonosBaseUrl}/${encodeURIComponent(roomName)}/state`,
+        json: true,
+        resolveWithFullResponse: true,
+        simple: false,
+      });
+
+      if (response.statusCode >= 400) {
+        throw new Error(`State request failed with status ${response.statusCode}`);
+      }
+
+      return response.body as Sonos.State;
+    },
+
+    async setVolume(roomName: string, volume: number): Promise<void> {
+      const response = await rpn({
+        method: 'GET',
+        uri: `${sonosBaseUrl}/${encodeURIComponent(roomName)}/volume/${volume}`,
+        resolveWithFullResponse: true,
+        simple: false,
+      });
+
+      if (response.statusCode >= 400) {
+        throw new Error(`Volume request failed with status ${response.statusCode}`);
       }
     },
   };

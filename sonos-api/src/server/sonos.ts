@@ -131,6 +131,7 @@ app.get('/intents/sonos/status', wrap(async (_req: RQ, res: RS) => {
 // make all rooms in same zone as :room have volume same as active room
 app.get('/same/:room', wrap(async (req: RQ, res: RS) => {
   const room = req.params['room'];
+  sonosIntentCoordinator.enableVolumeSync(room);
   const zoneResponse = await rpn({
     method: 'GET',
     uri: `${appConfig.sonosUrl}/${room}/zones`,
