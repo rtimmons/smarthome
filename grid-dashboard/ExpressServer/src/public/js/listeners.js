@@ -2,6 +2,9 @@ class ActiveCells {
     onMessage(e) {
         // TODO: move to onMessage for each cell
         e.Globals.App.eachCell(cell => {
+            if (!cell.config || !cell.config.activeWhenRoom) {
+                return;
+            }
             cell.setActive(cell.isActiveForRoom(e.Event.ToRoom));
         });
     }
@@ -229,6 +232,7 @@ class IntentUpdater {
 
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        ActiveCells: ActiveCells,
         displayedIntent: displayedIntent,
         formatBannerText: formatBannerText,
         intentBannerText: intentBannerText,

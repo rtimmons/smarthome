@@ -7,7 +7,7 @@
     "start": "ts-node src/server/index.ts",
     "stop": "pkill -f smhexprsrv",
     "dev": "supervisor -p 200 -RV -x npm start",
-    "test": "ts-mocha -p ./tsconfig.json --recursive ./src/**/*.spec.ts",
+    "test": "ts-mocha -p ./tsconfig.json --recursive ./src/server/**/*.spec.ts ./src/public/js/*.spec.ts",
     "check": "gts check",
     "clean": "gts clean",
     "fix": "gts fix",

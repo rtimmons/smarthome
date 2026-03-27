@@ -3,6 +3,46 @@ import { expect } from 'chai';
 const listeners: any = require('./listeners');
 
 describe('listeners banner formatting', () => {
+    it('does not clear zone toggle cells on room change', () => {
+        const activeCells = new listeners.ActiveCells();
+        const roomSelector = {
+            config: {
+                activeWhenRoom: 'Kitchen',
+            },
+            isActiveForRoom: (room: string) => room === 'Kitchen',
+            setActiveCalls: [] as boolean[],
+            setActive(value: boolean) {
+                this.setActiveCalls.push(value);
+            },
+        };
+        const zoneToggle = {
+            config: {
+                togglesRoom: 'Kitchen',
+            },
+            isActiveForRoom: () => false,
+            setActiveCalls: [] as boolean[],
+            setActive(value: boolean) {
+                this.setActiveCalls.push(value);
+            },
+        };
+
+        activeCells.onMessage({
+            Event: {
+                ToRoom: 'Kitchen',
+            },
+            Globals: {
+                App: {
+                    eachCell: (fn: (cell: unknown) => void) => {
+                        [roomSelector, zoneToggle].forEach(fn);
+                    },
+                },
+            },
+        });
+
+        expect(roomSelector.setActiveCalls).to.deep.equal([true]);
+        expect(zoneToggle.setActiveCalls).to.deep.equal([]);
+    });
+
     it('formats standard tracks with em dash separator', () => {
         const banner = listeners.formatBannerText({
             title: 'Teardrop',
