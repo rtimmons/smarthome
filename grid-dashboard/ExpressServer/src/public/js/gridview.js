@@ -45,7 +45,19 @@ class GridView {
             if (!room) {
                 return;
             }
+            c.setZoneUnknown(false);
             c.setActive(onoff.on.indexOf(c.togglesRoom()) >= 0);
+        });
+    }
+
+    setZonesUnknown() {
+        this.allCells().forEach(c => {
+            var room = c.togglesRoom();
+            if (!room) {
+                return;
+            }
+            c.setActive(false);
+            c.setZoneUnknown(true);
         });
     }
 

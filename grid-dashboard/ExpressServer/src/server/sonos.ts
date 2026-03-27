@@ -18,7 +18,31 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
             simple: false,
         });
 
-        res.status(response.statusCode).send(response.body);
+        const contentType =
+            (response.headers &&
+                (response.headers['content-type'] ||
+                    response.headers['Content-Type'])) ||
+            'application/json; charset=utf-8';
+        const forwardedHeaders = [
+            'x-sonos-response-source',
+            'x-sonos-response-stale',
+            'x-sonos-observed-at',
+            'x-sonos-age-ms',
+        ];
+
+        forwardedHeaders.forEach(headerName => {
+            const headerValue =
+                response.headers &&
+                (response.headers[headerName] ||
+                    response.headers[headerName.toLowerCase()]);
+            if (headerValue) {
+                res.setHeader(headerName, headerValue);
+            }
+        });
+
+        res.type(contentType)
+            .status(response.statusCode)
+            .send(response.body);
     } catch (err) {
         const statusCode = Number(err && err.statusCode) || 502;
         console.error(

@@ -61,6 +61,8 @@ class App {
         this.intentBanner = '';
         this.renderedBanner = '';
         this.intentBannerHasError = false;
+        this.sonosStateIsStale = false;
+        this.zoneStateIsUnknown = false;
     }
 
     // TODO: move to config class
@@ -208,6 +210,7 @@ class App {
 
     _refreshBanner() {
         this._bannerCell().toggleClass('intent-error', this.intentBannerHasError);
+        this._bannerCell().toggleClass('stale', this.sonosStateIsStale);
         this._setRenderedBanner(this.intentBanner || this.trackBanner);
     }
 
@@ -219,6 +222,11 @@ class App {
     setIntentBanner(msg, hasError) {
         this.intentBanner = (msg || '').trim();
         this.intentBannerHasError = Boolean(hasError && this.intentBanner);
+        this._refreshBanner();
+    }
+
+    setSonosStateStale(isStale) {
+        this.sonosStateIsStale = Boolean(isStale);
         this._refreshBanner();
     }
 
@@ -247,14 +255,23 @@ class App {
     updateZones(zones) {
         var myZone = zones.filter(z => z.members.indexOf(this.room) >= 0)[0];
         if (!myZone || !Array.isArray(myZone.members)) {
+            this.setZonesUnknown(true);
             return;
         }
+        this.setZonesUnknown(false);
         var sameZone = myZone.members;
         var arg = {
             on: sameZone,
             off: this.rooms.filter(r => sameZone.indexOf(r) < 0),
         };
         this.grid.updateZones(arg);
+    }
+
+    setZonesUnknown(isUnknown) {
+        this.zoneStateIsUnknown = Boolean(isUnknown);
+        if (this.zoneStateIsUnknown) {
+            this.grid.setZonesUnknown();
+        }
     }
 
     currentRoom() {

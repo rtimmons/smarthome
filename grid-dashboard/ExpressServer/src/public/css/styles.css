@@ -89,3 +89,12 @@ body {
 .state-Music.intent-error {
     background-color: rgba(128, 43, 43, 0.9);
 }
+
+.state-Music.stale {
+    box-shadow: inset 0 0 0 3px rgba(208, 165, 78, 0.9);
+}
+
+.cell.zone-unknown {
+    box-shadow: inset 0 0 0 3px rgba(138, 138, 138, 0.9);
+    opacity: 0.55;
+}

@@ -8,9 +8,11 @@ import {
   createSonosIntentCoordinator,
   GroupAllIntentRequest,
 } from './intents';
+import {SonosStatusProxy} from './status-proxy';
 
 const app = Router();
 const sonosIntentCoordinator = createSonosIntentCoordinator(appConfig.sonosUrl);
+const sonosStatusProxy = new SonosStatusProxy();
 
 const errorStatus = (err: any): number => {
   const statusCode = Number(err && err.statusCode);
@@ -37,17 +39,12 @@ const isTransientZonesError = (route: string, err: any): boolean => {
 };
 
 const proxySonosGet = async (route: string, res: RS): Promise<void> => {
-  const url = `${appConfig.sonosUrl}/${route}`;
-
   try {
-    const response = await rpn({
-      method: 'GET',
-      uri: url,
-      resolveWithFullResponse: true,
-      simple: false,
+    const response = await sonosStatusProxy.get(appConfig.sonosUrl, route);
+    Object.entries(response.headers).forEach(([headerName, headerValue]) => {
+      res.setHeader(headerName, headerValue);
     });
-
-    res.status(response.statusCode).send(response.body);
+    res.type(response.contentType).status(response.statusCode).send(response.body);
   } catch (err) {
     const statusCode = errorStatus(err);
     if (isTransientZonesError(route, err)) {
@@ -55,13 +52,19 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
         `Sonos API upstream transient zones error for ${route}: ${errorMessage(err, 'Sonos upstream request failed')}`
       );
     } else {
-      console.error(`Sonos API upstream error for ${route}:`, err);
+      console.error(
+        `Sonos API upstream error for ${route}: ${errorMessage(err, 'Sonos upstream request failed')}`
+      );
     }
     res.status(statusCode).json({
       error: errorMessage(err, 'Sonos upstream request failed'),
       route,
     });
   }
+};
+
+const invalidateTopologyCache = (): void => {
+  sonosStatusProxy.invalidate('zones');
 };
 
 const sonosGet = (
@@ -123,6 +126,7 @@ app.get('/intents/sonos/status', wrap(async (_req: RQ, res: RS) => {
       sonosIntentCoordinator.cancelActiveIntent(
         `Join-all cancelled by manual Sonos action: ${decodeURIComponent(rest)}`
       );
+      invalidateTopologyCache();
     }
     await proxySonosGet(rest, res);
   }));

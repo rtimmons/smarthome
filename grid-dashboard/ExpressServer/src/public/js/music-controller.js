@@ -56,9 +56,17 @@ class MusicController {
     }
 
     leaveRoom(r) {
+        this.pubsub.submit('Room.ZonesObserved', {
+            Zones: null,
+            Meta: { unknown: true },
+        });
         this.request('sonos', r, 'leave');
     }
     joinRoom(a, b) {
+        this.pubsub.submit('Room.ZonesObserved', {
+            Zones: null,
+            Meta: { unknown: true },
+        });
         this.request('sonos', a, 'join', b);
     }
 
@@ -74,6 +82,22 @@ class MusicController {
             console.log('Failed to parse Sonos response as JSON', err);
             return null;
         }
+    }
+
+    responseMeta(xhr) {
+        if (!xhr || typeof xhr.getResponseHeader !== 'function') {
+            return {};
+        }
+
+        var ageMs = Number(xhr.getResponseHeader('X-Sonos-Age-Ms'));
+        return {
+            source: xhr.getResponseHeader('X-Sonos-Response-Source') || 'live',
+            stale:
+                (xhr.getResponseHeader('X-Sonos-Response-Stale') || '')
+                    .toLowerCase() === 'true',
+            observedAt: xhr.getResponseHeader('X-Sonos-Observed-At') || '',
+            ageMs: Number.isFinite(ageMs) ? ageMs : 0,
+        };
     }
 
     allJoin(room) {
@@ -106,23 +130,33 @@ class MusicController {
     }
 
     fetchState() {
-        this.request('sonos', '$room', 'state').done(resp => {
+        this.request('sonos', '$room', 'state').done((resp, _textStatus, xhr) => {
             var parsed = this.parseJsonMaybe(resp);
             if (!parsed) {
                 return;
             }
             this.pubsub.submit('Room.StateObserved', {
                 State: parsed,
+                Meta: this.responseMeta(xhr),
             });
         });
 
-        this.request('sonos', 'zones').done(resp => {
+        this.request('sonos', 'zones').done((resp, _textStatus, xhr) => {
             var parsed = this.parseJsonMaybe(resp);
             if (!parsed) {
                 return;
             }
             this.pubsub.submit('Room.ZonesObserved', {
                 Zones: parsed,
+                Meta: this.responseMeta(xhr),
+            });
+        }).fail(xhr => {
+            this.pubsub.submit('Room.ZonesObserved', {
+                Zones: null,
+                Meta: {
+                    unknown: true,
+                    statusCode: (xhr && xhr.status) || 0,
+                },
             });
         });
 

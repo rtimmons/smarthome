@@ -141,7 +141,9 @@ function intentHasError(status) {
 class BackgroundChanger {
     onMessage(e) {
         var state = (e.Event && e.Event.State) || {};
+        var meta = (e.Event && e.Event.Meta) || {};
         var track = state.currentTrack;
+        e.Globals.App.setSonosStateStale(meta.stale);
         if (!track) {
             e.Globals.App.setBackgroundImage('');
             e.Globals.App.setTrackBanner('');
@@ -152,6 +154,11 @@ class BackgroundChanger {
         e.Globals.App.setBackgroundImage(artUrl);
 
         var bannerText = formatBannerText(track);
+        if (meta.stale && meta.ageMs > 0) {
+            bannerText = [bannerText, '(stale ' + Math.round(meta.ageMs / 1000) + 's)']
+                .filter(Boolean)
+                .join(' ');
+        }
         e.Globals.App.setTrackBanner(bannerText);
     }
 }
@@ -170,6 +177,12 @@ class ZoneUpdater {
     }
 
     onMessage(e) {
+        var meta = (e.Event && e.Event.Meta) || {};
+        if (meta.unknown || meta.stale) {
+            e.Globals.App.setZonesUnknown(true);
+            return;
+        }
+
         var zones = this.simplify(e.Event.Zones);
         e.Globals.App.updateZones(zones);
     }

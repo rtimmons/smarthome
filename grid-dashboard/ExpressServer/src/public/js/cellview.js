@@ -118,4 +118,8 @@ class CellView {
             'rgba(122, 93, 31, ' + strength + ')'
         );
     }
+
+    setZoneUnknown(enabled) {
+        this.$element.toggleClass('zone-unknown', Boolean(enabled));
+    }
 }
