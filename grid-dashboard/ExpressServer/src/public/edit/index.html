@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Grid Layout Editor</title>
+    <meta charset="UTF-8">
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    >
+    <link href="../css/layout-editor.css?v=1" rel="stylesheet" media="screen">
+  </head>
+  <body>
+    <div class="editor-shell">
+      <main class="panel canvas-panel">
+        <div class="panel-heading">
+          <h1>Layout Editor</h1>
+          <p>Token grid in, emoji grid out.</p>
+        </div>
+
+        <div class="canvas-toolbar">
+          <label class="field field-toolbar">
+            <span>Layout</span>
+            <select id="layout-select"></select>
+          </label>
+
+          <label class="field field-toolbar">
+            <span>Variant</span>
+            <select id="variant-select"></select>
+          </label>
+        </div>
+
+        <div class="panel-heading panel-heading-sub panel-heading-action">
+          <div>
+            <h2 id="canvas-title">Preview</h2>
+            <p id="canvas-subtitle">Click a cell to edit token or emoji.</p>
+          </div>
+          <button id="undo-button" class="undo-button" type="button">Undo</button>
+        </div>
+
+        <div class="canvas-frame">
+          <div id="grid-preview" class="grid-preview" aria-label="Layout preview"></div>
+        </div>
+      </main>
+
+      <aside class="panel inspector">
+        <div class="panel-heading">
+          <h2>Inspector</h2>
+          <p id="selection-label">No cell selected.</p>
+        </div>
+
+        <div class="field field-dual">
+          <input id="cell-token" class="cell-chip-input" type="text" maxlength="12" autocomplete="off" placeholder="TOKEN">
+          <input id="cell-emoji" class="cell-chip-input cell-chip-input-emoji" type="text" maxlength="8" autocomplete="off" placeholder="🙂">
+        </div>
+
+        <label class="field">
+          <span>Alias</span>
+          <input id="cell-alias" type="text" maxlength="64" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>Press</span>
+          <input id="cell-press" type="text" maxlength="160" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>Active When</span>
+          <input id="cell-active-when" type="text" maxlength="120" autocomplete="off">
+        </label>
+
+        <label class="field">
+          <span>Override Scope</span>
+          <input id="cell-override-scope" type="text" maxlength="64" autocomplete="off">
+        </label>
+
+        <label class="field field-notes">
+          <span>Notes</span>
+          <textarea id="cell-notes" rows="5"></textarea>
+        </label>
+
+        <div class="field field-legend">
+          <span>Legend</span>
+          <div id="legend-list" class="legend-list"></div>
+        </div>
+
+        <div class="inspector-actions">
+          <button id="reset-cell" type="button">Reset Variant Cell</button>
+        </div>
+      </aside>
+
+      <section class="panel output-panel">
+        <div class="panel-heading">
+          <h2>Token Grid Output</h2>
+          <p>Current effective grid and current variant metadata.</p>
+        </div>
+
+        <div class="output-grid">
+          <label class="field field-output">
+            <span>Token Grid</span>
+            <textarea id="token-grid-output" rows="12" readonly></textarea>
+          </label>
+
+          <label class="field field-output">
+            <span>Variant Metadata</span>
+            <textarea id="metadata-output" rows="12" readonly></textarea>
+          </label>
+        </div>
+      </section>
+    </div>
+
+    <script src="../js/layout-editor.js?v=1"></script>
+  </body>
+</html>
