@@ -63,6 +63,7 @@ class App {
         this.intentBannerHasError = false;
         this.sonosStateIsStale = false;
         this.zoneStateIsUnknown = false;
+        this.layoutMode = 'default';
     }
 
     // TODO: move to config class
@@ -78,6 +79,7 @@ class App {
     // This is the one method called from main.js
     run() {
         this.grid.init($(this.window), this);
+        this._bindLayoutWatcher();
 
         this.pubsub.setGlobal('App', this);
         this.pubsub.submit('App.Initialized', {});
@@ -89,6 +91,67 @@ class App {
                 this.onAction(p.action, p.args, { Submitted: new Date() });
             setInterval(f, p.period);
         });
+    }
+
+    _bindLayoutWatcher() {
+        var $win = $(this.window);
+        $win.on('resize', () => this._syncLayoutMode());
+        this._syncLayoutMode();
+    }
+
+    _layoutModeForViewport() {
+        var userAgent = this.window.navigator.userAgent || '';
+        var isIPhone = /iPhone|iPod/.test(userAgent);
+        var width = this.window.innerWidth || $(this.window).width();
+        var height = this.window.innerHeight || $(this.window).height();
+
+        if (!isIPhone) {
+            return 'default';
+        }
+
+        if (height > width) {
+            return 'iphonePortrait';
+        }
+
+        return 'default';
+    }
+
+    _resolveDisplayConfig(roomName) {
+        var layoutName = this._layoutModeForViewport();
+        var layoutResolved = ConfigResolver.resolveLayoutConfig(
+            this.baseConfig,
+            layoutName
+        );
+
+        return {
+            layoutName: layoutName,
+            config: ConfigResolver.resolveRoomConfig(layoutResolved, roomName),
+        };
+    }
+
+    _applyDisplayConfig(roomName) {
+        var resolved = this._resolveDisplayConfig(roomName);
+
+        this.layoutMode = resolved.layoutName;
+        this.config = resolved.config;
+        this.grid.renderConfig(resolved.config);
+
+        this.$bannerTrack = null;
+        this.renderedBanner = '';
+        this._refreshBanner();
+    }
+
+    _syncLayoutMode() {
+        if (!this.room) {
+            return;
+        }
+
+        var nextLayoutMode = this._layoutModeForViewport();
+        if (nextLayoutMode === this.layoutMode) {
+            return;
+        }
+
+        this._applyDisplayConfig(this.room);
     }
 
     _ensureBannerTrack() {
@@ -279,18 +342,10 @@ class App {
     }
 
     _applyRoomConfig(roomName) {
-        if (!this.baseConfig || !this.baseConfig.roomOverrides) {
+        if (!this.baseConfig) {
             return;
         }
-        var resolved = ConfigResolver.resolveRoomConfig(
-            this.baseConfig,
-            roomName
-        );
-        if (resolved === this.config) {
-            return;
-        }
-        this.config = resolved;
-        this.grid.updateCells(resolved.cells);
+        this._applyDisplayConfig(roomName);
     }
 
     changeRoom(toRoom) {

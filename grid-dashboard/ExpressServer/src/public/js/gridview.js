@@ -43,6 +43,45 @@ class GridView {
         return this.cells;
     }
 
+    renderConfig(config) {
+        this.config = config;
+        this.cols = config.cols;
+        this.rows = config.rows;
+        this.cells = [];
+        this.zoneCells = {};
+        this.cellsByKey = {};
+
+        this.$element.empty();
+
+        for (var row = 0; row < this.rows; row++) {
+            var tr = $('<tr>');
+            for (var col = 0; col < this.cols; col++) {
+                var cell = $('<td class="cell">');
+                cell.attr('id', 'cell-' + row + '-' + col);
+                var span = $('<div class="content"></div>');
+                cell.append(span);
+                tr.append(cell);
+            }
+            this.$element.append(tr);
+        }
+
+        this.config.cells.forEach(b => {
+            var cell = new CellView({
+                grid: this,
+                app: this.app,
+                pubsub: this.pubsub,
+                $element: this._createElement(b),
+                config: b,
+            });
+            this.cells.push(cell);
+            this.cellsByKey[this._cellKey(b.x, b.y)] = cell;
+        });
+
+        if (this.$window) {
+            this.onResize(this.$window.width(), this.$window.height());
+        }
+    }
+
     onResize(width, height) {
         var isIPhoneLandscape = this._isIPhoneLandscape(width, height);
         var body = $('body');
@@ -191,33 +230,10 @@ class GridView {
 
     init($win, app) {
         this.app = app;
+        this.$window = $win;
         var grid = this;
 
-        for (var row = 0; row < this.rows; row++) {
-            var tr = $('<tr>');
-            for (var col = 0; col < this.cols; col++) {
-                var cell = $('<td class="cell">');
-                // cell.addClass('row-'+row);
-                // cell.addClass('col-'+col);
-                cell.attr('id', 'cell-' + row + '-' + col);
-                var span = $('<div class="content"></div>');
-                cell.append(span);
-                tr.append(cell);
-            }
-            this.$element.append(tr);
-        }
-
-        this.config.cells.forEach(b => {
-            var cell = new CellView({
-                grid: grid,
-                app: this.app,
-                pubsub: this.pubsub,
-                $element: this._createElement(b),
-                config: b,
-            });
-            this.cells.push(cell);
-            this.cellsByKey[this._cellKey(b.x, b.y)] = cell;
-        });
+        this.renderConfig(this.config);
 
         $win.resize(function() {
             grid.onResize($win.width(), $win.height());

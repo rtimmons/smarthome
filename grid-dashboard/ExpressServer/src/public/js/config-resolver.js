@@ -119,8 +119,24 @@
     };
 
     const validateConfig = function(config) {
-        var baseIndex = createBaseIndex(config);
         var roomOverrides = config.roomOverrides || {};
+        var layoutOverrides = config.layoutOverrides || {};
+
+        createBaseIndex(config);
+        validateRoomOverrides(config, roomOverrides);
+
+        Object.keys(layoutOverrides).forEach(function(layoutName) {
+            var layoutConfig = resolveLayoutConfig(config, layoutName);
+            createBaseIndex(layoutConfig);
+            validateRoomOverrides(
+                layoutConfig,
+                layoutConfig.roomOverrides || {}
+            );
+        });
+    };
+
+    const validateRoomOverrides = function(config, roomOverrides) {
+        var baseIndex = createBaseIndex(config);
         Object.keys(roomOverrides).forEach(function(roomName) {
             var override = roomOverrides[roomName];
             if (!override) {
@@ -149,6 +165,21 @@
                 );
             });
         });
+    };
+
+    const resolveLayoutConfig = function(baseConfig, layoutName) {
+        var override =
+            baseConfig.layoutOverrides && baseConfig.layoutOverrides[layoutName];
+        if (!override) {
+            return baseConfig;
+        }
+
+        var resolved = Object.assign({}, baseConfig, override);
+        resolved.cells = override.cells || baseConfig.cells;
+        resolved.roomOverrides =
+            override.roomOverrides || baseConfig.roomOverrides;
+        resolved.layoutOverrides = baseConfig.layoutOverrides;
+        return resolved;
     };
 
     const mergeCells = function(baseCells, overrideCells, baseIndex) {
@@ -187,6 +218,7 @@
     };
 
     return {
+        resolveLayoutConfig: resolveLayoutConfig,
         resolveRoomConfig: resolveRoomConfig,
         validateConfig: validateConfig,
     };

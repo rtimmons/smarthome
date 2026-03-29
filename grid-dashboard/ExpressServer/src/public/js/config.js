@@ -22,6 +22,30 @@ const roomTiles = function({ xPos, roomName, emojiName }) {
     ];
 };
 
+const portraitRoomTiles = function({ yPos, roomName, emojiName }) {
+    return [
+        {
+            w: 1,
+            h: 1,
+            y: yPos,
+            x: 0,
+            emoji: emojiName,
+            activeWhenRoom: roomName,
+            onPress: { action: 'ChangeRoom', args: [roomName] },
+            onDoublePress: { action: 'AllJoin', args: [roomName] },
+        },
+        {
+            w: 1,
+            h: 1,
+            y: yPos,
+            x: 1,
+            emoji: 'Speaker',
+            togglesRoom: roomName,
+            onPress: { action: 'Music.ToggleRoom', args: [roomName] },
+        },
+    ];
+};
+
 const buildCells = function(rows, cols, cells) {
     const cellMap = {};
     cells.forEach(cell => {
@@ -83,8 +107,33 @@ const ledGridButtons = function(yPos) {
     ];
 };
 
+const portraitLedGridButtons = function(yPos) {
+    return [
+        {
+            x: 3,
+            y: yPos,
+            emoji: 'Rainbow',
+            onPress: { action: 'LedGrid.Start', args: ['rainbow'] },
+        },
+        {
+            x: 4,
+            y: yPos,
+            emoji: 'Sparkles',
+            onPress: { action: 'LedGrid.Start', args: ['sparkle'] },
+        },
+        {
+            x: 5,
+            y: yPos,
+            emoji: 'Tetris',
+            onPress: { action: 'LedGrid.Start', args: ['tetris'] },
+        },
+    ];
+};
+
 const rows = 8;
 const cols = 11;
+const portraitRows = 12;
+const portraitCols = 6;
 
 let roomX = 1;
 
@@ -582,6 +631,175 @@ const config = {
                     onPress: { action: 'Printer.Preset', args: ['S3nysytjA14'] },
                 },
             ],
+        },
+    },
+    layoutOverrides: {
+        iphonePortrait: {
+            rows: portraitRows,
+            cols: portraitCols,
+            cells: buildCells(portraitRows, portraitCols, [
+                ...portraitRoomTiles({
+                    yPos: 0,
+                    emojiName: 'Shower',
+                    roomName: 'Bathroom',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 1,
+                    emojiName: 'Kimono',
+                    roomName: 'Closet',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 2,
+                    emojiName: 'Bed',
+                    roomName: 'Bedroom',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 3,
+                    emojiName: 'Tent',
+                    roomName: 'Move',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 4,
+                    emojiName: 'Rice',
+                    roomName: 'Kitchen',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 5,
+                    emojiName: 'TV',
+                    roomName: 'Living Room',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 6,
+                    emojiName: 'Guest',
+                    roomName: 'Guest Bathroom',
+                }),
+                ...portraitRoomTiles({
+                    yPos: 7,
+                    emojiName: 'Briefcase',
+                    roomName: 'Office',
+                }),
+
+                { x: 2, y: 0, emoji: 'Boat',
+                    onPress: { action: 'Music.Favorite', args: ['Rockboat'] },
+                },
+                { x: 3, y: 0, emoji: 'Sunglasses',
+                    onPress: { action: 'Music.Favorite', args: ['Office DJ'] },
+                },
+                { x: 4, y: 0, emoji: 'MilkyWay',
+                    onPress: { action: 'Music.Favorite', args: ['Zero 7'] },
+                },
+                { x: 5, y: 0, emoji: 'SteveAoki',
+                    onPress: { action: 'Music.Favorite', args: ['735 - Steve Aoki\'s Remix Radio'] },
+                },
+
+                { x: 2, y: 1, emoji: 'Banjo',
+                    onPress: { action: 'Music.Favorite', args: ['Carbon Leaf'] },
+                },
+                { x: 3, y: 1, emoji: 'Chill',
+                    onPress: { action: 'Music.Favorite', args: ['53 - SiriusXM Chill'] },
+                },
+                { x: 4, y: 1, emoji: 'Film',
+                    onPress: { action: 'Music.Preset', args: ['$room-tv'] },
+                },
+                { x: 5, y: 1, emoji: null, onPress: null },
+
+                { x: 2, y: 2, emoji: null, onPress: null },
+                { x: 3, y: 2, emoji: null, onPress: null },
+                { x: 4, y: 2, emoji: null, onPress: null },
+                { x: 5, y: 2, emoji: null, onPress: null },
+
+                { x: 2, y: 3, emoji: null, onPress: null },
+                { x: 3, y: 3, emoji: null, onPress: null },
+                { x: 4, y: 3, emoji: null, onPress: null },
+                { x: 5, y: 3, emoji: null, onPress: null },
+
+                { x: 2, y: 4, emoji: null, onPress: null },
+                { x: 3, y: 4, emoji: null, onPress: null },
+                { x: 4, y: 4, emoji: null, onPress: null },
+                { x: 5, y: 4, emoji: null, onPress: null },
+
+                { x: 2, y: 5, emoji: 'Sun',
+                    onPress: { action: 'Lights.Scene', args: ['$room','High'] },
+                },
+                { x: 3, y: 5, emoji: 'Dim',
+                    onPress: { action: 'Lights.Scene', args: ['$room','Medium'] },
+                },
+                { x: 4, y: 5, emoji: 'Moon',
+                    onPress: { action: 'Lights.Scene', args: ['$room','Off'] },
+                    onDoublePress: { action: 'Lights.Scene', args: ['all','off'] },
+                },
+                { x: 5, y: 5, emoji: 'Klingon',
+                    onPress: { action: 'Music.VolumeSame', args: [] },
+                },
+
+                { x: 2, y: 6, emoji: 'Play',
+                    onPress: { action: 'Music.PlayPause', args: [] },
+                },
+                { x: 3, y: 6, emoji: 'Pause',
+                    onPress: { action: 'Music.Pause', args: [] },
+                },
+                { x: 4, y: 6, emoji: 'Skip',
+                    onPress: { action: 'Music.Next', args: [] },
+                },
+                { x: 5, y: 6, emoji: null, onPress: null },
+
+                { x: 2, y: 7, emoji: null, onPress: null },
+                { x: 3, y: 7, emoji: null, onPress: null },
+                { x: 4, y: 7, emoji: null, onPress: null },
+                { x: 5, y: 7, emoji: 'Notes',
+                    onPress: { action: 'App.Refresh', args: [] },
+                },
+
+                { x: 2, y: 8, emoji: null, onPress: null },
+                { x: 3, y: 8, emoji: null, onPress: null },
+                { x: 4, y: 8, emoji: null, onPress: null },
+                { x: 5, y: 8, emoji: null, onPress: null },
+
+                { x: 2, y: 9, emoji: null, onPress: null },
+                { x: 3, y: 9, emoji: null, onPress: null },
+                { x: 4, y: 9, emoji: null, onPress: null },
+                { x: 5, y: 9, emoji: null, onPress: null },
+
+                { x: 2, y: 10, emoji: null, onPress: null },
+                { x: 3, y: 10, emoji: null, onPress: null },
+                { x: 4, y: 10, emoji: null, onPress: null },
+                { x: 5, y: 10, emoji: null, onPress: null },
+
+                { x: 2, y: 11, emoji: 'Up',
+                    onPress: { action: 'Music.VolumeUp', args: [] },
+                },
+                {
+                    w: 2,
+                    h: 1,
+                    y: 11,
+                    x: 3,
+                    claz: 'state-Music',
+                    onPress: { action: 'Music.FetchState', args: [] },
+                },
+                { y: 11, x: 4, w: 0 },
+                { x: 5, y: 11, emoji: 'Down',
+                    onPress: { action: 'Music.VolumeDown', args: [] },
+                    onDoublePress: { action: 'Music.SetVolume', args: [10] },
+                },
+            ]),
+            roomOverrides: {
+                'Living Room': {
+                    cells: [
+                        ...portraitLedGridButtons(2),
+                    ],
+                },
+                Kitchen: {
+                    cells: [
+                        ...portraitLedGridButtons(2),
+                        {
+                            x: 5,
+                            y: 3,
+                            emoji: 'Calendar',
+                            onPress: { action: 'Printer.Preset', args: ['S3nysytjA14'] },
+                        },
+                    ],
+                },
+            },
         },
     },
     poll: [{ action: 'Music.FetchState', args: [], period: 2000 }],
