@@ -1,6 +1,7 @@
 class GridView {
     constructor(args) {
         this.$element = args.container;
+        this.$gridContainer = $('#grid-container');
         var config = args.config;
         this.config = config;
 
@@ -12,29 +13,74 @@ class GridView {
         this.cellsByKey = {};
     }
 
+    _isIPhoneLandscape(width, height) {
+        var userAgent = window.navigator.userAgent || '';
+        var isPhone = /iPhone|iPod/.test(userAgent);
+
+        return isPhone && width > height;
+    }
+
+    _applyTableLayout(cellWidth, cellHeight) {
+        $('.cell').each(function() {
+            var t = $(this);
+            var colspan = Number(t.attr('colspan') || 1);
+            var rowspan = Number(t.attr('rowspan') || 1);
+            var width = colspan * cellWidth;
+            var height = rowspan * cellHeight;
+            var fontSize = Math.floor((Math.min(cellWidth, cellHeight) * 2) / 3);
+
+            t.css({
+                height: height + 'px',
+                width: width + 'px',
+                maxWidth: width + 'px',
+                fontSize: fontSize + 'px',
+                lineHeight: height + 'px',
+            });
+        });
+    }
+
     allCells() {
         return this.cells;
     }
 
     onResize(width, height) {
+        var isIPhoneLandscape = this._isIPhoneLandscape(width, height);
+        var body = $('body');
+
+        body.toggleClass('layout-phone-landscape', isIPhoneLandscape);
+
+        if (isIPhoneLandscape) {
+            var cellWidth = Math.floor(width / this.cols);
+            var cellHeight = Math.floor(height / this.rows);
+
+            this.square = Math.min(cellWidth, cellHeight);
+            this._applyTableLayout(cellWidth, cellHeight);
+            this.$gridContainer.css({
+                width: width + 'px',
+                height: height + 'px',
+            });
+            this.$element.css({
+                width: (cellWidth * this.cols) + 'px',
+                height: (cellHeight * this.rows) + 'px',
+            });
+            return;
+        }
+
         var square = Math.min(
             Math.ceil(width / this.cols),
             Math.ceil(height / this.rows)
         );
-        this.square = square;
-        $('.cell').each(function() {
-            var t = $(this);
-            var width = (t.attr('colspan') || 1) * square + 'px';
-            t.css({
-                height: (t.attr('rowspan') || 1) * square + 0 + 'px',
-                width: width,
-                maxWidth: width,
-                fontSize: (square * 2) / 3 + 'px',
-                lineHeight: square + 'px',
-            });
-        });
 
-        this.$element.width((square + 2) * this.cols);
+        this.square = square;
+        this._applyTableLayout(square, square);
+        this.$gridContainer.css({
+            width: '',
+            height: '',
+        });
+        this.$element.css({
+            width: ((square + 2) * this.cols) + 'px',
+            height: '',
+        });
     }
 
     // TODO: each cell is a listener
