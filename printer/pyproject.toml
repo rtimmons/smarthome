@@ -5,7 +5,7 @@ description = "Kitchen label printing service."
 requires-python = ">=3.10"
 dependencies = [
     "flask",
-    "pillow>=10.3,<11",
+    "pillow>=10.3,<13",
     "brother-ql",
     "python-escpos",
     "cairosvg",
