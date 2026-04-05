@@ -372,6 +372,8 @@ def _get_preset_store() -> PresetStore:
         raise PresetServiceError(str(exc), status_code=500) from exc
     except RuntimeError as exc:
         raise PresetServiceError(str(exc), status_code=500) from exc
+    except Exception as exc:
+        raise PresetServiceError("Preset storage unavailable.", status_code=503) from exc
     if store is None:
         raise PresetServiceError("Presets require MONGODB_URL.", status_code=503)
     return store

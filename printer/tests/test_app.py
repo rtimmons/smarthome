@@ -749,6 +749,25 @@ def test_presets_create_list_delete(
     assert payload["count"] == 0
 
 
+def test_presets_returns_503_when_store_init_fails(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, _templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    def _raise_connection_error():
+        raise ConnectionError("localhost:27017 refused")
+
+    monkeypatch.setattr(app_module, "get_cached_store", _raise_connection_error)
+
+    response = client.get("/presets")
+
+    assert response.status_code == 503
+    payload = response.get_json()
+    assert payload is not None
+    assert payload["error"] == "Preset storage unavailable."
+
+
 def test_preset_redirects_to_bb(test_environment: Tuple, monkeypatch: pytest.MonkeyPatch) -> None:
     app_module, templates_module, flask_app, _labels_dir, _ = test_environment
     client = flask_app.test_client()

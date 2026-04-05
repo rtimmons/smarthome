@@ -32,6 +32,25 @@ setup-printer:
     @echo "✅ Printer Service setup complete"
 
 # Start the printer service in development mode
+[private]
+ensure-local-mongodb:
+    @set -e; \
+    if nc -z 127.0.0.1 27017 >/dev/null 2>&1; then \
+        exit 0; \
+    fi; \
+    echo "🗄️  Starting local MongoDB for presets..."; \
+    mkdir -p /tmp/printer-service; \
+    nohup just --justfile ../mongodb/Justfile start >/tmp/printer-service/mongodb.log 2>&1 & \
+    for _ in $(seq 1 40); do \
+        if nc -z 127.0.0.1 27017 >/dev/null 2>&1; then \
+            echo "✅ MongoDB is ready on port 27017"; \
+            exit 0; \
+        fi; \
+        sleep 0.5; \
+    done; \
+    echo "MongoDB did not become ready; see /tmp/printer-service/mongodb.log" >&2; \
+    exit 1
+
 [group: 'dev']
 start:
     @echo "🚀 Starting Printer Service..."
@@ -45,6 +64,7 @@ start:
     export PKG_CONFIG_PATH="${brew_prefix}/lib/pkgconfig:${brew_prefix}/share/pkgconfig:${PKG_CONFIG_PATH:-}"; \
     export PRINTER_DEV_RELOAD="${PRINTER_DEV_RELOAD:-1}"; \
     if [ ! -d "{{venv}}" ]; then just setup-printer; fi; \
+    just ensure-local-mongodb; \
     "{{python}}" -m printer_service.app
 
 # Kill any process using the printer service port (8099)

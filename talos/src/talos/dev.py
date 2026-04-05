@@ -45,6 +45,8 @@ SERVICE_COLORS = [
 RESTART_BACKOFF_SECONDS = 2
 RESTART_RESET_AFTER_SECONDS = 30
 MAX_RESTARTS = 5
+MONGODB_READY_TIMEOUT_SECONDS = 20.0
+MONGODB_READY_POLL_INTERVAL_SECONDS = 0.25
 
 
 class AddonConfig:
@@ -312,6 +314,11 @@ def port_is_available(port: int) -> bool:
     return True
 
 
+def port_is_listening(port: int) -> bool:
+    """Return True if a local TCP listener accepts connections on the given port."""
+    return not port_is_available(port)
+
+
 class ServiceProcess:
     """Manages a single service process with log capture."""
 
@@ -405,6 +412,22 @@ class ServiceProcess:
             self.started = True
             self.last_started_at = time.monotonic()
 
+            if self.addon.key == "mongodb" and self.addon.port:
+                ready = await self._wait_for_port_listener(
+                    self.addon.port,
+                    timeout_seconds=MONGODB_READY_TIMEOUT_SECONDS,
+                    poll_interval_seconds=MONGODB_READY_POLL_INTERVAL_SECONDS,
+                )
+                if not ready:
+                    reason = (
+                        f"MongoDB did not start listening on port {self.addon.port} within "
+                        f"{MONGODB_READY_TIMEOUT_SECONDS:.0f}s."
+                    )
+                    self._log(f"[red]{reason}[/red]")
+                    self.failure_reason = reason
+                    await self.stop()
+                    self.started = False
+
         except Exception as e:
             self._log(f"[red]Failed to start: {e}[/red]")
             self.failure_reason = str(e)
@@ -445,6 +468,23 @@ class ServiceProcess:
 
         self._log(f"[red]{hook} hook failed[/red]")
         return False
+
+    async def _wait_for_port_listener(
+        self,
+        port: int,
+        *,
+        timeout_seconds: float,
+        poll_interval_seconds: float,
+    ) -> bool:
+        """Wait until a local listener accepts connections on the given port."""
+        deadline = time.monotonic() + timeout_seconds
+        while time.monotonic() < deadline:
+            if self.process and self.process.returncode is not None:
+                return False
+            if port_is_listening(port):
+                return True
+            await asyncio.sleep(poll_interval_seconds)
+        return port_is_listening(port)
 
     async def stop(self):
         """Stop the service process gracefully."""
