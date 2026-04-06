@@ -9,6 +9,13 @@ from PIL import Image
 
 
 def _install_fake_cairosvg() -> None:
+    try:
+        import cairosvg  # noqa: F401
+
+        return
+    except Exception:
+        pass
+
     if "cairosvg" in sys.modules:
         return
 

@@ -593,6 +593,64 @@ def test_bluey_label_alt_symbol(regenerate_baselines):
     assert_visual_match(image, "bluey_alt_symbol.png", regenerate=regenerate_baselines)
 
 
+def test_bluey_label_meter_mode(regenerate_baselines):
+    """Bluey label replaces side text with mirrored meters in meter mode."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Chili",
+            "Line2": "Peppers",
+            "SymbolName": "awake",
+            "Side": "=METER",
+            "Bottom": "12/19/25",
+            "Percentage": "30:SH",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(image, "bluey_meter_mode.png", regenerate=regenerate_baselines)
+
+
+def test_bluey_label_meter_mode_zero_with_alt_symbol(regenerate_baselines):
+    """Bluey meter mode handles a low reading with an alternate symbol."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Mint",
+            "Line2": "Tea",
+            "SymbolName": "balloon-2",
+            "Side": "=METER",
+            "Bottom": "01/02/26",
+            "Percentage": "0:DRY",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image, "bluey_meter_mode_zero_alt_symbol.png", regenerate=regenerate_baselines
+    )
+
+
+def test_bluey_label_meter_mode_long_text_high_reading(regenerate_baselines):
+    """Bluey meter mode stays stable with longer titles and a high reading."""
+    template = bluey_label.TEMPLATE
+    form_data = TemplateFormData(
+        {
+            "Line1": "Fermented",
+            "Line2": "Blueberries",
+            "SymbolName": "sleep",
+            "Side": "=METER",
+            "Bottom": "08/30/26",
+            "Percentage": "100:AGED",
+        }
+    )
+
+    image = template.render(form_data)
+    assert_visual_match(
+        image, "bluey_meter_mode_long_text_high_reading.png", regenerate=regenerate_baselines
+    )
+
+
 def test_bluey_jar_label_basic(regenerate_baselines):
     """Bluey jar label with basic supplier and percentage fields."""
     template = bluey_label.TEMPLATE

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import List, Optional
 
 import qrcode  # type: ignore[import-untyped]
-from PIL import Image, ImageChops, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 from PIL.Image import Dither, Resampling
 
 from printer_service.label_specs import BrotherLabelSpec, QL810W_DPI
@@ -45,8 +46,26 @@ TITLE_FONT_POINTS = 60
 INITIALS_FONT_POINTS = 48
 DATE_FONT_POINTS = 18
 BACKGROUND_ALPHA_PERCENT = 25
+METER_BACKGROUND_ALPHA_PERCENT = 45
 INITIALS_OPACITY_PERCENT = 50
 TITLE_BLOCK_PADDING = int(round(0.16 * QL810W_DPI))
+METER_SIDE_WIDTH = 124
+METER_SIDE_TOP = 24
+METER_SIDE_BOTTOM = 48
+METER_TOP_WIDTH = 19
+METER_BOTTOM_WIDTH = METER_TOP_WIDTH * 3
+METER_DOT_RADIUS = 20
+METER_CHIP_PADDING = 3
+METER_LABEL_FONT_POINTS = int(INITIALS_FONT_POINTS * 0.75 * 0.75)
+METER_TEXT_HALO_SIZE = 7
+METER_STRIP_CENTER_INSET = 36
+TITLE_TEXT_HALO_SIZE = 13
+
+
+@dataclass(frozen=True)
+class MeterValue:
+    reading: int
+    label: str
 
 
 class Template(TemplateDefinition):
@@ -89,6 +108,7 @@ class Template(TemplateDefinition):
         available_slugs = [option["slug"] for option in options]
         symbol_slug = helper.normalize_choice(candidate=symbol_choice, options=available_slugs)
         bottom = bottom_raw
+        meter_value = self._parse_meter_value(side=side, percentage=form_data.get_str("Percentage"))
 
         renderer = LabelDrawingHelper(width=CANVAS_WIDTH_PX, height=CANVAS_HEIGHT_PX)
 
@@ -96,7 +116,11 @@ class Template(TemplateDefinition):
         helper.draw_background_symbol(
             canvas=background_canvas,
             slug=symbol_slug,
-            alpha_percent=BACKGROUND_ALPHA_PERCENT,
+            alpha_percent=(
+                METER_BACKGROUND_ALPHA_PERCENT
+                if meter_value is not None
+                else BACKGROUND_ALPHA_PERCENT
+            ),
         )
         renderer.move_to(TOP_MARGIN)
 
@@ -150,15 +174,12 @@ class Template(TemplateDefinition):
                     ) // gaps
                     title_block_padding = max(0, min(TITLE_BLOCK_PADDING, max_padding))
 
+        title_draw_ops: list[tuple[str, int, str]] = []
         if title_lines:
             for repeat_index in range(TITLE_REPEAT_COUNT):
-                for line_index, (text, _metrics, label_name) in enumerate(title_lines):
-                    renderer.draw_centered_text(
-                        text=text,
-                        font=title_font,
-                        width_warning=f"{label_name} is wider than the label and will be clipped.",
-                        height_warning="Text exceeds label height and may be clipped.",
-                    )
+                for line_index, (text, metrics, label_name) in enumerate(title_lines):
+                    title_draw_ops.append((text, renderer.current_y, label_name))
+                    renderer.move_to(renderer.current_y + metrics.height)
                     if line_index == 0 and len(title_lines) > 1:
                         renderer.advance(LINE2_OFFSET)
                 if repeat_index < TITLE_REPEAT_COUNT - 1:
@@ -166,7 +187,37 @@ class Template(TemplateDefinition):
 
         renderer.advance(SYMBOL_SECTION_SPACING)
 
-        if side:
+        if meter_value is not None:
+            left_center_x, right_center_x, meter_strip_mask = self._draw_side_meter_background(
+                background_canvas=background_canvas,
+                meter_value=meter_value,
+            )
+            meter_geometry: tuple[int, int] | None = (left_center_x, right_center_x)
+        else:
+            meter_geometry = None
+            meter_strip_mask = None
+
+        for text, top, label_name in title_draw_ops:
+            self._draw_centered_text_with_halo(
+                renderer=renderer,
+                background_canvas=background_canvas,
+                background_clear_mask=meter_strip_mask,
+                text=text,
+                font=title_font,
+                top=top,
+                width_warning=f"{label_name} is wider than the label and will be clipped.",
+                height_warning="Text exceeds label height and may be clipped.",
+            )
+
+        if meter_value is not None and meter_geometry is not None:
+            self._draw_side_meter_foreground(
+                renderer=renderer,
+                background_canvas=background_canvas,
+                meter_value=meter_value,
+                left_center_x=meter_geometry[0],
+                right_center_x=meter_geometry[1],
+            )
+        elif side:
             initials_top_margin: Optional[int] = None
             initials_min_top: Optional[int] = None
             initials_center = True
@@ -224,6 +275,204 @@ class Template(TemplateDefinition):
         if renderer.warnings:
             result.info["label_warnings"] = list(renderer.warnings)
         return result
+
+    def _parse_meter_value(self, *, side: str, percentage: str) -> Optional[MeterValue]:
+        if side != "=METER":
+            return None
+
+        reading_text, separator, label = percentage.partition(":")
+        if separator != ":" or not reading_text.strip() or not label.strip():
+            raise ValueError("Meter mode requires Percentage in the form reading:label.")
+
+        try:
+            reading = int(reading_text.strip())
+        except ValueError as exc:
+            raise ValueError("Meter mode requires Percentage in the form reading:label.") from exc
+
+        return MeterValue(reading=max(0, min(100, reading)), label=label.strip())
+
+    def _draw_side_meter_background(
+        self,
+        *,
+        background_canvas: Image.Image,
+        meter_value: MeterValue,
+    ) -> tuple[int, int, Image.Image]:
+        left_bounds = (
+            INITIALS_SIDE_MARGIN,
+            METER_SIDE_TOP,
+            INITIALS_SIDE_MARGIN + METER_SIDE_WIDTH,
+        )
+        right_bounds = (
+            CANVAS_WIDTH_PX - INITIALS_SIDE_MARGIN - METER_SIDE_WIDTH,
+            METER_SIDE_TOP,
+            CANVAS_WIDTH_PX - INITIALS_SIDE_MARGIN,
+        )
+        combined_mask = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=0)
+
+        left_center_x, left_mask = self._draw_meter(
+            background_canvas=background_canvas,
+            bounds=left_bounds,
+            reading=meter_value.reading,
+            center_x=left_bounds[0] + METER_STRIP_CENTER_INSET,
+        )
+        combined_mask.paste(255, (0, 0), left_mask)
+        right_center_x, right_mask = self._draw_meter(
+            background_canvas=background_canvas,
+            bounds=right_bounds,
+            reading=meter_value.reading,
+            center_x=right_bounds[2] - METER_STRIP_CENTER_INSET,
+        )
+        combined_mask.paste(255, (0, 0), right_mask)
+        return left_center_x, right_center_x, combined_mask
+
+    def _draw_side_meter_foreground(
+        self,
+        *,
+        renderer: LabelDrawingHelper,
+        background_canvas: Image.Image,
+        meter_value: MeterValue,
+        left_center_x: int,
+        right_center_x: int,
+    ) -> None:
+        self._draw_meter_dot(renderer=renderer, center_x=left_center_x, reading=meter_value.reading)
+        self._draw_meter_dot(
+            renderer=renderer, center_x=right_center_x, reading=meter_value.reading
+        )
+        self._draw_meter_chip(
+            renderer=renderer,
+            background_canvas=background_canvas,
+            text=str(meter_value.reading),
+            center_x=left_center_x,
+            reading=meter_value.reading,
+        )
+        self._draw_meter_chip(
+            renderer=renderer,
+            background_canvas=background_canvas,
+            text=meter_value.label,
+            center_x=right_center_x,
+            reading=meter_value.reading,
+        )
+
+    def _draw_meter(
+        self,
+        *,
+        background_canvas: Image.Image,
+        bounds: tuple[int, int, int],
+        reading: int,
+        center_x: int,
+    ) -> tuple[int, Image.Image]:
+        left, top, right = bounds
+        tube_top = top
+        tube_bottom = CANVAS_HEIGHT_PX - METER_SIDE_BOTTOM
+        stem_mask = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=0)
+        stem_draw = ImageDraw.Draw(stem_mask)
+        half_top = METER_TOP_WIDTH / 2
+        half_bottom = METER_BOTTOM_WIDTH / 2
+        polygon = [
+            (center_x - half_top, tube_top),
+            (center_x + half_top, tube_top),
+            (center_x + half_bottom, tube_bottom),
+            (center_x - half_bottom, tube_bottom),
+        ]
+        stem_draw.polygon(polygon, fill=255)
+
+        gradient = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=255)
+        gradient_pixels = gradient.load()
+        assert gradient_pixels is not None
+        usable_height = max(1, tube_bottom - tube_top)
+        for y in range(tube_top, tube_bottom + 1):
+            progress = (y - tube_top) / usable_height
+            opacity = min(1.0, max(0.0, (progress / 0.8) ** 0.7))
+            shade = int(round(255 * (1.0 - opacity)))
+            for x in range(max(0, left - 8), min(CANVAS_WIDTH_PX, right + 8)):
+                gradient_pixels[x, y] = shade
+
+        background_canvas.paste(gradient, (0, 0), stem_mask)
+
+        return center_x, stem_mask
+
+    def _draw_meter_dot(self, *, renderer: LabelDrawingHelper, center_x: int, reading: int) -> None:
+        chip_font = helper.load_font(size_points=METER_LABEL_FONT_POINTS)
+        text_height = renderer.measure_text(text="30", font=chip_font).height
+        rect_height = max(1, text_height // 2)
+        rect_width = max(METER_BOTTOM_WIDTH + 10, rect_height * 2)
+        dot_center_y = self._reading_center_y(reading)
+        renderer.draw.rectangle(
+            (
+                center_x - (rect_width // 2),
+                dot_center_y - (rect_height // 2),
+                center_x + (rect_width // 2),
+                dot_center_y + (rect_height // 2),
+            ),
+            fill=0,
+        )
+
+    def _draw_meter_chip(
+        self,
+        *,
+        renderer: LabelDrawingHelper,
+        background_canvas: Image.Image,
+        text: str,
+        center_x: int,
+        reading: int,
+    ) -> None:
+        chip_font = helper.load_font(size_points=METER_LABEL_FONT_POINTS)
+        bbox = renderer.draw.textbbox((0, 0), text, font=chip_font)
+        text_width = int(round(bbox[2] - bbox[0]))
+        text_height = int(round(bbox[3] - bbox[1]))
+        chip_width = text_width + (2 * METER_CHIP_PADDING)
+        chip_height = text_height + (2 * METER_CHIP_PADDING)
+        dot_center_y = self._reading_center_y(reading)
+        chip_top = dot_center_y - (chip_height // 2)
+        chip_left = center_x - (chip_width // 2)
+
+        text_x = chip_left + METER_CHIP_PADDING - bbox[0]
+        text_y = chip_top + METER_CHIP_PADDING - bbox[1]
+        text_mask = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=0)
+        text_draw = ImageDraw.Draw(text_mask)
+        text_draw.text((text_x, text_y), text, fill=255, font=chip_font)
+        halo_mask = text_mask.filter(ImageFilter.MaxFilter(size=METER_TEXT_HALO_SIZE))
+        background_canvas.paste(255, (0, 0), halo_mask)
+        renderer.canvas.paste(255, (0, 0), halo_mask)
+        renderer.canvas.paste(0, (0, 0), text_mask)
+
+    def _reading_center_y(self, reading: int) -> int:
+        tube_top = METER_SIDE_TOP
+        tube_bottom = CANVAS_HEIGHT_PX - METER_SIDE_BOTTOM
+        usable_height = max(1, tube_bottom - tube_top)
+        return tube_top + int(round((reading / 100) * usable_height))
+
+    def _draw_centered_text_with_halo(
+        self,
+        *,
+        renderer: LabelDrawingHelper,
+        background_canvas: Image.Image,
+        background_clear_mask: Image.Image | None,
+        text: str,
+        font: helper.FontType,
+        top: int,
+        width_warning: str | None = None,
+        height_warning: str | None = None,
+    ) -> None:
+        metrics = renderer.measure_text(text=text, font=font)
+        left = (CANVAS_WIDTH_PX - metrics.width) // 2
+        bottom_edge = top + metrics.height
+        if metrics.width > CANVAS_WIDTH_PX:
+            renderer.add_warning(
+                width_warning or "Text is wider than the label and will be clipped."
+            )
+        if bottom_edge > CANVAS_HEIGHT_PX:
+            renderer.add_warning(height_warning or "Text exceeds label height and may be clipped.")
+
+        text_mask = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=0)
+        text_draw = ImageDraw.Draw(text_mask)
+        text_draw.text((left, top), text, fill=255, font=font)
+        halo_mask = text_mask.filter(ImageFilter.MaxFilter(size=TITLE_TEXT_HALO_SIZE))
+        if background_clear_mask is not None:
+            restricted_halo = ImageChops.multiply(halo_mask, background_clear_mask)
+            background_canvas.paste(255, (0, 0), restricted_halo)
+        renderer.canvas.paste(255, (0, 0), halo_mask)
+        renderer.canvas.paste(0, (0, 0), text_mask)
 
     def _render_jar_label(self, form_data: TemplateFormData) -> Image.Image:
         """Render a portrait-oriented jar label with HTML table layout."""
