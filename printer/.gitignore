@@ -4,3 +4,5 @@ label-output.png
 developers.home-assistant/
 build/
 tests/baselines/DIFF_*.png
+tests/baselines/ENHANCED_*.png
+tests/baselines/visual-diff-report.html

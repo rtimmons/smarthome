@@ -43,7 +43,9 @@ See docs/testing.md for complete documentation.
 from __future__ import annotations
 
 import hashlib
+import html
 import importlib
+from datetime import datetime
 from datetime import date
 from pathlib import Path
 from typing import Tuple
@@ -60,6 +62,205 @@ from printer_service.label_templates.base import TemplateFormData
 # Directory for baseline images
 BASELINE_DIR = Path(__file__).parent / "baselines"
 BASELINE_DIR.mkdir(exist_ok=True)
+VISUAL_REPORT_PATH = BASELINE_DIR / "visual-diff-report.html"
+
+
+def _diff_path_for(baseline_name: str) -> Path:
+    """Return the diff image path for a baseline."""
+    return BASELINE_DIR / f"DIFF_{baseline_name}"
+
+
+def _enhanced_diff_path_for(baseline_name: str) -> Path:
+    """Return the enhanced diff image path for a baseline."""
+    return BASELINE_DIR / f"ENHANCED_{Path(baseline_name).stem}.png"
+
+
+def _write_visual_report() -> None:
+    """Write a browser-friendly side-by-side report for current diffs."""
+    diff_paths = sorted(BASELINE_DIR.glob("DIFF_*.png"))
+    if not diff_paths:
+        VISUAL_REPORT_PATH.unlink(missing_ok=True)
+        return
+
+    generated_at = datetime.now().astimezone().strftime("%Y-%m-%d %H:%M:%S %Z")
+    cases: list[str] = []
+
+    for diff_path in diff_paths:
+        baseline_name = diff_path.name.removeprefix("DIFF_")
+        baseline_path = BASELINE_DIR / baseline_name
+        if baseline_path.exists():
+            expected_markup = (
+                f'<img src="{html.escape(baseline_path.name, quote=True)}" '
+                f'alt="Expected {html.escape(baseline_name)}">'
+            )
+        else:
+            expected_markup = '<div class="missing">Expected baseline is missing.</div>'
+
+        cases.append(
+            f"""
+            <section class="case">
+              <div class="case-header">
+                <h2>{html.escape(baseline_name)}</h2>
+                <p>{html.escape(str(baseline_path))}</p>
+              </div>
+              <div class="comparison">
+                <article class="panel">
+                  <h3>Expected Baseline</h3>
+                  <p class="panel-meta">{html.escape(baseline_path.name)}</p>
+                  {expected_markup}
+                </article>
+                <article class="panel">
+                  <h3>Actual Render</h3>
+                  <p class="panel-meta">{html.escape(diff_path.name)}</p>
+                  <img src="{html.escape(diff_path.name, quote=True)}" alt="Actual {html.escape(baseline_name)}">
+                </article>
+              </div>
+            </section>
+            """
+        )
+
+    report_html = f"""<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Printer Visual Regression Report</title>
+    <style>
+      :root {{
+        color-scheme: light;
+        --bg: #f4f1eb;
+        --surface: #fffdf9;
+        --surface-strong: #ffffff;
+        --border: #d9d1c7;
+        --text: #1f1a17;
+        --muted: #6e6258;
+        --expected: #2f6b3b;
+        --actual: #a12a2a;
+      }}
+      * {{
+        box-sizing: border-box;
+      }}
+      body {{
+        margin: 0;
+        font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Georgia, serif;
+        background: linear-gradient(180deg, #fbf8f2 0%, var(--bg) 100%);
+        color: var(--text);
+      }}
+      header {{
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        background: rgba(255, 253, 249, 0.94);
+        backdrop-filter: blur(8px);
+      }}
+      h1, h2, h3, p {{
+        margin: 0;
+      }}
+      header p {{
+        margin-top: 0.35rem;
+        color: var(--muted);
+      }}
+      main {{
+        padding: 1.25rem;
+        display: grid;
+        gap: 1rem;
+      }}
+      .case {{
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 18px;
+        box-shadow: 0 12px 32px rgba(43, 31, 17, 0.08);
+        overflow: hidden;
+      }}
+      .case-header {{
+        padding: 1rem 1.25rem;
+        border-bottom: 1px solid var(--border);
+        background: linear-gradient(135deg, #fffdf9 0%, #f6efe5 100%);
+      }}
+      .case-header p {{
+        margin-top: 0.35rem;
+        color: var(--muted);
+        font-size: 0.95rem;
+        word-break: break-all;
+      }}
+      .comparison {{
+        display: grid;
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+        gap: 1rem;
+        padding: 1rem;
+      }}
+      .panel {{
+        background: var(--surface-strong);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 0.9rem;
+      }}
+      .panel h3 {{
+        margin-bottom: 0.75rem;
+        font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 0.95rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+      }}
+      .panel-meta {{
+        margin-bottom: 0.75rem;
+        color: var(--muted);
+        font-family: "Avenir Next", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 0.85rem;
+        word-break: break-all;
+      }}
+      .panel:first-child h3 {{
+        color: var(--expected);
+      }}
+      .panel:last-child h3 {{
+        color: var(--actual);
+      }}
+      img {{
+        display: block;
+        width: 100%;
+        height: auto;
+        background: white;
+        border: 1px solid #ece4d9;
+        border-radius: 10px;
+      }}
+      .missing {{
+        padding: 1rem;
+        border: 1px dashed var(--border);
+        border-radius: 10px;
+        color: var(--muted);
+        background: #faf6ef;
+      }}
+      @media (max-width: 900px) {{
+        .comparison {{
+          grid-template-columns: 1fr;
+        }}
+      }}
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Printer Visual Regression Report</h1>
+      <p>{len(diff_paths)} failing baseline(s) • generated {html.escape(generated_at)}</p>
+    </header>
+    <main>{"".join(cases)}</main>
+  </body>
+</html>
+"""
+    VISUAL_REPORT_PATH.write_text(report_html, encoding="utf-8")
+
+
+def _remove_stale_visual_artifacts(baseline_name: str) -> None:
+    """Remove stale diff artifacts and refresh the report if needed."""
+    removed_artifact = False
+    for artifact_path in (_diff_path_for(baseline_name), _enhanced_diff_path_for(baseline_name)):
+        if artifact_path.exists():
+            artifact_path.unlink()
+            removed_artifact = True
+
+    if removed_artifact:
+        _write_visual_report()
 
 
 def _image_hash(image: Image.Image) -> str:
@@ -156,34 +357,68 @@ def assert_visual_match(
         >>> assert_visual_match(image, "my_test.png", regenerate=regenerate_baselines)
     """
     baseline_path = BASELINE_DIR / baseline_name
+    diff_path = _diff_path_for(baseline_name)
 
     if regenerate or not baseline_path.exists():
         # Generate/update baseline
         rendered.save(baseline_path)
+        _remove_stale_visual_artifacts(baseline_name)
         print(f"Generated baseline: {baseline_path}")
         return
 
     # Compare against baseline
     baseline = Image.open(baseline_path)
 
-    if not _images_match(rendered, baseline, tolerance):
-        # Save the diff for inspection
-        diff_path = BASELINE_DIR / f"DIFF_{baseline_name}"
-        rendered.save(diff_path)
+    if _images_match(rendered, baseline, tolerance):
+        _remove_stale_visual_artifacts(baseline_name)
+        return
 
-        raise AssertionError(
-            f"Visual regression failure: {baseline_name}\n"
-            f"  Expected: {baseline_path}\n"
-            f"  Got: {diff_path}\n"
-            f"  Image size: expected={baseline.size}, got={rendered.size}\n"
-            f"  To update all baselines: pytest {__file__} --regenerate-baselines"
-        )
+    # Save the diff for inspection
+    rendered.save(diff_path)
+    _write_visual_report()
+
+    raise AssertionError(
+        f"Visual regression failure: {baseline_name}\n"
+        f"  Expected: {baseline_path}\n"
+        f"  Got: {diff_path}\n"
+        f"  HTML report: {VISUAL_REPORT_PATH}\n"
+        f"  Image size: expected={baseline.size}, got={rendered.size}\n"
+        f"  To update all baselines: pytest {__file__} --regenerate-baselines"
+    )
 
 
 @pytest.fixture
 def regenerate_baselines(request):
     """Fixture to check if --regenerate-baselines flag was passed."""
     return request.config.getoption("--regenerate-baselines", default=False)
+
+
+def test_visual_report_generated_for_failures(tmp_path, monkeypatch):
+    """Failed comparisons should leave behind a browser-friendly report."""
+    monkeypatch.setitem(globals(), "BASELINE_DIR", tmp_path)
+    monkeypatch.setitem(globals(), "VISUAL_REPORT_PATH", tmp_path / "visual-diff-report.html")
+
+    baseline_name = "example.png"
+    baseline = Image.new("RGB", (12, 12), "white")
+    actual = Image.new("RGB", (12, 12), "black")
+    baseline.save(tmp_path / baseline_name)
+
+    with pytest.raises(AssertionError) as exc_info:
+        assert_visual_match(actual, baseline_name)
+
+    diff_path = tmp_path / f"DIFF_{baseline_name}"
+    report_path = tmp_path / "visual-diff-report.html"
+    assert diff_path.exists()
+    assert report_path.exists()
+
+    report_html = report_path.read_text(encoding="utf-8")
+    assert baseline_name in report_html
+    assert f"DIFF_{baseline_name}" in report_html
+    assert str(report_path) in str(exc_info.value)
+
+    assert_visual_match(baseline.copy(), baseline_name)
+    assert not diff_path.exists()
+    assert not report_path.exists()
 
 
 # =============================================================================
@@ -489,6 +724,7 @@ def test_bluey_label_repeated_titles(regenerate_baselines):
         {
             "Line1": "Leftovers",
             "Line2": "Casserole",
+            "SymbolName": "sun",
             "Side": "xy",
         }
     )

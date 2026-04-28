@@ -107,6 +107,7 @@ When a visual regression test fails:
 AssertionError: Visual regression failure: best_by_simple_date.png
   Expected: /path/to/tests/baselines/best_by_simple_date.png
   Got: /path/to/tests/baselines/DIFF_best_by_simple_date.png
+  HTML report: /path/to/tests/baselines/visual-diff-report.html
   Image size: expected=(306, 991), got=(306, 991)
   To update all baselines: pytest tests/test_visual_regression.py --regenerate-baselines
 ```
@@ -114,7 +115,7 @@ AssertionError: Visual regression failure: best_by_simple_date.png
 This means:
 1. The rendered label differs from the baseline
 2. A `DIFF_*.png` file was created with the new rendering
-3. Open both files side-by-side to see what changed
+3. Open `tests/baselines/visual-diff-report.html` in Firefox to compare expected vs. actual side-by-side
 4. If the change is intentional, regenerate baselines
 5. If the change is unintentional, fix the code
 

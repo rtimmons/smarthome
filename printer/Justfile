@@ -276,14 +276,15 @@ visual-diff-help:
 [group: 'test']
 test-visual:
     #!/usr/bin/env bash
-    @echo "🧪 Running visual regression tests..."
-    @set -e
-    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
-    @if "{{python}}" -m pytest tests/test_visual_regression.py -v; then \
+    echo "🧪 Running visual regression tests..."
+    set -e
+    if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    if "{{python}}" -m pytest tests/test_visual_regression.py -v; then \
         echo "✅ All visual tests passed!"; \
     else \
         echo ""; \
         echo "❌ Visual tests failed. Showing differences..."; \
+        echo "🦊 Open tests/baselines/visual-diff-report.html in Firefox for side-by-side review."; \
         scripts/visual-diff.sh --summary; \
     fi
 
@@ -291,8 +292,8 @@ test-visual:
 [group: 'test']
 test-visual-update:
     #!/usr/bin/env bash
-    @echo "🧪 Running visual regression tests with baseline updates..."
-    @set -e
-    @if [ ! -d "{{venv}}" ]; then just setup-printer; fi
-    @"{{python}}" -m pytest tests/test_visual_regression.py --regenerate-baselines -v
-    @echo "✅ Visual tests completed and baselines updated!"
+    echo "🧪 Running visual regression tests with baseline updates..."
+    set -e
+    if [ ! -d "{{venv}}" ]; then just setup-printer; fi
+    "{{python}}" -m pytest tests/test_visual_regression.py --regenerate-baselines -v
+    echo "✅ Visual tests completed and baselines updated!"

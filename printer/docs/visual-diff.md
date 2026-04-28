@@ -9,6 +9,7 @@ The visual diff system provides multiple ways to review and manage visual differ
 - **Interactive Review**: Step through differences one by one with inline images
 - **Grid Overview**: Thumbnail grid showing all differences at once
 - **Text Summary**: Quick text-based overview of all differences
+- **Firefox Report**: Open `tests/baselines/visual-diff-report.html` for browser-based side-by-side review
 - **Integrated Testing**: Automatic diff display when tests fail
 
 ## Quick Start
@@ -28,6 +29,9 @@ just visual-diff
 
 # Run tests and automatically show diffs if any fail
 just test-visual
+
+# Open the browser-friendly side-by-side report
+firefox tests/baselines/visual-diff-report.html
 ```
 
 ## Commands Reference
@@ -95,6 +99,7 @@ When using `just visual-diff`:
 printer/tests/baselines/
 ├── baseline_image.png          # Expected result
 ├── DIFF_baseline_image.png     # Actual result (when test fails)
+├── visual-diff-report.html     # Firefox-friendly side-by-side review
 └── ...
 ```
 
