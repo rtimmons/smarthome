@@ -227,7 +227,7 @@ def svg_symbol_directory() -> Path:
 # Expose symbol discovery helpers for modules that manage filesystem enumeration directly.
 def render_svg_symbol(*, path: Path, output_width: int) -> Image.Image:
     """Rasterise the SVG at ``path`` to a luminance+alpha image."""
-    raster = _render_svg_symbol_cached(path.resolve(), output_width)
+    raster = _render_svg_symbol_cached(path.resolve(), output_width, _svg2png_cache_token())
     return raster.copy()
 
 
@@ -542,8 +542,16 @@ class LabelDrawingHelper:
         return _finalize_label_image(self._canvas, self._warnings, monochrome=monochrome)
 
 
+def _svg2png_cache_token() -> int:
+    """Return a cache token for the active SVG rasterizer implementation."""
+    if cairosvg is None:
+        return 0
+    return id(cairosvg.svg2png)
+
+
 @lru_cache(maxsize=128)
-def _render_svg_symbol_cached(path: Path, output_width: int) -> Image.Image:
+def _render_svg_symbol_cached(path: Path, output_width: int, rasterizer_token: int) -> Image.Image:
+    del rasterizer_token
     if cairosvg is None:
         raise RuntimeError("cairosvg is required to render SVG symbols but is not installed.")
     buffer = io.BytesIO()

@@ -134,6 +134,32 @@ def test_render_svg_symbol_returns_copy(monkeypatch: pytest.MonkeyPatch, tmp_pat
     assert image2.getpixel((0, 0)) != (255, 255)
 
 
+def test_render_svg_symbol_cache_tracks_active_rasterizer(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    svg_path = tmp_path / "icon.svg"
+    svg_path.write_text("<svg/>", encoding="utf-8")
+    helper._render_svg_symbol_cached.cache_clear()
+
+    def fake_svg2png_dark(*, url=None, write_to=None, output_width=None, **_kwargs):
+        image = Image.new("LA", (output_width or 10, output_width or 10), (0, 255))
+        image.save(write_to, format="PNG")
+        write_to.seek(0)
+
+    def fake_svg2png_light(*, url=None, write_to=None, output_width=None, **_kwargs):
+        image = Image.new("LA", (output_width or 10, output_width or 10), (255, 255))
+        image.save(write_to, format="PNG")
+        write_to.seek(0)
+
+    monkeypatch.setattr(helper.cairosvg, "svg2png", fake_svg2png_dark)
+    dark = helper.render_svg_symbol(path=svg_path, output_width=20)
+
+    monkeypatch.setattr(helper.cairosvg, "svg2png", fake_svg2png_light)
+    light = helper.render_svg_symbol(path=svg_path, output_width=20)
+
+    assert dark.getpixel((0, 0)) != light.getpixel((0, 0))
+
+
 def test_normalize_choice_validates_options():
     options = ["sleep", "focus"]
     assert helper.normalize_choice(candidate="Sleep", options=options) == "sleep"
