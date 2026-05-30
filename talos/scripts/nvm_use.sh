@@ -12,10 +12,16 @@ error_exit() {
 
 trap 'error_exit ${LINENO} "Script failed"' ERR
 
-echo "[nvm_use] Starting nvm initialization..." >&2
+debug() {
+  if [ "${NVM_USE_DEBUG:-0}" = "1" ]; then
+    echo "[nvm_use] $*" >&2
+  fi
+}
+
+debug "Starting nvm initialization..."
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)" || error_exit ${LINENO} "Failed to determine script directory"
-echo "[nvm_use] Script directory: $SCRIPT_DIR" >&2
+debug "Script directory: $SCRIPT_DIR"
 
 # Allow REPO_ROOT to be overridden for testing
 if [ -z "${REPO_ROOT:-}" ]; then
@@ -25,7 +31,7 @@ if [ -z "${REPO_ROOT:-}" ]; then
     REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
   fi
 fi
-echo "[nvm_use] Repository root: $REPO_ROOT" >&2
+debug "Repository root: $REPO_ROOT"
 
 DEFAULT_NVMRC="$REPO_ROOT/.nvmrc"
 LOCAL_NVMRC="$(pwd)/.nvmrc"
@@ -37,7 +43,7 @@ if [ -z "${NVM_VERSION_FILE:-}" ]; then
     NVM_VERSION_FILE="$DEFAULT_NVMRC"
   fi
 fi
-echo "[nvm_use] Using version file: $NVM_VERSION_FILE" >&2
+debug "Using version file: $NVM_VERSION_FILE"
 
 if [ ! -f "$NVM_VERSION_FILE" ]; then
   error_exit ${LINENO} "Missing $NVM_VERSION_FILE; cannot select Node runtime."
@@ -46,12 +52,12 @@ fi
 # Use self-contained nvm directory (not in user's home)
 export NVM_DIR="$REPO_ROOT/build/nvm"
 NVM_SH="$NVM_DIR/nvm-src/nvm.sh"
-echo "[nvm_use] NVM_DIR: $NVM_DIR" >&2
-echo "[nvm_use] Looking for nvm.sh at: $NVM_SH" >&2
+debug "NVM_DIR: $NVM_DIR"
+debug "Looking for nvm.sh at: $NVM_SH"
 
 # Ensure nvm is installed
 if [ ! -f "$NVM_SH" ]; then
-  echo "[nvm_use] nvm not found; installing..." >&2
+  debug "nvm not found; installing..."
   "$SCRIPT_DIR/setup_nvm.sh" || error_exit ${LINENO} "Failed to install nvm via setup_nvm.sh"
 fi
 
@@ -60,7 +66,7 @@ if [ ! -f "$NVM_SH" ]; then
   error_exit ${LINENO} "nvm.sh still not found at $NVM_SH after setup"
 fi
 
-echo "[nvm_use] Sourcing nvm.sh with --no-use..." >&2
+debug "Sourcing nvm.sh with --no-use..."
 # Source nvm with --no-use flag to prevent auto-activation of .nvmrc versions
 # On fresh machines, nvm.sh tries to auto-activate the version in .nvmrc during sourcing,
 # which fails if Node.js isn't installed yet. --no-use prevents this behavior.
@@ -97,26 +103,26 @@ fi
 rm -f "$NVM_SOURCE_LOG"
 
 # Verify nvm is available
-echo "[nvm_use] Verifying nvm command is available..." >&2
+debug "Verifying nvm command is available..."
 if ! command -v nvm >/dev/null 2>&1; then
   error_exit ${LINENO} "nvm command not available after sourcing $NVM_SH"
 fi
 
 # Install and use the required Node.js version
 required=$(tr -d '[:space:]' < "$NVM_VERSION_FILE")
-echo "[nvm_use] Required Node.js version: $required" >&2
+debug "Required Node.js version: $required"
 
 if [ "$(nvm version "$required" 2>/dev/null || echo N/A)" = "N/A" ]; then
-  echo "[nvm_use] Installing Node $required via nvm..." >&2
+  debug "Installing Node $required via nvm..."
   nvm install "$required" || error_exit ${LINENO} "Failed to install Node $required"
 fi
 
 # Activate the required version
-echo "[nvm_use] Activating Node $required..." >&2
+debug "Activating Node $required..."
 if ! nvm use --silent "$required" >/dev/null 2>&1; then
-  echo "[nvm_use] Node $required not active; installing again..." >&2
+  debug "Node $required not active; installing again..."
   nvm install "$required" || error_exit ${LINENO} "Failed to reinstall Node $required"
   nvm use --silent "$required" >/dev/null || error_exit ${LINENO} "nvm use failed after reinstall"
 fi
 
-echo "[nvm_use] Successfully initialized Node.js $(node --version 2>/dev/null || echo 'unknown')" >&2
+debug "Successfully initialized Node.js $(node --version 2>/dev/null || echo 'unknown')"

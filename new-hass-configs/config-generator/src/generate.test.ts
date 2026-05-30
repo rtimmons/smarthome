@@ -271,7 +271,7 @@ describe("Scene Generation with Pairing", () => {
 
       const calls = generateFastCalls(scenes.bathroom_high);
 
-      expect(calls).toHaveLength(5);
+      expect(calls).toHaveLength(2);
       expect(calls.every((call: any) => call.target.entity_id.length === 1)).toBe(true);
     });
 
@@ -317,6 +317,27 @@ describe("Scene Generation with Pairing", () => {
             call.target.entity_id.includes("switch.light_office_pianolight")
         )
       ).toBe(true);
+    });
+
+    it("should keep living_room_high in a single parallel step with the default cap", () => {
+      const { generateFastScripts } = require("./generate-test-helper");
+
+      const scripts = generateFastScripts({ living_room_high: scenes.living_room_high });
+      const script = scripts.fast_scene_living_room_high;
+
+      expect(script.sequence).toHaveLength(1);
+    });
+
+    it("should allow callers to lower the batching cap when needed", () => {
+      const { generateFastScripts } = require("./generate-test-helper");
+
+      const scripts = generateFastScripts(
+        { living_room_high: scenes.living_room_high },
+        { maxZwaveCallsPerStep: 8 }
+      );
+      const script = scripts.fast_scene_living_room_high;
+
+      expect(script.sequence.length).toBeGreaterThan(1);
     });
 
     it("should restore kitchen upper/lower brightness in high scenes", () => {

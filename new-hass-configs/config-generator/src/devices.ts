@@ -61,29 +61,9 @@ export const devices: DeviceRegistry = {
       capabilities: ["brightness"]
     },
 
-    // Bathroom lights - Z-Wave dimmers with non-dimmable fixtures (on/off only)
-    bathroom_sauna: {
-      entity: "light.bathroom_light_sauna",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
-    },
-    bathroom_shower: {
-      entity: "light.bathroom_light_shower",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
-    },
+    // Bathroom lights - currently active live entities
     bathroom_vanityleft: {
       entity: "light.light_bathroom_vanityleft",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
-    },
-    bathroom_vanityright: {
-      entity: "light.bathroom_light_vanityright",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
-    },
-    bathroom_vanitysconces: {
-      entity: "light.bathroom_light_vanitysconces",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },

@@ -8,9 +8,11 @@ import { execFileSync } from "child_process";
 import { devices } from "../devices";
 import { scenes } from "../scenes";
 import {
+  DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
   generateFastSceneCalls,
   generateSceneEntities,
   generateSceneTargets,
+  getFastSceneScriptEntityId,
 } from "../scene-generation";
 import { Device } from "../types";
 
@@ -24,6 +26,9 @@ interface Options {
   outputDir?: string;
   sceneIds: string[];
   logLines: number;
+  settleTimeoutMs: number;
+  pollIntervalMs: number;
+  failOnDrift: boolean;
 }
 
 interface CacheEntry<T> {
@@ -125,6 +130,29 @@ interface SceneParallelismFinding {
   entityIds: string[];
 }
 
+interface RegistryDriftSummary {
+  total: number;
+  missingEntityCount: number;
+  mismatchedDeviceCount: number;
+}
+
+interface ExercisedEntityState {
+  entityId: string;
+  desiredState: string;
+  actualState?: string;
+  desiredAttributes?: Record<string, any>;
+  actualAttributes?: Record<string, any>;
+}
+
+interface SceneExerciseResult {
+  sceneId: string;
+  scriptEntityId: string;
+  targetCount: number;
+  reachedSteadyState: boolean;
+  settleTimeMs: number;
+  pending: ExercisedEntityState[];
+}
+
 const SSH_OPTIONS = [
   "-o",
   "BatchMode=yes",
@@ -138,6 +166,9 @@ function parseArgs(argv: string[]): Options {
     server: "http://homeassistant.local:8123",
     sceneIds: [],
     logLines: 400,
+    settleTimeoutMs: 30000,
+    pollIntervalMs: 500,
+    failOnDrift: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -158,6 +189,15 @@ function parseArgs(argv: string[]): Options {
         break;
       case "--log-lines":
         options.logLines = Number(argv[++index]);
+        break;
+      case "--settle-timeout-ms":
+        options.settleTimeoutMs = Number(argv[++index]);
+        break;
+      case "--poll-interval-ms":
+        options.pollIntervalMs = Number(argv[++index]);
+        break;
+      case "--fail-on-drift":
+        options.failOnDrift = true;
         break;
       default:
         throw new Error(`Unknown argument: ${arg}`);
@@ -664,6 +704,67 @@ function fetchStates(options: Options, accessToken: string): JsonObject[] {
   ) as JsonObject[];
 }
 
+function fetchState(
+  options: Options,
+  accessToken: string,
+  entityId: string
+): JsonObject | null {
+  const response = runCommand("curl", [
+    "-sS",
+    "-o",
+    "-",
+    "-w",
+    "\n%{http_code}",
+    `${options.server}/api/states/${encodeURIComponent(entityId)}`,
+    "-H",
+    `Authorization: Bearer ${accessToken}`,
+    "-H",
+    "Content-Type: application/json",
+  ]);
+  const splitIndex = response.lastIndexOf("\n");
+  const body = splitIndex >= 0 ? response.slice(0, splitIndex) : response;
+  const statusCode = Number(splitIndex >= 0 ? response.slice(splitIndex + 1) : "0");
+
+  if (statusCode === 404) {
+    return null;
+  }
+
+  if (statusCode < 200 || statusCode >= 300) {
+    throw new Error(`Failed to fetch ${entityId}: HTTP ${statusCode} ${body}`);
+  }
+
+  return JSON.parse(body) as JsonObject;
+}
+
+function callService(
+  options: Options,
+  accessToken: string,
+  domain: string,
+  service: string,
+  data: Record<string, any>
+): JsonObject[] {
+  return JSON.parse(
+    runCommand("curl", [
+      "-sS",
+      "-X",
+      "POST",
+      `${options.server}/api/services/${domain}/${service}`,
+      "-H",
+      `Authorization: Bearer ${accessToken}`,
+      "-H",
+      "Content-Type: application/json",
+      "-d",
+      JSON.stringify(data),
+    ])
+  ) as JsonObject[];
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
 function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
   const entries: ConfiguredDeviceSummary[] = [];
 
@@ -737,6 +838,28 @@ function buildEntityAuditFindings(
   }
 
   return findings;
+}
+
+function summarizeRegistryDrift(findings: EntityAuditFinding[]): RegistryDriftSummary {
+  let missingEntityCount = 0;
+  let mismatchedDeviceCount = 0;
+
+  for (const finding of findings) {
+    if (finding.issue === "configured entity missing from live entity registry") {
+      missingEntityCount += 1;
+      continue;
+    }
+
+    if (finding.issue === "configured device_id does not match the live entity registry") {
+      mismatchedDeviceCount += 1;
+    }
+  }
+
+  return {
+    total: findings.length,
+    missingEntityCount,
+    mismatchedDeviceCount,
+  };
 }
 
 function collectUnavailableConfiguredEntities(
@@ -894,6 +1017,126 @@ function buildSceneParallelismFindings(sceneIds: string[]): SceneParallelismFind
   return findings;
 }
 
+function pickComparableAttributes(entityState: Record<string, any>): Record<string, any> {
+  const comparableKeys = [
+    "brightness",
+    "rgb_color",
+    "rgbw_color",
+    "color_temp",
+    "white_value",
+    "transition",
+  ];
+  const comparable: Record<string, any> = {};
+
+  for (const key of comparableKeys) {
+    if (entityState[key] !== undefined) {
+      comparable[key] = entityState[key];
+    }
+  }
+
+  return comparable;
+}
+
+function entityMatchesTarget(target: ReturnType<typeof generateSceneTargets>[number], state: JsonObject | null) {
+  if (!state) {
+    return false;
+  }
+
+  if (state.state !== target.entityState.state) {
+    return false;
+  }
+
+  if (target.entityState.state !== "on") {
+    return true;
+  }
+
+  const expectedAttributes = pickComparableAttributes(target.entityState);
+  for (const [key, value] of Object.entries(expectedAttributes)) {
+    if (JSON.stringify(state.attributes?.[key]) !== JSON.stringify(value)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+function buildPendingExerciseStates(
+  targets: ReturnType<typeof generateSceneTargets>,
+  statesByEntityId: Map<string, JsonObject | null>
+): ExercisedEntityState[] {
+  return targets
+    .filter((target) => !entityMatchesTarget(target, statesByEntityId.get(target.entityId) ?? null))
+    .map((target) => {
+      const state = statesByEntityId.get(target.entityId) ?? null;
+      return {
+        entityId: target.entityId,
+        desiredState: String(target.entityState.state),
+        actualState: state?.state,
+        desiredAttributes: pickComparableAttributes(target.entityState),
+        actualAttributes: state?.attributes,
+      };
+    })
+    .sort((left, right) => left.entityId.localeCompare(right.entityId));
+}
+
+async function exerciseScene(
+  options: Options,
+  accessToken: string,
+  sceneId: string
+): Promise<SceneExerciseResult> {
+  const scene = scenes[sceneId];
+  if (!scene) {
+    throw new Error(`Unknown scene: ${sceneId}`);
+  }
+
+  const scriptEntityId = getFastSceneScriptEntityId(sceneId);
+  const targets = generateSceneTargets(scene);
+  const startedAt = Date.now();
+
+  callService(options, accessToken, "script", "turn_on", {
+    entity_id: scriptEntityId,
+  });
+
+  while (Date.now() - startedAt < options.settleTimeoutMs) {
+    const statesByEntityId = new Map(
+      targets.map((target) => [
+        target.entityId,
+        fetchState(options, accessToken, target.entityId),
+      ])
+    );
+    const pending = buildPendingExerciseStates(targets, statesByEntityId);
+
+    if (pending.length === 0) {
+      return {
+        sceneId,
+        scriptEntityId,
+        targetCount: targets.length,
+        reachedSteadyState: true,
+        settleTimeMs: Date.now() - startedAt,
+        pending: [],
+      };
+    }
+
+    await sleep(options.pollIntervalMs);
+  }
+
+  const finalStatesByEntityId = new Map(
+    targets.map((target) => [
+      target.entityId,
+      fetchState(options, accessToken, target.entityId),
+    ])
+  );
+
+  return {
+    sceneId,
+    scriptEntityId,
+    targetCount: targets.length,
+    reachedSteadyState: false,
+    settleTimeMs: options.settleTimeoutMs,
+    pending: buildPendingExerciseStates(targets, finalStatesByEntityId),
+  };
+}
+
 async function diagnose(options: Options) {
   const outputDir = ensureOutputDir(options.outputDir);
   const artifactPaths = fetchLiveArtifacts(options, outputDir);
@@ -986,6 +1229,7 @@ async function inventory(options: Options) {
     configuredDevices,
     artifacts.entityRegistry
   );
+  const registryDriftSummary = summarizeRegistryDrift(entityAuditFindings);
   const suspiciousLogSummary = summarizeSuspiciousLogs(artifacts.zwaveLog, nodeMap);
   const sceneParallelismFindings = buildSceneParallelismFindings(options.sceneIds);
 
@@ -999,6 +1243,8 @@ async function inventory(options: Options) {
       unavailable_configured_entity_count: configuredUnavailable.length,
       scenes_with_unavailable_entities: sceneAvailabilityFindings.length,
       entity_audit_finding_count: entityAuditFindings.length,
+      registry_drift_missing_entity_count: registryDriftSummary.missingEntityCount,
+      registry_drift_mismatched_device_count: registryDriftSummary.mismatchedDeviceCount,
       remaining_grouped_zwave_call_count: sceneParallelismFindings.length,
       suspicious_log_categories: suspiciousLogSummary.counts,
     },
@@ -1006,6 +1252,7 @@ async function inventory(options: Options) {
     scene_parallelism_findings: sceneParallelismFindings,
     scene_availability_findings: sceneAvailabilityFindings,
     configured_unavailable_entities: configuredUnavailable,
+    registry_drift_summary: registryDriftSummary,
     entity_audit_findings: entityAuditFindings,
     suspicious_log_summary: suspiciousLogSummary,
     live_ramp_plan: liveRampPlan,
@@ -1014,6 +1261,7 @@ async function inventory(options: Options) {
   writeJson(path.join(outputDir, "inventory-report.json"), report);
   writeJson(path.join(outputDir, "configured-devices.json"), configuredDevices);
   writeJson(path.join(outputDir, "scene-availability.json"), sceneAvailabilityFindings);
+  writeJson(path.join(outputDir, "registry-drift-summary.json"), registryDriftSummary);
   writeJson(path.join(outputDir, "entity-audit-findings.json"), entityAuditFindings);
   writeJson(path.join(outputDir, "suspicious-log-summary.json"), suspiciousLogSummary);
 
@@ -1043,6 +1291,9 @@ async function inventory(options: Options) {
 
   if (entityAuditFindings.length > 0) {
     console.log("");
+    console.log(
+      `Registry drift findings: ${registryDriftSummary.missingEntityCount} missing entities, ${registryDriftSummary.mismatchedDeviceCount} device-id mismatches`
+    );
     console.log("Top entity audit findings:");
     for (const finding of entityAuditFindings.slice(0, 10)) {
       const related =
@@ -1063,6 +1314,99 @@ async function inventory(options: Options) {
 
   console.log("");
   console.log(`Inventory report: ${path.join(outputDir, "inventory-report.json")}`);
+
+  if (options.failOnDrift && entityAuditFindings.length > 0) {
+    process.exitCode = 1;
+  }
+}
+
+async function checkRegistryDrift(options: Options) {
+  const outputDir = ensureOutputDir(options.outputDir);
+  const artifactPaths = fetchLiveArtifacts(options, outputDir);
+  const artifacts = loadArtifacts(artifactPaths);
+  const configuredDevices = flattenConfiguredDevices();
+  const entityAuditFindings = buildEntityAuditFindings(
+    configuredDevices,
+    artifacts.entityRegistry
+  );
+  const registryDriftSummary = summarizeRegistryDrift(entityAuditFindings);
+
+  const report = {
+    generated_at: new Date().toISOString(),
+    output_dir: outputDir,
+    configured_device_count: configuredDevices.length,
+    registry_drift_summary: registryDriftSummary,
+    entity_audit_findings: entityAuditFindings,
+  };
+
+  writeJson(path.join(outputDir, "registry-drift-report.json"), report);
+  writeJson(path.join(outputDir, "entity-audit-findings.json"), entityAuditFindings);
+
+  console.log(`Output directory: ${outputDir}`);
+  console.log(
+    `Registry drift findings: ${registryDriftSummary.total} total | ${registryDriftSummary.missingEntityCount} missing entities | ${registryDriftSummary.mismatchedDeviceCount} mismatched device IDs`
+  );
+
+  for (const finding of entityAuditFindings.slice(0, 15)) {
+    console.log(`  ${finding.name}: ${finding.issue}`);
+  }
+
+  console.log("");
+  console.log(`Registry drift report: ${path.join(outputDir, "registry-drift-report.json")}`);
+
+  if (entityAuditFindings.length > 0) {
+    process.exitCode = 1;
+  }
+}
+
+async function exerciseScenes(options: Options) {
+  if (options.sceneIds.length === 0) {
+    throw new Error("exercise-scene requires at least one --scene <scene_id>");
+  }
+
+  const outputDir = ensureOutputDir(options.outputDir);
+  const accessToken = getAccessToken(options);
+  const results: SceneExerciseResult[] = [];
+
+  for (const sceneId of options.sceneIds) {
+    results.push(await exerciseScene(options, accessToken, sceneId));
+  }
+
+  const report = {
+    generated_at: new Date().toISOString(),
+    output_dir: outputDir,
+    server: options.server,
+    settle_timeout_ms: options.settleTimeoutMs,
+    poll_interval_ms: options.pollIntervalMs,
+    default_max_zwave_calls_per_step: DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
+    results,
+  };
+
+  writeJson(path.join(outputDir, "scene-exercise-report.json"), report);
+
+  console.log(`Output directory: ${outputDir}`);
+  console.log("");
+  for (const result of results) {
+    const status = result.reachedSteadyState ? "settled" : "timed out";
+    console.log(
+      `${result.sceneId}: ${status} in ${result.settleTimeMs}ms (${result.targetCount} targets)`
+    );
+    for (const pending of result.pending.slice(0, 10)) {
+      console.log(
+        `  pending ${pending.entityId}: wanted ${pending.desiredState}, got ${pending.actualState ?? "missing"}`
+      );
+    }
+    if (result.pending.length > 10) {
+      console.log(`  ... ${result.pending.length - 10} more pending targets`);
+    }
+  }
+
+  console.log("");
+  console.log(`Scene exercise report: ${path.join(outputDir, "scene-exercise-report.json")}`);
+
+  if (results.some((result) => !result.reachedSteadyState)) {
+    process.exitCode = 1;
+  }
 }
 
 async function fetchConfigParameters(
@@ -1230,7 +1574,7 @@ async function main() {
   const [command, ...args] = process.argv.slice(2);
   if (!command) {
     throw new Error(
-      "Usage: zwave-scenes <diagnose|inventory|apply-instant-ramps|verify-instant-ramps> [options]"
+      "Usage: zwave-scenes <diagnose|inventory|exercise-scene|check-registry-drift|apply-instant-ramps|verify-instant-ramps> [options]"
     );
   }
 
@@ -1242,6 +1586,12 @@ async function main() {
       return;
     case "inventory":
       await inventory(options);
+      return;
+    case "exercise-scene":
+      await exerciseScenes(options);
+      return;
+    case "check-registry-drift":
+      await checkRegistryDrift(options);
       return;
     case "apply-instant-ramps":
       await applyInstantRamps(options);

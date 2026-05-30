@@ -144,27 +144,12 @@ export const scenes: SceneRegistry = {
     name: "Bathroom - High",
     lights: [
       {
-        device: "bathroom_sauna",
-        state: "on",
-        brightness: 255
-      },
-      {
-        device: "bathroom_shower",
-        state: "on",
-        brightness: 255
-      },
-      {
         device: "bathroom_vanityleft",
         state: "on",
         brightness: 255
       },
       {
-        device: "bathroom_vanityright",
-        state: "on",
-        brightness: 255
-      },
-      {
-        device: "bathroom_vanitysconces",
+        device: "bathroom_abovesauna",
         state: "on",
         brightness: 255
       }
@@ -175,27 +160,12 @@ export const scenes: SceneRegistry = {
     name: "Bathroom - Medium",
     lights: [
       {
-        device: "bathroom_sauna",
-        state: "on",
-        brightness: 155
-      },
-      {
-        device: "bathroom_shower",
-        state: "on",
-        brightness: 155
-      },
-      {
         device: "bathroom_vanityleft",
         state: "on",
         brightness: 155
       },
       {
-        device: "bathroom_vanityright",
-        state: "on",
-        brightness: 155
-      },
-      {
-        device: "bathroom_vanitysconces",
+        device: "bathroom_abovesauna",
         state: "on",
         brightness: 155
       }
@@ -206,25 +176,13 @@ export const scenes: SceneRegistry = {
     name: "Bathroom - Low",
     lights: [
       {
-        device: "bathroom_sauna",
-        state: "off"
-      },
-      {
-        device: "bathroom_shower",
-        state: "off"
-      },
-      {
         device: "bathroom_vanityleft",
-        state: "off"
-      },
-      {
-        device: "bathroom_vanityright",
-        state: "off"
-      },
-      {
-        device: "bathroom_vanitysconces",
         state: "on",
         brightness: 50
+      },
+      {
+        device: "bathroom_abovesauna",
+        state: "off"
       }
     ]
   },
@@ -233,23 +191,11 @@ export const scenes: SceneRegistry = {
     name: "Bathroom - Off",
     lights: [
       {
-        device: "bathroom_sauna",
-        state: "off"
-      },
-      {
-        device: "bathroom_shower",
-        state: "off"
-      },
-      {
         device: "bathroom_vanityleft",
         state: "off"
       },
       {
-        device: "bathroom_vanityright",
-        state: "off"
-      },
-      {
-        device: "bathroom_vanitysconces",
+        device: "bathroom_abovesauna",
         state: "off"
       }
     ]

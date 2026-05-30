@@ -109,11 +109,23 @@ ha-addon addon="all": talos-build
 # DEPLOYMENT
 # ============================================================================
 
+[private]
+deploy-config-precheck:
+	@echo "🏠 Prechecking Home Assistant configs..."
+	@cd new-hass-configs && just deploy-precheck
+
+[private]
+deploy-config-apply:
+	@echo ""
+	@echo "🏠 Deploying Home Assistant configs..."
+	@cd new-hass-configs && just deploy-apply
+
 # Deploy addons and Home Assistant configs
 [group: 'deploy']
 deploy addon="all" *args="":
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
+	@just deploy-config-precheck
 	@echo "🚀 Starting enhanced deployment..."
 	@set -e; \
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
@@ -124,9 +136,7 @@ deploy addon="all" *args="":
 	else \
 		"{{talos_bin}}" addons deploy {{args}}; \
 	fi
-	@echo ""
-	@echo "🏠 Deploying Home Assistant configs..."
-	@cd new-hass-configs && just deploy >/dev/null 2>&1
+	@just deploy-config-apply
 	@echo "✅ Deployment completed successfully!"
 
 # Deploy with verbose output for troubleshooting
@@ -134,6 +144,7 @@ deploy addon="all" *args="":
 deploy-verbose addon="all" *args="":
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
+	@just deploy-config-precheck
 	@echo "🚀 Starting enhanced deployment (verbose mode)..."
 	@set -e; \
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
@@ -144,9 +155,7 @@ deploy-verbose addon="all" *args="":
 	else \
 		"{{talos_bin}}" addons deploy --verbose {{args}}; \
 	fi
-	@echo ""
-	@echo "🏠 Deploying Home Assistant configs..."
-	@cd new-hass-configs && just deploy >/dev/null 2>&1
+	@just deploy-config-apply
 	@echo "✅ Deployment completed successfully!"
 
 # Dry run deployment to see what would be deployed

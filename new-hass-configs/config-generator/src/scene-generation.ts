@@ -34,7 +34,11 @@ export interface SceneEntityTarget {
 }
 
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
-const MAX_ZWAVE_CALLS_PER_STEP = 8;
+export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 16;
+
+export interface FastSceneGenerationOptions {
+  maxZwaveCallsPerStep?: number;
+}
 
 function stableStringify(value: any): string {
   if (Array.isArray(value)) {
@@ -277,10 +281,13 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
 }
 
 function generateFastSceneSequence(
-  scene: Scene
+  scene: Scene,
+  options: FastSceneGenerationOptions = {}
 ): Array<{
   parallel: HAServiceCall[];
 }> {
+  const maxZwaveCallsPerStep =
+    options.maxZwaveCallsPerStep ?? DEFAULT_MAX_ZWAVE_CALLS_PER_STEP;
   const calls = generateFastSceneCalls(scene);
   const targetsByEntityId = new Map(
     generateSceneTargets(scene).map((target) => [target.entityId, target])
@@ -300,14 +307,14 @@ function generateFastSceneSequence(
     }
   }
 
-  if (zwaveCalls.length <= MAX_ZWAVE_CALLS_PER_STEP) {
+  if (zwaveCalls.length <= maxZwaveCallsPerStep) {
     return [{ parallel: calls }];
   }
 
   const sequence: Array<{ parallel: HAServiceCall[] }> = [];
 
-  for (let index = 0; index < zwaveCalls.length; index += MAX_ZWAVE_CALLS_PER_STEP) {
-    const parallel = zwaveCalls.slice(index, index + MAX_ZWAVE_CALLS_PER_STEP);
+  for (let index = 0; index < zwaveCalls.length; index += maxZwaveCallsPerStep) {
+    const parallel = zwaveCalls.slice(index, index + maxZwaveCallsPerStep);
     if (index === 0) {
       parallel.unshift(...nonZwaveCalls);
     }
@@ -318,7 +325,8 @@ function generateFastSceneSequence(
 }
 
 export function generateFastScriptsFromRegistry(
-  sceneRegistry: Record<string, Scene>
+  sceneRegistry: Record<string, Scene>,
+  options: FastSceneGenerationOptions = {}
 ): Record<string, HAScript> {
   return Object.fromEntries(
     Object.entries(sceneRegistry).map(([sceneId, scene]) => [
@@ -326,7 +334,7 @@ export function generateFastScriptsFromRegistry(
       {
         alias: `Fast Scene - ${scene.name}`,
         mode: "restart",
-        sequence: generateFastSceneSequence(scene),
+        sequence: generateFastSceneSequence(scene, options),
       },
     ])
   );

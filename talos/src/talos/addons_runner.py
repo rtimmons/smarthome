@@ -105,6 +105,12 @@ def _run_just(addon_dir: Path, recipe: str, verbose: bool = True) -> None:
         subprocess.run(cmd, check=True, capture_output=True, text=True)
 
 
+def _is_truthy(value: str | None) -> bool:
+    if value is None:
+        return False
+    return value.strip().lower() not in {"", "0", "false", "no", "off"}
+
+
 def _resolve_addons(explicit: Iterable[str]) -> List[Path]:
     if explicit:
         addon_dirs = []
@@ -122,10 +128,12 @@ def _resolve_addons(explicit: Iterable[str]) -> List[Path]:
 
 
 def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, ha_user: str,
-                          dry_run: bool = False, verbose: bool = False, jobs: int | None = None) -> None:
+                          dry_run: bool = False, verbose: bool = False, jobs: int | None = None,
+                          verify: bool = False) -> None:
     """Enhanced deployment with better error handling and progress tracking."""
     addon_dirs = _resolve_addons(addons)
     addon_names = [addon_dir.name for addon_dir in addon_dirs]
+    verify = verify or _is_truthy(os.environ.get("TALOS_DEPLOY_VERIFY"))
 
     if not addon_names:
         console.print("[yellow]No add-ons to deploy[/yellow]")
@@ -137,10 +145,15 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         console.print(f"  • Target: {ha_host}:{ha_port}")
         console.print(f"  • Add-ons to deploy: {len(addon_names)}")
         console.print(f"  • Add-ons: {', '.join(addon_names)}")
+        console.print(f"  • Mode: {'verified' if verify else 'fast'}")
         console.print(f"\n[dim]Each add-on would be:[/dim]")
-        console.print(f"  1. Built locally with pre-deployment tests")
-        console.print(f"  2. Uploaded and deployed to {ha_host}")
-        console.print(f"  3. Health checked after deployment")
+        if verify:
+            console.print(f"  1. Validated locally via optional Just recipes")
+            console.print(f"  2. Built, uploaded, and deployed to {ha_host}")
+            console.print(f"  3. Health checked after deployment")
+        else:
+            console.print(f"  1. Built, uploaded, and deployed to {ha_host}")
+            console.print(f"  2. Health checked after deployment")
         console.print(f"\n[yellow]This is a dry run - no changes would be made[/yellow]")
 
         # Still call individual dry-runs if verbose mode is requested
@@ -155,6 +168,10 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         return
 
     console.print(f"🚀 [bold]Deploying {len(addon_names)} add-on(s)[/bold]")
+    if verify:
+        console.print("🧪 [bold]Verified deploy mode:[/bold] running optional local pre-deploy recipes first.")
+    else:
+        console.print("⚡ [bold]Fast deploy mode:[/bold] skipping optional local build/test/container validation. Use `--verify` to restore it.")
     validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
     if jobs is None:
         jobs = os.cpu_count() or 1
@@ -174,61 +191,60 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         transient=not verbose,
         disable=not console.is_terminal or not console.is_interactive
     ) as progress:
+        if verify:
+            build_task = progress.add_task("Running local pre-deploy checks...", total=len(addon_names))
 
-        # Phase 1: Pre-deployment validation and build
-        build_task = progress.add_task("Building add-ons...", total=len(addon_names))
+            def record_pre_deploy_failure(
+                addon_name: str,
+                pre: Optional[str],
+                error_msg: str,
+                error: Optional[subprocess.CalledProcessError]
+            ) -> None:
+                deployment_errors.append((addon_name, error_msg))
+                progress.stop()
+                console.print(f"  ❌ [red]{error_msg}[/red]")
+                if not verbose and error is not None:
+                    _print_command_output(error.stdout or "", error.stderr or "")
+                if pre:
+                    console.print(f"  Hint: run `just {pre}` in `{addon_name}/` to reproduce.")
+                else:
+                    console.print(f"  Hint: run the add-on build steps in `{addon_name}/` to reproduce.")
+                progress.start()
 
-        def record_pre_deploy_failure(
-            addon_name: str,
-            pre: Optional[str],
-            error_msg: str,
-            error: Optional[subprocess.CalledProcessError]
-        ) -> None:
-            deployment_errors.append((addon_name, error_msg))
-            progress.stop()
-            console.print(f"  ❌ [red]{error_msg}[/red]")
-            if not verbose and error is not None:
-                _print_command_output(error.stdout or "", error.stderr or "")
-            if pre:
-                console.print(f"  Hint: run `just {pre}` in `{addon_name}/` to reproduce.")
-            else:
-                console.print(f"  Hint: run the add-on build steps in `{addon_name}/` to reproduce.")
-            progress.start()
-
-        if jobs == 1:
-            for addon_dir in addon_dirs:
-                addon_name = addon_dir.name
-                progress.update(build_task, description=f"Building {addon_name}...")
-
-                addon_name, failed_pre, error_msg, error = _run_pre_deploy_steps(addon_dir, verbose)
-                if error_msg:
-                    record_pre_deploy_failure(addon_name, failed_pre, error_msg, error)
-
-                progress.advance(build_task)
-        else:
-            with ThreadPoolExecutor(max_workers=jobs) as executor:
-                futures = {
-                    executor.submit(_run_pre_deploy_steps, addon_dir, verbose): addon_dir
-                    for addon_dir in addon_dirs
-                }
-
-                for future in as_completed(futures):
-                    addon_dir = futures[future]
+            if jobs == 1:
+                for addon_dir in addon_dirs:
                     addon_name = addon_dir.name
-                    progress.update(build_task, description=f"Building {addon_name}...")
-                    try:
-                        addon_name, failed_pre, error_msg, error = future.result()
-                    except Exception as e:
-                        failed_pre = None
-                        error = None
-                        error_msg = f"Pre-deployment step failed for {addon_name}: {str(e)}"
+                    progress.update(build_task, description=f"Checking {addon_name}...")
 
+                    addon_name, failed_pre, error_msg, error = _run_pre_deploy_steps(addon_dir, verbose)
                     if error_msg:
                         record_pre_deploy_failure(addon_name, failed_pre, error_msg, error)
 
                     progress.advance(build_task)
+            else:
+                with ThreadPoolExecutor(max_workers=jobs) as executor:
+                    futures = {
+                        executor.submit(_run_pre_deploy_steps, addon_dir, verbose): addon_dir
+                        for addon_dir in addon_dirs
+                    }
 
-        progress.remove_task(build_task)
+                    for future in as_completed(futures):
+                        addon_dir = futures[future]
+                        addon_name = addon_dir.name
+                        progress.update(build_task, description=f"Checking {addon_name}...")
+                        try:
+                            addon_name, failed_pre, error_msg, error = future.result()
+                        except Exception as e:
+                            failed_pre = None
+                            error = None
+                            error_msg = f"Pre-deployment step failed for {addon_name}: {str(e)}"
+
+                        if error_msg:
+                            record_pre_deploy_failure(addon_name, failed_pre, error_msg, error)
+
+                        progress.advance(build_task)
+
+            progress.remove_task(build_task)
 
         # Phase 2: Deployment
         if not deployment_errors:  # Only deploy if all builds succeeded

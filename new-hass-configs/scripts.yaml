@@ -154,23 +154,13 @@ fast_scene_bathroom_high:
         - service: light.turn_on
           target:
             entity_id:
-              - light.bathroom_light_sauna
-        - service: light.turn_on
-          target:
-            entity_id:
-              - light.bathroom_light_shower
+              - light.light_bathroom_abovesauna
+          data:
+            brightness: 255
         - service: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityleft
-        - service: light.turn_on
-          target:
-            entity_id:
-              - light.bathroom_light_vanityright
-        - service: light.turn_on
-          target:
-            entity_id:
-              - light.bathroom_light_vanitysconces
 fast_scene_bathroom_medium:
   alias: Fast Scene - Bathroom - Medium
   mode: restart
@@ -179,23 +169,13 @@ fast_scene_bathroom_medium:
         - service: light.turn_on
           target:
             entity_id:
-              - light.bathroom_light_sauna
-        - service: light.turn_on
-          target:
-            entity_id:
-              - light.bathroom_light_shower
+              - light.light_bathroom_abovesauna
+          data:
+            brightness: 155
         - service: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityleft
-        - service: light.turn_on
-          target:
-            entity_id:
-              - light.bathroom_light_vanityright
-        - service: light.turn_on
-          target:
-            entity_id:
-              - light.bathroom_light_vanitysconces
 fast_scene_bathroom_low:
   alias: Fast Scene - Bathroom - Low
   mode: restart
@@ -204,23 +184,11 @@ fast_scene_bathroom_low:
         - service: light.turn_off
           target:
             entity_id:
-              - light.bathroom_light_sauna
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_shower
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.light_bathroom_vanityleft
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_vanityright
+              - light.light_bathroom_abovesauna
         - service: light.turn_on
           target:
             entity_id:
-              - light.bathroom_light_vanitysconces
+              - light.light_bathroom_vanityleft
 fast_scene_bathroom_off:
   alias: Fast Scene - Bathroom - Off
   mode: restart
@@ -229,23 +197,11 @@ fast_scene_bathroom_off:
         - service: light.turn_off
           target:
             entity_id:
-              - light.bathroom_light_sauna
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_shower
-        - service: light.turn_off
-          target:
-            entity_id:
               - light.light_bathroom_vanityleft
         - service: light.turn_off
           target:
             entity_id:
-              - light.bathroom_light_vanityright
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_vanitysconces
+              - light.light_bathroom_abovesauna
 fast_scene_guest_bathroom_high:
   alias: Fast Scene - Guest Bathroom - High
   mode: restart
@@ -343,20 +299,6 @@ fast_scene_living_room_high:
         - service: light.turn_on
           target:
             entity_id:
-              - light.entry_light_nook
-              - light.living_light_corner
-              - light.living_light_floor
-              - light.living_light_nook
-          data:
-            brightness: 255
-        - service: switch.turn_on
-          target:
-            entity_id:
-              - switch.light_living_ledwall
-              - switch.light_living_sillleftpower
-        - service: light.turn_on
-          target:
-            entity_id:
               - light.light_living_windowsillleft
           data:
             brightness: 180
@@ -424,10 +366,18 @@ fast_scene_living_room_high:
         - service: light.turn_on
           target:
             entity_id:
+              - light.entry_light_nook
+              - light.living_light_corner
+              - light.living_light_floor
+              - light.living_light_nook
+          data:
+            brightness: 255
+        - service: light.turn_on
+          target:
+            entity_id:
               - light.light_living_curtains_white
           data:
             brightness: 255
-    - parallel:
         - service: light.turn_on
           target:
             entity_id:
@@ -460,6 +410,11 @@ fast_scene_living_room_high:
           target:
             entity_id:
               - light.light_living_hallway
+        - service: switch.turn_on
+          target:
+            entity_id:
+              - switch.light_living_ledwall
+              - switch.light_living_sillleftpower
 fast_scene_living_room_medium:
   alias: Fast Scene - Living Room - Medium
   mode: restart
@@ -514,7 +469,6 @@ fast_scene_living_room_medium:
           target:
             entity_id:
               - light.light_kitchen_hanging
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -612,11 +566,6 @@ fast_scene_living_room_off:
               - light.living_light_corner
               - light.living_light_floor
               - light.living_light_nook
-        - service: switch.turn_off
-          target:
-            entity_id:
-              - switch.light_living_ledwall
-              - switch.light_living_sillleftpower
         - service: light.turn_off
           target:
             entity_id:
@@ -649,7 +598,6 @@ fast_scene_living_room_off:
           target:
             entity_id:
               - light.light_living_abovetv_white
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -678,6 +626,11 @@ fast_scene_living_room_off:
           target:
             entity_id:
               - light.light_living_abovetv
+        - service: switch.turn_off
+          target:
+            entity_id:
+              - switch.light_living_ledwall
+              - switch.light_living_sillleftpower
 fast_scene_makerroom_high:
   alias: Fast Scene - Maker Room - High
   mode: restart
@@ -843,7 +796,6 @@ fast_scene_kitchen_high:
           target:
             entity_id:
               - light.light_kitchen_hanging
-    - parallel:
         - service: light.turn_on
           target:
             entity_id:
@@ -912,7 +864,6 @@ fast_scene_kitchen_medium:
           target:
             entity_id:
               - light.light_kitchen_hanging
-    - parallel:
         - service: light.turn_on
           target:
             entity_id:
@@ -963,7 +914,6 @@ fast_scene_kitchen_low:
           target:
             entity_id:
               - light.light_kitchen_hanging
-    - parallel:
         - service: light.turn_on
           target:
             entity_id:
@@ -1005,7 +955,6 @@ fast_scene_kitchen_off:
           target:
             entity_id:
               - light.light_dining_nook_white
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -1143,24 +1092,7 @@ fast_scene_all_off:
         - service: light.turn_off
           target:
             entity_id:
-              - light.bathroom_light_sauna
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_shower
-        - service: light.turn_off
-          target:
-            entity_id:
               - light.light_bathroom_vanityleft
-    - parallel:
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_vanityright
-        - service: light.turn_off
-          target:
-            entity_id:
-              - light.bathroom_light_vanitysconces
         - service: light.turn_off
           target:
             entity_id:
@@ -1185,7 +1117,6 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_living_windowsillright
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -1202,6 +1133,7 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_living_desklamps
+    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -1218,7 +1150,6 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_living_abovetv_white
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -1251,7 +1182,6 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_kitchen_upper
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -1268,6 +1198,7 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_kitchen_ring
+    - parallel:
         - service: light.turn_off
           target:
             entity_id:
@@ -1284,7 +1215,6 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_dining_abovetable
-    - parallel:
         - service: light.turn_off
           target:
             entity_id:

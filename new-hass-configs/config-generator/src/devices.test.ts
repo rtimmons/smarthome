@@ -24,7 +24,7 @@ describe("Device Pairing Functions", () => {
 
     it("should return null for devices without pairs", () => {
       expect(getPairedDeviceName("office_sidetable")).toBeNull();
-      expect(getPairedDeviceName("bathroom_sauna")).toBeNull();
+      expect(getPairedDeviceName("bathroom_vanityleft")).toBeNull();
       expect(getPairedDeviceName("living_floor")).toBeNull();
     });
 
@@ -44,7 +44,7 @@ describe("Device Pairing Functions", () => {
 
     it("should return false for devices without pairs", () => {
       expect(hasPairedDevice("office_sidetable")).toBe(false);
-      expect(hasPairedDevice("bathroom_sauna")).toBe(false);
+      expect(hasPairedDevice("bathroom_vanityleft")).toBe(false);
       expect(hasPairedDevice("nonexistent_device")).toBe(false);
     });
   });
@@ -66,7 +66,7 @@ describe("Device Pairing Functions", () => {
 
     it("should return only the device for unpaired devices", () => {
       expect(getDeviceWithPair("office_sidetable")).toEqual(["office_sidetable"]);
-      expect(getDeviceWithPair("bathroom_sauna")).toEqual(["bathroom_sauna"]);
+      expect(getDeviceWithPair("bathroom_vanityleft")).toEqual(["bathroom_vanityleft"]);
     });
   });
 

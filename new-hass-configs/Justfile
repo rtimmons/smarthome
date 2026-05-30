@@ -31,6 +31,21 @@ zwave-inventory *args="": preflight
 	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js inventory --output-dir "../$output_dir" {{args}}; \
 	echo "Wrote Z-Wave inventory to $output_dir"
 
+# Trigger fast scene scripts live and measure how long targets take to settle
+zwave-exercise-scene *args="": preflight
+	timestamp="$(date +%Y%m%d-%H%M%S)"; \
+	output_dir="inventory_snapshots/zwave-scene-audits/$timestamp"; \
+	mkdir -p "$output_dir"; \
+	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js exercise-scene --output-dir "../$output_dir" {{args}}; \
+	echo "Wrote Z-Wave scene exercise to $output_dir"
+
+# Fail if configured entity IDs or device IDs drift from the live registry
+zwave-check-registry-drift *args="": preflight
+	timestamp="$(date +%Y%m%d-%H%M%S)"; \
+	output_dir="inventory_snapshots/zwave-scene-audits/$timestamp"; \
+	mkdir -p "$output_dir"; \
+	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js check-registry-drift --output-dir "../$output_dir" {{args}}
+
 # Normalize ramp/dim settings to instant/fast defaults on live Z-Wave devices
 zwave-apply-instant-ramps *args="": preflight
 	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js apply-instant-ramps {{args}}
@@ -191,8 +206,14 @@ check: preflight
 		| sed 's/^/  /'
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 
-# Deploy the current config to Home Assistant and restart (skipping buggy validation).
-deploy: generate preflight sync-check
+# Run the expensive drift check up front without applying changes.
+[group: 'deploy']
+deploy-precheck: generate preflight sync-check
+	@echo "Config deployment precheck passed"
+
+# Apply the already-reviewed config to Home Assistant and restart.
+[group: 'deploy']
+deploy-apply: preflight
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \
@@ -275,8 +296,12 @@ deploy: generate preflight sync-check
 		--exclude '*' \
 		-e "ssh -p 22" \
 		. root@homeassistant.local:/config/
-	ssh -p 22 root@homeassistant.local "ha core restart"
+	ssh -p 22 root@homeassistant.local 'for attempt in 1 2 3 4 5 6 7 8 9 10; do if ha core restart >/tmp/ha-core-restart.out 2>&1; then rm -f /tmp/ha-core-restart.out; exit 0; fi; if ! grep -q "Another job is running for job group home_assistant_core" /tmp/ha-core-restart.out; then cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1; fi; sleep 3; done; cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1'
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
+
+# Deploy the current config to Home Assistant and restart.
+[group: 'deploy']
+deploy: deploy-precheck deploy-apply
 
 # ============================================================================
 # BIDIRECTIONAL SYNC TOOLS

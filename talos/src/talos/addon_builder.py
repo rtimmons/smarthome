@@ -528,14 +528,18 @@ def build_addon(addon_key: str, verbose: bool = False) -> Path:
 
 def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, verbose: bool = True, capture_output: bool = False) -> subprocess.CompletedProcess:
     """Run a command with improved error handling and output control."""
+    display_cmd = cmd
+    if cmd and cmd[0] == "ssh" and cmd[-1].startswith("#!/bin/bash\n"):
+        display_cmd = [*cmd[:-1], "<remote-script>"]
+
     # Only show commands in verbose mode, and make dry-run output much more concise
     if verbose and not dry_run:
-        console.print(f"[cyan]$ {' '.join(cmd)}[/cyan]" + (f" (cwd={cwd})" if cwd else ""))
+        console.print(f"[cyan]$ {' '.join(display_cmd)}[/cyan]" + (f" (cwd={cwd})" if cwd else ""))
 
     if dry_run:
         # For dry run, only show high-level operations, not individual commands
         if verbose:
-            console.print(f"[dim]Would run: {' '.join(cmd)}[/dim]")
+            console.print(f"[dim]Would run: {' '.join(display_cmd)}[/dim]")
         return subprocess.CompletedProcess(cmd, 0, "", "")
 
     try:
