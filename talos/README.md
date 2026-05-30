@@ -43,6 +43,8 @@ add-on runtimes.
 - `talos addon build <name>` — render an add-on payload to `build/home-assistant-addon/`
 - `talos addon deploy <name>` — scp + install the add-on on Home Assistant
 - `talos addon test <name>` — run add-on-defined test hooks
+- `talos addon package-external --app-dir . --addon-dir ha-addon` — package an external app repo as a local add-on
+- `talos addon deploy-external --app-dir . --addon-dir ha-addon` — deploy an external app repo as a local add-on
 
 ### Batch Operations
 - `talos addons deploy [addons…]` — enhanced batch deployment with progress tracking and error handling
@@ -68,6 +70,10 @@ Talos discovers add-ons by globbing for `*/addon.yaml` files at the repository r
 - Decentralized configuration (each add-on owns its config)
 - Cross-repository add-ons via symlinks
 - Zero-config addition of new add-ons
+
+External app repositories do not need to participate in root auto-discovery. Use
+`talos addon deploy-external --app-dir /path/to/app --addon-dir /path/to/app/ha-addon`
+when a separate repo already contains a standard Home Assistant add-on wrapper.
 
 ### Single Source of Truth
 Runtime versions come from repo-root files:

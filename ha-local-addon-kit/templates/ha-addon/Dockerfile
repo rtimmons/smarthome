@@ -1,0 +1,20 @@
+FROM node:22-alpine
+
+ENV LANG=C.UTF-8
+WORKDIR /opt/app
+
+RUN apk add --no-cache bash jq
+
+COPY app/package*.json ./
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+COPY app/ ./
+RUN if node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"; then npm run build; fi
+RUN npm prune --omit=dev && npm cache clean --force
+
+COPY run.sh /run.sh
+RUN chmod a+x /run.sh
+
+EXPOSE 3000
+
+CMD ["/run.sh"]

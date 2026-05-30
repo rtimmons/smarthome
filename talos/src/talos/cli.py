@@ -4,7 +4,7 @@ import os
 
 import click
 
-from . import addon_builder, addons_runner, dev as dev_mod, hooks, manage_ports
+from . import addon_builder, addons_runner, dev as dev_mod, external_addon, hooks, manage_ports
 
 DEFAULT_JOBS = max(1, os.cpu_count() or 1)
 
@@ -48,6 +48,53 @@ def addon_deploy(addon: str, ha_host: str, ha_port: int, ha_user: str, dry_run: 
     try:
         addon_builder.deploy_addon(addon, ha_host=ha_host, ha_port=ha_port, ha_user=ha_user, dry_run=dry_run, verbose=verbose)
     except addon_builder.DeploymentError as e:
+        e.display_error()
+        raise click.ClickException("Deployment failed")
+
+
+@addon.command("package-external")
+@click.option("--app-dir", default=".", type=click.Path(file_okay=False, dir_okay=True), show_default=True, help="External app repository root.")
+@click.option("--addon-dir", default="ha-addon", type=click.Path(file_okay=False, dir_okay=True), show_default=True, help="Directory containing config.yaml, Dockerfile, and run.sh.")
+@click.option("--output-dir", default=None, type=click.Path(file_okay=False, dir_okay=True), help="Directory for the packaged tarball.")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+def addon_package_external(app_dir: str, addon_dir: str, output_dir: str | None, verbose: bool) -> None:
+    """Package an external app repository as a Home Assistant local add-on."""
+    archive = external_addon.package_external_addon(app_dir, addon_dir, output_dir=output_dir, verbose=verbose)
+    click.echo(str(archive))
+
+
+@addon.command("deploy-external")
+@click.option("--app-dir", default=".", type=click.Path(file_okay=False, dir_okay=True), show_default=True, help="External app repository root.")
+@click.option("--addon-dir", default="ha-addon", type=click.Path(file_okay=False, dir_okay=True), show_default=True, help="Directory containing config.yaml, Dockerfile, and run.sh.")
+@click.option("--output-dir", default=None, type=click.Path(file_okay=False, dir_okay=True), help="Directory for the packaged tarball.")
+@click.option("--ha-host", envvar="HA_HOST", default="homeassistant.local", show_default=True)
+@click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
+@click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
+@click.option("--dry-run", is_flag=True, help="Print operations without executing.")
+@click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
+def addon_deploy_external(
+    app_dir: str,
+    addon_dir: str,
+    output_dir: str | None,
+    ha_host: str,
+    ha_port: int,
+    ha_user: str,
+    dry_run: bool,
+    verbose: bool,
+) -> None:
+    """Deploy an external app repository as a Home Assistant local add-on."""
+    try:
+        external_addon.deploy_external_addon(
+            app_dir,
+            addon_dir,
+            ha_host=ha_host,
+            ha_port=ha_port,
+            ha_user=ha_user,
+            output_dir=output_dir,
+            dry_run=dry_run,
+            verbose=verbose,
+        )
+    except external_addon.DeploymentError as e:
         e.display_error()
         raise click.ClickException("Deployment failed")
 

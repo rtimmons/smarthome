@@ -1,0 +1,25 @@
+# Home Assistant local add-on helpers.
+
+set dotenv-load
+
+ha_addon_script := "scripts/deploy-ha-addon.sh"
+ha_addon_slug := "TODO_ADDON_SLUG"
+ha_host := env_var_or_default("HA_HOST", "homeassistant.local")
+ha_user := env_var_or_default("HA_USER", "root")
+ha_port := env_var_or_default("HA_PORT", "22")
+
+package-ha-addon:
+	{{ha_addon_script}} --package-only
+
+deploy-ha-addon:
+	{{ha_addon_script}}
+
+deploy-ha-addon-verbose:
+	{{ha_addon_script}} --verbose
+
+ha-addon-logs:
+	ssh -p {{ha_port}} {{ha_user}}@{{ha_host}} ha addons logs local_{{ha_addon_slug}} --lines 120
+
+ha-addon-info:
+	ssh -p {{ha_port}} {{ha_user}}@{{ha_host}} ha addons info local_{{ha_addon_slug}}
+
