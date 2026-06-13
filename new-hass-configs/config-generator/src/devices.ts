@@ -61,15 +61,20 @@ export const devices: DeviceRegistry = {
       capabilities: ["brightness"]
     },
 
-    // Bathroom lights - currently active live entities
+    // Bathroom lights - Z-Wave dimmers
     bathroom_vanityleft: {
       entity: "light.light_bathroom_vanityleft",
-      type: "zwave_switch_light",
-      capabilities: ["on_off"]
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
     },
     bathroom_abovesauna: {
       entity: "light.light_bathroom_abovesauna",
-      type: "dimmer_light",
+      type: "zwave_dimmer_46203",
+      capabilities: ["brightness"]
+    },
+    bathroom_vanityright: {
+      entity: "light.light_bathroom_vanityright",
+      type: "zwave_dimmer_46203",
       capabilities: ["brightness"]
     },
 

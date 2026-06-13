@@ -243,20 +243,27 @@ test_git_status_checking() {
     cd "$REPO_ROOT"
 
     # This test checks if git status checking works
-    # We'll create a temporary change and see if it's detected
-    local test_file="${CONFIG_DIR}/test-git-status.tmp"
-    echo "test" > "$test_file"
+    # We'll temporarily dirty a tracked config file and see if it's detected.
+    local test_file="${CONFIG_DIR}/scripts.yaml"
+    local original_file
+    original_file="$(mktemp)"
+    cp "$test_file" "$original_file"
+
+    restore_test_file() {
+        cp "$original_file" "$test_file"
+        rm -f "$original_file"
+    }
+
+    echo "# test uncommitted change" >> "$test_file"
 
     # The fetch-config script should detect this as an uncommitted change
     # and refuse to run without --force
     if FORCE_FLAG=false "${SCRIPT_DIR}/fetch-config.sh" >/dev/null 2>&1; then
-        # Clean up
-        rm -f "$test_file"
+        restore_test_file
         warn "Git status check may not be working properly"
         return 0  # Don't fail the test suite for this
     else
-        # Clean up
-        rm -f "$test_file"
+        restore_test_file
         info "Git status checking is working"
         return 0
     fi

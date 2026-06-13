@@ -271,7 +271,7 @@ describe("Scene Generation with Pairing", () => {
 
       const calls = generateFastCalls(scenes.bathroom_high);
 
-      expect(calls).toHaveLength(2);
+      expect(calls).toHaveLength(3);
       expect(calls.every((call: any) => call.target.entity_id.length === 1)).toBe(true);
     });
 

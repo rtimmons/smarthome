@@ -10,6 +10,9 @@ CONFIG_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 TEMP_DIR="/tmp/ha-sync-$$"
 REMOTE_HOST="root@homeassistant.local"
 REMOTE_CONFIG="/config"
+SHOW_DIFFS="${SHOW_DIFFS:-true}"
+DIFF_CONTEXT="${DIFF_CONTEXT:-3}"
+DIFF_MAX_LINES="${DIFF_MAX_LINES:-120}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -32,6 +35,10 @@ error() {
 
 success() {
     echo -e "${GREEN}[SUCCESS]${NC} $*" >&2
+}
+
+info() {
+    echo -e "${BLUE}[INFO]${NC} $*" >&2
 }
 
 cleanup() {
@@ -71,6 +78,39 @@ fetch_live_configs() {
     done
 }
 
+# Function to print an actionable repo-to-live diff for a changed file
+print_file_diff() {
+    local repo_file="$1"
+    local live_file="$2"
+    local file_type="$3"
+
+    if [[ "$SHOW_DIFFS" != "true" ]]; then
+        return 0
+    fi
+
+    local diff_output
+    local rel_file="${repo_file#${CONFIG_DIR}/}"
+    diff_output=$(diff -u -U "$DIFF_CONTEXT" \
+        --label "repository/${rel_file}" \
+        --label "live-homeassistant/${rel_file}" \
+        "$repo_file" "$live_file" || true)
+
+    if [[ -z "$diff_output" ]]; then
+        return 0
+    fi
+
+    local total_lines
+    total_lines=$(printf '%s\n' "$diff_output" | wc -l | tr -d ' ')
+
+    warn "Diff for $file_type (repository -> live Home Assistant):"
+    printf '%s\n' "$diff_output" | sed -n "1,${DIFF_MAX_LINES}p" >&2
+
+    if [[ "$total_lines" -gt "$DIFF_MAX_LINES" ]]; then
+        info "Diff truncated after ${DIFF_MAX_LINES}/${total_lines} lines."
+        info "Run: just reconcile ${rel_file}"
+    fi
+}
+
 # Function to compare file checksums
 compare_files() {
     local repo_file="$1"
@@ -93,6 +133,7 @@ compare_files() {
     
     if [[ "$repo_checksum" != "$live_checksum" ]]; then
         warn "Detected changes in $file_type: $(basename "$repo_file")"
+        print_file_diff "$repo_file" "$live_file" "$file_type"
         echo "CHANGED:$file_type:$repo_file:$live_file"
         return 1
     fi

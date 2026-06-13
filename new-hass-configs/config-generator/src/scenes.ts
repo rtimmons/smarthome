@@ -149,6 +149,11 @@ export const scenes: SceneRegistry = {
         brightness: 255
       },
       {
+        device: "bathroom_vanityright",
+        state: "on",
+        brightness: 255
+      },
+      {
         device: "bathroom_abovesauna",
         state: "on",
         brightness: 255
@@ -161,6 +166,11 @@ export const scenes: SceneRegistry = {
     lights: [
       {
         device: "bathroom_vanityleft",
+        state: "on",
+        brightness: 155
+      },
+      {
+        device: "bathroom_vanityright",
         state: "on",
         brightness: 155
       },
@@ -181,6 +191,11 @@ export const scenes: SceneRegistry = {
         brightness: 50
       },
       {
+        device: "bathroom_vanityright",
+        state: "on",
+        brightness: 50
+      },
+      {
         device: "bathroom_abovesauna",
         state: "off"
       }
@@ -192,6 +207,10 @@ export const scenes: SceneRegistry = {
     lights: [
       {
         device: "bathroom_vanityleft",
+        state: "off"
+      },
+      {
+        device: "bathroom_vanityright",
         state: "off"
       },
       {
