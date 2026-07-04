@@ -3,7 +3,9 @@ from __future__ import annotations
 import base64
 import hashlib
 import json
+import os
 import threading
+import time
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -58,8 +60,14 @@ class PresetStore:
             return None
         MongoClient = _require_pymongo()
         last_error: Optional[Exception] = None
+        timeout_ms = _mongo_timeout_ms()
         for config in configs:
-            client = MongoClient(config.url, serverSelectionTimeoutMS=2000)
+            client = MongoClient(
+                config.url,
+                connectTimeoutMS=timeout_ms,
+                serverSelectionTimeoutMS=timeout_ms,
+                socketTimeoutMS=timeout_ms,
+            )
             store = cls(client, _resolve_database(config))
             try:
                 store.ensure_indexes()
@@ -153,10 +161,13 @@ class PresetStore:
 
 _STORE_LOCK = threading.Lock()
 _STORE: Optional[PresetStore] = None
+_STORE_INITIALIZED = False
+_STORE_ERROR_UNTIL = 0.0
+_STORE_ERROR_TTL_SECONDS = 30.0
 
 
 def reset_cached_store() -> None:
-    global _STORE
+    global _STORE, _STORE_INITIALIZED, _STORE_ERROR_UNTIL
     with _STORE_LOCK:
         if _STORE is not None:
             try:
@@ -164,22 +175,32 @@ def reset_cached_store() -> None:
             except Exception:
                 pass
         _STORE = None
+        _STORE_INITIALIZED = False
+        _STORE_ERROR_UNTIL = 0.0
 
 
 def get_cached_store() -> Optional[PresetStore]:
-    # Cache the store to avoid reconnecting and reindexing on each request.
-    global _STORE
-    if _STORE is not None:
+    # Cache the store state to avoid reconnecting and reindexing on each request.
+    global _STORE, _STORE_INITIALIZED, _STORE_ERROR_UNTIL
+    if _STORE_INITIALIZED:
         return _STORE
+    if time.monotonic() < _STORE_ERROR_UNTIL:
+        return None
     with _STORE_LOCK:
-        if _STORE is not None:
+        if _STORE_INITIALIZED:
             return _STORE
-        store = PresetStore.from_env()
-        if store is not None:
-            if isinstance(store, PresetStore):
-                store._cached = True
-            _STORE = store
-        return store
+        if time.monotonic() < _STORE_ERROR_UNTIL:
+            return None
+        try:
+            store = PresetStore.from_env()
+        except Exception:
+            _STORE_ERROR_UNTIL = time.monotonic() + _STORE_ERROR_TTL_SECONDS
+            raise
+        if store is not None and isinstance(store, PresetStore):
+            store._cached = True
+        _STORE = store
+        _STORE_INITIALIZED = True
+        return _STORE
 
 
 def normalize_template_slug(raw: object) -> str:
@@ -318,6 +339,15 @@ def _dump_json(value: object) -> str:
 
 def _resolve_database(config: MongoConfig) -> str:
     return config.database or DEFAULT_DB
+
+
+def _mongo_timeout_ms() -> int:
+    raw = os.getenv("MONGODB_TIMEOUT_MS", "350")
+    try:
+        value = int(raw)
+    except (TypeError, ValueError):
+        return 350
+    return max(value, 1)
 
 
 def _utc_now_iso() -> str:

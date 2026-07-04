@@ -200,7 +200,35 @@ def test_get_cached_store_uses_from_env(monkeypatch: pytest.MonkeyPatch) -> None
 
     presets.reset_cached_store()
     assert presets.get_cached_store() is None
+    assert presets.get_cached_store() is None
     assert calls["count"] == 1
+
+
+def test_get_cached_store_backs_off_after_init_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    calls = {"count": 0}
+    now = {"value": 100.0}
+
+    def _fake_monotonic() -> float:
+        return now["value"]
+
+    def _raise_connection_error():
+        calls["count"] += 1
+        raise ConnectionError("mongodb unavailable")
+
+    monkeypatch.setattr(presets.time, "monotonic", _fake_monotonic)
+    monkeypatch.setattr(presets.PresetStore, "from_env", _raise_connection_error)
+
+    presets.reset_cached_store()
+    with pytest.raises(ConnectionError):
+        presets.get_cached_store()
+
+    assert presets.get_cached_store() is None
+    assert calls["count"] == 1
+
+    now["value"] += presets._STORE_ERROR_TTL_SECONDS + 0.1
+    with pytest.raises(ConnectionError):
+        presets.get_cached_store()
+    assert calls["count"] == 2
 
 
 def test_cached_store_close_is_noop() -> None:
