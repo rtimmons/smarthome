@@ -5,20 +5,41 @@ import { appConfig } from './config';
 
 const app = Router();
 
-app.get('/scenes/:scene', async (req: RQ, res: RS) => {
+const activateScene = async (req: RQ, res: RS) => {
     const scene = req.params['scene'];
-    const url = `${appConfig.webhookBase}/${scene}`;
+    const useCoreApi =
+        Boolean(process.env.SUPERVISOR_TOKEN) && !process.env.HASS_WEBHOOK_BASE;
+    const sceneId = scene.replace(/^scene_/, '');
+    if (!sceneId || sceneId === scene) {
+        res.status(400).send('Invalid scene');
+        return;
+    }
+
+    // The authenticated Core API avoids webhook local-network filtering while
+    // retaining HASS_WEBHOOK_BASE support for standalone local development.
+    const url = useCoreApi
+        ? `${appConfig.coreApiBase}/services/script/turn_on`
+        : `${appConfig.webhookBase}/${scene}`;
     console.log({ url });
+
+    // GET remains supported for legacy in-house IoT callers. Prevent caches from
+    // swallowing repeated activations; new dashboard clients should use POST.
+    res.set('Cache-Control', 'no-store');
 
     try {
         const response = await rpn({
             url,
             method: 'POST',
-            headers: appConfig.webhookBase.includes('supervisor')
+            headers: useCoreApi
                 ? { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` }
                 : undefined,
+            body: useCoreApi
+                ? { entity_id: `script.fast_scene_${sceneId}` }
+                : undefined,
+            json: useCoreApi,
             resolveWithFullResponse: true,
             simple: false,
+            timeout: 10000,
         });
 
         if (response.statusCode >= 400) {
@@ -35,6 +56,9 @@ app.get('/scenes/:scene', async (req: RQ, res: RS) => {
             scene,
         });
     }
-});
+};
+
+app.get('/scenes/:scene', activateScene);
+app.post('/scenes/:scene', activateScene);
 
 export const hass = app;

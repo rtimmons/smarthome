@@ -25,6 +25,13 @@ class LightController {
         }
 
         console.log('Requesting scene at url ', url);
-        this.app.request(url);
+        return this.app.request({
+            url: url,
+            method: 'POST',
+        });
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = LightController;
 }

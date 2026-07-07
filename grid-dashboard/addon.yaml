@@ -44,7 +44,7 @@ translations:
       description: Base URL for ledgrid-poc web API (e.g., http://ledwallleft.local:5000).
     webhook_base:
       name: Webhook base URL
-      description: Optional override for Home Assistant webhook calls; leave empty to use supervisor proxy.
+      description: Optional standalone-development webhook URL; leave empty to use the authenticated Supervisor Core API proxy.
 docs:
   readme: >
     Local add-on that exposes the Express-based grid dashboard UI with ingress support. Access the dashboard directly
