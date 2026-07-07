@@ -8,12 +8,14 @@ This directory contains documentation for system maintenance, verification proce
 
 1. **[system-verification.md](system-verification.md)** — System consistency verification procedures
 2. **[zwave-scene-ops.md](zwave-scene-ops.md)** — Live Z-Wave scene diagnosis and response workflow
-3. **[improvements.md](improvements.md)** — Comprehensive improvements roadmap
+3. **[esphome-fancontrollers.md](esphome-fancontrollers.md)** — ESPHome fan controller inventory and setup workflow
+4. **[improvements.md](improvements.md)** — Comprehensive improvements roadmap
 
 ## Files
 
 - **[system-verification.md](system-verification.md)** — Verification procedures for configuration files, documentation, and build tools
 - **[zwave-scene-ops.md](zwave-scene-ops.md)** — Repeatable workflow for Z-Wave-heavy scene slowness, ramp fixes, and inventory capture
+- **[esphome-fancontrollers.md](esphome-fancontrollers.md)** — Live ESPHome fan controller configuration, entity naming, and onboarding notes
 - **[improvements.md](improvements.md)** — **Strategic roadmap** consolidating all improvement plans and priorities
 
 ## Common Operations
