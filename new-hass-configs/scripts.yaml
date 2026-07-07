@@ -442,6 +442,9 @@ fast_scene_living_room_high:
           target:
             entity_id:
               - switch.light_living_ledwall
+        - service: switch.turn_on
+          target:
+            entity_id:
               - switch.light_living_sillleftpower
 fast_scene_living_room_medium:
   alias: Fast Scene - Living Room - Medium
@@ -464,7 +467,6 @@ fast_scene_living_room_medium:
           target:
             entity_id:
               - switch.light_living_ledwall
-              - switch.light_living_sillleftpower
         - service: light.turn_off
           target:
             entity_id:
@@ -565,6 +567,10 @@ fast_scene_living_room_medium:
               - light.light_living_abovetv_white
           data:
             brightness: 51
+        - service: switch.turn_off
+          target:
+            entity_id:
+              - switch.light_living_sillleftpower
 fast_scene_living_room_low:
   alias: Fast Scene - Living Room - Low
   mode: restart
@@ -581,6 +587,9 @@ fast_scene_living_room_low:
           target:
             entity_id:
               - switch.light_living_ledwall
+        - service: switch.turn_off
+          target:
+            entity_id:
               - switch.light_living_sillleftpower
 fast_scene_living_room_off:
   alias: Fast Scene - Living Room - Off
@@ -658,6 +667,9 @@ fast_scene_living_room_off:
           target:
             entity_id:
               - switch.light_living_ledwall
+        - service: switch.turn_off
+          target:
+            entity_id:
               - switch.light_living_sillleftpower
 fast_scene_makerroom_high:
   alias: Fast Scene - Maker Room - High
@@ -1095,7 +1107,6 @@ fast_scene_all_off:
               - switch.light_bedroom_flamingopower
               - switch.light_dining_weenie
               - switch.light_living_ledwall
-              - switch.light_living_sillleftpower
               - switch.light_office_pianolight
         - service: light.turn_off
           target:
@@ -1263,3 +1274,7 @@ fast_scene_all_off:
           target:
             entity_id:
               - light.light_bedroom_sconces
+        - service: switch.turn_off
+          target:
+            entity_id:
+              - switch.light_living_sillleftpower

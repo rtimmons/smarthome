@@ -232,18 +232,26 @@ describe("Scene Generation with Pairing", () => {
       expect(yamlOutput).toContain("brightness: 255");
     });
 
-    it("should generate grouped fast scene calls for living_room_high", () => {
+    it("should isolate Z-Wave outlet fast scene calls for living_room_high", () => {
       const { generateFastCalls } = require("./generate-test-helper");
 
       const calls = generateFastCalls(scenes.living_room_high);
 
-      expect(calls).toHaveLength(17);
+      expect(calls).toHaveLength(18);
+      expect(
+        calls.find(
+          (call: any) =>
+            call.service === "switch.turn_on" &&
+            call.target.entity_id.length === 1 &&
+            call.target.entity_id[0] === "switch.light_living_sillleftpower"
+        )
+      ).toBeDefined();
       expect(
         calls.find(
           (call: any) =>
             call.service === "switch.turn_on" &&
             call.target.entity_id.includes("switch.light_living_ledwall") &&
-            call.target.entity_id.includes("switch.light_living_sillleftpower")
+            !call.target.entity_id.includes("switch.light_living_sillleftpower")
         )
       ).toBeDefined();
       expect(

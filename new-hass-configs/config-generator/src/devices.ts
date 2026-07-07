@@ -469,7 +469,7 @@ export const devices: DeviceRegistry = {
     },
     living_sillleftpower: {
       entity: "switch.light_living_sillleftpower",
-      type: "outlet",
+      type: "zwave_outlet",
       capabilities: ["on_off"]
     },
     dining_weenie: {

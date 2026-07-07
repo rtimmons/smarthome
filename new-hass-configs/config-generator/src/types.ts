@@ -15,6 +15,7 @@ export type DeviceType =
   | "color_light"
   | "white_light"
   | "outlet"
+  | "zwave_outlet"
   | "switch"
   | "zwave_switch_light" // Z-Wave dimmer hardware with non-dimmable fixture (on/off only)
   | "zwave_dimmer_46203"
