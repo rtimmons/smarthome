@@ -10,6 +10,7 @@ This directory contains documentation for system maintenance, verification proce
 2. **[zwave-scene-ops.md](zwave-scene-ops.md)** — Live Z-Wave scene diagnosis and response workflow
 3. **[esphome-fancontrollers.md](esphome-fancontrollers.md)** — ESPHome fan controller inventory and setup workflow
 4. **[improvements.md](improvements.md)** — Comprehensive improvements roadmap
+5. **[zwave-product-catalog.json](zwave-product-catalog.json)** — Stable hardware product identities and upstream product detail records
 
 ## Files
 
@@ -17,6 +18,7 @@ This directory contains documentation for system maintenance, verification proce
 - **[zwave-scene-ops.md](zwave-scene-ops.md)** — Repeatable workflow for Z-Wave-heavy scene slowness, ramp fixes, and inventory capture
 - **[esphome-fancontrollers.md](esphome-fancontrollers.md)** — Live ESPHome fan controller configuration, entity naming, and onboarding notes
 - **[improvements.md](improvements.md)** — **Strategic roadmap** consolidating all improvement plans and priorities
+- **[zwave-product-catalog.json](zwave-product-catalog.json)** — Stable make/model labels and product detail URLs for Z-Wave and ESPHome hardware; live node status remains in inventory snapshots
 
 ## Common Operations
 

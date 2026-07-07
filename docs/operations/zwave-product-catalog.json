@@ -1,0 +1,188 @@
+{
+  "schema": 1,
+  "purpose": "Stable product identity catalog for Home Assistant hardware where make/model identity matters. Runtime health, availability, node status, and noise counts belong in inventory snapshots, not this file. The filename is historical; this catalog now includes Z-Wave and ESPHome products.",
+  "source_priority": [
+    "Home Assistant core.device_registry for installed manufacturer/model identity",
+    "Z-Wave JS device config records for stable product identifiers and details URLs",
+    "ESPHome core.config_entries and live YAML for device names, firmware targets, and integration details",
+    "Official manufacturer documentation for board-level product detail URLs",
+    "Inventory snapshots only for temporary cross-checking"
+  ],
+  "products": [
+    {
+      "id": "espressif-esp32-s2-saola-1-fancontroller-r3-1",
+      "manufacturer": "Espressif",
+      "label": "ESP32-S2-Saola-1",
+      "description": "ESP32-S2 development board target used by the ESPHome fancontroller-r3-1 firmware. Home Assistant reports the board model, but does not prove the assembled fan controller product/vendor.",
+      "esphome": {
+        "deviceNamePattern": "fancontroller-r3-1-*",
+        "baseDeviceName": "fancontroller-r3-1",
+        "friendlyName": "fancontroller",
+        "board": "esp32-s2-saola-1",
+        "framework": "arduino",
+        "nativeApiPort": 6053,
+        "webServerPort": 80,
+        "firmwareSourcePath": "/config/esphome/config.yaml",
+        "archivedFirmwareSourcePath": "/config/esphome/archive/fancontroller-rev31-esp32s2.yaml"
+      },
+      "detailsUrl": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32s2/esp32-s2-saola-1/index.html",
+      "knownRepoReferences": [
+        {
+          "deviceKey": "fancontroller_1",
+          "entityId": "fan.fancontroller_1_fan_1",
+          "haDeviceName": "fancontroller 1",
+          "area": "living_room",
+          "host": "192.168.1.238",
+          "mac": "90:e5:b1:8b:11:b8",
+          "note": "Represents four fan entities plus RPM, temperature, humidity, button, and NeoPixel entities."
+        },
+        {
+          "deviceKey": "fancontroller_2",
+          "entityId": "fan.fancontroller_2_fan_1",
+          "haDeviceName": "fancontroller 2",
+          "area": "living_room",
+          "host": "192.168.1.52",
+          "mac": "90:e5:b1:8b:12:ee",
+          "note": "Represents four fan entities plus RPM, temperature, humidity, button, and NeoPixel entities."
+        },
+        {
+          "deviceKey": "fancontroller_3",
+          "entityId": "fan.fancontroller_3_fan_1",
+          "haDeviceName": "fancontroller 3",
+          "area": "bedroom",
+          "host": "192.168.1.49",
+          "mac": "90:e5:b1:8b:12:e0",
+          "note": "Represents four fan entities plus RPM, temperature, humidity, button, and NeoPixel entities."
+        }
+      ]
+    },
+    {
+      "id": "espressif-esp32-c3-devkitm-1-human-sensor",
+      "manufacturer": "Espressif",
+      "label": "ESP32-C3-DevKitM-1",
+      "description": "ESP32-C3 development board target reported by Home Assistant for the ESPHome human-sensor presence device. The exposed entities indicate a mmWave presence sensor with VEML7700 ambient light and AHT20 temperature/humidity sensors, but HA does not prove a branded assembled product.",
+      "esphome": {
+        "deviceName": "human-sensor",
+        "board": "esp32-c3-devkitm-1",
+        "nativeApiPort": 6053,
+        "host": "192.168.1.81",
+        "observedSensors": [
+          "presence",
+          "moving_target",
+          "still_target",
+          "moving_distance",
+          "still_distance",
+          "detection_distance",
+          "VEML7700 ambient light",
+          "AHT20 temperature",
+          "AHT20 humidity"
+        ]
+      },
+      "detailsUrl": "https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32c3/esp32-c3-devkitm-1/index.html",
+      "knownRepoReferences": [
+        {
+          "deviceKey": "human_sensor",
+          "entityId": "binary_sensor.human_sensor_presence",
+          "haDeviceName": "human-sensor",
+          "area": "living_room",
+          "host": "192.168.1.81",
+          "mac": "94:a9:90:79:fd:40",
+          "note": "Presence sensor endpoint was unreachable during the 2026-07-07 product audit; identity comes from HA registries."
+        }
+      ]
+    },
+    {
+      "id": "ge-14288-zw1002",
+      "manufacturer": "GE",
+      "label": "14288 / ZW1002",
+      "description": "In-Wall Outlet, TR, 500S",
+      "zwave": {
+        "manufacturerId": "0x0063",
+        "productType": "0x4952",
+        "productId": "0x3133"
+      },
+      "detailsUrl": "https://raw.githubusercontent.com/zwave-js/zwave-js/master/packages/config/config/devices/0x0063/14288_zw1002.json",
+      "knownRepoReferences": [
+        {
+          "deviceKey": "living_sillleftpower",
+          "entityId": "switch.light_living_sillleftpower"
+        }
+      ]
+    },
+    {
+      "id": "enbrighten-35931-zw7101",
+      "manufacturer": "Enbrighten",
+      "label": "35931 / ZW7101",
+      "description": "LED A19 Bulb, 500S",
+      "zwave": {
+        "manufacturerId": "0x0063",
+        "productType": "0x4c42",
+        "productId": "0x3031"
+      },
+      "detailsUrl": "https://raw.githubusercontent.com/zwave-js/zwave-js/master/packages/config/config/devices/0x0063/35931_zw7101.json",
+      "knownRepoReferences": [
+        {
+          "deviceKey": "bathroom_vanityleft",
+          "entityId": "light.light_bathroom_vanityleft"
+        }
+      ]
+    },
+    {
+      "id": "minoston-mp22zd",
+      "manufacturer": "Minoston",
+      "label": "MP22ZD",
+      "description": "Z-Wave Outdoor Smart Plug",
+      "zwave": {
+        "manufacturerId": "0x0312",
+        "productType": "0xff07",
+        "productId": "0xff03"
+      },
+      "detailsUrl": "https://raw.githubusercontent.com/zwave-js/zwave-js/master/packages/config/config/devices/0x0312/mp22zd.json",
+      "knownRepoReferences": [
+        {
+          "deviceKey": "living_desklamps",
+          "entityId": "light.light_living_desklamps"
+        },
+        {
+          "deviceKey": "kitchen_ring",
+          "entityId": "light.light_kitchen_ring"
+        },
+        {
+          "deviceKey": "living_sliderring",
+          "entityId": "light.light_living_sliderring"
+        },
+        {
+          "deviceKey": "living_cornerspot",
+          "entityId": "light.light_living_cornerspot"
+        }
+      ]
+    },
+    {
+      "id": "ge-enbrighten-46203-zw3010",
+      "manufacturer": "GE/Enbrighten",
+      "label": "46203 / ZW3010",
+      "description": "In-Wall Paddle Dimmer, QFSW, 500S",
+      "zwave": {
+        "manufacturerId": "0x0063",
+        "productType": "0x4944",
+        "productId": "0x3235"
+      },
+      "detailsUrl": "https://raw.githubusercontent.com/zwave-js/zwave-js/master/packages/config/config/devices/0x0063/46203_zw3010.json",
+      "knownRepoReferences": [
+        {
+          "deviceKey": "guestbathroom_overhead",
+          "entityId": "light.light_guestbathroom_overhead"
+        },
+        {
+          "deviceKey": "dining_abovetable",
+          "entityId": "light.light_dining_abovetable"
+        },
+        {
+          "deviceKey": "bathroom_vanityright",
+          "entityId": "light.light_bathroom_vanityright",
+          "note": "Configured in repo, but absent from the live entity registry during the 2026-07-07 audit."
+        }
+      ]
+    }
+  ]
+}

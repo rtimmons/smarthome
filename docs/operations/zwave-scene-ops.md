@@ -56,6 +56,7 @@ just zwave-verify-instant-ramps
 - [`new-hass-configs/config-generator/src/cli/zwave-scenes.ts`](/Users/rtimmons/Projects/smarthome/new-hass-configs/config-generator/src/cli/zwave-scenes.ts)
 - [`new-hass-configs/config-generator/src/devices.ts`](/Users/rtimmons/Projects/smarthome/new-hass-configs/config-generator/src/devices.ts)
 - [`new-hass-configs/config-generator/src/scenes.ts`](/Users/rtimmons/Projects/smarthome/new-hass-configs/config-generator/src/scenes.ts)
+- [`docs/operations/zwave-product-catalog.json`](/Users/rtimmons/Projects/smarthome/docs/operations/zwave-product-catalog.json) for stable make/model/product identity references. Do not use it for live health; use fresh inventory snapshots for node status and availability.
 
 ## When To Patch The Generator
 

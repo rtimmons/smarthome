@@ -45,6 +45,8 @@ The boards report as:
 - Model: `esp32-s2-saola-1`
 - ESPHome version observed on existing boards: `2025.12.5`
 
+Board-level product identity is tracked in [`zwave-product-catalog.json`](zwave-product-catalog.json) under `espressif-esp32-s2-saola-1-fancontroller-r3-1`. Home Assistant reports the Espressif development board target; it does not prove the vendor/model of the assembled fan controller PCB.
+
 ## Exposed Entities
 
 Each controller exposes the same entity set. For controller 1, the active entities are:
