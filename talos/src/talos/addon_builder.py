@@ -19,6 +19,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .paths import ADDON_BUILD_ROOT, REPO_ROOT, TEMPLATE_DIR
+from .timing import DeployTimer
 
 console = Console()
 
@@ -570,9 +571,130 @@ def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, v
         raise
 
 
+def render_remote_deploy_script(slug: str, remote_tar: str, remote_addon_dir: str, remote_addons_dir: str, verbose: bool) -> str:
+    verbose_flag = "true" if verbose else "false"
+    return f"""#!/bin/bash
+set -euo pipefail
+
+ADDON_SLUG="{slug}"
+ADDON_ID="local_{slug}"
+REMOTE_TAR="{remote_tar}"
+REMOTE_ADDON_DIR="{remote_addon_dir}"
+VERBOSE="{verbose_flag}"
+
+log_info() {{
+    if [ "$VERBOSE" = "true" ]; then
+        echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $1"
+    fi
+}}
+
+log_error() {{
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2
+}}
+
+run_quiet() {{
+    if [ "$VERBOSE" = "true" ]; then
+        "$@"
+    else
+        "$@" >/dev/null 2>&1
+    fi
+}}
+
+log_info "Stopping add-on $ADDON_ID if running..."
+if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
+    ADDON_STATE="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.data.state // "unknown"' || echo "unknown")"
+    if [ "$ADDON_STATE" = "started" ]; then
+        if ! run_quiet ha addons stop "$ADDON_ID"; then
+            log_error "Failed to stop add-on $ADDON_ID"
+            exit 1
+        fi
+        log_info "Add-on $ADDON_ID stopped successfully"
+    else
+        log_info "Add-on $ADDON_ID is not running (state: $ADDON_STATE)"
+    fi
+else
+    log_info "Add-on $ADDON_ID not currently installed"
+fi
+
+log_info "Extracting add-on files..."
+rm -rf "$REMOTE_ADDON_DIR"
+mkdir -p "{remote_addons_dir}"
+if ! tar -xzf "$REMOTE_TAR" -C "{remote_addons_dir}"; then
+    log_error "Failed to extract add-on tarball"
+    exit 1
+fi
+rm -f "$REMOTE_TAR"
+log_info "Add-on files extracted successfully"
+
+log_info "Reloading add-on list..."
+if ! run_quiet ha addons reload; then
+    log_error "Failed to reload add-on list"
+    exit 1
+fi
+
+log_info "Installing/rebuilding add-on $ADDON_ID..."
+if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
+    log_info "Add-on exists, attempting rebuild..."
+    if ! run_quiet ha addons rebuild "$ADDON_ID"; then
+        log_info "Rebuild failed, attempting fresh install..."
+        if ! run_quiet ha addons install "$ADDON_ID"; then
+            log_error "Failed to install add-on $ADDON_ID"
+            exit 1
+        fi
+    fi
+else
+    log_info "Installing new add-on..."
+    if ! run_quiet ha addons install "$ADDON_ID"; then
+        log_error "Failed to install add-on $ADDON_ID"
+        exit 1
+    fi
+fi
+
+log_info "Configuring add-on options..."
+SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
+if [ -n "$SUPERVISOR_TOKEN" ]; then
+    OPTIONS_JSON='{{"watchdog": true}}'
+
+    if curl -sSf -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" \\
+        -X POST -d "$OPTIONS_JSON" http://supervisor/addons/"$ADDON_ID"/options >/dev/null; then
+        log_info "Add-on options configured successfully"
+    else
+        log_info "Warning: could not update add-on options for $ADDON_ID; continuing with current settings"
+    fi
+else
+    log_info "SUPERVISOR_TOKEN not set; skipping add-on options configuration"
+fi
+
+log_info "Starting add-on $ADDON_ID..."
+if ! run_quiet ha addons start "$ADDON_ID"; then
+    log_error "Failed to start add-on $ADDON_ID"
+    exit 1
+fi
+log_info "Add-on $ADDON_ID started successfully"
+
+for attempt in 1 2 3 4 5 6; do
+    if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
+        log_info "Add-on $ADDON_ID is running and healthy"
+        break
+    fi
+
+    if [ "$attempt" = "6" ]; then
+        log_error "Add-on $ADDON_ID failed to start properly"
+        exit 1
+    fi
+
+    sleep 1
+done
+
+log_info "Deployment of $ADDON_ID completed successfully"
+"""
+
+
 def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool,
-                 verbose: bool = False, validate_prereqs: bool = True, show_success: bool = True) -> None:
+                 verbose: bool = False, validate_prereqs: bool = True, show_success: bool = True,
+                 timer: DeployTimer | None = None) -> None:
     """Deploy an add-on with enhanced error handling and validation."""
+    timer = timer or DeployTimer(console, enabled=False)
     try:
         manifest = load_manifest()
         context = build_context(addon_key, manifest)
@@ -606,15 +728,16 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
 
         # Validate prerequisites for real deployments
         if validate_prereqs:
-            validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
+            with timer.phase("addon.prerequisites", addon=addon_key):
+                validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
 
         if verbose:
             console.print(f"🔨 [bold]Building {addon_key}...[/bold]")
-        archive = build_addon(addon_key, verbose=verbose)
+        with timer.phase("addon.build", addon=addon_key):
+            archive = build_addon(addon_key, verbose=verbose)
 
         remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
         remote_addon_dir = f"{paths['remote_addons']}/{slug}"
-        has_ingress = "true" if addon.get("ingress") else "false"
 
         if verbose:
             console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
@@ -622,7 +745,8 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
         # Upload addon tarball
         scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
         try:
-            run_cmd(scp_cmd, dry_run=dry_run, verbose=verbose)
+            with timer.phase("addon.upload", addon=addon_key):
+                run_cmd(scp_cmd, dry_run=dry_run, verbose=verbose)
             if verbose:
                 console.print(f"  ✓ Uploaded {addon_key} tarball")
         except subprocess.CalledProcessError as e:
@@ -641,195 +765,25 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
                 ]
             )
 
-        # Create enhanced remote deployment script
-        verbose_flag = "true" if verbose else "false"
-        remote_script = f"""#!/bin/bash
-set -euo pipefail
-
-# Deployment variables
-ADDON_SLUG="{slug}"
-ADDON_ID="local_{slug}"
-REMOTE_TAR="{remote_tar}"
-REMOTE_ADDON_DIR="{remote_addon_dir}"
-VERBOSE="{verbose_flag}"
-
-# Logging function
-log_info() {{
-    if [ "$VERBOSE" = "true" ]; then
-        echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $1"
-    fi
-}}
-
-log_error() {{
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2
-}}
-
-# Stop addon if running
-log_info "Stopping add-on $ADDON_ID if running..."
-if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-    # Check if addon is actually running before trying to stop it
-    ADDON_STATE="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.data.state // "unknown"' || echo "unknown")"
-    if [ "$ADDON_STATE" = "started" ]; then
-        if [ "$VERBOSE" = "true" ]; then
-            if ! ha addons stop "$ADDON_ID"; then
-                log_error "Failed to stop add-on $ADDON_ID"
-                exit 1
-            fi
-        else
-            if ! ha addons stop "$ADDON_ID" >/dev/null 2>&1; then
-                log_error "Failed to stop add-on $ADDON_ID"
-                exit 1
-            fi
-        fi
-        log_info "Add-on $ADDON_ID stopped successfully"
-    else
-        log_info "Add-on $ADDON_ID is not running (state: $ADDON_STATE)"
-    fi
-else
-    log_info "Add-on $ADDON_ID not currently installed"
-fi
-
-# Extract addon files
-log_info "Extracting add-on files..."
-rm -rf "$REMOTE_ADDON_DIR"
-mkdir -p "{paths['remote_addons']}"
-if ! tar -xzf "$REMOTE_TAR" -C "{paths['remote_addons']}"; then
-    log_error "Failed to extract add-on tarball"
-    exit 1
-fi
-rm -f "$REMOTE_TAR"
-log_info "Add-on files extracted successfully"
-
-# Reload addon list
-log_info "Reloading add-on list..."
-if [ "$VERBOSE" = "true" ]; then
-    if ! ha addons reload; then
-        log_error "Failed to reload add-on list"
-        exit 1
-    fi
-else
-    if ! ha addons reload >/dev/null 2>&1; then
-        log_error "Failed to reload add-on list"
-        exit 1
-    fi
-fi
-sleep 2
-
-# Install or rebuild addon
-log_info "Installing/rebuilding add-on $ADDON_ID..."
-if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-    log_info "Add-on exists, attempting rebuild..."
-    if [ "$VERBOSE" = "true" ]; then
-        if ! ha addons rebuild "$ADDON_ID"; then
-            log_info "Rebuild failed, attempting fresh install..."
-            if ! ha addons install "$ADDON_ID"; then
-                log_error "Failed to install add-on $ADDON_ID"
-                exit 1
-            fi
-        fi
-    else
-        if ! ha addons rebuild "$ADDON_ID" >/dev/null 2>&1; then
-            log_info "Rebuild failed, attempting fresh install..."
-            if ! ha addons install "$ADDON_ID" >/dev/null 2>&1; then
-                log_error "Failed to install add-on $ADDON_ID"
-                exit 1
-            fi
-        fi
-    fi
-else
-    log_info "Installing new add-on..."
-    if [ "$VERBOSE" = "true" ]; then
-        if ! ha addons install "$ADDON_ID"; then
-            log_error "Failed to install add-on $ADDON_ID"
-            exit 1
-        fi
-    else
-        if ! ha addons install "$ADDON_ID" >/dev/null 2>&1; then
-            log_error "Failed to install add-on $ADDON_ID"
-            exit 1
-        fi
-    fi
-fi
-"""
-
-        # Add port mapping and options configuration
-        if port:
-            remote_script += f"""
-# Check if port mapping is needed
-log_info "Checking port configuration for port {port}..."
-CURRENT_PORT="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.network["{port}/tcp"] // empty' || true)"
-need_port_mapping="false"
-if [ -z "$CURRENT_PORT" ] || [ "$CURRENT_PORT" = "null" ]; then
-    need_port_mapping="true"
-    log_info "Port mapping needed for port {port}"
-else
-    log_info "Port {port} already configured"
-fi
-"""
-
-        # Add options configuration
-        remote_script += f"""
-# Configure add-on options
-log_info "Configuring add-on options..."
-SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
-if [ -n "$SUPERVISOR_TOKEN" ]; then
-    OPTIONS_JSON='{{"watchdog": true}}'
-
-    if curl -sSf -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" \\
-        -X POST -d "$OPTIONS_JSON" http://supervisor/addons/"$ADDON_ID"/options >/dev/null; then
-        log_info "Add-on options configured successfully"
-    else
-        log_info "Warning: could not update add-on options for $ADDON_ID; continuing with current settings"
-    fi
-else
-    log_info "SUPERVISOR_TOKEN not set; skipping add-on options configuration"
-fi
-
-# Start the add-on
-log_info "Starting add-on $ADDON_ID..."
-if [ "$VERBOSE" = "true" ]; then
-    if ha addons start "$ADDON_ID"; then
-        log_info "Add-on $ADDON_ID started successfully"
-    else
-        log_error "Failed to start add-on $ADDON_ID"
-        exit 1
-    fi
-else
-    if ha addons start "$ADDON_ID" >/dev/null 2>&1; then
-        log_info "Add-on $ADDON_ID started successfully"
-    else
-        log_error "Failed to start add-on $ADDON_ID"
-        exit 1
-    fi
-fi
-
-# Verify it is running, waiting only if Supervisor has not reported started yet.
-for attempt in 1 2 3 4 5 6; do
-    if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
-        log_info "Add-on $ADDON_ID is running and healthy"
-        break
-    fi
-
-    if [ "$attempt" = "6" ]; then
-        log_error "Add-on $ADDON_ID failed to start properly"
-        exit 1
-    fi
-
-    sleep 1
-done
-
-log_info "Deployment of $ADDON_ID completed successfully"
-"""
+        remote_script = render_remote_deploy_script(
+            slug=slug,
+            remote_tar=remote_tar,
+            remote_addon_dir=remote_addon_dir,
+            remote_addons_dir=paths["remote_addons"],
+            verbose=verbose,
+        )
 
         # Execute remote deployment script
         ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
         try:
-            run_cmd(ssh_cmd, dry_run=dry_run, verbose=verbose)
+            with timer.phase("addon.remote_deploy", addon=addon_key):
+                run_cmd(ssh_cmd, dry_run=dry_run, verbose=verbose)
             if not dry_run and verbose:
                 console.print(f"  ✅ [green]{addon_key} deployed successfully[/green]")
         except subprocess.CalledProcessError as e:
             # Capture logs for troubleshooting
-            addon_logs = get_addon_logs(ha_host, ha_port, ha_user, f"local_{slug}", lines=20)
+            with timer.phase("addon.fetch_logs", addon=addon_key):
+                addon_logs = get_addon_logs(ha_host, ha_port, ha_user, f"local_{slug}", lines=20)
 
             raise DeploymentError(
                 f"Failed to deploy {addon_key} on remote system",

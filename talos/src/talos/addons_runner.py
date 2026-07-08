@@ -12,6 +12,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskPr
 
 from .addon_builder import discover_addons, DeploymentError, deploy_addon, validate_deployment_prerequisites
 from .paths import REPO_ROOT
+from .timing import DeployTimer
 
 console = Console()
 PRE_DEPLOY_RECIPES = ("generate", "build", "test", "ha-addon", "container-test")
@@ -129,8 +130,9 @@ def _resolve_addons(explicit: Iterable[str]) -> List[Path]:
 
 def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, ha_user: str,
                           dry_run: bool = False, verbose: bool = False, jobs: int | None = None,
-                          verify: bool = False) -> None:
+                          verify: bool = False, timer: DeployTimer | None = None) -> None:
     """Enhanced deployment with better error handling and progress tracking."""
+    timer = timer or DeployTimer(console, enabled=False)
     addon_dirs = _resolve_addons(addons)
     addon_names = [addon_dir.name for addon_dir in addon_dirs]
     verify = verify or _is_truthy(os.environ.get("TALOS_DEPLOY_VERIFY"))
@@ -172,7 +174,8 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         console.print("🧪 [bold]Verified deploy mode:[/bold] running optional local pre-deploy recipes first.")
     else:
         console.print("⚡ [bold]Fast deploy mode:[/bold] skipping optional local build/test/container validation. Use `--verify` to restore it.")
-    validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
+    with timer.phase("addons.prerequisites"):
+        validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
     if jobs is None:
         jobs = os.cpu_count() or 1
     if jobs < 1:
@@ -216,7 +219,8 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
                     addon_name = addon_dir.name
                     progress.update(build_task, description=f"Checking {addon_name}...")
 
-                    addon_name, failed_pre, error_msg, error = _run_pre_deploy_steps(addon_dir, verbose)
+                    with timer.phase("addons.verify", addon=addon_name):
+                        addon_name, failed_pre, error_msg, error = _run_pre_deploy_steps(addon_dir, verbose)
                     if error_msg:
                         record_pre_deploy_failure(addon_name, failed_pre, error_msg, error)
 
@@ -263,7 +267,8 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
                         dry_run,
                         verbose,
                         validate_prereqs=False,
-                        show_success=verbose
+                        show_success=verbose,
+                        timer=timer
                     )
                     successful_deployments.append(addon_name)
                     progress.advance(deploy_task)

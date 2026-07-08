@@ -212,109 +212,22 @@ check: preflight
 
 # Run the expensive drift check up front without applying changes.
 [group: 'deploy']
-deploy-precheck: generate preflight sync-check
-	@echo "Config deployment precheck passed"
+deploy-precheck:
+	@sync-tools/deploy-config.sh precheck
 
 [private]
-deploy-needed: preflight
-	#!/usr/bin/env bash
-	set -euo pipefail
-	raw_changes="$(rsync -anic --delete \
-		{{rsync_protect_filters}} \
-		--prune-empty-dirs \
-		{{local_repo_excludes}} \
-		--exclude 'secrets.yaml' \
-		--include '*/' \
-		--include '*.yaml' \
-		--include '*.yml' \
-		--include '*.json' \
-		--include '*.sh' \
-		--exclude '.git/' \
-		--exclude '.cloud/' \
-		--exclude '.storage/' \
-		--exclude 'deps/' \
-		--exclude 'tts/' \
-		--exclude '*.db*' \
-		--exclude '*.log' \
-		--exclude '*.pickle' \
-		--exclude '*.uuid' \
-		--exclude '*~' \
-		--exclude '*.pyc' \
-		--exclude '__pycache__/' \
-		--exclude '*' \
-		-e "ssh -p 22" \
-		. root@homeassistant.local:/config/)"
-	if printf '%s\n' "$raw_changes" | awk 'NF && !($2 == "./" && substr($1, 1, 2) == ".d") && $1 !~ /^[.]f[.][.]t/ { found = 1 } END { exit found ? 0 : 1 }'; then
-		printf 'true\n'
-	else
-		printf 'false\n'
-	fi
+deploy-needed:
+	@sync-tools/deploy-config.sh needed
 
 # Apply the already-reviewed config to Home Assistant and restart.
 [group: 'deploy']
-deploy-apply: preflight
-	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
-	rsync -av \
-		--delete \
-		{{rsync_protect_filters}} \
-		--prune-empty-dirs \
-		{{local_repo_excludes}} \
-		--include '*/' \
-		--include '*.yaml' \
-		--include '*.yml' \
-		--include '*.json' \
-		--include '*.sh' \
-		--exclude '.git/' \
-		--exclude '.cloud/' \
-		--exclude '.storage/' \
-		--exclude 'deps/' \
-		--exclude 'tts/' \
-		--exclude 'secrets.yaml' \
-		--exclude '*.db*' \
-		--exclude '*.log' \
-		--exclude '*.pickle' \
-		--exclude '*.uuid' \
-		--exclude '*~' \
-		--exclude '*.pyc' \
-		--exclude '__pycache__/' \
-		--exclude '*' \
-		-e "ssh -p 22" \
-		. root@homeassistant.local:"{{tmp_dir}}"/
-	ssh -p 22 root@homeassistant.local "if [ -f /config/secrets.yaml ]; then cp /config/secrets.yaml \"{{tmp_dir}}\"/; fi"
-	ssh -p 22 root@homeassistant.local "\
-		backup_dir=\"/tmp/hass-config-backup\" && \
-		rm -rf \"\${backup_dir}\" && \
-		mkdir -p \"\${backup_dir}\" && \
-		rsync -a --delete /config/ \"\${backup_dir}\"/  && \
-		rsync -av --delete --prune-empty-dirs \
-			{{rsync_protect_filters}} \
-			--include '*/' \
-			--include '*.yaml' \
-			--include '*.yml' \
-			--include '*.json' \
-			--include '*.sh' \
-			--exclude '.git/' \
-			--exclude '.cloud/' \
-			--exclude '.storage/' \
-			--exclude 'deps/' \
-			--exclude 'tts/' \
-			--exclude 'secrets.yaml' \
-			--exclude '*.db*' \
-			--exclude '*.log' \
-			--exclude '*.pickle' \
-			--exclude '*.uuid' \
-			--exclude '*~' \
-			--exclude '*.pyc' \
-			--exclude '__pycache__/' \
-			--exclude '*' \
-			\"{{tmp_dir}}\"/ /config/  && \
-		rm -rf \"\${backup_dir}\""
-	ssh -p 22 root@homeassistant.local 'for attempt in 1 2 3 4 5 6 7 8 9 10; do if ha core restart >/tmp/ha-core-restart.out 2>&1; then rm -f /tmp/ha-core-restart.out; exit 0; fi; if ! grep -q "Another job is running for job group home_assistant_core" /tmp/ha-core-restart.out; then cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1; fi; sleep 3; done; cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1'
-	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
+deploy-apply:
+	@sync-tools/deploy-config.sh apply
 
 # Deploy the current config to Home Assistant and restart.
 [group: 'deploy']
-deploy: deploy-precheck deploy-apply
+deploy:
+	@sync-tools/deploy-config.sh deploy
 
 # ============================================================================
 # BIDIRECTIONAL SYNC TOOLS
