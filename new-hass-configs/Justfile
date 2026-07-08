@@ -2,7 +2,7 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
-rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***'"
+rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .cache/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***'"
 local_repo_excludes := "--exclude 'config-generator/***' --exclude 'backups/***' --exclude 'inventory_snapshots/***'"
 
 preflight:
@@ -15,48 +15,52 @@ preflight:
 		fi
 	done
 
+[private]
+config-generator-install:
+	cd config-generator && if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then npm install; fi
+
 # Run tests for config-generator
-test:
-	cd config-generator && npm install && npm test
+test: config-generator-install
+	cd config-generator && npm test
 
 # Diagnose Z-Wave scene slowness and generate a ramp-normalization plan
-zwave-diagnose *args="": preflight
-	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js diagnose {{args}}
+zwave-diagnose *args="": preflight config-generator-install
+	cd config-generator && npm run build && node dist/cli/zwave-scenes.js diagnose {{args}}
 
 # Capture a timestamped live Z-Wave scene inventory for future diagnosis
-zwave-inventory *args="": preflight
+zwave-inventory *args="": preflight config-generator-install
 	timestamp="$(date +%Y%m%d-%H%M%S)"; \
 	output_dir="inventory_snapshots/zwave-scene-audits/$timestamp"; \
 	mkdir -p "$output_dir"; \
-	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js inventory --output-dir "../$output_dir" {{args}}; \
+	cd config-generator && npm run build && node dist/cli/zwave-scenes.js inventory --output-dir "../$output_dir" {{args}}; \
 	echo "Wrote Z-Wave inventory to $output_dir"
 
 # Trigger fast scene scripts live and measure how long targets take to settle
-zwave-exercise-scene *args="": preflight
+zwave-exercise-scene *args="": preflight config-generator-install
 	timestamp="$(date +%Y%m%d-%H%M%S)"; \
 	output_dir="inventory_snapshots/zwave-scene-audits/$timestamp"; \
 	mkdir -p "$output_dir"; \
-	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js exercise-scene --output-dir "../$output_dir" {{args}}; \
+	cd config-generator && npm run build && node dist/cli/zwave-scenes.js exercise-scene --output-dir "../$output_dir" {{args}}; \
 	echo "Wrote Z-Wave scene exercise to $output_dir"
 
 # Fail if configured entity IDs or device IDs drift from the live registry
-zwave-check-registry-drift *args="": preflight
+zwave-check-registry-drift *args="": preflight config-generator-install
 	timestamp="$(date +%Y%m%d-%H%M%S)"; \
 	output_dir="inventory_snapshots/zwave-scene-audits/$timestamp"; \
 	mkdir -p "$output_dir"; \
-	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js check-registry-drift --output-dir "../$output_dir" {{args}}
+	cd config-generator && npm run build && node dist/cli/zwave-scenes.js check-registry-drift --output-dir "../$output_dir" {{args}}
 
 # Normalize ramp/dim settings to instant/fast defaults on live Z-Wave devices
-zwave-apply-instant-ramps *args="": preflight
-	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js apply-instant-ramps {{args}}
+zwave-apply-instant-ramps *args="": preflight config-generator-install
+	cd config-generator && npm run build && node dist/cli/zwave-scenes.js apply-instant-ramps {{args}}
 
 # Verify that all targeted Z-Wave ramp settings are already normalized
-zwave-verify-instant-ramps *args="": preflight
-	cd config-generator && npm install && npm run build && node dist/cli/zwave-scenes.js verify-instant-ramps {{args}}
+zwave-verify-instant-ramps *args="": preflight config-generator-install
+	cd config-generator && npm run build && node dist/cli/zwave-scenes.js verify-instant-ramps {{args}}
 
 # Generate Home Assistant configs from TypeScript sources
-generate:
-	cd config-generator && npm install && npm run generate
+generate: config-generator-install
+	cd config-generator && npm run generate
 	@echo "Merging generated configs with manual configs..."
 	@# Note: Manual configs are already YAML files, just concatenate them with headers
 	@echo "# This file is automatically generated by merging:" > scenes.yaml
@@ -211,6 +215,41 @@ check: preflight
 deploy-precheck: generate preflight sync-check
 	@echo "Config deployment precheck passed"
 
+[private]
+deploy-needed: preflight
+	#!/usr/bin/env bash
+	set -euo pipefail
+	raw_changes="$(rsync -anic --delete \
+		{{rsync_protect_filters}} \
+		--prune-empty-dirs \
+		{{local_repo_excludes}} \
+		--exclude 'secrets.yaml' \
+		--include '*/' \
+		--include '*.yaml' \
+		--include '*.yml' \
+		--include '*.json' \
+		--include '*.sh' \
+		--exclude '.git/' \
+		--exclude '.cloud/' \
+		--exclude '.storage/' \
+		--exclude 'deps/' \
+		--exclude 'tts/' \
+		--exclude '*.db*' \
+		--exclude '*.log' \
+		--exclude '*.pickle' \
+		--exclude '*.uuid' \
+		--exclude '*~' \
+		--exclude '*.pyc' \
+		--exclude '__pycache__/' \
+		--exclude '*' \
+		-e "ssh -p 22" \
+		. root@homeassistant.local:/config/)"
+	if printf '%s\n' "$raw_changes" | awk 'NF && !($2 == "./" && substr($1, 1, 2) == ".d") && $1 !~ /^[.]f[.][.]t/ { found = 1 } END { exit found ? 0 : 1 }'; then
+		printf 'true\n'
+	else
+		printf 'false\n'
+	fi
+
 # Apply the already-reviewed config to Home Assistant and restart.
 [group: 'deploy']
 deploy-apply: preflight
@@ -270,32 +309,6 @@ deploy-apply: preflight
 			--exclude '*' \
 			\"{{tmp_dir}}\"/ /config/  && \
 		rm -rf \"\${backup_dir}\""
-	rsync -av \
-		--delete \
-		{{rsync_protect_filters}} \
-		--prune-empty-dirs \
-		{{local_repo_excludes}} \
-		--include '*/' \
-		--include '*.yaml' \
-		--include '*.yml' \
-		--include '*.json' \
-		--include '*.sh' \
-		--exclude '.git/' \
-		--exclude '.cloud/' \
-		--exclude '.storage/' \
-		--exclude 'deps/' \
-		--exclude 'tts/' \
-		--exclude 'secrets.yaml' \
-		--exclude '*.db*' \
-		--exclude '*.log' \
-		--exclude '*.pickle' \
-		--exclude '*.uuid' \
-		--exclude '*~' \
-		--exclude '*.pyc' \
-		--exclude '__pycache__/' \
-		--exclude '*' \
-		-e "ssh -p 22" \
-		. root@homeassistant.local:/config/
 	ssh -p 22 root@homeassistant.local 'for attempt in 1 2 3 4 5 6 7 8 9 10; do if ha core restart >/tmp/ha-core-restart.out 2>&1; then rm -f /tmp/ha-core-restart.out; exit 0; fi; if ! grep -q "Another job is running for job group home_assistant_core" /tmp/ha-core-restart.out; then cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1; fi; sleep 3; done; cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1'
 	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 

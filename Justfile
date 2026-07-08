@@ -116,9 +116,16 @@ deploy-config-precheck:
 
 [private]
 deploy-config-apply:
-	@echo ""
-	@echo "🏠 Deploying Home Assistant configs..."
-	@cd new-hass-configs && just deploy-apply
+	@set -e; \
+	deploy_needed="$$(cd new-hass-configs && just --quiet deploy-needed)"; \
+	if [ "$$deploy_needed" = "true" ]; then \
+		echo ""; \
+		echo "🏠 Deploying Home Assistant configs..."; \
+		cd new-hass-configs && just deploy-apply; \
+	else \
+		echo ""; \
+		echo "🏠 Home Assistant configs unchanged; skipping config deploy and restart."; \
+	fi
 
 # Deploy addons and Home Assistant configs
 [group: 'deploy']

@@ -803,14 +803,20 @@ else
     fi
 fi
 
-# Wait a moment and verify it's running
-sleep 3
-if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
-    log_info "Add-on $ADDON_ID is running and healthy"
-else
-    log_error "Add-on $ADDON_ID failed to start properly"
-    exit 1
-fi
+# Verify it is running, waiting only if Supervisor has not reported started yet.
+for attempt in 1 2 3 4 5 6; do
+    if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
+        log_info "Add-on $ADDON_ID is running and healthy"
+        break
+    fi
+
+    if [ "$attempt" = "6" ]; then
+        log_error "Add-on $ADDON_ID failed to start properly"
+        exit 1
+    fi
+
+    sleep 1
+done
 
 log_info "Deployment of $ADDON_ID completed successfully"
 """
