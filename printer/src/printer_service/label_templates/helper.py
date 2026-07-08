@@ -99,6 +99,7 @@ def _iter_candidate_fonts() -> Iterable[str]:
     yield "DejaVuSans.ttf"
 
 
+@lru_cache(maxsize=32)
 def load_font(*, size_points: int) -> FontType:
     """Load the project default font at ``size_points``."""
     for candidate in _iter_candidate_fonts():

@@ -467,12 +467,39 @@ class Template(TemplateDefinition):
         text_mask = Image.new("L", (CANVAS_WIDTH_PX, CANVAS_HEIGHT_PX), color=0)
         text_draw = ImageDraw.Draw(text_mask)
         text_draw.text((left, top), text, fill=255, font=font)
-        halo_mask = text_mask.filter(ImageFilter.MaxFilter(size=TITLE_TEXT_HALO_SIZE))
+        halo_mask = self._expanded_mask(text_mask, TITLE_TEXT_HALO_SIZE)
         if background_clear_mask is not None:
             restricted_halo = ImageChops.multiply(halo_mask, background_clear_mask)
             background_canvas.paste(255, (0, 0), restricted_halo)
         renderer.canvas.paste(255, (0, 0), halo_mask)
         renderer.canvas.paste(0, (0, 0), text_mask)
+
+    def _expanded_mask(self, mask: Image.Image, filter_size: int) -> Image.Image:
+        bbox = mask.getbbox()
+        if bbox is None:
+            return mask
+        radius = filter_size // 2
+        output_left = max(0, bbox[0] - radius)
+        output_top = max(0, bbox[1] - radius)
+        output_right = min(mask.width, bbox[2] + radius)
+        output_bottom = min(mask.height, bbox[3] + radius)
+        input_left = max(0, output_left - radius)
+        input_top = max(0, output_top - radius)
+        input_right = min(mask.width, output_right + radius)
+        input_bottom = min(mask.height, output_bottom + radius)
+        crop = mask.crop((input_left, input_top, input_right, input_bottom))
+        expanded_crop = crop.filter(ImageFilter.MaxFilter(size=filter_size))
+        paste_crop = expanded_crop.crop(
+            (
+                output_left - input_left,
+                output_top - input_top,
+                output_right - input_left,
+                output_bottom - input_top,
+            )
+        )
+        expanded = Image.new("L", mask.size, color=0)
+        expanded.paste(paste_crop, (output_left, output_top))
+        return expanded
 
     def _render_jar_label(self, form_data: TemplateFormData) -> Image.Image:
         """Render a portrait-oriented jar label with HTML table layout."""
