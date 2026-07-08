@@ -159,6 +159,8 @@ def create_app() -> Flask:
                 result = dispatch_image(image, config)
             except ValueError as exc:
                 return jsonify({"error": str(exc)}), 400
+            except OSError as exc:
+                return jsonify({"error": f"Printer unavailable: {exc}"}), 503
             return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
         payload = request.get_json(silent=True) or {}
@@ -180,6 +182,8 @@ def create_app() -> Flask:
             result = dispatch_image(image, config, target_spec=target_spec)
         except ValueError as exc:
             return jsonify({"error": str(exc)}), 400
+        except OSError as exc:
+            return jsonify({"error": f"Printer unavailable: {exc}"}), 503
         return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
     @app.get("/presets")
@@ -569,6 +573,8 @@ def _dispatch_print(
         return jsonify({"error": str(exc)}), exc.status_code
     except ValueError as exc:
         return jsonify({"error": str(exc)}), 400
+    except OSError as exc:
+        return jsonify({"error": f"Printer unavailable: {exc}"}), 503
     return jsonify(response_payload)
 
 

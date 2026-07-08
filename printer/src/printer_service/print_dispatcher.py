@@ -46,13 +46,12 @@ class PrintDispatchService:
         include_jar_label: bool = False,
     ) -> dict:
         config = self.config_from_env()
-        image, metrics, metrics_template = self._render_print_image(
+        image, metrics, target_spec = self._render_print_image(
             template,
             form_data,
             include_qr_label=include_qr_label,
             include_jar_label=include_jar_label,
         )
-        target_spec = metrics_template.preferred_label_spec() if metrics_template else None
         result = self.dispatch_image(image, config, target_spec=target_spec)
         response_payload = self.success_payload(
             result,
@@ -85,7 +84,7 @@ class PrintDispatchService:
         *,
         include_qr_label: bool,
         include_jar_label: bool = False,
-    ) -> tuple[Image.Image, LabelMetrics, LabelTemplate]:
+    ) -> tuple[Image.Image, LabelMetrics, Optional[BrotherLabelSpec]]:
         if include_qr_label:
             print_url = self.print_url_for_template(template, form_data, prefer_preset=True)
             qr_caption = self.qr_caption_for_template(template, form_data)
@@ -97,7 +96,7 @@ class PrintDispatchService:
             metrics = self.analyze_label_image(
                 qr_image, target_spec=qr_template.preferred_label_spec()
             )
-            return qr_image, metrics, qr_template
+            return qr_image, metrics, qr_template.preferred_label_spec()
         if include_jar_label:
             jar_qr_url = self.jar_qr_url_for_template(template, form_data)
             jar_form_data = dict(form_data)
@@ -109,10 +108,10 @@ class PrintDispatchService:
                 raise self.payload_error(str(exc)) from exc
             jar_spec = self.label_spec_from_metadata(image)
             metrics = self.analyze_label_image(image, target_spec=jar_spec)
-            return image, metrics, template
+            return image, metrics, jar_spec
         try:
             image = template.render(form_data)
         except ValueError as exc:
             raise self.payload_error(str(exc)) from exc
         metrics = self.analyze_label_image(image, target_spec=template.preferred_label_spec())
-        return image, metrics, template
+        return image, metrics, template.preferred_label_spec()

@@ -433,6 +433,7 @@ def test_bb_print_can_send_jar_label(
     def fake_dispatch(image, config, **_kwargs):
         dispatched["called"] = True
         dispatched["backend"] = config.backend
+        dispatched["target_spec"] = _kwargs.get("target_spec")
         return tmp_path / "jar.png"
 
     monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch)
@@ -452,6 +453,9 @@ def test_bb_print_can_send_jar_label(
 
     assert response.status_code == 200  # Returns JSON response
     assert dispatched["called"] is True
+    target_spec = dispatched["target_spec"]
+    assert hasattr(target_spec, "code")
+    assert target_spec.code == "62-jar"
 
     # Should return JSON response
     data = response.get_json()
@@ -677,6 +681,35 @@ def test_bb_execute_print_endpoint_handles_print_errors(
     # Should return error (400) as JSON
     assert response.status_code == 400
     assert response.json["error"] == "Printer not available"
+
+
+def test_bb_execute_print_endpoint_handles_transport_errors(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test that printer transport failures return JSON instead of a 500."""
+    app_module, _templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+
+    def fake_dispatch_error(image, config, **_kwargs):
+        raise OSError(113, "Host is unreachable")
+
+    monkeypatch.setattr(app_module, "dispatch_image", fake_dispatch_error)
+
+    response = client.post(
+        "/bb/execute-print",
+        query_string={
+            "tpl": "bluey_label",
+            "Line1": "foo",
+            "Line2": "bar",
+            "SymbolName": "awake",
+            "print": "true",
+            "jar": "true",
+        },
+    )
+
+    assert response.status_code == 503
+    assert response.json is not None
+    assert response.json["error"] == "Printer unavailable: [Errno 113] Host is unreachable"
 
 
 def test_no_cooldown_on_rapid_prints(
