@@ -628,7 +628,10 @@ class Template(TemplateDefinition):
 
         # Set custom label spec for jar labels to avoid dimension warnings
         jar_spec = BrotherLabelSpec(
-            code="62-jar",  # Custom code for jar labels
+            # Keep the physical Brother stock code while overriding the printable
+            # dimensions for the shorter jar artwork. The driver receives this
+            # code directly and only accepts codes from its label registry.
+            code=LABEL_SPEC.code,
             printable_px=(portrait_width_px, portrait_height_px),  # 720x331
             tape_size_mm=LABEL_SPEC.tape_size_mm,  # Same physical tape
         )

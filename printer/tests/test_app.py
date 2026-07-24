@@ -13,7 +13,7 @@ import pytest
 from PIL import Image, ImageFont
 
 import printer_service.best_by as best_by_request
-from printer_service.label_specs import resolve_brother_label_spec
+from printer_service.label_specs import BrotherLabelSpec, resolve_brother_label_spec
 from printer_service.label_templates import bluey_label as bluey_module
 from printer_service.label_templates.base import TemplateFormData
 import printer_service.presets as presets
@@ -454,8 +454,11 @@ def test_bb_print_can_send_jar_label(
     assert response.status_code == 200  # Returns JSON response
     assert dispatched["called"] is True
     target_spec = dispatched["target_spec"]
-    assert hasattr(target_spec, "code")
-    assert target_spec.code == "62-jar"
+    assert isinstance(target_spec, BrotherLabelSpec)
+    # Custom jar dimensions still use the physical 62 mm continuous-roll code
+    # understood by brother_ql.
+    assert target_spec.code == "62"
+    assert target_spec.printable_px == (720, 331)
 
     # Should return JSON response
     data = response.get_json()
