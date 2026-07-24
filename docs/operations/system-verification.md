@@ -9,8 +9,8 @@ This document provides verification procedures to ensure all configuration files
 
 ## Version Files (Single Source of Truth)
 
-✅ **`.nvmrc`**: `v20.18.2`
-✅ **`.python-version`**: `3.12.12`
+✅ **`.nvmrc`**: `v24.18.0`
+✅ **`.python-version`**: `3.14.6`
 
 ## Justfile Parsing
 
@@ -60,18 +60,18 @@ All addon.yaml files discovered and consistent:
 ✅ **Version Reading**
 ```python
 read_runtime_versions() correctly reads:
-- Node: 20.18.2 from .nvmrc
-- Python: 3.12.12 from .python-version
+- Node: 24.18.0 from .nvmrc
+- Python: 3.14.6 from .python-version
 ```
 
 ✅ **Dockerfile Generation**
 ```dockerfile
 # Version pinning based on .nvmrc and .python-version
-# Node.js version: 20.18.2 (from .nvmrc)
-# Python version: 3.12.12 (from .python-version)
+# Node.js version: 24.18.0 (from .nvmrc)
+# Python version: 3.14.6 (from .python-version)
 
-# Use Python 3.12 base image
-FROM python:3.12-alpine
+# Use Python 3.14 base image
+FROM python:3.14-alpine
 ```
 
 ✅ **Addon Discovery**
@@ -80,19 +80,19 @@ FROM python:3.12-alpine
 
 ## Documentation Consistency
 
-All documentation updated to Python 3.12.12:
+All documentation updated to Python 3.14.6:
 
 ✅ **docs/setup/dev-setup.md**
-- Python version: 3.12.12 ✓
+- Python version: 3.14.6 ✓
 
 ✅ **docs/setup/version-management.md**
-- Example versions: 3.12.12 ✓
-- Minor version: 3.12 ✓
-- Upgrade example: 3.13.0 ✓
+- Example versions: 3.14.6 ✓
+- Minor version: 3.14 ✓
+- Upgrade example uses a version placeholder ✓
 
 ✅ **docs/setup/version-management.md** (includes diagrams)
-- Diagrams show: 3.12.12 ✓
-- Docker examples: python:3.12-alpine ✓
+- Diagrams show: 3.14.6 ✓
+- Docker examples: python:3.14-alpine ✓
 
 ✅ **AGENTS.md**
 - Version management section references .nvmrc and .python-version ✓
@@ -119,22 +119,22 @@ All documentation updated to Python 3.12.12:
 
 ✅ **`just ha-addon printer`**
 - Builds successfully
-- Generates Dockerfile with Python 3.12
+- Generates Dockerfile with Python 3.14
 - Version comment correctly shows source
 
 ## Cross-Environment Consistency
 
 ### Local Development
 ```bash
-just setup  # Installs Node 20.18.2 + Python 3.12.12
+just setup  # Installs Node 24.18.0 + Python 3.14.6
 just dev    # Runs services with these versions
 ```
 
 ### Docker/Production
 ```bash
 just ha-addon  # Generates Dockerfiles with:
-  - FROM node:20.18.2-alpine
-  - FROM python:3.12-alpine
+  - FROM node:24.18.0-alpine
+  - FROM python:3.14-alpine
 ```
 
 ✅ **Versions Match**: Local and Docker use same versions from version files
@@ -154,8 +154,8 @@ mongodb/addon.yaml            ✓
 
 ✅ **Version Files**
 ```
-.nvmrc                ✓ (v20.18.2)
-.python-version       ✓ (3.12.12)
+.nvmrc                ✓ (v24.18.0)
+.python-version       ✓ (3.14.6)
 ```
 
 ✅ **Build Tools**
@@ -193,8 +193,8 @@ All files are built on these consistent assumptions:
 
 ```bash
 # Verify version files exist and are correct
-cat .nvmrc           # v20.18.2
-cat .python-version  # 3.12.12
+cat .nvmrc           # v24.18.0
+cat .python-version  # 3.14.6
 
 # Verify all Justfiles parse
 just --list

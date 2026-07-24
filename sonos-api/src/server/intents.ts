@@ -1,4 +1,4 @@
-import rpn = require('request-promise-native');
+import {getJson, getText} from './http';
 
 import '../types/sonos';
 
@@ -536,28 +536,19 @@ export const createSonosIntentCoordinator = (
 ): SonosIntentCoordinator => {
   const client: SonosHttpClient = {
     async getZones(): Promise<Sonos.Zone[]> {
-      const response = await rpn({
-        method: 'GET',
-        uri: `${sonosBaseUrl}/zones`,
-        json: true,
-        resolveWithFullResponse: true,
-        simple: false,
-      });
+      const response = await getJson<Sonos.Zone[]>(`${sonosBaseUrl}/zones`);
 
       if (response.statusCode >= 400) {
         throw new Error(`Zones request failed with status ${response.statusCode}`);
       }
 
-      return response.body as Sonos.Zone[];
+      return response.body;
     },
 
     async joinRoom(roomName: string, coordinatorRoom: string): Promise<void> {
-      const response = await rpn({
-        method: 'GET',
-        uri: `${sonosBaseUrl}/${encodeURIComponent(roomName)}/join/${encodeURIComponent(coordinatorRoom)}`,
-        resolveWithFullResponse: true,
-        simple: false,
-      });
+      const response = await getText(
+        `${sonosBaseUrl}/${encodeURIComponent(roomName)}/join/${encodeURIComponent(coordinatorRoom)}`
+      );
 
       if (response.statusCode >= 400) {
         throw new Error(`Join request failed with status ${response.statusCode}`);
@@ -565,28 +556,21 @@ export const createSonosIntentCoordinator = (
     },
 
     async getState(roomName: string): Promise<Sonos.State> {
-      const response = await rpn({
-        method: 'GET',
-        uri: `${sonosBaseUrl}/${encodeURIComponent(roomName)}/state`,
-        json: true,
-        resolveWithFullResponse: true,
-        simple: false,
-      });
+      const response = await getJson<Sonos.State>(
+        `${sonosBaseUrl}/${encodeURIComponent(roomName)}/state`
+      );
 
       if (response.statusCode >= 400) {
         throw new Error(`State request failed with status ${response.statusCode}`);
       }
 
-      return response.body as Sonos.State;
+      return response.body;
     },
 
     async setVolume(roomName: string, volume: number): Promise<void> {
-      const response = await rpn({
-        method: 'GET',
-        uri: `${sonosBaseUrl}/${encodeURIComponent(roomName)}/volume/${volume}`,
-        resolveWithFullResponse: true,
-        simple: false,
-      });
+      const response = await getText(
+        `${sonosBaseUrl}/${encodeURIComponent(roomName)}/volume/${volume}`
+      );
 
       if (response.statusCode >= 400) {
         throw new Error(`Volume request failed with status ${response.statusCode}`);

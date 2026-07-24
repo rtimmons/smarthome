@@ -63,10 +63,8 @@ url: "https://github.com/rtimmons/printer"
 arch:
   - aarch64
   - amd64
-  - armv7
-  - armhf
-  - i386
 startup: services
+watchdog: tcp://[HOST]:[PORT:8099]
 ingress: true
 ingress_port: 8099
 ingress_entry: "/"
@@ -115,8 +113,14 @@ EOF
 DOCKERFILE_PATH="${ADDON_ROOT}/Dockerfile"
 log "Writing ${DOCKERFILE_PATH}"
 cat >"${DOCKERFILE_PATH}" <<'EOF'
-ARG BUILD_FROM=ghcr.io/home-assistant/amd64-base:latest
-FROM ${BUILD_FROM}
+FROM ghcr.io/home-assistant/base:latest
+
+ARG BUILD_VERSION=dev
+ARG BUILD_ARCH
+LABEL \
+    io.hass.version="${BUILD_VERSION}" \
+    io.hass.type="app" \
+    io.hass.arch="${BUILD_ARCH}"
 
 ENV PATH="/opt/venv/bin:${PATH}"
 ENV PYTHONUNBUFFERED=1

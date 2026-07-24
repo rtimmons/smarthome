@@ -1,12 +1,17 @@
 import { Request as RQ, Response as RS, Router } from 'express';
-import * as rpn from 'request-promise-native';
 
 import { appConfig } from './config';
+import { requestText } from './http';
 
 const app = Router();
 
 const activateScene = async (req: RQ, res: RS) => {
-    const scene = req.params['scene'];
+    const sceneParam = req.params['scene'];
+    const scene = Array.isArray(sceneParam) ? sceneParam[0] : sceneParam;
+    if (!scene) {
+        res.status(400).send('Invalid scene');
+        return;
+    }
     const useCoreApi =
         Boolean(process.env.SUPERVISOR_TOKEN) && !process.env.HASS_WEBHOOK_BASE;
     const sceneId = scene.replace(/^scene_/, '');
@@ -27,19 +32,17 @@ const activateScene = async (req: RQ, res: RS) => {
     res.set('Cache-Control', 'no-store');
 
     try {
-        const response = await rpn({
-            url,
+        const response = await requestText(url, {
             method: 'POST',
             headers: useCoreApi
-                ? { Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}` }
+                ? {
+                      Authorization: `Bearer ${process.env.SUPERVISOR_TOKEN}`,
+                      'Content-Type': 'application/json',
+                  }
                 : undefined,
             body: useCoreApi
-                ? { entity_id: `script.fast_scene_${sceneId}` }
+                ? JSON.stringify({ entity_id: `script.fast_scene_${sceneId}` })
                 : undefined,
-            json: useCoreApi,
-            resolveWithFullResponse: true,
-            simple: false,
-            timeout: 10000,
         });
 
         if (response.statusCode >= 400) {
@@ -49,10 +52,12 @@ const activateScene = async (req: RQ, res: RS) => {
 
         res.send('OK');
     } catch (err) {
-        const statusCode = Number(err && err.statusCode) || 502;
-        res.status(statusCode).json({
-            error:
-                (err && err.message) || 'Failed to call Home Assistant webhook',
+        const message =
+            err instanceof Error
+                ? err.message
+                : 'Failed to call Home Assistant webhook';
+        res.status(502).json({
+            error: message,
             scene,
         });
     }

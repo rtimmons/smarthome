@@ -2,7 +2,7 @@
 
 This document consolidates all improvement plans, todos, and recommendations into a single comprehensive roadmap. It merges content from previously scattered plans across multiple documents.
 
-**Last Updated**: 2025-12-07
+**Last Updated**: 2026-07-18
 **Status**: Active roadmap - replaces all other TODO/improvement documents
 
 ## Overview
@@ -17,67 +17,49 @@ This roadmap prioritizes improvements across four main areas:
 
 ### 1. Complete Node.js Security Updates
 
-**Status**: ✅ **COMPLETED** - Node.js upgraded to v20.18.2 LTS
+**Status**: ✅ **COMPLETED** - Node.js upgraded to v24.18.0 LTS
 
 **Completed Items**:
-- ✅ Update ExpressServer from Node.js v8.16.0 to v20.x LTS
-- ✅ Update root .nvmrc from v12.6.0 to v20.x LTS
+- ✅ Update maintained services and the root runtime to Node.js v24.18.0 LTS
+- ✅ Keep the upstream `node-sonos-http-api` app on its declared Node 22 compatibility line
 - ✅ Test all Node.js dependencies with new runtime
 - ✅ Update Ansible deployment scripts for new Node version
 
 ### 2. Replace Deprecated npm Packages
 
-**Issue**: Legacy packages with security vulnerabilities and deprecated APIs.
+**Status**: ✅ **COMPLETED FOR MAINTAINED SERVICES** / ⚠️ **UPSTREAM SONOS DEBT REMAINS**
 
-**Current Code Issues**:
-- `request` package (deprecated, security issues)
-- `underscore` package (can use native ES6+ features)
-- Multiple 2019-era dependencies with known vulnerabilities
+The dashboard and local Sonos proxy now use Node's built-in `fetch`; deprecated
+`request`, `request-promise`, and `body-parser` dependencies were removed. The
+vendored browser Underscore was updated to 1.13.8. Maintained npm projects audit
+clean. The cloned third-party `node-sonos-http-api` project still has an old,
+vulnerable dependency graph and should eventually be replaced or migrated
+upstream rather than hidden behind unsafe overrides.
 
 **Tasks**:
-- [ ] Replace `request` package with `axios` or `node-fetch`
-- [ ] Replace `underscore` with native ES6+ features or `lodash`
-- [ ] Update all 2019-era dependencies to current versions
-- [ ] Run security audit and fix vulnerabilities: `npm audit fix`
+- [x] Replace deprecated request clients in maintained services with native `fetch`
+- [x] Update the shipped browser Underscore build
+- [x] Update maintained service dependencies and lockfiles
+- [x] Audit maintained production dependency trees
+- [ ] Replace or upstream-modernize `node-sonos-http-api`
 
 ### 3. Python Environment Standardization
 
-**Status**: ✅ **COMPLETED** - Python standardized to 3.12.12
+**Status**: ✅ **COMPLETED** - Python standardized to 3.14.6
 
 **Completed Items**:
-- ✅ Standardize on Python 3.12.12 across all components
+- ✅ Standardize on Python 3.14.6 across all components
 - ✅ Update .python-version file
 - ✅ Update PyYAML from 5.3 to 6.x
 
-### 4. Adopt Official Add-on Configuration Format
+### 4. Generate Official App Configuration Artifacts
 
-**Issue**: Current add-ons use custom `addon.yaml` format instead of standard `config.yaml`.
+**Status**: ✅ **COMPLETED**
 
-**Official Standard**: [Add-on Configuration](../reference-repos/developers.home-assistant/docs/add-ons/configuration.md)
-- Use `config.yaml` instead of `addon.yaml`
-- Follow standard metadata fields (`version`, `slug`, `name`, `description`, `arch`)
-- Use standard options/schema format
-
-**Current Code Issues**:
-- `grid-dashboard/addon.yaml` uses non-standard fields like `source_subdir`, `npm_build`
-- `printer/addon.yaml` uses custom `python_module` field
-- Missing standard fields like `version`, `arch`, `startup`
-
-**Recommendation**:
-```yaml
-# Standard config.yaml format
-version: "1.0.0"
-slug: grid_dashboard
-name: Grid Dashboard
-description: Dashboard UI with Sonos shortcuts
-arch:
-  - aarch64
-  - amd64
-  - armhf
-  - armv7
-  - i386
-startup: services
-```
+Talos intentionally keeps repository-specific `addon.yaml` source manifests and
+generates Supervisor-compatible `config.yaml`, `Dockerfile`, `run.sh`, and
+translation artifacts. Generated configs now target supported 64-bit
+architectures and include TCP watchdogs for network services.
 
 ## 🟡 Home Assistant Standards Alignment (High Priority)
 
@@ -100,32 +82,28 @@ startup: services
 - Missing `CHANGELOG.md` files
 - Custom build system instead of standard Dockerfile
 
-### 6. Use Official Base Images
+### 6. Use Explicit BuildKit-Compatible Images and Metadata
 
-**Issue**: Custom container build system instead of official Home Assistant base images.
+**Status**: ✅ **COMPLETED**
 
-**Official Standard**: [Add-on Configuration](../reference-repos/developers.home-assistant/docs/add-ons/configuration.md#dockerfile)
-- Use `FROM $BUILD_FROM` in Dockerfile
-- Use official base images: `ghcr.io/home-assistant/{arch}-base:latest`
-
-**Current Code**: Custom talos build system generates Dockerfiles
-
-**Recommendation**: Migrate to standard Dockerfiles with official base images.
+Supervisor 2026.04 removed the legacy automatic `BUILD_FROM` fallback. Generated
+Dockerfiles now use explicit `FROM` images and emit `io.hass.version`,
+`io.hass.type=app`, and `io.hass.arch` labels from BuildKit arguments.
 
 ### 7. Home Assistant Integration Modernization
 
-**Issue**: Using outdated Home Assistant version and custom configuration patterns.
+**Status**: 🟡 **ACTIVE**
 
-**Current Code Issues**:
-- Home Assistant 2021.9.7 (very outdated)
-- Custom Z-Wave XML config instead of Z-Wave JS
-- Custom configuration generator instead of native HA config
+The live host was observed on Home Assistant 2026.6.3 with 2026.7.2 available
+during this review; no live update was installed. Generated and manual
+automations now use the current plural `triggers`, `conditions`, and `actions`
+shape and `action` service calls.
 
 **Tasks**:
-- [ ] Research current Home Assistant best practices
+- [x] Align generated automation and script YAML with current syntax
+- [x] Align app build metadata with the current Supervisor builder
 - [ ] Evaluate migration from custom generator to native HA config
-- [ ] Migrate from custom Z-Wave XML config to Home Assistant's Z-Wave JS
-- [ ] Update from Home Assistant 2021.9.7 to current version
+- [ ] Schedule and perform the live Home Assistant 2026.7.2 update separately
 - [ ] Consider MQTT for device communication
 
 ### 8. Implement Security Best Practices
@@ -167,27 +145,20 @@ startup: services
 
 ### 10. TypeScript & Build System Modernization
 
-**Issue**: Outdated TypeScript and build tooling.
+**Status**: ✅ **COMPLETED FOR MAINTAINED SERVICES**
 
-**Current Code Issues**:
-- TypeScript 3.6.3 (very outdated, current is 5.x)
-- Using ts-node instead of modern build tools
-- Missing proper type definitions
-- Outdated ESLint and Prettier configurations
-
-**Tasks**:
-- [ ] Update TypeScript from 3.6.3 to 5.x
-- [ ] Migrate from ts-node to modern build tool (Vite/esbuild)
-- [ ] Add proper type definitions for all modules
-- [ ] Configure strict TypeScript settings
-- [ ] Update ESLint and Prettier configurations
+- [x] Update maintained projects to TypeScript 5.9
+- [x] Replace ts-node development paths with tsx
+- [x] Migrate Jest/Mocha suites to Vitest where appropriate
+- [x] Adopt ESLint flat configuration and current Prettier
+- [x] Enable strict TypeScript in the dashboard
 
 ### 11. Testing Infrastructure
 
 **Issue**: No comprehensive testing setup.
 
 **Tasks**:
-- [ ] Set up Jest or Vitest for unit tests
+- [x] Set up Vitest for maintained TypeScript services and the config generator
 - [ ] Add integration tests with hardware mocks
 - [ ] Configure GitHub Actions CI/CD pipeline
 - [ ] Add end-to-end tests for critical paths
@@ -221,10 +192,10 @@ startup: services
 
 ### 14. API Modernization
 
-**Issue**: Outdated Express.js and API patterns.
+**Status**: 🟡 **CORE RUNTIME COMPLETED**
 
 **Tasks**:
-- [ ] Update Express from 4.17.1 to latest 4.x
+- [x] Update the dashboard and Sonos proxy to Express 5.2
 - [ ] Add OpenAPI/Swagger documentation
 - [ ] Consider GraphQL or tRPC for type-safe API
 - [ ] Implement proper error handling middleware
@@ -533,8 +504,8 @@ startup: services
 ## Status Tracking
 
 ### ✅ Completed Improvements
-- **Node.js Security Updates** (#1) - Upgraded to v20.18.2 LTS
-- **Python Standardization** (#3) - Standardized to Python 3.12.12
+- **Node.js Security Updates** (#1) - Upgraded to v24.18.0 LTS
+- **Python Standardization** (#3) - Standardized to Python 3.14.6
 - **Version Management** (#23) - Single source of truth implemented
 - **Documentation Updates** - Comprehensive docs created and updated
 

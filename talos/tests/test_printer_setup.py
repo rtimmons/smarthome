@@ -8,6 +8,8 @@ def test_printer_setup_runs_script():
     justfile = printer_root / "Justfile"
     contents = justfile.read_text(encoding="utf-8")
     assert "scripts/setup.sh" in contents
+    assert "setup: setup-printer" in contents
+    assert "ensure-current-venv" in contents
 
     setup_script = printer_root / "scripts" / "setup.sh"
     setup_text = setup_script.read_text(encoding="utf-8")

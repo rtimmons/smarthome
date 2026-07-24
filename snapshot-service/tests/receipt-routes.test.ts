@@ -17,7 +17,10 @@ describe("receipt routes", () => {
 
   it("renders upload page with items from query", async () => {
     const items = encodeURIComponent(JSON.stringify(["Alpha", "Beta"]));
-    const res = await app.inject({ method: "GET", url: `/receipt/upload?items=${items}&date=2025-01-01&receipt_id=abc` });
+    const res = await app.inject({
+      method: "GET",
+      url: `/receipt/upload?items=${items}&date=2025-01-01&receipt_id=abc`,
+    });
     expect(res.statusCode).toBe(200);
     expect(res.headers["content-type"]).toContain("text/html");
     expect(res.body).toContain("Alpha");
@@ -36,7 +39,7 @@ describe("receipt routes", () => {
       Buffer.from(`Content-Disposition: form-data; name="receipt"; filename="receipt.png"\r\n`),
       Buffer.from("Content-Type: image/png\r\n\r\n"),
       image,
-      Buffer.from(`\r\n--${boundary}--\r\n`)
+      Buffer.from(`\r\n--${boundary}--\r\n`),
     ]);
 
     const res = await app.inject({
@@ -44,13 +47,15 @@ describe("receipt routes", () => {
       url: "/receipt/analyze",
       payload: body,
       headers: {
-        "Content-Type": `multipart/form-data; boundary=${boundary}`
-      }
+        "Content-Type": `multipart/form-data; boundary=${boundary}`,
+      },
     });
 
     expect(res.statusCode).toBe(200);
     const json = res.json();
-    const checked = (json.items as { label: string; checked: boolean }[]).filter((i) => i.checked).map((i) => i.label);
+    const checked = (json.items as { label: string; checked: boolean }[])
+      .filter((i) => i.checked)
+      .map((i) => i.label);
     expect(checked).toEqual(["Lunch", "Meds AM"]);
     expect(json.status).toBe("ok");
   });

@@ -11,6 +11,9 @@ git_clone:
   target: /app
 container_workdir: /app
 npm_build: false
+# Upstream currently declares support for Node <23. Keep this legacy service
+# on the newest compatible maintenance LTS while the rest of the repo uses 24.
+node_version: "22.21.1"
 homeassistant_min: "2024.6.0"
 ingress: false
 homeassistant_api: false

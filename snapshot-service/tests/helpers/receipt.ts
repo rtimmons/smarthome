@@ -2,7 +2,15 @@ import sharp from "sharp";
 
 import { RECEIPT_LAYOUT } from "../../src/receipt/layout.js";
 
-export function drawRect(buffer: Uint8Array, width: number, x: number, y: number, w: number, h: number, value: number) {
+export function drawRect(
+  buffer: Uint8Array,
+  width: number,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  value: number,
+) {
   const startX = Math.max(0, Math.floor(x));
   const startY = Math.max(0, Math.floor(y));
   const endX = Math.min(width - 1, Math.floor(x + w));
@@ -17,7 +25,8 @@ export function drawRect(buffer: Uint8Array, width: number, x: number, y: number
 }
 
 export async function syntheticReceiptPng(checkedIndexes: number[] = []): Promise<Buffer> {
-  const { widthPx, heightPx, checkboxLeft, checkboxTop, checkboxSize, checkboxSpacing, maxItems } = RECEIPT_LAYOUT;
+  const { widthPx, heightPx, checkboxLeft, checkboxTop, checkboxSize, checkboxSpacing, maxItems } =
+    RECEIPT_LAYOUT;
   const pixels = new Uint8Array(widthPx * heightPx);
   pixels.fill(255);
 
@@ -32,9 +41,25 @@ export async function syntheticReceiptPng(checkedIndexes: number[] = []): Promis
   const guideThickness = 10;
   const edge = 4;
   drawRect(pixels, widthPx, edge, heightPx / 2 - guideLength / 2, guideThickness, guideLength, 0);
-  drawRect(pixels, widthPx, widthPx - edge - guideThickness, heightPx / 2 - guideLength / 2, guideThickness, guideLength, 0);
+  drawRect(
+    pixels,
+    widthPx,
+    widthPx - edge - guideThickness,
+    heightPx / 2 - guideLength / 2,
+    guideThickness,
+    guideLength,
+    0,
+  );
   drawRect(pixels, widthPx, widthPx / 2 - guideLength / 2, edge, guideLength, guideThickness, 0);
-  drawRect(pixels, widthPx, widthPx / 2 - guideLength / 2, heightPx - edge - guideThickness, guideLength, guideThickness, 0);
+  drawRect(
+    pixels,
+    widthPx,
+    widthPx / 2 - guideLength / 2,
+    heightPx - edge - guideThickness,
+    guideLength,
+    guideThickness,
+    0,
+  );
 
   for (let i = 0; i < maxItems; i += 1) {
     if (!checkedIndexes.includes(i)) continue;

@@ -77,8 +77,8 @@ when a separate repo already contains a standard Home Assistant add-on wrapper.
 
 ### Single Source of Truth
 Runtime versions come from repo-root files:
-- **`.nvmrc`** — Node.js version (e.g., `v20.18.2`)
-- **`.python-version`** — Python version (e.g., `3.12.12`)
+- **`.nvmrc`** — Node.js version (e.g., `v24.18.0`)
+- **`.python-version`** — Python version (e.g., `3.14.6`)
 
 These control both local development (via nvm/pyenv) and Docker base images.
 

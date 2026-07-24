@@ -6,7 +6,7 @@ export const RECEIPT_LAYOUT = {
   checkboxSize: 32,
   checkboxSpacing: 96,
   textLeft: 76,
-  maxItems: 8
+  maxItems: 8,
 } as const;
 
 export const RECEIPT_LAYOUT_ID = "receipt_checklist_v1";

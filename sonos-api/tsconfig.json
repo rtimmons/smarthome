@@ -1,8 +1,8 @@
 {
   "compilerOptions": {
-    "target": "es2017",
+    "target": "es2023",
     "module": "commonjs",
-    "lib": ["es2017"],
+    "lib": ["es2023", "dom", "dom.iterable"],
     "outDir": "./dist",
     "rootDir": "./src",
     "strict": true,

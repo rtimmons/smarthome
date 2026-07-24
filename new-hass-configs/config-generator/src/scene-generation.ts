@@ -9,7 +9,7 @@ export interface HAScene {
 }
 
 export interface HAServiceCall {
-  service: string;
+  action: string;
   target: {
     entity_id: string[];
   };
@@ -267,15 +267,15 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
 
   return Array.from(groupedCalls.values())
     .map((call) => ({
-      service: call.service,
+      action: call.service,
       target: {
         entity_id: [...call.entityIds].sort(),
       },
       ...(call.data && { data: call.data }),
     }))
     .sort((left, right) => {
-      const leftSignature = `${left.service}|${stableStringify(left.data ?? {})}`;
-      const rightSignature = `${right.service}|${stableStringify(right.data ?? {})}`;
+      const leftSignature = `${left.action}|${stableStringify(left.data ?? {})}`;
+      const rightSignature = `${right.action}|${stableStringify(right.data ?? {})}`;
       return leftSignature.localeCompare(rightSignature);
     });
 }

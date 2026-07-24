@@ -152,7 +152,7 @@ NVM_USE_SCRIPT="$REPO_ROOT/talos/scripts/nvm_use.sh"
 
 # Use self-contained nvm directory (not in user's home)
 export NVM_DIR="$REPO_ROOT/build/nvm"
-REQUIRED_NODE_VERSION="v20.18.2"
+REQUIRED_NODE_VERSION="v24.18.0"
 if [ -f "$NVM_VERSION_FILE" ]; then
     REQUIRED_NODE_VERSION=$(tr -d '[:space:]' < "$NVM_VERSION_FILE")
 fi
@@ -207,7 +207,7 @@ echo ""
 info "Checking Python version management..."
 
 # Determine required Python version
-REQUIRED_PYTHON_VERSION="3.12.12"
+REQUIRED_PYTHON_VERSION="3.14.6"
 if [ -f ".python-version" ]; then
     REQUIRED_PYTHON_VERSION=$(cat .python-version)
 fi

@@ -653,7 +653,7 @@ function buildSceneSummaries(sceneIds: string[]): SceneSummary[] {
       entityCount: Object.keys(entities).length,
       groupedCallCount: calls.length,
       calls: calls.map((call) => ({
-        service: call.service,
+        service: call.action,
         entityCount: call.target.entity_id.length,
         ...(call.data && { data: call.data }),
       })),
@@ -1008,7 +1008,7 @@ function buildSceneParallelismFindings(sceneIds: string[]): SceneParallelismFind
 
       findings.push({
         sceneId,
-        service: call.service,
+        service: call.action,
         entityIds: [...call.target.entity_id].sort(),
       });
     }

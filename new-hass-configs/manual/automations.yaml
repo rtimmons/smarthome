@@ -4,100 +4,100 @@
 - id: living_hallway_switch_double_up_living_room_high
   alias: Living Hallway Switch - Double Up → Living Room High
   description: Turn on Living Room High scene on double-tap up
-  trigger:
-    platform: event
-    event_type: zwave_js_value_notification
-    event_data:
-      device_id: c136100e5d6664e5b6fa256eaeb6c9b3
-      command_class_name: Central Scene
-      property_key_name: "001"
-      value: KeyPressed2x
-  action:
-    service: scene.turn_on
-    target:
-      entity_id: scene.living_room_high
+  triggers:
+    - trigger: event
+      event_type: zwave_js_value_notification
+      event_data:
+        device_id: c136100e5d6664e5b6fa256eaeb6c9b3
+        command_class_name: Central Scene
+        property_key_name: "001"
+        value: KeyPressed2x
+  actions:
+    - action: scene.turn_on
+      target:
+        entity_id: scene.living_room_high
   mode: restart
 
 - id: living_hallway_switch_double_down_all_off
   alias: Living Hallway Switch - Double Down → All Off
   description: Turn off all lights on double-tap down
-  trigger:
-    platform: event
-    event_type: zwave_js_value_notification
-    event_data:
-      device_id: c136100e5d6664e5b6fa256eaeb6c9b3
-      command_class_name: Central Scene
-      property_key_name: "002"
-      value: KeyPressed2x
-  action:
-    service: scene.turn_on
-    target:
-      entity_id: scene.all_off
+  triggers:
+    - trigger: event
+      event_type: zwave_js_value_notification
+      event_data:
+        device_id: c136100e5d6664e5b6fa256eaeb6c9b3
+        command_class_name: Central Scene
+        property_key_name: "002"
+        value: KeyPressed2x
+  actions:
+    - action: scene.turn_on
+      target:
+        entity_id: scene.all_off
   mode: restart
 
 - id: kitchen_hanging_switch_double_up_kitchen_high
   alias: Kitchen Hanging Switch - Double Up → Kitchen High
   description: Turn on Kitchen High scene on double-tap up
-  trigger:
-    platform: event
-    event_type: zwave_js_value_notification
-    event_data:
-      device_id: 95c227b330c78abc0104d0701dc6311b
-      command_class_name: Central Scene
-      property_key_name: "001"
-      value: KeyPressed2x
-  action:
-    service: scene.turn_on
-    target:
-      entity_id: scene.kitchen_high
+  triggers:
+    - trigger: event
+      event_type: zwave_js_value_notification
+      event_data:
+        device_id: 95c227b330c78abc0104d0701dc6311b
+        command_class_name: Central Scene
+        property_key_name: "001"
+        value: KeyPressed2x
+  actions:
+    - action: scene.turn_on
+      target:
+        entity_id: scene.kitchen_high
   mode: restart
 
 - id: kitchen_hanging_switch_double_down_kitchen_off
   alias: Kitchen Hanging Switch - Double Down → Kitchen Off
   description: Turn off Kitchen lights on double-tap down
-  trigger:
-    platform: event
-    event_type: zwave_js_value_notification
-    event_data:
-      device_id: 95c227b330c78abc0104d0701dc6311b
-      command_class_name: Central Scene
-      property_key_name: "002"
-      value: KeyPressed2x
-  action:
-    service: scene.turn_on
-    target:
-      entity_id: scene.kitchen_off
+  triggers:
+    - trigger: event
+      event_type: zwave_js_value_notification
+      event_data:
+        device_id: 95c227b330c78abc0104d0701dc6311b
+        command_class_name: Central Scene
+        property_key_name: "002"
+        value: KeyPressed2x
+  actions:
+    - action: scene.turn_on
+      target:
+        entity_id: scene.kitchen_off
   mode: restart
 
 - id: closet_presence_lighting
   alias: "Closet Presence Lighting"
   description: "Automatically control closet lighting based on human presence detection"
-  trigger:
-    - platform: state
+  triggers:
+    - trigger: state
       entity_id: binary_sensor.human_sensor_presence
       from: "off"
       to: "on"
-  condition:
+  conditions:
     - condition: state
       entity_id: light.light_closet_main
       state: "off"
-  action:
+  actions:
     - alias: "Turn on closet light at 10% brightness when entering"
-      service: light.turn_on
+      action: light.turn_on
       target:
         entity_id: light.light_closet_main
       data:
         brightness_pct: 10
     - alias: "Wait until no presence detected for 37.5 seconds"
       wait_for_trigger:
-        - platform: state
+        - trigger: state
           entity_id: binary_sensor.human_sensor_presence
           to: "off"
           for:
             seconds: 37
             milliseconds: 500
     - alias: "Turn off closet scene after timeout"
-      service: scene.turn_on
+      action: scene.turn_on
       target:
         entity_id: scene.closet_off
   mode: single
@@ -105,11 +105,11 @@
 - id: button_3rsb22bz_1_print_made_today
   alias: Button 3RSB22BZ 1 - Print Made Today
   description: Print the "Made Today" label preset when the button is pressed.
-  trigger:
-    platform: event
-    event_type: zha_event
-    event_data:
-      device_ieee: "ff:ff:b4:0e:06:06:53:bf"
-  action:
-    service: rest_command.printer_made_today
+  triggers:
+    - trigger: event
+      event_type: zha_event
+      event_data:
+        device_ieee: "ff:ff:b4:0e:06:06:53:bf"
+  actions:
+    - action: rest_command.printer_made_today
   mode: single

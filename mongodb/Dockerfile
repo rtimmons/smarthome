@@ -1,6 +1,13 @@
 # MongoDB Community Edition 8.x for Home Assistant
 FROM mongo:8
 
+ARG BUILD_VERSION=dev
+ARG BUILD_ARCH
+LABEL \
+    io.hass.version="${BUILD_VERSION}" \
+    io.hass.type="app" \
+    io.hass.arch="${BUILD_ARCH}"
+
 # Install jq and bash for Home Assistant integration
 RUN apt-get update && apt-get install -y \
     jq \

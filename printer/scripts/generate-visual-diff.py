@@ -136,7 +136,7 @@ def create_side_by_side_overlay(
     try:
         # Try to use a better font if available
         font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 16)
-    except (OSError, IOError):
+    except OSError, IOError:
         font = ImageFont.load_default()
 
     draw.text((width // 2 - 30, 5), "EXPECTED", fill=(0, 100, 0, 255), font=font)
@@ -190,7 +190,7 @@ def create_difference_visualization(
     try:
         font = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 14)
         font_small = ImageFont.truetype("/System/Library/Fonts/Helvetica.ttc", 12)
-    except (OSError, IOError):
+    except OSError, IOError:
         font = ImageFont.load_default()
         font_small = font
 

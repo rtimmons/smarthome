@@ -108,7 +108,7 @@ This single command handles everything:
 - Installs Homebrew (if not present)
 - Installs system dependencies (cairo)
 - Installs nvm and pyenv (if not present)
-- Installs correct Node.js version (v20.18.2) via nvm
+- Installs correct Node.js version (v24.18.0) via nvm
 - Installs correct Python version via pyenv
 - Installs uv package manager
 - Clones node-sonos-http-api upstream repository
@@ -142,7 +142,7 @@ That's it! All services start, logs stream to your terminal, and file changes tr
 5. **Launching**: Starts processes with correct:
    - Working directory
    - Environment variables
-   - Runtime (Node v20.18.2, Python 3.10+)
+   - Runtime (Node v24.18.0, Python 3.10+)
 6. **Monitoring**: Captures stdout/stderr, multiplexes to terminal
 7. **Shutdown**: Graceful termination on Ctrl+C
 

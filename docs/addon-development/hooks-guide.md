@@ -222,7 +222,7 @@ chmod +x <addon>/local-dev/hooks/pre_start.sh
 ```bash
 # DON'T - talos already does this
 echo "Checking Node.js version..."
-if ! node --version | grep -q "v20.18.2"; then
+if ! node --version | grep -q "v24.18.0"; then
     echo "Wrong Node.js version"
     exit 1
 fi

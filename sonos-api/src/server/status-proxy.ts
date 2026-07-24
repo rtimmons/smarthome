@@ -1,4 +1,4 @@
-import rpn = require('request-promise-native');
+import {getText} from './http';
 
 export interface SonosStatusProxyOptions {
   cacheTtlMs?: number;
@@ -35,6 +35,10 @@ interface UpstreamRequestOptions {
 }
 
 type SonosRequestFn = (options: UpstreamRequestOptions) => Promise<UpstreamResponse>;
+
+const defaultRequest: SonosRequestFn = async options => {
+  return getText(options.uri, options.timeout);
+};
 
 const DEFAULT_CACHE_TTL_MS = 30 * 1000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 900;
@@ -126,7 +130,7 @@ export class SonosStatusProxy {
     this.cacheTtlMs = options.cacheTtlMs || DEFAULT_CACHE_TTL_MS;
     this.requestTimeoutMs = options.requestTimeoutMs || DEFAULT_REQUEST_TIMEOUT_MS;
     this.now = options.now || (() => Date.now());
-    this.request = options.request || rpn;
+    this.request = options.request || defaultRequest;
   }
 
   async get(baseUrl: string, route: string): Promise<SonosProxyResponse> {

@@ -3,24 +3,14 @@
  */
 
 import * as yaml from "yaml";
-import * as fs from "fs";
-import * as path from "path";
+import { generateFastCalls, generateFastScripts, generateScenes } from "./generate-test-helper";
 import { scenes } from "./scenes";
-
-// Mock filesystem to prevent actual file writes during tests
-jest.mock("fs");
+import type { Scene } from "./types";
 
 describe("Scene Generation with Pairing", () => {
-  beforeEach(() => {
-    jest.clearAllMocks();
-  });
-
   describe("Paired device synchronization", () => {
     it("should automatically add _white pair when RGBW device is specified", () => {
-      // Import after mocking
-      const { generateScenes } = require("./generate-test-helper");
-
-      const testScene = {
+      const testScene: Scene = {
         name: "Test Scene",
         lights: [
           {
@@ -47,9 +37,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should automatically add RGBW pair when _white device is specified", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScene = {
+      const testScene: Scene = {
         name: "Test Scene",
         lights: [
           {
@@ -76,9 +65,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should default paired RGBW white channel to full when _white brightness is omitted", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScene = {
+      const testScene: Scene = {
         name: "Test White Default Brightness",
         lights: [
           {
@@ -95,9 +83,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should turn off both paired devices when one is turned off", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScene = {
+      const testScene: Scene = {
         name: "Test Off Scene",
         lights: [
           {
@@ -116,9 +103,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should respect explicitly defined paired devices", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScene = {
+      const testScene: Scene = {
         name: "Test Explicit Scene",
         lights: [
           {
@@ -149,9 +135,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should handle multiple paired devices in one scene", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScene = {
+      const testScene: Scene = {
         name: "Test Multiple Pairs",
         lights: [
           {
@@ -184,9 +169,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should not add pairs for unpaired devices", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScene = {
+      const testScene: Scene = {
         name: "Test Unpaired",
         lights: [
           {
@@ -208,9 +192,8 @@ describe("Scene Generation with Pairing", () => {
 
   describe("Integration test with actual scenes", () => {
     it("should generate valid YAML with paired devices", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScenes = {
+      const testScenes: Record<string, Scene> = {
         office_high: {
           name: "Office - High",
           lights: [
@@ -233,7 +216,6 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should isolate Z-Wave outlet fast scene calls for living_room_high", () => {
-      const { generateFastCalls } = require("./generate-test-helper");
 
       const calls = generateFastCalls(scenes.living_room_high);
 
@@ -241,7 +223,7 @@ describe("Scene Generation with Pairing", () => {
       expect(
         calls.find(
           (call: any) =>
-            call.service === "switch.turn_on" &&
+            call.action === "switch.turn_on" &&
             call.target.entity_id.length === 1 &&
             call.target.entity_id[0] === "switch.light_living_sillleftpower"
         )
@@ -249,7 +231,7 @@ describe("Scene Generation with Pairing", () => {
       expect(
         calls.find(
           (call: any) =>
-            call.service === "switch.turn_on" &&
+            call.action === "switch.turn_on" &&
             call.target.entity_id.includes("switch.light_living_ledwall") &&
             !call.target.entity_id.includes("switch.light_living_sillleftpower")
         )
@@ -257,7 +239,7 @@ describe("Scene Generation with Pairing", () => {
       expect(
         calls.find(
           (call: any) =>
-            call.service === "light.turn_on" &&
+            call.action === "light.turn_on" &&
             call.data?.brightness === 255 &&
             call.target.entity_id.length === 1 &&
             call.target.entity_id[0] === "light.light_living_curtains_white"
@@ -266,7 +248,7 @@ describe("Scene Generation with Pairing", () => {
       expect(
         calls.find(
           (call: any) =>
-            call.service === "light.turn_on" &&
+            call.action === "light.turn_on" &&
             call.data?.brightness === 255 &&
             call.target.entity_id.includes("light.living_light_floor") &&
             call.target.entity_id.includes("light.living_light_nook")
@@ -275,7 +257,6 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should isolate bathroom Z-Wave loads into individual fast calls", () => {
-      const { generateFastCalls } = require("./generate-test-helper");
 
       const calls = generateFastCalls(scenes.bathroom_high);
 
@@ -284,7 +265,6 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should not duplicate targets when a paired RGBW entity is already explicit", () => {
-      const { generateFastCalls } = require("./generate-test-helper");
 
       const calls = generateFastCalls(scenes.office_high);
       const allTargets = calls.flatMap((call: any) => call.target.entity_id);
@@ -294,7 +274,6 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should exclude controller-only switches from all_off fast calls", () => {
-      const { generateFastCalls } = require("./generate-test-helper");
 
       const calls = generateFastCalls(scenes.all_off);
       const allTargets = calls.flatMap((call: any) => call.target.entity_id);
@@ -303,7 +282,7 @@ describe("Scene Generation with Pairing", () => {
       expect(
         calls.find(
           (call: any) =>
-            call.service === "light.turn_off" &&
+            call.action === "light.turn_off" &&
             call.target.entity_id.length === 1 &&
             call.target.entity_id[0] === "light.light_living_curtains"
         )
@@ -311,7 +290,6 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should batch large Z-Wave scenes into multiple parallel steps", () => {
-      const { generateFastScripts } = require("./generate-test-helper");
 
       const scripts = generateFastScripts({ all_off: scenes.all_off });
       const script = scripts.fast_scene_all_off;
@@ -321,14 +299,13 @@ describe("Scene Generation with Pairing", () => {
       expect(
         script.sequence.flatMap((step: any) => step.parallel).some(
           (call: any) =>
-            call.service === "switch.turn_off" &&
+            call.action === "switch.turn_off" &&
             call.target.entity_id.includes("switch.light_office_pianolight")
         )
       ).toBe(true);
     });
 
     it("should keep living_room_high in a single parallel step with the default cap", () => {
-      const { generateFastScripts } = require("./generate-test-helper");
 
       const scripts = generateFastScripts({ living_room_high: scenes.living_room_high });
       const script = scripts.fast_scene_living_room_high;
@@ -337,7 +314,6 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should allow callers to lower the batching cap when needed", () => {
-      const { generateFastScripts } = require("./generate-test-helper");
 
       const scripts = generateFastScripts(
         { living_room_high: scenes.living_room_high },
@@ -349,9 +325,8 @@ describe("Scene Generation with Pairing", () => {
     });
 
     it("should restore kitchen upper/lower brightness in high scenes", () => {
-      const { generateScenes } = require("./generate-test-helper");
 
-      const testScenes = {
+      const testScenes: Record<string, Scene> = {
         kitchen_high: {
           name: "Kitchen - High",
           lights: [

@@ -1,6 +1,10 @@
 import Fastify from "fastify";
 import fastifyCors from "@fastify/cors";
-import { serializerCompiler, validatorCompiler, type ZodTypeProvider } from "fastify-type-provider-zod";
+import {
+  serializerCompiler,
+  validatorCompiler,
+  type ZodTypeProvider,
+} from "fastify-type-provider-zod";
 
 import { snapshotFixture } from "./fixtures/snapshot.js";
 import { SnapshotSchema } from "./schema/snapshot.js";
@@ -12,15 +16,15 @@ const DEFAULT_HOST = "0.0.0.0";
 export async function buildServer() {
   const app = Fastify({
     logger: {
-      level: process.env.LOG_LEVEL || "info"
-    }
+      level: process.env.LOG_LEVEL || "info",
+    },
   }).withTypeProvider<ZodTypeProvider>();
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
 
   app.register(fastifyCors, {
-    origin: true
+    origin: true,
   });
 
   app.get("/healthz", async () => ({ status: "ok" }));
@@ -30,11 +34,11 @@ export async function buildServer() {
     {
       schema: {
         response: {
-          200: SnapshotSchema
-        }
-      }
+          200: SnapshotSchema,
+        },
+      },
     },
-    async () => snapshotFixture
+    async () => snapshotFixture,
   );
 
   await registerReceiptRoutes(app);

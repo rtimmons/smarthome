@@ -1,4 +1,11 @@
-FROM node:22-alpine
+FROM node:24-alpine
+
+ARG BUILD_VERSION=dev
+ARG BUILD_ARCH
+LABEL \
+    io.hass.version="${BUILD_VERSION}" \
+    io.hass.type="app" \
+    io.hass.arch="${BUILD_ARCH}"
 
 ENV LANG=C.UTF-8
 WORKDIR /opt/app

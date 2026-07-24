@@ -40,7 +40,7 @@ from typing import (
 
 try:
     import cairosvg as _cairosvg
-except (OSError, ImportError):
+except OSError, ImportError:
     _cairosvg = None
 cairosvg: Any | None = _cairosvg
 from PIL import Image, ImageDraw, ImageFont

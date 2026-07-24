@@ -6,14 +6,14 @@ fast_scene_office_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.office_light_sidetable
           data:
             brightness: 255
             color_temp: 2732
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovetv
@@ -24,7 +24,7 @@ fast_scene_office_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovecouch
@@ -35,19 +35,19 @@ fast_scene_office_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovecouch_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovetv_white
           data:
             brightness: 255
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id:
               - switch.light_office_pianolight
@@ -56,14 +56,14 @@ fast_scene_office_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.office_light_sidetable
           data:
             brightness: 180
             color_temp: 2732
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovetv
@@ -74,7 +74,7 @@ fast_scene_office_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovecouch
@@ -85,19 +85,19 @@ fast_scene_office_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovecouch_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_office_abovetv_white
           data:
             brightness: 180
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id:
               - switch.light_office_pianolight
@@ -106,14 +106,14 @@ fast_scene_office_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.office_light_sidetable
           data:
             brightness: 50
             color_temp: 2732
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_office_pianolight
@@ -122,27 +122,27 @@ fast_scene_office_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovecouch
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovecouch_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovetv
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovetv_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.office_light_sidetable
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_office_pianolight
@@ -151,19 +151,19 @@ fast_scene_bathroom_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityleft
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityright
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_abovesauna
@@ -174,19 +174,19 @@ fast_scene_bathroom_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityleft
           data:
             brightness: 155
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityright
           data:
             brightness: 155
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_abovesauna
@@ -197,17 +197,17 @@ fast_scene_bathroom_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_abovesauna
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityleft
           data:
             brightness: 50
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bathroom_vanityright
@@ -218,15 +218,15 @@ fast_scene_bathroom_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_vanityleft
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_vanityright
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_abovesauna
@@ -235,13 +235,13 @@ fast_scene_guest_bathroom_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_guestbathroom_overhead
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_guestbathroom_sconce
@@ -252,13 +252,13 @@ fast_scene_guest_bathroom_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_guestbathroom_overhead
           data:
             brightness: 128
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_guestbathroom_sconce
@@ -269,11 +269,11 @@ fast_scene_guest_bathroom_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_guestbathroom_overhead
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_guestbathroom_sconce
@@ -282,7 +282,7 @@ fast_scene_closet_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_closet_main
@@ -293,7 +293,7 @@ fast_scene_closet_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_closet_main
@@ -304,7 +304,7 @@ fast_scene_closet_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_closet_main
@@ -315,7 +315,7 @@ fast_scene_closet_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_closet_main
@@ -324,7 +324,7 @@ fast_scene_living_room_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_windowsillleft
@@ -335,7 +335,7 @@ fast_scene_living_room_high:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_windowsillright
@@ -346,19 +346,19 @@ fast_scene_living_room_high:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_windowsillleft_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_windowsillright_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_curtains
@@ -369,7 +369,7 @@ fast_scene_living_room_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_behindtv
@@ -380,7 +380,7 @@ fast_scene_living_room_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_abovetv
@@ -391,7 +391,7 @@ fast_scene_living_room_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.entry_light_nook
@@ -400,49 +400,49 @@ fast_scene_living_room_high:
               - light.living_light_nook
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_curtains_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_behindtv_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_abovetv_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_desklamps
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_sliderring
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_palm
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_cornerspot
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_hallway
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id:
               - switch.light_living_ledwall
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id:
               - switch.light_living_sillleftpower
@@ -451,11 +451,11 @@ fast_scene_living_room_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.living_light_corner
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.entry_light_nook
@@ -463,59 +463,59 @@ fast_scene_living_room_medium:
               - light.living_light_nook
           data:
             brightness: 180
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_ledwall
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillleft_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillright_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_desklamps
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_sliderring
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_palm
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_nook
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_nook_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_hanging
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_cornerspot
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_hallway
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillleft
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillright
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_curtains
@@ -526,13 +526,13 @@ fast_scene_living_room_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_curtains_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_behindtv
@@ -543,7 +543,7 @@ fast_scene_living_room_medium:
               - 0
               - 0
               - 51
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_abovetv
@@ -555,19 +555,19 @@ fast_scene_living_room_medium:
               - 0
               - 51
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_behindtv_white
           data:
             brightness: 51
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_living_abovetv_white
           data:
             brightness: 51
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_sillleftpower
@@ -576,18 +576,18 @@ fast_scene_living_room_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.living_light_floor
               - light.living_light_nook
           data:
             brightness: 50
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_ledwall
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_sillleftpower
@@ -596,78 +596,78 @@ fast_scene_living_room_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.entry_light_nook
               - light.living_light_corner
               - light.living_light_floor
               - light.living_light_nook
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_curtains_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillleft_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillright_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_behindtv_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_desklamps
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_sliderring
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_palm
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_abovetv_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_cornerspot
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_hallway
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_curtains
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillleft
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillright
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_behindtv
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_abovetv
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_ledwall
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_sillleftpower
@@ -676,7 +676,7 @@ fast_scene_makerroom_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_undershelf
@@ -687,13 +687,13 @@ fast_scene_makerroom_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_main
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_undershelf_white
@@ -704,7 +704,7 @@ fast_scene_makerroom_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_undershelf
@@ -715,13 +715,13 @@ fast_scene_makerroom_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_main
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_undershelf_white
@@ -732,7 +732,7 @@ fast_scene_makerroom_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_undershelf
@@ -743,13 +743,13 @@ fast_scene_makerroom_low:
               - 0
               - 0
               - 50
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_main
           data:
             brightness: 50
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_makerroom_undershelf_white
@@ -760,15 +760,15 @@ fast_scene_makerroom_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_makerroom_main
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_makerroom_undershelf_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_makerroom_undershelf
@@ -777,7 +777,7 @@ fast_scene_kitchen_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_upper
@@ -788,7 +788,7 @@ fast_scene_kitchen_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_lower
@@ -799,7 +799,7 @@ fast_scene_kitchen_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_nook
@@ -810,33 +810,33 @@ fast_scene_kitchen_high:
               - 0
               - 0
               - 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_upper_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_lower_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_nook_white
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_ring
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_hanging
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_abovetable
@@ -845,7 +845,7 @@ fast_scene_kitchen_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_upper
@@ -856,7 +856,7 @@ fast_scene_kitchen_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_lower
@@ -867,7 +867,7 @@ fast_scene_kitchen_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_nook
@@ -878,33 +878,33 @@ fast_scene_kitchen_medium:
               - 0
               - 0
               - 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_upper_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_lower_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_nook_white
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_ring
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_hanging
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_abovetable
@@ -913,27 +913,27 @@ fast_scene_kitchen_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_upper
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_upper_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_lower
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_lower_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_ring
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_nook
@@ -944,17 +944,17 @@ fast_scene_kitchen_low:
               - 0
               - 0
               - 50
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_nook_white
           data:
             brightness: 50
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_kitchen_hanging
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_dining_abovetable
@@ -963,39 +963,39 @@ fast_scene_kitchen_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_upper
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_upper_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_lower
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_lower_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_ring
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_hanging
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_nook
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_nook_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_abovetable
@@ -1004,13 +1004,13 @@ fast_scene_bedroom_high:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bedroom_sconces
           data:
             brightness: 255
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.bedroom_light_dresser
@@ -1018,7 +1018,7 @@ fast_scene_bedroom_high:
               - light.bedroom_light_mikedesk
           data:
             brightness: 255
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id:
               - switch.light_bedroom_flamingopower
@@ -1027,13 +1027,13 @@ fast_scene_bedroom_medium:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bedroom_sconces
           data:
             brightness: 180
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.bedroom_light_dresser
@@ -1041,7 +1041,7 @@ fast_scene_bedroom_medium:
               - light.bedroom_light_mikedesk
           data:
             brightness: 180
-        - service: switch.turn_on
+        - action: switch.turn_on
           target:
             entity_id:
               - switch.light_bedroom_flamingopower
@@ -1050,19 +1050,19 @@ fast_scene_bedroom_low:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.bedroom_light_dresser
               - light.bedroom_light_flamingo
               - light.bedroom_light_mikedesk
-        - service: light.turn_on
+        - action: light.turn_on
           target:
             entity_id:
               - light.light_bedroom_sconces
           data:
             brightness: 50
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_bedroom_flamingopower
@@ -1071,17 +1071,17 @@ fast_scene_bedroom_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bedroom_sconces
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.bedroom_light_dresser
               - light.bedroom_light_flamingo
               - light.bedroom_light_mikedesk
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_bedroom_flamingopower
@@ -1090,7 +1090,7 @@ fast_scene_all_off:
   mode: restart
   sequence:
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.bedroom_light_dresser
@@ -1101,180 +1101,180 @@ fast_scene_all_off:
               - light.living_light_floor
               - light.living_light_nook
               - light.office_light_sidetable
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_bedroom_flamingopower
               - switch.light_dining_weenie
               - switch.light_living_ledwall
               - switch.light_office_pianolight
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovecouch
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovecouch_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovetv
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_abovetv_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_office_toggle
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_vanityleft
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_abovesauna
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bathroom_vanityright
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_curtains
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_curtains_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillleft
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillleft_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillright
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_windowsillright_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_behindtv
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_behindtv_white
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_desklamps
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_sliderring
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_palm
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_abovetv
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_abovetv_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_cornerspot
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_living_hallway
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_outdoor_cafe
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_outdoor_sconces
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_makerroom_main
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_makerroom_undershelf
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_makerroom_undershelf_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_upper
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_upper_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_lower
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_lower_white
     - parallel:
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_ring
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_kitchen_hanging
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_nook
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_nook_white
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_dining_abovetable
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_guestbathroom_overhead
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_guestbathroom_sconce
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_closet_main
-        - service: light.turn_off
+        - action: light.turn_off
           target:
             entity_id:
               - light.light_bedroom_sconces
-        - service: switch.turn_off
+        - action: switch.turn_off
           target:
             entity_id:
               - switch.light_living_sillleftpower

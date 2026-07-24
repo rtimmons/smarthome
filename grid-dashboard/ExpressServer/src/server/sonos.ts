@@ -1,9 +1,9 @@
 import { Request as RQ, Response as RS, Router } from 'express';
-import * as rpn from 'request-promise-native';
 
 import '../types/sonos';
 
 import { appConfig } from './config';
+import { requestText } from './http';
 
 const app = Router();
 
@@ -11,17 +11,12 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
     const url = `${appConfig.sonosUrl}/${route}`;
 
     try {
-        const response = await rpn({
+        const response = await requestText(url, {
             method: 'GET',
-            uri: url,
-            resolveWithFullResponse: true,
-            simple: false,
         });
 
         const contentType =
-            (response.headers &&
-                (response.headers['content-type'] ||
-                    response.headers['Content-Type'])) ||
+            response.headers.get('content-type') ||
             'application/json; charset=utf-8';
         const forwardedHeaders = [
             'x-sonos-response-source',
@@ -31,10 +26,7 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
         ];
 
         forwardedHeaders.forEach(headerName => {
-            const headerValue =
-                response.headers &&
-                (response.headers[headerName] ||
-                    response.headers[headerName.toLowerCase()]);
+            const headerValue = response.headers.get(headerName);
             if (headerValue) {
                 res.setHeader(headerName, headerValue);
             }
@@ -44,13 +36,13 @@ const proxySonosGet = async (route: string, res: RS): Promise<void> => {
             .status(response.statusCode)
             .send(response.body);
     } catch (err) {
-        const statusCode = Number(err && err.statusCode) || 502;
+        const message = err instanceof Error ? err.message : 'Sonos API request failed';
         console.error(
             `Sonos API error for ${route}:`,
-            (err && err.message) || err
+            message
         );
-        res.status(statusCode).json({
-            error: (err && err.message) || 'Sonos API request failed',
+        res.status(502).json({
+            error: message,
             route,
         });
     }
@@ -65,24 +57,23 @@ const proxySonosRequest = async (
     const url = `${appConfig.sonosUrl}/${route}`;
 
     try {
-        const response = await rpn({
+        const response = await requestText(url, {
             method,
-            uri: url,
-            body,
-            json: true,
-            resolveWithFullResponse: true,
-            simple: false,
+            headers: body === undefined ? undefined : {'Content-Type': 'application/json'},
+            body: body === undefined ? undefined : JSON.stringify(body),
         });
 
-        res.status(response.statusCode).json(response.body);
+        res.type(response.headers.get('content-type') || 'application/json')
+            .status(response.statusCode)
+            .send(response.body);
     } catch (err) {
-        const statusCode = Number(err && err.statusCode) || 502;
+        const message = err instanceof Error ? err.message : 'Sonos API request failed';
         console.error(
             `Sonos API error for ${method} ${route}:`,
-            (err && err.message) || err
+            message
         );
-        res.status(statusCode).json({
-            error: (err && err.message) || 'Sonos API request failed',
+        res.status(502).json({
+            error: message,
             route,
         });
     }

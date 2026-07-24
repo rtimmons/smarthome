@@ -6,6 +6,13 @@
 # Use Python {{ addon.python_minor }} base image
 FROM python:{{ addon.python_minor }}-alpine
 
+ARG BUILD_VERSION=dev
+ARG BUILD_ARCH
+LABEL \
+    io.hass.version="${BUILD_VERSION}" \
+    io.hass.type="app" \
+    io.hass.arch="${BUILD_ARCH}"
+
 ENV LANG=C.UTF-8
 ENV PYTHONUNBUFFERED=1
 WORKDIR {{ addon.container_workdir }}
@@ -63,6 +70,13 @@ RUN {{ paths.venv }}/bin/pip install --no-cache-dir {{ addon.container_workdir }
 {% else %}
 # Use Node.js {{ addon.node_version }} base image
 FROM node:{{ addon.node_version }}-alpine
+
+ARG BUILD_VERSION=dev
+ARG BUILD_ARCH
+LABEL \
+    io.hass.version="${BUILD_VERSION}" \
+    io.hass.type="app" \
+    io.hass.arch="${BUILD_ARCH}"
 
 ENV LANG=C.UTF-8
 WORKDIR {{ addon.container_workdir }}

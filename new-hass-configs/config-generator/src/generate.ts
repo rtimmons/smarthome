@@ -41,7 +41,7 @@ const SCRIPTS_OUTPUT = path.join(OUTPUT_DIR, "scripts.yaml");
 // ============================================================================
 
 interface HATrigger {
-  platform: string;
+  trigger: string;
   [key: string]: any;
 }
 
@@ -58,9 +58,9 @@ interface HAAutomation {
   id?: string;
   alias: string;
   description?: string;
-  trigger: HATrigger | HATrigger[];
-  condition?: HACondition | HACondition[];
-  action: HAAction | HAAction[];
+  triggers: HATrigger[];
+  conditions?: HACondition[];
+  actions: HAAction[];
   mode?: string;
   max?: number;
 }
@@ -85,7 +85,7 @@ function convertTrigger(trigger: Trigger): HATrigger {
       }
 
       return {
-        platform: "event",
+        trigger: "event",
         event_type: "zwave_js_value_notification",
         event_data: {
           device_id: device.device_id,
@@ -98,19 +98,19 @@ function convertTrigger(trigger: Trigger): HATrigger {
 
     case "webhook":
       return {
-        platform: "webhook",
+        trigger: "webhook",
         webhook_id: trigger.webhook_id,
       };
 
     case "time":
       return {
-        platform: "time",
+        trigger: "time",
         at: trigger.at,
       };
 
     case "state":
       return {
-        platform: "state",
+        trigger: "state",
         entity_id: trigger.entity_id,
         ...(trigger.to && { to: trigger.to }),
         ...(trigger.from && { from: trigger.from }),
@@ -119,7 +119,7 @@ function convertTrigger(trigger: Trigger): HATrigger {
 
     case "numeric_state":
       return {
-        platform: "numeric_state",
+        trigger: "numeric_state",
         entity_id: trigger.entity_id,
         ...(trigger.above !== undefined && { above: trigger.above }),
         ...(trigger.below !== undefined && { below: trigger.below }),
@@ -128,13 +128,13 @@ function convertTrigger(trigger: Trigger): HATrigger {
 
     case "template":
       return {
-        platform: "template",
+        trigger: "template",
         value_template: trigger.value_template,
       };
 
     case "event":
       return {
-        platform: "event",
+        trigger: "event",
         event_type: trigger.event_type,
         ...(trigger.event_data && { event_data: trigger.event_data }),
       };
@@ -148,7 +148,7 @@ function convertAction(action: Action): HAAction {
   switch (action.type) {
     case "scene":
       return {
-        service: "script.turn_on",
+        action: "script.turn_on",
         target: {
           entity_id: getFastSceneScriptEntityId(action.scene),
         },
@@ -156,7 +156,7 @@ function convertAction(action: Action): HAAction {
 
     case "service":
       return {
-        service: action.service,
+        action: action.service,
         ...(action.target && { target: action.target }),
         ...(action.data && { data: action.data }),
       };
@@ -266,17 +266,20 @@ function generateAutomations(): HAAutomation[] {
         id,
         alias: automation.alias,
         ...(automation.description && { description: automation.description }),
-        trigger: Array.isArray(automation.trigger)
-          ? automation.trigger.map(convertTrigger)
-          : convertTrigger(automation.trigger),
+        triggers: (Array.isArray(automation.trigger)
+          ? automation.trigger
+          : [automation.trigger]
+        ).map(convertTrigger),
         ...(automation.condition && {
-          condition: Array.isArray(automation.condition)
-            ? automation.condition.map(convertCondition)
-            : convertCondition(automation.condition),
+          conditions: (Array.isArray(automation.condition)
+            ? automation.condition
+            : [automation.condition]
+          ).map(convertCondition),
         }),
-        action: Array.isArray(automation.action)
-          ? automation.action.map(convertAction)
-          : convertAction(automation.action),
+        actions: (Array.isArray(automation.action)
+          ? automation.action
+          : [automation.action]
+        ).map(convertAction),
         ...(automation.mode && { mode: automation.mode }),
         ...(automation.max && { max: automation.max }),
       };

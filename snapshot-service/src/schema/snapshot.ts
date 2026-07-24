@@ -5,7 +5,7 @@ export const DayStatusSchema = z.enum(["past", "today", "future", "empty"]);
 export const CalendarDaySchema = z.object({
   day: z.number().int().min(1).max(31).optional(),
   status: DayStatusSchema,
-  label: z.string().optional()
+  label: z.string().optional(),
 });
 
 export const CalendarWeekSchema = z.array(CalendarDaySchema).length(7);
@@ -14,7 +14,7 @@ export const CalendarMonthSchema = z.object({
   year: z.number().int(),
   month: z.number().int().min(1).max(12),
   month_label: z.string(),
-  weeks: z.array(CalendarWeekSchema)
+  weeks: z.array(CalendarWeekSchema),
 });
 
 export const WeatherSchema = z.object({
@@ -28,7 +28,7 @@ export const WeatherSchema = z.object({
   chance_of_rain_pct: z.number().optional(),
   humidity_pct: z.number().optional(),
   aqi: z.number().optional(),
-  uv_index: z.number().optional()
+  uv_index: z.number().optional(),
 });
 
 export const ScheduleEntrySchema = z.object({
@@ -36,7 +36,7 @@ export const ScheduleEntrySchema = z.object({
   title: z.string(),
   duration_minutes: z.number().optional(),
   location: z.string().optional(),
-  source: z.string().optional()
+  source: z.string().optional(),
 });
 
 export const ReminderSchema = z.string();
@@ -46,17 +46,17 @@ export const CommuteLegSchema = z.object({
   duration_minutes: z.number(),
   traffic: z.string().optional(),
   route: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
 });
 
 export const HabitSchema = z.object({
   label: z.string(),
-  checked: z.boolean().default(false)
+  checked: z.boolean().default(false),
 });
 
 export const MetricsSchema = z.object({
   glucose_mg_dL: z.number().optional(),
-  hydration_cups: z.number().optional()
+  hydration_cups: z.number().optional(),
 });
 
 export const SnapshotSchema = z.object({
@@ -65,7 +65,7 @@ export const SnapshotSchema = z.object({
   today: z.object({
     iso_date: z.string(),
     weekday: z.string(),
-    label: z.string()
+    label: z.string(),
   }),
   weather: WeatherSchema,
   calendar_month: CalendarMonthSchema,
@@ -73,7 +73,7 @@ export const SnapshotSchema = z.object({
   reminders: z.array(ReminderSchema),
   commute: z
     .object({
-      legs: z.array(CommuteLegSchema)
+      legs: z.array(CommuteLegSchema),
     })
     .optional(),
   habits: z.array(HabitSchema).optional(),
@@ -87,16 +87,16 @@ export const SnapshotSchema = z.object({
           payload: z.object({
             iso_date: z.string(),
             weekday: z.string(),
-            label: z.string()
-          })
+            label: z.string(),
+          }),
         }),
         z.object({
           type: z.literal("calendar_month"),
-          payload: CalendarMonthSchema
-        })
-      ])
+          payload: CalendarMonthSchema,
+        }),
+      ]),
     )
-    .optional()
+    .optional(),
 });
 
 export type Snapshot = z.infer<typeof SnapshotSchema>;

@@ -6,10 +6,9 @@ url: "{{ addon.url }}"
 arch:
   - aarch64
   - amd64
-  - armv7
-  - armhf
-  - i386
 startup: services
+{% if addon.port %}watchdog: tcp://[HOST]:[PORT:{{ addon.port }}]
+{% endif -%}
 ingress: {{ "true" if addon.ingress else "false" }}
 {% if addon.ingress -%}
 ingress_port: {{ addon.port }}

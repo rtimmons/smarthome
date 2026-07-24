@@ -1,7 +1,11 @@
 import sharp from "sharp";
 
 import { RECEIPT_LAYOUT, RECEIPT_LAYOUT_ID } from "./layout.js";
-import { type ReceiptAnalysis, type ReceiptCheckboxResult, ReceiptProcessingError } from "./types.js";
+import {
+  type ReceiptAnalysis,
+  type ReceiptCheckboxResult,
+  ReceiptProcessingError,
+} from "./types.js";
 
 const BBOX_PIXEL_THRESHOLD = 240;
 const CHECKED_PIXEL_THRESHOLD = 170;
@@ -18,7 +22,7 @@ function isPortrait(width: number, height: number) {
 }
 
 async function loadGrayscale(buffer: Buffer): Promise<RawImage> {
-  const rotated = sharp(buffer, { failOnError: false }).rotate();
+  const rotated = sharp(buffer, { failOn: "none" }).rotate();
   const meta = await rotated.metadata();
   let working = rotated;
   if (meta.width && meta.height && !isPortrait(meta.width, meta.height)) {
@@ -48,11 +52,15 @@ function findBoundingBox(image: RawImage) {
     }
   }
   if (minX > maxX || minY > maxY) {
-    throw new ReceiptProcessingError("Could not detect the receipt in the photo. Try retaking closer and flatter.");
+    throw new ReceiptProcessingError(
+      "Could not detect the receipt in the photo. Try retaking closer and flatter.",
+    );
   }
   const area = (maxX - minX) * (maxY - minY);
   if (area < MIN_BBOX_AREA) {
-    throw new ReceiptProcessingError("Receipt area too small to analyze. Move closer and ensure the receipt fills the frame.");
+    throw new ReceiptProcessingError(
+      "Receipt area too small to analyze. Move closer and ensure the receipt fills the frame.",
+    );
   }
   return { minX, minY, maxX, maxY };
 }
@@ -83,7 +91,10 @@ type AnalysisOptions = {
   date?: string;
 };
 
-export async function analyzeReceiptBuffer(buffer: Buffer, options: AnalysisOptions): Promise<ReceiptAnalysis> {
+export async function analyzeReceiptBuffer(
+  buffer: Buffer,
+  options: AnalysisOptions,
+): Promise<ReceiptAnalysis> {
   const raw = await loadGrayscale(buffer);
   const bbox = findBoundingBox(raw);
   const bboxWidth = bbox.maxX - bbox.minX;
@@ -98,7 +109,8 @@ export async function analyzeReceiptBuffer(buffer: Buffer, options: AnalysisOpti
     const label = items[i];
     const targetTop = RECEIPT_LAYOUT.checkboxTop + i * RECEIPT_LAYOUT.checkboxSpacing;
     const sampleSize = RECEIPT_LAYOUT.checkboxSize * 0.6;
-    const centerX = bbox.minX + (RECEIPT_LAYOUT.checkboxLeft + RECEIPT_LAYOUT.checkboxSize / 2) * scaleX;
+    const centerX =
+      bbox.minX + (RECEIPT_LAYOUT.checkboxLeft + RECEIPT_LAYOUT.checkboxSize / 2) * scaleX;
     const centerY = bbox.minY + (targetTop + RECEIPT_LAYOUT.checkboxSize / 2) * scaleY;
 
     const mean = sampleMean(raw, centerX - sampleSize / 2, centerY - sampleSize / 2, sampleSize);
@@ -111,8 +123,8 @@ export async function analyzeReceiptBuffer(buffer: Buffer, options: AnalysisOpti
       box: {
         x: Math.round(centerX - sampleSize / 2),
         y: Math.round(centerY - sampleSize / 2),
-        size: Math.round(sampleSize)
-      }
+        size: Math.round(sampleSize),
+      },
     });
   }
 
@@ -126,7 +138,7 @@ export async function analyzeReceiptBuffer(buffer: Buffer, options: AnalysisOpti
     debug: {
       boundingBox: { ...bbox, pixelThreshold: BBOX_PIXEL_THRESHOLD },
       source: { width: raw.width, height: raw.height },
-      scale: { x: scaleX, y: scaleY }
-    }
+      scale: { x: scaleX, y: scaleY },
+    },
   };
 }

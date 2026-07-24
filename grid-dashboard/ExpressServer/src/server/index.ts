@@ -1,9 +1,8 @@
-import * as bodyParser from 'body-parser';
-import * as cors from 'cors';
-import * as express from 'express';
-import * as morgan from 'morgan';
+import cors from 'cors';
+import express from 'express';
+import morgan from 'morgan';
 import * as path from 'path';
-import * as serveFavicon from 'serve-favicon';
+import serveFavicon from 'serve-favicon';
 
 // The below value matches with stop in package.json.
 process.title = 'smhexprsrv';
@@ -19,8 +18,8 @@ const publicDir = path.join(__dirname, '..', 'public');
 
 // Community middle-ware.
 app.use(morgan('tiny'));
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+app.use(express.json()); // support json encoded bodies
+app.use(express.urlencoded({ extended: true })); // support encoded bodies
 app.use(cors());
 
 // /ui (dashboard ui) middleware

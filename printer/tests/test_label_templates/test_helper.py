@@ -259,8 +259,8 @@ def test_draw_repeating_side_text_supports_mask_dithering() -> None:
     )
     assert dither_runs_left == dither_runs_right >= 4
 
-    with_dither_black = sum(1 for value in with_dither.getdata() if value == 0)
-    without_dither_black = sum(1 for value in without_dither.getdata() if value == 0)
+    with_dither_black = sum(1 for value in with_dither.get_flattened_data() if value == 0)
+    without_dither_black = sum(1 for value in without_dither.get_flattened_data() if value == 0)
 
     # Both images should have some content (black pixels)
     assert with_dither_black > 0

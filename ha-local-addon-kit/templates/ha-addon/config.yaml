@@ -6,12 +6,10 @@ url: "TODO_REPOSITORY_URL"
 arch:
   - aarch64
   - amd64
-  - armv7
-  - armhf
-  - i386
 startup: services
 boot: auto
 init: false
+watchdog: tcp://[HOST]:[PORT:3000]
 
 # Enable ingress for browser-based apps so the app can appear in the Home Assistant sidebar.
 ingress: true
@@ -46,4 +44,3 @@ options:
 schema:
   port: "int"
   public_base_url: "str?"
-

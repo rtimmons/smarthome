@@ -1,9 +1,9 @@
 import {Request as RQ, Response as RS, Router} from 'express';
-import rpn = require('request-promise-native');
 
 import '../types/sonos';
 
 import {appConfig} from './config';
+import {getJson, getText} from './http';
 import {
   createSonosIntentCoordinator,
   GroupAllIntentRequest,
@@ -134,21 +134,21 @@ app.get('/intents/sonos/status', wrap(async (_req: RQ, res: RS) => {
 
 // make all rooms in same zone as :room have volume same as active room
 app.get('/same/:room', wrap(async (req: RQ, res: RS) => {
-  const room = req.params['room'];
+  const roomParam = req.params['room'];
+  const room = Array.isArray(roomParam) ? roomParam[0] : roomParam;
+  if (!room) {
+    res.status(400).json({error: 'A Sonos room is required'});
+    return;
+  }
   sonosIntentCoordinator.enableVolumeSync(room);
-  const zoneResponse = await rpn({
-    method: 'GET',
-    uri: `${appConfig.sonosUrl}/${room}/zones`,
-    resolveWithFullResponse: true,
-    simple: false,
-  });
+  const zoneResponse = await getText(`${appConfig.sonosUrl}/${room}/zones`);
 
   if (zoneResponse.statusCode >= 400) {
     res.status(zoneResponse.statusCode).send(zoneResponse.body);
     return;
   }
 
-  const zones: Sonos.Zone[] = JSON.parse(zoneResponse.body as string);
+  const zones: Sonos.Zone[] = JSON.parse(zoneResponse.body);
   // /:room/zones can include all zones; choose the one containing :room.
   const zone = zones.find(z => z.members.some(member => member.roomName === room));
   if (!zone) {
@@ -169,12 +169,9 @@ app.get('/same/:room', wrap(async (req: RQ, res: RS) => {
   const others = volumes.filter(v => v.volume !== selfVolume.volume);
   await Promise.all(
     others.map(async other => {
-      await rpn({
-        method: 'GET',
-        uri: `${appConfig.sonosUrl}/${other.roomName}/volume/${selfVolume.volume}`,
-        resolveWithFullResponse: true,
-        simple: false,
-      });
+      await getText(
+        `${appConfig.sonosUrl}/${encodeURIComponent(other.roomName)}/volume/${selfVolume.volume}`
+      );
     })
   );
 
@@ -182,59 +179,43 @@ app.get('/same/:room', wrap(async (req: RQ, res: RS) => {
 }));
 
 app.get('/down', wrap(async (_req: RQ, res: RS) => {
-  const stateResponse = await rpn({
-    method: 'GET',
-    uri: `${appConfig.sonosUrl}/Bedroom/state`,
-    resolveWithFullResponse: true,
-    simple: false,
-  });
+  const stateResponse = await getJson<{playbackState: string; volume: number}>(
+    `${appConfig.sonosUrl}/Bedroom/state`
+  );
 
   if (stateResponse.statusCode >= 400) {
     res.status(stateResponse.statusCode).send(stateResponse.body);
     return;
   }
 
-  const state = JSON.parse(stateResponse.body as string);
+  const state = stateResponse.body;
   const path =
     state.playbackState === 'PLAYING' && state.volume <= 3
       ? '/Bedroom/pause'
       : '/Bedroom/groupVolume/-1';
 
-  const updateResponse = await rpn({
-    method: 'GET',
-    uri: `${appConfig.sonosUrl}${path}`,
-    resolveWithFullResponse: true,
-    simple: false,
-  });
+  const updateResponse = await getText(`${appConfig.sonosUrl}${path}`);
 
   res.status(updateResponse.statusCode).send(updateResponse.body);
 }));
 
 app.get('/up', wrap(async (_req: RQ, res: RS) => {
-  const stateResponse = await rpn({
-    method: 'GET',
-    uri: `${appConfig.sonosUrl}/Bedroom/state`,
-    resolveWithFullResponse: true,
-    simple: false,
-  });
+  const stateResponse = await getJson<{playbackState: string; volume: number}>(
+    `${appConfig.sonosUrl}/Bedroom/state`
+  );
 
   if (stateResponse.statusCode >= 400) {
     res.status(stateResponse.statusCode).send(stateResponse.body);
     return;
   }
 
-  const state = JSON.parse(stateResponse.body as string);
+  const state = stateResponse.body;
   const path =
     state.playbackState === 'PAUSED_PLAYBACK'
       ? '/Bedroom/play'
       : '/Bedroom/groupVolume/+1';
 
-  const updateResponse = await rpn({
-    method: 'GET',
-    uri: `${appConfig.sonosUrl}${path}`,
-    resolveWithFullResponse: true,
-    simple: false,
-  });
+  const updateResponse = await getText(`${appConfig.sonosUrl}${path}`);
 
   res.status(updateResponse.statusCode).send(updateResponse.body);
 }));

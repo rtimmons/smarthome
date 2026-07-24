@@ -15,7 +15,7 @@ This project uses **single source of truth** files for runtime versions to ensur
 │                                                              │
 │   .nvmrc                     .python-version                 │
 │   ┌──────────┐              ┌───────────┐                   │
-│   │ v20.18.2 │              │  3.12.12  │                   │
+│   │ v24.18.0 │              │  3.14.6  │                   │
 │   └──────────┘              └───────────┘                   │
 └─────────────────────────────────────────────────────────────┘
                         │
@@ -49,7 +49,7 @@ This project uses **single source of truth** files for runtime versions to ensur
 
 ### `.nvmrc`
 ```
-v20.18.2
+v24.18.0
 ```
 
 Controls Node.js version for:
@@ -57,9 +57,14 @@ Controls Node.js version for:
 - Docker images (via base image selection)
 - CI/CD pipelines (if configured)
 
+`node-sonos-http-api` is an explicit compatibility exception: its upstream
+package declares Node `<23`, so Talos builds that app with the per-app
+`node_version` in its `addon.yaml` while maintained local services use the
+repository-wide Node 24 pin.
+
 ### `.python-version`
 ```
-3.12.12
+3.14.6
 ```
 
 Controls Python version for:
@@ -91,16 +96,16 @@ Controls Python version for:
 1. `talos addon build` reads `.nvmrc` and `.python-version`
 2. Passes versions to Dockerfile template
 3. Dockerfile uses specific base images:
-   - Node addons: `FROM node:20.18.2-alpine`
-   - Python addons: `FROM python:3.12-alpine`
+   - Node addons: `FROM node:24.18.0-alpine`
+   - Python addons: `FROM python:3.14-alpine`
 
 **Resulting Dockerfiles include version comments:**
 ```dockerfile
 # Version pinning based on .nvmrc and .python-version
-# Node.js version: 20.18.2 (from .nvmrc)
-# Python version: 3.12.12 (from .python-version)
+# Node.js version: 24.18.0 (from .nvmrc)
+# Python version: 3.14.6 (from .python-version)
 
-FROM node:20.18.2-alpine
+FROM node:24.18.0-alpine
 ```
 
 ## Upgrading Runtime Versions
@@ -126,7 +131,7 @@ just deploy    # Deploys to Home Assistant
 
 ```bash
 # Update .python-version
-echo "3.13.0" > .python-version
+echo "<new-python-version>" > .python-version
 
 # Rebuild locally
 just setup  # Installs new Python version via pyenv
@@ -144,11 +149,11 @@ just deploy    # Deploys to Home Assistant
 - **Node.js version** in Docker exactly matches `.nvmrc`
 - **Python version** in Docker exactly matches `.python-version` (minor version)
 - **Local development** uses same versions as Docker (when nvm/pyenv available)
-- **All add-ons** use the same runtime versions
+- **Per-app runtime overrides** are explicit in `addon.yaml`
 
 ### 📝 Minor Version Matching
 
-- Python Docker images use minor version (3.12) from `.python-version` (3.12.12)
+- Python Docker images use minor version (3.14) from `.python-version` (3.14.6)
 - This allows patch updates in Docker base images while maintaining compatibility
 
 ## Verification
@@ -167,8 +172,8 @@ cat build/home-assistant-addon/sonos_api/Dockerfile | head -10
 
 Output should show:
 ```dockerfile
-# Node.js version: 20.18.2 (from .nvmrc)
-FROM node:20.18.2-alpine
+# Node.js version: 24.18.0 (from .nvmrc)
+FROM node:24.18.0-alpine
 ```
 
 ## Benefits
@@ -198,11 +203,11 @@ just ha-addon all
 ### Version file doesn't exist
 
 The build system uses defaults if files are missing:
-- Node.js: 20.18.2
-- Python: 3.12.12
+- Node.js: 24.18.0
+- Python: 3.14.6
 
 Create the files to override:
 ```bash
-echo "v20.18.2" > .nvmrc
-echo "3.12.12" > .python-version
+echo "v24.18.0" > .nvmrc
+echo "3.14.6" > .python-version
 ```

@@ -1,5 +1,5 @@
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.14"
 mypy_path = "src"
 show_error_codes = true
 pretty = true

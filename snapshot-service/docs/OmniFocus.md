@@ -102,13 +102,13 @@ function run(argv) {
   const flaggedTasks = defaultDoc.flattenedTasks.whose({
     flagged: true,
     completed: false,
-    dropped: false
+    dropped: false,
   })();
 
   // Extract task names
   const reminders = flaggedTasks
     .slice(0, 10) // Limit to 10 tasks
-    .map(task => task.name());
+    .map((task) => task.name());
 
   return JSON.stringify({ reminders });
 }
@@ -141,7 +141,7 @@ interface ReminderCache {
 
 let cachedReminders: ReminderCache = {
   reminders: [],
-  lastUpdated: new Date()
+  lastUpdated: new Date(),
 };
 
 // POST endpoint to receive reminders from laptop
@@ -150,27 +150,27 @@ app.post(
   {
     schema: {
       body: z.object({
-        reminders: z.array(z.string())
+        reminders: z.array(z.string()),
       }),
       response: {
-        200: z.object({ success: z.boolean() })
-      }
-    }
+        200: z.object({ success: z.boolean() }),
+      },
+    },
   },
   async (request) => {
     cachedReminders = {
       reminders: request.body.reminders,
-      lastUpdated: new Date()
+      lastUpdated: new Date(),
     };
     return { success: true };
-  }
+  },
 );
 
 // Update GET /snapshot to use cached reminders
 app.get("/snapshot", async () => {
   return {
     ...snapshotFixture,
-    reminders: cachedReminders.reminders
+    reminders: cachedReminders.reminders,
   };
 });
 ```
@@ -252,6 +252,7 @@ app.post("/reminders", async (request, reply) => {
 ```
 
 Then update the curl command:
+
 ```bash
 curl -X POST \
   -H "Content-Type: application/json" \
@@ -265,11 +266,13 @@ curl -X POST \
 ### Manual Testing
 
 1. **Test OmniFocus query:**
+
    ```bash
    ~/bin/query-omnifocus.js
    ```
 
 2. **Test POST endpoint:**
+
    ```bash
    curl -X POST \
      -H "Content-Type: application/json" \
@@ -278,6 +281,7 @@ curl -X POST \
    ```
 
 3. **Test GET endpoint:**
+
    ```bash
    curl http://homeassistant.local:4010/snapshot | jq '.reminders'
    ```
@@ -292,16 +296,19 @@ curl -X POST \
 ## Troubleshooting
 
 ### OmniFocus not accessible
+
 - Ensure OmniFocus is running
 - Check System Preferences → Security & Privacy → Automation
 - Grant Terminal (or your script runner) permission to control OmniFocus
 
 ### Network issues
+
 - Verify `homeassistant.local` resolves: `ping homeassistant.local`
 - Check snapshot-service is running: `curl http://homeassistant.local:4010/healthz`
 - Review logs: `~/Library/Logs/omnifocus-sync.err`
 
 ### launchd not running
+
 - Check status: `launchctl list | grep omnifocus-sync`
 - Reload: `launchctl unload ~/Library/LaunchAgents/com.user.omnifocus-sync.plist && launchctl load ~/Library/LaunchAgents/com.user.omnifocus-sync.plist`
 - Check system logs: `log show --predicate 'process == "launchd"' --last 1h`

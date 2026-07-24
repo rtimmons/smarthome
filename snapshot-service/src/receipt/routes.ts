@@ -11,17 +11,31 @@ const UploadQuerySchema = z.object({
   date: z.string().optional(),
   receipt_id: z.string().optional(),
   items: z.string().optional(),
-  layout: z.string().optional()
+  layout: z.string().optional(),
 });
 
-const DEFAULT_ITEMS = ["Breakfast", "Lunch", "Dinner", "Meds AM", "Meds PM", "Hydrate x8", "Exercise", "Notes"];
+const ErrorResponseSchema = z.object({
+  status: z.literal("error"),
+  message: z.string(),
+});
+
+const DEFAULT_ITEMS = [
+  "Breakfast",
+  "Lunch",
+  "Dinner",
+  "Meds AM",
+  "Meds PM",
+  "Hydrate x8",
+  "Exercise",
+  "Notes",
+];
 
 export async function registerReceiptRoutes(app: FastifyInstance) {
   await app.register(multipart, {
     limits: {
       fileSize: 15 * 1024 * 1024,
-      files: 1
-    }
+      files: 1,
+    },
   });
 
   app.get("/receipt/upload", async (request, reply) => {
@@ -31,7 +45,7 @@ export async function registerReceiptRoutes(app: FastifyInstance) {
       items,
       date: parsed.success ? parsed.data.date : undefined,
       receiptId: parsed.success ? parsed.data.receipt_id : undefined,
-      targetUrl: "/receipt/analyze"
+      targetUrl: "/receipt/analyze",
     });
     reply.type("text/html").send(html);
   });
@@ -41,9 +55,11 @@ export async function registerReceiptRoutes(app: FastifyInstance) {
     {
       schema: {
         response: {
-          200: ReceiptAnalysisSchema
-        }
-      }
+          200: ReceiptAnalysisSchema,
+          400: ErrorResponseSchema,
+          500: ErrorResponseSchema,
+        },
+      },
     },
     async (request, reply) => {
       try {
@@ -59,7 +75,7 @@ export async function registerReceiptRoutes(app: FastifyInstance) {
         const result = await analyzeReceiptBuffer(buffer, {
           items,
           receiptId,
-          date
+          date,
         });
         reply.send(result);
       } catch (error) {
@@ -68,9 +84,11 @@ export async function registerReceiptRoutes(app: FastifyInstance) {
           return;
         }
         request.log.error(error);
-        reply.status(500).send({ status: "error", message: "Unexpected error while processing receipt." });
+        reply
+          .status(500)
+          .send({ status: "error", message: "Unexpected error while processing receipt." });
       }
-    }
+    },
   );
 }
 

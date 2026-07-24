@@ -1,7 +1,7 @@
 import { Request as RQ, Response as RS, Router } from 'express';
-import * as rpn from 'request-promise-native';
 
 import { appConfig as cfg } from './config';
+import { requestText } from './http';
 
 // removes port
 const host = (req: RQ) => {
@@ -26,10 +26,25 @@ const urls: { [key: string]: (req: RQ, res: RS) => string } = {
     '2right': () => `${cfg.sonosUrl}/Bedroom/next`,
 };
 
-redirs.get('/b/:to', (req: RQ, res: RS) => {
-    const url = urls[req.params['to']](req, res);
-    console.log(`/b/${req.params['to']} => ${url}`);
-    req.pipe(rpn(url)).pipe(res);
+redirs.get('/b/:to', async (req: RQ, res: RS) => {
+    const targetParam = req.params['to'];
+    const target = Array.isArray(targetParam) ? targetParam[0] : targetParam;
+    const urlFactory = target ? urls[target] : undefined;
+    if (!urlFactory) {
+        res.status(404).send('Unknown redirect target');
+        return;
+    }
+    const url = urlFactory(req, res);
+    console.log(`/b/${target} => ${url}`);
+    try {
+        const response = await requestText(url);
+        res.type(response.headers.get('content-type') || 'text/plain')
+            .status(response.statusCode)
+            .send(response.body);
+    } catch (err) {
+        const message = err instanceof Error ? err.message : 'Redirect target failed';
+        res.status(502).json({error: message});
+    }
 });
 
 redirs.post('/report', (req: RQ, res: RS) => {

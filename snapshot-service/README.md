@@ -1,7 +1,9 @@
 # Snapshot Service
+
 Backend add-on that returns a fully shaped daily snapshot JSON for the `printer` UI to render (no client-side intelligence needed). Uses TypeScript + Fastify for speed, safety, and easy local development.
 
 ## Tech stack
+
 - Node.js 20 (per repo `.nvmrc`), TypeScript, Fastify (or Express if preferred), npm (corepack-enabled; pnpm also fine).
 - Runtime validation + OpenAPI from one source (e.g., Zod + zod-openapi).
 - Testing: Vitest + Supertest, tsx for watch mode, msw-style mocks for outbound APIs.
@@ -9,28 +11,30 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
 - Config: dotenv for local, typed config loader, strict TS.
 
 ## Milestones
-1) **Bootstrap + mock endpoint**  
-   - Scaffold service with `Justfile` targets: `setup` (install deps), `dev` (fast reload server), `lint`, `test`, `fmt`, `typecheck`, `build`.  
-   - Expose `GET /snapshot` serving a single mock JSON file (fixtures) that already matches the printer contract. `just dev` should bring this up locally.  
+
+1. **Bootstrap + mock endpoint**
+   - Scaffold service with `Justfile` targets: `setup` (install deps), `dev` (fast reload server), `lint`, `test`, `fmt`, `typecheck`, `build`.
+   - Expose `GET /snapshot` serving a single mock JSON file (fixtures) that already matches the printer contract. `just dev` should bring this up locally.
    - Add CI job (GitHub Actions) running lint/test/typecheck.
-2) **Data contract + validation**  
-   - Define `Snapshot` schema (Zod) and derive OpenAPI/JSON Schema; publish `/openapi.json`.  
-   - Keep the printer dumb: snapshot includes all derived fields (today’s date, localized strings, computed highs/lows, week rows, etc.).  
+2. **Data contract + validation**
+   - Define `Snapshot` schema (Zod) and derive OpenAPI/JSON Schema; publish `/openapi.json`.
+   - Keep the printer dumb: snapshot includes all derived fields (today’s date, localized strings, computed highs/lows, week rows, etc.).
    - Add contract tests that ensure fixture conforms to schema and is backward-compatible.
-3) **Sources + adapters**  
-   - Weather provider adapter (e.g., OpenWeather or Tomorrow.io) behind an interface; add caching + timeouts + fallback to mock.  
-   - Calendar adapter (Google Calendar/Workspaces service account + timezone handling).  
-   - Optional adapters: commute (Google/Apple/Here), health metrics, reminders/tasks.  
+3. **Sources + adapters**
+   - Weather provider adapter (e.g., OpenWeather or Tomorrow.io) behind an interface; add caching + timeouts + fallback to mock.
+   - Calendar adapter (Google Calendar/Workspaces service account + timezone handling).
+   - Optional adapters: commute (Google/Apple/Here), health metrics, reminders/tasks.
    - Use dependency injection to swap real vs mock in dev/test.
-4) **Composition + business rules**  
-   - Snapshot builder aggregates adapters, handles timezones, dedupes overlaps, clamps text lengths, and sets color/intensity hints (e.g., `status: "today"` → printer renders in red).  
+4. **Composition + business rules**
+   - Snapshot builder aggregates adapters, handles timezones, dedupes overlaps, clamps text lengths, and sets color/intensity hints (e.g., `status: "today"` → printer renders in red).
    - Add feature flags for sections (weather/calendar/schedule/reminders/commute/habits/metrics).
-5) **Operations**  
-   - Structured logging, request IDs, healthcheck (`/healthz`), metrics-ready hook (Prom/StatsD).  
-   - Configurable port/bind address; minimal runtime image (node:20-slim + npm prune).  
+5. **Operations**
+   - Structured logging, request IDs, healthcheck (`/healthz`), metrics-ready hook (Prom/StatsD).
+   - Configurable port/bind address; minimal runtime image (node:24-alpine + npm prune).
    - Add-on packaging: `addon.yaml`, container build, and hook into root `talos` CLI.
 
 ## Local dev (first cut)
+
 - `cd snapshot-service`
 - `just setup` (installs npm deps via corepack)
 - `just dev` (Fastify + tsx watch on port 4010)
@@ -38,16 +42,19 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
 - The first `npm install` will generate `package-lock.json`, which is required for Docker/add-on builds.
 
 ## First success criteria (`just dev`)
-- `just dev` runs Fastify in watch mode on port 4010 and serves `GET /snapshot` returning a static fixture from `src/fixtures/snapshot.json`.  
-- Lint/test pass; `just test snapshot-service` (or equivalent) runs Vitest suite over the fixture and schema.  
+
+- `just dev` runs Fastify in watch mode on port 4010 and serves `GET /snapshot` returning a static fixture from `src/fixtures/snapshot.json`.
+- Lint/test pass; `just test snapshot-service` (or equivalent) runs Vitest suite over the fixture and schema.
 - Printer add-on can hit `http://localhost:<port>/snapshot` and render without any extra logic.
 
 ## Receipt checklist flow
+
 - `GET /receipt/upload` renders the upload UI used by the printed checklist QR.
 - `POST /receipt/analyze` accepts a photo (multipart field `receipt`) and returns which checkboxes were checked.
 - See `docs/receipt.md` for layout, processing details, and a quick demo (`cd snapshot-service && ./check.sh --print` to generate/print a checklist).
 
 ## Proposed JSON shape (fixture example)
+
 ```json
 {
   "generated_at": "2024-09-10T07:14:00-07:00",
@@ -70,13 +77,29 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
     "year": 2024,
     "month": 9,
     "weeks": [
-      [{ "day": 8, "status": "past" }, { "day": 9, "status": "past" }, { "day": 10, "status": "today" }]
+      [
+        { "day": 8, "status": "past" },
+        { "day": 9, "status": "past" },
+        { "day": 10, "status": "today" }
+      ]
     ],
     "month_label": "September"
   },
   "schedule": [
-    { "time": "08:30", "title": "Standup", "duration_minutes": 30, "location": "Zoom", "source": "work" },
-    { "time": "10:00", "title": "Client Sync", "duration_minutes": 60, "location": "Room 2B", "source": "work" },
+    {
+      "time": "08:30",
+      "title": "Standup",
+      "duration_minutes": 30,
+      "location": "Zoom",
+      "source": "work"
+    },
+    {
+      "time": "10:00",
+      "title": "Client Sync",
+      "duration_minutes": 60,
+      "location": "Room 2B",
+      "source": "work"
+    },
     { "time": "12:30", "title": "Lunch w/ Alex", "location": "Cafe Grin" },
     { "time": "15:00", "title": "Dentist", "duration_minutes": 45 },
     { "time": "19:00", "title": "Date Night" }
@@ -85,7 +108,13 @@ Backend add-on that returns a fully shaped daily snapshot JSON for the `printer`
   "commute": {
     "legs": [
       { "label": "Home → Office", "duration_minutes": 22, "traffic": "light", "route": "101N" },
-      { "label": "Office → Home", "duration_minutes": 28, "traffic": "moderate", "route": "280S", "notes": "after 6:15p" }
+      {
+        "label": "Office → Home",
+        "duration_minutes": 28,
+        "traffic": "moderate",
+        "route": "280S",
+        "notes": "after 6:15p"
+      }
     ]
   },
   "habits": [

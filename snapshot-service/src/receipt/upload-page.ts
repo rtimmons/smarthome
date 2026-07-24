@@ -6,7 +6,9 @@ type UploadPageOptions = {
 };
 
 export function renderUploadPage(options: UploadPageOptions): string {
-  const itemsList = options.items.length ? options.items : ["Breakfast", "Lunch", "Dinner", "Meds AM", "Meds PM"];
+  const itemsList = options.items.length
+    ? options.items
+    : ["Breakfast", "Lunch", "Dinner", "Meds AM", "Meds PM"];
   const encodedItems = JSON.stringify(itemsList);
   const today = new Date().toISOString().slice(0, 10);
   const dateValue = options.date || today;
@@ -25,7 +27,7 @@ export function renderUploadPage(options: UploadPageOptions): string {
     p { margin: 0 0 0.75rem; color: #475569; }
     form { display: grid; gap: 0.75rem; }
     label { display: grid; gap: 0.35rem; font-weight: 600; color: #0f172a; }
-    input[type=\"file\"], input[type=\"date\"], input[type=\"text\"] { padding: 0.6rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 10px; }
+    input[type="file"], input[type="date"], input[type="text"] { padding: 0.6rem; font-size: 1rem; border: 1px solid #cbd5e1; border-radius: 10px; }
     button { padding: 0.75rem 1rem; border: none; background: #2563eb; color: #fff; font-size: 1rem; border-radius: 10px; cursor: pointer; box-shadow: 0 10px 28px -16px rgba(37, 99, 235, 0.7); }
     button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; }
     .card { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 0.75rem; }
@@ -37,20 +39,20 @@ export function renderUploadPage(options: UploadPageOptions): string {
   <main>
     <h1>Upload your receipt photo</h1>
     <p>Take a clear photo of the printed checklist. Keep the receipt flat and the QR/corner marks visible for best results.</p>
-    <div class=\"card\">
+    <div class="card">
       <strong>Items on this receipt:</strong>
-      <div class=\"items\">
+      <div class="items">
         ${itemsList.map((item) => `<span>• ${escapeHtml(item)}</span>`).join("")}
       </div>
     </div>
-    <form id=\"uploadForm\" enctype=\"multipart/form-data\" method=\"post\" action=\"${options.targetUrl}\">
-      <input type=\"hidden\" name=\"items\" value='${encodeURIComponent(encodedItems)}'>
-      <label>Receipt photo<input type=\"file\" name=\"receipt\" accept=\"image/*\" capture=\"environment\" required></label>
-      <label>Date<input type=\"date\" name=\"date\" value=\"${dateValue}\"></label>
-      <label>Receipt ID<input type=\"text\" name=\"receipt_id\" value=\"${options.receiptId ?? ""}\" placeholder=\"Optional tracking ID\"></label>
-      <button type=\"submit\">Upload & analyze</button>
+    <form id="uploadForm" enctype="multipart/form-data" method="post" action="${options.targetUrl}">
+      <input type="hidden" name="items" value='${encodeURIComponent(encodedItems)}'>
+      <label>Receipt photo<input type="file" name="receipt" accept="image/*" capture="environment" required></label>
+      <label>Date<input type="date" name="date" value="${dateValue}"></label>
+      <label>Receipt ID<input type="text" name="receipt_id" value="${options.receiptId ?? ""}" placeholder="Optional tracking ID"></label>
+      <button type="submit">Upload & analyze</button>
     </form>
-    <pre id=\"result\" class=\"result\" style=\"display:none\"></pre>
+    <pre id="result" class="result" style="display:none"></pre>
   </main>
   <script>
     const form = document.getElementById('uploadForm');
@@ -74,5 +76,9 @@ export function renderUploadPage(options: UploadPageOptions): string {
 }
 
 function escapeHtml(value: string): string {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\"/g, "&quot;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

@@ -78,8 +78,8 @@ The setup script will automatically install:
 - **Homebrew**: macOS package manager
 - **nvm**: Node Version Manager (via Homebrew)
 - **pyenv**: Python Version Manager (via Homebrew)
-- **Node.js**: v20.18.2 (via nvm)
-- **Python**: 3.12.12 (via pyenv)
+- **Node.js**: v24.18.0 (via nvm)
+- **Python**: 3.14.6 (via pyenv)
 - **npm**: Comes with Node.js
 - **uv**: Python package manager
 - **cairo**: System library for printer service

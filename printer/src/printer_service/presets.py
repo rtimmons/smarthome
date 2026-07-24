@@ -345,7 +345,7 @@ def _mongo_timeout_ms() -> int:
     raw = os.getenv("MONGODB_TIMEOUT_MS", "350")
     try:
         value = int(raw)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return 350
     return max(value, 1)
 

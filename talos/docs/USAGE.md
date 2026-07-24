@@ -370,10 +370,10 @@ just dev
 
 ```bash
 # Update Node.js version
-echo "v20.19.0" > .nvmrc
+echo "<new-node-version>" > .nvmrc
 
 # Update Python version
-echo "3.13.0" > .python-version
+echo "<new-python-version>" > .python-version
 
 # Rebuild local environment
 just setup
@@ -530,8 +530,8 @@ run_env:
 ### Version Management
 
 Talos reads runtime versions from:
-- **`.nvmrc`** - Node.js version (e.g., `v20.18.2`)
-- **`.python-version`** - Python version (e.g., `3.12.12`)
+- **`.nvmrc`** - Node.js version (e.g., `v24.18.0`)
+- **`.python-version`** - Python version (e.g., `3.14.6`)
 
 These files control:
 1. Local development (via nvm/pyenv)

@@ -152,7 +152,7 @@ def create_app() -> Flask:
                 return jsonify({"error": "Upload a file under the 'file' field."}), 400
             try:
                 image = Image.open(uploaded.stream)
-            except (UnidentifiedImageError, OSError):
+            except UnidentifiedImageError, OSError:
                 return jsonify({"error": "Uploaded file must be a readable image."}), 400
             metrics = analyze_label_image(image, config)
             try:
@@ -291,7 +291,7 @@ def create_app() -> Flask:
             try:
                 form_data = _coerce_template_form_data(preset.params)
                 query = canonical_query_string(preset.template, form_data)
-            except (LabelPayloadError, ValueError):
+            except LabelPayloadError, ValueError:
                 query = ""
         # Keep control params (print/qr/etc.) so grid-dashboard's PrinterService can drive
         # /p/<slug>?print=true countdown prints in the printer add-on UI.

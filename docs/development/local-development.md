@@ -60,7 +60,7 @@ printer:8099 (standalone)
 
 ### Primary Goal
 Run `just dev` from the repository root to:
-- Start all 4 services with correct runtime versions (Node v20.18.2, Python 3.10+)
+- Start all 4 services with correct runtime versions (Node v24.18.0, Python 3.10+)
 - Watch for file changes and auto-reload services
 - Display unified logs with `[service-name HH:MM:SS]` prefixes
 - Provide localhost URLs for accessing each service
@@ -93,7 +93,7 @@ A new development orchestrator (Python script or Justfile recipes) will:
 5. Handle graceful shutdown of all services
 
 ### Runtime Management
-- **Node.js**: Managed by `talos/scripts/nvm_use.sh` (sources nvm itself) to ensure v20.18.2 from `.nvmrc` without shell profile tweaks
+- **Node.js**: Managed by `talos/scripts/nvm_use.sh` (sources nvm itself) to ensure v24.18.0 from `.nvmrc` without shell profile tweaks
 - **Python**: Use `uv` or venv with Python 3.10+ (from `.python-version` and pyproject.toml)
 
 ### File Watching
@@ -135,7 +135,7 @@ A new development orchestrator (Python script or Justfile recipes) will:
 The local development environment is fully operational with the following capabilities:
 
 - Surveyed all 4 add-ons (node-sonos-http-api, sonos-api, grid-dashboard, printer)
-- Identified runtime requirements (Node v20.18.2, Python 3.10+)
+- Identified runtime requirements (Node v24.18.0, Python 3.10+)
 - Mapped service dependencies
 - Located existing dev scripts
 - Refactored to decentralized `*/addon.yaml` structure (supports cross-repo symlinks)
@@ -178,7 +178,7 @@ just dev
 - **Type**: Node.js (upstream git clone)
 - **Port**: 5005
 - **Source**: `node-sonos-http-api/` (git clone from https://github.com/jishi/node-sonos-http-api.git)
-- **Runtime**: Node v20.18.2
+- **Runtime**: Node v24.18.0
 - **Start**: Clone repo → `npm install` → `npm start`
 - **Env vars**: `PORT=5005`, `SONOS_DISCOVERY_TIMEOUT=5`
 - **Watch**: May need nodemon or supervisor (not in upstream)
@@ -188,7 +188,7 @@ just dev
 - **Type**: TypeScript/Node.js
 - **Port**: 5006
 - **Source**: `sonos-api/`
-- **Runtime**: Node v20.18.2
+- **Runtime**: Node v24.18.0
 - **Start**: `npm run dev` (uses supervisor)
 - **Env vars**: `PORT=5006`, `APP_PORT=5006`, `SONOS_BASE_URL=http://localhost:5005`
 - **Watch**: Built-in via supervisor
@@ -198,7 +198,7 @@ just dev
 - **Type**: TypeScript/Node.js/Express
 - **Port**: 3000
 - **Source**: `grid-dashboard/ExpressServer/`
-- **Runtime**: Node v20.18.2
+- **Runtime**: Node v24.18.0
 - **Start**: `npm run dev` (uses supervisor)
 - **Env vars**: `PORT=3000`, `APP_PORT=3000`, `SONOS_BASE_URL=http://localhost:5006`, `HASS_WEBHOOK_BASE=`, `INGRESS_ENTRY=`, `NODE_OPTIONS=--enable-source-maps`
 - **Watch**: Built-in via supervisor
@@ -240,7 +240,7 @@ The goal is to avoid containers entirely and run natively on macOS for faster it
 | Ingress | Via HA supervisor | Direct port access |
 
 ### Runtime Version Management
-- **Node**: Use the repo wrapper (`talos/scripts/nvm_use.sh`) which sources nvm directly and pins to `.nvmrc` (v20.18.2) without requiring shell init files
+- **Node**: Use the repo wrapper (`talos/scripts/nvm_use.sh`) which sources nvm directly and pins to `.nvmrc` (v24.18.0) without requiring shell init files
 - **Python**: Use `uv` with `pyproject.toml` requirements, or fallback to venv with `.python-version`
 
 ## Configuration Structure
@@ -282,7 +282,7 @@ $ just dev
 
 🚀 Starting smart home development environment...
 
-[init 10:15:33] Checking runtimes: Node v20.18.2 ✓, Python 3.10 ✓
+[init 10:15:33] Checking runtimes: Node v24.18.0 ✓, Python 3.10 ✓
 [init 10:15:33] Resolving dependencies: node-sonos-http-api → sonos-api → grid-dashboard, printer
 [init 10:15:34] Starting services...
 

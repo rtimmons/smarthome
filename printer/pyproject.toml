@@ -2,10 +2,10 @@
 name = "printer"
 version = "0.1.0"
 description = "Kitchen label printing service."
-requires-python = ">=3.10"
+requires-python = ">=3.14"
 dependencies = [
     "flask",
-    "pillow>=10.3,<11",
+    "pillow>=12,<13",
     "brother-ql",
     "python-escpos",
     "cairosvg",
@@ -31,7 +31,7 @@ build-backend = "hatchling.build"
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py314"
 
 [tool.ruff.format]
 quote-style = "double"

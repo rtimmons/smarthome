@@ -1,4 +1,3 @@
-import bodyParser = require('body-parser');
 import cors = require('cors');
 import express = require('express');
 import morgan = require('morgan');
@@ -13,8 +12,8 @@ const app = express();
 
 // Community middle-ware.
 app.use(morgan('tiny'));
-app.use(bodyParser.json()); // support json encoded bodies
-app.use(bodyParser.urlencoded({ extended: true })); // support encoded bodies
+app.use(express.json()); // support json encoded bodies
+app.use(express.urlencoded({extended: true})); // support encoded bodies
 app.use(cors());
 
 // Sonos API routes

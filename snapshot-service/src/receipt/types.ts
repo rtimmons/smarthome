@@ -37,9 +37,9 @@ export interface ReceiptAnalysis {
 }
 
 export class ReceiptProcessingError extends Error {
-  statusCode: number;
+  readonly statusCode: 400;
 
-  constructor(message: string, statusCode = 400) {
+  constructor(message: string, statusCode: 400 = 400) {
     super(message);
     this.name = "ReceiptProcessingError";
     this.statusCode = statusCode;

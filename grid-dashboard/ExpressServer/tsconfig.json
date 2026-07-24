@@ -1,15 +1,18 @@
 {
-  "extends": "./node_modules/gts/tsconfig-google.json",
   "compilerOptions": {
     "allowJs": true,
     "checkJs": true,
     "declaration": false,
     "noImplicitAny": true,
-    "lib": ["es2017"],
+    "lib": ["es2023", "dom", "dom.iterable"],
     "module": "CommonJS",
     "pretty": true,
     "rootDir": ".",
-    "target": "es2017"
+    "target": "es2023",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node", "vitest/globals"]
   },
   "include": [
     "src/**/*.ts"

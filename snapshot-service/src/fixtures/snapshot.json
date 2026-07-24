@@ -72,8 +72,20 @@
     ]
   },
   "schedule": [
-    { "time": "08:30", "title": "Standup", "duration_minutes": 30, "location": "Zoom", "source": "work" },
-    { "time": "10:00", "title": "Client Sync", "duration_minutes": 60, "location": "Room 2B", "source": "work" },
+    {
+      "time": "08:30",
+      "title": "Standup",
+      "duration_minutes": 30,
+      "location": "Zoom",
+      "source": "work"
+    },
+    {
+      "time": "10:00",
+      "title": "Client Sync",
+      "duration_minutes": 60,
+      "location": "Room 2B",
+      "source": "work"
+    },
     { "time": "12:30", "title": "Lunch w/ Alex", "location": "Cafe Grin" },
     { "time": "15:00", "title": "Dentist", "duration_minutes": 45 },
     { "time": "19:00", "title": "Date Night" }
@@ -82,7 +94,13 @@
   "commute": {
     "legs": [
       { "label": "Home → Office", "duration_minutes": 22, "traffic": "light", "route": "101N" },
-      { "label": "Office → Home", "duration_minutes": 28, "traffic": "moderate", "route": "280S", "notes": "after 6:15p" }
+      {
+        "label": "Office → Home",
+        "duration_minutes": 28,
+        "traffic": "moderate",
+        "route": "280S",
+        "notes": "after 6:15p"
+      }
     ]
   },
   "habits": [

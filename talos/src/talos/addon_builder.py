@@ -320,8 +320,8 @@ def read_runtime_versions() -> Dict[str, str]:
         versions["node"] = node_version.lstrip("v")
         versions["node_major"] = node_version.lstrip("v").split(".")[0]
     else:
-        versions["node"] = "20.18.2"
-        versions["node_major"] = "20"
+        versions["node"] = "24.18.0"
+        versions["node_major"] = "24"
 
     python_version_path = REPO_ROOT / ".python-version"
     if python_version_path.exists():
@@ -329,8 +329,8 @@ def read_runtime_versions() -> Dict[str, str]:
         versions["python"] = python_version
         versions["python_minor"] = ".".join(python_version.split(".")[:2])
     else:
-        versions["python"] = "3.9.0"
-        versions["python_minor"] = "3.9"
+        versions["python"] = "3.14.6"
+        versions["python_minor"] = "3.14"
 
     return versions
 
@@ -407,8 +407,10 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "audio": raw.get("audio", False),
             "gpio": raw.get("gpio", False),
             "custom_dockerfile": raw.get("custom_dockerfile", False),
-            "node_version": runtime_versions["node"],
-            "node_major": runtime_versions["node_major"],
+            "node_version": str(raw.get("node_version", runtime_versions["node"])).lstrip("v"),
+            "node_major": str(raw.get("node_version", runtime_versions["node_major"]))
+            .lstrip("v")
+            .split(".")[0],
             "python_version": runtime_versions["python"],
             "python_minor": runtime_versions["python_minor"],
         },

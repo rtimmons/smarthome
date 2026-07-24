@@ -19,6 +19,13 @@ def test_build_context_reads_runtime_versions():
     assert "python_version" in addon and addon["python_version"]
 
 
+def test_build_context_supports_per_addon_node_version():
+    addons = addon_builder.discover_addons()
+    ctx = addon_builder.build_context("node-sonos-http-api", addons)
+    assert ctx["addon"]["node_version"] == "22.21.1"
+    assert ctx["addon"]["node_major"] == "22"
+
+
 def test_remote_deploy_script_uses_quiet_wrapper_without_fixed_reload_sleep():
     script = addon_builder.render_remote_deploy_script(
         slug="grid_dashboard",

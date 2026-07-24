@@ -20,7 +20,7 @@ def _ensure_antialias_alias(image: Any = Image) -> None:
         warnings.simplefilter("error", DeprecationWarning)
         try:
             getattr(image, "ANTIALIAS")
-        except (AttributeError, DeprecationWarning):
+        except AttributeError, DeprecationWarning:
             needs_alias = True
     if needs_alias:
         image.ANTIALIAS = image.Resampling.LANCZOS
@@ -354,7 +354,7 @@ def label_spec_from_metadata(image: Image.Image) -> Optional[BrotherLabelSpec]:
     try:
         width_px = int(width_raw)
         height_px = int(height_raw)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
     label_code = str(code or f"{width_px}x{height_px}")
     return BrotherLabelSpec(code=label_code, printable_px=(width_px, height_px))

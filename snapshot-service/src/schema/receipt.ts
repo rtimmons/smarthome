@@ -8,8 +8,8 @@ export const ReceiptCheckboxSchema = z.object({
   box: z.object({
     x: z.number(),
     y: z.number(),
-    size: z.number()
-  })
+    size: z.number(),
+  }),
 });
 
 export const ReceiptAnalysisSchema = z.object({
@@ -26,18 +26,18 @@ export const ReceiptAnalysisSchema = z.object({
         minY: z.number(),
         maxX: z.number(),
         maxY: z.number(),
-        pixelThreshold: z.number()
+        pixelThreshold: z.number(),
       }),
       source: z.object({
         width: z.number(),
-        height: z.number()
+        height: z.number(),
       }),
       scale: z.object({
         x: z.number(),
-        y: z.number()
-      })
+        y: z.number(),
+      }),
     })
-    .optional()
+    .optional(),
 });
 
 export type ReceiptAnalysis = z.infer<typeof ReceiptAnalysisSchema>;

@@ -55,7 +55,9 @@ export async function buildServer(options?: BuildOptions) {
     logger: {
       level: process.env.LOG_LEVEL || "info",
     },
-    ignoreTrailingSlash: true,
+    routerOptions: {
+      ignoreTrailingSlash: true,
+    },
     rewriteUrl: (req) => {
       const rawUrl = req.url || "";
       const [pathOnly, search = ""] = rawUrl.split("?", 2);
