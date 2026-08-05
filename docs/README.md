@@ -35,6 +35,7 @@ This directory contains project-specific documentation for the smarthome reposit
 *System maintenance, verification, and strategic planning*
 
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
+- [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — UniFi device SSH access through the Cloud Key Gen2 Plus site and 1Password agent
 - [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow
 - [**esphome-fancontrollers.md**](operations/esphome-fancontrollers.md) — ESPHome fan controller inventory and setup workflow
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
