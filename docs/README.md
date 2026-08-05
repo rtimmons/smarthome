@@ -36,6 +36,7 @@ This directory contains project-specific documentation for the smarthome reposit
 
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — Cloud Key host and adopted-device SSH access through the 1Password agent
+- [**unifi-apple-tv-remote.md**](operations/unifi-apple-tv-remote.md) — Evidence-first UniFi, Bonjour, and Apple TV Remote troubleshooting
 - [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow
 - [**esphome-fancontrollers.md**](operations/esphome-fancontrollers.md) — ESPHome fan controller inventory and setup workflow
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**

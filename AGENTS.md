@@ -41,6 +41,7 @@ Guidance for humans and agents working in this repository.
 ## Docs map
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
 - Container runtime details: `docs/addon-development/container-runtime.md`.
+- UniFi access and Apple TV/Bonjour troubleshooting: `docs/operations/unifi-ssh-access.md`, `docs/operations/unifi-apple-tv-remote.md`.
 - Sonos architecture/routing: `docs/sonos/overview.md`, `docs/sonos/routing-guide.md`.
 - Versioning and runtimes: `docs/setup/version-management.md`.
 - Home Assistant ingress history/fixes: `docs/addon-development/ingress-fixes.md`.
