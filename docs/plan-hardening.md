@@ -1,8 +1,10 @@
 # Home Assistant hardening plan
 
-> **Status:** Proposed
+> **Status:** Active — focused backup tooling implemented; live recovery validation remains open
 >
 > **Audit baseline:** 2026-08-05
+>
+> **Repository reassessment:** 2026-08-05 at `89df8c3` (backup/deployment work through `c7c7292`)
 >
 > **Scope:** The live Home Assistant host, repository-managed add-ons and configuration, attached radios, and operational recovery procedures
 >
@@ -45,18 +47,30 @@ The 2026-08-05 read-only audit established the following baseline:
 
 The audit inventory is retained under `new-hass-configs/inventory_snapshots/zwave-scene-audits/20260805-160618/`.
 
+## Progress since the audit
+
+The repository has advanced materially since this plan was written:
+
+- Commit `171d9ba` implements and documents a Talos-native Supervisor partial backup for all seven repository add-ons plus `/share`.
+- The backup workflow discovers add-ons from their manifests, orders them by dependency, requires a healthy/supported Supervisor, validates MongoDB cold-backup configuration, checks required applications before and after backup creation, and rejects insufficient remote space.
+- Downloaded backups are validated against Supervisor metadata, exact tar membership, size, and a remote-versus-local SHA-256. Publication is atomic, local directories use mode `0700`, files use `0600`, and the generated manifest excludes add-on options and connection secrets.
+- Commit `c7c7292` adds dependency-ready deployment scheduling, application health checks, graceful shutdown handling, `--skip-config`, and structured deployment timing output.
+- A repository-wide `just test` run on 2026-08-05 passed the selected Talos suite, all configured add-on suites, and every add-on container build check.
+
+This establishes that the **backup implementation** is complete in the repository. It does not establish that a live focused archive was created, copied to durable off-host storage, or restored. No `backups/addon-state/` artifact was present in the repository workspace during this reassessment, and live host state was not re-audited. Those operational gates remain open.
+
 ## Priorities and sequencing
 
-| Order | Workstream | Priority | Dependency |
-| --- | --- | --- | --- |
-| 0 | Recoverability and change isolation | P0 | None |
-| 1 | MongoDB containment and application recovery | P0 | Phase 0 safety backup |
-| 2 | Backup, restore, and secret-file hardening | P1 | Healthy database stack for focused add-on export |
-| 3 | Cooling, storage health, and BIOS maintenance | P1 | Verified off-host backup and physical access |
-| 4 | Remote access, service exposure, and device security | P1 | Phase 0; may proceed alongside Phase 3 |
-| 5 | Deployment and rollback hardening | P1 | Phase 0; complete before routine config changes |
-| 6 | Home Assistant runtime and device remediation | P2 | Safe deployment path |
-| 7 | Monitoring and maintenance cadence | P2 | Stable post-change baseline |
+| Order | Workstream | Priority | Status | Dependency |
+| --- | --- | --- | --- | --- |
+| 0 | Recoverability and change isolation | P0 | Operational work open | None |
+| 1 | MongoDB containment and application recovery | P0 | Repository preparation partial; deployment open | Phase 0 safety backup |
+| 2 | Backup, restore, and secret-file hardening | P1 | Focused backup implementation complete; execution, retention, and restore open | Healthy database stack for focused add-on export |
+| 3 | Cooling, storage health, and BIOS maintenance | P1 | Open | Verified off-host backup and physical access |
+| 4 | Remote access, service exposure, and device security | P1 | Open | Phase 0; may proceed alongside Phase 3 |
+| 5 | Deployment and rollback hardening | P1 | Add-on scheduling/observability partial; config rollback open | Phase 0; complete before routine config changes |
+| 6 | Home Assistant runtime and device remediation | P2 | Open | Safe deployment path |
+| 7 | Monitoring and maintenance cadence | P2 | Open | Stable post-change baseline |
 
 P0 work addresses an active exposure or is required to make subsequent changes safely. P1 work materially reduces the chance or impact of an outage. P2 work improves correctness and long-term operability.
 
@@ -114,18 +128,18 @@ If off-host backup configuration cannot be completed promptly, use network-level
 
 ## Phase 1: MongoDB containment and application recovery
 
-### Repository work
+### Repository work — partially complete
 
-Complete and verify the existing in-progress changes rather than recreating them:
+The database dependency and backup preparation landed in `171d9ba` and passed `just test`. Remaining and completed items are:
 
 - [ ] Remove MongoDB's host/LAN port publication. Keep database traffic on the Supervisor add-on network.
-- [ ] Standardize Printer and TinyURL on the confirmed internal hostname `local-mongodb` or its Supervisor FQDN.
-- [ ] Retain legacy hostname fallbacks only for migration, with bounded retries and clear diagnostics.
-- [ ] Keep MongoDB at `startup: system` and `backup: cold` so Supervisor orders startup and captures consistent database state.
-- [ ] Keep explicit `depends_on: mongodb` declarations and application-level deployment health paths for Printer and TinyURL.
-- [ ] Confirm data directories remain persistent and included in Supervisor backups.
-- [ ] Add or retain regression tests for hostname selection, retry behavior, dependency order, persistence, and health failures.
-- [ ] Run targeted add-on tests, followed by `just test` before deployment.
+- [x] Standardize Printer and TinyURL on the confirmed internal hostname `local-mongodb` or its Supervisor FQDN.
+- [x] Retain legacy hostname fallbacks for migration, with bounded retries and tested fallback ordering.
+- [x] Set MongoDB to `startup: system` and `backup: cold` so Supervisor orders startup and captures consistent database state.
+- [x] Add explicit `depends_on: mongodb` declarations and application-level deployment health paths for Printer and TinyURL.
+- [x] Preserve private add-on data and `/share` in the focused Supervisor backup contract.
+- [x] Add regression tests for hostname selection, retry behavior, dependency order, backup membership, health gates, interrupted transfer, malformed archives, and checksum failure.
+- [x] Run `just test` against the committed implementation; all configured tests and container build checks passed on 2026-08-05.
 
 Closing the host port, dropping elevated add-on privileges, running MongoDB as a non-root user, and enabling MongoDB authentication are separate changes. Close the LAN port first. Design and test credential migration afterward so containment is not delayed by a larger database migration.
 
@@ -153,6 +167,7 @@ Perform this as a separate change after the port-closure observation window:
 - [ ] Inventory required databases and client operations for Printer and TinyURL.
 - [ ] Design per-application MongoDB users with only the permissions each service needs.
 - [ ] Store database credentials in Supervisor-managed options or another approved secret store, never in repository defaults.
+- [ ] Redact credentials from TinyURL MongoDB retry/error logs before connection URLs contain authentication data.
 - [ ] Create and test the users while existing clients still have a rollback path.
 - [ ] Migrate one client at a time, validate its application-level operations, and then disable anonymous database access.
 - [ ] Determine whether the add-on can run as a non-root user and without `full_access`; make each privilege reduction independently testable.
@@ -164,17 +179,32 @@ If data or application health fails, stop dependent add-ons, restore the prior a
 
 ## Phase 2: Backup, restore, and secret-file hardening
 
+### Focused add-on-state backup — repository implementation complete
+
+- [x] Add the root `just addon-state-backup` recipe and `talos backup addon-state` CLI command.
+- [x] Discover all repository add-ons from manifests and serialize backup components in dependency order.
+- [x] Require healthy/supported Home Assistant, the expected installed add-on set, MongoDB `startup: system`/`backup: cold`, required database dependents running, and at least 2 GiB free in remote `/backup`.
+- [x] Run dependency-aware health checks before and after Supervisor briefly stops MongoDB for its cold backup.
+- [x] Create a compressed Supervisor partial backup containing exactly the seven repository add-ons and `/share`, without Home Assistant Core.
+- [x] Verify Supervisor metadata, exact outer tar members, embedded `backup.json`, archive size, and remote-versus-local SHA-256.
+- [x] Publish atomically with directory mode `0700`, file mode `0600`, a `SHA256SUMS` file, and a secret-free manifest containing Git and Home Assistant version evidence.
+- [x] Cover success and failure paths with automated tests and document operation, retention limitations, and the restore contract.
+- [ ] After Phase 1 is deployed and healthy, execute `just addon-state-backup` against the live host and retain its timestamped manifest/checksum as evidence.
+
 ### Backup policy
 
 - [ ] Configure automatic full encrypted Supervisor backups to a network or cloud destination.
 - [ ] Define and document retention. A reasonable initial policy is seven daily, four weekly, and three monthly recovery points, adjusted for archive size and storage capacity.
 - [ ] Maintain at least three copies on two storage types with one copy off-site, following Home Assistant's [3-2-1 guidance](https://www.home-assistant.io/blog/2025/01/03/3-2-1-backup/).
 - [ ] Alert on backup failure, stale last-success time, unavailable destination, and insufficient free space.
-- [ ] After Phase 1 is healthy, run `just addon-state-backup` and verify its manifest and checksum as a focused complement to the full backup.
-- [ ] Keep the focused add-on export owner-readable only; it is intentionally unencrypted and includes `/share`.
+- [x] Implement manifest/checksum verification for the focused add-on-state export.
+- [x] Enforce owner-only permissions for the focused export; it is intentionally unencrypted and includes `/share`.
+- [ ] Define pruning or transfer policy for both the remote native archive and downloaded focused export; the command intentionally performs no automatic pruning.
 
 ### Restore exercise
 
+- [x] Define a versioned, secret-free manifest as the contract for a future focused restore workflow.
+- [ ] Implement `talos backup restore-addon-state` with checksum validation, a pre-restore safety backup, explicit component selection, dependency-ordered recovery, state preservation, and post-restore health checks.
 - [ ] Select a non-production restore target or a documented destructive maintenance window.
 - [ ] Restore a full encrypted backup and confirm Core startup, integrations, secrets, add-ons, radios, and representative automations.
 - [ ] Separately exercise the documented manual restore procedure for the focused add-on-state export until a Talos restore command exists.
@@ -189,6 +219,8 @@ If data or application health fails, stop dependent add-ons, restore the prior a
 
 ### Exit criteria
 
+- [x] The focused add-on-state backup command and failure handling pass automated repository tests.
+- [ ] A verified focused archive has been created from the live host and copied to its intended durable destination.
 - [ ] Supervisor no longer reports `no_current_backup`.
 - [ ] A current full backup exists in at least one off-host location.
 - [ ] A restore has been demonstrated and documented.
@@ -280,11 +312,14 @@ This phase turns the safety assumptions needed above into the normal deployment 
 
 ### Add-on deployment
 
-- [ ] Provide an explicit add-on-only workflow that never deploys Home Assistant configuration as a side effect.
-- [ ] Finish dependency-aware ordering and verify that MongoDB becomes healthy before Printer and TinyURL deploy.
-- [ ] Retain application-level health checks and graceful shutdown handling.
-- [ ] Record the exact revision, add-on versions, dependency order, health results, and timing for each deployment.
+- [x] Provide explicit add-on-only workflows through `talos addons deploy` and `talos deploy --skip-config`.
+- [x] Implement dependency-ready scheduling so MongoDB completes before Printer and TinyURL become eligible while unrelated add-ons continue in parallel.
+- [x] Retain application-level health checks and add graceful shutdown handling for Grid Dashboard, Printer, and Sonos API.
+- [x] Emit dependency schedule, per-phase status, and timing events to a default JSON metrics artifact.
+- [ ] Add the exact Git revision, rendered/deployed add-on versions, and summarized health results to the deployment artifact.
 - [ ] Do not describe add-on deployment as atomic until successful add-ons can actually be rolled back after a later failure.
+
+The same commit instruments Home Assistant config phases, but it does not close the config safety gap below: the current script still removes `/tmp/hass-config-backup` before restarting Core and confirming post-restart health.
 
 ### Home Assistant configuration deployment
 
@@ -389,6 +424,9 @@ Record completed work without copying credentials or sensitive configuration:
 
 | Date | Phase/task | Change reference | Before evidence | After evidence | Rollback artifact | Result/owner |
 | --- | --- | --- | --- | --- | --- | --- |
+| 2026-08-05 | Phases 1-2: database dependency and focused backup implementation | `171d9ba` | No repository-native add-on state export | Native Supervisor partial backup with health gates, exact membership/checksum validation, private atomic publication, manifest, docs, and tests | Supervisor archive remains in `/backup`; restore command still pending | Repository implementation complete |
+| 2026-08-05 | Phase 5: deployment scheduling and observability | `c7c7292` | Sequential deployment and limited timing evidence | Dependency-ready queue, `--skip-config`, health/graceful-shutdown checks, structured timings | Add-on transaction rollback and config rollback remain pending | Partial completion |
+| 2026-08-05 | Repository validation | `just test` | Reassessment required | Talos, configured add-on suites, and all add-on container build checks passed | Not applicable | Passed |
 |  |  |  |  |  |  |  |
 
 ## Related documentation
