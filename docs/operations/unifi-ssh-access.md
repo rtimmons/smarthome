@@ -2,6 +2,8 @@
 
 Use this runbook to configure or troubleshoot SSH access to the **Cloud Key Gen2 Plus** console and the UniFi devices it manages. These are two independent SSH configurations.
 
+For the current controller, AP, radio, and SSID baseline, see [UniFi Network Setup and Tuning](unifi-network-setup.md).
+
 For Bonjour, AirPlay, or Apple TV Remote failures after AP changes, continue with [UniFi and Apple TV Remote Troubleshooting](unifi-apple-tv-remote.md) after verifying access here.
 
 ## Current Configuration

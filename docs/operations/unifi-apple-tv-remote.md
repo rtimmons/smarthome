@@ -1,6 +1,6 @@
 # UniFi and Apple TV Remote Troubleshooting
 
-Use this runbook when the Apple TV Remote on an iPhone or iPad discovers an Apple TV inconsistently, remains on **Connecting**, or starts failing after an access-point change. Read [UniFi SSH Access](unifi-ssh-access.md) first for the two distinct SSH paths used below.
+Use this runbook when the Apple TV Remote on an iPhone or iPad discovers an Apple TV inconsistently, remains on **Connecting**, or starts failing after an access-point change. Read [UniFi SSH Access](unifi-ssh-access.md) first for the two distinct SSH paths used below, and compare live state with [UniFi Network Setup and Tuning](unifi-network-setup.md) before changing the intended radio or SSID baseline.
 
 The objective is to distinguish among three failure domains before changing configuration:
 
