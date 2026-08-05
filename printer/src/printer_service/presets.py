@@ -32,10 +32,15 @@ class Preset:
     params: Optional[Mapping[str, object]]
     created_at: str
     updated_at: str
+    print_count: int = 0
 
     @classmethod
     def from_document(cls, doc: Mapping[str, object]) -> "Preset":
         params = doc.get("params")
+        try:
+            print_count = max(0, int(str(doc.get("print_count") or 0)))
+        except TypeError, ValueError:
+            print_count = 0
         return cls(
             slug=str(doc.get("slug") or ""),
             name=str(doc.get("name") or ""),
@@ -44,6 +49,7 @@ class Preset:
             params=params if isinstance(params, Mapping) else None,
             created_at=str(doc.get("created_at") or ""),
             updated_at=str(doc.get("updated_at") or ""),
+            print_count=print_count,
         )
 
 
@@ -91,13 +97,37 @@ class PresetStore:
     def ensure_indexes(self) -> None:
         self._collection.create_index("slug", unique=True)
         self._collection.create_index("name")
+        self._collection.create_index("template")
+        self._collection.create_index("created_at")
         self._collection.create_index("updated_at")
+        self._collection.create_index("print_count")
 
-    def list_presets(self, *, sort_by: str = "name", limit: int = 200) -> list[Preset]:
-        if sort_by == "updated":
-            sort_key, sort_dir = "updated_at", -1
-        else:
-            sort_key, sort_dir = "name", 1
+    def list_presets(
+        self,
+        *,
+        sort_by: str = "created",
+        direction: Optional[str] = None,
+        limit: int = 200,
+    ) -> list[Preset]:
+        normalized_sort = str(sort_by or "").strip().lower()
+        sort_fields = {
+            "name": "name",
+            "slug": "slug",
+            "template": "template",
+            "created": "created_at",
+            "created_at": "created_at",
+            "updated": "updated_at",
+            "updated_at": "updated_at",
+            "prints": "print_count",
+            "print_count": "print_count",
+        }
+        sort_key = sort_fields.get(normalized_sort, "created_at")
+        normalized_direction = str(direction or "").strip().lower()
+        if normalized_direction not in {"asc", "desc"}:
+            normalized_direction = (
+                "desc" if sort_key in {"created_at", "updated_at", "print_count"} else "asc"
+            )
+        sort_dir = -1 if normalized_direction == "desc" else 1
         cursor = self._collection.find({}).sort(sort_key, sort_dir).limit(limit)
         return [Preset.from_document(doc) for doc in cursor]
 
@@ -141,7 +171,7 @@ class PresetStore:
 
         doc = self._collection.find_one_and_update(
             {"slug": slug},
-            {"$set": payload, "$setOnInsert": {"created_at": now}},
+            {"$set": payload, "$setOnInsert": {"created_at": now, "print_count": 0}},
             upsert=True,
             return_document=ReturnDocument.AFTER,
         )
@@ -150,6 +180,20 @@ class PresetStore:
         if doc is None:
             raise RuntimeError("Failed to save preset.")
         return Preset.from_document(doc)
+
+    def record_print(self, slug: str) -> Optional[Preset]:
+        normalized = str(slug or "").strip()
+        if not normalized:
+            return None
+        from pymongo import ReturnDocument
+
+        doc = self._collection.find_one_and_update(
+            {"slug": normalized},
+            {"$inc": {"print_count": 1}},
+            upsert=False,
+            return_document=ReturnDocument.AFTER,
+        )
+        return Preset.from_document(doc) if doc else None
 
     def delete_preset(self, slug: str) -> bool:
         normalized = str(slug or "").strip()

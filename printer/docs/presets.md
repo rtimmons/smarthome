@@ -14,7 +14,9 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
 - "Save preset" controls live below the left-side label form.
 - Saving prompts for a name; presets store current URL params (including template).
 - Saving a preset refreshes the preview so the QR URL updates to `/p/<slug>` immediately.
-- Presets list (name, slug, template, actions) lives below the save controls.
+- The full-width presets table shows name, slug, template, date added, successful print count,
+  and actions.
+- Every data column is sortable. The default is newest date added first.
 - Presets can be deleted.
 - Presets are stored in MongoDB (via the mongodb add-on).
 - Presets require `pymongo` as a core dependency (not optional).
@@ -39,16 +41,31 @@ Named presets store label form URL parameters in MongoDB so the UI can recall co
   - `query` (string, canonical query string)
   - `params` (object form, optional)
   - `created_at`, `updated_at` (UTC ISO strings)
+  - `print_count` (integer, defaults to `0` for existing documents)
 
 ## Routing and behavior
 - `GET /p/<slug>`: lookup preset, redirect to `/bb?...` with stored params.
-- `GET /presets`: list presets (sorted by name or updated time).
+- `GET /presets`: list presets. Defaults to `sort=created&direction=desc`; supported sort
+  values are `name`, `slug`, `template`, `created`, `updated`, and `prints`.
 - `POST /presets`: create/update preset with name + current params.
 - `DELETE /presets/<slug>`: delete preset.
 - QR URL generation path:
   - Build canonical query (template + params).
   - If a preset with matching slug exists, use `/p/<slug>` for QR.
   - Otherwise fall back to the full `/bb?...` URL.
+- After a print dispatch succeeds, the service looks up a preset matching the canonical form
+  values and atomically increments its `print_count`. Counting is best-effort: a MongoDB error
+  never turns an already-dispatched label into a failed response that might cause a duplicate
+  retry. A print request counts once, including QR or jar variants.
+
+## UI framework decision
+
+Do not add MUI for the presets table. The printer UI is server-rendered Jinja with one vanilla
+JavaScript file and has no React runtime, package manager, or frontend build step. A native
+semantic table, the existing CSS variables, and small sorting handlers provide the required
+interaction and accessibility without adding React, Emotion, and a new asset pipeline. Revisit a
+component framework only if the printer UI is intentionally moving to a broader React application
+with several shared, complex interactive views.
 
 ## Slug hashing (64-bit, URL-safe)
 - Canonicalize params: stable key order, normalized template slug, list handling, empty values removed.

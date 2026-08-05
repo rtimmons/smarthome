@@ -47,7 +47,7 @@
         body {
             font-family: "Segoe UI", "Helvetica Neue", system-ui, sans-serif;
             margin: 1.5rem auto;
-            max-width: 820px;
+            max-width: 1120px;
             color: var(--text-color);
             background-color: var(--bg-color);
             background-image:
@@ -107,8 +107,8 @@
         }
         .form-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(280px, 460px);
-            gap: 1rem;
+            grid-template-columns: minmax(280px, 0.75fr) minmax(460px, 1.25fr);
+            gap: 1.25rem;
             align-items: start;
         }
         .form-fields {
@@ -224,15 +224,6 @@
             .preview {
                 margin-top: 0.5rem;
             }
-            .preset-row {
-                grid-template-columns: 1fr;
-            }
-            .preset-row--header {
-                display: none;
-            }
-            .preset-row__actions {
-                justify-content: flex-start;
-            }
         }
         label {
             display: grid;
@@ -281,11 +272,11 @@
         .preset-panel {
             border: 1px solid var(--border-color);
             border-radius: 12px;
-            padding: 0.85rem;
+            padding: 1.1rem;
             background: var(--label-panel-bg);
             box-shadow: var(--shadow);
             display: grid;
-            gap: 0.75rem;
+            gap: 0.9rem;
         }
         .preset-header h3 {
             margin: 0;
@@ -312,33 +303,93 @@
             color: var(--danger-color);
         }
         .preset-list {
-            display: grid;
-            gap: 0.35rem;
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            background: var(--surface-color);
         }
-        .preset-list-body {
-            display: grid;
-            gap: 0.35rem;
+        .preset-table {
+            width: 100%;
+            min-width: 850px;
+            border-collapse: collapse;
+            table-layout: fixed;
         }
-        .preset-row {
-            display: grid;
-            grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr) auto;
-            gap: 0.6rem;
-            align-items: center;
-            padding: 0.35rem 0.2rem;
-            border-bottom: 1px dashed var(--border-color);
+        .preset-table th,
+        .preset-table td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            vertical-align: middle;
+            border-bottom: 1px solid var(--border-color);
             font-size: 0.9rem;
         }
-        .preset-row:last-child {
-            border-bottom: none;
-        }
-        .preset-row--header {
+        .preset-table th {
+            background: var(--preview-bg);
+            color: var(--muted-color);
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
-            font-weight: 600;
+            font-weight: 700;
+        }
+        .preset-table th:nth-child(1) {
+            width: 20%;
+        }
+        .preset-table th:nth-child(2) {
+            width: 15%;
+        }
+        .preset-table th:nth-child(3) {
+            width: 15%;
+        }
+        .preset-table th:nth-child(4) {
+            width: 22%;
+        }
+        .preset-table th:nth-child(5) {
+            width: 10%;
+        }
+        .preset-table th:nth-child(6) {
+            width: 18%;
+        }
+        .preset-row:last-child td {
+            border-bottom: none;
+        }
+        .preset-row:hover td {
+            background: var(--label-panel-bg);
+        }
+        .preset-sort {
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.5rem;
+            padding: 0;
+            border: 0;
+            border-radius: 0;
+            background: transparent;
+            color: inherit;
+            box-shadow: none;
+            font: inherit;
+            text-transform: uppercase;
+            letter-spacing: inherit;
+            text-align: left;
+        }
+        .preset-sort:hover {
+            background: transparent;
+            color: var(--accent-color);
+        }
+        .preset-sort:focus-visible {
+            outline: 2px solid var(--accent-color);
+            outline-offset: 4px;
+        }
+        .preset-sort__indicator {
+            min-width: 1em;
             color: var(--muted-color);
-            border-bottom: 1px solid var(--border-color);
-            padding-top: 0;
+            font-size: 0.9rem;
+        }
+        .preset-table th[aria-sort="ascending"] .preset-sort,
+        .preset-table th[aria-sort="descending"] .preset-sort,
+        .preset-table th[aria-sort="ascending"] .preset-sort__indicator,
+        .preset-table th[aria-sort="descending"] .preset-sort__indicator {
+            color: var(--accent-color);
         }
         .preset-code {
             font-family: "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
@@ -347,7 +398,7 @@
         .preset-row__actions {
             display: flex;
             gap: 0.4rem;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             justify-content: flex-end;
         }
         .preset-action {
@@ -374,7 +425,7 @@
             border-color: transparent;
         }
         .preset-empty {
-            margin: 0;
+            margin: 0.25rem 0;
             color: var(--muted-color);
             font-size: 0.9rem;
         }
@@ -636,26 +687,6 @@
                 <div class="form-grid">
                     <div class="form-fields">
                         {% block form_fields %}{% endblock %}
-                        <section class="preset-panel" id="presetPanel" aria-label="Presets">
-                            <div class="preset-header">
-                                <h3>Presets</h3>
-                                <p>Save common labels to reuse and shorten QR URLs.</p>
-                            </div>
-                            <div class="preset-controls">
-                                <button type="button" id="savePresetButton">Save preset</button>
-                            </div>
-                            <p id="presetStatus" class="preset-status" role="status" aria-live="polite"></p>
-                            <div class="preset-list" id="presetList" role="list">
-                                <div class="preset-row preset-row--header" aria-hidden="true">
-                                    <span>Name</span>
-                                    <span>Slug</span>
-                                    <span>Template</span>
-                                    <span>Actions</span>
-                                </div>
-                                <div id="presetListBody" class="preset-list-body"></div>
-                            </div>
-                            <p id="presetEmpty" class="preset-empty" hidden>No presets saved yet.</p>
-                        </section>
                     </div>
                     {% block preview_area %}
                         <section id="previewContainer" class="preview" aria-live="polite">
@@ -723,6 +754,57 @@
                         </section>
                     {% endblock %}
                 </div>
+                <section class="preset-panel" id="presetPanel" aria-labelledby="presetHeading">
+                    <div class="preset-header">
+                        <h3 id="presetHeading">Presets</h3>
+                        <p>Save common labels to reuse and shorten QR URLs.</p>
+                    </div>
+                    <div class="preset-controls">
+                        <button type="button" id="savePresetButton">Save preset</button>
+                    </div>
+                    <p id="presetStatus" class="preset-status" role="status" aria-live="polite"></p>
+                    <div class="preset-list">
+                        <table class="preset-table" id="presetList">
+                            <thead>
+                                <tr class="preset-row--header">
+                                    <th scope="col" data-preset-sort-header="name" aria-sort="none">
+                                        <button type="button" class="preset-sort" data-preset-sort="name">
+                                            <span>Name</span>
+                                            <span class="preset-sort__indicator" aria-hidden="true">↕</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" data-preset-sort-header="slug" aria-sort="none">
+                                        <button type="button" class="preset-sort" data-preset-sort="slug">
+                                            <span>Slug</span>
+                                            <span class="preset-sort__indicator" aria-hidden="true">↕</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" data-preset-sort-header="template" aria-sort="none">
+                                        <button type="button" class="preset-sort" data-preset-sort="template">
+                                            <span>Template</span>
+                                            <span class="preset-sort__indicator" aria-hidden="true">↕</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" data-preset-sort-header="created" aria-sort="descending">
+                                        <button type="button" class="preset-sort" data-preset-sort="created">
+                                            <span>Date added</span>
+                                            <span class="preset-sort__indicator" aria-hidden="true">↓</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col" data-preset-sort-header="prints" aria-sort="none">
+                                        <button type="button" class="preset-sort" data-preset-sort="prints">
+                                            <span>Printed</span>
+                                            <span class="preset-sort__indicator" aria-hidden="true">↕</span>
+                                        </button>
+                                    </th>
+                                    <th scope="col">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="presetListBody"></tbody>
+                        </table>
+                    </div>
+                    <p id="presetEmpty" class="preset-empty" hidden>No presets saved yet.</p>
+                </section>
                 {% block form_actions %}
                 {% endblock %}
             </form>

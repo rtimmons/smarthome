@@ -20,6 +20,8 @@ const savePresetButton = document.getElementById('savePresetButton');
 const presetStatus = document.getElementById('presetStatus');
 const presetListBody = document.getElementById('presetListBody');
 const presetEmpty = document.getElementById('presetEmpty');
+const presetSortButtons = Array.from(document.querySelectorAll('[data-preset-sort]'));
+const presetSortHeaders = Array.from(document.querySelectorAll('[data-preset-sort-header]'));
 const backButton = document.getElementById('backButton');
 
 let previewAbortController = null;
@@ -30,6 +32,8 @@ const PREVIEW_DEBOUNCE_MS = 16;
 const THEME_STORAGE_KEY = 'printer-theme';
 const THEME_OPTIONS = ['light', 'dark', 'system'];
 const PRESET_EMPTY_MESSAGE = 'No presets saved yet.';
+const presetSortState = { key: 'created', direction: 'desc' };
+let presetLoadSequence = 0;
 
 // Countdown functionality
 let countdownTimer = null;
@@ -274,6 +278,7 @@ function showPrintSuccess() {
     if (cancelButton) {
         cancelButton.textContent = 'Done';
     }
+    loadPresets();
 
     if (autoBackAfterPrint) {
         autoBackAfterPrint = false;
@@ -677,7 +682,7 @@ function refreshPreviewAfterPresetSave() {
 }
 
 function createPresetCell(content, options = {}) {
-    const cell = document.createElement('div');
+    const cell = document.createElement('td');
     if (options.className) {
         cell.className = options.className;
     }
@@ -692,7 +697,35 @@ function createPresetCell(content, options = {}) {
     return cell;
 }
 
+function createPresetDateCell(value) {
+    const cell = createPresetCell('—', { className: 'preset-date' });
+    if (!value) {
+        return cell;
+    }
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        cell.textContent = value;
+        return cell;
+    }
+    const time = document.createElement('time');
+    time.dateTime = date.toISOString();
+    time.title = date.toLocaleString();
+    time.textContent = new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+    }).format(date);
+    cell.textContent = '';
+    cell.appendChild(time);
+    return cell;
+}
+
+function normalizedPrintCount(value) {
+    const count = Number.parseInt(value, 10);
+    return Number.isFinite(count) && count > 0 ? count : 0;
+}
+
 function createPresetActions(preset) {
+    const cell = document.createElement('td');
     const actions = document.createElement('div');
     actions.className = 'preset-row__actions';
 
@@ -714,18 +747,47 @@ function createPresetActions(preset) {
 
     actions.appendChild(openButton);
     actions.appendChild(deleteButton);
-    return actions;
+    cell.appendChild(actions);
+    return cell;
 }
 
 function renderPresetRow(preset) {
-    const row = document.createElement('div');
+    const row = document.createElement('tr');
     row.className = 'preset-row';
-    row.setAttribute('role', 'listitem');
     row.appendChild(createPresetCell(preset.name || 'Untitled'));
     row.appendChild(createPresetCell(preset.slug || '', { asCode: true }));
     row.appendChild(createPresetCell(preset.template || '', { asCode: true }));
+    row.appendChild(createPresetDateCell(preset.created_at));
+    row.appendChild(createPresetCell(normalizedPrintCount(preset.print_count), {
+        className: 'preset-print-count',
+    }));
     row.appendChild(createPresetActions(preset));
     return row;
+}
+
+function updatePresetSortHeaders() {
+    presetSortHeaders.forEach((header) => {
+        const isActive = header.dataset.presetSortHeader === presetSortState.key;
+        header.setAttribute('aria-sort', isActive ? (presetSortState.direction === 'asc' ? 'ascending' : 'descending') : 'none');
+        const indicator = header.querySelector('.preset-sort__indicator');
+        if (indicator) {
+            indicator.textContent = isActive ? (presetSortState.direction === 'asc' ? '↑' : '↓') : '↕';
+        }
+    });
+}
+
+function changePresetSort(key) {
+    if (!key) {
+        return;
+    }
+    if (presetSortState.key === key) {
+        presetSortState.direction = presetSortState.direction === 'asc' ? 'desc' : 'asc';
+    } else {
+        presetSortState.key = key;
+        presetSortState.direction = 'asc';
+    }
+    updatePresetSortHeaders();
+    loadPresets();
 }
 
 function renderPresets(presets) {
@@ -747,8 +809,16 @@ async function loadPresets() {
     if (!presetPanel) {
         return;
     }
+    const loadSequence = ++presetLoadSequence;
     setPresetStatus('Loading presets...', false);
-    const result = await requestJson('/presets');
+    const query = new URLSearchParams({
+        sort: presetSortState.key,
+        direction: presetSortState.direction,
+    });
+    const result = await requestJson(`/presets?${query.toString()}`);
+    if (loadSequence !== presetLoadSequence) {
+        return;
+    }
     if (!result.ok) {
         const message = result.error || 'Presets unavailable.';
         setPresetStatus(message, true);
@@ -821,6 +891,12 @@ function initPresets() {
     if (savePresetButton) {
         savePresetButton.addEventListener('click', handleSavePreset);
     }
+    presetSortButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+            changePresetSort(button.dataset.presetSort);
+        });
+    });
+    updatePresetSortHeaders();
     loadPresets();
 }
 

@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any, Callable, List, Optional, Sequence, TypeGuard
 from urllib.parse import urlencode, urljoin
 
-from flask import Flask, abort, jsonify, redirect, render_template, request, url_for
+from flask import Flask, abort, current_app, jsonify, redirect, render_template, request, url_for
 from PIL import Image, UnidentifiedImageError
 
 from . import best_by as best_by_request
@@ -193,10 +193,29 @@ def create_app() -> Flask:
         except PresetServiceError as exc:
             return jsonify({"error": str(exc)}), exc.status_code
         try:
-            sort_by = request.args.get("sort", "name").strip().lower() or "name"
-            if sort_by not in {"name", "updated"}:
-                sort_by = "name"
-            presets = store.list_presets(sort_by=sort_by)
+            sort_by = request.args.get("sort", "created").strip().lower() or "created"
+            allowed_sorts = {
+                "name",
+                "slug",
+                "template",
+                "created",
+                "created_at",
+                "updated",
+                "updated_at",
+                "prints",
+                "print_count",
+            }
+            if sort_by not in allowed_sorts:
+                sort_by = "created"
+            direction = request.args.get("direction", "").strip().lower()
+            if direction not in {"asc", "desc"}:
+                direction = (
+                    "desc"
+                    if sort_by
+                    in {"created", "created_at", "updated", "updated_at", "prints", "print_count"}
+                    else "asc"
+                )
+            presets = store.list_presets(sort_by=sort_by, direction=direction)
         except Exception as exc:
             app.logger.warning("Preset list failed: %s", exc)
             return jsonify({"error": "Preset storage unavailable."}), 503
@@ -391,6 +410,7 @@ def _preset_payload(preset: Preset) -> dict[str, object]:
         "query": preset.query,
         "created_at": preset.created_at,
         "updated_at": preset.updated_at,
+        "print_count": preset.print_count,
     }
     if preset.params is not None:
         payload["params"] = preset.params
@@ -569,6 +589,7 @@ def _dispatch_print(
             include_qr_label=include_qr_label,
             include_jar_label=include_jar_label,
         )
+        _record_preset_print(template, form_data)
     except LabelPayloadError as exc:
         return jsonify({"error": str(exc)}), exc.status_code
     except ValueError as exc:
@@ -657,15 +678,44 @@ def _preset_slug_for_form_data(
     except PresetServiceError:
         return None
     try:
-        slug = store.find_slug_for_params(template.slug, form_data)
-        if slug:
-            return slug
-        legacy_form_data = _legacy_preset_form_data(template, form_data)
-        if legacy_form_data is None:
-            return None
-        return store.find_slug_for_params(template.slug, legacy_form_data)
+        return _find_preset_slug(store, template, form_data)
     except Exception:
         return None
+    finally:
+        store.close()
+
+
+def _find_preset_slug(
+    store: PresetStore,
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+) -> Optional[str]:
+    slug = store.find_slug_for_params(template.slug, form_data)
+    if slug:
+        return slug
+    legacy_form_data = _legacy_preset_form_data(template, form_data)
+    if legacy_form_data is None:
+        return None
+    return store.find_slug_for_params(template.slug, legacy_form_data)
+
+
+def _record_preset_print(
+    template: label_templates.LabelTemplate,
+    form_data: TemplateFormData,
+) -> None:
+    """Best-effort usage accounting after a label has been dispatched successfully."""
+    try:
+        store = _get_preset_store()
+    except PresetServiceError:
+        return
+    try:
+        slug = _find_preset_slug(store, template, form_data)
+        if slug:
+            store.record_print(slug)
+    except Exception as exc:
+        # The physical print has already happened. Never encourage a retry (and duplicate
+        # label) just because usage accounting is temporarily unavailable.
+        current_app.logger.warning("Preset print count update failed: %s", exc)
     finally:
         store.close()
 

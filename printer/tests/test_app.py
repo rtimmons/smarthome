@@ -39,12 +39,21 @@ class FakePresetStore:
     def __init__(self) -> None:
         self._presets: dict[str, Preset] = {}
 
-    def list_presets(self, *, sort_by: str = "name", limit: int = 200) -> list[Preset]:
+    def list_presets(
+        self, *, sort_by: str = "created", direction: str = "desc", limit: int = 200
+    ) -> list[Preset]:
         presets = list(self._presets.values())
-        if sort_by == "updated":
-            presets.sort(key=lambda preset: preset.updated_at, reverse=True)
-        else:
-            presets.sort(key=lambda preset: preset.name)
+        sort_attributes = {
+            "name": "name",
+            "slug": "slug",
+            "template": "template",
+            "created": "created_at",
+            "updated": "updated_at",
+            "prints": "print_count",
+        }
+        attribute = sort_attributes.get(sort_by, "created_at")
+        reverse = direction != "asc"
+        presets.sort(key=lambda preset: getattr(preset, attribute), reverse=reverse)
         return presets[:limit]
 
     def find_by_slug(self, slug: str) -> Preset | None:
@@ -72,6 +81,48 @@ class FakePresetStore:
             params=dict(params),
             created_at=created_at,
             updated_at=now,
+            print_count=existing.print_count if existing else 0,
+        )
+        self._presets[slug] = preset
+        return preset
+
+    def record_print(self, slug: str) -> Preset | None:
+        existing = self._presets.get(slug)
+        if existing is None:
+            return None
+        preset = Preset(
+            slug=existing.slug,
+            name=existing.name,
+            template=existing.template,
+            query=existing.query,
+            params=existing.params,
+            created_at=existing.created_at,
+            updated_at=existing.updated_at,
+            print_count=existing.print_count + 1,
+        )
+        self._presets[slug] = preset
+        return preset
+
+    def seed_preset(
+        self,
+        *,
+        slug: str,
+        name: str,
+        template: str,
+        created_at: str,
+        updated_at: str,
+        print_count: int,
+    ) -> Preset:
+        params = {"Line1": name}
+        preset = Preset(
+            slug=slug,
+            name=name,
+            template=template,
+            query=canonical_query_string(template, params),
+            params=params,
+            created_at=created_at,
+            updated_at=updated_at,
+            print_count=print_count,
         )
         self._presets[slug] = preset
         return preset
@@ -152,6 +203,33 @@ def _use_fake_preset_store(
         app_module.PresetStore,
         "from_env",
         classmethod(lambda cls: store),
+    )
+
+
+def _seed_sortable_presets(store: FakePresetStore) -> None:
+    store.seed_preset(
+        slug="zulu",
+        name="Alpha",
+        template="best_by",
+        created_at="2024-03-01T00:00:00+00:00",
+        updated_at="2024-01-01T00:00:00+00:00",
+        print_count=2,
+    )
+    store.seed_preset(
+        slug="alpha",
+        name="Charlie",
+        template="bluey_label",
+        created_at="2024-01-01T00:00:00+00:00",
+        updated_at="2024-03-01T00:00:00+00:00",
+        print_count=1,
+    )
+    store.seed_preset(
+        slug="mike",
+        name="Bravo",
+        template="bb_2_weeks",
+        created_at="2024-02-01T00:00:00+00:00",
+        updated_at="2024-02-01T00:00:00+00:00",
+        print_count=3,
     )
 
 
@@ -715,6 +793,84 @@ def test_bb_execute_print_endpoint_handles_transport_errors(
     assert response.json["error"] == "Printer unavailable: [Errno 113] Host is unreachable"
 
 
+def test_successful_matching_print_dispatches_increment_preset_count(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk"}
+    preset = store.upsert_preset("Oat Milk", template_slug, params)
+
+    monkeypatch.setattr(
+        app_module, "dispatch_image", lambda *_args, **_kwargs: tmp_path / "printed.png"
+    )
+
+    execute_response = client.post(
+        "/bb/execute-print", query_string={"tpl": template_slug, **params}
+    )
+    json_response = client.post("/bb/print", json={"template": template_slug, "data": params})
+
+    assert execute_response.status_code == 200
+    assert json_response.status_code == 200
+    recorded = store.find_by_slug(preset.slug)
+    assert recorded is not None
+    assert recorded.print_count == 2
+
+
+def test_failed_print_dispatch_does_not_increment_preset_count(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk"}
+    preset = store.upsert_preset("Oat Milk", template_slug, params)
+
+    def fail_dispatch(*_args, **_kwargs):
+        raise ValueError("Printer not available")
+
+    monkeypatch.setattr(app_module, "dispatch_image", fail_dispatch)
+
+    response = client.post("/bb/execute-print", query_string={"tpl": template_slug, **params})
+
+    assert response.status_code == 400
+    recorded = store.find_by_slug(preset.slug)
+    assert recorded is not None
+    assert recorded.print_count == 0
+
+
+def test_preset_count_recording_failure_does_not_fail_a_successful_print(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    app_module, templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _use_fake_preset_store(monkeypatch, app_module, store)
+    template_slug = templates_module.get_template("bluey_label").slug
+    params = {"Line1": "Oat Milk"}
+    store.upsert_preset("Oat Milk", template_slug, params)
+
+    def fail_record(_slug: str) -> Preset | None:
+        raise ConnectionError("MongoDB unavailable after printing")
+
+    monkeypatch.setattr(store, "record_print", fail_record)
+    monkeypatch.setattr(
+        app_module, "dispatch_image", lambda *_args, **_kwargs: tmp_path / "printed.png"
+    )
+
+    response = client.post("/bb/execute-print", query_string={"tpl": template_slug, **params})
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    assert payload["status"] == "sent"
+
+
 def test_no_cooldown_on_rapid_prints(
     test_environment: Tuple, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
@@ -764,6 +920,8 @@ def test_presets_create_list_delete(
     assert payload is not None
     preset = payload["preset"]
     assert preset["name"] == "Oat Milk"
+    assert preset["print_count"] == 0
+    assert preset["created_at"]
     slug = preset["slug"]
 
     response = client.get("/presets")
@@ -772,6 +930,7 @@ def test_presets_create_list_delete(
     assert payload is not None
     assert payload["count"] == 1
     assert payload["presets"][0]["slug"] == slug
+    assert payload["presets"][0]["print_count"] == 0
 
     response = client.delete(f"/presets/{slug}")
     assert response.status_code == 200
@@ -783,6 +942,49 @@ def test_presets_create_list_delete(
     payload = response.get_json()
     assert payload is not None
     assert payload["count"] == 0
+
+
+def test_presets_default_to_newest_created_and_sort_every_data_column(
+    test_environment: Tuple, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    app_module, _templates_module, flask_app, _labels_dir, _ = test_environment
+    client = flask_app.test_client()
+    store = FakePresetStore()
+    _seed_sortable_presets(store)
+    _use_fake_preset_store(monkeypatch, app_module, store)
+
+    response = client.get("/presets")
+
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload is not None
+    assert [preset["name"] for preset in payload["presets"]] == [
+        "Alpha",
+        "Bravo",
+        "Charlie",
+    ]
+    assert [preset["print_count"] for preset in payload["presets"]] == [2, 3, 1]
+
+    ascending_names = {
+        "name": ["Alpha", "Bravo", "Charlie"],
+        "slug": ["Charlie", "Bravo", "Alpha"],
+        "template": ["Bravo", "Alpha", "Charlie"],
+        "created": ["Charlie", "Bravo", "Alpha"],
+        "updated": ["Alpha", "Bravo", "Charlie"],
+        "prints": ["Charlie", "Alpha", "Bravo"],
+    }
+    for sort_by, expected in ascending_names.items():
+        ascending = client.get(
+            "/presets", query_string={"sort": sort_by, "direction": "asc"}
+        ).get_json()
+        descending = client.get(
+            "/presets", query_string={"sort": sort_by, "direction": "desc"}
+        ).get_json()
+
+        assert ascending is not None
+        assert descending is not None
+        assert [preset["name"] for preset in ascending["presets"]] == expected
+        assert [preset["name"] for preset in descending["presets"]] == list(reversed(expected))
 
 
 def test_presets_returns_503_when_store_init_fails(
