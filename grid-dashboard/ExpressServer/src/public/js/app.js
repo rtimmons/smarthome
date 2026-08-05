@@ -24,6 +24,7 @@ class App {
             root: '', // Empty root for relative URLs (ingress compatible)
             app: this,
             pubsub: this.pubsub,
+            sceneRooms: this.config.lightSceneRooms,
         });
 
         this.ledgridController = new LedGridController({

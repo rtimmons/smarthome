@@ -18,10 +18,10 @@ export interface HAServiceCall {
 
 export interface HAScript {
   alias: string;
-  mode: "restart";
-  sequence: Array<{
-    parallel: HAServiceCall[];
-  }>;
+  mode: "single" | "queued";
+  max?: number;
+  fields?: Record<string, any>;
+  sequence: any[];
 }
 
 export interface SceneEntityTarget {
@@ -34,10 +34,13 @@ export interface SceneEntityTarget {
 }
 
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
-export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 16;
+export const FAST_SCENE_DISPATCHER_ID = "fast_scene_dispatch";
+export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 2;
+export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 1000;
 
 export interface FastSceneGenerationOptions {
   maxZwaveCallsPerStep?: number;
+  zwaveBatchDelayMs?: number;
 }
 
 function stableStringify(value: any): string {
@@ -283,11 +286,17 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
 function generateFastSceneSequence(
   scene: Scene,
   options: FastSceneGenerationOptions = {}
-): Array<{
-  parallel: HAServiceCall[];
-}> {
+): Array<{ parallel: HAServiceCall[] } | { delay: { milliseconds: number } }> {
   const maxZwaveCallsPerStep =
     options.maxZwaveCallsPerStep ?? DEFAULT_MAX_ZWAVE_CALLS_PER_STEP;
+  const zwaveBatchDelayMs =
+    options.zwaveBatchDelayMs ?? DEFAULT_ZWAVE_BATCH_DELAY_MS;
+  if (!Number.isInteger(maxZwaveCallsPerStep) || maxZwaveCallsPerStep < 1) {
+    throw new Error("maxZwaveCallsPerStep must be a positive integer");
+  }
+  if (!Number.isInteger(zwaveBatchDelayMs) || zwaveBatchDelayMs < 0) {
+    throw new Error("zwaveBatchDelayMs must be a non-negative integer");
+  }
   const calls = generateFastSceneCalls(scene);
   const targetsByEntityId = new Map(
     generateSceneTargets(scene).map((target) => [target.entityId, target])
@@ -311,7 +320,9 @@ function generateFastSceneSequence(
     return [{ parallel: calls }];
   }
 
-  const sequence: Array<{ parallel: HAServiceCall[] }> = [];
+  const sequence: Array<
+    { parallel: HAServiceCall[] } | { delay: { milliseconds: number } }
+  > = [];
 
   for (let index = 0; index < zwaveCalls.length; index += maxZwaveCallsPerStep) {
     const parallel = zwaveCalls.slice(index, index + maxZwaveCallsPerStep);
@@ -319,6 +330,12 @@ function generateFastSceneSequence(
       parallel.unshift(...nonZwaveCalls);
     }
     sequence.push({ parallel });
+    const hasAnotherBatch = index + maxZwaveCallsPerStep < zwaveCalls.length;
+    if (hasAnotherBatch && zwaveBatchDelayMs > 0) {
+      // Home Assistant service actions return after handing work to Z-Wave JS,
+      // not after the RF transaction drains. Pace adjacent batches explicitly.
+      sequence.push({ delay: { milliseconds: zwaveBatchDelayMs } });
+    }
   }
 
   return sequence;
@@ -328,14 +345,52 @@ export function generateFastScriptsFromRegistry(
   sceneRegistry: Record<string, Scene>,
   options: FastSceneGenerationOptions = {}
 ): Record<string, HAScript> {
-  return Object.fromEntries(
+  const sceneScripts = Object.fromEntries(
     Object.entries(sceneRegistry).map(([sceneId, scene]) => [
       getFastSceneScriptId(sceneId),
       {
         alias: `Fast Scene - ${scene.name}`,
-        mode: "restart",
-        sequence: generateFastSceneSequence(scene, options),
+        mode: "single",
+        sequence: [
+          {
+            // A blocking call keeps this wrapper on until the queued dispatcher
+            // finishes, so mode: single can suppress repeat activations.
+            action: `script.${FAST_SCENE_DISPATCHER_ID}`,
+            data: { scene_id: sceneId },
+          },
+        ],
       },
     ])
   );
+
+  return {
+    [FAST_SCENE_DISPATCHER_ID]: {
+      alias: "Fast Scene Dispatcher",
+      // Serialize every fast scene, including different rooms and presets, so
+      // independently triggered scripts cannot multiply the Z-Wave fanout.
+      mode: "queued",
+      max: 10,
+      fields: {
+        scene_id: {
+          description: "Generated scene identifier to execute",
+          required: true,
+        },
+      },
+      sequence: [
+        {
+          choose: Object.entries(sceneRegistry).map(([sceneId, scene]) => ({
+            conditions: `{{ scene_id == '${sceneId}' }}`,
+            sequence: generateFastSceneSequence(scene, options),
+          })),
+          default: [
+            {
+              stop: "Unknown fast scene identifier",
+              error: true,
+            },
+          ],
+        },
+      ],
+    },
+    ...sceneScripts,
+  };
 }

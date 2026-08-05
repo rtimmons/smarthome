@@ -489,6 +489,7 @@ export const devices: DeviceRegistry = {
     bedroom_flamingopower: {
       entity: "switch.light_bedroom_flamingopower",
       type: "outlet",
+      includeInAllOff: false,
       capabilities: ["on_off"]
     },
   },

@@ -13,27 +13,10 @@
         property_key_name: "001"
         value: KeyPressed2x
   actions:
-    - action: scene.turn_on
+    - action: script.turn_on
       target:
-        entity_id: scene.living_room_high
-  mode: restart
-
-- id: living_hallway_switch_double_down_all_off
-  alias: Living Hallway Switch - Double Down → All Off
-  description: Turn off all lights on double-tap down
-  triggers:
-    - trigger: event
-      event_type: zwave_js_value_notification
-      event_data:
-        device_id: c136100e5d6664e5b6fa256eaeb6c9b3
-        command_class_name: Central Scene
-        property_key_name: "002"
-        value: KeyPressed2x
-  actions:
-    - action: scene.turn_on
-      target:
-        entity_id: scene.all_off
-  mode: restart
+        entity_id: script.fast_scene_living_room_high
+  mode: single
 
 - id: kitchen_hanging_switch_double_up_kitchen_high
   alias: Kitchen Hanging Switch - Double Up → Kitchen High
@@ -47,10 +30,10 @@
         property_key_name: "001"
         value: KeyPressed2x
   actions:
-    - action: scene.turn_on
+    - action: script.turn_on
       target:
-        entity_id: scene.kitchen_high
-  mode: restart
+        entity_id: script.fast_scene_kitchen_high
+  mode: single
 
 - id: kitchen_hanging_switch_double_down_kitchen_off
   alias: Kitchen Hanging Switch - Double Down → Kitchen Off
@@ -64,10 +47,10 @@
         property_key_name: "002"
         value: KeyPressed2x
   actions:
-    - action: scene.turn_on
+    - action: script.turn_on
       target:
-        entity_id: scene.kitchen_off
-  mode: restart
+        entity_id: script.fast_scene_kitchen_off
+  mode: single
 
 - id: closet_presence_lighting
   alias: "Closet Presence Lighting"
@@ -97,9 +80,71 @@
             seconds: 37
             milliseconds: 500
     - alias: "Turn off closet scene after timeout"
-      action: scene.turn_on
+      action: script.turn_on
       target:
-        entity_id: scene.closet_off
+        entity_id: script.fast_scene_closet_off
+  mode: single
+
+- id: zwave_controller_jammed_alert
+  alias: Z-Wave Controller Jammed Alert
+  description: Preserve a visible alert whenever the ZWA-2 reports a jammed network.
+  triggers:
+    - trigger: state
+      entity_id: sensor.home_assistant_connect_zwa_2_status
+      to: jammed
+  actions:
+    - action: persistent_notification.create
+      data:
+        notification_id: zwave_controller_jammed
+        title: Z-Wave controller jammed
+        message: >-
+          The ZWA-2 reported a jammed network at {{ now().strftime('%Y-%m-%d %H:%M:%S %Z') }}.
+          Review the Z-Wave JS file log before restarting anything.
+  mode: single
+
+- id: zwave_dead_nodes_alert
+  alias: Z-Wave Dead Nodes Alert
+  description: Alert when one or more Z-Wave nodes stay dead for five minutes.
+  triggers:
+    - trigger: template
+      value_template: >-
+        {% set ns = namespace(nodes=[]) %}
+        {% for item in states.sensor
+           if item.entity_id.endswith('_node_status') and item.state == 'dead' %}
+          {% set ns.nodes = ns.nodes + [item.entity_id] %}
+        {% endfor %}
+        {{ ns.nodes | count > 0 }}
+      for: "00:05:00"
+  actions:
+    - action: persistent_notification.create
+      data:
+        notification_id: zwave_dead_nodes
+        title: Z-Wave nodes remain dead
+        message: >-
+          {% set ns = namespace(nodes=[]) %}
+          {% for item in states.sensor
+             if item.entity_id.endswith('_node_status') and item.state == 'dead' %}
+            {% set ns.nodes = ns.nodes + [item.name] %}
+          {% endfor %}
+          Dead for at least five minutes: {{ ns.nodes | join(', ') }}.
+  mode: single
+
+- id: zwave_dead_nodes_alert_clear
+  alias: Z-Wave Dead Nodes Alert Clear
+  description: Dismiss the dead-node alert after every node recovers.
+  triggers:
+    - trigger: template
+      value_template: >-
+        {% set ns = namespace(count=0) %}
+        {% for item in states.sensor
+           if item.entity_id.endswith('_node_status') and item.state == 'dead' %}
+          {% set ns.count = ns.count + 1 %}
+        {% endfor %}
+        {{ ns.count == 0 }}
+  actions:
+    - action: persistent_notification.dismiss
+      data:
+        notification_id: zwave_dead_nodes
   mode: single
 
 - id: button_3rsb22bz_1_print_made_today

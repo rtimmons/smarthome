@@ -13,6 +13,7 @@ import * as yaml from "yaml";
 import { devices, getDevice } from "./devices";
 import { scenes } from "./scenes";
 import { automations } from "./automations";
+import { getEffectiveAutomationMode } from "./automation-generation";
 import {
   Automation,
   Trigger,
@@ -262,6 +263,7 @@ function generateAutomations(): HAAutomation[] {
 
   for (const [id, automation] of Object.entries(automations)) {
     try {
+      const effectiveMode = getEffectiveAutomationMode(automation);
       const haAutomation: HAAutomation = {
         id,
         alias: automation.alias,
@@ -280,7 +282,7 @@ function generateAutomations(): HAAutomation[] {
           ? automation.action
           : [automation.action]
         ).map(convertAction),
-        ...(automation.mode && { mode: automation.mode }),
+        ...(effectiveMode && { mode: effectiveMode }),
         ...(automation.max && { max: automation.max }),
       };
 

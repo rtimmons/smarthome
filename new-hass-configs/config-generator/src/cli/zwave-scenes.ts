@@ -9,6 +9,8 @@ import { devices } from "../devices";
 import { scenes } from "../scenes";
 import {
   DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
+  DEFAULT_ZWAVE_BATCH_DELAY_MS,
+  FAST_SCENE_DISPATCHER_ID,
   generateFastSceneCalls,
   generateSceneEntities,
   generateSceneTargets,
@@ -148,9 +150,11 @@ interface SceneExerciseResult {
   sceneId: string;
   scriptEntityId: string;
   targetCount: number;
+  testedTargetCount: number;
   reachedSteadyState: boolean;
   settleTimeMs: number;
   pending: ExercisedEntityState[];
+  skippedUnavailable: ExercisedEntityState[];
 }
 
 const SSH_OPTIONS = [
@@ -1090,7 +1094,34 @@ async function exerciseScene(
   }
 
   const scriptEntityId = getFastSceneScriptEntityId(sceneId);
+  const dispatcherEntityId = `script.${FAST_SCENE_DISPATCHER_ID}`;
   const targets = generateSceneTargets(scene);
+  const initialStatesByEntityId = new Map(
+    targets.map((target) => [
+      target.entityId,
+      fetchState(options, accessToken, target.entityId),
+    ])
+  );
+  const skippedUnavailable = targets
+    .filter((target) => {
+      const state = initialStatesByEntityId.get(target.entityId);
+      return !state || state.state === "unavailable";
+    })
+    .map((target) => {
+      const state = initialStatesByEntityId.get(target.entityId) ?? null;
+      return {
+        entityId: target.entityId,
+        desiredState: String(target.entityState.state),
+        actualState: state?.state,
+      };
+    })
+    .sort((left, right) => left.entityId.localeCompare(right.entityId));
+  const skippedEntityIds = new Set(
+    skippedUnavailable.map((target) => target.entityId)
+  );
+  const testableTargets = targets.filter(
+    (target) => !skippedEntityIds.has(target.entityId)
+  );
   const startedAt = Date.now();
 
   callService(options, accessToken, "script", "turn_on", {
@@ -1099,21 +1130,24 @@ async function exerciseScene(
 
   while (Date.now() - startedAt < options.settleTimeoutMs) {
     const statesByEntityId = new Map(
-      targets.map((target) => [
+      testableTargets.map((target) => [
         target.entityId,
         fetchState(options, accessToken, target.entityId),
       ])
     );
-    const pending = buildPendingExerciseStates(targets, statesByEntityId);
+    const pending = buildPendingExerciseStates(testableTargets, statesByEntityId);
+    const dispatcherState = fetchState(options, accessToken, dispatcherEntityId);
 
-    if (pending.length === 0) {
+    if (pending.length === 0 && dispatcherState?.state === "off") {
       return {
         sceneId,
         scriptEntityId,
         targetCount: targets.length,
+        testedTargetCount: testableTargets.length,
         reachedSteadyState: true,
         settleTimeMs: Date.now() - startedAt,
         pending: [],
+        skippedUnavailable,
       };
     }
 
@@ -1121,19 +1155,30 @@ async function exerciseScene(
   }
 
   const finalStatesByEntityId = new Map(
-    targets.map((target) => [
+    testableTargets.map((target) => [
       target.entityId,
       fetchState(options, accessToken, target.entityId),
     ])
   );
+  const finalPending = buildPendingExerciseStates(testableTargets, finalStatesByEntityId);
+  const finalDispatcherState = fetchState(options, accessToken, dispatcherEntityId);
+  if (finalDispatcherState?.state !== "off") {
+    finalPending.unshift({
+      entityId: dispatcherEntityId,
+      desiredState: "off",
+      actualState: finalDispatcherState?.state,
+    });
+  }
 
   return {
     sceneId,
     scriptEntityId,
     targetCount: targets.length,
+    testedTargetCount: testableTargets.length,
     reachedSteadyState: false,
     settleTimeMs: options.settleTimeoutMs,
-    pending: buildPendingExerciseStates(targets, finalStatesByEntityId),
+    pending: finalPending,
+    skippedUnavailable,
   };
 }
 
@@ -1379,6 +1424,7 @@ async function exerciseScenes(options: Options) {
     settle_timeout_ms: options.settleTimeoutMs,
     poll_interval_ms: options.pollIntervalMs,
     default_max_zwave_calls_per_step: DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
+    default_zwave_batch_delay_ms: DEFAULT_ZWAVE_BATCH_DELAY_MS,
     results,
   };
 
@@ -1389,8 +1435,13 @@ async function exerciseScenes(options: Options) {
   for (const result of results) {
     const status = result.reachedSteadyState ? "settled" : "timed out";
     console.log(
-      `${result.sceneId}: ${status} in ${result.settleTimeMs}ms (${result.targetCount} targets)`
+      `${result.sceneId}: ${status} in ${result.settleTimeMs}ms (${result.testedTargetCount}/${result.targetCount} targets tested)`
     );
+    for (const skipped of result.skippedUnavailable) {
+      console.log(
+        `  skipped ${skipped.entityId}: unavailable before exercise (${skipped.actualState ?? "missing"})`
+      );
+    }
     for (const pending of result.pending.slice(0, 10)) {
       console.log(
         `  pending ${pending.entityId}: wanted ${pending.desiredState}, got ${pending.actualState ?? "missing"}`

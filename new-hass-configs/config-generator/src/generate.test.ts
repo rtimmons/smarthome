@@ -3,11 +3,33 @@
  */
 
 import * as yaml from "yaml";
+import { getEffectiveAutomationMode } from "./automation-generation";
 import { generateFastCalls, generateFastScripts, generateScenes } from "./generate-test-helper";
 import { scenes } from "./scenes";
 import type { Scene } from "./types";
 
 describe("Scene Generation with Pairing", () => {
+  describe("Outdoor dashboard scenes", () => {
+    it("should control both outdoor light entities", () => {
+      const high = generateScenes({ outdoor_high: scenes.outdoor_high })[0];
+      const medium = generateScenes({ outdoor_medium: scenes.outdoor_medium })[0];
+      const off = generateScenes({ outdoor_off: scenes.outdoor_off })[0];
+
+      expect(high.entities["light.light_outdoor_cafe"]).toMatchObject({ state: "on" });
+      expect(high.entities["light.light_outdoor_sconces"]).toMatchObject({
+        state: "on",
+        brightness: 255,
+      });
+      expect(medium.entities["light.light_outdoor_cafe"]).toMatchObject({ state: "on" });
+      expect(medium.entities["light.light_outdoor_sconces"]).toMatchObject({
+        state: "on",
+        brightness: 180,
+      });
+      expect(off.entities["light.light_outdoor_cafe"]).toMatchObject({ state: "off" });
+      expect(off.entities["light.light_outdoor_sconces"]).toMatchObject({ state: "off" });
+    });
+  });
+
   describe("Paired device synchronization", () => {
     it("should automatically add _white pair when RGBW device is specified", () => {
       const testScene: Scene = {
@@ -279,6 +301,7 @@ describe("Scene Generation with Pairing", () => {
       const allTargets = calls.flatMap((call: any) => call.target.entity_id);
 
       expect(allTargets).not.toContain("switch.office_wall_switch");
+      expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
       expect(
         calls.find(
           (call: any) =>
@@ -289,15 +312,28 @@ describe("Scene Generation with Pairing", () => {
       ).toBeDefined();
     });
 
+    it("should keep smart-bulb power energized in bedroom off scenes", () => {
+      const calls = generateFastCalls(scenes.bedroom_off);
+      const allTargets = calls.flatMap((call: any) => call.target.entity_id);
+
+      expect(allTargets).toContain("light.bedroom_light_flamingo");
+      expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
+    });
+
     it("should batch large Z-Wave scenes into multiple parallel steps", () => {
 
       const scripts = generateFastScripts({ all_off: scenes.all_off });
-      const script = scripts.fast_scene_all_off;
+      const script = scripts.fast_scene_dispatch;
+      const sequence = script.sequence[0].choose[0].sequence;
+      const parallelSteps = sequence.filter((step: any) => step.parallel);
+      const delaySteps = sequence.filter((step: any) => step.delay);
 
-      expect(script.sequence.length).toBeGreaterThan(1);
-      expect(script.sequence[0].parallel.length).toBeGreaterThan(0);
+      expect(sequence.length).toBeGreaterThan(1);
+      expect(parallelSteps[0].parallel.length).toBeGreaterThan(0);
+      expect(delaySteps).toHaveLength(parallelSteps.length - 1);
+      expect(delaySteps.every((step: any) => step.delay.milliseconds === 1000)).toBe(true);
       expect(
-        script.sequence.flatMap((step: any) => step.parallel).some(
+        parallelSteps.flatMap((step: any) => step.parallel).some(
           (call: any) =>
             call.action === "switch.turn_off" &&
             call.target.entity_id.includes("switch.light_office_pianolight")
@@ -305,23 +341,65 @@ describe("Scene Generation with Pairing", () => {
       ).toBe(true);
     });
 
-    it("should keep living_room_high in a single parallel step with the default cap", () => {
+    it("should throttle living_room_high with the conservative default cap", () => {
 
       const scripts = generateFastScripts({ living_room_high: scenes.living_room_high });
       const script = scripts.fast_scene_living_room_high;
+      const dispatcher = scripts.fast_scene_dispatch;
+      const sequence = dispatcher.sequence[0].choose[0].sequence;
 
-      expect(script.sequence).toHaveLength(1);
+      expect(script.mode).toBe("single");
+      expect(script.sequence).toEqual([
+        {
+          action: "script.fast_scene_dispatch",
+          data: { scene_id: "living_room_high" },
+        },
+      ]);
+      expect(dispatcher.mode).toBe("queued");
+      expect(sequence.length).toBeGreaterThan(1);
+      expect(sequence.some((step: any) => step.delay?.milliseconds === 1000)).toBe(true);
+    });
+
+    it("should force scene automations to single mode", () => {
+      expect(
+        getEffectiveAutomationMode({
+          alias: "Test Scene Automation",
+          trigger: { type: "webhook", webhook_id: "test_scene" },
+          action: { type: "scene", scene: "living_room_high" },
+          mode: "restart",
+        })
+      ).toBe("single");
     });
 
     it("should allow callers to lower the batching cap when needed", () => {
 
       const scripts = generateFastScripts(
         { living_room_high: scenes.living_room_high },
-        { maxZwaveCallsPerStep: 8 }
+        { maxZwaveCallsPerStep: 2 }
       );
-      const script = scripts.fast_scene_living_room_high;
+      const dispatcher = scripts.fast_scene_dispatch;
+      const sequence = dispatcher.sequence[0].choose[0].sequence;
 
-      expect(script.sequence.length).toBeGreaterThan(1);
+      expect(sequence.length).toBeGreaterThan(4);
+    });
+
+    it("should reject invalid Z-Wave batching caps", () => {
+
+      expect(() =>
+        generateFastScripts(
+          { living_room_high: scenes.living_room_high },
+          { maxZwaveCallsPerStep: 0 }
+        )
+      ).toThrow("maxZwaveCallsPerStep must be a positive integer");
+    });
+
+    it("should reject invalid Z-Wave batch delays", () => {
+      expect(() =>
+        generateFastScripts(
+          { living_room_high: scenes.living_room_high },
+          { zwaveBatchDelayMs: -1 }
+        )
+      ).toThrow("zwaveBatchDelayMs must be a non-negative integer");
     });
 
     it("should restore kitchen upper/lower brightness in high scenes", () => {

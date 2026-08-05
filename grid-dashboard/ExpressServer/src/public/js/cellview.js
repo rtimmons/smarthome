@@ -1,3 +1,50 @@
+class PressDispatcher {
+    constructor(args) {
+        this.onSingle = args.onSingle;
+        this.onDouble = args.onDouble;
+        this.hasDouble = args.hasDouble;
+        // Wrap browser timer globals so they are invoked with their native
+        // receiver instead of as methods on this dispatcher.
+        this.schedule =
+            args.schedule || ((callback, delay) => setTimeout(callback, delay));
+        this.cancel = args.cancel || (timer => clearTimeout(timer));
+        this.delay = args.delay === undefined ? 300 : args.delay;
+        this.pending = null;
+    }
+
+    single() {
+        if (!this.hasDouble()) {
+            this.commitSingle();
+            return;
+        }
+        if (this.pending) {
+            this.cancel(this.pending);
+        }
+        this.pending = this.schedule(() => {
+            this.pending = null;
+            this.onSingle();
+        }, this.delay);
+    }
+
+    commitSingle() {
+        if (this.pending) {
+            this.cancel(this.pending);
+            this.pending = null;
+        }
+        this.onSingle();
+    }
+
+    double() {
+        if (this.pending) {
+            this.cancel(this.pending);
+            this.pending = null;
+        }
+        if (this.hasDouble()) {
+            this.onDouble();
+        }
+    }
+}
+
 class CellView {
     constructor(args) {
         // $element, config, app
@@ -12,36 +59,45 @@ class CellView {
         this.setContent(this.app.emojiWithName(this.config.emoji));
         this.$element.addClass(this.config.claz || '');
 
-        // hacky thing to bind double-tap
         var $element = this.$element;
+        var pressDispatcher = new PressDispatcher({
+            onSingle: () =>
+                this.pubsub.submit('Cell.Press', { Cell: this }),
+            onDouble: () =>
+                this.pubsub.submit('Cell.DoublePress', { Cell: this }),
+            hasDouble: () => Boolean(this.config.onDoublePress),
+        });
+
+        // Touch events do not reliably emit dblclick. Delay only cells that
+        // actually have a double-press action, then commit exactly one event.
         /**
          * @type {boolean|function|null}
          */
         var tapped = false;
         $element.on('touchstart', function(e) {
+            if (!pressDispatcher.hasDouble()) {
+                pressDispatcher.commitSingle();
+                e.preventDefault();
+                return;
+            }
             if (!tapped) {
                 tapped = setTimeout(function() {
                     tapped = null;
-                    $element.trigger('click');
+                    pressDispatcher.commitSingle();
                 }, 300);
             } else {
                 clearTimeout(tapped);
                 tapped = null;
-                $element.trigger('dblclick');
+                pressDispatcher.double();
             }
             e.preventDefault();
         });
 
-        var app = this.app;
-        $element.on('click', () =>
-            this.pubsub.submit('Cell.Press', { Cell: this })
-        );
-        $element.on('dblclick', () =>
-            this.pubsub.submit('Cell.DoublePress', { Cell: this })
-        );
-        $element.on('doubletap', () =>
-            this.pubsub.submit('Cell.DoublePress', { Cell: this })
-        );
+        // Native desktop dblclick fires after click events. Hold the single
+        // action briefly so the double action can cancel it instead of firing
+        // room-off and all-off together.
+        $element.on('click', () => pressDispatcher.single());
+        $element.on('dblclick', () => pressDispatcher.double());
     }
 
     setContent(c) {
@@ -122,4 +178,11 @@ class CellView {
     setZoneUnknown(enabled) {
         this.$element.toggleClass('zone-unknown', Boolean(enabled));
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        CellView: CellView,
+        PressDispatcher: PressDispatcher,
+    };
 }

@@ -25,6 +25,54 @@ import { devices } from "./devices";
  */
 export const scenes: SceneRegistry = {
   // ============================================================================
+  // Outdoor Scenes (exposed through the dashboard's Move room)
+  // ============================================================================
+
+  outdoor_high: {
+    name: "Outdoor - High",
+    lights: [
+      {
+        device: "outdoor_cafe",
+        state: "on"
+      },
+      {
+        device: "outdoor_sconces",
+        state: "on",
+        brightness: 255
+      }
+    ]
+  },
+
+  outdoor_medium: {
+    name: "Outdoor - Medium",
+    lights: [
+      {
+        device: "outdoor_cafe",
+        state: "on"
+      },
+      {
+        device: "outdoor_sconces",
+        state: "on",
+        brightness: 180
+      }
+    ]
+  },
+
+  outdoor_off: {
+    name: "Outdoor - Off",
+    lights: [
+      {
+        device: "outdoor_cafe",
+        state: "off"
+      },
+      {
+        device: "outdoor_sconces",
+        state: "off"
+      }
+    ]
+  },
+
+  // ============================================================================
   // Office Scenes
   // ============================================================================
 
@@ -873,10 +921,7 @@ export const scenes: SceneRegistry = {
         device: "bedroom_flamingo",
         state: "off"
       }
-    ],
-    switches: {
-      bedroom_flamingopower: "off"
-    }
+    ]
   },
 
   bedroom_off: {
@@ -898,10 +943,7 @@ export const scenes: SceneRegistry = {
         device: "bedroom_flamingo",
         state: "off"
       }
-    ],
-    switches: {
-      bedroom_flamingopower: "off"
-    }
+    ]
   },
 
   // ============================================================================

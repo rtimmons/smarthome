@@ -5,6 +5,11 @@ import { requestText } from './http';
 
 const app = Router();
 
+export const fastSceneEntityId = (scene: string): string | undefined => {
+    const match = /^scene_([a-z0-9]+(?:_[a-z0-9]+)*)$/.exec(scene);
+    return match ? `script.fast_scene_${match[1]}` : undefined;
+};
+
 const activateScene = async (req: RQ, res: RS) => {
     const sceneParam = req.params['scene'];
     const scene = Array.isArray(sceneParam) ? sceneParam[0] : sceneParam;
@@ -14,8 +19,8 @@ const activateScene = async (req: RQ, res: RS) => {
     }
     const useCoreApi =
         Boolean(process.env.SUPERVISOR_TOKEN) && !process.env.HASS_WEBHOOK_BASE;
-    const sceneId = scene.replace(/^scene_/, '');
-    if (!sceneId || sceneId === scene) {
+    const entityId = fastSceneEntityId(scene);
+    if (!entityId) {
         res.status(400).send('Invalid scene');
         return;
     }
@@ -41,7 +46,7 @@ const activateScene = async (req: RQ, res: RS) => {
                   }
                 : undefined,
             body: useCoreApi
-                ? JSON.stringify({ entity_id: `script.fast_scene_${sceneId}` })
+                ? JSON.stringify({ entity_id: entityId })
                 : undefined,
         });
 

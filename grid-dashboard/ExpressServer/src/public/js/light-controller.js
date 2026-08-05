@@ -4,13 +4,23 @@ class LightController {
         this.root = args.root;
         this.app = args.app;
         this.pubsub = args.pubsub;
+        this.sceneRooms = args.sceneRooms || {};
     }
 
     scene(paths) { // ['$room', 'High']
         const currRoom = this.app.currentRoom();
-        const replaceName = n => n.replace(/\$room/g, currRoom);
+        const replaceName = n => {
+            if (n !== '$room') {
+                return n;
+            }
+            const sceneRoom = this.sceneRooms[currRoom];
+            if (!sceneRoom) {
+                throw new Error('No lighting scenes configured for room: ' + currRoom);
+            }
+            return sceneRoom;
+        };
         paths = paths.map(a => replaceName(a));
-        // => ['Living Room', 'High']
+        // => ['living_room', 'High']
 
         const scenePath = 'scenes/scene_' + paths.join('_').replace(/\s+/g, '_').toLowerCase();
 

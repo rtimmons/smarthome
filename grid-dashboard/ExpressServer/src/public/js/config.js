@@ -86,6 +86,17 @@ const ledGridButtons = function(yPos) {
 const rows = 8;
 const cols = 11;
 
+const lightSceneRooms = {
+    Bathroom: 'bathroom',
+    Closet: 'closet',
+    Bedroom: 'bedroom',
+    Move: 'outdoor',
+    Kitchen: 'kitchen',
+    'Living Room': 'living_room',
+    'Guest Bathroom': 'guest_bathroom',
+    Office: 'office',
+};
+
 let roomX = 1;
 
 const config = {
@@ -154,6 +165,7 @@ const config = {
     rows: rows,
     cols: cols,
     printerPort: 8099,
+    lightSceneRooms: lightSceneRooms,
     rooms: [
         // This is used by allJoin (double-tap a room).
         // This "should" be implemented in the ExpressAPI
@@ -586,3 +598,10 @@ const config = {
     },
     poll: [{ action: 'Music.FetchState', args: [], period: 2000 }],
 };
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        config: config,
+        lightSceneRooms: lightSceneRooms,
+    };
+}
