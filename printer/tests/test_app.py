@@ -206,6 +206,22 @@ def _use_fake_preset_store(
     )
 
 
+def test_mongo_health_route_checks_mongo_once(tmp_path, monkeypatch):
+    app_module, _, flask_app, _, _ = _build_test_environment(tmp_path, monkeypatch)
+    checks = []
+
+    def fake_mongo_health():
+        checks.append(True)
+        return {"configured": True, "ok": True, "host": "local-mongodb"}
+
+    monkeypatch.setattr(app_module, "mongo_health", fake_mongo_health)
+
+    response = flask_app.test_client().get("/health/mongo")
+
+    assert response.status_code == 200
+    assert len(checks) == 1
+
+
 def _seed_sortable_presets(store: FakePresetStore) -> None:
     store.seed_preset(
         slug="zulu",

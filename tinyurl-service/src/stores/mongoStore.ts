@@ -6,6 +6,7 @@ import { TinyUrl, TinyUrlStore } from "../types.js";
 const MAX_VISITS = 10;
 const MAX_ATTEMPTS = 30;
 const COLLECTION_NAME = "tinyurls";
+const SERVER_SELECTION_TIMEOUT_MS = 3000;
 
 export interface TinyUrlDocument {
   _id?: ObjectId;
@@ -25,7 +26,12 @@ export class MongoTinyUrlStore implements TinyUrlStore {
   ) {}
 
   static async connect(mongoUrl: string): Promise<MongoTinyUrlStore> {
-    const client = new MongoClient(mongoUrl);
+    // Keep hostname fallback responsive. The driver default is 30 seconds,
+    // which makes a stale saved add-on hostname dominate startup time.
+    const client = new MongoClient(mongoUrl, {
+      connectTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+      serverSelectionTimeoutMS: SERVER_SELECTION_TIMEOUT_MS,
+    });
     await client.connect();
     const db = client.db();
     const collection = db.collection<TinyUrlDocument>(COLLECTION_NAME);

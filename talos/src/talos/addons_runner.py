@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 import subprocess
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import FIRST_COMPLETED, Future, ThreadPoolExecutor, as_completed, wait
 from pathlib import Path
 from typing import Iterable, List, Optional, Tuple
 
@@ -128,11 +128,7 @@ def _dependency_waves(addon_dirs: Iterable[Path]) -> list[list[Path]]:
         return dependency_waves(addon_dirs)
     except click.ClickException as error:
         if "Circular add-on dependencies" in str(error):
-            message = str(error).replace(
-                "Circular add-on dependencies",
-                "Circular add-on deployment dependencies",
-            )
-            raise click.ClickException(message) from error
+            raise click.ClickException(str(error).replace("Circular add-on dependencies", "Circular add-on deployment dependencies")) from error
         raise
 
 
@@ -143,9 +139,22 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
     timer = timer or DeployTimer(console, enabled=False)
     addon_dirs = _resolve_addons(addons)
     addon_names = [addon_dir.name for addon_dir in addon_dirs]
-    deployment_waves = _dependency_waves(addon_dirs)
-    ordered_addon_dirs = [addon_dir for wave in deployment_waves for addon_dir in wave]
+    dependency_waves = _dependency_waves(addon_dirs)
+    dependencies = {addon_dir.name: _deploy_dependencies(addon_dir) for addon_dir in addon_dirs}
     verify = verify or _is_truthy(os.environ.get("TALOS_DEPLOY_VERIFY"))
+    if jobs is None:
+        jobs = os.cpu_count() or 1
+    if jobs < 1:
+        jobs = 1
+    jobs = min(jobs, len(addon_names))
+
+    timer.record(
+        "addons.schedule",
+        0.0,
+        waves=[[path.name for path in wave] for wave in dependency_waves],
+        strategy="dependency-ready-queue",
+        jobs=jobs,
+    )
 
     if not addon_names:
         console.print("[yellow]No add-ons to deploy[/yellow]")
@@ -159,10 +168,10 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         console.print(f"  • Add-ons: {', '.join(addon_names)}")
         console.print(f"  • Mode: {'verified' if verify else 'fast'}")
         console.print(
-            "  • Dependency order: "
+            "  • Dependency levels (dispatched as soon as ready): "
             + " → ".join(
                 f"wave {number} ({', '.join(path.name for path in wave)})"
-                for number, wave in enumerate(deployment_waves, 1)
+                for number, wave in enumerate(dependency_waves, 1)
             )
         )
         console.print(f"\n[dim]Each add-on would be:[/dim]")
@@ -192,15 +201,13 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
     else:
         console.print("⚡ [bold]Fast deploy mode:[/bold] skipping optional local build/test/container validation. Use `--verify` to restore it.")
     with timer.phase("addons.prerequisites"):
-        validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
-    if jobs is None:
-        jobs = os.cpu_count() or 1
-    if jobs < 1:
-        jobs = 1
-    jobs = min(jobs, len(addon_names))
-
+        validate_deployment_prerequisites(
+            ha_host, ha_port, ha_user, verbose=verbose, timer=timer
+        )
     deployment_errors = []
     successful_deployments = []
+    failed_deployments: set[str] = set()
+    live_progress = console.is_terminal and console.is_interactive
 
     with Progress(
         SpinnerColumn(),
@@ -209,7 +216,7 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         TaskProgressColumn(),
         console=console,
         transient=not verbose,
-        disable=not console.is_terminal or not console.is_interactive
+        disable=not live_progress
     ) as progress:
         if verify:
             build_task = progress.add_task("Running local pre-deploy checks...", total=len(addon_names))
@@ -267,14 +274,14 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
 
             progress.remove_task(build_task)
 
-        # Phase 2: Deployment
+        # Phase 2: dependency-aware ready queue. Dependents launch as soon as
+        # their own prerequisites finish; unrelated slow add-ons do not create
+        # a wave-wide barrier.
         if not deployment_errors:  # Only deploy if all builds succeeded
             deploy_task = progress.add_task("Deploying add-ons...", total=len(addon_names))
 
-            for addon_dir in ordered_addon_dirs:
+            def deploy_one(addon_dir: Path) -> tuple[str, Exception | None]:
                 addon_name = addon_dir.name
-                progress.update(deploy_task, description=f"Deploying {addon_name}...")
-
                 try:
                     deploy_addon(
                         addon_name,
@@ -285,28 +292,128 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
                         verbose,
                         validate_prereqs=False,
                         show_success=verbose,
-                        timer=timer
+                        timer=timer,
                     )
-                    successful_deployments.append(addon_name)
-                    progress.advance(deploy_task)
+                    return addon_name, None
+                except Exception as error:  # surfaced by the coordinator thread below
+                    return addon_name, error
 
-                except DeploymentError as e:
-                    deployment_errors.append((addon_name, str(e)))
-                    # Stop progress bar before displaying error to avoid interference
+            addon_by_name = {addon_dir.name: addon_dir for addon_dir in addon_dirs}
+            selected_names = set(addon_by_name)
+            selected_dependencies = {
+                name: declared & selected_names for name, declared in dependencies.items()
+            }
+            pending = set(selected_names)
+            completed_deployments: set[str] = set()
+            running: dict[Future[tuple[str, Exception | None]], str] = {}
+
+            def record_deployment_result(addon_name: str, error: Exception | None) -> None:
+                if error is None:
+                    completed_deployments.add(addon_name)
+                    successful_deployments.append(addon_name)
+                    if not live_progress:
+                        console.print(f"  ✅ {addon_name} deployment finished")
+                else:
+                    failed_deployments.add(addon_name)
+                    deployment_errors.append((addon_name, str(error)))
                     progress.stop()
-                    e.display_error()
+                    if isinstance(error, DeploymentError):
+                        error.display_error()
+                    else:
+                        console.print(
+                            f"  ❌ [red]Unexpected error deploying {addon_name}: {error}[/red]"
+                        )
+                    if running:
+                        console.print(
+                            "  ⏳ Allowing "
+                            f"{len(running)} in-flight deployment(s) to finish safely; "
+                            "their output may remain quiet until completion."
+                        )
                     progress.start()
-                    progress.advance(deploy_task)
-                    continue
-                except Exception as e:
-                    error_msg = f"Unexpected error deploying {addon_name}: {str(e)}"
-                    deployment_errors.append((addon_name, error_msg))
-                    # Stop progress bar before displaying error to avoid interference
-                    progress.stop()
-                    console.print(f"  ❌ [red]{error_msg}[/red]")
-                    progress.start()
-                    progress.advance(deploy_task)
-                    continue
+                progress.advance(deploy_task)
+
+            with timer.phase(
+                "addons.execution",
+                strategy="dependency-ready-queue",
+                jobs=jobs,
+            ):
+                with ThreadPoolExecutor(max_workers=jobs) as executor:
+                    while pending or running:
+                        # A failed dependency blocks its entire downstream chain.
+                        blocked = sorted(
+                            name
+                            for name in pending
+                            if selected_dependencies[name] & failed_deployments
+                        )
+                        for addon_name in blocked:
+                            blocked_by = sorted(
+                                selected_dependencies[addon_name] & failed_deployments
+                            )
+                            pending.remove(addon_name)
+                            error_message = (
+                                f"Blocked by failed dependency: {', '.join(blocked_by)}"
+                            )
+                            failed_deployments.add(addon_name)
+                            deployment_errors.append((addon_name, error_message))
+                            timer.record(
+                                "addons.blocked",
+                                0.0,
+                                status="blocked",
+                                addon=addon_name,
+                                blocked_by=blocked_by,
+                            )
+                            progress.advance(deploy_task)
+                        if blocked:
+                            # Re-evaluate immediately so failure propagation can
+                            # block deeper dependents before declaring a deadlock.
+                            continue
+
+                        available_slots = jobs - len(running)
+                        ready = sorted(
+                            name
+                            for name in pending
+                            if selected_dependencies[name] <= completed_deployments
+                        )
+                        for addon_name in ready[:available_slots]:
+                            pending.remove(addon_name)
+                            timer.record(
+                                "addons.dispatch",
+                                0.0,
+                                addon=addon_name,
+                                dependencies=sorted(selected_dependencies[addon_name]),
+                                active=len(running) + 1,
+                            )
+                            progress.update(
+                                deploy_task,
+                                description=f"Deploying {addon_name} ({len(running) + 1} active)...",
+                            )
+                            if not live_progress:
+                                dependency_label = ", ".join(
+                                    sorted(selected_dependencies[addon_name])
+                                ) or "none"
+                                console.print(
+                                    f"  → {addon_name} deployment started "
+                                    f"(dependencies: {dependency_label})"
+                                )
+                            future = executor.submit(deploy_one, addon_by_name[addon_name])
+                            running[future] = addon_name
+
+                        if not running:
+                            if pending:
+                                unresolved = ", ".join(sorted(pending))
+                                raise click.ClickException(
+                                    f"Unable to schedule add-on deployments: {unresolved}"
+                                )
+                            continue
+
+                        finished, _ = wait(running, return_when=FIRST_COMPLETED)
+                        for future in finished:
+                            expected_name = running.pop(future)
+                            try:
+                                addon_name, error = future.result()
+                            except Exception as unexpected_error:
+                                addon_name, error = expected_name, unexpected_error
+                            record_deployment_result(addon_name, error)
 
             progress.remove_task(deploy_task)
 

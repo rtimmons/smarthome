@@ -27,24 +27,6 @@ fi
 export SONOS_BASE_URL
 
 cd /opt/sonos-api/app
-
-attempt=0
-while true; do
-  attempt=$((attempt + 1))
-  log_info "Starting Sonos API on port ${PORT} (attempt ${attempt})"
-
-  if npm start; then
-    log_info "Sonos API exited cleanly"
-    exit 0
-  else
-    exit_code=$?
-  fi
-
-  if [ "$attempt" -ge 10 ]; then
-    log_info "Sonos API crashed ${attempt} times; exiting so Supervisor can apply restart policy"
-    exit "$exit_code"
-  fi
-
-  log_info "Sonos API exited with code ${exit_code}; restarting in 2s"
-  sleep 2
-done
+log_info "Starting Sonos API on port ${PORT}"
+# Keep Node as PID 1 so SIGTERM reaches its graceful shutdown handler.
+exec node dist/server/index.js

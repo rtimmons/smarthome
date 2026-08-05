@@ -24,6 +24,7 @@ ports:
   "4010": 4010
 ports_description:
   "4010": Snapshot API
+deploy_health_path: "/healthz"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
 run_env:

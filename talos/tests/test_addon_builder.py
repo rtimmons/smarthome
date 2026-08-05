@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-import pytest
+from rich.console import Console
 
 from talos import addon_builder
+from talos.timing import DeployTimer
+import pytest
 
 
 def test_discover_addons_finds_known_services():
@@ -72,9 +74,73 @@ def test_remote_deploy_script_uses_quiet_wrapper_without_fixed_reload_sleep():
         remote_addon_dir="/addons/grid_dashboard",
         remote_addons_dir="/addons",
         verbose=False,
+        health_port=3000,
+        health_path="/",
     )
 
     assert 'VERBOSE="false"' in script
-    assert "run_quiet ha addons reload" in script
+    assert 'run_metric "remote.reload" reload_addons' in script
+    assert 'run_metric "remote.stop" run_quiet ha apps stop' in script
+    assert 'run_metric "remote.rebuild" run_quiet ha apps rebuild' in script
+    assert "__TALOS_METRIC__" in script
+    assert 'ha --raw-json apps info "$ADDON_ID"' in script
+    assert 'http://supervisor/addons/"$ADDON_ID"/options' in script
+    assert "HEALTH_PORT=3000" in script
+    assert "HEALTH_PATH=/" in script
+    assert "READINESS_ATTEMPTS=60" in script
+    assert 'run_metric "remote.state" wait_for_started' in script
+    assert 'run_metric "remote.readiness" wait_for_readiness' in script
+    assert ".data.ip_address" in script
+    assert '"http://${curl_host}:${HEALTH_PORT}${HEALTH_PATH}"' in script
+    assert 'nc -z -w 2 "$addon_ip" "$HEALTH_PORT"' in script
+    assert '${HEALTH_PATH}" 2>/dev/null' in script
+    assert "127.0.0.1" not in script
+    assert "Readiness probe exhausted retries at $LAST_HEALTH_TARGET" in script
     assert "sleep 2" not in script
     assert "need_port_mapping" not in script
+
+
+def test_remote_metrics_are_recorded_and_hidden():
+    timer = DeployTimer(Console(), enabled=True)
+    visible = addon_builder._record_remote_metrics(
+        "before\n__TALOS_METRIC__\tremote.stop\t1000\t1250\tok\nafter\n",
+        "grid-dashboard",
+        timer,
+    )
+
+    assert visible == "before\nafter"
+    assert timer.events[0]["name"] == "addon.remote.stop"
+    assert timer.events[0]["seconds"] == 0.25
+    assert timer.events[0]["addon"] == "grid-dashboard"
+
+
+def test_generated_dockerfile_caches_dependencies_before_source():
+    addons = addon_builder.discover_addons()
+    context = addon_builder.build_context("grid-dashboard", addons)
+    dockerfile = addon_builder.render_template(
+        addon_builder.jinja_env(), "Dockerfile.j2", context
+    )
+
+    dependency_copy = "COPY app/package.json app/package-lock.json"
+    source_copy = "COPY app/ /opt/grid-dashboard/app/"
+    assert dockerfile.index(dependency_copy) < dockerfile.index("RUN npm ci")
+    assert dockerfile.index("RUN npm ci") < dockerfile.index(source_copy)
+
+
+def test_python_context_exposes_runtime_and_build_dependencies():
+    addons = addon_builder.discover_addons()
+    context = addon_builder.build_context("printer", addons)
+
+    assert "flask" in context["addon"]["python_dependencies"]
+    assert "hatchling" in context["addon"]["python_build_dependencies"]
+    assert context["addon"]["deploy_health_path"] == "/health/mongo"
+
+
+def test_slow_stopping_node_addons_exec_the_service_as_pid_one():
+    grid_run = (addon_builder.REPO_ROOT / "grid-dashboard/ExpressServer/run.sh").read_text()
+    sonos_run = (addon_builder.REPO_ROOT / "sonos-api/run.sh").read_text()
+
+    assert "exec ./node_modules/.bin/tsx src/server/index.ts" in grid_run
+    assert "exec node dist/server/index.js" in sonos_run
+    assert "npm start" not in grid_run
+    assert "npm start" not in sonos_run

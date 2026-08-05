@@ -273,7 +273,6 @@ async function createStoreWithRetry(
 
 function expandMongoUrls(url: string): string[] {
   const urls = new Set<string>();
-  urls.add(url);
 
   // Only attempt host fallbacks for single-host URLs of the form mongodb://[auth@]host[:port]/...
   const match = url.match(/^mongodb:\/\/([^@]+@)?([^/:]+)(:[0-9]+)?(\/.*)?$/);
@@ -282,10 +281,16 @@ function expandMongoUrls(url: string): string[] {
     const host = match[2];
     const port = match[3] ?? "";
     const rest = match[4] ?? "";
+    // Existing add-on options may contain a legacy hostname. Prefer the
+    // Supervisor-advertised canonical hostname before trying those aliases.
+    if (!MONGO_HOST_FALLBACKS.includes(host)) {
+      urls.add(url);
+    }
     for (const candidateHost of MONGO_HOST_FALLBACKS) {
-      if (candidateHost === host) continue;
       urls.add(`mongodb://${auth}${candidateHost}${port}${rest}`);
     }
+  } else {
+    urls.add(url);
   }
 
   return Array.from(urls);

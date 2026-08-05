@@ -7,6 +7,7 @@ process.title = 'sonos-api-server';
 
 import {sonos} from './sonos';
 import {appConfig} from './config';
+import {installGracefulShutdown} from './graceful-shutdown';
 
 const app = express();
 
@@ -25,4 +26,7 @@ app.get('/health', (req: express.Request, res: express.Response) => {
 });
 
 // Run the thing.
-app.listen(appConfig.port, () => console.log(`Sonos API listening on port ${appConfig.port}!`));
+const server = app.listen(appConfig.port, () =>
+  console.log(`Sonos API listening on port ${appConfig.port}!`),
+);
+installGracefulShutdown(server, {service: 'sonos-api'});

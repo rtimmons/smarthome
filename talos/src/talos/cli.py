@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import os
+import time
 from pathlib import Path
 
 import click
 
 from . import addon_backup, addon_builder, addons_runner, dev as dev_mod, external_addon, hass_config, hooks, manage_ports
+from .paths import REPO_ROOT
 from .timing import DeployTimer
 
-DEFAULT_JOBS = max(1, os.cpu_count() or 1)
+DEFAULT_JOBS = min(4, max(1, os.cpu_count() or 1))
+DEFAULT_DEPLOY_METRICS = str(REPO_ROOT / "build" / "deploy-metrics" / "latest.json")
 
 
 @click.group()
@@ -175,7 +178,14 @@ def addons_run(recipe: str, addons: tuple[str, ...]) -> None:
 @click.option("--verbose", "-v", is_flag=True, help="Show detailed output.")
 @click.option("--verify", is_flag=True, help="Run optional local add-on build/test/container recipes before deploying.")
 @click.option("--jobs", type=int, default=DEFAULT_JOBS, show_default=True, help="Max parallel build jobs.")
-@click.option("--metrics-json", type=click.Path(dir_okay=False), default=None, help="Write deploy timing events as JSON.")
+@click.option(
+    "--metrics-json",
+    envvar="TALOS_DEPLOY_METRICS",
+    type=click.Path(dir_okay=False),
+    default=DEFAULT_DEPLOY_METRICS,
+    show_default=True,
+    help="Write deploy timing events as JSON.",
+)
 @click.option("--no-timings", is_flag=True, help="Suppress deploy timing summary.")
 def addons_deploy(
     addons: tuple[str, ...],
@@ -229,7 +239,14 @@ def config_apply(verbose: bool) -> None:
 @click.option("--verify", is_flag=True, help="Run optional local add-on build/test/container recipes before deploying.")
 @click.option("--jobs", type=int, default=DEFAULT_JOBS, show_default=True, help="Max parallel build jobs.")
 @click.option("--skip-config", is_flag=True, help="Skip Home Assistant config precheck/apply.")
-@click.option("--metrics-json", type=click.Path(dir_okay=False), default=None, help="Write deploy timing events as JSON.")
+@click.option(
+    "--metrics-json",
+    envvar="TALOS_DEPLOY_METRICS",
+    type=click.Path(dir_okay=False),
+    default=DEFAULT_DEPLOY_METRICS,
+    show_default=True,
+    help="Write deploy timing events as JSON.",
+)
 @click.option("--no-timings", is_flag=True, help="Suppress deploy timing summary.")
 def deploy_cmd(
     addons: tuple[str, ...],
@@ -246,29 +263,61 @@ def deploy_cmd(
 ) -> None:
     """Deploy Home Assistant configs and add-ons."""
     timer = DeployTimer(addons_runner.console, enabled=not no_timings)
+    deploy_started = time.perf_counter()
+    deploy_status = "ok"
+    try:
+        if dry_run:
+            if not skip_config:
+                click.echo("Home Assistant configs would be prechecked and deployed if changed.")
+            addons_runner.run_enhanced_deployment(
+                addons,
+                ha_host,
+                ha_port,
+                ha_user,
+                dry_run=True,
+                verbose=verbose,
+                jobs=jobs,
+                verify=verify,
+                timer=timer,
+            )
+            return
 
-    if dry_run:
         if not skip_config:
-            click.echo("Home Assistant configs would be prechecked and deployed if changed.")
-        addons_runner.run_enhanced_deployment(addons, ha_host, ha_port, ha_user, dry_run=True, verbose=verbose, jobs=jobs, verify=verify, timer=timer)
+            hass_config.precheck(verbose=verbose, timer=timer)
+
+        addons_runner.run_enhanced_deployment(
+            addons,
+            ha_host,
+            ha_port,
+            ha_user,
+            dry_run=False,
+            verbose=verbose,
+            jobs=jobs,
+            verify=verify,
+            timer=timer,
+        )
+
+        if not skip_config:
+            if hass_config.deploy_needed(verbose=verbose, timer=timer):
+                hass_config.console.print("\n🏠 Deploying Home Assistant configs...")
+                hass_config.apply(verbose=verbose, timer=timer)
+            else:
+                hass_config.console.print(
+                    "\n🏠 Home Assistant configs unchanged; skipping config deploy and restart."
+                )
+    except Exception:
+        deploy_status = "error"
+        raise
+    finally:
+        timer.record(
+            "deploy.total",
+            time.perf_counter() - deploy_started,
+            status=deploy_status,
+            jobs=jobs,
+            dry_run=dry_run,
+        )
         timer.print_summary()
         timer.write_json(metrics_json)
-        return
-
-    if not skip_config:
-        hass_config.precheck(verbose=verbose, timer=timer)
-
-    addons_runner.run_enhanced_deployment(addons, ha_host, ha_port, ha_user, dry_run=False, verbose=verbose, jobs=jobs, verify=verify, timer=timer)
-
-    if not skip_config:
-        if hass_config.deploy_needed(verbose=verbose, timer=timer):
-            hass_config.console.print("\n🏠 Deploying Home Assistant configs...")
-            hass_config.apply(verbose=verbose, timer=timer)
-        else:
-            hass_config.console.print("\n🏠 Home Assistant configs unchanged; skipping config deploy and restart.")
-
-    timer.print_summary()
-    timer.write_json(metrics_json)
 
 
 @app.command(name="dev")

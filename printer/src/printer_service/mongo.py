@@ -64,29 +64,19 @@ def _load_mongo_url() -> tuple[Optional[str], Optional[str]]:
 
 
 def _expand_mongo_urls(raw: str) -> list[str]:
-    urls = [raw]
     match = re.match(r"^mongodb:\/\/([^@]+@)?([^/:]+)(:[0-9]+)?(/.*)?$", raw)
     if not match:
-        return urls
+        return [raw]
     auth = match.group(1) or ""
     host = match.group(2) or ""
     port = match.group(3) or ""
     rest = match.group(4) or ""
     if "," in host:
-        return urls
+        return [raw]
+    urls = [] if host in MONGO_HOST_FALLBACKS else [raw]
     for candidate in MONGO_HOST_FALLBACKS:
-        if candidate == host:
-            continue
         urls.append(f"mongodb://{auth}{candidate}{port}{rest}")
     return urls
-
-
-def _host_resolves(host: str, port: int) -> bool:
-    try:
-        socket.getaddrinfo(host, port, type=socket.SOCK_STREAM)
-        return True
-    except socket.gaierror:
-        return False
 
 
 def _load_mongo_urls() -> tuple[list[str], Optional[str]]:
@@ -127,9 +117,10 @@ def load_mongo_configs() -> list[MongoConfig]:
     urls, source = _load_mongo_urls()
     if not urls or not source:
         return []
-    configs = [_build_mongo_config(url, source) for url in urls]
-    resolved = [config for config in configs if _host_resolves(config.host, config.port)]
-    return resolved or configs
+    # Do not pre-resolve every fallback hostname here. Home Assistant DNS can
+    # take seconds to reject each legacy alias, outside the health-check time
+    # budget. Let the bounded driver connection try canonical-first candidates.
+    return [_build_mongo_config(url, source) for url in urls]
 
 
 def _tcp_ping(host: str, port: int, timeout_seconds: float) -> None:
@@ -145,7 +136,9 @@ def _driver_ping(config: MongoConfig, timeout_seconds: float) -> None:
         return
     client: MongoClient = MongoClient(
         config.url,
+        connectTimeoutMS=max(int(timeout_seconds * 1000), 1),
         serverSelectionTimeoutMS=max(int(timeout_seconds * 1000), 1),
+        socketTimeoutMS=max(int(timeout_seconds * 1000), 1),
     )
     try:
         client.admin.command("ping")
@@ -177,9 +170,12 @@ def mongo_health(timeout_seconds: float = 1.0) -> dict[str, object]:
     first_error: Optional[str] = None
     first_error_config = configs[0]
     for candidate in configs:
+        remaining_seconds = timeout_seconds - (time.monotonic() - start)
+        if remaining_seconds <= 0:
+            break
         config = candidate
         try:
-            _driver_ping(candidate, timeout_seconds)
+            _driver_ping(candidate, remaining_seconds)
             ok = True
             error = None
             break

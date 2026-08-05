@@ -39,41 +39,37 @@ describe("createStoreWithRetry", () => {
     expect(connectFn).toHaveBeenCalledTimes(2);
   });
 
-  it("falls back to alternate MongoDB hostnames when the first fails", async () => {
+  it("prioritizes the canonical MongoDB hostname over a saved legacy alias", async () => {
     const config = {
       ...loadConfig(),
       mongoRetries: 3,
       mongoRetryDelayMs: 1,
-      mongoUrl: "mongodb://mongodb:27017/tinyurl",
+      mongoUrl: "mongodb://addon_local_mongodb:27017/tinyurl",
     };
 
-    const connectFn = vi
-      .fn<(url: string) => Promise<unknown>>()
-      .mockRejectedValueOnce(new Error("ENOTFOUND mongodb"))
-      .mockResolvedValueOnce({ ok: true });
+    const connectFn = vi.fn<(url: string) => Promise<unknown>>().mockResolvedValue({ ok: true });
 
     const store = await _test.createStoreWithRetry(config, fakeLogger(), connectFn as never);
     expect(store.isMongo).toBe(true);
-    expect(connectFn).toHaveBeenNthCalledWith(1, "mongodb://mongodb:27017/tinyurl");
-    expect(connectFn).toHaveBeenNthCalledWith(2, "mongodb://local-mongodb:27017/tinyurl");
-    expect(connectFn).toHaveBeenCalledTimes(2);
+    expect(connectFn).toHaveBeenCalledWith("mongodb://local-mongodb:27017/tinyurl");
+    expect(connectFn).toHaveBeenCalledTimes(1);
   });
 
   it("expands Mongo URLs with known fallbacks", () => {
     expect(_test.expandMongoUrls("mongodb://mongodb:27017/tinyurl")).toEqual([
-      "mongodb://mongodb:27017/tinyurl",
       "mongodb://local-mongodb:27017/tinyurl",
       "mongodb://local-mongodb.local.hass.io:27017/tinyurl",
       "mongodb://addon_local_mongodb:27017/tinyurl",
       "mongodb://addon_mongodb:27017/tinyurl",
+      "mongodb://mongodb:27017/tinyurl",
     ]);
 
     expect(
       _test.expandMongoUrls("mongodb://user:pass@addon_local_mongodb:27018/db?retry=1"),
     ).toEqual([
-      "mongodb://user:pass@addon_local_mongodb:27018/db?retry=1",
       "mongodb://user:pass@local-mongodb:27018/db?retry=1",
       "mongodb://user:pass@local-mongodb.local.hass.io:27018/db?retry=1",
+      "mongodb://user:pass@addon_local_mongodb:27018/db?retry=1",
       "mongodb://user:pass@addon_mongodb:27018/db?retry=1",
       "mongodb://user:pass@mongodb:27018/db?retry=1",
     ]);

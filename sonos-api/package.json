@@ -7,7 +7,7 @@
     "build": "tsc",
     "start": "node dist/server/index.js",
     "start:dev": "tsx src/server/index.ts",
-    "test": "tsx src/server/intents.spec.ts && tsx src/server/status-proxy.spec.ts",
+    "test": "tsx src/server/intents.spec.ts && tsx src/server/status-proxy.spec.ts && tsx src/server/graceful-shutdown.spec.ts",
     "stop": "pkill -f sonos-api-server",
     "dev": "supervisor -p 200 -RV -x npm -- run start:dev"
   },

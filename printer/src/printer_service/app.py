@@ -1,7 +1,11 @@
 from __future__ import annotations
 
 import base64
+import json
 import os
+import signal
+import threading
+import time
 from collections.abc import Mapping
 from io import BytesIO
 from pathlib import Path
@@ -10,6 +14,7 @@ from urllib.parse import urlencode, urljoin
 
 from flask import Flask, abort, current_app, jsonify, redirect, render_template, request, url_for
 from PIL import Image, UnidentifiedImageError
+from werkzeug.serving import make_server
 
 from . import best_by as best_by_request
 from . import label_templates
@@ -331,6 +336,10 @@ def create_app() -> Flask:
 
     @app.before_request
     def log_mongo_health_once():
+        # The health endpoint performs this check itself; avoid doubling its
+        # latency and spawning overlapping MongoDB probes during deployment.
+        if request.endpoint == "mongo_health_route":
+            return None
         if mongo_logged["done"]:
             return None
         mongo_logged["done"] = True
@@ -797,14 +806,77 @@ def main() -> None:
     reload_enabled = _should_enable_dev_reload()
     extra_files = _dev_extra_files() if reload_enabled else None
     forwarded_prefix = os.getenv("INGRESS_ENTRY")
-    app.run(
-        host=host,
-        port=port,
-        debug=reload_enabled,
-        use_reloader=reload_enabled,
-        extra_files=extra_files,
-        threaded=True,
+    if reload_enabled:
+        app.run(
+            host=host,
+            port=port,
+            debug=True,
+            use_reloader=True,
+            extra_files=extra_files,
+            threaded=True,
+        )
+        return
+    _serve_production(app, host, port)
+
+
+def _serve_production(flask_app: Flask, host: str, port: int) -> None:
+    """Serve until SIGTERM/SIGINT, then stop accepting requests promptly."""
+    server = make_server(host, port, flask_app, threaded=True)
+    shutdown_started: Optional[float] = None
+
+    def emit_lifecycle_event(event: dict[str, object]) -> None:
+        # Flask's app logger defaults to WARNING in production. Write lifecycle
+        # events directly so they are always visible in Supervisor logs.
+        print(json.dumps(event), flush=True)
+
+    def handle_shutdown(received_signal: int, _frame: object) -> None:
+        nonlocal shutdown_started
+        if shutdown_started is not None:
+            return
+        shutdown_started = time.monotonic()
+        signal_name = signal.Signals(received_signal).name
+        emit_lifecycle_event(
+            {
+                "event": "service.shutdown.started",
+                "service": "printer-service",
+                "signal": signal_name,
+                "pid": os.getpid(),
+            }
+        )
+        threading.Thread(
+            target=server.shutdown,
+            name="printer-service-shutdown",
+            daemon=True,
+        ).start()
+
+    previous_handlers = {
+        shutdown_signal: signal.signal(shutdown_signal, handle_shutdown)
+        for shutdown_signal in (signal.SIGTERM, signal.SIGINT)
+    }
+    emit_lifecycle_event(
+        {
+            "event": "service.started",
+            "service": "printer-service",
+            "host": host,
+            "port": port,
+            "pid": os.getpid(),
+        }
     )
+    try:
+        server.serve_forever()
+    finally:
+        server.server_close()
+        for shutdown_signal, previous_handler in previous_handlers.items():
+            signal.signal(shutdown_signal, previous_handler)
+        if shutdown_started is not None:
+            emit_lifecycle_event(
+                {
+                    "event": "service.shutdown.completed",
+                    "service": "printer-service",
+                    "elapsedMs": round((time.monotonic() - shutdown_started) * 1000),
+                    "status": "ok",
+                }
+            )
 
 
 def _coerce_template_form_data(candidate: object) -> TemplateFormData:

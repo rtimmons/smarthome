@@ -53,8 +53,29 @@ DEPLOY_FILTERS=(
   "--exclude=*"
 )
 
+monotonic_ms() {
+  python3 -c 'import time; print(round(time.monotonic() * 1000))'
+}
+
+run_metric() {
+  local phase="$1"
+  shift
+  local started_ms finished_ms exit_code status
+  started_ms="$(monotonic_ms)"
+  set +e
+  "$@"
+  exit_code=$?
+  set -e
+  finished_ms="$(monotonic_ms)"
+  status="ok"
+  if [ "$exit_code" -ne 0 ]; then status="error"; fi
+  printf '__TALOS_CONFIG_METRIC__\t%s\t%s\t%s\t%s\n' \
+    "$phase" "$started_ms" "$finished_ms" "$status" >&2
+  return "$exit_code"
+}
+
 require_tools() {
-  for bin in rsync ssh; do
+  for bin in python3 rsync ssh; do
     if ! command -v "$bin" >/dev/null 2>&1; then
       echo "Missing required tool: $bin" >&2
       exit 1
@@ -77,15 +98,16 @@ generate() {
 
 precheck() {
   cd "$CONFIG_DIR"
-  generate
-  just sync-check
+  run_metric "config.generate" generate
+  run_metric "config.sync_check" just sync-check
   echo "Config deployment precheck passed"
 }
 
 needed() {
   cd "$CONFIG_DIR"
   local raw_changes
-  raw_changes="$(rsync_config -anic --delete -e "ssh -p 22" . "${REMOTE}:${REMOTE_CONFIG}/")"
+  raw_changes="$(run_metric "config.rsync_dry_run" \
+    rsync_config -anic --delete -e "ssh -p 22" . "${REMOTE}:${REMOTE_CONFIG}/")"
 
   if printf '%s\n' "$raw_changes" | awk 'NF && !($2 == "./" && substr($1, 1, 2) == ".d") && $1 !~ /^[.]f[.][.]t/ { found = 1 } END { exit found ? 0 : 1 }'; then
     printf 'true\n'
@@ -98,20 +120,27 @@ apply_config() {
   cd "$CONFIG_DIR"
   local remote_rsync_args
   printf -v remote_rsync_args '%q ' "${RSYNC_PROTECT_FILTERS[@]}" "${DEPLOY_FILTERS[@]}"
-  ssh -p 22 "$REMOTE" "rm -rf \"${TMP_DIR}\" && mkdir -p \"${TMP_DIR}\""
-  rsync_config -av --delete -e "ssh -p 22" . "${REMOTE}:${TMP_DIR}/"
-  ssh -p 22 "$REMOTE" "if [ -f ${REMOTE_CONFIG}/secrets.yaml ]; then cp ${REMOTE_CONFIG}/secrets.yaml \"${TMP_DIR}\"/; fi"
-  ssh -p 22 "$REMOTE" "\
+  run_metric "config.prepare_staging" \
+    ssh -p 22 "$REMOTE" "rm -rf \"${TMP_DIR}\" && mkdir -p \"${TMP_DIR}\""
+  run_metric "config.upload_staging" \
+    rsync_config -av --delete -e "ssh -p 22" . "${REMOTE}:${TMP_DIR}/"
+  run_metric "config.copy_secrets" \
+    ssh -p 22 "$REMOTE" "if [ -f ${REMOTE_CONFIG}/secrets.yaml ]; then cp ${REMOTE_CONFIG}/secrets.yaml \"${TMP_DIR}\"/; fi"
+  run_metric "config.backup" ssh -p 22 "$REMOTE" "\
     backup_dir=\"/tmp/hass-config-backup\" && \
     rm -rf \"\${backup_dir}\" && \
     mkdir -p \"\${backup_dir}\" && \
-    rsync -a --delete ${REMOTE_CONFIG}/ \"\${backup_dir}\"/ && \
+    rsync -a --delete ${REMOTE_CONFIG}/ \"\${backup_dir}\"/"
+  run_metric "config.sync" ssh -p 22 "$REMOTE" "\
     rsync -av --delete --prune-empty-dirs \
       ${remote_rsync_args} \
-      \"${TMP_DIR}\"/ ${REMOTE_CONFIG}/ && \
-    rm -rf \"\${backup_dir}\""
-  ssh -p 22 "$REMOTE" 'for attempt in 1 2 3 4 5 6 7 8 9 10; do if ha core restart >/tmp/ha-core-restart.out 2>&1; then rm -f /tmp/ha-core-restart.out; exit 0; fi; if ! grep -q "Another job is running for job group home_assistant_core" /tmp/ha-core-restart.out; then cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1; fi; sleep 3; done; cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1'
-  ssh -p 22 "$REMOTE" "rm -rf \"${TMP_DIR}\""
+      \"${TMP_DIR}\"/ ${REMOTE_CONFIG}/"
+  run_metric "config.backup_cleanup" \
+    ssh -p 22 "$REMOTE" "rm -rf /tmp/hass-config-backup"
+  run_metric "config.core_restart" ssh -p 22 "$REMOTE" \
+    'for attempt in 1 2 3 4 5 6 7 8 9 10; do if ha core restart >/tmp/ha-core-restart.out 2>&1; then rm -f /tmp/ha-core-restart.out; exit 0; fi; if ! grep -q "Another job is running for job group home_assistant_core" /tmp/ha-core-restart.out; then cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1; fi; sleep 3; done; cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1'
+  run_metric "config.staging_cleanup" \
+    ssh -p 22 "$REMOTE" "rm -rf \"${TMP_DIR}\""
 }
 
 deploy() {

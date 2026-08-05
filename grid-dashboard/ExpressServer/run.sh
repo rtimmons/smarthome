@@ -39,25 +39,6 @@ if [ -n "$HASS_WEBHOOK_BASE" ]; then
 fi
 
 cd /opt/grid-dashboard/app
-
-attempt=0
-while true; do
-  attempt=$((attempt + 1))
-  log_info "Starting Grid Dashboard on port ${PORT} (attempt ${attempt})"
-
-  if npm start; then
-    log_info "Grid Dashboard exited cleanly"
-    exit 0
-  else
-    exit_code=$?
-  fi
-
-  # Crash loop protection: let Supervisor take over if we fail repeatedly.
-  if [ "$attempt" -ge 10 ]; then
-    log_info "Grid Dashboard crashed ${attempt} times; exiting so Supervisor can apply restart policy"
-    exit "$exit_code"
-  fi
-
-  log_info "Grid Dashboard exited with code ${exit_code}; restarting in 2s"
-  sleep 2
-done
+log_info "Starting Grid Dashboard on port ${PORT}"
+# Keep the application as PID 1 so SIGTERM reaches its graceful shutdown handler.
+exec ./node_modules/.bin/tsx src/server/index.ts

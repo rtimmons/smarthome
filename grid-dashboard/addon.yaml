@@ -25,6 +25,7 @@ ports:
   "3000": 3000
 ports_description:
   "3000": "Optional host port for direct access (ingress is enabled by default)."
+deploy_health_path: "/"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
   INGRESS_ENTRY: "/api/hassio_ingress"

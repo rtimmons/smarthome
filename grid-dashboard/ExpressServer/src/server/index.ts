@@ -9,6 +9,7 @@ process.title = 'smhexprsrv';
 
 import { appConfig } from './config';
 import { hass } from './hass';
+import { installGracefulShutdown } from './graceful-shutdown';
 import { ledgrid } from './ledgrid';
 import { redirs } from './redirs';
 import { sonos } from './sonos';
@@ -36,6 +37,7 @@ app.use(ledgrid);
 app.use('/', express.static(publicDir));
 
 // Run the thing.
-app.listen(appConfig.port, () =>
+const server = app.listen(appConfig.port, () =>
     console.log(`Listening on port ${appConfig.port}!`)
 );
+installGracefulShutdown(server, { service: 'grid-dashboard' });

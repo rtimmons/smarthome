@@ -28,6 +28,7 @@ ports:
   "8099": 8099
 ports_description:
   "8099": "Optional host port for direct access (ingress is enabled by default)."
+deploy_health_path: "/health/mongo"
 environment: {}
 options:
   printer_backend: "brother-network"

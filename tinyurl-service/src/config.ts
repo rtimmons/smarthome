@@ -9,7 +9,7 @@ export interface AppConfig {
 
 const DEFAULT_PORT = 4100;
 const DEFAULT_HOST = "0.0.0.0";
-// Use Supervisor's advertised FQDN; saved legacy options are handled by the
+// Use Supervisor's advertised add-on hostname; saved legacy options are handled by the
 // fallback list in server.ts.
 const DEFAULT_MONGO = "mongodb://local-mongodb:27017/tinyurl";
 const DEFAULT_MONGO_RETRIES = 20;

@@ -100,7 +100,13 @@ def check_ha_core_status(ha_host: str, ha_port: int, ha_user: str) -> dict:
         return {"status": "error", "error": str(e)}
 
 
-def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str, verbose: bool = False) -> None:
+def validate_deployment_prerequisites(
+    ha_host: str,
+    ha_port: int,
+    ha_user: str,
+    verbose: bool = False,
+    timer: DeployTimer | None = None,
+) -> None:
     """
     Validate that deployment prerequisites are met.
 
@@ -167,14 +173,16 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str, 
     # Test SSH connectivity with enhanced error handling
     if verbose:
         console.print("  🔗 Testing SSH connectivity...")
+    timer = timer or DeployTimer(console, enabled=False)
     try:
-        result = run_cmd([
-            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
-            "-o", "ConnectTimeout=10",
-            "-o", "BatchMode=yes",
-            "-o", "StrictHostKeyChecking=no",  # For automated deployments
-            "echo 'SSH connection successful'"
-        ], verbose=False, capture_output=True)
+        with timer.phase("prerequisites.ssh"):
+            result = run_cmd([
+                "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+                "-o", "ConnectTimeout=10",
+                "-o", "BatchMode=yes",
+                "-o", "StrictHostKeyChecking=no",  # For automated deployments
+                "echo 'SSH connection successful'"
+            ], verbose=False, capture_output=True)
         if verbose:
             console.print("  ✓ SSH connection established")
     except subprocess.CalledProcessError as e:
@@ -216,7 +224,8 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str, 
         )
 
     # Check Home Assistant core status
-    core_status = check_ha_core_status(ha_host, ha_port, ha_user)
+    with timer.phase("prerequisites.core_info"):
+        core_status = check_ha_core_status(ha_host, ha_port, ha_user)
     if core_status["status"] != "ok":
         raise DeploymentError(
             "Home Assistant core is not responding properly",
@@ -234,10 +243,11 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str, 
 
     # Check disk space
     try:
-        result = run_cmd([
-            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
-            "df -h / | tail -1 | awk '{print $4}'"
-        ], verbose=False, capture_output=True)
+        with timer.phase("prerequisites.disk"):
+            result = run_cmd([
+                "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+                "df -h / | tail -1 | awk '{print $4}'"
+            ], verbose=False, capture_output=True)
 
         free_space = result.stdout.strip()
         if verbose:
@@ -360,15 +370,38 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
 
     runtime_versions = read_runtime_versions()
 
+    python_dependencies: list[str] = []
+    python_build_dependencies: list[str] = []
     if raw.get("python", False):
         version_from = source_dir / "pyproject.toml"
         version = read_pyproject_version(version_from) if version_from.exists() else "0.0.0"
+        if version_from.exists():
+            try:
+                import tomllib
+
+                pyproject = tomllib.loads(version_from.read_text(encoding="utf-8"))
+                python_dependencies = list(pyproject.get("project", {}).get("dependencies", []))
+                python_build_dependencies = list(
+                    pyproject.get("build-system", {}).get("requires", [])
+                )
+            except Exception as error:
+                raise click.ClickException(f"Unable to read Python dependencies from {version_from}: {error}")
     else:
         version_from = source_dir / "package.json"
         version = read_package_version(version_from) if version_from.exists() else "0.0.0"
 
     ports = raw.get("ports") or {}
     port = int(next(iter(ports.keys()))) if ports else None
+    deploy_health_path = raw.get("deploy_health_path")
+    if deploy_health_path is not None:
+        if not isinstance(deploy_health_path, str) or not deploy_health_path.startswith("/"):
+            raise click.ClickException(
+                f"Invalid deploy_health_path for '{addon_key}'; expected an absolute HTTP path."
+            )
+        if port is None:
+            raise click.ClickException(
+                f"Add-on '{addon_key}' declares deploy_health_path without a port."
+            )
 
     # Container paths (used in Dockerfile and run.sh templates)
     container_paths = {
@@ -415,6 +448,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "python": raw.get("python", False),
             "python_module": raw.get("python_module", ""),
             "port": port,
+            "deploy_health_path": deploy_health_path,
             "run_env": raw.get("run_env", []),
             "git_clone": raw.get("git_clone"),
             "tests": raw.get("tests", []),
@@ -430,6 +464,8 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             .split(".")[0],
             "python_version": runtime_versions["python"],
             "python_minor": runtime_versions["python_minor"],
+            "python_dependencies": python_dependencies,
+            "python_build_dependencies": python_build_dependencies,
         },
         "paths": {
             **container_paths,
@@ -501,53 +537,68 @@ def make_tarball(addon_root: Path, slug: str) -> Path:
     return archive
 
 
-def build_addon(addon_key: str, verbose: bool = False) -> Path:
-    manifest = load_manifest()
-    context = build_context(addon_key, manifest)
+def build_addon(
+    addon_key: str,
+    verbose: bool = False,
+    timer: DeployTimer | None = None,
+) -> Path:
+    timer = timer or DeployTimer(console, enabled=False)
+    with timer.phase("addon.local.context", addon=addon_key):
+        manifest = load_manifest()
+        context = build_context(addon_key, manifest)
     addon = context["addon"]
     addon_root = ADDON_BUILD_ROOT / addon["slug"]
     app_root = addon_root / "app"
     translations_root = addon_root / "translations"
 
-    if addon_root.exists():
-        shutil.rmtree(addon_root)
-    app_root.mkdir(parents=True, exist_ok=True)
-    translations_root.mkdir(parents=True, exist_ok=True)
+    with timer.phase("addon.local.stage", addon=addon_key):
+        if addon_root.exists():
+            shutil.rmtree(addon_root)
+        app_root.mkdir(parents=True, exist_ok=True)
+        translations_root.mkdir(parents=True, exist_ok=True)
+        copy_sources(addon, app_root)
 
-    copy_sources(addon, app_root)
+    with timer.phase("addon.local.render", addon=addon_key):
+        env = jinja_env()
+        write_file(addon_root / "config.yaml", render_template(env, "config.yaml.j2", context))
 
-    env = jinja_env()
-    write_file(addon_root / "config.yaml", render_template(env, "config.yaml.j2", context))
+        if addon.get("custom_dockerfile", False):
+            custom_dockerfile = addon["source_dir"] / "Dockerfile"
+            if not custom_dockerfile.exists():
+                raise click.ClickException(f"custom_dockerfile is set but {custom_dockerfile} not found")
+            shutil.copy2(custom_dockerfile, addon_root / "Dockerfile")
+        else:
+            write_file(addon_root / "Dockerfile", render_template(env, "Dockerfile.j2", context))
 
-    if addon.get("custom_dockerfile", False):
-        custom_dockerfile = addon["source_dir"] / "Dockerfile"
-        if not custom_dockerfile.exists():
-            raise click.ClickException(f"custom_dockerfile is set but {custom_dockerfile} not found")
-        shutil.copy2(custom_dockerfile, addon_root / "Dockerfile")
-    else:
-        write_file(addon_root / "Dockerfile", render_template(env, "Dockerfile.j2", context))
+        custom_run_sh = addon["source_dir"] / "run.sh"
+        if custom_run_sh.exists():
+            shutil.copy2(custom_run_sh, addon_root / "run.sh")
+        else:
+            write_file(addon_root / "run.sh", render_template(env, "run.sh.j2", context))
+        os.chmod(addon_root / "run.sh", 0o755)
+        write_file(addon_root / "README.md", render_template(env, "README.md.j2", context))
+        write_file(addon_root / "DOCS.md", render_template(env, "DOCS.md.j2", context))
+        write_file(addon_root / "CHANGELOG.md", f"## {addon['version']}\n\n- Automated Home Assistant add-on packaging.")
+        write_file(addon_root / "apparmor.txt", render_template(env, "apparmor.txt.j2", context))
+        write_file(translations_root / "en.yaml", render_template(env, "translations_en.yaml.j2", context))
+        generate_placeholder_images(addon_root)
 
-    custom_run_sh = addon["source_dir"] / "run.sh"
-    if custom_run_sh.exists():
-        shutil.copy2(custom_run_sh, addon_root / "run.sh")
-    else:
-        write_file(addon_root / "run.sh", render_template(env, "run.sh.j2", context))
-    os.chmod(addon_root / "run.sh", 0o755)
-    write_file(addon_root / "README.md", render_template(env, "README.md.j2", context))
-    write_file(addon_root / "DOCS.md", render_template(env, "DOCS.md.j2", context))
-    write_file(addon_root / "CHANGELOG.md", f"## {addon['version']}\n\n- Automated Home Assistant add-on packaging.")
-    write_file(addon_root / "apparmor.txt", render_template(env, "apparmor.txt.j2", context))
-    write_file(translations_root / "en.yaml", render_template(env, "translations_en.yaml.j2", context))
-
-    generate_placeholder_images(addon_root)
-    archive = make_tarball(addon_root, addon["slug"])
+    with timer.phase("addon.local.archive", addon=addon_key):
+        archive = make_tarball(addon_root, addon["slug"])
     if verbose:
         console.print(f"[green]Built[/green] {addon_key} -> {addon_root}")
         console.print(f"[green]Tarball[/green] {archive}")
     return archive
 
 
-def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, verbose: bool = True, capture_output: bool = False) -> subprocess.CompletedProcess:
+def run_cmd(
+    cmd: list[str],
+    dry_run: bool = False,
+    cwd: Optional[Path] = None,
+    verbose: bool = True,
+    capture_output: bool = False,
+    report_failure: bool = True,
+) -> subprocess.CompletedProcess:
     """Run a command with improved error handling and output control."""
     display_cmd = cmd
     if cmd and cmd[0] == "ssh" and cmd[-1].startswith("#!/bin/bash\n"):
@@ -583,16 +634,27 @@ def run_cmd(cmd: list[str], dry_run: bool = False, cwd: Optional[Path] = None, v
             )
         return result
     except subprocess.CalledProcessError as e:
-        console.print(f"[red]Command failed with exit code {e.returncode}[/red]")
-        if e.stdout:
-            console.print(f"[red]stdout:[/red] {e.stdout}")
-        if e.stderr:
-            console.print(f"[red]stderr:[/red] {e.stderr}")
+        if report_failure:
+            console.print(f"[red]Command failed with exit code {e.returncode}[/red]")
+            if e.stdout:
+                console.print(f"[red]stdout:[/red] {e.stdout}")
+            if e.stderr:
+                console.print(f"[red]stderr:[/red] {e.stderr}")
         raise
 
 
-def render_remote_deploy_script(slug: str, remote_tar: str, remote_addon_dir: str, remote_addons_dir: str, verbose: bool) -> str:
+def render_remote_deploy_script(
+    slug: str,
+    remote_tar: str,
+    remote_addon_dir: str,
+    remote_addons_dir: str,
+    verbose: bool,
+    health_port: int | None = None,
+    health_path: str | None = None,
+) -> str:
     verbose_flag = "true" if verbose else "false"
+    health_port_value = shlex.quote(str(health_port)) if health_port is not None else "''"
+    health_path_value = shlex.quote(health_path or "")
     return f"""#!/bin/bash
 set -euo pipefail
 
@@ -601,6 +663,15 @@ ADDON_ID="local_{slug}"
 REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
 VERBOSE="{verbose_flag}"
+HEALTH_PORT={health_port_value}
+HEALTH_PATH={health_path_value}
+READINESS_ATTEMPTS=60
+LAST_HEALTH_TARGET="not-resolved"
+
+monotonic_ms() {{ awk '{{printf "%.0f", $1 * 1000}}' /proc/uptime; }}
+REMOTE_TOTAL_START_MS="$(monotonic_ms)"
+REMOTE_TOTAL_STATUS="error"
+RELOAD_LOCK_HELD="false"
 
 log_info() {{
     if [ "$VERBOSE" = "true" ]; then
@@ -608,63 +679,155 @@ log_info() {{
     fi
 }}
 
-log_error() {{
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2
-}}
+log_error() {{ echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2; }}
 
 run_quiet() {{
-    if [ "$VERBOSE" = "true" ]; then
-        "$@"
+    if [ "$VERBOSE" = "true" ]; then "$@"; else "$@" >/dev/null 2>&1; fi
+}}
+
+emit_metric() {{
+    printf '__TALOS_METRIC__\t%s\t%s\t%s\t%s\n' "$1" "$2" "$3" "$4"
+}}
+
+run_metric() {{
+    local phase="$1" started_ms finished_ms exit_code
+    shift
+    started_ms="$(monotonic_ms)"
+    set +e
+    "$@"
+    exit_code=$?
+    set -e
+    finished_ms="$(monotonic_ms)"
+    if [ "$exit_code" -eq 0 ]; then
+        emit_metric "$phase" "$started_ms" "$finished_ms" "ok"
     else
-        "$@" >/dev/null 2>&1
+        emit_metric "$phase" "$started_ms" "$finished_ms" "error"
+    fi
+    return "$exit_code"
+}}
+
+emit_total_metric() {{
+    if [ "$RELOAD_LOCK_HELD" = "true" ]; then
+        rmdir /tmp/talos-addon-reload.lock 2>/dev/null || true
+    fi
+    emit_metric "remote.total" "$REMOTE_TOTAL_START_MS" "$(monotonic_ms)" "$REMOTE_TOTAL_STATUS"
+}}
+trap emit_total_metric EXIT
+
+extract_addon() {{
+    rm -rf "$REMOTE_ADDON_DIR"
+    mkdir -p "{remote_addons_dir}"
+    tar -xzf "$REMOTE_TAR" -C "{remote_addons_dir}"
+    rm -f "$REMOTE_TAR"
+}}
+
+read_addon_info() {{ ha --raw-json apps info "$ADDON_ID"; }}
+
+read_addon_ip() {{
+    read_addon_info | jq -er '.data.ip_address | strings | select(length > 0)'
+}}
+
+reload_addons() {{
+    local attempt exit_code
+    for attempt in $(seq 1 100); do
+        if mkdir /tmp/talos-addon-reload.lock 2>/dev/null; then
+            RELOAD_LOCK_HELD="true"
+            run_quiet ha apps reload
+            exit_code=$?
+            rmdir /tmp/talos-addon-reload.lock 2>/dev/null || true
+            RELOAD_LOCK_HELD="false"
+            return "$exit_code"
+        fi
+        sleep 0.1
+    done
+    return 1
+}}
+
+wait_for_started() {{
+    local attempt
+    for attempt in $(seq 1 20); do
+        if read_addon_info | jq -e '.data.state == "started"' >/dev/null; then return 0; fi
+        if [ "$attempt" = "20" ]; then return 1; fi
+        sleep 1
+    done
+}}
+
+probe_service() {{
+    local addon_ip curl_host
+    if [ -z "$HEALTH_PORT" ]; then return 0; fi
+    if ! addon_ip="$(read_addon_ip)"; then
+        LAST_HEALTH_TARGET="Supervisor IP unavailable"
+        return 1
+    fi
+    LAST_HEALTH_TARGET="${{addon_ip}}:${{HEALTH_PORT}}${{HEALTH_PATH}}"
+    if [ -n "$HEALTH_PATH" ]; then
+        curl_host="$addon_ip"
+        case "$curl_host" in *:*) curl_host="[${{curl_host}}]" ;; esac
+        curl -fsS -o /dev/null --connect-timeout 1 --max-time 2 \
+            "http://${{curl_host}}:${{HEALTH_PORT}}${{HEALTH_PATH}}" 2>/dev/null
+    else
+        nc -z -w 2 "$addon_ip" "$HEALTH_PORT" >/dev/null 2>&1
     fi
 }}
 
+wait_for_readiness() {{
+    local attempt
+    for attempt in $(seq 1 "$READINESS_ATTEMPTS"); do
+        if probe_service; then return 0; fi
+        if [ "$attempt" = "$READINESS_ATTEMPTS" ]; then
+            log_error "Readiness probe exhausted retries at $LAST_HEALTH_TARGET"
+            return 1
+        fi
+        sleep 1
+    done
+}}
+
 log_info "Stopping add-on $ADDON_ID if running..."
-if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-    ADDON_STATE="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.data.state // "unknown"' || echo "unknown")"
+INSPECT_STARTED_MS="$(monotonic_ms)"
+if ADDON_INFO="$(read_addon_info 2>/dev/null)"; then
+    ADDON_STATE="$(printf '%s' "$ADDON_INFO" | jq -r '.data.state // "unknown"')"
+    emit_metric "remote.inspect" "$INSPECT_STARTED_MS" "$(monotonic_ms)" "ok"
     if [ "$ADDON_STATE" = "started" ]; then
-        if ! run_quiet ha addons stop "$ADDON_ID"; then
+        if ! run_metric "remote.stop" run_quiet ha apps stop "$ADDON_ID"; then
             log_error "Failed to stop add-on $ADDON_ID"
             exit 1
         fi
         log_info "Add-on $ADDON_ID stopped successfully"
     else
+        NOW_MS="$(monotonic_ms)"
+        emit_metric "remote.stop" "$NOW_MS" "$NOW_MS" "skipped"
         log_info "Add-on $ADDON_ID is not running (state: $ADDON_STATE)"
     fi
 else
+    emit_metric "remote.inspect" "$INSPECT_STARTED_MS" "$(monotonic_ms)" "not_found"
+    NOW_MS="$(monotonic_ms)"
+    emit_metric "remote.stop" "$NOW_MS" "$NOW_MS" "skipped"
     log_info "Add-on $ADDON_ID not currently installed"
 fi
 
 log_info "Extracting add-on files..."
-rm -rf "$REMOTE_ADDON_DIR"
-mkdir -p "{remote_addons_dir}"
-if ! tar -xzf "$REMOTE_TAR" -C "{remote_addons_dir}"; then
+if ! run_metric "remote.extract" extract_addon; then
     log_error "Failed to extract add-on tarball"
     exit 1
 fi
-rm -f "$REMOTE_TAR"
-log_info "Add-on files extracted successfully"
 
 log_info "Reloading add-on list..."
-if ! run_quiet ha addons reload; then
+if ! run_metric "remote.reload" reload_addons; then
     log_error "Failed to reload add-on list"
     exit 1
 fi
 
 log_info "Installing/rebuilding add-on $ADDON_ID..."
-if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-    log_info "Add-on exists, attempting rebuild..."
-    if ! run_quiet ha addons rebuild "$ADDON_ID"; then
+if read_addon_info >/dev/null 2>&1; then
+    if ! run_metric "remote.rebuild" run_quiet ha apps rebuild "$ADDON_ID"; then
         log_info "Rebuild failed, attempting fresh install..."
-        if ! run_quiet ha addons install "$ADDON_ID"; then
+        if ! run_metric "remote.install_fallback" run_quiet ha apps install "$ADDON_ID"; then
             log_error "Failed to install add-on $ADDON_ID"
             exit 1
         fi
     fi
 else
-    log_info "Installing new add-on..."
-    if ! run_quiet ha addons install "$ADDON_ID"; then
+    if ! run_metric "remote.install" run_quiet ha apps install "$ADDON_ID"; then
         log_error "Failed to install add-on $ADDON_ID"
         exit 1
     fi
@@ -674,40 +837,80 @@ log_info "Configuring add-on options..."
 SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
 if [ -n "$SUPERVISOR_TOKEN" ]; then
     OPTIONS_JSON='{{"watchdog": true}}'
-
-    if curl -sSf -H "Authorization: Bearer $SUPERVISOR_TOKEN" -H "Content-Type: application/json" \\
-        -X POST -d "$OPTIONS_JSON" http://supervisor/addons/"$ADDON_ID"/options >/dev/null; then
-        log_info "Add-on options configured successfully"
-    else
-        log_info "Warning: could not update add-on options for $ADDON_ID; continuing with current settings"
+    if ! run_metric "remote.configure" curl -sSf \\
+        -o /dev/null \\
+        -H "Authorization: Bearer $SUPERVISOR_TOKEN" \\
+        -H "Content-Type: application/json" \\
+        -X POST -d "$OPTIONS_JSON" \\
+        http://supervisor/addons/"$ADDON_ID"/options; then
+        log_info "Warning: could not update add-on options for $ADDON_ID; continuing"
     fi
 else
-    log_info "SUPERVISOR_TOKEN not set; skipping add-on options configuration"
+    NOW_MS="$(monotonic_ms)"
+    emit_metric "remote.configure" "$NOW_MS" "$NOW_MS" "skipped"
 fi
 
 log_info "Starting add-on $ADDON_ID..."
-if ! run_quiet ha addons start "$ADDON_ID"; then
+if ! run_metric "remote.start" run_quiet ha apps start "$ADDON_ID"; then
     log_error "Failed to start add-on $ADDON_ID"
     exit 1
 fi
-log_info "Add-on $ADDON_ID started successfully"
 
-for attempt in 1 2 3 4 5 6; do
-    if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
-        log_info "Add-on $ADDON_ID is running and healthy"
-        break
-    fi
+if ! run_metric "remote.state" wait_for_started; then
+    log_error "Add-on $ADDON_ID never reached Supervisor state 'started'"
+    exit 1
+fi
 
-    if [ "$attempt" = "6" ]; then
-        log_error "Add-on $ADDON_ID failed to start properly"
-        exit 1
-    fi
-
-    sleep 1
-done
+if ! run_metric "remote.readiness" wait_for_readiness; then
+    log_error "Add-on $ADDON_ID did not pass its service readiness probe"
+    exit 1
+fi
 
 log_info "Deployment of $ADDON_ID completed successfully"
+REMOTE_TOTAL_STATUS="ok"
 """
+
+
+def _record_remote_metrics(output: str, addon_key: str, timer: DeployTimer) -> str:
+    """Record structured remote metrics and return output without marker lines."""
+    visible_lines: list[str] = []
+    metrics: list[tuple[str, int, int, str]] = []
+    for line in output.splitlines():
+        if not line.startswith("__TALOS_METRIC__\t"):
+            visible_lines.append(line)
+            continue
+        parts = line.split("\t")
+        if len(parts) != 5:
+            visible_lines.append(line)
+            continue
+        _, phase, started_raw, finished_raw, status = parts
+        try:
+            started_ms = int(started_raw)
+            finished_ms = int(finished_raw)
+        except ValueError:
+            visible_lines.append(line)
+            continue
+        metrics.append((phase, started_ms, finished_ms, status))
+
+    remote_finish_ms = max((metric[2] for metric in metrics), default=0)
+    local_finish_offset = time.perf_counter() - timer.started_at
+    for phase, started_ms, finished_ms, status in metrics:
+        timer.record(
+            f"addon.{phase}",
+            max(0, finished_ms - started_ms) / 1000,
+            status=status,
+            addon=addon_key,
+            source="remote",
+            remote_started_ms=started_ms,
+            remote_finished_ms=finished_ms,
+            started_offset_seconds=round(
+                local_finish_offset - (remote_finish_ms - started_ms) / 1000, 3
+            ),
+            finished_offset_seconds=round(
+                local_finish_offset - (remote_finish_ms - finished_ms) / 1000, 3
+            ),
+        )
+    return "\n".join(visible_lines)
 
 
 def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool,
@@ -749,12 +952,14 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
         # Validate prerequisites for real deployments
         if validate_prereqs:
             with timer.phase("addon.prerequisites", addon=addon_key):
-                validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
+                validate_deployment_prerequisites(
+                    ha_host, ha_port, ha_user, verbose=verbose, timer=timer
+                )
 
         if verbose:
             console.print(f"🔨 [bold]Building {addon_key}...[/bold]")
         with timer.phase("addon.build", addon=addon_key):
-            archive = build_addon(addon_key, verbose=verbose)
+            archive = build_addon(addon_key, verbose=verbose, timer=timer)
 
         remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
         remote_addon_dir = f"{paths['remote_addons']}/{slug}"
@@ -791,16 +996,32 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
             remote_addon_dir=remote_addon_dir,
             remote_addons_dir=paths["remote_addons"],
             verbose=verbose,
+            health_port=port,
+            health_path=addon.get("deploy_health_path"),
         )
 
         # Execute remote deployment script
         ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
         try:
             with timer.phase("addon.remote_deploy", addon=addon_key):
-                run_cmd(ssh_cmd, dry_run=dry_run, verbose=verbose)
+                remote_result = run_cmd(
+                    ssh_cmd,
+                    dry_run=dry_run,
+                    verbose=verbose,
+                    capture_output=True,
+                    report_failure=False,
+                )
+            visible_output = _record_remote_metrics(
+                remote_result.stdout or "", addon_key, timer
+            )
+            if verbose and visible_output:
+                console.print(visible_output, markup=False)
+            if verbose and remote_result.stderr:
+                console.print(remote_result.stderr.rstrip(), style="dim", markup=False)
             if not dry_run and verbose:
                 console.print(f"  ✅ [green]{addon_key} deployed successfully[/green]")
         except subprocess.CalledProcessError as e:
+            _record_remote_metrics(e.stdout or "", addon_key, timer)
             # Capture logs for troubleshooting
             with timer.phase("addon.fetch_logs", addon=addon_key):
                 addon_logs = get_addon_logs(ha_host, ha_port, ha_user, f"local_{slug}", lines=20)
