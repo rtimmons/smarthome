@@ -11,7 +11,13 @@ from urllib.parse import ParseResult, urlparse, urlunparse
 DEFAULT_DB = "smarthome"
 DEFAULT_LOCAL_URL = "mongodb://localhost:27017/smarthome"
 DEFAULT_PORT = 27017
-MONGO_HOST_FALLBACKS = ("addon_local_mongodb", "addon_mongodb", "mongodb")
+MONGO_HOST_FALLBACKS = (
+    "local-mongodb",
+    "local-mongodb.local.hass.io",
+    "addon_local_mongodb",
+    "addon_mongodb",
+    "mongodb",
+)
 
 
 @dataclass(frozen=True)

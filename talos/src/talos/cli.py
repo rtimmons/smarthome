@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import os
+from pathlib import Path
 
 import click
 
-from . import addon_builder, addons_runner, dev as dev_mod, external_addon, hass_config, hooks, manage_ports
+from . import addon_backup, addon_builder, addons_runner, dev as dev_mod, external_addon, hass_config, hooks, manage_ports
 from .timing import DeployTimer
 
 DEFAULT_JOBS = max(1, os.cpu_count() or 1)
@@ -13,6 +14,37 @@ DEFAULT_JOBS = max(1, os.cpu_count() or 1)
 @click.group()
 def app() -> None:
     """Talos smarthome build tool."""
+
+
+@app.group()
+def backup() -> None:
+    """Create and inspect Home Assistant backups."""
+
+
+@backup.command("addon-state")
+@click.option("--ha-host", envvar="HA_HOST", default="homeassistant.local", show_default=True)
+@click.option("--ha-port", envvar="HA_PORT", default=22, type=int, show_default=True)
+@click.option("--ha-user", envvar="HA_USER", default="root", show_default=True)
+@click.option(
+    "--output-root",
+    type=click.Path(file_okay=False, path_type=Path),
+    default=None,
+    help="Override the local backup output root.",
+)
+def backup_addon_state(
+    ha_host: str,
+    ha_port: int,
+    ha_user: str,
+    output_root: Path | None,
+) -> None:
+    """Back up every repository add-on and /share using Supervisor."""
+    destination = addon_backup.create_addon_state_backup(
+        ha_host=ha_host,
+        ha_port=ha_port,
+        ha_user=ha_user,
+        output_root=output_root,
+    )
+    click.echo(f"Published verified backup: {destination}")
 
 
 @app.group()

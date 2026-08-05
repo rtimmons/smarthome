@@ -55,13 +55,15 @@ describe("createStoreWithRetry", () => {
     const store = await _test.createStoreWithRetry(config, fakeLogger(), connectFn as never);
     expect(store.isMongo).toBe(true);
     expect(connectFn).toHaveBeenNthCalledWith(1, "mongodb://mongodb:27017/tinyurl");
-    expect(connectFn).toHaveBeenNthCalledWith(2, "mongodb://addon_local_mongodb:27017/tinyurl");
+    expect(connectFn).toHaveBeenNthCalledWith(2, "mongodb://local-mongodb:27017/tinyurl");
     expect(connectFn).toHaveBeenCalledTimes(2);
   });
 
   it("expands Mongo URLs with known fallbacks", () => {
     expect(_test.expandMongoUrls("mongodb://mongodb:27017/tinyurl")).toEqual([
       "mongodb://mongodb:27017/tinyurl",
+      "mongodb://local-mongodb:27017/tinyurl",
+      "mongodb://local-mongodb.local.hass.io:27017/tinyurl",
       "mongodb://addon_local_mongodb:27017/tinyurl",
       "mongodb://addon_mongodb:27017/tinyurl",
     ]);
@@ -70,6 +72,8 @@ describe("createStoreWithRetry", () => {
       _test.expandMongoUrls("mongodb://user:pass@addon_local_mongodb:27018/db?retry=1"),
     ).toEqual([
       "mongodb://user:pass@addon_local_mongodb:27018/db?retry=1",
+      "mongodb://user:pass@local-mongodb:27018/db?retry=1",
+      "mongodb://user:pass@local-mongodb.local.hass.io:27018/db?retry=1",
       "mongodb://user:pass@addon_mongodb:27018/db?retry=1",
       "mongodb://user:pass@mongodb:27018/db?retry=1",
     ]);

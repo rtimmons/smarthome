@@ -3,6 +3,8 @@ name: Grid Dashboard
 description: Dashboard UI with Sonos shortcuts and Home Assistant webhook helpers.
 url: https://github.com/rtimmons/smarthome
 source_subdir: ExpressServer
+depends_on:
+  - sonos-api
 copy:
   - src
   - package.json

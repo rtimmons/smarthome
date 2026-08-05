@@ -50,6 +50,7 @@ def test_mongo_health_reports_invalid_url(monkeypatch):
 
 def test_mongo_health_success(monkeypatch):
     monkeypatch.setenv("MONGODB_URL", "mongodb://user:pass@db.example:27017/app")
+    monkeypatch.setattr(mongo, "_host_resolves", lambda _host, _port: True)
 
     def _noop_ping(_config, _timeout):
         return None
@@ -92,6 +93,8 @@ def test_load_mongo_configs_expands_hosts(monkeypatch):
 
     hosts = [config.host for config in configs]
     assert hosts[0] == "mongodb"
+    assert "local-mongodb" in hosts
+    assert "local-mongodb.local.hass.io" in hosts
     assert "addon_local_mongodb" in hosts
     assert "addon_mongodb" in hosts
 
@@ -102,7 +105,7 @@ def test_mongo_health_uses_fallback_host(monkeypatch):
     monkeypatch.setattr(
         mongo,
         "_host_resolves",
-        lambda host, _port: host in {"mongodb", "addon_local_mongodb"},
+        lambda host, _port: host in {"mongodb", "local-mongodb"},
     )
 
     def _ping(config, _timeout):
@@ -116,4 +119,4 @@ def test_mongo_health_uses_fallback_host(monkeypatch):
 
     assert status["configured"] is True
     assert status["ok"] is True
-    assert status["host"] == "addon_local_mongodb"
+    assert status["host"] == "local-mongodb"

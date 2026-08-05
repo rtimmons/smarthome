@@ -35,7 +35,13 @@ export interface BuildOptions {
   configOverrides?: Partial<ReturnType<typeof loadConfig>>;
 }
 
-const MONGO_HOST_FALLBACKS = ["addon_local_mongodb", "addon_mongodb", "mongodb"];
+const MONGO_HOST_FALLBACKS = [
+  "local-mongodb",
+  "local-mongodb.local.hass.io",
+  "addon_local_mongodb",
+  "addon_mongodb",
+  "mongodb",
+];
 
 function toResponse(entry: TinyUrl) {
   return {

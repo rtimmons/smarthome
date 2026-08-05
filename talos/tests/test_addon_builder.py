@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from talos import addon_builder
 
 
@@ -24,6 +26,43 @@ def test_build_context_supports_per_addon_node_version():
     ctx = addon_builder.build_context("node-sonos-http-api", addons)
     assert ctx["addon"]["node_version"] == "22.21.1"
     assert ctx["addon"]["node_major"] == "22"
+
+
+def test_generated_mongodb_configuration_is_system_cold_backup():
+    addons = addon_builder.discover_addons()
+    context = addon_builder.build_context("mongodb", addons)
+    rendered = addon_builder.render_template(
+        addon_builder.jinja_env(), "config.yaml.j2", context
+    )
+    assert "startup: system" in rendered
+    assert "backup: cold" in rendered
+
+
+def test_generated_configuration_supports_backup_hooks_and_excludes():
+    addons = addon_builder.discover_addons()
+    addons["printer"] = {
+        **addons["printer"],
+        "backup": "hot",
+        "backup_pre": "echo pre",
+        "backup_post": "echo post",
+        "backup_exclude": ["cache", "tmp/*"],
+    }
+    context = addon_builder.build_context("printer", addons)
+    rendered = addon_builder.render_template(
+        addon_builder.jinja_env(), "config.yaml.j2", context
+    )
+    assert "backup: hot" in rendered
+    assert 'backup_pre: "echo pre"' in rendered
+    assert 'backup_post: "echo post"' in rendered
+    assert "- cache" in rendered
+    assert "- tmp/*" in rendered
+
+
+def test_cold_backup_rejects_hot_backup_hooks():
+    addons = addon_builder.discover_addons()
+    addons["mongodb"] = {**addons["mongodb"], "backup_pre": "unsafe"}
+    with pytest.raises(Exception, match="cannot combine"):
+        addon_builder.build_context("mongodb", addons)
 
 
 def test_remote_deploy_script_uses_quiet_wrapper_without_fixed_reload_sleep():

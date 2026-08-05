@@ -10,7 +10,8 @@ import click
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn, TaskProgressColumn
 
-from .addon_builder import discover_addons, DeploymentError, deploy_addon, validate_deployment_prerequisites
+from .addon_builder import DeploymentError, deploy_addon, validate_deployment_prerequisites
+from .addon_manifest import addon_dependencies, dependency_waves, resolve_addon_dirs
 from .paths import REPO_ROOT
 from .timing import DeployTimer
 
@@ -113,19 +114,26 @@ def _is_truthy(value: str | None) -> bool:
 
 
 def _resolve_addons(explicit: Iterable[str]) -> List[Path]:
-    if explicit:
-        addon_dirs = []
-        for name in explicit:
-            path = REPO_ROOT / name
-            if not (path.exists() and (path / "addon.yaml").exists()):
-                raise click.ClickException(f"Unknown add-on '{name}' (no addon.yaml in {path}).")
-            addon_dirs.append(path)
-        return addon_dirs
+    return resolve_addon_dirs(explicit)
 
-    addons = discover_addons()
-    if not addons:
-        raise click.ClickException("No add-on manifests found (expected */addon.yaml).")
-    return [REPO_ROOT / name for name in sorted(addons.keys())]
+
+def _deploy_dependencies(addon_dir: Path) -> set[str]:
+    """Return explicit deployment dependencies declared by an add-on."""
+    return addon_dependencies(addon_dir)
+
+
+def _dependency_waves(addon_dirs: Iterable[Path]) -> list[list[Path]]:
+    """Group add-ons into parallel waves while preserving dependency order."""
+    try:
+        return dependency_waves(addon_dirs)
+    except click.ClickException as error:
+        if "Circular add-on dependencies" in str(error):
+            message = str(error).replace(
+                "Circular add-on dependencies",
+                "Circular add-on deployment dependencies",
+            )
+            raise click.ClickException(message) from error
+        raise
 
 
 def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, ha_user: str,
@@ -135,6 +143,8 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
     timer = timer or DeployTimer(console, enabled=False)
     addon_dirs = _resolve_addons(addons)
     addon_names = [addon_dir.name for addon_dir in addon_dirs]
+    deployment_waves = _dependency_waves(addon_dirs)
+    ordered_addon_dirs = [addon_dir for wave in deployment_waves for addon_dir in wave]
     verify = verify or _is_truthy(os.environ.get("TALOS_DEPLOY_VERIFY"))
 
     if not addon_names:
@@ -148,6 +158,13 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         console.print(f"  • Add-ons to deploy: {len(addon_names)}")
         console.print(f"  • Add-ons: {', '.join(addon_names)}")
         console.print(f"  • Mode: {'verified' if verify else 'fast'}")
+        console.print(
+            "  • Dependency order: "
+            + " → ".join(
+                f"wave {number} ({', '.join(path.name for path in wave)})"
+                for number, wave in enumerate(deployment_waves, 1)
+            )
+        )
         console.print(f"\n[dim]Each add-on would be:[/dim]")
         if verify:
             console.print(f"  1. Validated locally via optional Just recipes")
@@ -254,7 +271,7 @@ def run_enhanced_deployment(addons: Iterable[str], ha_host: str, ha_port: int, h
         if not deployment_errors:  # Only deploy if all builds succeeded
             deploy_task = progress.add_task("Deploying add-ons...", total=len(addon_names))
 
-            for addon_dir in addon_dirs:
+            for addon_dir in ordered_addon_dirs:
                 addon_name = addon_dir.name
                 progress.update(deploy_task, description=f"Deploying {addon_name}...")
 

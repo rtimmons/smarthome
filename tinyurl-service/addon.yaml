@@ -2,6 +2,8 @@ slug: tinyurl_service
 name: TinyURL Service
 description: Create and manage short links with visit stats, backed by the MongoDB add-on.
 url: https://github.com/rtimmons/smarthome
+depends_on:
+  - mongodb
 copy:
   - src
   - public
@@ -37,7 +39,7 @@ run_env:
     value: "0.0.0.0"
   - env: MONGODB_URL
     from_option: mongodb_url
-    default: "mongodb://addon_local_mongodb:27017/tinyurl"
+    default: "mongodb://local-mongodb:27017/tinyurl"
     optional: true
   - env: PUBLIC_BASE_URL
     from_option: public_base_url
@@ -57,7 +59,7 @@ docs:
     Open Web UI). Optional: access directly via http://<ha-host>:4100/ and use redirects at
     http://<ha-host>:4100/<slug>.
 options:
-  mongodb_url: "mongodb://addon_local_mongodb:27017/tinyurl"
+  mongodb_url: "mongodb://local-mongodb:27017/tinyurl"
   public_base_url: ""
 schema:
   mongodb_url: "str?"

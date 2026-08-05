@@ -6,7 +6,7 @@ MongoDB Community Edition 8.x database server for Home Assistant add-ons.
 
 - **MongoDB Community Edition 8.x** - Latest major version with full-text and vector search
 - **Persistent storage** - Data stored in `/data` and included in Home Assistant backups
-- **Network accessible** - Available to other add-ons via `mongodb:27017`
+- **Network accessible** - Available to other add-ons via `local-mongodb:27017`
 - **Local development** - Runs via Homebrew on macOS for local testing
 
 ## Installation & Deployment
@@ -61,7 +61,7 @@ Other Home Assistant add-ons can connect to MongoDB using:
 
 **Connection string:**
 ```
-mongodb://mongodb:27017/
+mongodb://local-mongodb:27017/
 ```
 
 **Example environment variable in addon.yaml:**
@@ -69,7 +69,7 @@ mongodb://mongodb:27017/
 run_env:
   - env: MONGODB_URL
     from_option: mongodb_url
-    default: "mongodb://mongodb:27017/smarthome"
+    default: "mongodb://local-mongodb:27017/smarthome"
 ```
 
 The connection string will automatically be converted to `mongodb://localhost:27017/smarthome` during local development.
@@ -154,13 +154,13 @@ If `just start` fails:
 
 Check add-on logs:
 ```bash
-ha addons logs local_mongodb
+ha apps logs local_mongodb
 ```
 
 Verify MongoDB is accessible from other add-ons:
 ```bash
 # From another add-on container
-mongosh mongodb://mongodb:27017/ --eval "db.adminCommand({ping: 1})"
+mongosh mongodb://local-mongodb:27017/ --eval "db.adminCommand({ping: 1})"
 ```
 
 ## Architecture Notes

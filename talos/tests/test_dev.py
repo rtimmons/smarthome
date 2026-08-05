@@ -55,3 +55,24 @@ def test_wait_for_port_listener_fails_when_process_exits(monkeypatch):
         )
 
     assert asyncio.run(_run()) is False
+
+
+def test_canonical_mongodb_hostname_is_a_dependency_and_rewrites_for_local_dev():
+    addon = AddonConfig(
+        key="printer",
+        yaml_path=Path("printer/addon.yaml"),
+        data={
+            "name": "printer",
+            "ports": {"8099": 8099},
+            "run_env": [
+                {
+                    "env": "MONGODB_URL",
+                    "from_option": "mongodb_url",
+                    "default": "mongodb://local-mongodb.local.hass.io:27017/smarthome",
+                }
+            ],
+        },
+    )
+
+    assert addon.get_dependencies() == {"mongodb"}
+    assert addon.build_env_vars()["MONGODB_URL"] == "mongodb://localhost:27017/smarthome"

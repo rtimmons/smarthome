@@ -9,9 +9,9 @@ export interface AppConfig {
 
 const DEFAULT_PORT = 4100;
 const DEFAULT_HOST = "0.0.0.0";
-// Supervisor DNS exposes add-ons as addon_<slug>; for a locally added add-on the slug is prefixed with "local_".
-// Use addon_local_mongodb as the default host for the bundled MongoDB add-on.
-const DEFAULT_MONGO = "mongodb://addon_local_mongodb:27017/tinyurl";
+// Use Supervisor's advertised FQDN; saved legacy options are handled by the
+// fallback list in server.ts.
+const DEFAULT_MONGO = "mongodb://local-mongodb:27017/tinyurl";
 const DEFAULT_MONGO_RETRIES = 20;
 const DEFAULT_MONGO_RETRY_DELAY_MS = 2000;
 

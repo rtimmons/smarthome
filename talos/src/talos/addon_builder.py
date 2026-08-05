@@ -19,6 +19,7 @@ from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from .paths import ADDON_BUILD_ROOT, REPO_ROOT, TEMPLATE_DIR
+from .addon_manifest import discover_addons
 from .timing import DeployTimer
 
 console = Console()
@@ -251,27 +252,6 @@ def validate_deployment_prerequisites(ha_host: str, ha_port: int, ha_user: str, 
         console.print("✅ Prerequisites validation passed")
 
 
-def discover_addons() -> Dict[str, Any]:
-    """Discover all addons by finding */addon.yaml files in the repo."""
-    addons: Dict[str, Any] = {}
-    for addon_yaml in REPO_ROOT.glob("*/addon.yaml"):
-        addon_dir = addon_yaml.parent
-        addon_key = addon_dir.name
-
-        data = yaml.safe_load(addon_yaml.read_text(encoding="utf-8"))
-        if not data:
-            continue
-
-        # Derive source_dir from addon location
-        # If there's a source_subdir, use that as the working directory
-        source_dir = addon_dir / data.get("source_subdir", "") if data.get("source_subdir") else addon_dir
-
-        data["source_dir"] = source_dir
-        addons[addon_key] = data
-
-    return addons
-
-
 def load_manifest() -> Dict[str, Any]:
     """Load all addon manifests from */addon.yaml files."""
     return discover_addons()
@@ -310,6 +290,41 @@ def default_yaml(data: Dict[str, Any]) -> str:
     return yaml.safe_dump(data, default_flow_style=False, sort_keys=False).strip()
 
 
+def _validated_backup_config(raw: Dict[str, Any], addon_key: str) -> Dict[str, Any]:
+    startup = raw.get("startup", "services")
+    if startup not in {"initialize", "system", "services", "application", "once"}:
+        raise click.ClickException(f"Invalid startup mode for add-on '{addon_key}': {startup}")
+
+    backup = raw.get("backup")
+    if backup is not None and backup not in {"hot", "cold"}:
+        raise click.ClickException(f"Invalid backup mode for add-on '{addon_key}': {backup}")
+
+    backup_pre = raw.get("backup_pre")
+    backup_post = raw.get("backup_post")
+    for field, value in (("backup_pre", backup_pre), ("backup_post", backup_post)):
+        if value is not None and not isinstance(value, str):
+            raise click.ClickException(f"Invalid {field} for add-on '{addon_key}'; expected a string.")
+    if backup == "cold" and (backup_pre or backup_post):
+        raise click.ClickException(
+            f"Add-on '{addon_key}' cannot combine backup: cold with backup_pre or backup_post."
+        )
+
+    backup_exclude = raw.get("backup_exclude", [])
+    if not isinstance(backup_exclude, list) or not all(
+        isinstance(item, str) and item for item in backup_exclude
+    ):
+        raise click.ClickException(
+            f"Invalid backup_exclude for add-on '{addon_key}'; expected a list of paths."
+        )
+    return {
+        "startup": startup,
+        "backup": backup,
+        "backup_pre": backup_pre,
+        "backup_post": backup_post,
+        "backup_exclude": backup_exclude,
+    }
+
+
 def read_runtime_versions() -> Dict[str, str]:
     """Read runtime versions from .nvmrc and .python-version files."""
     versions: Dict[str, str] = {}
@@ -341,6 +356,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
 
     raw = manifest[addon_key]
     source_dir = REPO_ROOT / raw["source_dir"]
+    backup_config = _validated_backup_config(raw, addon_key)
 
     runtime_versions = read_runtime_versions()
 
@@ -407,6 +423,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "audio": raw.get("audio", False),
             "gpio": raw.get("gpio", False),
             "custom_dockerfile": raw.get("custom_dockerfile", False),
+            **backup_config,
             "node_version": str(raw.get("node_version", runtime_versions["node"])).lstrip("v"),
             "node_major": str(raw.get("node_version", runtime_versions["node_major"]))
             .lstrip("v")
@@ -424,6 +441,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
         "options_yaml": default_yaml(raw.get("options", {})),
         "schema_yaml": default_yaml(raw.get("schema", {})),
         "translations_yaml": default_yaml(raw.get("translations", {})),
+        "backup_exclude_yaml": default_yaml(backup_config["backup_exclude"]),
     }
     return context
 

@@ -90,6 +90,14 @@ printer-image:
 # ADDON MANAGEMENT
 # ============================================================================
 
+# Create and verify a native Supervisor backup of all repository add-on state
+[group: 'backup']
+addon-state-backup *args="": talos-build
+	@"{{talos_bin}}" backup addon-state \
+		--ha-host "{{ha_host}}" \
+		--ha-port "{{ha_port}}" \
+		--ha-user "{{ha_user}}" {{args}}
+
 # Build Home Assistant addons
 [group: 'build']
 ha-addon addon="all": talos-build

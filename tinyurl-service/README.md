@@ -5,7 +5,7 @@ Tiny URL management add-on with a simple web UI and REST API. Create short links
 ## Features
 
 - Auto-generated slugs (a-z, 2-9, optional dashes; no 0/1/O/I/L; max length 10; no leading/trailing/repeated dashes)
-- MongoDB-backed storage (defaults to the bundled MongoDB add-on at `addon_local_mongodb`)
+- MongoDB-backed storage (defaults to Supervisor's canonical `local-mongodb` hostname)
 - Visit tracking with total count and last 10 timestamps
 - Reset and delete controls; duplicate targets reuse the same slug
 - Ingress-enabled web UI; optional host port `4100`
@@ -23,7 +23,7 @@ Tiny URL management add-on with a simple web UI and REST API. Create short links
 ## Configuration
 
 - `mongodb_url` (option / env `MONGODB_URL`): MongoDB connection string  
-  Default: `mongodb://addon_local_mongodb:27017/tinyurl` (use `addon_mongodb` if installed from a non-local add-on repository). On startup the service will also try the other known add-on hosts (`addon_mongodb`, `mongodb`) if the first host is unreachable.
+  Default: `mongodb://local-mongodb:27017/tinyurl`. On startup the service also tries the Supervisor FQDN and legacy add-on hostnames so existing saved options continue to work.
 - `public_base_url` (option / env `PUBLIC_BASE_URL`): External base URL to use when copying short links (e.g., `http://homeassistant.local:4100`). If empty, the UI will fall back to `http://<hostname>:4100`.
 
 ## Local development

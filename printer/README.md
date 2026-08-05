@@ -98,15 +98,14 @@ PRINTER_BACKEND: "brother-network"
 BROTHER_PRINTER_URI: "tcp://192.168.1.192:9100"
 BROTHER_MODEL: "QL-810W"
 BROTHER_LABEL: "62x29"
-MONGODB_URL: "mongodb://addon_local_mongodb:27017/smarthome"
+MONGODB_URL: "mongodb://local-mongodb:27017/smarthome"
 ```
 
 Presets are stored in MongoDB. Configure `mongodb_url` in the add-on options (or
 set `MONGODB_URL` when running locally). See [addon.yaml](./addon.yaml) for all
 available configuration options.
-If your MongoDB add-on is installed from a non-local repository, use
-`mongodb://addon_mongodb:27017/smarthome`; the service will also try
-`addon_mongodb` and `mongodb` hosts if the configured one is unreachable.
+The service prefers Supervisor's canonical `local-mongodb` hostname and also
+tries its FQDN and legacy add-on hostnames for existing configurations.
 
 ## Label Templates
 

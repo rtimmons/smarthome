@@ -97,7 +97,9 @@ class AddonConfig:
             if "local-grid-dashboard" in default_val:
                 deps.add("grid-dashboard")
             if (
-                "mongodb://addon_local_mongodb:" in default_val
+                "mongodb://local-mongodb.local.hass.io:" in default_val
+                or "mongodb://local-mongodb:" in default_val
+                or "mongodb://addon_local_mongodb:" in default_val
                 or "mongodb://addon_mongodb:" in default_val
                 or "mongodb://mongodb:" in default_val
                 or "mongodb:27017" in default_val
@@ -145,6 +147,14 @@ class AddonConfig:
                 default = default.replace("http://local-node-sonos-http-api:5005", "http://localhost:5005")
                 default = default.replace("http://local-sonos-api:5006", "http://localhost:5006")
                 default = default.replace("http://local-grid-dashboard:3000", "http://localhost:3000")
+                default = default.replace(
+                    "mongodb://local-mongodb.local.hass.io:27017",
+                    "mongodb://localhost:27017",
+                )
+                default = default.replace(
+                    "mongodb://local-mongodb:27017",
+                    "mongodb://localhost:27017",
+                )
                 default = default.replace(
                     "mongodb://addon_local_mongodb:27017",
                     "mongodb://localhost:27017",

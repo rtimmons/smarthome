@@ -2,6 +2,8 @@ slug: sonos_api
 name: Sonos API
 description: Proxy API for node-sonos-http-api with custom routes and helpers.
 url: https://github.com/rtimmons/smarthome
+depends_on:
+  - node-sonos-http-api
 copy:
   - src
   - package.json

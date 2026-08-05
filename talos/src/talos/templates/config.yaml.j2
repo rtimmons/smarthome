@@ -6,7 +6,16 @@ url: "{{ addon.url }}"
 arch:
   - aarch64
   - amd64
-startup: services
+startup: {{ addon.startup }}
+{% if addon.backup %}backup: {{ addon.backup }}
+{% endif -%}
+{% if addon.backup_pre %}backup_pre: {{ addon.backup_pre | tojson }}
+{% endif -%}
+{% if addon.backup_post %}backup_post: {{ addon.backup_post | tojson }}
+{% endif -%}
+{% if addon.backup_exclude %}backup_exclude:
+{{ backup_exclude_yaml | indent(2, true) }}
+{% endif -%}
 {% if addon.port %}watchdog: tcp://[HOST]:[PORT:{{ addon.port }}]
 {% endif -%}
 ingress: {{ "true" if addon.ingress else "false" }}
