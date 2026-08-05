@@ -19,6 +19,8 @@ from printer_service.app import create_app
 
 pytestmark = pytest.mark.ui
 
+INSTANT_PREVIEW_BUDGET_SECONDS = 0.1
+
 
 @pytest.fixture(scope="session")
 def app_server():
@@ -49,6 +51,133 @@ def browser():
 def _wait_for_previews(page):
     """Wait for preview images to load."""
     page.wait_for_selector(".bb-preview-trigger img", state="visible", timeout=15000)
+
+
+def _open_bluey_preview(page, app_server):
+    page.goto(
+        f"{app_server}/bb?tpl=bluey_label&Line1=Initial",
+        wait_until="domcontentloaded",
+    )
+    page.wait_for_function(
+        """() => {
+            const image = document.getElementById('labelPreviewImage');
+            return image && image.dataset.hasPreview === 'true';
+        }""",
+        timeout=15000,
+    )
+
+
+def _wait_for_new_label_preview(page, previous_src):
+    page.wait_for_function(
+        """(src) => {
+            const image = document.getElementById('labelPreviewImage');
+            const container = document.getElementById('previewContainer');
+            return image && image.dataset.hasPreview === 'true' &&
+                image.src !== src && !container.hasAttribute('aria-busy');
+        }""",
+        arg=previous_src,
+        timeout=15000,
+    )
+
+
+def test_live_preview_latency_feels_instantaneous(app_server, browser):
+    """Keep edit-to-visible-preview latency inside the 100 ms interaction budget."""
+    page = browser.new_page()
+    try:
+        _open_bluey_preview(page, app_server)
+        previous_src = page.locator("#labelPreviewImage").get_attribute("src")
+
+        started_at = time.perf_counter()
+        page.locator("#line1").fill("Instant preview")
+        _wait_for_new_label_preview(page, previous_src)
+        elapsed = time.perf_counter() - started_at
+        print(f"live preview latency: {elapsed * 1000:.1f} ms")
+
+        assert elapsed <= INSTANT_PREVIEW_BUDGET_SECONDS, (
+            f"Live preview took {elapsed * 1000:.1f} ms; "
+            f"budget is {INSTANT_PREVIEW_BUDGET_SECONDS * 1000:.0f} ms"
+        )
+    finally:
+        page.close()
+
+
+def test_live_preview_coalesces_rapid_edits_and_uses_latest_form_state(app_server, browser):
+    """A burst of edits should render once with the final complete form payload."""
+    page = browser.new_page()
+    preview_payloads = []
+    page.on(
+        "request",
+        lambda request: (
+            preview_payloads.append(request.post_data_json)
+            if request.url.endswith("/bb/preview")
+            else None
+        ),
+    )
+    try:
+        _open_bluey_preview(page, app_server)
+        preview_payloads.clear()
+
+        page.locator("#line1").fill("Final line one")
+        page.locator("#line2").fill("Final line two")
+        page.wait_for_timeout(400)
+        page.wait_for_function(
+            """() => !document.getElementById('previewContainer').hasAttribute('aria-busy')""",
+            timeout=15000,
+        )
+
+        assert len(preview_payloads) == 1
+        assert preview_payloads[0]["data"]["Line1"] == "Final line one"
+        assert preview_payloads[0]["data"]["Line2"] == "Final line two"
+    finally:
+        page.close()
+
+
+def test_live_preview_skips_unchanged_form_state(app_server, browser):
+    """Input/change noise must not re-render an identical preview."""
+    page = browser.new_page()
+    preview_requests = []
+    page.on(
+        "request",
+        lambda request: (
+            preview_requests.append(request) if request.url.endswith("/bb/preview") else None
+        ),
+    )
+    try:
+        _open_bluey_preview(page, app_server)
+        preview_requests.clear()
+
+        page.locator("#line1").dispatch_event("input")
+        page.locator("#line1").dispatch_event("change")
+        page.wait_for_timeout(350)
+
+        assert preview_requests == []
+    finally:
+        page.close()
+
+
+def test_live_preview_removes_optional_jar_when_fields_are_cleared(app_server, browser):
+    """The jar preview should follow the supplier/percentage fields in both directions."""
+    page = browser.new_page()
+    try:
+        _open_bluey_preview(page, app_server)
+        jar_image = page.locator("#jarPreviewImage")
+        assert jar_image.is_hidden()
+
+        page.locator("#supplier").fill("Local Farm")
+        page.wait_for_function(
+            """() => document.getElementById('jarPreviewImage').dataset.hasPreview === 'true'""",
+            timeout=15000,
+        )
+        assert jar_image.is_visible()
+
+        page.locator("#supplier").fill("")
+        page.wait_for_function(
+            """() => document.getElementById('jarPreviewImage').dataset.hasPreview === 'false'""",
+            timeout=15000,
+        )
+        assert jar_image.is_hidden()
+    finally:
+        page.close()
 
 
 def test_countdown_appears_with_print_parameter(app_server, browser):

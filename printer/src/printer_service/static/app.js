@@ -3,6 +3,7 @@ const disableDefaultFormHandlers = !!(form && form.dataset.disableDefaultHandler
 const previewContainer = document.getElementById('previewContainer');
 const labelPreviewImage = document.getElementById('labelPreviewImage');
 const qrPreviewImage = document.getElementById('qrPreviewImage');
+const jarPreviewImage = document.getElementById('jarPreviewImage');
 const previewStatus = document.getElementById('livePreviewStatus');
 const labelPreviewWarnings = document.getElementById('labelPreviewWarnings');
 const qrPreviewWarnings = document.getElementById('qrPreviewWarnings');
@@ -24,7 +25,8 @@ const backButton = document.getElementById('backButton');
 let previewAbortController = null;
 let previewTimerId = null;
 let lastPreviewPayloadKey = '';
-const PREVIEW_DEBOUNCE_MS = 250;
+// Coalesce same-frame edits without adding perceptible input latency.
+const PREVIEW_DEBOUNCE_MS = 16;
 const THEME_STORAGE_KEY = 'printer-theme';
 const THEME_OPTIONS = ['light', 'dark', 'system'];
 const PRESET_EMPTY_MESSAGE = 'No presets saved yet.';
@@ -877,7 +879,7 @@ function setPreviewLoading() {
     }
     previewStatus.textContent = 'Rendering previews…';
     previewStatus.classList.remove('preview-status--error');
-    [labelPreviewImage, qrPreviewImage].forEach((image) => {
+    [labelPreviewImage, qrPreviewImage, jarPreviewImage].forEach((image) => {
         if (!image) {
             return;
         }
@@ -995,7 +997,7 @@ async function requestPreview() {
     }
 
     const clearLoadingState = () => {
-        [labelPreviewImage, qrPreviewImage].forEach((image) => {
+        [labelPreviewImage, qrPreviewImage, jarPreviewImage].forEach((image) => {
             if (!image) {
                 return;
             }
@@ -1041,11 +1043,8 @@ async function requestPreview() {
     updatePreviewImage(qrPreviewImage, qrPayload);
 
     // Update jar preview if available
-    const jarPreviewImage = document.getElementById('jarPreviewImage');
     const jarPreviewWarnings = document.getElementById('jarPreviewWarnings');
-    if (jarPreviewImage && jarPayload.image) {
-        updatePreviewImage(jarPreviewImage, jarPayload);
-    }
+    updatePreviewImage(jarPreviewImage, jarPayload);
     if (jarPreviewWarnings) {
         updateWarnings(jarPreviewWarnings, jarPayload.warnings || []);
     }
