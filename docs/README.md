@@ -34,6 +34,7 @@ This directory contains project-specific documentation for the smarthome reposit
 ### 🔍 [Operations](operations/) - Maintenance & Planning
 *System maintenance, verification, and strategic planning*
 
+- [**plan-dashboard-upgrade.md**](plan-dashboard-upgrade.md) — Proposed compatibility-first upgrade plan for the iPad Grid Dashboard
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
 - [**unifi-network-setup.md**](operations/unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
