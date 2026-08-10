@@ -100,6 +100,10 @@ export function expandLightsWithPairs(lights: LightState[]): LightState[] {
 }
 
 function isZWaveBackedDevice(device: Device): boolean {
+  if (device.protocol) {
+    return device.protocol === "zwave";
+  }
+
   return (
     device.type.startsWith("zwave_") ||
     (device.type === "dimmer_light" && device.entity.startsWith("light.light_"))

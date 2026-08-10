@@ -122,6 +122,30 @@
       ]
     },
     {
+      "id": "sengled-e11-n1g-bathroom-edison-lights",
+      "manufacturer": "sengled",
+      "label": "E11-N1G",
+      "description": "Brightness-only Zigbee bulbs used for the bathroom Edison-top and Edison-bottom lights.",
+      "zigbee": {
+        "platform": "zha",
+        "model": "E11-N1G",
+        "supportedColorModes": [
+          "brightness"
+        ],
+        "maximumBrightness": 254
+      },
+      "knownRepoReferences": [
+        {
+          "deviceKey": "bathroom_edison_top",
+          "entityId": "light.light_bathroom_edison_top"
+        },
+        {
+          "deviceKey": "bathroom_edison_bottom",
+          "entityId": "light.light_bathroom_edison_bottom"
+        }
+      ]
+    },
+    {
       "id": "ge-14288-zw1002",
       "manufacturer": "GE",
       "label": "14288 / ZW1002",

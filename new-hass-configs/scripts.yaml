@@ -201,6 +201,8 @@ fast_scene_dispatch:
                   target:
                     entity_id:
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_edison_bottom
+                      - light.light_bathroom_edison_top
                       - light.light_bathroom_vanity_left
                       - light.light_bathroom_vanity_right
                   data:
@@ -212,6 +214,8 @@ fast_scene_dispatch:
                   target:
                     entity_id:
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_edison_bottom
+                      - light.light_bathroom_edison_top
                       - light.light_bathroom_vanity_left
                       - light.light_bathroom_vanity_right
                   data:
@@ -226,6 +230,8 @@ fast_scene_dispatch:
                 - action: light.turn_on
                   target:
                     entity_id:
+                      - light.light_bathroom_edison_bottom
+                      - light.light_bathroom_edison_top
                       - light.light_bathroom_vanity_left
                       - light.light_bathroom_vanity_right
                   data:
@@ -237,6 +243,8 @@ fast_scene_dispatch:
                   target:
                     entity_id:
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_edison_bottom
+                      - light.light_bathroom_edison_top
                       - light.light_bathroom_vanity_left
                       - light.light_bathroom_vanity_right
         - conditions: "{{ scene_id == 'guest_bathroom_high' }}"
@@ -1179,6 +1187,8 @@ fast_scene_dispatch:
                       - light.bedroom_light_mikedesk
                       - light.entry_light_nook
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_edison_bottom
+                      - light.light_bathroom_edison_top
                       - light.light_bathroom_vanity_left
                       - light.light_bathroom_vanity_right
                       - light.living_light_corner

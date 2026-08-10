@@ -46,6 +46,7 @@ export interface ZWaveEventData {
 export interface Device {
   entity: string;
   type: DeviceType;
+  protocol?: "zigbee" | "zwave";
   capabilities?: DeviceCapability[];
   events?: Partial<Record<ZWaveEvent, ZWaveEventData>>;
   device_id?: string; // For Z-Wave JS triggers

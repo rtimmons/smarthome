@@ -52,15 +52,17 @@ just zwave-verify-instant-ramps
 
 ## Current Bathroom Lighting Baseline
 
-As of 2026-08-10, the three main bathroom bulbs are Third Reality `3RCB01057Z` Zigbee devices on ZHA:
+As of 2026-08-10, the five main bathroom bulbs are Zigbee devices on ZHA:
 
 | Device key | Active entity ID | High | Medium | Low | Off / All Off |
 | --- | --- | ---: | ---: | --- | --- |
 | `bathroom_vanity_left` | `light.light_bathroom_vanity_left` | 254 | 155 | 50 | off |
 | `bathroom_vanity_right` | `light.light_bathroom_vanity_right` | 254 | 155 | 50 | off |
 | `bathroom_abovesauna` | `light.light_bathroom_abovesauna` | 254 | 155 | off | off |
+| `bathroom_edison_top` | `light.light_bathroom_edison_top` | 254 | 155 | 50 | off |
+| `bathroom_edison_bottom` | `light.light_bathroom_edison_bottom` | 254 | 155 | 50 | off |
 
-- The bulbs support `color_temp` and `xy` color modes and report 254 as maximum brightness.
+- The vanity and above-sauna bulbs are Third Reality `3RCB01057Z` color bulbs supporting `color_temp` and `xy`. Edison-top and Edison-bottom are brightness-only Sengled `E11-N1G` bulbs. All five report 254 as maximum brightness.
 - Compatible on/off calls should be grouped as non-Z-Wave targets. The above-sauna bulb must not be isolated or paced as a Z-Wave load.
 - Former Z-Wave nodes 38 (vanity-left), 39 (vanity-right), and 40 (above-sauna) are retired and absent from the active device registry and Z-Wave value inventory.
 - The retired entity IDs `light.light_bathroom_vanityleft` and `light.light_bathroom_vanityright` must not appear in source or generated configuration.

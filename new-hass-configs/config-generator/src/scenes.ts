@@ -205,6 +205,16 @@ export const scenes: SceneRegistry = {
         device: "bathroom_abovesauna",
         state: "on",
         brightness: 254
+      },
+      {
+        device: "bathroom_edison_top",
+        state: "on",
+        brightness: 254
+      },
+      {
+        device: "bathroom_edison_bottom",
+        state: "on",
+        brightness: 254
       }
     ]
   },
@@ -224,6 +234,16 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "bathroom_abovesauna",
+        state: "on",
+        brightness: 155
+      },
+      {
+        device: "bathroom_edison_top",
+        state: "on",
+        brightness: 155
+      },
+      {
+        device: "bathroom_edison_bottom",
         state: "on",
         brightness: 155
       }
@@ -246,6 +266,16 @@ export const scenes: SceneRegistry = {
       {
         device: "bathroom_abovesauna",
         state: "off"
+      },
+      {
+        device: "bathroom_edison_top",
+        state: "on",
+        brightness: 50
+      },
+      {
+        device: "bathroom_edison_bottom",
+        state: "on",
+        brightness: 50
       }
     ]
   },
@@ -263,6 +293,14 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "bathroom_abovesauna",
+        state: "off"
+      },
+      {
+        device: "bathroom_edison_top",
+        state: "off"
+      },
+      {
+        device: "bathroom_edison_bottom",
         state: "off"
       }
     ]

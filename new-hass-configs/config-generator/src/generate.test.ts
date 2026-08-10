@@ -288,7 +288,9 @@ describe("Scene Generation with Pairing", () => {
         calls.find(
           (call: any) =>
             call.data?.brightness === 254 &&
-            call.target.entity_id.length === 3 &&
+            call.target.entity_id.length === 5 &&
+            call.target.entity_id.includes("light.light_bathroom_edison_bottom") &&
+            call.target.entity_id.includes("light.light_bathroom_edison_top") &&
             call.target.entity_id.includes("light.light_bathroom_vanity_left") &&
             call.target.entity_id.includes("light.light_bathroom_vanity_right") &&
             call.target.entity_id.includes("light.light_bathroom_abovesauna")
@@ -307,6 +309,8 @@ describe("Scene Generation with Pairing", () => {
           target: {
             entity_id: [
               "light.light_bathroom_abovesauna",
+              "light.light_bathroom_edison_bottom",
+              "light.light_bathroom_edison_top",
               "light.light_bathroom_vanity_left",
               "light.light_bathroom_vanity_right",
             ],
@@ -325,6 +329,8 @@ describe("Scene Generation with Pairing", () => {
             action: "light.turn_on",
             target: {
               entity_id: [
+                "light.light_bathroom_edison_bottom",
+                "light.light_bathroom_edison_top",
                 "light.light_bathroom_vanity_left",
                 "light.light_bathroom_vanity_right",
               ],
@@ -339,6 +345,8 @@ describe("Scene Generation with Pairing", () => {
           target: {
             entity_id: [
               "light.light_bathroom_abovesauna",
+              "light.light_bathroom_edison_bottom",
+              "light.light_bathroom_edison_top",
               "light.light_bathroom_vanity_left",
               "light.light_bathroom_vanity_right",
             ],
@@ -364,6 +372,8 @@ describe("Scene Generation with Pairing", () => {
       expect(allTargets).not.toContain("switch.office_wall_switch");
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
       expect(allTargets).toContain("light.light_bathroom_abovesauna");
+      expect(allTargets).toContain("light.light_bathroom_edison_bottom");
+      expect(allTargets).toContain("light.light_bathroom_edison_top");
       expect(allTargets).toContain("light.light_bathroom_vanity_left");
       expect(allTargets).toContain("light.light_bathroom_vanity_right");
       expect(

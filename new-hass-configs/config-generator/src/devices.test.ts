@@ -10,26 +10,43 @@ import {
 } from "./devices";
 
 describe("Device Pairing Functions", () => {
-  it("should model the three main bathroom bulbs as Zigbee color lights", () => {
+  it("should model the five main bathroom bulbs as Zigbee lights", () => {
     expect([
       devices.lights.bathroom_vanity_left,
       devices.lights.bathroom_vanity_right,
       devices.lights.bathroom_abovesauna,
+      devices.lights.bathroom_edison_top,
+      devices.lights.bathroom_edison_bottom,
     ]).toEqual([
       {
         entity: "light.light_bathroom_vanity_left",
         type: "color_light",
+        protocol: "zigbee",
         capabilities: ["brightness", "color_temp", "rgb_color"],
       },
       {
         entity: "light.light_bathroom_vanity_right",
         type: "color_light",
+        protocol: "zigbee",
         capabilities: ["brightness", "color_temp", "rgb_color"],
       },
       {
         entity: "light.light_bathroom_abovesauna",
         type: "color_light",
+        protocol: "zigbee",
         capabilities: ["brightness", "color_temp", "rgb_color"],
+      },
+      {
+        entity: "light.light_bathroom_edison_top",
+        type: "dimmer_light",
+        protocol: "zigbee",
+        capabilities: ["brightness"],
+      },
+      {
+        entity: "light.light_bathroom_edison_bottom",
+        type: "dimmer_light",
+        protocol: "zigbee",
+        capabilities: ["brightness"],
       },
     ]);
   });
