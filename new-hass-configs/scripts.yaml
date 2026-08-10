@@ -200,46 +200,20 @@ fast_scene_dispatch:
                 - action: light.turn_on
                   target:
                     entity_id:
-                      - light.light_bathroom_vanityleft
-                  data:
-                    brightness: 255
-                - action: light.turn_on
-                  target:
-                    entity_id:
-                      - light.light_bathroom_vanityright
-                  data:
-                    brightness: 255
-            - delay:
-                milliseconds: 1000
-            - parallel:
-                - action: light.turn_on
-                  target:
-                    entity_id:
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_vanity_left
+                      - light.light_bathroom_vanity_right
                   data:
-                    brightness: 255
+                    brightness: 254
         - conditions: "{{ scene_id == 'bathroom_medium' }}"
           sequence:
             - parallel:
                 - action: light.turn_on
                   target:
                     entity_id:
-                      - light.light_bathroom_vanityleft
-                  data:
-                    brightness: 155
-                - action: light.turn_on
-                  target:
-                    entity_id:
-                      - light.light_bathroom_vanityright
-                  data:
-                    brightness: 155
-            - delay:
-                milliseconds: 1000
-            - parallel:
-                - action: light.turn_on
-                  target:
-                    entity_id:
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_vanity_left
+                      - light.light_bathroom_vanity_right
                   data:
                     brightness: 155
         - conditions: "{{ scene_id == 'bathroom_low' }}"
@@ -252,16 +226,8 @@ fast_scene_dispatch:
                 - action: light.turn_on
                   target:
                     entity_id:
-                      - light.light_bathroom_vanityleft
-                  data:
-                    brightness: 50
-            - delay:
-                milliseconds: 1000
-            - parallel:
-                - action: light.turn_on
-                  target:
-                    entity_id:
-                      - light.light_bathroom_vanityright
+                      - light.light_bathroom_vanity_left
+                      - light.light_bathroom_vanity_right
                   data:
                     brightness: 50
         - conditions: "{{ scene_id == 'bathroom_off' }}"
@@ -270,18 +236,9 @@ fast_scene_dispatch:
                 - action: light.turn_off
                   target:
                     entity_id:
-                      - light.light_bathroom_vanityleft
-                - action: light.turn_off
-                  target:
-                    entity_id:
-                      - light.light_bathroom_vanityright
-            - delay:
-                milliseconds: 1000
-            - parallel:
-                - action: light.turn_off
-                  target:
-                    entity_id:
                       - light.light_bathroom_abovesauna
+                      - light.light_bathroom_vanity_left
+                      - light.light_bathroom_vanity_right
         - conditions: "{{ scene_id == 'guest_bathroom_high' }}"
           sequence:
             - parallel:
@@ -1221,6 +1178,9 @@ fast_scene_dispatch:
                       - light.bedroom_light_flamingo
                       - light.bedroom_light_mikedesk
                       - light.entry_light_nook
+                      - light.light_bathroom_abovesauna
+                      - light.light_bathroom_vanity_left
+                      - light.light_bathroom_vanity_right
                       - light.living_light_corner
                       - light.living_light_floor
                       - light.living_light_nook
@@ -1260,201 +1220,186 @@ fast_scene_dispatch:
                 - action: light.turn_off
                   target:
                     entity_id:
-                      - light.light_bathroom_vanityleft
-            - delay:
-                milliseconds: 1000
-            - parallel:
-                - action: light.turn_off
-                  target:
-                    entity_id:
-                      - light.light_bathroom_abovesauna
-                - action: light.turn_off
-                  target:
-                    entity_id:
-                      - light.light_bathroom_vanityright
-            - delay:
-                milliseconds: 1000
-            - parallel:
-                - action: light.turn_off
-                  target:
-                    entity_id:
                       - light.light_living_curtains
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_curtains_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_windowsillleft
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_windowsillleft_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_windowsillright
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_windowsillright_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_behindtv
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_behindtv_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_desklamps
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_sliderring
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_palm
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_abovetv
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_abovetv_white
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_cornerspot
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_living_hallway
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_outdoor_cafe
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_outdoor_sconces
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_makerroom_main
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_makerroom_undershelf
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_makerroom_undershelf_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_kitchen_upper
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_kitchen_upper_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_kitchen_lower
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_kitchen_lower_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_kitchen_ring
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_kitchen_hanging
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_dining_nook
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_dining_nook_white
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_dining_abovetable
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_guestbathroom_overhead
-            - delay:
-                milliseconds: 1000
-            - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
                       - light.light_guestbathroom_sconce
-                - action: light.turn_off
-                  target:
-                    entity_id:
-                      - light.light_closet_main
             - delay:
                 milliseconds: 1000
             - parallel:
                 - action: light.turn_off
                   target:
                     entity_id:
+                      - light.light_closet_main
+                - action: light.turn_off
+                  target:
+                    entity_id:
                       - light.light_bedroom_sconces
+            - delay:
+                milliseconds: 1000
+            - parallel:
                 - action: switch.turn_off
                   target:
                     entity_id:

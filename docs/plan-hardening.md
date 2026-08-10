@@ -360,9 +360,8 @@ Update `new-hass-configs/sync-tools/deploy-config.sh` so the workflow becomes:
 
 ### Registry and availability
 
-- [ ] Determine whether `light.light_bathroom_vanityright` was renamed, removed, or should be recreated; update source configuration rather than generated YAML.
-- [ ] Reconcile the Enbrighten 35931 device taxonomy for bathroom vanity-left and above-sauna lights.
-- [ ] Repair, replace, exclude, or explicitly retire dead Z-Wave nodes 2 and 38.
+- [x] Replace the bathroom vanity-left, vanity-right, and above-sauna Z-Wave bulbs with Third Reality 3RCB01057Z Zigbee bulbs, preserve the clean entity IDs, and retire Z-Wave nodes 38, 39, and 40.
+- [ ] Repair, replace, exclude, or explicitly retire dead Z-Wave node 2.
 - [ ] Investigate node 23 as an endpoint/security-session problem before adding repeaters; its direct RF link was strong despite response failures.
 - [ ] Monitor node 28 and the latency watch list over multiple inventories before changing routes.
 - [ ] Repair or remove the three unavailable Hue scene targets.

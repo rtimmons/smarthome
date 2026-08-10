@@ -1,9 +1,10 @@
 {
   "schema": 1,
-  "purpose": "Stable product identity catalog for Home Assistant hardware where make/model identity matters. Runtime health, availability, node status, and noise counts belong in inventory snapshots, not this file. The filename is historical; this catalog now includes Z-Wave and ESPHome products.",
+  "purpose": "Stable product identity catalog for Home Assistant hardware where make/model identity matters. Runtime health, availability, node status, and noise counts belong in inventory snapshots, not this file. The filename is historical; this catalog now includes Z-Wave, Zigbee, and ESPHome products.",
   "source_priority": [
     "Home Assistant core.device_registry for installed manufacturer/model identity",
     "Z-Wave JS device config records for stable product identifiers and details URLs",
+    "ZHA device registry records for installed Zigbee manufacturer/model identity",
     "ESPHome core.config_entries and live YAML for device names, firmware targets, and integration details",
     "Official manufacturer documentation for board-level product detail URLs",
     "Inventory snapshots only for temporary cross-checking"
@@ -92,6 +93,35 @@
       ]
     },
     {
+      "id": "third-reality-3rcb01057z-bathroom-lights",
+      "manufacturer": "Third Reality, Inc",
+      "label": "3RCB01057Z",
+      "description": "Zigbee color bulbs used for the bathroom vanity-left, vanity-right, and above-sauna lights.",
+      "zigbee": {
+        "platform": "zha",
+        "model": "3RCB01057Z",
+        "supportedColorModes": [
+          "color_temp",
+          "xy"
+        ],
+        "maximumBrightness": 254
+      },
+      "knownRepoReferences": [
+        {
+          "deviceKey": "bathroom_vanity_left",
+          "entityId": "light.light_bathroom_vanity_left"
+        },
+        {
+          "deviceKey": "bathroom_vanity_right",
+          "entityId": "light.light_bathroom_vanity_right"
+        },
+        {
+          "deviceKey": "bathroom_abovesauna",
+          "entityId": "light.light_bathroom_abovesauna"
+        }
+      ]
+    },
+    {
       "id": "ge-14288-zw1002",
       "manufacturer": "GE",
       "label": "14288 / ZW1002",
@@ -106,24 +136,6 @@
         {
           "deviceKey": "living_sillleftpower",
           "entityId": "switch.light_living_sillleftpower"
-        }
-      ]
-    },
-    {
-      "id": "enbrighten-35931-zw7101",
-      "manufacturer": "Enbrighten",
-      "label": "35931 / ZW7101",
-      "description": "LED A19 Bulb, 500S",
-      "zwave": {
-        "manufacturerId": "0x0063",
-        "productType": "0x4c42",
-        "productId": "0x3031"
-      },
-      "detailsUrl": "https://raw.githubusercontent.com/zwave-js/zwave-js/master/packages/config/config/devices/0x0063/35931_zw7101.json",
-      "knownRepoReferences": [
-        {
-          "deviceKey": "bathroom_vanityleft",
-          "entityId": "light.light_bathroom_vanityleft"
         }
       ]
     },
@@ -176,11 +188,6 @@
         {
           "deviceKey": "dining_abovetable",
           "entityId": "light.light_dining_abovetable"
-        },
-        {
-          "deviceKey": "bathroom_vanityright",
-          "entityId": "light.light_bathroom_vanityright",
-          "note": "Configured in repo, but absent from the live entity registry during the 2026-07-07 audit."
         }
       ]
     }

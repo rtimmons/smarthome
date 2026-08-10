@@ -50,6 +50,23 @@ just zwave-verify-instant-ramps
 - Registry mismatches matter. If a configured device entity does not exist live, fix the device registry before changing scene logic.
 - Repeated timeout, decode, nonce, or invalid-payload entries isolated to one node usually indicate a bad or noisy route. Clusters spanning multiple nodes at the exact time of a large scene are evidence that the scene's RF concurrency is still too high.
 
+## Current Bathroom Lighting Baseline
+
+As of 2026-08-10, the three main bathroom bulbs are Third Reality `3RCB01057Z` Zigbee devices on ZHA:
+
+| Device key | Active entity ID | High | Medium | Low | Off / All Off |
+| --- | --- | ---: | ---: | --- | --- |
+| `bathroom_vanity_left` | `light.light_bathroom_vanity_left` | 254 | 155 | 50 | off |
+| `bathroom_vanity_right` | `light.light_bathroom_vanity_right` | 254 | 155 | 50 | off |
+| `bathroom_abovesauna` | `light.light_bathroom_abovesauna` | 254 | 155 | off | off |
+
+- The bulbs support `color_temp` and `xy` color modes and report 254 as maximum brightness.
+- Compatible on/off calls should be grouped as non-Z-Wave targets. The above-sauna bulb must not be isolated or paced as a Z-Wave load.
+- Former Z-Wave nodes 38 (vanity-left), 39 (vanity-right), and 40 (above-sauna) are retired and absent from the active device registry and Z-Wave value inventory.
+- The retired entity IDs `light.light_bathroom_vanityleft` and `light.light_bathroom_vanityright` must not appear in source or generated configuration.
+- Home Assistant retains records for removed entities under `core.entity_registry.data.deleted_entities`. These are deletion tombstones, not active entities or callable service targets; active-remnant audits must inspect `data.entities`, the device registry, and the live state machine.
+- Dashboard webhooks `scene_bathroom_high`, `scene_bathroom_medium`, and `scene_bathroom_off` route to their blocking `script.fast_scene_bathroom_*` wrappers. `bathroom_low` is available as a generated scene/script even though it has no dashboard webhook.
+
 ## Scene Dispatch and Concurrency Contract
 
 All generated scene entry points must follow this path:

@@ -3,12 +3,37 @@
  */
 
 import {
+  devices,
   getPairedDeviceName,
   hasPairedDevice,
   getDeviceWithPair,
 } from "./devices";
 
 describe("Device Pairing Functions", () => {
+  it("should model the three main bathroom bulbs as Zigbee color lights", () => {
+    expect([
+      devices.lights.bathroom_vanity_left,
+      devices.lights.bathroom_vanity_right,
+      devices.lights.bathroom_abovesauna,
+    ]).toEqual([
+      {
+        entity: "light.light_bathroom_vanity_left",
+        type: "color_light",
+        capabilities: ["brightness", "color_temp", "rgb_color"],
+      },
+      {
+        entity: "light.light_bathroom_vanity_right",
+        type: "color_light",
+        capabilities: ["brightness", "color_temp", "rgb_color"],
+      },
+      {
+        entity: "light.light_bathroom_abovesauna",
+        type: "color_light",
+        capabilities: ["brightness", "color_temp", "rgb_color"],
+      },
+    ]);
+  });
+
   describe("getPairedDeviceName", () => {
     it("should find _white pair for RGBW device", () => {
       expect(getPairedDeviceName("office_abovetv")).toBe("office_abovetv_white");
@@ -24,7 +49,7 @@ describe("Device Pairing Functions", () => {
 
     it("should return null for devices without pairs", () => {
       expect(getPairedDeviceName("office_sidetable")).toBeNull();
-      expect(getPairedDeviceName("bathroom_vanityleft")).toBeNull();
+      expect(getPairedDeviceName("bathroom_abovesauna")).toBeNull();
       expect(getPairedDeviceName("living_floor")).toBeNull();
     });
 
@@ -44,7 +69,7 @@ describe("Device Pairing Functions", () => {
 
     it("should return false for devices without pairs", () => {
       expect(hasPairedDevice("office_sidetable")).toBe(false);
-      expect(hasPairedDevice("bathroom_vanityleft")).toBe(false);
+      expect(hasPairedDevice("bathroom_abovesauna")).toBe(false);
       expect(hasPairedDevice("nonexistent_device")).toBe(false);
     });
   });
@@ -66,7 +91,7 @@ describe("Device Pairing Functions", () => {
 
     it("should return only the device for unpaired devices", () => {
       expect(getDeviceWithPair("office_sidetable")).toEqual(["office_sidetable"]);
-      expect(getDeviceWithPair("bathroom_vanityleft")).toEqual(["bathroom_vanityleft"]);
+      expect(getDeviceWithPair("bathroom_abovesauna")).toEqual(["bathroom_abovesauna"]);
     });
   });
 

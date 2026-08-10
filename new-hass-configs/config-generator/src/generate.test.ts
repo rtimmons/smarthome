@@ -4,6 +4,7 @@
 
 import * as yaml from "yaml";
 import { getEffectiveAutomationMode } from "./automation-generation";
+import { automations } from "./automations";
 import { generateFastCalls, generateFastScripts, generateScenes } from "./generate-test-helper";
 import { scenes } from "./scenes";
 import type { Scene } from "./types";
@@ -278,12 +279,72 @@ describe("Scene Generation with Pairing", () => {
       ).toBeDefined();
     });
 
-    it("should isolate bathroom Z-Wave loads into individual fast calls", () => {
+    it("should group all bathroom Zigbee lights into one fast call", () => {
 
       const calls = generateFastCalls(scenes.bathroom_high);
 
-      expect(calls).toHaveLength(3);
-      expect(calls.every((call: any) => call.target.entity_id.length === 1)).toBe(true);
+      expect(calls).toHaveLength(1);
+      expect(
+        calls.find(
+          (call: any) =>
+            call.data?.brightness === 254 &&
+            call.target.entity_id.length === 3 &&
+            call.target.entity_id.includes("light.light_bathroom_vanity_left") &&
+            call.target.entity_id.includes("light.light_bathroom_vanity_right") &&
+            call.target.entity_id.includes("light.light_bathroom_abovesauna")
+        )
+      ).toBeDefined();
+    });
+
+    it("should generate the current bathroom medium, low, and off behavior", () => {
+      const mediumCalls = generateFastCalls(scenes.bathroom_medium);
+      const lowCalls = generateFastCalls(scenes.bathroom_low);
+      const offCalls = generateFastCalls(scenes.bathroom_off);
+
+      expect(mediumCalls).toEqual([
+        {
+          action: "light.turn_on",
+          target: {
+            entity_id: [
+              "light.light_bathroom_abovesauna",
+              "light.light_bathroom_vanity_left",
+              "light.light_bathroom_vanity_right",
+            ],
+          },
+          data: { brightness: 155 },
+        },
+      ]);
+      expect(lowCalls).toHaveLength(2);
+      expect(lowCalls).toEqual(
+        expect.arrayContaining([
+          {
+            action: "light.turn_off",
+            target: { entity_id: ["light.light_bathroom_abovesauna"] },
+          },
+          {
+            action: "light.turn_on",
+            target: {
+              entity_id: [
+                "light.light_bathroom_vanity_left",
+                "light.light_bathroom_vanity_right",
+              ],
+            },
+            data: { brightness: 50 },
+          },
+        ])
+      );
+      expect(offCalls).toEqual([
+        {
+          action: "light.turn_off",
+          target: {
+            entity_id: [
+              "light.light_bathroom_abovesauna",
+              "light.light_bathroom_vanity_left",
+              "light.light_bathroom_vanity_right",
+            ],
+          },
+        },
+      ]);
     });
 
     it("should not duplicate targets when a paired RGBW entity is already explicit", () => {
@@ -302,6 +363,9 @@ describe("Scene Generation with Pairing", () => {
 
       expect(allTargets).not.toContain("switch.office_wall_switch");
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
+      expect(allTargets).toContain("light.light_bathroom_abovesauna");
+      expect(allTargets).toContain("light.light_bathroom_vanity_left");
+      expect(allTargets).toContain("light.light_bathroom_vanity_right");
       expect(
         calls.find(
           (call: any) =>
@@ -369,6 +433,28 @@ describe("Scene Generation with Pairing", () => {
           mode: "restart",
         })
       ).toBe("single");
+    });
+
+    it("should keep bathroom webhooks on the current fast-scene paths", () => {
+      expect(automations.bathroom_webhook_high).toMatchObject({
+        trigger: { type: "webhook", webhook_id: "scene_bathroom_high" },
+        action: { type: "scene", scene: "bathroom_high" },
+      });
+      expect(automations.bathroom_webhook_medium).toMatchObject({
+        trigger: { type: "webhook", webhook_id: "scene_bathroom_medium" },
+        action: { type: "scene", scene: "bathroom_medium" },
+      });
+      expect(automations.bathroom_webhook_off).toMatchObject({
+        trigger: { type: "webhook", webhook_id: "scene_bathroom_off" },
+        action: { type: "scene", scene: "bathroom_off" },
+      });
+      expect(
+        [
+          automations.bathroom_webhook_high,
+          automations.bathroom_webhook_medium,
+          automations.bathroom_webhook_off,
+        ].every((automation) => getEffectiveAutomationMode(automation) === "single")
+      ).toBe(true);
     });
 
     it("should allow callers to lower the batching cap when needed", () => {

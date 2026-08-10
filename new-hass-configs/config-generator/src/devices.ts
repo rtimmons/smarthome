@@ -61,21 +61,21 @@ export const devices: DeviceRegistry = {
       capabilities: ["brightness"]
     },
 
-    // Bathroom lights - Z-Wave dimmers
-    bathroom_vanityleft: {
-      entity: "light.light_bathroom_vanityleft",
-      type: "zwave_dimmer_46203",
-      capabilities: ["brightness"]
+    // Bathroom lights - Zigbee color lights
+    bathroom_vanity_left: {
+      entity: "light.light_bathroom_vanity_left",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
+    },
+    bathroom_vanity_right: {
+      entity: "light.light_bathroom_vanity_right",
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     bathroom_abovesauna: {
       entity: "light.light_bathroom_abovesauna",
-      type: "zwave_dimmer_46203",
-      capabilities: ["brightness"]
-    },
-    bathroom_vanityright: {
-      entity: "light.light_bathroom_vanityright",
-      type: "zwave_dimmer_46203",
-      capabilities: ["brightness"]
+      type: "color_light",
+      capabilities: ["brightness", "color_temp", "rgb_color"]
     },
 
     // Living room lights - mix of Hue and Z-Wave
