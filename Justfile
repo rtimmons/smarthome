@@ -223,6 +223,21 @@ test-slow:
 zwave-diagnose *args="":
 	@cd new-hass-configs && just zwave-diagnose {{args}}
 
+# Capture the live Home Assistant device and entity registries
+[group: 'info']
+ha-inventory *args="":
+	@cd new-hass-configs && just inventory {{args}}
+
+# Read one live Home Assistant entity state
+[group: 'info']
+ha-state entity_id *args="":
+	@cd new-hass-configs && just ha-state "{{entity_id}}" {{args}}
+
+# Call a live Home Assistant service for one entity
+[group: 'deploy']
+ha-call service entity_id *args="":
+	@cd new-hass-configs && just ha-call "{{service}}" "{{entity_id}}" {{args}}
+
 # Capture a timestamped live Z-Wave scene inventory snapshot
 [group: 'info']
 zwave-inventory *args="":

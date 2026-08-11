@@ -17,10 +17,16 @@ import {
   getFastSceneScriptEntityId,
 } from "../scene-generation";
 import { Device } from "../types";
-
-declare const WebSocket: any;
-
-type JsonObject = Record<string, any>;
+import {
+  callHomeAssistantWs,
+  callService,
+  fetchState,
+  fetchStates,
+  getAccessToken,
+  JsonObject,
+  runSsh,
+  SSH_OPTIONS,
+} from "./home-assistant-client";
 
 interface Options {
   host: string;
@@ -157,13 +163,6 @@ interface SceneExerciseResult {
   skippedUnavailable: ExercisedEntityState[];
 }
 
-const SSH_OPTIONS = [
-  "-o",
-  "BatchMode=yes",
-  "-o",
-  "StrictHostKeyChecking=no",
-];
-
 function parseArgs(argv: string[]): Options {
   const options: Options = {
     host: "root@homeassistant.local",
@@ -220,24 +219,6 @@ function ensureOutputDir(outputDir?: string): string {
     );
   fs.mkdirSync(resolved, { recursive: true });
   return resolved;
-}
-
-function runCommand(
-  command: string,
-  args: string[],
-  extraEnv?: NodeJS.ProcessEnv
-): string {
-  return execFileSync(command, args, {
-    encoding: "utf8",
-    env: {
-      ...process.env,
-      ...extraEnv,
-    },
-  }).trim();
-}
-
-function runSsh(host: string, remoteCommand: string): string {
-  return runCommand("ssh", [...SSH_OPTIONS, host, remoteCommand]);
 }
 
 function scpFromRemote(host: string, remotePath: string, localPath: string) {
@@ -376,153 +357,6 @@ function buildNodeMap(deviceRegistry: JsonObject, entityRegistry: JsonObject): M
   }
 
   return nodes;
-}
-
-function normalizeServerClientId(server: string): string {
-  return server.endsWith("/") ? server : `${server}/`;
-}
-
-function getAccessToken(options: Options): string {
-  if (process.env.HASS_TOKEN) {
-    return process.env.HASS_TOKEN;
-  }
-
-  const auth = JSON.parse(runSsh(options.host, "cat /config/.storage/auth"));
-  const ownerUserIds = new Set(
-    auth.data.users
-      .filter((user: JsonObject) => user.is_owner)
-      .map((user: JsonObject) => user.id)
-  );
-  const preferredClientId = normalizeServerClientId(options.server);
-  const refreshToken = auth.data.refresh_tokens.find(
-    (token: JsonObject) =>
-      ownerUserIds.has(token.user_id) &&
-      typeof token.token === "string" &&
-      token.token.length > 0 &&
-      (!token.client_id || token.client_id === preferredClientId)
-  ) ??
-    auth.data.refresh_tokens.find(
-      (token: JsonObject) =>
-        ownerUserIds.has(token.user_id) &&
-        typeof token.token === "string" &&
-        token.token.length > 0
-    );
-
-  if (!refreshToken) {
-    throw new Error("Unable to locate an owner refresh token over SSH");
-  }
-
-  const body = [
-    `grant_type=refresh_token`,
-    `client_id=${encodeURIComponent(preferredClientId)}`,
-    `refresh_token=${encodeURIComponent(refreshToken.token)}`,
-  ].join("&");
-
-  const response = JSON.parse(
-    runCommand("curl", [
-      "-sS",
-      "-X",
-      "POST",
-      `${options.server}/auth/token`,
-      "-H",
-      "Content-Type: application/x-www-form-urlencoded",
-      "--data",
-      body,
-    ])
-  );
-
-  if (!response.access_token) {
-    throw new Error("Failed to exchange refresh token for an access token");
-  }
-
-  return response.access_token as string;
-}
-
-function hassCli(options: Options, accessToken: string, ...args: string[]): string {
-  return runCommand("hass-cli", args, {
-    HASS_SERVER: options.server,
-    HASS_TOKEN: accessToken,
-  });
-}
-
-function websocketUrl(server: string): string {
-  if (server.startsWith("https://")) {
-    return `wss://${server.slice("https://".length)}/api/websocket`;
-  }
-  if (server.startsWith("http://")) {
-    return `ws://${server.slice("http://".length)}/api/websocket`;
-  }
-  throw new Error(`Unsupported Home Assistant server URL: ${server}`);
-}
-
-function callHomeAssistantWs<T>(
-  options: Options,
-  accessToken: string,
-  payload: Record<string, any>
-): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const socket = new WebSocket(websocketUrl(options.server));
-    let settled = false;
-
-    const finish = (fn: () => void) => {
-      if (settled) {
-        return;
-      }
-      settled = true;
-      fn();
-      socket.close();
-    };
-
-    socket.addEventListener("message", (event: any) => {
-      const message = JSON.parse(String(event.data));
-
-      if (message.type === "auth_required") {
-        socket.send(
-          JSON.stringify({
-            type: "auth",
-            access_token: accessToken,
-          })
-        );
-        return;
-      }
-
-      if (message.type === "auth_invalid") {
-        finish(() => reject(new Error("Home Assistant websocket authentication failed")));
-        return;
-      }
-
-      if (message.type === "auth_ok") {
-        socket.send(
-          JSON.stringify({
-            id: 1,
-            ...payload,
-          })
-        );
-        return;
-      }
-
-      if (message.id === 1) {
-        if (message.success) {
-          finish(() => resolve(message.result as T));
-          return;
-        }
-
-        finish(() =>
-          reject(
-            new Error(
-              `Home Assistant websocket call failed: ${JSON.stringify(
-                message.error ?? message
-              )}`
-            )
-          )
-        );
-      }
-    });
-
-    socket.addEventListener("error", () => {
-      finish(() => reject(new Error("Home Assistant websocket connection failed")));
-    });
-  });
 }
 
 function determineTargetValue(metadata: JsonObject, currentValue: unknown): {
@@ -693,74 +527,6 @@ function loadArtifacts(artifactPaths: ReturnType<typeof fetchLiveArtifacts>) {
 
 function writeJson(filePath: string, value: unknown) {
   fs.writeFileSync(filePath, JSON.stringify(value, null, 2), "utf8");
-}
-
-function fetchStates(options: Options, accessToken: string): JsonObject[] {
-  return JSON.parse(
-    runCommand("curl", [
-      "-sS",
-      `${options.server}/api/states`,
-      "-H",
-      `Authorization: Bearer ${accessToken}`,
-      "-H",
-      "Content-Type: application/json",
-    ])
-  ) as JsonObject[];
-}
-
-function fetchState(
-  options: Options,
-  accessToken: string,
-  entityId: string
-): JsonObject | null {
-  const response = runCommand("curl", [
-    "-sS",
-    "-o",
-    "-",
-    "-w",
-    "\n%{http_code}",
-    `${options.server}/api/states/${encodeURIComponent(entityId)}`,
-    "-H",
-    `Authorization: Bearer ${accessToken}`,
-    "-H",
-    "Content-Type: application/json",
-  ]);
-  const splitIndex = response.lastIndexOf("\n");
-  const body = splitIndex >= 0 ? response.slice(0, splitIndex) : response;
-  const statusCode = Number(splitIndex >= 0 ? response.slice(splitIndex + 1) : "0");
-
-  if (statusCode === 404) {
-    return null;
-  }
-
-  if (statusCode < 200 || statusCode >= 300) {
-    throw new Error(`Failed to fetch ${entityId}: HTTP ${statusCode} ${body}`);
-  }
-
-  return JSON.parse(body) as JsonObject;
-}
-
-function callService(
-  options: Options,
-  accessToken: string,
-  domain: string,
-  service: string,
-  data: Record<string, any>
-): JsonObject[] {
-  return JSON.parse(
-    runCommand("curl", [
-      "-sS",
-      "-X",
-      "POST",
-      `${options.server}/api/services/${domain}/${service}`,
-      "-H",
-      `Authorization: Bearer ${accessToken}`,
-      "-H",
-      "Content-Type: application/json",
-      "-d",
-      JSON.stringify(data),
-    ])
-  ) as JsonObject[];
 }
 
 function sleep(ms: number): Promise<void> {

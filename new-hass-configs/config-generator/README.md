@@ -516,11 +516,11 @@ After deploying scene changes, verify both entities are controlled correctly:
 
 ```bash
 # Trigger the scene
-hass-cli service call scene.turn_on --arguments 'entity_id=scene.office_high'
+just ha-call scene.turn_on scene.office_high
 
 # Check both paired entities are in sync
-hass-cli state get light.light_office_abovecouch
-hass-cli state get light.light_office_abovecouch_white
+just ha-state light.light_office_abovecouch
+just ha-state light.light_office_abovecouch_white
 ```
 
 Both entities should show the same on/off state and brightness. If they don't match:

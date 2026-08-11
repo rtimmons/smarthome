@@ -16,8 +16,23 @@ preflight:
 	done
 
 [private]
+home-assistant-preflight:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	for bin in curl node npm ssh; do
+		if ! command -v "$bin" >/dev/null 2>&1; then
+			echo "Missing required Home Assistant client tool: $bin" >&2
+			exit 1
+		fi
+	done
+
+[private]
 config-generator-install:
-	cd config-generator && if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then npm install; fi
+	cd config-generator && if [ ! -d node_modules ] || [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then npm ci; fi
+
+[private]
+home-assistant-build: config-generator-install
+	cd config-generator && npm run build
 
 # Run tests for config-generator
 test: config-generator-install
@@ -78,12 +93,17 @@ generate: config-generator-install
 	@if [ ! -f automations.yaml ]; then echo "[]" > automations.yaml; fi
 	@echo "Configuration generation complete!"
 
-# Fetch live device inventory from Home Assistant via hass-cli
-inventory:
-	hass-cli --output json device list > device_inventory.json
-	hass-cli --output json entity list > entity_inventory.json
-	@echo "Wrote device inventory to device_inventory.json"
-	@echo "Wrote entity inventory to entity_inventory.json"
+# Fetch live device and entity registries through the repository-owned API client
+inventory *args="": home-assistant-preflight home-assistant-build
+	cd config-generator && node dist/cli/home-assistant.js inventory --device-output ../device_inventory.json --entity-output ../entity_inventory.json {{args}}
+
+# Read one live Home Assistant entity state
+ha-state entity_id *args="": home-assistant-preflight home-assistant-build
+	cd config-generator && node dist/cli/home-assistant.js state "{{entity_id}}" {{args}}
+
+# Call a live Home Assistant service for one entity
+ha-call service entity_id *args="": home-assistant-preflight home-assistant-build
+	cd config-generator && node dist/cli/home-assistant.js call "{{service}}" --entity-id "{{entity_id}}" {{args}}
 
 # Fetch the Home Assistant YAML configs into current directory
 fetch: preflight

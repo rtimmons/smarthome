@@ -249,13 +249,21 @@ Use `iterate.sh` to capture before/after inventories around a scene application.
 
 ```bash
 cd new-hass-configs
-./iterate.sh  # runs just inventory, applies scene.guest_bathroom_high via hass-cli, runs inventory again
+./iterate.sh  # runs just inventory, applies scene.guest_bathroom_high via the repo API client, then inventories again
 ls inventory_snapshots/2025*/  # view captured device/entity snapshots
 ```
 
 Requirements:
-- `just inventory` working (hass-cli configured for your Home Assistant instance)
-- `hass-cli` installed locally and authenticated
+- SSH access to `root@homeassistant.local`, or `HASS_TOKEN` set to a valid long-lived access token
+- A reachable Home Assistant API (override with `--server` and SSH discovery with `--host` when needed)
+
+The repository client is built automatically from `config-generator` and avoids the external Python-based `hass-cli` package:
+
+```bash
+just inventory
+just ha-state light.light_office_abovecouch
+just ha-call scene.turn_on scene.office_high
+```
 
 ---
 

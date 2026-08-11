@@ -20,9 +20,8 @@ Guidance for humans and agents working in this repository.
 - Upstream Home Assistant references live under `reference-repos/` as submodules; see `reference-repos/AGENTS.md` for purposes, doc entry points, and refresh commands.
 
 ## Home Assistant configuration
-- Everything lives under `new-hass-configs`. Common commands: `just fetch`, `just check`, `just deploy`, and `./iterate.sh` for before/after scene inventories. Access the live system with `hass-cli` when you need to inspect entities or trigger scenes.
-- **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The `ha` command is available for system control, device discovery, entity inspection, logs, backups, and more. Entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
-- **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The `ha` command is available for system control, device discovery, entity inspection, logs, backups, and more. Entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
+- Everything lives under `new-hass-configs`. Common commands: `just fetch`, `just check`, `just deploy`, and `./iterate.sh` for before/after scene inventories. From the repo root, use the repository-owned `just ha-state <entity_id>`, `just ha-call <domain.service> <entity_id>`, and `just ha-inventory` commands to inspect or operate the live system; they do not depend on the Python-based `hass-cli` package.
+- **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The remote `ha` command manages Core/Supervisor lifecycle, logs, backups, and host services; it does not expose entity state or service-call commands, so use the repository API client for those. The entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
 
 ## Add-ons at a glance
 - `grid-dashboard` (port 3000) — Main dashboard UI. See `grid-dashboard/AGENTS.md`.

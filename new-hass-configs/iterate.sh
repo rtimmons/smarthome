@@ -13,8 +13,8 @@ just inventory
 cp device_inventory.json "${snap_dir}/device_before.json"
 cp entity_inventory.json "${snap_dir}/entity_before.json"
 
-echo "Applying guest bathroom high scene via hass-cli..."
-hass-cli service call scene.turn_on --arguments entity_id=scene.guest_bathroom_high
+echo "Applying guest bathroom high scene via the repository Home Assistant client..."
+just ha-call scene.turn_on scene.guest_bathroom_high
 
 echo "Taking post-scene inventory..."
 just inventory
