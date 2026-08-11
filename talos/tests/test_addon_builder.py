@@ -127,6 +127,40 @@ def test_generated_dockerfile_caches_dependencies_before_source():
     assert dockerfile.index("RUN npm ci") < dockerfile.index(source_copy)
 
 
+def test_git_cloned_addons_require_an_immutable_ref_and_frozen_install():
+    addons = addon_builder.discover_addons()
+    context = addon_builder.build_context("node-sonos-http-api", addons)
+    dockerfile = addon_builder.render_template(
+        addon_builder.jinja_env(), "Dockerfile.j2", context
+    )
+
+    ref = "3776f0ee2261c924c7b7204de121a38100a08ca7"
+    assert context["addon"]["git_clone"]["ref"] == ref
+    assert f"git checkout --detach {ref}" in dockerfile
+    assert 'test "$(git rev-parse HEAD)" =' in dockerfile
+    assert "npm ci --omit=dev" in dockerfile
+    assert "npm install --production" not in dockerfile
+    assert dockerfile.index("dependency-lock/package-lock.json") < dockerfile.index(
+        "npm ci --omit=dev"
+    )
+    assert dockerfile.index("/overlay/.") < dockerfile.index("npm ci --omit=dev")
+    assert dockerfile.index("patch -p1") < dockerfile.index("npm ci --omit=dev")
+
+
+def test_git_cloned_addons_reject_moving_refs():
+    addons = addon_builder.discover_addons()
+    addons["node-sonos-http-api"] = {
+        **addons["node-sonos-http-api"],
+        "git_clone": {
+            **addons["node-sonos-http-api"]["git_clone"],
+            "ref": "master",
+        },
+    }
+
+    with pytest.raises(Exception, match="40-character commit SHA"):
+        addon_builder.build_context("node-sonos-http-api", addons)
+
+
 def test_python_context_exposes_runtime_and_build_dependencies():
     addons = addon_builder.discover_addons()
     context = addon_builder.build_context("printer", addons)
@@ -134,6 +168,40 @@ def test_python_context_exposes_runtime_and_build_dependencies():
     assert "flask" in context["addon"]["python_dependencies"]
     assert "hatchling" in context["addon"]["python_build_dependencies"]
     assert context["addon"]["deploy_health_path"] == "/health/mongo"
+
+
+def test_python_dependencies_are_exported_from_uv_lock_with_hashes(tmp_path):
+    addons = addon_builder.discover_addons()
+    context = addon_builder.build_context("printer", addons)
+
+    addon_builder.export_python_requirements(context["addon"], tmp_path)
+
+    requirements = (tmp_path / "requirements.lock").read_text(encoding="utf-8")
+    build_requirements = (tmp_path / "build-requirements.lock").read_text(
+        encoding="utf-8"
+    )
+    assert "flask==" in requirements
+    assert "pillow==12.3.0" in requirements
+    assert "pytest==" not in requirements
+    assert "--hash=sha256:" in requirements
+    assert "hatchling==" in build_requirements
+    assert "wheel==" in build_requirements
+    assert "--hash=sha256:" in build_requirements
+
+
+def test_python_dockerfile_installs_hash_locked_application_dependencies():
+    addons = addon_builder.discover_addons()
+    context = addon_builder.build_context("printer", addons)
+    dockerfile = addon_builder.render_template(
+        addon_builder.jinja_env(), "Dockerfile.j2", context
+    )
+
+    assert "COPY app/requirements.lock app/build-requirements.lock" in dockerfile
+    assert "pip install --no-cache-dir --require-hashes --no-deps" in dockerfile
+    assert "--no-build-isolation -r /tmp/app-metadata/requirements.lock" in dockerfile
+    assert 'ENV PYTHONPATH="/opt/printer/app/src"' in dockerfile
+    assert "FROM python:3.14.6-alpine" in dockerfile
+    assert "pip install --no-cache-dir --upgrade" not in dockerfile
 
 
 def test_slow_stopping_node_addons_exec_the_service_as_pid_one():

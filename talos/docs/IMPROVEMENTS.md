@@ -231,7 +231,7 @@ This approach avoids duplicating talos validation logic and keeps hooks focused 
 Enhance error messages with suggestions:
 - **Missing addon.yaml**: "Add-on '<name>' not found. Create <name>/addon.yaml or check spelling."
 - **SSH failure**: "Cannot SSH to Home Assistant. Run: ssh root@homeassistant.local to diagnose."
-- **Missing dependencies**: "node_modules not found. Run: cd <addon> && npm install"
+- **Missing dependencies**: "node_modules not found. Run: cd <addon> && just setup"
 
 #### 4. Add Template Variable Reference
 Create `talos/docs/TEMPLATES.md` documenting:

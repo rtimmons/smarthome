@@ -7,11 +7,16 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 addon_dir="$(cd "${script_dir}/../.." && pwd)"
 upstream_dir="${addon_dir}/node-sonos-http-api"
 patch_dir="${addon_dir}/patches"
+overlay_dir="${addon_dir}/overlay"
+dependency_lock_dir="${addon_dir}/dependency-lock"
 
 if [ ! -d "${upstream_dir}/.git" ]; then
     echo "[node-sonos-http-api] Upstream checkout missing at ${upstream_dir}; run just setup." >&2
     exit 1
 fi
+
+cp -R "${overlay_dir}/." "${upstream_dir}/"
+cp "${dependency_lock_dir}/package.json" "${dependency_lock_dir}/package-lock.json" "${upstream_dir}/"
 
 shopt -s nullglob
 for patch_file in "${patch_dir}"/*.patch; do

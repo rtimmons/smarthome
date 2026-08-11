@@ -232,7 +232,7 @@ import "../talos/just/nvm.just"
 
 setup:
     {{nvm_use}}
-    cd ExpressServer && npm install
+    cd ExpressServer && npm ci
 
 test:
     {{nvm_use}}
@@ -374,7 +374,7 @@ tests:
 2. Create `Justfile`:
 ```just
 setup:
-    uv sync  # or npm install
+    uv sync  # Node add-ons should use npm ci
 
 test:
     uv run pytest

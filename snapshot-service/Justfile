@@ -23,7 +23,7 @@ ensure_deps := "if [ ! -d 'node_modules' ]; then just setup; fi"
 setup:
     @echo "🔧 Setting up Snapshot Service..."
     @set -e
-    @npm install
+    @npm ci
     @echo "✅ Snapshot Service setup complete"
 
 # Run development server

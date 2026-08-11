@@ -32,8 +32,8 @@ cd talos
 export PATH="$PWD/build/bin:$PATH"  # optional convenience for direct talos usage
 ```
 
-The build uses its own virtualenv under `talos/build/venv` so it never conflicts with
-add-on runtimes.
+The build uses its own virtualenv under `talos/build/venv` and syncs it from
+`talos/uv.lock`, so it never conflicts with add-on runtimes or drifts between runs.
 
 ## Core Commands
 
@@ -129,7 +129,7 @@ talos/
 - **Tests**: Run with `pytest` from the Talos venv:
   ```bash
   cd talos
-  build/venv/bin/python -m pip install -e '.[test]'
+  ./build.sh
   build/venv/bin/python -m pytest tests
   ```
 

@@ -170,7 +170,7 @@ test addon="all":
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "⚡ Running fast tests (excluding slow integration tests)..."; \
-		( cd talos && build/venv/bin/python -m pip install -e '.[test]' >/dev/null && build/venv/bin/python -m pytest -m "not slow" tests ); \
+		( cd talos && ./build.sh >/dev/null && build/venv/bin/python -m pytest -m "not slow" tests ); \
 		args=(); \
 		if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
 		if [ ${#args[@]} -eq 0 ]; then \
@@ -191,7 +191,7 @@ test-all addon="all":
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "🧪 Running all tests (including slow integration tests)..."; \
-		( cd talos && build/venv/bin/python -m pip install -e '.[test]' >/dev/null && build/venv/bin/python -m pytest tests ); \
+		( cd talos && ./build.sh >/dev/null && build/venv/bin/python -m pytest tests ); \
 		args=(); \
 		if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
 		if [ ${#args[@]} -eq 0 ]; then \
@@ -212,7 +212,7 @@ test-slow:
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "🐌 Running slow and integration tests..."; \
-		( cd talos && build/venv/bin/python -m pip install -e '.[test]' >/dev/null && build/venv/bin/python -m pytest -m "slow or integration" tests )
+		( cd talos && ./build.sh >/dev/null && build/venv/bin/python -m pytest -m "slow or integration" tests )
 
 # ============================================================================
 # INFORMATION AND UTILITIES

@@ -25,7 +25,7 @@ no_update := "NO_UPDATE_NOTIFIER=1"
 setup:
     @echo "🔧 Setting up Grid Dashboard..."
     @{{nvm_use}}
-    @cd {{express_dir}} && npm install
+    @cd {{express_dir}} && npm ci
     @echo "✅ Grid Dashboard setup complete"
 
 # Run tests with specific configuration

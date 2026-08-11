@@ -3,8 +3,8 @@
 # Python version: {{ addon.python_version }} (from .python-version)
 
 {% if addon.python %}
-# Use Python {{ addon.python_minor }} base image
-FROM python:{{ addon.python_minor }}-alpine
+# Use Python {{ addon.python_version }} base image
+FROM python:{{ addon.python_version }}-alpine
 
 ARG BUILD_VERSION=dev
 ARG BUILD_ARCH
@@ -58,13 +58,17 @@ RUN apk add --no-cache \
     freetype-dev \
     libpng-dev \
     libffi-dev \
-  && python3 -m venv {{ paths.venv }} \
-  && {{ paths.venv }}/bin/pip install --no-cache-dir --upgrade pip setuptools wheel{% for dependency in addon.python_build_dependencies %} {{ dependency | shquote }}{% endfor %}{% for dependency in addon.python_dependencies %} {{ dependency | shquote }}{% endfor %}
+  && python3 -m venv {{ paths.venv }}
 
 ENV PATH="{{ paths.venv }}/bin:${PATH}"
+ENV PYTHONPATH="{{ addon.container_workdir }}/src"
+COPY app/requirements.lock app/build-requirements.lock /tmp/app-metadata/
+RUN {{ paths.venv }}/bin/pip install --no-cache-dir --require-hashes --no-deps \
+    -r /tmp/app-metadata/build-requirements.lock
+RUN {{ paths.venv }}/bin/pip install --no-cache-dir --require-hashes --no-deps \
+    --no-build-isolation -r /tmp/app-metadata/requirements.lock
 COPY app/ {{ addon.container_workdir }}/
-RUN {{ paths.venv }}/bin/pip install --no-cache-dir --no-deps --no-build-isolation {{ addon.container_workdir }}/ \
-  && find {{ addon.container_workdir }}/ -type f -name '*.pyc' -delete \
+RUN find {{ addon.container_workdir }}/ -type f -name '*.pyc' -delete \
   && find {{ addon.container_workdir }}/ -type d -name '__pycache__' -delete \
   && apk del .build-deps
 {% else %}
@@ -84,17 +88,24 @@ WORKDIR {{ addon.container_workdir }}
 RUN apk add --no-cache bash jq {% if addon.git_clone %}git patch{% endif %}
 
 {% if addon.git_clone %}
+COPY app/ {{ paths.tmp_overlay }}/
 RUN set -e; \
   for i in 1 2 3 4 5; do \
-    git clone {{ addon.git_clone.repo | shquote }} {{ addon.git_clone.target | shquote }} {% if addon.git_clone.ref %}&& cd {{ addon.git_clone.target | shquote }} && git checkout {{ addon.git_clone.ref | shquote }} && cd / {% endif %} \
+    git clone --no-checkout {{ addon.git_clone.repo | shquote }} {{ addon.git_clone.target | shquote }} \
+    && cd {{ addon.git_clone.target | shquote }} \
+    && git checkout --detach {{ addon.git_clone.ref | shquote }} \
+    && test "$(git rev-parse HEAD)" = {{ addon.git_clone.ref | shquote }} \
+    && cd / \
     && break || { echo "git clone attempt ${i} failed, retrying in 5s..."; rm -rf {{ addon.git_clone.target | shquote }}; sleep 5; }; \
   done; \
+  cp -R {{ paths.tmp_overlay }}/. {{ addon.git_clone.target | shquote }}/; \
+  if [ -d {{ paths.tmp_overlay }}/overlay ]; then cp -R {{ paths.tmp_overlay }}/overlay/. {{ addon.git_clone.target | shquote }}/; fi; \
+  if [ -d {{ paths.tmp_overlay }}/dependency-lock ]; then cp {{ paths.tmp_overlay }}/dependency-lock/package.json {{ paths.tmp_overlay }}/dependency-lock/package-lock.json {{ addon.git_clone.target | shquote }}/; fi; \
+  rm -rf {{ addon.git_clone.target | shquote }}/overlay {{ addon.git_clone.target | shquote }}/dependency-lock {{ addon.git_clone.target | shquote }}/patches; \
+  if [ -d {{ paths.tmp_overlay }}/patches ]; then cd {{ addon.git_clone.target | shquote }} && for patch in {{ paths.tmp_overlay }}/patches/*.patch; do [ -f "$patch" ] && patch -p1 < "$patch" && echo "Applied patch: $patch"; done; fi; \
   cd {{ addon.git_clone.target | shquote }} \
-  && npm install --production \
+  && npm ci --omit=dev \
   && npm cache clean --force
-COPY app/ {{ paths.tmp_overlay }}/
-RUN if [ -d {{ paths.tmp_overlay }} ]; then cp -R {{ paths.tmp_overlay }}/. {{ addon.git_clone.target | shquote }}/; fi \
-  && if [ -d {{ paths.tmp_overlay }}/patches ]; then cd {{ addon.git_clone.target | shquote }} && for patch in {{ paths.tmp_overlay }}/patches/*.patch; do [ -f "$patch" ] && patch -p1 < "$patch" && echo "Applied patch: $patch"; done; fi
 {% else %}
 COPY app/package.json app/package-lock.json {{ addon.container_workdir }}/
 RUN npm ci && npm cache clean --force

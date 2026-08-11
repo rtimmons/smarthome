@@ -170,7 +170,7 @@ just dev
 **Known Issues** (see [../setup/dev-setup.md](../setup/dev-setup.md) for solutions):
 - 🔧 printer: Requires system library `cairo` (install via `brew install cairo`)
 - 🔧 node-sonos-http-api: Requires upstream git clone (one-time setup)
-- 🔧 All addons: Require `npm install` or `uv sync` before first run
+- 🔧 All add-ons: Run their `just setup` recipes before first use; Node projects install with `npm ci`
 
 ## Service Details
 
@@ -179,7 +179,7 @@ just dev
 - **Port**: 5005
 - **Source**: `node-sonos-http-api/` (git clone from https://github.com/jishi/node-sonos-http-api.git)
 - **Runtime**: Node v24.18.0
-- **Start**: Clone repo → `npm install` → `npm start`
+- **Start**: `just setup` (reviewed upstream commit + locked dependencies) → `npm start`
 - **Env vars**: `PORT=5005`, `SONOS_DISCOVERY_TIMEOUT=5`
 - **Watch**: May need nodemon or supervisor (not in upstream)
 - **Dependencies**: None

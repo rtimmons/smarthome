@@ -2,7 +2,7 @@
 
 This document consolidates all improvement plans, todos, and recommendations into a single comprehensive roadmap. It merges content from previously scattered plans across multiple documents.
 
-**Last Updated**: 2026-07-18
+**Last Updated**: 2026-08-11
 **Status**: Active roadmap - replaces all other TODO/improvement documents
 
 ## Overview
@@ -27,20 +27,39 @@ This roadmap prioritizes improvements across four main areas:
 
 ### 2. Replace Deprecated npm Packages
 
-**Status**: ✅ **COMPLETED FOR MAINTAINED SERVICES** / ⚠️ **UPSTREAM SONOS DEBT REMAINS**
+**Status**: ✅ **COMPLETED** / ⚠️ **UPSTREAM SONOS REPLACEMENT REMAINS LONG-TERM DEBT**
 
 The dashboard and local Sonos proxy now use Node's built-in `fetch`; deprecated
 `request`, `request-promise`, and `body-parser` dependencies were removed. The
 vendored browser Underscore was updated to 1.13.8. Maintained npm projects audit
-clean. The cloned third-party `node-sonos-http-api` project still has an old,
-vulnerable dependency graph and should eventually be replaced or migrated
-upstream rather than hidden behind unsafe overrides.
+clean. The cloned third-party `node-sonos-http-api` source is now pinned to a
+reviewed commit and built with a repository-owned, production-only dependency
+graph. Its abandoned request clients were replaced while preserving Pandora,
+Spotify search, AWS Polly, and ElevenLabs behavior; the resulting image audits
+at zero known production vulnerabilities. Replacing that upstream service is
+still worthwhile because it remains largely dormant legacy code.
+
+Production dependency resolution is now reproducible: Python add-on builds
+export the frozen `uv.lock` graph to hash-locked application and build
+requirements, disable PEP 517 build isolation, and the
+third-party Sonos build pins its upstream commit and installs its checked-in npm
+lockfile with `npm ci`. Maintained Node setup paths also use `npm ci` rather
+than rewriting lockfiles, and Talos installs itself from its own `uv.lock`.
+Dependabot version updates cover every maintained npm
+and uv manifest plus Dockerfiles and Git submodules.
 
 **Tasks**:
 - [x] Replace deprecated request clients in maintained services with native `fetch`
 - [x] Update the shipped browser Underscore build
 - [x] Update maintained service dependencies and lockfiles
 - [x] Audit maintained production dependency trees
+- [x] Install Python production dependencies from the hash-locked `uv.lock` graph
+- [x] Pin cloned upstream source and use a reviewed npm lockfile during local and container builds
+- [x] Replace the Sonos upstream production graph and verify the built image audits clean
+- [x] Route the legacy printer build script through the locked Talos build pipeline
+- [x] Lock the Talos build/test environment and remove self-updating pip setup paths
+- [x] Pin runtime container images to patch releases and verify the nvm tag's commit
+- [x] Configure scheduled npm, uv, Docker, and Git submodule version updates
 - [ ] Replace or upstream-modernize `node-sonos-http-api`
 
 ### 3. Python Environment Standardization

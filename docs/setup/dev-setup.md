@@ -112,13 +112,12 @@ cd ..
 
 #### node-sonos-http-api (Special Case)
 
-This addon requires cloning the upstream repository:
+Use its setup recipe so the upstream commit, compatibility overlay, and
+production-only lockfile are all verified:
 
 ```bash
 cd node-sonos-http-api
-git clone https://github.com/jishi/node-sonos-http-api.git
-cd node-sonos-http-api
-npm install
+just setup
 cd ../..
 ```
 
@@ -126,16 +125,16 @@ cd ../..
 
 ```bash
 cd sonos-api
-npm install
+just setup
 cd ..
 ```
 
 #### grid-dashboard
 
 ```bash
-cd grid-dashboard/ExpressServer
-npm install
-cd ../..
+cd grid-dashboard
+just setup
+cd ..
 ```
 
 #### printer
@@ -174,7 +173,7 @@ Press `Ctrl+C` to stop all services.
 
 ```bash
 cd <addon-directory>
-npm install
+just setup
 ```
 
 ### Service won't start - missing Python dependencies
@@ -186,11 +185,11 @@ uv sync
 
 ### node-sonos-http-api not found
 
-Make sure you've cloned the upstream repo inside the `node-sonos-http-api` directory:
+Run the repository setup recipe; do not manually clone a moving upstream ref:
 
 ```bash
 cd node-sonos-http-api
-git clone https://github.com/jishi/node-sonos-http-api.git
+just setup
 ```
 
 ### node-sonos-http-api never discovers speakers on macOS

@@ -230,7 +230,7 @@ class AddonConfig:
                     raise ValueError(
                         f"Upstream repo not found. See docs/setup/dev-setup.md for instructions.\n"
                         f"   Quick fix: cd {self.source_dir} && "
-                        f"git clone https://github.com/jishi/node-sonos-http-api.git"
+                        f"just setup"
                     )
                 # Run from the cloned repo directory
                 return ["npm", "start"]
@@ -354,9 +354,9 @@ class ServiceProcess:
             if package_json.exists():
                 node_modules = working_dir / "node_modules"
                 if not node_modules.exists():
-                    self._log("[yellow]⚠️  node_modules not found. Run 'just setup' (or npm install for this add-on).[/yellow]")
-                    self._log(f"[yellow]   cd {working_dir} && npm install[/yellow]")
-                    self.failure_reason = "Missing node_modules (run just setup / npm install)"
+                    self._log("[yellow]⚠️  node_modules not found. Run the add-on's 'just setup' recipe.[/yellow]")
+                    self._log(f"[yellow]   cd {self.addon.source_dir} && just setup[/yellow]")
+                    self.failure_reason = "Missing node_modules (run just setup)"
                     return False
 
         # Check for venv/uv setup if Python service

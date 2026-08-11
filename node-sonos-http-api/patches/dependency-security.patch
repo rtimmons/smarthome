@@ -1,0 +1,148 @@
+diff --git a/lib/actions/musicSearch.js b/lib/actions/musicSearch.js
+index c782631..f61a2f4 100644
+--- a/lib/actions/musicSearch.js
++++ b/lib/actions/musicSearch.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-const request = require('request-promise');
++const request = require('../helpers/fetch-request');
+ const fs = require("fs");
+ const isRadioOrLineIn = require('../helpers/is-radio-or-line-in');
+ 
+diff --git a/lib/actions/pandora.js b/lib/actions/pandora.js
+index b7f4532..0e1dddf 100644
+--- a/lib/actions/pandora.js
++++ b/lib/actions/pandora.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ const url = require('url');
+ const querystring = require('querystring');
+-const Anesidora = require('anesidora');
++const Anesidora = require('../helpers/anesidora');
+ const Fuse = require('fuse.js');
+ const settings = require('../../settings');
+ 
+diff --git a/lib/helpers/file-duration.js b/lib/helpers/file-duration.js
+index c44e28b..a503d4b 100644
+--- a/lib/helpers/file-duration.js
++++ b/lib/helpers/file-duration.js
+@@ -1,7 +1,6 @@
+-const musicMeta = require('music-metadata');
+-
+-function fileDuration(path) {
+-  return musicMeta.parseFile(path, { duration: true })
++async function fileDuration(path) {
++  const musicMeta = await import('music-metadata');
++  return musicMeta.parseFile(path, { duration: true })
+       .then((info) => {
+         return Math.ceil(info.format.duration * 1000);
+       })
+diff --git a/lib/music_services/spotifyDef.js b/lib/music_services/spotifyDef.js
+index f38ce1a..465da5f 100644
+--- a/lib/music_services/spotifyDef.js
++++ b/lib/music_services/spotifyDef.js
+@@ -1,6 +1,6 @@
+ 'use strict';
+ 
+-var   request = require('request-promise');
++var request = require('../helpers/fetch-request');
+ const settings = require('../../settings');
+ 
+ var clientId = "";
+diff --git a/lib/tts-providers/aws-polly.js b/lib/tts-providers/aws-polly.js
+index 7de740d..0c63ec8 100644
+--- a/lib/tts-providers/aws-polly.js
++++ b/lib/tts-providers/aws-polly.js
+@@ -1,9 +1,8 @@
+ 'use strict';
+ const crypto = require('crypto');
+ const fs = require('fs');
+-const http = require('http');
+ const path = require('path');
+-const AWS = require('aws-sdk');
++const { PollyClient, SynthesizeSpeechCommand } = require('@aws-sdk/client-polly');
+ const fileDuration = require('../helpers/file-duration');
+ const settings = require('../../settings');
+ const logger = require('sonos-discovery/lib/helpers/logger');
+@@ -52,17 +51,18 @@ function polly(phrase, voiceName) {
+     logger.info(`announce file for phrase "${phrase}" does not seem to exist, downloading`);
+   }
+ 
+-  const constructorParameters = Object.assign({ apiVersion: '2016-06-10' }, settings.aws.credentials);
+-
+-  const polly = new AWS.Polly(constructorParameters);
++  const client = new PollyClient(settings.aws.credentials || {});
+ 
+-  return polly.synthesizeSpeech(synthesizeParameters)
+-    .promise()
+-    .then((data) => {
+-      fs.writeFileSync(filepath, data.AudioStream);
++  return client.send(new SynthesizeSpeechCommand(synthesizeParameters))
++    .then(async (data) => {
++      const audio = data.AudioStream && data.AudioStream.transformToByteArray
++        ? await data.AudioStream.transformToByteArray()
++        : data.AudioStream;
++      fs.writeFileSync(filepath, Buffer.from(audio));
+       return fileDuration(filepath);
+     })
+     .then((duration) => {
++      client.destroy();
+       return {
+         duration,
+         uri: expectedUri
+diff --git a/lib/tts-providers/elevenlabs.js b/lib/tts-providers/elevenlabs.js
+index 748be18..c30484f 100644
+--- a/lib/tts-providers/elevenlabs.js
++++ b/lib/tts-providers/elevenlabs.js
+@@ -1,9 +1,7 @@
+ 'use strict';
+ const crypto = require('crypto');
+ const fs = require('fs');
+-const http = require('http');
+ const path = require('path');
+-const ElevenLabs = require('elevenlabs-node');
+ const fileDuration = require('../helpers/file-duration');
+ const settings = require('../../settings');
+ const logger = require('sonos-discovery/lib/helpers/logger');
+@@ -56,14 +54,33 @@ function eleven(phrase, voiceId) {
+     logger.info(`announce file for phrase "${phrase}" does not seem to exist, downloading`);
+   }
+ 
+-  const voice = new ElevenLabs(
+-      {
+-          apiKey:  settings.elevenlabs.auth.apiKey
+-      }
+-  );
+-
+-  return voice.textToSpeech(synthesizeParameters)
+-    .then((res) => {
++  const endpoint = `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(synthesizeParameters.voiceId)}`;
++  return fetch(endpoint, {
++    method: 'POST',
++    headers: {
++      Accept: 'audio/mpeg',
++      'Content-Type': 'application/json',
++      'xi-api-key': settings.elevenlabs.auth.apiKey
++    },
++    body: JSON.stringify({
++      text: synthesizeParameters.textInput,
++      voice_settings: {
++        stability: synthesizeParameters.stability,
++        similarity_boost: synthesizeParameters.similarityBoost,
++        style: synthesizeParameters.style,
++        use_speaker_boost: synthesizeParameters.speakerBoost
++      },
++      model_id: synthesizeParameters.modelId
++    })
++  })
++    .then((response) => {
++      if (!response.ok) {
++        throw new Error(`ElevenLabs request failed with HTTP ${response.status}`);
++      }
++      return response.arrayBuffer();
++    })
++    .then((audio) => {
++      fs.writeFileSync(filepath, Buffer.from(audio));
+       console.log('Elevenlabs TTS generated new audio file.');
+     })
+     .then(() => {

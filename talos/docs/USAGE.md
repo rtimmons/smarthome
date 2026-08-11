@@ -43,7 +43,8 @@ cd talos
 ./build.sh
 ```
 
-This creates an isolated Python virtualenv in `talos/build/venv` and installs talos as an editable package.
+This creates an isolated Python virtualenv in `talos/build/venv` and installs
+Talos plus its test tools from the hash-pinned `talos/uv.lock` graph.
 
 ### Using Talos Directly
 
@@ -456,7 +457,7 @@ run_env:
 git_clone:
   repo: https://github.com/user/repo.git
   target: upstream                # Directory to clone into
-  ref: main                       # Branch/tag/commit (optional)
+  ref: 0123456789abcdef0123456789abcdef01234567  # Required full commit SHA
 
 # Tests (run by 'talos addon test <name>')
 tests:
@@ -623,7 +624,7 @@ talos dev
 ```bash
 # Run setup for specific add-on
 cd <addon-directory>
-npm install  # or: uv sync
+just setup
 
 # Or run full setup
 just setup

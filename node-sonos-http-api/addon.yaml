@@ -3,12 +3,15 @@ name: Node Sonos HTTP API
 description: The actual node-sonos-http-api server for controlling Sonos speakers via HTTP.
 url: https://github.com/jishi/node-sonos-http-api
 copy:
+  - dependency-lock
+  - overlay
   - presets
   - presets.example.json
   - patches
 git_clone:
   repo: https://github.com/jishi/node-sonos-http-api.git
   target: /app
+  ref: 3776f0ee2261c924c7b7204de121a38100a08ca7
 container_workdir: /app
 npm_build: false
 # Upstream currently declares support for Node <23. Keep this legacy service

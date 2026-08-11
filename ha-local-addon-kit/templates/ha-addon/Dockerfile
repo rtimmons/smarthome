@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:24.18.0-alpine
 
 ARG BUILD_VERSION=dev
 ARG BUILD_ARCH
@@ -12,8 +12,8 @@ WORKDIR /opt/app
 
 RUN apk add --no-cache bash jq
 
-COPY app/package*.json ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+COPY app/package.json app/package-lock.json ./
+RUN npm ci
 
 COPY app/ ./
 RUN if node -e "const p=require('./package.json'); process.exit(p.scripts && p.scripts.build ? 0 : 1)"; then npm run build; fi

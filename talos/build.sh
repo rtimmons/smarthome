@@ -2,16 +2,18 @@
 set -euo pipefail
 
 # Build/install talos into an isolated venv under talos/build
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+TALOS_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$TALOS_ROOT"
 
 # Source Python version management to ensure we use the correct Python version
-source "$SCRIPT_DIR/scripts/python_use.sh"
+source "$TALOS_ROOT/scripts/python_use.sh"
 PYTHON_BIN="$TALOS_PYTHON_BIN"
 mkdir -p build
 
-export PIP_DISABLE_PIP_VERSION_CHECK=1
-export PIP_NO_COLOR=1
+if ! command -v uv >/dev/null 2>&1; then
+  echo "uv is required to install Talos from its lockfile; run 'just setup'." >&2
+  exit 1
+fi
 
 # Check if we need to recreate the venv due to Python version mismatch
 RECREATE_VENV=0
@@ -30,15 +32,13 @@ if [ -x "build/venv/bin/python" ]; then
   fi
 fi
 
-if [ ! -x "build/venv/bin/python" ]; then
-  "$PYTHON_BIN" -m venv build/venv
-fi
-
-# Quiet successful installs; stderr still shows failures
-build/venv/bin/python -m pip install --upgrade pip >/dev/null
-build/venv/bin/python -m pip install -e . >/dev/null
+# Sync the editable project and test tools from the hash-pinned uv lock.
+UV_PROJECT_ENVIRONMENT="$TALOS_ROOT/build/venv" \
+UV_CACHE_DIR="$TALOS_ROOT/build/uv-cache" \
+UV_PYTHON_DOWNLOADS=never \
+  uv sync --frozen --extra test --python "$PYTHON_BIN" >/dev/null
 
 # Expose a stable bin path
 (cd build && ln -sfn venv/bin bin)
 
-echo "Talos ready: $SCRIPT_DIR/build/bin/talos"
+echo "Talos ready: $TALOS_ROOT/build/bin/talos"

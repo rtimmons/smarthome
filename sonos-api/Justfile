@@ -14,7 +14,7 @@ import "../talos/just/nvm.just"
 setup:
     @echo "🔧 Setting up Sonos API..."
     @{{nvm_use}}
-    @npm install
+    @npm ci
     @echo "✅ Sonos API setup complete"
 
 # Build the project (test equivalent)

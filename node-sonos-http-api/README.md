@@ -58,22 +58,28 @@ node node-sonos-http-api/tools/check_sonos_multicast.js
 This add-on:
 - Runs on port 5005
 - Uses host networking to discover Sonos devices on your network
-- Clones and runs the official node-sonos-http-api from GitHub
+- Clones a reviewed, immutable node-sonos-http-api commit from GitHub
 - Is accessible to other add-ons via `http://node-sonos-http-api:5005`
-- Applies custom patches to improve error handling and prevent crashes
+- Installs a repository-owned production lockfile with `npm ci`
+- Applies compatibility and reliability patches before installing dependencies
 
 ## Error Handling
 
-This add-on applies runtime patches to the upstream node-sonos-http-api to prevent crashes from transient SOAP errors:
+This add-on applies build-time patches to the upstream node-sonos-http-api for security and to prevent crashes from transient SOAP errors:
 
 ### Patches Applied
 
-1. **`patches/group-error-handling.patch`**: Adds retry logic to join operations
+1. **`patches/dependency-security.patch`**: Removes abandoned vulnerable clients
+   - Replaces `request`/`request-promise` callers with Node's built-in `fetch`
+   - Replaces the abandoned Pandora client with a local HTTPS implementation
+   - Migrates Polly to AWS SDK v3 and updates JSON/audio parsers
+
+2. **`patches/group-error-handling.patch`**: Adds retry logic to join operations
    - Retries failed join attempts up to 3 times with 1-second delays
    - Gracefully handles HTTP 500 errors from Sonos devices
    - Logs failures without crashing the service
 
-2. **`patches/server-crash-prevention.patch`**: Adds global error handlers
+3. **`patches/server-crash-prevention.patch`**: Adds global error handlers
    - Catches uncaught exceptions to prevent process crashes
    - Logs errors with stack traces for debugging
 

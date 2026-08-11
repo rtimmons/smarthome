@@ -3,13 +3,14 @@ from __future__ import annotations
 import base64
 import json
 import os
+import re
 import shlex
 import shutil
 import subprocess
 import tarfile
 import time
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, List, Optional
 
 import click
@@ -335,6 +336,42 @@ def _validated_backup_config(raw: Dict[str, Any], addon_key: str) -> Dict[str, A
     }
 
 
+def _validated_git_clone_config(
+    raw: Dict[str, Any], addon_key: str
+) -> Dict[str, str] | None:
+    config = raw.get("git_clone")
+    if config is None:
+        return None
+    if not isinstance(config, dict):
+        raise click.ClickException(
+            f"Invalid git_clone for add-on '{addon_key}'; expected a mapping."
+        )
+
+    repo = config.get("repo")
+    target = config.get("target")
+    ref = config.get("ref")
+    if not isinstance(repo, str) or not repo.startswith("https://"):
+        raise click.ClickException(
+            f"Invalid git_clone.repo for add-on '{addon_key}'; expected an HTTPS URL."
+        )
+    target_path = PurePosixPath(target) if isinstance(target, str) else None
+    if (
+        target_path is None
+        or not target_path.is_absolute()
+        or target_path == PurePosixPath("/")
+        or ".." in target_path.parts
+    ):
+        raise click.ClickException(
+            f"Invalid git_clone.target for add-on '{addon_key}'; expected a safe absolute path."
+        )
+    if not isinstance(ref, str) or re.fullmatch(r"[0-9a-fA-F]{40}", ref) is None:
+        raise click.ClickException(
+            f"Invalid git_clone.ref for add-on '{addon_key}'; expected a full 40-character commit SHA."
+        )
+
+    return {"repo": repo, "target": str(target_path), "ref": ref.lower()}
+
+
 def read_runtime_versions() -> Dict[str, str]:
     """Read runtime versions from .nvmrc and .python-version files."""
     versions: Dict[str, str] = {}
@@ -367,6 +404,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
     raw = manifest[addon_key]
     source_dir = REPO_ROOT / raw["source_dir"]
     backup_config = _validated_backup_config(raw, addon_key)
+    git_clone_config = _validated_git_clone_config(raw, addon_key)
 
     runtime_versions = read_runtime_versions()
 
@@ -450,7 +488,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "port": port,
             "deploy_health_path": deploy_health_path,
             "run_env": raw.get("run_env", []),
-            "git_clone": raw.get("git_clone"),
+            "git_clone": git_clone_config,
             "tests": raw.get("tests", []),
             "map": raw.get("map", []),
             "usb": raw.get("usb", False),
@@ -512,6 +550,59 @@ def copy_sources(addon: Dict[str, Any], app_root: Path) -> None:
             shutil.copy2(src, dest)
 
 
+def export_python_requirements(addon: Dict[str, Any], app_root: Path) -> None:
+    """Export frozen uv application and build graphs as hash-locked requirements."""
+    source_dir: Path = addon["source_dir"]
+    lockfile = source_dir / "uv.lock"
+    if not lockfile.exists():
+        raise click.ClickException(
+            f"Python add-on '{addon['key']}' must include uv.lock for reproducible builds."
+        )
+
+    exports = (
+        (app_root / "requirements.lock", ["--no-dev"]),
+        (app_root / "build-requirements.lock", ["--only-group", "build"]),
+    )
+    for output, selection in exports:
+        command = [
+            "uv",
+            "export",
+            "--frozen",
+            "--offline",
+            "--no-cache",
+            *selection,
+            "--no-emit-project",
+            "--no-header",
+            "--no-annotate",
+            "--quiet",
+            "--output-file",
+            str(output),
+        ]
+        try:
+            subprocess.run(
+                command,
+                cwd=source_dir,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError as error:
+            raise click.ClickException(
+                "uv is required to export locked Python dependencies; run 'just setup'."
+            ) from error
+        except subprocess.CalledProcessError as error:
+            detail = error.stderr.strip() or error.stdout.strip() or str(error)
+            raise click.ClickException(
+                f"Unable to export locked dependencies for '{addon['key']}': {detail}"
+            ) from error
+
+        exported = output.read_text(encoding="utf-8") if output.exists() else ""
+        if "--hash=sha256:" not in exported:
+            raise click.ClickException(
+                f"Locked dependency export for '{addon['key']}' did not contain package hashes."
+            )
+
+
 def write_file(path: Path, content: str) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(content, encoding="utf-8")
@@ -557,6 +648,8 @@ def build_addon(
         app_root.mkdir(parents=True, exist_ok=True)
         translations_root.mkdir(parents=True, exist_ok=True)
         copy_sources(addon, app_root)
+        if addon.get("python", False):
+            export_python_requirements(addon, app_root)
 
     with timer.phase("addon.local.render", addon=addon_key):
         env = jinja_env()
