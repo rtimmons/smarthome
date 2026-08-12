@@ -54,6 +54,6 @@ include = [
 build = [
     "hatch-requirements-txt==0.4.1",
     "hatchling==1.32.0",
-    "setuptools==83.0.0",
+    "setuptools==84.0.0",
     "wheel==0.47.0",
 ]
