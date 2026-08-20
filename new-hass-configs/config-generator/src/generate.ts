@@ -16,6 +16,7 @@ import { automations } from "./automations";
 import { getEffectiveAutomationMode } from "./automation-generation";
 import {
   Automation,
+  AutomationRegistry,
   Trigger,
   Action,
   Condition,
@@ -46,7 +47,7 @@ interface HATrigger {
   [key: string]: any;
 }
 
-interface HAAction {
+export interface HAAction {
   [key: string]: any;
 }
 
@@ -55,7 +56,7 @@ interface HACondition {
   [key: string]: any;
 }
 
-interface HAAutomation {
+export interface HAAutomation {
   id?: string;
   alias: string;
   description?: string;
@@ -145,14 +146,14 @@ function convertTrigger(trigger: Trigger): HATrigger {
   }
 }
 
-function convertAction(action: Action): HAAction {
+export function convertAction(action: Action): HAAction {
   switch (action.type) {
     case "scene":
       return {
-        action: "script.turn_on",
-        target: {
-          entity_id: getFastSceneScriptEntityId(action.scene),
-        },
+        // A direct script action blocks until the wrapper and shared dispatcher
+        // finish. `script.turn_on` would enqueue the wrapper and return early,
+        // making the caller's mode: single ineffective for repeat suppression.
+        action: getFastSceneScriptEntityId(action.scene),
       };
 
     case "service":
@@ -258,10 +259,12 @@ function convertCondition(condition: Condition): HACondition {
   }
 }
 
-function generateAutomations(): HAAutomation[] {
+export function generateAutomationsFromRegistry(
+  automationRegistry: AutomationRegistry
+): HAAutomation[] {
   const output: HAAutomation[] = [];
 
-  for (const [id, automation] of Object.entries(automations)) {
+  for (const [id, automation] of Object.entries(automationRegistry)) {
     try {
       const effectiveMode = getEffectiveAutomationMode(automation);
       const haAutomation: HAAutomation = {
@@ -331,7 +334,7 @@ function main() {
 
   // Generate automations
   console.log("Generating automations...");
-  const haAutomations = generateAutomations();
+  const haAutomations = generateAutomationsFromRegistry(automations);
   const automationsYaml = yaml.stringify(haAutomations);
   fs.writeFileSync(AUTOMATIONS_OUTPUT, automationsYaml, "utf8");
   console.log(`  ✓ Generated ${haAutomations.length} automations -> ${AUTOMATIONS_OUTPUT}`);

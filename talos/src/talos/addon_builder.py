@@ -101,6 +101,54 @@ def check_ha_core_status(ha_host: str, ha_port: int, ha_user: str) -> dict:
         return {"status": "error", "error": str(e)}
 
 
+def classify_ssh_failure(stderr: str) -> str:
+    """Classify the failure stage without treating pre-auth DNS as an auth error."""
+    message = stderr.lower()
+    if any(
+        marker in message
+        for marker in (
+            "could not resolve hostname",
+            "name or service not known",
+            "nodename nor servname provided",
+            "temporary failure in name resolution",
+            "no address associated with hostname",
+        )
+    ):
+        return "SSH_HOSTNAME_RESOLUTION_FAILED"
+    if any(
+        marker in message
+        for marker in (
+            "permission denied",
+            "agent refused operation",
+            "sign_and_send_pubkey",
+            "too many authentication failures",
+        )
+    ):
+        return "SSH_AUTHENTICATION_FAILED"
+    return "SSH_CONNECTION_FAILED"
+
+
+def ssh_failure_troubleshooting(error_type: str, host: str, port: int, user: str) -> list[str]:
+    command = f"ssh -p {port} {user}@{host}"
+    if error_type == "SSH_HOSTNAME_RESOLUTION_FAILED":
+        return [
+            f"Retry the exact hostname-based command once outside the Codex sandbox: {command}",
+            "Do not substitute an IP address; this failure happened before authentication",
+            "If the hostname still does not resolve, stop and report the mDNS/network failure",
+        ]
+    if error_type == "SSH_AUTHENTICATION_FAILED":
+        return [
+            "Stop the deployment and ask Ryan to unlock 1Password",
+            "Retry SSH only after Ryan confirms 1Password is ready",
+            "Do not retry repeatedly or switch credentials, hosts, or authentication paths",
+        ]
+    return [
+        f"Inspect the exact failure with: {command}",
+        "Stop the deployment until the SSH transport problem is understood",
+        "Do not fall back to another host, IP address, or authentication path",
+    ]
+
+
 def validate_deployment_prerequisites(
     ha_host: str,
     ha_port: int,
@@ -187,41 +235,24 @@ def validate_deployment_prerequisites(
         if verbose:
             console.print("  ✓ SSH connection established")
     except subprocess.CalledProcessError as e:
+        stderr = getattr(e, "stderr", "") or ""
+        error_type = classify_ssh_failure(stderr)
         error_details = {
             "host": ha_host,
             "port": ha_port,
             "user": ha_user,
             "exit_code": e.returncode,
-            "stderr": getattr(e, 'stderr', ''),
+            "stderr": stderr,
             "command": f"ssh -p {ha_port} {ha_user}@{ha_host}"
         }
 
-        # Provide specific troubleshooting based on exit code
-        troubleshooting_steps = [
-            f"Test manual connection: ssh -p {ha_port} {ha_user}@{ha_host}",
-            "Check if Home Assistant is running and accessible",
-            "Verify network connectivity and firewall settings",
-            "Ensure SSH key authentication is configured"
-        ]
-
-        if e.returncode == 255:  # SSH connection refused
-            troubleshooting_steps.extend([
-                "Check if SSH add-on is installed and running",
-                "Verify SSH port configuration in Home Assistant",
-                "Check network routing and DNS resolution"
-            ])
-        elif e.returncode == 1:  # Authentication failure
-            troubleshooting_steps.extend([
-                "Verify SSH key is added to authorized_keys",
-                "Check SSH user permissions and home directory",
-                "Test password authentication if keys fail"
-            ])
-
         raise DeploymentError(
             f"Cannot establish SSH connection to {ha_host}:{ha_port}",
-            error_type="SSH_CONNECTION_FAILED",
+            error_type=error_type,
             context=error_details,
-            troubleshooting_steps=troubleshooting_steps
+            troubleshooting_steps=ssh_failure_troubleshooting(
+                error_type, ha_host, ha_port, ha_user
+            )
         )
 
     # Check Home Assistant core status

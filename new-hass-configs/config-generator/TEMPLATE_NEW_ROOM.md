@@ -404,6 +404,9 @@ export const scenes: SceneRegistry = {
 2. Check webhook automation exists: `cat new-hass-configs/automations.yaml | grep {room_id}`
 3. Test webhook manually: `curl -X POST http://homeassistant.local:8123/api/webhook/scene_{room_id}_high`
 4. Check Home Assistant automation is enabled
+5. Exercise the reliability path: `just zwave-exercise-scene --scene {room_id}_high --scene {room_id}_off`
+
+Do not validate a new room with `scene.turn_on`. Native scenes bypass the shared queue, runtime health checks, paced Z-Wave batches, and skipped-target event. The generated automation must call `script.fast_scene_{room_id}_{level}` directly and use `mode: single`.
 
 ---
 

@@ -13,9 +13,7 @@
         property_key_name: "001"
         value: KeyPressed2x
   actions:
-    - action: script.turn_on
-      target:
-        entity_id: script.fast_scene_living_room_high
+    - action: script.fast_scene_living_room_high
   mode: single
 
 - id: kitchen_hanging_switch_double_up_kitchen_high
@@ -30,9 +28,7 @@
         property_key_name: "001"
         value: KeyPressed2x
   actions:
-    - action: script.turn_on
-      target:
-        entity_id: script.fast_scene_kitchen_high
+    - action: script.fast_scene_kitchen_high
   mode: single
 
 - id: kitchen_hanging_switch_double_down_kitchen_off
@@ -47,9 +43,7 @@
         property_key_name: "002"
         value: KeyPressed2x
   actions:
-    - action: script.turn_on
-      target:
-        entity_id: script.fast_scene_kitchen_off
+    - action: script.fast_scene_kitchen_off
   mode: single
 
 - id: closet_presence_lighting
@@ -80,9 +74,7 @@
             seconds: 37
             milliseconds: 500
     - alias: "Turn off closet scene after timeout"
-      action: script.turn_on
-      target:
-        entity_id: script.fast_scene_closet_off
+      action: script.fast_scene_closet_off
   mode: single
 
 - id: zwave_controller_jammed_alert
@@ -146,6 +138,25 @@
       data:
         notification_id: zwave_dead_nodes
   mode: single
+
+- id: fast_scene_skipped_targets_alert
+  alias: Fast Scene Skipped Targets Alert
+  description: Report targets that a best-effort scene skipped because they were unavailable or on an unhealthy Z-Wave node.
+  triggers:
+    - trigger: event
+      event_type: fast_scene_targets_skipped
+  actions:
+    - action: persistent_notification.create
+      data:
+        notification_id: fast_scene_skipped_targets
+        title: Scene skipped unhealthy targets
+        message: >-
+          {{ trigger.event.data.scene_id }} skipped
+          {{ trigger.event.data.entity_ids | join(', ') }} at
+          {{ now().strftime('%Y-%m-%d %H:%M:%S %Z') }}.
+          The remaining healthy scene targets are still being dispatched.
+  mode: queued
+  max: 5
 
 - id: button_3rsb22bz_1_print_made_today
   alias: Button 3RSB22BZ 1 - Print Made Today

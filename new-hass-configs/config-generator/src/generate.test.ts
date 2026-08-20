@@ -9,6 +9,26 @@ import { generateFastCalls, generateFastScripts, generateScenes } from "./genera
 import { scenes } from "./scenes";
 import type { Scene } from "./types";
 
+function collectObjects(
+  value: unknown,
+  predicate: (candidate: Record<string, any>) => boolean
+): Record<string, any>[] {
+  if (Array.isArray(value)) {
+    return value.flatMap((item) => collectObjects(item, predicate));
+  }
+  if (!value || typeof value !== "object") {
+    return [];
+  }
+
+  const candidate = value as Record<string, any>;
+  return [
+    ...(predicate(candidate) ? [candidate] : []),
+    ...Object.values(candidate).flatMap((item) =>
+      collectObjects(item, predicate)
+    ),
+  ];
+}
+
 describe("Scene Generation with Pairing", () => {
   describe("Outdoor dashboard scenes", () => {
     it("should control both outdoor light entities", () => {
@@ -399,20 +419,31 @@ describe("Scene Generation with Pairing", () => {
       const scripts = generateFastScripts({ all_off: scenes.all_off });
       const script = scripts.fast_scene_dispatch;
       const sequence = script.sequence[0].choose[0].sequence;
-      const parallelSteps = sequence.filter((step: any) => step.parallel);
-      const delaySteps = sequence.filter((step: any) => step.delay);
+      const parallelSteps = collectObjects(sequence, (step) => Boolean(step.parallel));
+      const delaySteps = collectObjects(sequence, (step) => Boolean(step.delay));
+      const serviceActions = collectObjects(sequence, (step) => Boolean(step.action));
 
       expect(sequence.length).toBeGreaterThan(1);
       expect(parallelSteps[0].parallel.length).toBeGreaterThan(0);
-      expect(delaySteps).toHaveLength(parallelSteps.length - 1);
+      expect(delaySteps.length).toBeGreaterThan(1);
       expect(delaySteps.every((step: any) => step.delay.milliseconds === 1000)).toBe(true);
       expect(
-        parallelSteps.flatMap((step: any) => step.parallel).some(
+        serviceActions.some(
           (call: any) =>
             call.action === "switch.turn_off" &&
-            call.target.entity_id.includes("switch.light_office_pianolight")
+            call.target.entity_id.includes("switch.light_office_pianolight") &&
+            call.continue_on_error === true
         )
       ).toBe(true);
+      expect(
+        sequence.some(
+          (step: any) =>
+            step.variables?.fast_scene_skipped_entities?.includes("_node_status")
+        )
+      ).toBe(true);
+      expect(
+        collectObjects(sequence, (step) => step.event === "fast_scene_targets_skipped")
+      ).toHaveLength(1);
     });
 
     it("should throttle living_room_high with the conservative default cap", () => {
@@ -431,7 +462,29 @@ describe("Scene Generation with Pairing", () => {
       ]);
       expect(dispatcher.mode).toBe("queued");
       expect(sequence.length).toBeGreaterThan(1);
-      expect(sequence.some((step: any) => step.delay?.milliseconds === 1000)).toBe(true);
+      expect(
+        collectObjects(sequence, (step) => step.delay?.milliseconds === 1000).length
+      ).toBeGreaterThan(0);
+    });
+
+    it("should skip satisfied off targets and dispatch weak Z-Wave routes last", () => {
+      const scripts = generateFastScripts({ all_off: scenes.all_off });
+      const sequence = scripts.fast_scene_dispatch.sequence[0].choose[0].sequence;
+      const eligibleVariables = sequence.find(
+        (step: any) => step.variables?.fast_scene_eligible_entities
+      );
+      const zwaveBatchSteps = sequence.filter(
+        (step: any) => step.if && step.then?.some((action: any) => action.parallel)
+      );
+
+      expect(eligibleVariables.variables.fast_scene_eligible_entities).toContain(
+        "states(entity_id) != 'off'"
+      );
+      expect(
+        JSON.stringify(zwaveBatchSteps.at(-1)).includes(
+          "switch.light_living_sillleftpower"
+        )
+      ).toBe(true);
     });
 
     it("should force scene automations to single mode", () => {

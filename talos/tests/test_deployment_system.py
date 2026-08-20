@@ -5,6 +5,8 @@ These tests verify the core deployment functionality without mocking
 functions that don't exist.
 """
 
+import subprocess
+
 import pytest
 from unittest.mock import Mock, patch
 from talos import addon_builder
@@ -61,16 +63,55 @@ class TestDeploymentValidation:
         # Should not raise an exception
         addon_builder.validate_deployment_prerequisites("homeassistant.local", 22, "root")
     
-    def test_validate_deployment_prerequisites_ssh_failure(self, monkeypatch):
-        """Test SSH connection failure."""
-        mock_run = Mock(return_value=Mock(returncode=1, stdout="", stderr="Connection refused"))
+    def test_validate_deployment_prerequisites_auth_failure_requires_1password(self, monkeypatch):
+        """Authentication failures stop and point to the 1Password agent."""
+        mock_run = Mock(
+            side_effect=subprocess.CalledProcessError(
+                255,
+                ["ssh"],
+                stderr="Permission denied (publickey)",
+            )
+        )
         monkeypatch.setattr("subprocess.run", mock_run)
         
         with pytest.raises(DeploymentError) as exc_info:
             addon_builder.validate_deployment_prerequisites("homeassistant.local", 22, "root")
-        
-        # The actual error message may vary, just check it's a DeploymentError
-        assert isinstance(exc_info.value, DeploymentError)
+
+        error = exc_info.value
+        assert error.error_type == "SSH_AUTHENTICATION_FAILED"
+        assert any("unlock 1Password" in step for step in error.troubleshooting_steps)
+        assert not any("password authentication" in step for step in error.troubleshooting_steps)
+
+    def test_validate_deployment_prerequisites_dns_failure_is_not_auth(self, monkeypatch):
+        """mDNS failures preserve the hostname and do not blame 1Password."""
+        mock_run = Mock(
+            side_effect=subprocess.CalledProcessError(
+                255,
+                ["ssh"],
+                stderr="ssh: Could not resolve hostname homeassistant.local",
+            )
+        )
+        monkeypatch.setattr("subprocess.run", mock_run)
+
+        with pytest.raises(DeploymentError) as exc_info:
+            addon_builder.validate_deployment_prerequisites("homeassistant.local", 22, "root")
+
+        error = exc_info.value
+        assert error.error_type == "SSH_HOSTNAME_RESOLUTION_FAILED"
+        assert any("outside the Codex sandbox" in step for step in error.troubleshooting_steps)
+        assert any("Do not substitute an IP" in step for step in error.troubleshooting_steps)
+        assert not any("unlock 1Password" in step for step in error.troubleshooting_steps)
+
+    @pytest.mark.parametrize(
+        ("stderr", "expected"),
+        [
+            ("sign_and_send_pubkey: agent refused operation", "SSH_AUTHENTICATION_FAILED"),
+            ("connect to host homeassistant.local port 22: Connection refused", "SSH_CONNECTION_FAILED"),
+            ("Temporary failure in name resolution", "SSH_HOSTNAME_RESOLUTION_FAILED"),
+        ],
+    )
+    def test_classify_ssh_failure(self, stderr, expected):
+        assert addon_builder.classify_ssh_failure(stderr) == expected
 
 
 class TestAddonDiscovery:

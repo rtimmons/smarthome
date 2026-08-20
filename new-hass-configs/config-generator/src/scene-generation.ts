@@ -10,6 +10,7 @@ export interface HAScene {
 
 export interface HAServiceCall {
   action: string;
+  continue_on_error?: boolean;
   target: {
     entity_id: string[];
   };
@@ -37,6 +38,15 @@ export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
 export const FAST_SCENE_DISPATCHER_ID = "fast_scene_dispatch";
 export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 2;
 export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 1000;
+export const FAST_SCENE_SKIPPED_EVENT = "fast_scene_targets_skipped";
+
+interface HAConditionalAction {
+  if: Array<{
+    condition: "template";
+    value_template: string;
+  }>;
+  then: any[];
+}
 
 export interface FastSceneGenerationOptions {
   maxZwaveCallsPerStep?: number;
@@ -189,6 +199,11 @@ export function generateSceneTargets(scene: Scene): SceneEntityTarget[] {
       } catch {
         device = getDevice("outlets", switchName);
       }
+      if (state === "off" && device.allowSceneTurnOff === false) {
+        throw new Error(
+          `Scene cannot turn off protected power device ${switchName} (${device.entity})`
+        );
+      }
       const [domain] = device.entity.split(".");
       targetsByEntityId.set(device.entity, {
         entityId: device.entity,
@@ -290,10 +305,104 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
     });
 }
 
+function entityIdsForCall(call: HAServiceCall): string[] {
+  return call.target.entity_id;
+}
+
+function buildEligibleEntitiesTemplate(
+  call: HAServiceCall,
+  returnBoolean = false
+): string {
+  const entityIds = entityIdsForCall(call);
+  const filtered = `fast_scene_eligible_entities | select('in', ${JSON.stringify(
+    entityIds
+  )}) | list`;
+  return returnBoolean ? `{{ ${filtered} | count > 0 }}` : `{{ ${filtered} }}`;
+}
+
+function buildSkippedEntitiesTemplate(targets: SceneEntityTarget[]): string {
+  const entityIds = targets.map((target) => target.entityId).sort();
+  const zwaveEntityIds = targets
+    .filter((target) => target.zwaveBacked)
+    .map((target) => target.entityId)
+    .sort();
+
+  return [
+    "{%- set skipped = namespace(entities=[]) -%}",
+    `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
+    "{%- set entity_state = states(entity_id) -%}",
+    "{%- set health = namespace(blocked=false) -%}",
+    `{%- if entity_id in ${JSON.stringify(zwaveEntityIds)} -%}`,
+    "{%- set target_device = device_id(entity_id) -%}",
+    "{%- if target_device -%}",
+    "{%- for status_entity in device_entities(target_device) -%}",
+    "{%- if status_entity.endswith('_node_status') and states(status_entity) in ['dead', 'unavailable', 'unknown'] -%}",
+    "{%- set health.blocked = true -%}",
+    "{%- endif -%}",
+    "{%- endfor -%}",
+    "{%- endif -%}",
+    "{%- endif -%}",
+    "{%- if entity_state in ['unavailable', 'unknown'] or health.blocked -%}",
+    "{%- set skipped.entities = skipped.entities + [entity_id] -%}",
+    "{%- endif -%}",
+    "{%- endfor -%}",
+    "{{ skipped.entities }}",
+  ].join("\n");
+}
+
+function buildSceneEligibleEntitiesTemplate(targets: SceneEntityTarget[]): string {
+  const entityIds = targets.map((target) => target.entityId).sort();
+  const offEntityIds = targets
+    .filter((target) => target.entityState.state === "off")
+    .map((target) => target.entityId)
+    .sort();
+
+  return [
+    "{%- set eligible = namespace(entities=[]) -%}",
+    `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
+    `{%- if entity_id not in fast_scene_skipped_entities and (entity_id not in ${JSON.stringify(
+      offEntityIds
+    )} or states(entity_id) != 'off') -%}`,
+    "{%- set eligible.entities = eligible.entities + [entity_id] -%}",
+    "{%- endif -%}",
+    "{%- endfor -%}",
+    "{{ eligible.entities }}",
+  ].join("\n");
+}
+
+function buildHealthAwareCall(call: HAServiceCall): HAConditionalAction {
+  const eligibleEntities = buildEligibleEntitiesTemplate(call);
+
+  return {
+    if: [
+      {
+        condition: "template",
+        value_template: buildEligibleEntitiesTemplate(call, true),
+      },
+    ],
+    then: [
+      {
+        ...call,
+        continue_on_error: true,
+        target: {
+          entity_id: eligibleEntities,
+        },
+      },
+    ],
+  };
+}
+
+function buildBatchHasWorkTemplate(calls: HAServiceCall[]): string {
+  const entityIds = calls.flatMap(entityIdsForCall);
+  return `{{ fast_scene_eligible_entities | select('in', ${JSON.stringify(
+    entityIds
+  )}) | list | count > 0 }}`;
+}
+
 function generateFastSceneSequence(
   scene: Scene,
   options: FastSceneGenerationOptions = {}
-): Array<{ parallel: HAServiceCall[] } | { delay: { milliseconds: number } }> {
+): any[] {
   const maxZwaveCallsPerStep =
     options.maxZwaveCallsPerStep ?? DEFAULT_MAX_ZWAVE_CALLS_PER_STEP;
   const zwaveBatchDelayMs =
@@ -304,9 +413,10 @@ function generateFastSceneSequence(
   if (!Number.isInteger(zwaveBatchDelayMs) || zwaveBatchDelayMs < 0) {
     throw new Error("zwaveBatchDelayMs must be a non-negative integer");
   }
+  const targets = generateSceneTargets(scene);
   const calls = generateFastSceneCalls(scene);
   const targetsByEntityId = new Map(
-    generateSceneTargets(scene).map((target) => [target.entityId, target])
+    targets.map((target) => [target.entityId, target])
   );
   const zwaveCalls: HAServiceCall[] = [];
   const nonZwaveCalls: HAServiceCall[] = [];
@@ -323,26 +433,83 @@ function generateFastSceneSequence(
     }
   }
 
-  if (zwaveCalls.length <= maxZwaveCallsPerStep) {
-    return [{ parallel: calls }];
+  zwaveCalls.sort((left, right) => {
+    const priority = (call: HAServiceCall) =>
+      entityIdsForCall(call).some(
+        (entityId) =>
+          targetsByEntityId.get(entityId)?.device.fastScenePriority === "last"
+      )
+        ? 1
+        : 0;
+    return priority(left) - priority(right);
+  });
+
+  const sequence: any[] = [
+    {
+      variables: {
+        fast_scene_skipped_entities: buildSkippedEntitiesTemplate(targets),
+        fast_scene_zwave_batch_sent: false,
+      },
+    },
+    {
+      variables: {
+        fast_scene_eligible_entities: buildSceneEligibleEntitiesTemplate(targets),
+      },
+    },
+    {
+      if: [
+        {
+          condition: "template",
+          value_template: "{{ fast_scene_skipped_entities | count > 0 }}",
+        },
+      ],
+      then: [
+        {
+          event: FAST_SCENE_SKIPPED_EVENT,
+          event_data: {
+            scene_id: "{{ scene_id }}",
+            entity_ids: "{{ fast_scene_skipped_entities }}",
+          },
+        },
+      ],
+    },
+  ];
+
+  if (nonZwaveCalls.length > 0) {
+    sequence.push({
+      parallel: nonZwaveCalls.map((call) => buildHealthAwareCall(call)),
+    });
   }
 
-  const sequence: Array<
-    { parallel: HAServiceCall[] } | { delay: { milliseconds: number } }
-  > = [];
-
   for (let index = 0; index < zwaveCalls.length; index += maxZwaveCallsPerStep) {
-    const parallel = zwaveCalls.slice(index, index + maxZwaveCallsPerStep);
-    if (index === 0) {
-      parallel.unshift(...nonZwaveCalls);
+    const batch = zwaveCalls.slice(index, index + maxZwaveCallsPerStep);
+    const then: any[] = [];
+    if (zwaveBatchDelayMs > 0) {
+      then.push({
+        if: [
+          {
+            condition: "template",
+            value_template: "{{ fast_scene_zwave_batch_sent }}",
+          },
+        ],
+        then: [{ delay: { milliseconds: zwaveBatchDelayMs } }],
+      });
     }
-    sequence.push({ parallel });
-    const hasAnotherBatch = index + maxZwaveCallsPerStep < zwaveCalls.length;
-    if (hasAnotherBatch && zwaveBatchDelayMs > 0) {
-      // Home Assistant service actions return after handing work to Z-Wave JS,
-      // not after the RF transaction drains. Pace adjacent batches explicitly.
-      sequence.push({ delay: { milliseconds: zwaveBatchDelayMs } });
-    }
+    then.push(
+      {
+        parallel: batch.map((call) => buildHealthAwareCall(call)),
+      },
+      { variables: { fast_scene_zwave_batch_sent: true } }
+    );
+    sequence.push({
+      if: [
+        {
+          condition: "template",
+          value_template: buildBatchHasWorkTemplate(batch),
+        },
+      ],
+      then,
+    });
   }
 
   return sequence;

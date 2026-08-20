@@ -78,11 +78,13 @@ just deploy grid-dashboard sonos-api --verbose
 ## Error Handling
 
 ### Error Types
-1. **SSH_CONNECTION_FAILED** - Cannot connect to Home Assistant
-2. **HA_CORE_NOT_RUNNING** - Home Assistant core is not running
-3. **UPLOAD_FAILED** - Failed to upload add-on files
-4. **REMOTE_DEPLOYMENT_FAILED** - Deployment failed on remote system
-5. **ADDON_START_FAILED** - Add-on failed to start after installation
+1. **SSH_HOSTNAME_RESOLUTION_FAILED** - `homeassistant.local` did not resolve; retry the exact hostname once outside the Codex sandbox and do not substitute an IP
+2. **SSH_AUTHENTICATION_FAILED** - Host reached but SSH/1Password agent authentication failed; stop and ask Ryan to unlock 1Password
+3. **SSH_CONNECTION_FAILED** - Other SSH transport failure; stop deployment until resolved
+4. **HA_CORE_NOT_RUNNING** - Home Assistant core is not running
+5. **UPLOAD_FAILED** - Failed to upload add-on files
+6. **REMOTE_DEPLOYMENT_FAILED** - Deployment failed on remote system
+7. **ADDON_START_FAILED** - Add-on failed to start after installation
 
 ### Troubleshooting Steps
 Each error includes specific troubleshooting steps:

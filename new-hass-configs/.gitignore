@@ -13,6 +13,7 @@ inventory_snapshots/
 # Merged output files (created from generated/ + manual/)
 scenes.yaml
 automations.yaml
+scripts.yaml
 
 # Secrets (never commit)
 secrets.yaml

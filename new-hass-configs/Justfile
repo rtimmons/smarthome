@@ -37,6 +37,7 @@ home-assistant-build: config-generator-install
 # Run tests for config-generator
 test: config-generator-install
 	bash sync-tools/test-detect-changes.sh
+	bash sync-tools/test-generated-config-policy.sh
 	cd config-generator && npm test
 
 # Diagnose Z-Wave scene slowness and generate a ramp-normalization plan

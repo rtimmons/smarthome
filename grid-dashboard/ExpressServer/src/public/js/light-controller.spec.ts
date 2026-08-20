@@ -84,4 +84,37 @@ describe('LightController', () => {
             (global as any).window = previousWindow;
         }
     });
+
+    it('posts the Moon double-press action to the global fast-scene route', () => {
+        const requests: any[] = [];
+        const controller = new lightController({
+            app: {
+                currentRoom: () => 'Kitchen',
+                request: (request: any) => requests.push(request),
+            },
+            root: 'http://dashboard.local',
+            sceneRooms: dashboardConfig.lightSceneRooms,
+        });
+        const moon = dashboardConfig.config.cells.find(
+            (cell: any) => cell.emoji === 'Moon'
+        );
+
+        expect(moon.onPress).to.deep.equal({
+            action: 'Lights.Scene',
+            args: ['$room', 'Off'],
+        });
+        expect(moon.onDoublePress).to.deep.equal({
+            action: 'Lights.Scene',
+            args: ['all', 'off'],
+        });
+
+        controller.scene(moon.onDoublePress.args);
+
+        expect(requests).to.deep.equal([
+            {
+                url: 'http://dashboard.local/scenes/scene_all_off',
+                method: 'POST',
+            },
+        ]);
+    });
 });

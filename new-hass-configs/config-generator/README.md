@@ -59,14 +59,14 @@ Dashboard Room: "Living Room"
 Scene ID: living_room_high
        ↓ (prepend "scene_")
 Webhook ID: scene_living_room_high
-       ↓ (Home Assistant entity)
-Entity: scene.living_room_high
+       ↓ (reliability entry point)
+Script: script.fast_scene_living_room_high
 ```
 
 **Examples:**
-- "Living Room" → `living_room_high` → `scene_living_room_high` → `scene.living_room_high`
-- "Office" → `office_medium` → `scene_office_medium` → `scene.office_medium`
-- "Guest Bathroom" → `guest_bathroom_off` → `scene_guest_bathroom_off` → `scene.guest_bathroom_off`
+- "Living Room" → `living_room_high` → `scene_living_room_high` → `script.fast_scene_living_room_high`
+- "Office" → `office_medium` → `scene_office_medium` → `script.fast_scene_office_medium`
+- "Guest Bathroom" → `guest_bathroom_off` → `scene_guest_bathroom_off` → `script.fast_scene_guest_bathroom_off`
 
 ---
 
@@ -92,15 +92,22 @@ Entity: scene.living_room_high
 
 3. **Express Server** (`grid-dashboard/.../hass.ts`)
    - Receives request at `/scenes/:scene`
-   - POSTs to Home Assistant webhook: `${webhookBase}/${scene}`
-   - Example: `http://supervisor/core/api/webhook/scene_living_room_high`
+   - In Home Assistant, starts `script.fast_scene_<scene_id>` through the authenticated Core API
+   - Coalesces identical browser/touch requests received within one second
+   - Uses the webhook only for standalone development without a Supervisor token
 
-4. **Home Assistant Webhook Automation** (generated from `automations.ts`)
-   - Listens for `webhook_id: scene_living_room_high`
-   - Triggers scene: `scene.living_room_high`
+4. **Fast Scene Wrapper** (generated in `scripts.yaml`)
+   - `script.fast_scene_living_room_high` runs in `single` mode
+   - Calls `script.fast_scene_dispatch` directly and remains active until it finishes
+   - Generated webhook and switch automations also call this wrapper directly; they do not use non-blocking `script.turn_on`
 
-5. **Home Assistant Scene** (generated from `scenes.ts`)
-   - Applies defined light states to all devices in the scene
+5. **Shared Dispatcher**
+   - Serializes scene work in `queued` mode
+   - Skips unavailable/unknown entities and dead Z-Wave nodes
+   - Groups compatible non-Z-Wave calls and sends isolated Z-Wave calls in paced batches of at most two
+   - Continues after individual action errors and reports skipped targets
+
+Native `scene.<scene_id>` entities are still generated for UI/compatibility, but controls, tests, and diagnostics must use `script.fast_scene_<scene_id>`; `scene.turn_on` bypasses the reliability path.
 
 ### Workflow
 
@@ -109,7 +116,8 @@ Entity: scene.living_room_high
 3. Define automations in `automations.ts` (reference devices and scenes)
 4. Run `npm run generate` to create YAML files
 5. Generated files output to `../generated/`
-6. Use `just check` and `just deploy` to deploy
+6. Parent `just generate` rebuilds merged deployment files, including ignored/untracked `scripts.yaml`
+7. Use `just test`, `just check`, and `just deploy` to validate and deploy
 
 ---
 
@@ -515,8 +523,8 @@ When both are explicitly defined, **auto-pairing is skipped** and your explicit 
 After deploying scene changes, verify both entities are controlled correctly:
 
 ```bash
-# Trigger the scene
-just ha-call scene.turn_on scene.office_high
+# Trigger the real path and wait for both target state and dispatcher drain
+just zwave-exercise-scene --scene office_high
 
 # Check both paired entities are in sync
 just ha-state light.light_office_abovecouch
@@ -524,7 +532,7 @@ just ha-state light.light_office_abovecouch_white
 ```
 
 Both entities should show the same on/off state and brightness. If they don't match:
-1. Check that `generated/scenes.yaml` includes both entities
+1. Check that `generated/scenes.yaml` includes both entities and `generated/scripts.yaml` contains the fast wrapper/dispatcher calls
 2. Run `just deploy` from `new-hass-configs/` to deploy the updated config
 3. Verify the scene was reloaded in Home Assistant
 
@@ -624,7 +632,13 @@ npm run generate
 
 5. **Check Express server logs**
    - Dashboard should POST to `/scenes/scene_{room}_{level}`
-   - Server should forward to webhook endpoint
+   - In production the server should target `script.fast_scene_{room}_{level}` through the authenticated Core API
+
+6. **Exercise the generated path**
+   ```bash
+   just zwave-exercise-scene --scene office_high --scene office_off
+   ```
+   This waits for both entity state and `script.fast_scene_dispatch`; a direct native scene call does not test the reliability contract.
 
 ### "Device not found" error
 

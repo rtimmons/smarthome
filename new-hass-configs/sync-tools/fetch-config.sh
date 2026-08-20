@@ -58,7 +58,6 @@ check_git_status() {
     local config_files=(
         "new-hass-configs/scenes.yaml"
         "new-hass-configs/automations.yaml"
-        "new-hass-configs/scripts.yaml"
         "new-hass-configs/configuration.yaml"
     )
     
@@ -175,8 +174,10 @@ analyze_changes() {
     
     local changes_found=false
     
-    # Check main configuration files
-    for file in scenes.yaml scripts.yaml configuration.yaml; do
+    # Check source-bearing main configuration files. scripts.yaml is a local
+    # generated deployment artifact and is intentionally never imported from
+    # the live host as repository source.
+    for file in scenes.yaml configuration.yaml; do
         local repo_file="${CONFIG_DIR}/${file}"
         local live_file="${TEMP_DIR}/fetched/${file}"
 
@@ -196,6 +197,13 @@ analyze_changes() {
             fi
         fi
     done
+
+    local generated_repo_scripts="${CONFIG_DIR}/scripts.yaml"
+    local generated_live_scripts="${TEMP_DIR}/fetched/scripts.yaml"
+    if [[ -f "$generated_live_scripts" && -f "$generated_repo_scripts" ]] && \
+       ! cmp -s "$generated_repo_scripts" "$generated_live_scripts"; then
+        log "Generated scripts.yaml differs from live; regenerate and deploy rather than importing it"
+    fi
 
     # Check automation files (multiple blocks structure)
     # 1. UI-created automations (root automations.yaml)
@@ -246,8 +254,9 @@ analyze_changes() {
 apply_changes() {
     log "Synchronizing local files with live Home Assistant system..."
 
-    # Copy main configuration files to local repository
-    for file in scenes.yaml scripts.yaml configuration.yaml; do
+    # Copy source-bearing main configuration files to the local repository.
+    # scripts.yaml is rebuilt by `just generate` from generated/scripts.yaml.
+    for file in scenes.yaml configuration.yaml; do
         local live_file="${TEMP_DIR}/fetched/${file}"
         local repo_file="${CONFIG_DIR}/${file}"
 
@@ -256,6 +265,8 @@ apply_changes() {
             success "Synchronized: $file"
         fi
     done
+
+    log "Skipped scripts.yaml because it is generated and ignored by Git"
 
     # Synchronize automation files (multiple blocks structure)
     # 1. UI-created automations (root automations.yaml)

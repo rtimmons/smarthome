@@ -22,6 +22,8 @@ Guidance for humans and agents working in this repository.
 ## Home Assistant configuration
 - Everything lives under `new-hass-configs`. Common commands: `just fetch`, `just check`, `just deploy`, and `./iterate.sh` for before/after scene inventories. From the repo root, use the repository-owned `just ha-state <entity_id>`, `just ha-call <domain.service> <entity_id>`, and `just ha-inventory` commands to inspect or operate the live system; they do not depend on the Python-based `hass-cli` package.
 - **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The remote `ha` command manages Core/Supervisor lifecycle, logs, backups, and host services; it does not expose entity state or service-call commands, so use the repository API client for those. The entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
+- **SSH authentication failures are fatal**: If SSH reaches the host but authentication or 1Password agent access fails, stop the Home Assistant workflow immediately. Ask Ryan to unlock 1Password and tell you when it is ready, then retry SSH only after he confirms. Do not retry repeatedly or fall back to another host, IP address, browser session, API token, or alternate authentication path.
+- **Hostname failures are not 1Password failures**: The Codex sandbox can fail to resolve `homeassistant.local`. Retry the exact hostname-based command once outside the sandbox; do not substitute an IP address. If it still cannot resolve, stop and report the mDNS/network failure rather than asking Ryan to unlock 1Password.
 
 ## Add-ons at a glance
 - `grid-dashboard` (port 3000) — Main dashboard UI. See `grid-dashboard/AGENTS.md`.
@@ -35,7 +37,10 @@ Guidance for humans and agents working in this repository.
 ## Operational notes
 - Lifecycle hooks live in `local-dev/hooks/` per add-on and are documented in `docs/addon-development/hooks-guide.md`; `node-sonos-http-api` checks Sonos multicast reachability and `printer` validates cairo/pkg-config for label rendering.
 - Sonos reliability patches are in `node-sonos-http-api/patches` and are applied during container builds; adjust those patches if you change upstream Sonos behavior.
-- Scenes with paired RGBW entities must keep base + `_white` lights in sync; the generator handles it via `expandLightsWithPairs()` in `new-hass-configs/config-generator/src/generate.ts`.
+- Scenes with paired RGBW entities must keep base + `_white` lights in sync; the generator handles it via `expandLightsWithPairs()` in `new-hass-configs/config-generator/src/scene-generation.ts`.
+- Operational lighting must use `script.fast_scene_<scene_id>`, never native `scene.turn_on`; the fast wrapper and queued dispatcher provide health filtering, bounded Z-Wave batches, error isolation, and skipped-target reporting. Generated scene automations use `mode: single` and call the fast script directly so they remain active until dispatch finishes. See `docs/operations/zwave-scene-ops.md`.
+- `new-hass-configs/scripts.yaml` is a generated, ignored deployment artifact. Edit generator sources, review `new-hass-configs/generated/scripts.yaml`, and let `just generate`, `just check`, or deployment prechecks rebuild it; do not commit or reconcile the root file.
+- Outlets powering smart lights must set both `includeInAllOff: false` and `allowSceneTurnOff: false`; generated scenes must control the bulb entity and never cut its power.
 
 ## Docs map
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.

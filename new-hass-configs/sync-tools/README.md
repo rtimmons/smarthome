@@ -127,7 +127,7 @@ auggie merge scenes.yaml /tmp/live-scenes.yaml > merged-scenes.yaml
 
 - `scenes.yaml` - Scene definitions
 - `automations.yaml` - Automation rules  
-- `scripts.yaml` - Script definitions
+- `scripts.yaml` - Generated, ignored deployment artifact; checked as deployable output but never imported as source
 - `configuration.yaml` - Main configuration
 
 ## Safety Features
@@ -167,6 +167,12 @@ Ensure you can connect to the HA system:
 ```bash
 ssh root@homeassistant.local "echo 'Connection OK'"
 ```
+
+A `homeassistant.local` resolution failure inside the Codex sandbox is pre-authentication: retry the exact command once outside the sandbox and never substitute an IP. If SSH reaches the host but authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password before retrying.
+
+### Generated `scripts.yaml`
+
+`scripts.yaml` is rebuilt from `config-generator/src/` by `just generate`, ignored by Git, and deployed as runtime output. `fetch-config` deliberately does not replace it with the live copy. Review `generated/scripts.yaml` and regenerate instead of reconciling the root artifact.
 
 ### Permission Issues
 Make sure scripts are executable:

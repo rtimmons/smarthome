@@ -112,11 +112,24 @@ interface UnavailableEntityFinding {
   state: string;
   sourceDevice?: string;
   type?: string;
+  issue?: "entity_unavailable" | "zwave_node_unhealthy";
+  nodeId?: number;
+  nodeStatusEntityId?: string;
+  nodeStatus?: string;
 }
 
 interface SceneAvailabilityFinding {
   sceneId: string;
   entities: UnavailableEntityFinding[];
+}
+
+interface NodeHealthFinding {
+  nodeId: number;
+  deviceId?: string;
+  deviceName?: string;
+  nodeStatusEntityId: string;
+  state: string;
+  entityIds: string[];
 }
 
 interface SuspiciousLogSummary {
@@ -660,8 +673,52 @@ function collectUnavailableConfiguredEntities(
   return unavailable.sort((left, right) => left.entityId.localeCompare(right.entityId));
 }
 
-function buildSceneAvailabilityFindings(states: JsonObject[]): SceneAvailabilityFinding[] {
+function buildUnhealthyNodeFindings(
+  nodeMap: Map<number, NodeInfo>,
+  states: JsonObject[]
+): NodeHealthFinding[] {
   const stateByEntityId = new Map(states.map((state) => [state.entity_id, state]));
+  const unhealthyStates = new Set(["dead", "unavailable", "unknown"]);
+  const findings: NodeHealthFinding[] = [];
+
+  for (const node of nodeMap.values()) {
+    const nodeStatusEntityId = node.entityIds.find((entityId) =>
+      entityId.endsWith("_node_status")
+    );
+    if (!nodeStatusEntityId) {
+      continue;
+    }
+
+    const nodeStatus = stateByEntityId.get(nodeStatusEntityId)?.state;
+    if (typeof nodeStatus !== "string" || !unhealthyStates.has(nodeStatus)) {
+      continue;
+    }
+
+    findings.push({
+      nodeId: node.nodeId,
+      deviceId: node.deviceId,
+      deviceName: node.name,
+      nodeStatusEntityId,
+      state: nodeStatus,
+      entityIds: node.entityIds,
+    });
+  }
+
+  return findings.sort((left, right) => left.nodeId - right.nodeId);
+}
+
+function buildSceneAvailabilityFindings(
+  states: JsonObject[],
+  nodeMap: Map<number, NodeInfo>
+): SceneAvailabilityFinding[] {
+  const stateByEntityId = new Map(states.map((state) => [state.entity_id, state]));
+  const unhealthyNodes = buildUnhealthyNodeFindings(nodeMap, states);
+  const unhealthyNodeByEntityId = new Map<string, NodeHealthFinding>();
+  for (const node of unhealthyNodes) {
+    for (const entityId of node.entityIds) {
+      unhealthyNodeByEntityId.set(entityId, node);
+    }
+  }
   const findings: SceneAvailabilityFinding[] = [];
 
   for (const [sceneId, scene] of Object.entries(scenes)) {
@@ -669,19 +726,26 @@ function buildSceneAvailabilityFindings(states: JsonObject[]): SceneAvailability
 
     for (const target of generateSceneTargets(scene)) {
       const state = stateByEntityId.get(target.entityId);
-      if (!state) {
-        continue;
-      }
-
-      if (state.state !== "unavailable" && state.state !== "unknown") {
+      const nodeHealth = unhealthyNodeByEntityId.get(target.entityId);
+      const targetUnavailable =
+        state?.state === "unavailable" || state?.state === "unknown";
+      if (!targetUnavailable && !nodeHealth) {
         continue;
       }
 
       unavailable.push({
         entityId: target.entityId,
-        state: state.state,
+        state: state?.state ?? "missing",
         sourceDevice: target.sourceDevice,
         type: target.device.type,
+        issue: targetUnavailable
+          ? "entity_unavailable"
+          : "zwave_node_unhealthy",
+        ...(nodeHealth && {
+          nodeId: nodeHealth.nodeId,
+          nodeStatusEntityId: nodeHealth.nodeStatusEntityId,
+          nodeStatus: nodeHealth.state,
+        }),
       });
     }
 
@@ -1031,11 +1095,15 @@ async function inventory(options: Options) {
   );
   const states = fetchStates(options, accessToken);
   const configuredDevices = flattenConfiguredDevices();
-  const sceneAvailabilityFindings = buildSceneAvailabilityFindings(states);
+  const unhealthyNodeFindings = buildUnhealthyNodeFindings(nodeMap, states);
+  const sceneAvailabilityFindings = buildSceneAvailabilityFindings(states, nodeMap);
   const configuredUnavailable = collectUnavailableConfiguredEntities(
     configuredDevices,
     states
   );
+  const scenesWithUnavailableEntities = sceneAvailabilityFindings.filter((finding) =>
+    finding.entities.some((entity) => entity.issue === "entity_unavailable")
+  ).length;
   const entityAuditFindings = buildEntityAuditFindings(
     configuredDevices,
     artifacts.entityRegistry
@@ -1052,7 +1120,9 @@ async function inventory(options: Options) {
       scene_count: sceneSummaries.length,
       live_ramp_plan_count: liveRampPlan.length,
       unavailable_configured_entity_count: configuredUnavailable.length,
-      scenes_with_unavailable_entities: sceneAvailabilityFindings.length,
+      unhealthy_zwave_node_count: unhealthyNodeFindings.length,
+      scenes_with_unavailable_entities: scenesWithUnavailableEntities,
+      scenes_with_health_findings: sceneAvailabilityFindings.length,
       entity_audit_finding_count: entityAuditFindings.length,
       registry_drift_missing_entity_count: registryDriftSummary.missingEntityCount,
       registry_drift_mismatched_device_count: registryDriftSummary.mismatchedDeviceCount,
@@ -1062,6 +1132,7 @@ async function inventory(options: Options) {
     scene_summaries: sceneSummaries,
     scene_parallelism_findings: sceneParallelismFindings,
     scene_availability_findings: sceneAvailabilityFindings,
+    unhealthy_zwave_nodes: unhealthyNodeFindings,
     configured_unavailable_entities: configuredUnavailable,
     registry_drift_summary: registryDriftSummary,
     entity_audit_findings: entityAuditFindings,
@@ -1072,6 +1143,7 @@ async function inventory(options: Options) {
   writeJson(path.join(outputDir, "inventory-report.json"), report);
   writeJson(path.join(outputDir, "configured-devices.json"), configuredDevices);
   writeJson(path.join(outputDir, "scene-availability.json"), sceneAvailabilityFindings);
+  writeJson(path.join(outputDir, "unhealthy-zwave-nodes.json"), unhealthyNodeFindings);
   writeJson(path.join(outputDir, "registry-drift-summary.json"), registryDriftSummary);
   writeJson(path.join(outputDir, "entity-audit-findings.json"), entityAuditFindings);
   writeJson(path.join(outputDir, "suspicious-log-summary.json"), suspiciousLogSummary);
@@ -1083,7 +1155,7 @@ async function inventory(options: Options) {
   );
   console.log(`Pending ramp changes: ${liveRampPlan.length}`);
   console.log(
-    `Unavailable configured entities: ${configuredUnavailable.length} | Scenes impacted: ${sceneAvailabilityFindings.length}`
+    `Unavailable configured entities: ${configuredUnavailable.length} | Unhealthy Z-Wave nodes: ${unhealthyNodeFindings.length} | Scenes impacted: ${sceneAvailabilityFindings.length}`
   );
   console.log(
     `Entity audit findings: ${entityAuditFindings.length} | Remaining grouped Z-Wave calls: ${sceneParallelismFindings.length}`
@@ -1097,6 +1169,16 @@ async function inventory(options: Options) {
     }
     if (configuredUnavailable.length > 10) {
       console.log(`  ... ${configuredUnavailable.length - 10} more`);
+    }
+  }
+
+  if (unhealthyNodeFindings.length > 0) {
+    console.log("");
+    console.log("Unhealthy Z-Wave nodes:");
+    for (const item of unhealthyNodeFindings.slice(0, 10)) {
+      console.log(
+        `  node ${item.nodeId} (${item.deviceName ?? "unknown"}) -> ${item.state} via ${item.nodeStatusEntityId}`
+      );
     }
   }
 

@@ -23,7 +23,7 @@ just reconcile scenes.yaml # Manual conflict resolution
 The system compares live Home Assistant configuration files with repository versions using:
 - Checksum-based comparison (whitespace-insensitive)
 - UI-created content identification (scenes/automations with numeric IDs)
-- Comprehensive monitoring of scenes.yaml, automations.yaml, scripts.yaml, configuration.yaml
+- Source-aware monitoring of scenes, automations, and configuration plus deployment comparison for generated `scripts.yaml`
 
 ### Pre-deployment Protection
 - Automatically runs before `just deploy`
@@ -134,7 +134,7 @@ just deploy-force [--backup] # Force deployment
 
 - `scenes.yaml` - Scene definitions
 - `automations.yaml` - Automation rules
-- `scripts.yaml` - Script definitions
+- `scripts.yaml` - Generated, ignored deployment artifact; compared with live as pending deployment, never fetched as repository source
 - `configuration.yaml` - Main configuration
 
 ## Dependencies
@@ -172,6 +172,12 @@ Ensure you can connect to the HA system:
 ```bash
 ssh root@homeassistant.local "echo 'Connection OK'"
 ```
+
+If the hostname fails only inside the Codex sandbox, retry that exact hostname command once outside the sandbox; do not substitute an IP. If the host is reached but authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password before retrying. A resolution failure happens before authentication and is not a 1Password failure.
+
+### Generated script differences
+
+Do not reconcile or commit `scripts.yaml`. Edit `config-generator/src/`, run `just generate`, review `generated/scripts.yaml`, and deploy. Fetching live configuration intentionally leaves the local generated artifact alone.
 
 ### Permission Issues
 Make sure scripts are executable:

@@ -47,10 +47,18 @@ export interface Device {
   entity: string;
   type: DeviceType;
   protocol?: "zigbee" | "zwave";
+  /**
+   * Send this device after normal-priority Z-Wave loads in generated scenes.
+   * Use only for a known weak route: health checks still decide whether the
+   * target should be called at all.
+   */
+  fastScenePriority?: "normal" | "last";
   capabilities?: DeviceCapability[];
   events?: Partial<Record<ZWaveEvent, ZWaveEventData>>;
   device_id?: string; // For Z-Wave JS triggers
   includeInAllOff?: boolean;
+  /** Reject any generated lighting scene that tries to turn this device off. */
+  allowSceneTurnOff?: boolean;
 }
 
 export type DeviceCapability =

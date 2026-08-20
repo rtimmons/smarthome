@@ -41,7 +41,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   office_switch_doubledown: {
@@ -56,7 +56,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -75,7 +75,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   bedroom_switch_doubledown: {
@@ -90,7 +90,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -109,7 +109,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "all_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -128,7 +128,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   guest_bathroom_switch_singleup: {
@@ -158,7 +158,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   guest_bathroom_switch_singledown: {
@@ -188,7 +188,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   guest_bathroom_sconce_switch_singleup: {
@@ -218,7 +218,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   guest_bathroom_sconce_switch_singledown: {
@@ -251,7 +251,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   office_webhook_medium: {
@@ -265,7 +265,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   office_webhook_off: {
@@ -279,7 +279,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "office_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -297,7 +297,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bathroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   bathroom_webhook_medium: {
@@ -311,7 +311,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bathroom_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   bathroom_webhook_off: {
@@ -325,7 +325,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bathroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -343,7 +343,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   guest_bathroom_webhook_medium: {
@@ -357,7 +357,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   guest_bathroom_webhook_off: {
@@ -371,7 +371,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "guest_bathroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -389,7 +389,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "closet_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   closet_webhook_medium: {
@@ -403,7 +403,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "closet_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   closet_webhook_off: {
@@ -417,7 +417,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "closet_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -435,7 +435,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   bedroom_webhook_medium: {
@@ -449,7 +449,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   bedroom_webhook_low: {
@@ -463,7 +463,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_low"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   bedroom_webhook_off: {
@@ -477,7 +477,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "bedroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -495,7 +495,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "living_room_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   living_room_webhook_medium: {
@@ -509,7 +509,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "living_room_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   living_room_webhook_off: {
@@ -523,7 +523,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "living_room_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -541,7 +541,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "makerroom_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   makerroom_webhook_medium: {
@@ -555,7 +555,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "makerroom_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   makerroom_webhook_off: {
@@ -569,7 +569,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "makerroom_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -587,7 +587,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "kitchen_high"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   kitchen_webhook_medium: {
@@ -601,7 +601,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "kitchen_medium"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   kitchen_webhook_off: {
@@ -615,7 +615,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "kitchen_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 
   // ============================================================================
@@ -633,7 +633,7 @@ export const automations: AutomationRegistry = {
       type: "scene",
       scene: "all_off"
     },
-    mode: "restart"
+    mode: "single"
   },
 };
 

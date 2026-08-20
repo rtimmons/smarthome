@@ -244,7 +244,7 @@ test_git_status_checking() {
 
     # This test checks if git status checking works
     # We'll temporarily dirty a tracked config file and see if it's detected.
-    local test_file="${CONFIG_DIR}/scripts.yaml"
+    local test_file="${CONFIG_DIR}/configuration.yaml"
     local original_file
     original_file="$(mktemp)"
     cp "$test_file" "$original_file"

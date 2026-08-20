@@ -58,8 +58,8 @@ new-hass-configs/
 │   └── automations.yaml       # Manual automations (webhooks, etc.)
 │
 ├── scenes.yaml                # MERGED: generated + manual
-├── automations.yaml           # MERGED: generated + manual
-├── scripts.yaml               # Scripts
+├── automations.yaml           # UI-owned automations
+├── scripts.yaml               # GENERATED deployment artifact (ignored/untracked)
 ├── configuration.yaml         # Main Home Assistant config
 ├── secrets.yaml               # Secrets (git-ignored)
 │
@@ -249,20 +249,23 @@ Use `iterate.sh` to capture before/after inventories around a scene application.
 
 ```bash
 cd new-hass-configs
-./iterate.sh  # runs just inventory, applies scene.guest_bathroom_high via the repo API client, then inventories again
+./iterate.sh  # inventories, runs script.fast_scene_guest_bathroom_high, then inventories again
 ls inventory_snapshots/2025*/  # view captured device/entity snapshots
 ```
 
 Requirements:
-- SSH access to `root@homeassistant.local`, or `HASS_TOKEN` set to a valid long-lived access token
-- A reachable Home Assistant API (override with `--server` and SSH discovery with `--host` when needed)
+- SSH access to `root@homeassistant.local`; `HASS_TOKEN` may be configured as the repository client's normal credential, but must not be introduced as a fallback after an SSH authentication failure
+- A reachable Home Assistant API at `homeassistant.local`
+
+If SSH reaches the host but authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password before retrying. A sandbox-only `homeassistant.local` resolution error is different: retry the exact hostname command once outside the sandbox, never substitute an IP, and report an mDNS/network failure if it still cannot resolve.
 
 The repository client is built automatically from `config-generator` and avoids the external Python-based `hass-cli` package:
 
 ```bash
 just inventory
 just ha-state light.light_office_abovecouch
-just ha-call scene.turn_on scene.office_high
+just ha-call script.turn_on script.fast_scene_office_high  # one-shot start; CLI returns early
+just zwave-exercise-scene --scene office_high               # blocking, measured validation
 ```
 
 ---
@@ -304,12 +307,12 @@ just ha-call scene.turn_on scene.office_high
 Dashboard: "Living Room" button + Sun button (High)
     ↓ (Dashboard LightController converts to URL)
 URL: /scenes/scene_living_room_high
-    ↓ (Express server POSTs to Home Assistant webhook)
-Webhook: scene_living_room_high
-    ↓ (Home Assistant automation triggers scene)
-Scene: scene.living_room_high
-    ↓ (Scene applies light states)
-Lights: Turn on at specified brightness
+    ↓ (Express server starts the fast wrapper; duplicate requests are coalesced)
+Wrapper: script.fast_scene_living_room_high (single, blocking internally)
+    ↓
+Dispatcher: script.fast_scene_dispatch (queued)
+    ↓ (health filter + grouped non-Z-Wave calls + paced 2-call Z-Wave batches)
+Lights: Reach the requested states; unhealthy targets are skipped and reported
 ```
 
 ### Scene Levels
@@ -509,7 +512,7 @@ generate:
 Each backup includes:
 - `automations.yaml`
 - `scenes.yaml`
-- `scripts.yaml`
+- `scripts.yaml` (generated runtime artifact; restore/deploy material, not a Git source file)
 - `configuration.yaml`
 - All YAML/JSON/shell scripts
 - Excludes: `.storage/`, `secrets.yaml`, `*.db`, logs
@@ -612,9 +615,10 @@ Z-Wave JS uses device IDs instead of entity IDs for triggers. The generator must
 just generate
 just check
 
-# Test specific scene on HA
+# Test the generator contract, deploy, and exercise the real fast-scene path
+just test
 just deploy
-# Then in HA UI: Developer Tools > Services > scene.turn_on
+just zwave-exercise-scene --scene office_high --scene office_off
 
 # Test automation trigger
 # Physically press switch, check HA logs
@@ -647,10 +651,16 @@ just deploy
 
 ### SSH connection fails
 
-1. Verify Home Assistant is running: `ping homeassistant.local`
-2. Check SSH key is added: `ssh-add -l`
-3. Test manual connection: `ssh -p 22 root@homeassistant.local`
-4. Check Home Assistant SSH add-on is installed
+1. If `homeassistant.local` does not resolve inside the Codex sandbox, retry the exact command once outside the sandbox. Do not change to an IP address or blame 1Password for a pre-authentication DNS failure.
+2. If the hostname still does not resolve, stop and report the mDNS/network failure.
+3. If the host is reached but SSH authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password. Retry only after he confirms; do not switch credentials or authentication paths.
+
+### Scene is partial, slow, or one device is unavailable
+
+1. Activate `script.fast_scene_<scene_id>`, never `scene.<scene_id>`; native scenes bypass the reliability dispatcher.
+2. Run `just zwave-inventory` and inspect unhealthy nodes, unavailable targets, registry drift, and recent node-specific errors.
+3. Use `just zwave-exercise-scene --scene <scene_id>` to wait for target state and the shared dispatcher to settle.
+4. Edit generator sources, not `scripts.yaml`. The root file is rebuilt by `just generate` and intentionally ignored by Git.
 
 ---
 

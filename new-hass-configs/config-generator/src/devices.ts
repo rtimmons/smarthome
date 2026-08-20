@@ -485,6 +485,9 @@ export const devices: DeviceRegistry = {
     living_sillleftpower: {
       entity: "switch.light_living_sillleftpower",
       type: "zwave_outlet",
+      // Node 28 has a repeatedly failing route. Keep it from delaying healthy
+      // loads while its placement/repeater path is repaired.
+      fastScenePriority: "last",
       capabilities: ["on_off"]
     },
     dining_weenie: {
@@ -505,6 +508,7 @@ export const devices: DeviceRegistry = {
       entity: "switch.light_bedroom_flamingopower",
       type: "outlet",
       includeInAllOff: false,
+      allowSceneTurnOff: false,
       capabilities: ["on_off"]
     },
   },
