@@ -22,6 +22,7 @@
   "main": "lib/sonos-http-api.js",
   "license": "MIT",
   "scripts": {
+    "postinstall": "node tools/check-runtime-dependencies.js",
     "start": "node server.js"
   }
 }

@@ -7,6 +7,7 @@ MongoDB Community Edition 8.x database server for Home Assistant add-ons.
 - **MongoDB Community Edition 8.x** - Latest major version with full-text and vector search
 - **Persistent storage** - Data stored in `/data` and included in Home Assistant backups
 - **Network accessible** - Available to other add-ons via `local-mongodb:27017`
+- **FCV-compatible image** - The add-on pins MongoDB 8.2 because the persistent database uses feature compatibility version 8.2; do not deploy an 8.0 binary against it
 - **Local development** - Runs via Homebrew on macOS for local testing
 
 ## Installation & Deployment

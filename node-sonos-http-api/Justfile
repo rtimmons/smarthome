@@ -43,10 +43,15 @@ setup:
     cd {{upstream_dir}} && npm ci --omit=dev
     echo "✅ Node Sonos HTTP API setup complete"
 
-# Run tests (currently none defined)
+# Verify the fully patched checkout has no unresolved production imports
 [group: 'test']
 test:
-    @echo "⚠️  No tests defined for node-sonos-http-api; skipping."
+    #!/usr/bin/env bash
+    set -euo pipefail
+    "{{justfile_directory()}}/local-dev/hooks/pre_start.sh"
+    {{nvm_use}}
+    cd {{upstream_dir}}
+    node tools/check-runtime-dependencies.js
 
 # ============================================================================
 # COMMON ADDON RECIPES (using shared functions)

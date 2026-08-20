@@ -62,6 +62,9 @@ This add-on:
 - Is accessible to other add-ons via `http://node-sonos-http-api:5005`
 - Installs a repository-owned production lockfile with `npm ci`
 - Applies compatibility and reliability patches before installing dependencies
+- Runs a post-install import scan so a removed or missing runtime dependency fails the image build instead of crashing after deployment
+
+Run `just test` after dependency or patch changes. It refreshes the prepared upstream checkout with the current overlay and patches, then runs the same runtime-import scan used during image installation.
 
 ## Error Handling
 

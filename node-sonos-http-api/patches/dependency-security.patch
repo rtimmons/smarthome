@@ -1,3 +1,13 @@
+diff --git a/lib/actions/siriusXM.js b/lib/actions/siriusXM.js
+index 0d80d8b..ac12ad7 100644
+--- a/lib/actions/siriusXM.js
++++ b/lib/actions/siriusXM.js
+@@ -1,5 +1,4 @@
+ 'use strict';
+-const request = require('request-promise');
+ const Fuse = require('fuse.js');
+ const channels = require('../sirius-channels.json');
+ 
 diff --git a/lib/actions/musicSearch.js b/lib/actions/musicSearch.js
 index c782631..f61a2f4 100644
 --- a/lib/actions/musicSearch.js

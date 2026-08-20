@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+
 from rich.console import Console
 
 from talos import addon_builder
@@ -145,6 +147,36 @@ def test_git_cloned_addons_require_an_immutable_ref_and_frozen_install():
     )
     assert dockerfile.index("/overlay/.") < dockerfile.index("npm ci --omit=dev")
     assert dockerfile.index("patch -p1") < dockerfile.index("npm ci --omit=dev")
+
+
+def test_sonos_security_overlay_checks_every_runtime_import_after_install():
+    repo_root = addon_builder.REPO_ROOT
+    package = json.loads(
+        (repo_root / "node-sonos-http-api/dependency-lock/package.json").read_text()
+    )
+    security_patch = (
+        repo_root / "node-sonos-http-api/patches/dependency-security.patch"
+    ).read_text()
+    scanner = (
+        repo_root
+        / "node-sonos-http-api/overlay/tools/check-runtime-dependencies.js"
+    ).read_text()
+
+    assert package["scripts"]["postinstall"] == (
+        "node tools/check-runtime-dependencies.js"
+    )
+    assert "diff --git a/lib/actions/siriusXM.js" in security_patch
+    assert "-const request = require('request-promise');" in security_patch
+    assert "require.resolve(specifier" in scanner
+    assert "process.exit(1)" in scanner
+
+
+def test_mongodb_image_matches_the_persisted_8_2_feature_compatibility_line():
+    dockerfile = (addon_builder.REPO_ROOT / "mongodb/Dockerfile").read_text()
+
+    assert dockerfile.startswith(
+        "# MongoDB Community Edition 8.x for Home Assistant\nFROM mongo:8.2.12\n"
+    )
 
 
 def test_git_cloned_addons_reject_moving_refs():

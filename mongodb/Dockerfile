@@ -1,5 +1,5 @@
 # MongoDB Community Edition 8.x for Home Assistant
-FROM mongo:8.0.28
+FROM mongo:8.2.12
 
 ARG BUILD_VERSION=dev
 ARG BUILD_ARCH
