@@ -31,7 +31,7 @@ just zwave-verify-instant-ramps
 
 `just zwave-inventory` writes a timestamped snapshot under `new-hass-configs/inventory_snapshots/zwave-scene-audits/`.
 
-Connection failures are stage-specific. `SSH_HOSTNAME_RESOLUTION_FAILED` means `homeassistant.local` failed before authentication: retry the exact command once outside the Codex sandbox, never substitute an IP, and report mDNS/network failure if it persists. `SSH_AUTHENTICATION_FAILED` means the host was reached: stop, ask Ryan to unlock 1Password, and retry only after confirmation without changing credentials or authentication paths.
+Connection failures are stage-specific. Use the ignored repository identity explicitly with `ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local`. `SSH_HOSTNAME_RESOLUTION_FAILED` means `homeassistant.local` failed before authentication: retry the same hostname-based command once outside the Codex sandbox, never substitute an IP, and report mDNS/network failure if it persists. `SSH_AUTHENTICATION_FAILED` means the host was reached: stop and ask Ryan to rerun the human-only `just ha-ssh-key-copy`; do not fall back to 1Password or alternate credentials.
 
 ## Standard Workflow
 

@@ -22,6 +22,7 @@ node-sonos-http-api/node-sonos-http-api/
 .idea/**/dbnavigator.xml
 
 # Sensitive or local-only configuration
+/.ssh/
 .idea/**/gradle.xml
 .idea/**/libraries
 

@@ -10,6 +10,7 @@ Guidance for humans and agents working in this repository.
 
 ## Root workflows (Justfile-aligned)
 - Bootstrap everything: `just setup` (installs pinned Node/Python, builds `talos` if needed).
+- Create the ignored, repository-local Home Assistant SSH key with `just ha-ssh-key-create`. A human installs it on Home Assistant once with `just ha-ssh-key-copy`; agents must not run the copy recipe.
 - Run the whole stack locally: `just dev`; free conflicting ports with `just kill`. Services map to localhost ports: grid-dashboard 3000, sonos-api 5006, node-sonos-http-api 5005, printer 8099, snapshot-service 4010, tinyurl-service 4100.
 - Build add-ons: `just ha-addon [addon]`; list discovered add-ons with `just addons` (discovery is by `*/addon.yaml`).
 - Deploy: `just deploy [addon]` builds via `talos` and deploys, then rolls out `new-hass-configs`. Use `just printer-image` to preflight the printer container build.
@@ -21,9 +22,9 @@ Guidance for humans and agents working in this repository.
 
 ## Home Assistant configuration
 - Everything lives under `new-hass-configs`. Common commands: `just fetch`, `just check`, `just deploy`, and `./iterate.sh` for before/after scene inventories. From the repo root, use the repository-owned `just ha-state <entity_id>`, `just ha-call <domain.service> <entity_id>`, and `just ha-inventory` commands to inspect or operate the live system; they do not depend on the Python-based `hass-cli` package.
-- **SSH access**: Use `ssh root@homeassistant.local` to access the Home Assistant system directly. The remote `ha` command manages Core/Supervisor lifecycle, logs, backups, and host services; it does not expose entity state or service-call commands, so use the repository API client for those. The entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
-- **SSH authentication failures are fatal**: If SSH reaches the host but authentication or 1Password agent access fails, stop the Home Assistant workflow immediately. Ask Ryan to unlock 1Password and tell you when it is ready, then retry SSH only after he confirms. Do not retry repeatedly or fall back to another host, IP address, browser session, API token, or alternate authentication path.
-- **Hostname failures are not 1Password failures**: The Codex sandbox can fail to resolve `homeassistant.local`. Retry the exact hostname-based command once outside the sandbox; do not substitute an IP address. If it still cannot resolve, stop and report the mDNS/network failure rather than asking Ryan to unlock 1Password.
+- **SSH access**: From the repository root, use `ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local` to access Home Assistant directly. Always select this repository-local identity explicitly; do not use 1Password or another SSH-agent identity for agent access. The remote `ha` command manages Core/Supervisor lifecycle, logs, backups, and host services; it does not expose entity state or service-call commands, so use the repository API client for those. The entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
+- **SSH key setup and failures**: The private key is local-only under the Git-ignored `/.ssh/` directory. If the keypair is missing, run `just ha-ssh-key-create`, then stop and ask Ryan to run the human-only `just ha-ssh-key-copy`. If the dedicated key exists but authentication fails, stop the Home Assistant workflow immediately and ask Ryan to rerun `just ha-ssh-key-copy`; do not retry repeatedly or fall back to 1Password, another host, an IP address, a browser session, an API token, or alternate credentials.
+- **Hostname failures are not authentication failures**: The Codex sandbox can fail to resolve `homeassistant.local`. Retry the same hostname-based command with the repository-local identity once outside the sandbox; do not substitute an IP address. If it still cannot resolve, stop and report the mDNS/network failure rather than changing credentials.
 
 ## Add-ons at a glance
 - `grid-dashboard` (port 3000) — Main dashboard UI. See `grid-dashboard/AGENTS.md`.

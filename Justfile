@@ -18,9 +18,51 @@ set dotenv-load
 # Home Assistant configs directory
 hass_configs_dir := "new-hass-configs"
 
+# Repository-local Home Assistant SSH identity (ignored by Git)
+ha_ssh_key := ".ssh/id_ed25519_codex_smarthome"
+ha_ssh_target := "root@homeassistant.local"
+
 # ============================================================================
 # SETUP AND VALIDATION
 # ============================================================================
+
+# Create the repository-local Home Assistant SSH keypair
+[group: 'setup']
+ha-ssh-key-create:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel)"
+	KEY_PATH="${REPO_ROOT}/{{ha_ssh_key}}"
+	KEY_DIR="$(dirname "${KEY_PATH}")"
+	umask 077
+	mkdir -p "${KEY_DIR}"
+	chmod 700 "${KEY_DIR}"
+	if [[ -e "${KEY_PATH}" || -e "${KEY_PATH}.pub" ]]; then
+		if [[ ! -f "${KEY_PATH}" || ! -f "${KEY_PATH}.pub" ]]; then
+			echo "Incomplete SSH keypair at ${KEY_PATH}; refusing to overwrite it." >&2
+			exit 1
+		fi
+		ssh-keygen -lf "${KEY_PATH}.pub" >/dev/null
+		chmod 600 "${KEY_PATH}"
+		chmod 644 "${KEY_PATH}.pub"
+		echo "Home Assistant SSH keypair already exists at ${KEY_PATH}."
+		exit 0
+	fi
+	ssh-keygen -q -t ed25519 -N "" -C "codex-smarthome@homeassistant.local" -f "${KEY_PATH}"
+	chmod 600 "${KEY_PATH}"
+	chmod 644 "${KEY_PATH}.pub"
+	echo "Created Home Assistant SSH keypair at ${KEY_PATH}."
+
+# Install the repository-local public key on Home Assistant (human-run; may invoke 1Password once)
+[group: 'setup']
+ha-ssh-key-copy: ha-ssh-key-create
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel)"
+	KEY_PATH="${REPO_ROOT}/{{ha_ssh_key}}"
+	ssh-copy-id -i "${KEY_PATH}.pub" -o IdentitiesOnly=no "{{ha_ssh_target}}"
+	ssh -i "${KEY_PATH}" -o IdentitiesOnly=yes -o BatchMode=yes "{{ha_ssh_target}}" exit
+	echo "Verified repository-local SSH authentication to {{ha_ssh_target}}."
 
 # Validate deployment prerequisites
 [group: 'validation']
