@@ -1,4 +1,4 @@
-FROM node:24.18.0-alpine
+FROM node:26.7.0-alpine
 
 ARG BUILD_VERSION=dev
 ARG BUILD_ARCH
