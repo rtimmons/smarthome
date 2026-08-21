@@ -48,6 +48,12 @@ export interface Device {
   type: DeviceType;
   protocol?: "zigbee" | "zwave";
   /**
+   * Preserve a desired entity name and scene membership while hardware is
+   * intentionally absent. Inventory does not report a missing live registry
+   * entry as drift until this marker is removed after re-inclusion.
+   */
+  inventoryStatus?: "active" | "temporarily_removed";
+  /**
    * Send this device after normal-priority Z-Wave loads in generated scenes.
    * Use only for a known weak route: health checks still decide whether the
    * target should be called at all.

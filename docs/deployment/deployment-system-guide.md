@@ -158,8 +158,8 @@ ha_user := env_var_or_default("HA_USER", "root")
 💬 SSH connection failed
 
 🔧 Troubleshooting Steps:
-1. If `homeassistant.local` failed to resolve in the Codex sandbox, retry the exact hostname command once outside it; do not substitute an IP or treat this as a 1Password failure.
-2. If the host was reached but authentication failed, stop and ask Ryan to unlock 1Password. Retry only after confirmation; do not switch credentials or authentication paths.
+1. If `homeassistant.local` failed to resolve in the Codex sandbox, retry the exact dedicated-key hostname command once outside it; do not substitute an IP or treat this as an authentication failure.
+2. If the host was reached but the repository-local key failed, stop and ask Ryan to rerun the human-only `just ha-ssh-key-copy`. Retry only after confirmation; do not fall back to 1Password or alternate credentials.
 3. For other transport failures, stop the deployment and verify Home Assistant/SSH service availability before rerunning it.
 ```
 

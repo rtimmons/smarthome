@@ -167,6 +167,7 @@ export const devices: DeviceRegistry = {
     living_palm: {
       entity: "light.light_living_palm",
       type: "zwave_switch_light",
+      inventoryStatus: "temporarily_removed",
       capabilities: ["on_off"]
     },
     living_abovetv: {
@@ -192,6 +193,7 @@ export const devices: DeviceRegistry = {
     outdoor_cafe: {
       entity: "light.light_outdoor_cafe",
       type: "zwave_switch_light",
+      inventoryStatus: "temporarily_removed",
       capabilities: ["on_off"]
     },
     outdoor_sconces: {

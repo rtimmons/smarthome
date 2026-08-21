@@ -62,9 +62,14 @@ class TestDeploymentValidation:
         
         # Should not raise an exception
         addon_builder.validate_deployment_prerequisites("homeassistant.local", 22, "root")
+
+        first_command = mock_run.call_args_list[0].args[0]
+        assert first_command[:2] == ["ssh", "-i"]
+        assert str(addon_builder.DEFAULT_HA_SSH_IDENTITY) in first_command
+        assert "IdentitiesOnly=yes" in first_command
     
-    def test_validate_deployment_prerequisites_auth_failure_requires_1password(self, monkeypatch):
-        """Authentication failures stop and point to the 1Password agent."""
+    def test_validate_deployment_prerequisites_auth_failure_requires_key_copy(self, monkeypatch):
+        """Authentication failures stop and point to the dedicated-key setup."""
         mock_run = Mock(
             side_effect=subprocess.CalledProcessError(
                 255,
@@ -79,8 +84,8 @@ class TestDeploymentValidation:
 
         error = exc_info.value
         assert error.error_type == "SSH_AUTHENTICATION_FAILED"
-        assert any("unlock 1Password" in step for step in error.troubleshooting_steps)
-        assert not any("password authentication" in step for step in error.troubleshooting_steps)
+        assert any("just ha-ssh-key-copy" in step for step in error.troubleshooting_steps)
+        assert not any("unlock 1Password" in step for step in error.troubleshooting_steps)
 
     def test_validate_deployment_prerequisites_dns_failure_is_not_auth(self, monkeypatch):
         """mDNS failures preserve the hostname and do not blame 1Password."""
@@ -100,12 +105,28 @@ class TestDeploymentValidation:
         assert error.error_type == "SSH_HOSTNAME_RESOLUTION_FAILED"
         assert any("outside the Codex sandbox" in step for step in error.troubleshooting_steps)
         assert any("Do not substitute an IP" in step for step in error.troubleshooting_steps)
+        assert any("id_ed25519_codex_smarthome" in step for step in error.troubleshooting_steps)
         assert not any("unlock 1Password" in step for step in error.troubleshooting_steps)
+
+    def test_home_assistant_transport_supports_identity_override(self, monkeypatch):
+        monkeypatch.setenv("HASS_SSH_IDENTITY", "/tmp/test-home-assistant-key")
+
+        assert addon_builder.ssh_transport_args(2222) == [
+            "-i", "/tmp/test-home-assistant-key",
+            "-o", "IdentitiesOnly=yes",
+            "-p", "2222",
+        ]
+        assert addon_builder.scp_transport_args(2222) == [
+            "-i", "/tmp/test-home-assistant-key",
+            "-o", "IdentitiesOnly=yes",
+            "-P", "2222",
+        ]
 
     @pytest.mark.parametrize(
         ("stderr", "expected"),
         [
             ("sign_and_send_pubkey: agent refused operation", "SSH_AUTHENTICATION_FAILED"),
+            ("Warning: Identity file /missing not accessible", "SSH_AUTHENTICATION_FAILED"),
             ("connect to host homeassistant.local port 22: Connection refused", "SSH_CONNECTION_FAILED"),
             ("Temporary failure in name resolution", "SSH_HOSTNAME_RESOLUTION_FAILED"),
         ],

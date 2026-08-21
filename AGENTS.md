@@ -42,6 +42,7 @@ Guidance for humans and agents working in this repository.
 - Operational lighting must use `script.fast_scene_<scene_id>`, never native `scene.turn_on`; the fast wrapper and queued dispatcher provide health filtering, bounded Z-Wave batches, error isolation, and skipped-target reporting. Generated scene automations use `mode: single` and call the fast script directly so they remain active until dispatch finishes. See `docs/operations/zwave-scene-ops.md`.
 - `new-hass-configs/scripts.yaml` is a generated, ignored deployment artifact. Edit generator sources, review `new-hass-configs/generated/scripts.yaml`, and let `just generate`, `just check`, or deployment prechecks rebuild it; do not commit or reconcile the root file.
 - Outlets powering smart lights must set both `includeInAllOff: false` and `allowSceneTurnOff: false`; generated scenes must control the bulb entity and never cut its power.
+- Z-Wave nodes 2 (`living_palm`) and 16 (`outdoor_cafe`) were intentionally removed on 2026-08-21. Their desired entity IDs remain in `devices.ts` with `inventoryStatus: "temporarily_removed"`; preserve that marker while they are absent, then clear it only after re-inclusion and restoration of the same entity IDs. If failed-node removal is accepted but its completion event times out, do not submit it again: restart only Z-Wave JS once, then verify the fresh controller node list and Home Assistant registries.
 
 ## Docs map
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.

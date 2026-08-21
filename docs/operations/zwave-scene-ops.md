@@ -46,6 +46,19 @@ Connection failures are stage-specific. Use the ignored repository identity expl
 4. If scenes still lag, inspect the generated fast scene calls and isolate any remaining Z-Wave-backed entities so they are sent in separate parallel service calls.
 5. If a target entity is `unavailable` or its node-status sensor is `dead`, treat the underlying fault as a device/platform issue. The generated dispatcher skips it so the fault does not block healthy targets, but that resilience is not a substitute for repairing or removing the node.
 
+## Failed-Node Removal and Re-Inclusion
+
+Before removing a failed node, save a Z-Wave JS NVM backup. Submit one failed-node removal request and wait for the controller response. If the request is accepted but the WebSocket completion event times out, do not submit a duplicate removal: inspect the persistent Z-Wave log and controller state first. When a later operation reports `node_not_found`, restart only the Z-Wave JS add-on once to reconcile its runtime with the controller NVM, then verify the node is absent from the fresh startup list and that Home Assistant removed the corresponding active device and entity registry entries.
+
+As of 2026-08-21, former nodes 2 (`living_palm`, Minoston MP22ZD) and 16 (`outdoor_cafe`, Minoston MP22ZD) are intentionally absent. Their desired entity IDs remain in `devices.ts` with `inventoryStatus: "temporarily_removed"`; inventory reports them separately and does not count their expected absence as registry drift. The post-removal controller baseline is 31 nodes, all Alive and ready, with zero unhealthy Z-Wave nodes.
+
+To re-add either plug later:
+
+1. Exclude or factory-reset the plug as needed, then include it normally.
+2. Restore its desired entity ID (`light.light_living_palm` or `light.light_outdoor_cafe`).
+3. Remove `inventoryStatus: "temporarily_removed"` from `devices.ts`.
+4. Run `just zwave-inventory`; the entity must be active, healthy, and free of registry drift before relying on scenes.
+
 ## Interpretation Notes
 
 - Live websocket reads are authoritative for Z-Wave config verification. Cache files can lag after writes.
@@ -170,6 +183,7 @@ Operationally, a dead mains-powered node should be repaired, excluded, or replac
 - After remediation, the live dashboard Kitchen Sun/Moon path reached the correct fast scripts and a high-to-off exercise settled in roughly two seconds per scene without a new controller jam or command timeout.
 - Live All Off verification exposed a separate power-model error: it cut power to the Flamingo Hue bulb, making the bulb unavailable. The power outlet is now excluded from All Off and bedroom off/low scenes.
 - The 2026-08-20 post-deployment All Off replay settled all 50 reachable targets in 27.46 seconds and skipped five unavailable entities without aborting. Nodes 2 and 16 were already dead and were omitted; the only new RF errors were two timeouts from node 4 and one from last-priority node 28. This confirms the resilience path works while also showing that batching cannot repair weak physical routes.
+- On 2026-08-21, nodes 2 and 16 were removed from the controller. Each removal was accepted but its completion event timed out; a single Z-Wave JS restart reconciled runtime state with controller NVM and Home Assistant then cleaned the active device/entity registry. A fresh inventory showed all 31 remaining nodes Alive and ready, with zero unhealthy Z-Wave nodes. The pre-removal NVM backup is ignored at `new-hass-configs/backups/zwave-js/zwave_js_backup_2026-08-21_before-removing-nodes-2-16.bin` (SHA-256 `0430357f705cd330f1c3dbb94eab6a229dbb35170b1a3403b8a5a965312e7356`).
 
 ## Files Involved
 

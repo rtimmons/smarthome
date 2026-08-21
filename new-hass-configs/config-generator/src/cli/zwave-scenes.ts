@@ -23,9 +23,9 @@ import {
   fetchState,
   fetchStates,
   getAccessToken,
+  getSshOptions,
   JsonObject,
   runSsh,
-  SSH_OPTIONS,
 } from "./home-assistant-client";
 
 interface Options {
@@ -86,16 +86,17 @@ interface SceneSummary {
   }>;
 }
 
-interface ConfiguredDeviceSummary {
+export interface ConfiguredDeviceSummary {
   category: string;
   name: string;
   entityId: string;
   type: string;
   deviceId?: string;
   includeInAllOff: boolean;
+  inventoryStatus: "active" | "temporarily_removed";
 }
 
-interface EntityAuditFinding {
+export interface EntityAuditFinding {
   category: string;
   name: string;
   entityId: string;
@@ -235,7 +236,7 @@ function ensureOutputDir(outputDir?: string): string {
 }
 
 function scpFromRemote(host: string, remotePath: string, localPath: string) {
-  execFileSync("scp", [...SSH_OPTIONS, `${host}:${remotePath}`, localPath], {
+  execFileSync("scp", [...getSshOptions(), `${host}:${remotePath}`, localPath], {
     stdio: "inherit",
   });
 }
@@ -548,7 +549,7 @@ function sleep(ms: number): Promise<void> {
   });
 }
 
-function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
+export function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
   const entries: ConfiguredDeviceSummary[] = [];
 
   for (const [category, registry] of Object.entries(devices)) {
@@ -560,6 +561,7 @@ function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
         type: device.type,
         deviceId: device.device_id,
         includeInAllOff: device.includeInAllOff !== false,
+        inventoryStatus: device.inventoryStatus ?? "active",
       });
     }
   }
@@ -567,7 +569,7 @@ function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
   return entries.sort((left, right) => left.entityId.localeCompare(right.entityId));
 }
 
-function buildEntityAuditFindings(
+export function buildEntityAuditFindings(
   configuredDevices: ConfiguredDeviceSummary[],
   entityRegistry: JsonObject
 ): EntityAuditFinding[] {
@@ -588,6 +590,9 @@ function buildEntityAuditFindings(
   for (const configured of configuredDevices) {
     const liveEntity = entityById.get(configured.entityId);
     if (!liveEntity) {
+      if (configured.inventoryStatus === "temporarily_removed") {
+        continue;
+      }
       findings.push({
         category: configured.category,
         name: configured.name,
@@ -653,6 +658,9 @@ function collectUnavailableConfiguredEntities(
   const unavailable: UnavailableEntityFinding[] = [];
 
   for (const configured of configuredDevices) {
+    if (configured.inventoryStatus === "temporarily_removed") {
+      continue;
+    }
     const state = stateByEntityId.get(configured.entityId);
     if (!state) {
       continue;
@@ -1095,6 +1103,9 @@ async function inventory(options: Options) {
   );
   const states = fetchStates(options, accessToken);
   const configuredDevices = flattenConfiguredDevices();
+  const temporarilyRemovedConfiguredDevices = configuredDevices.filter(
+    (device) => device.inventoryStatus === "temporarily_removed"
+  );
   const unhealthyNodeFindings = buildUnhealthyNodeFindings(nodeMap, states);
   const sceneAvailabilityFindings = buildSceneAvailabilityFindings(states, nodeMap);
   const configuredUnavailable = collectUnavailableConfiguredEntities(
@@ -1117,6 +1128,8 @@ async function inventory(options: Options) {
     output_dir: outputDir,
     summary: {
       configured_device_count: configuredDevices.length,
+      temporarily_removed_configured_device_count:
+        temporarilyRemovedConfiguredDevices.length,
       scene_count: sceneSummaries.length,
       live_ramp_plan_count: liveRampPlan.length,
       unavailable_configured_entity_count: configuredUnavailable.length,
@@ -1134,6 +1147,7 @@ async function inventory(options: Options) {
     scene_availability_findings: sceneAvailabilityFindings,
     unhealthy_zwave_nodes: unhealthyNodeFindings,
     configured_unavailable_entities: configuredUnavailable,
+    temporarily_removed_configured_devices: temporarilyRemovedConfiguredDevices,
     registry_drift_summary: registryDriftSummary,
     entity_audit_findings: entityAuditFindings,
     suspicious_log_summary: suspiciousLogSummary,
@@ -1152,6 +1166,9 @@ async function inventory(options: Options) {
   console.log("");
   console.log(
     `Configured devices: ${configuredDevices.length} | Scenes: ${sceneSummaries.length}`
+  );
+  console.log(
+    `Temporarily removed configured devices: ${temporarilyRemovedConfiguredDevices.length}`
   );
   console.log(`Pending ramp changes: ${liveRampPlan.length}`);
   console.log(
@@ -1218,6 +1235,9 @@ async function checkRegistryDrift(options: Options) {
   const artifactPaths = fetchLiveArtifacts(options, outputDir);
   const artifacts = loadArtifacts(artifactPaths);
   const configuredDevices = flattenConfiguredDevices();
+  const temporarilyRemovedConfiguredDevices = configuredDevices.filter(
+    (device) => device.inventoryStatus === "temporarily_removed"
+  );
   const entityAuditFindings = buildEntityAuditFindings(
     configuredDevices,
     artifacts.entityRegistry
@@ -1228,6 +1248,9 @@ async function checkRegistryDrift(options: Options) {
     generated_at: new Date().toISOString(),
     output_dir: outputDir,
     configured_device_count: configuredDevices.length,
+    temporarily_removed_configured_device_count:
+      temporarilyRemovedConfiguredDevices.length,
+    temporarily_removed_configured_devices: temporarilyRemovedConfiguredDevices,
     registry_drift_summary: registryDriftSummary,
     entity_audit_findings: entityAuditFindings,
   };
@@ -1503,9 +1526,9 @@ async function main() {
   }
 }
 
-try {
-  main();
-} catch (error) {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : error);
+    process.exit(1);
+  });
 }

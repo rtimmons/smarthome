@@ -1,5 +1,10 @@
 import { parseArgs } from "./home-assistant";
-import { runCommand, selectOwnerRefreshToken } from "./home-assistant-client";
+import {
+  DEFAULT_HASS_SSH_IDENTITY,
+  getSshOptions,
+  runCommand,
+  selectOwnerRefreshToken,
+} from "./home-assistant-client";
 
 describe("Home Assistant CLI", () => {
   it("parses state commands and connection overrides", () => {
@@ -102,5 +107,36 @@ describe("runCommand", () => {
     } catch (error) {
       expect(String(error)).not.toContain(secret);
     }
+  });
+});
+
+describe("getSshOptions", () => {
+  it("selects the ignored repository-local Home Assistant identity", () => {
+    expect(getSshOptions({})).toEqual(
+      expect.arrayContaining([
+        "-i",
+        DEFAULT_HASS_SSH_IDENTITY,
+        "-o",
+        "IdentitiesOnly=yes",
+      ])
+    );
+    expect(DEFAULT_HASS_SSH_IDENTITY).toMatch(
+      /\.ssh\/id_ed25519_codex_smarthome$/
+    );
+  });
+
+  it("supports an explicit identity override without using an SSH agent", () => {
+    const options = getSshOptions({
+      HASS_SSH_IDENTITY: "/tmp/test-home-assistant-key",
+    });
+
+    expect(options).toEqual(
+      expect.arrayContaining([
+        "-i",
+        "/tmp/test-home-assistant-key",
+        "-o",
+        "IdentitiesOnly=yes",
+      ])
+    );
   });
 });

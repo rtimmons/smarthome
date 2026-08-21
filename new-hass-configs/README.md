@@ -254,10 +254,11 @@ ls inventory_snapshots/2025*/  # view captured device/entity snapshots
 ```
 
 Requirements:
-- SSH access to `root@homeassistant.local`; `HASS_TOKEN` may be configured as the repository client's normal credential, but must not be introduced as a fallback after an SSH authentication failure
+- The ignored repository-local SSH key at `.ssh/id_ed25519_codex_smarthome`; create it with `just ha-ssh-key-create` and ask Ryan to run the human-only `just ha-ssh-key-copy` if it is not installed
+- `HASS_TOKEN` may be configured as the repository client's normal credential, but must not be introduced as a fallback after an SSH authentication failure
 - A reachable Home Assistant API at `homeassistant.local`
 
-If SSH reaches the host but authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password before retrying. A sandbox-only `homeassistant.local` resolution error is different: retry the exact hostname command once outside the sandbox, never substitute an IP, and report an mDNS/network failure if it still cannot resolve.
+Automated clients explicitly select the dedicated key and set `IdentitiesOnly=yes`; set `HASS_SSH_IDENTITY` only when intentionally testing another repository-local key path. If authentication fails, stop and ask Ryan to rerun `just ha-ssh-key-copy`. A sandbox-only `homeassistant.local` resolution error is different: retry the exact hostname command with the same key once outside the sandbox, never substitute an IP, and report an mDNS/network failure if it still cannot resolve.
 
 The repository client is built automatically from `config-generator` and avoids the external Python-based `hass-cli` package:
 
@@ -544,7 +545,7 @@ just restore 20250118-143022 --check
 
 If Home Assistant fails to start after `just deploy`:
 
-1. SSH into Home Assistant: `ssh root@homeassistant.local`
+1. From the repository root, SSH into Home Assistant: `ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local`
 2. Check logs: `ha core logs`
 3. Restore from remote backup: `rsync -a /tmp/hass-config-backup/ /config/`
 4. Restart: `ha core restart`
@@ -651,9 +652,9 @@ just zwave-exercise-scene --scene office_high --scene office_off
 
 ### SSH connection fails
 
-1. If `homeassistant.local` does not resolve inside the Codex sandbox, retry the exact command once outside the sandbox. Do not change to an IP address or blame 1Password for a pre-authentication DNS failure.
+1. If `homeassistant.local` does not resolve inside the Codex sandbox, retry the exact dedicated-key command once outside the sandbox. Do not change to an IP address or diagnose credentials for a pre-authentication DNS failure.
 2. If the hostname still does not resolve, stop and report the mDNS/network failure.
-3. If the host is reached but SSH authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password. Retry only after he confirms; do not switch credentials or authentication paths.
+3. If the host is reached but the dedicated key fails, stop and ask Ryan to rerun the human-only `just ha-ssh-key-copy`. Retry only after he confirms; do not fall back to 1Password or alternate credentials.
 
 ### Scene is partial, slow, or one device is unavailable
 

@@ -7,6 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+source "${SCRIPT_DIR}/ha-ssh.sh"
 
 # Colors for output
 RED='\033[0;31m'
@@ -71,7 +72,7 @@ test_script_permissions() {
 
 # Test 2: Check SSH connectivity
 test_ssh_connectivity() {
-    if ! ssh -p 22 -o ConnectTimeout=5 root@homeassistant.local "echo 'SSH OK'" >/dev/null 2>&1; then
+    if ! ssh "${HA_SSH_ARGS[@]}" -o ConnectTimeout=5 root@homeassistant.local "echo 'SSH OK'" >/dev/null 2>&1; then
         error "Cannot connect to homeassistant.local via SSH"
         return 1
     fi

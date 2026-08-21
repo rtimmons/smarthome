@@ -168,12 +168,12 @@ new-hass-configs/
 ## Troubleshooting
 
 ### SSH Connection Issues
-Ensure you can connect to the HA system:
+From the repository root, ensure you can connect to the HA system with the dedicated key:
 ```bash
-ssh root@homeassistant.local "echo 'Connection OK'"
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local "echo 'Connection OK'"
 ```
 
-If the hostname fails only inside the Codex sandbox, retry that exact hostname command once outside the sandbox; do not substitute an IP. If the host is reached but authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password before retrying. A resolution failure happens before authentication and is not a 1Password failure.
+If the hostname fails only inside the Codex sandbox, retry that exact dedicated-key command once outside the sandbox; do not substitute an IP. If the host is reached but the key fails, stop and ask Ryan to rerun the human-only `just ha-ssh-key-copy`; do not fall back to 1Password or alternate credentials. A resolution failure happens before authentication.
 
 ### Generated script differences
 

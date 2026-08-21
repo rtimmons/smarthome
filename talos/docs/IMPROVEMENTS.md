@@ -230,7 +230,7 @@ This approach avoids duplicating talos validation logic and keeps hooks focused 
 #### 3. Error Message Improvements
 Enhance error messages with suggestions:
 - **Missing addon.yaml**: "Add-on '<name>' not found. Create <name>/addon.yaml or check spelling."
-- **SSH failure**: classify hostname resolution separately from authentication. Resolution guidance preserves `homeassistant.local` and retries once outside the sandbox; authentication guidance stops and asks Ryan to unlock 1Password, without suggesting an IP, password, or alternate credential.
+- **SSH failure**: classify hostname resolution separately from authentication. Resolution guidance preserves `homeassistant.local` and retries once outside the sandbox with the repository-local identity; authentication guidance stops and asks Ryan to rerun the human-only `just ha-ssh-key-copy`, without suggesting an IP, 1Password, or alternate credential.
 - **Missing dependencies**: "node_modules not found. Run: cd <addon> && just setup"
 
 #### 4. Add Template Variable Reference

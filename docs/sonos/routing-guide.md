@@ -72,7 +72,7 @@ curl http://homeassistant.local:5005/Bedroom/state
 ### From Inside Home Assistant (SSH into host):
 ```bash
 # Test each layer
-ssh root@homeassistant.local
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local
 
 # Layer 3: node-sonos-http-api directly
 curl http://local-node-sonos-http-api:5005/zones
@@ -163,7 +163,7 @@ just deploy
 - **Problem:** Changes to build scripts don't reflect in running add-ons
 - **Solution:** Reinstall the add-on to pick up new default config:
   ```bash
-  ssh root@homeassistant.local
+  ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local
   ha addons stop local_sonos_api
   ha addons uninstall local_sonos_api
   ha addons reload

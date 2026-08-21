@@ -3,6 +3,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+source "${SCRIPT_DIR}/ha-ssh.sh"
 TMP_DIR="${HASS_CONFIG_TMP_DIR:-/tmp/new-hass-configs}"
 REMOTE="${HASS_CONFIG_REMOTE:-root@homeassistant.local}"
 REMOTE_CONFIG="${HASS_CONFIG_REMOTE_DIR:-/config}"
@@ -107,7 +108,7 @@ needed() {
   cd "$CONFIG_DIR"
   local raw_changes
   raw_changes="$(run_metric "config.rsync_dry_run" \
-    rsync_config -anic --delete -e "ssh -p 22" . "${REMOTE}:${REMOTE_CONFIG}/")"
+    rsync_config -anic --delete -e "${HA_RSYNC_SHELL}" . "${REMOTE}:${REMOTE_CONFIG}/")"
 
   if printf '%s\n' "$raw_changes" | awk 'NF && !($2 == "./" && substr($1, 1, 2) == ".d") && $1 !~ /^[.]f[.][.]t/ { found = 1 } END { exit found ? 0 : 1 }'; then
     printf 'true\n'
@@ -121,26 +122,26 @@ apply_config() {
   local remote_rsync_args
   printf -v remote_rsync_args '%q ' "${RSYNC_PROTECT_FILTERS[@]}" "${DEPLOY_FILTERS[@]}"
   run_metric "config.prepare_staging" \
-    ssh -p 22 "$REMOTE" "rm -rf \"${TMP_DIR}\" && mkdir -p \"${TMP_DIR}\""
+    ssh "${HA_SSH_ARGS[@]}" "$REMOTE" "rm -rf \"${TMP_DIR}\" && mkdir -p \"${TMP_DIR}\""
   run_metric "config.upload_staging" \
-    rsync_config -av --delete -e "ssh -p 22" . "${REMOTE}:${TMP_DIR}/"
+    rsync_config -av --delete -e "${HA_RSYNC_SHELL}" . "${REMOTE}:${TMP_DIR}/"
   run_metric "config.copy_secrets" \
-    ssh -p 22 "$REMOTE" "if [ -f ${REMOTE_CONFIG}/secrets.yaml ]; then cp ${REMOTE_CONFIG}/secrets.yaml \"${TMP_DIR}\"/; fi"
-  run_metric "config.backup" ssh -p 22 "$REMOTE" "\
+    ssh "${HA_SSH_ARGS[@]}" "$REMOTE" "if [ -f ${REMOTE_CONFIG}/secrets.yaml ]; then cp ${REMOTE_CONFIG}/secrets.yaml \"${TMP_DIR}\"/; fi"
+  run_metric "config.backup" ssh "${HA_SSH_ARGS[@]}" "$REMOTE" "\
     backup_dir=\"/tmp/hass-config-backup\" && \
     rm -rf \"\${backup_dir}\" && \
     mkdir -p \"\${backup_dir}\" && \
     rsync -a --delete ${REMOTE_CONFIG}/ \"\${backup_dir}\"/"
-  run_metric "config.sync" ssh -p 22 "$REMOTE" "\
+  run_metric "config.sync" ssh "${HA_SSH_ARGS[@]}" "$REMOTE" "\
     rsync -av --delete --prune-empty-dirs \
       ${remote_rsync_args} \
       \"${TMP_DIR}\"/ ${REMOTE_CONFIG}/"
   run_metric "config.backup_cleanup" \
-    ssh -p 22 "$REMOTE" "rm -rf /tmp/hass-config-backup"
-  run_metric "config.core_restart" ssh -p 22 "$REMOTE" \
+    ssh "${HA_SSH_ARGS[@]}" "$REMOTE" "rm -rf /tmp/hass-config-backup"
+  run_metric "config.core_restart" ssh "${HA_SSH_ARGS[@]}" "$REMOTE" \
     'for attempt in 1 2 3 4 5 6 7 8 9 10; do if ha core restart >/tmp/ha-core-restart.out 2>&1; then rm -f /tmp/ha-core-restart.out; exit 0; fi; if ! grep -q "Another job is running for job group home_assistant_core" /tmp/ha-core-restart.out; then cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1; fi; sleep 3; done; cat /tmp/ha-core-restart.out >&2; rm -f /tmp/ha-core-restart.out; exit 1'
   run_metric "config.staging_cleanup" \
-    ssh -p 22 "$REMOTE" "rm -rf \"${TMP_DIR}\""
+    ssh "${HA_SSH_ARGS[@]}" "$REMOTE" "rm -rf \"${TMP_DIR}\""
 }
 
 deploy() {

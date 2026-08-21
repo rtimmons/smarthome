@@ -600,11 +600,11 @@ Check SSH access:
 
 ```bash
 # Test SSH manually
-ssh -p 22 root@homeassistant.local
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes -p 22 root@homeassistant.local
 ```
 
 - If `homeassistant.local` fails to resolve inside the Codex sandbox, retry this exact hostname command once outside the sandbox. Do not substitute an IP; resolution failed before authentication.
-- If the host is reached but authentication or 1Password agent access fails, stop and ask Ryan to unlock 1Password. Retry only after confirmation and do not switch credentials or authentication paths.
+- If the host is reached but the repository-local key fails, stop and ask Ryan to rerun the human-only `just ha-ssh-key-copy`. Retry only after confirmation; do not fall back to 1Password or alternate credentials.
 - Other SSH transport failures are fatal to the deployment; diagnose and resolve them before rerunning Talos.
 
 ### Dev Fails - Port Conflict

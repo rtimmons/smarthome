@@ -25,6 +25,35 @@ from .timing import DeployTimer
 
 console = Console()
 
+DEFAULT_HA_SSH_IDENTITY = REPO_ROOT / ".ssh" / "id_ed25519_codex_smarthome"
+
+
+def ha_ssh_identity() -> Path:
+    """Return the explicit repository-local Home Assistant SSH identity."""
+    return Path(
+        os.environ.get("HASS_SSH_IDENTITY", str(DEFAULT_HA_SSH_IDENTITY))
+    ).expanduser()
+
+
+def ssh_transport_args(port: int) -> list[str]:
+    return [
+        "-i", str(ha_ssh_identity()),
+        "-o", "IdentitiesOnly=yes",
+        "-p", str(port),
+    ]
+
+
+def scp_transport_args(port: int) -> list[str]:
+    return [
+        "-i", str(ha_ssh_identity()),
+        "-o", "IdentitiesOnly=yes",
+        "-P", str(port),
+    ]
+
+
+def ssh_command(host: str, port: int, user: str) -> str:
+    return shlex.join(["ssh", *ssh_transport_args(port), f"{user}@{host}"])
+
 
 class DeploymentError(Exception):
     """Enhanced deployment error with context and troubleshooting info."""
@@ -69,7 +98,7 @@ def get_addon_logs(ha_host: str, ha_port: int, ha_user: str, addon_id: str, line
     """Get the last N lines of logs for an add-on."""
     try:
         result = run_cmd([
-            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+            "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}",
             f"ha addons logs {addon_id} --lines {lines}"
         ], verbose=False, capture_output=True)
         return result.stdout.strip()
@@ -81,7 +110,7 @@ def check_ha_core_status(ha_host: str, ha_port: int, ha_user: str) -> dict:
     """Check Home Assistant core status and return detailed information."""
     try:
         result = run_cmd([
-            "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+            "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}",
             "ha core info --raw-json"
         ], verbose=False, capture_output=True)
 
@@ -122,6 +151,8 @@ def classify_ssh_failure(stderr: str) -> str:
             "agent refused operation",
             "sign_and_send_pubkey",
             "too many authentication failures",
+            "identity file",
+            "no such identity",
         )
     ):
         return "SSH_AUTHENTICATION_FAILED"
@@ -129,7 +160,7 @@ def classify_ssh_failure(stderr: str) -> str:
 
 
 def ssh_failure_troubleshooting(error_type: str, host: str, port: int, user: str) -> list[str]:
-    command = f"ssh -p {port} {user}@{host}"
+    command = ssh_command(host, port, user)
     if error_type == "SSH_HOSTNAME_RESOLUTION_FAILED":
         return [
             f"Retry the exact hostname-based command once outside the Codex sandbox: {command}",
@@ -138,9 +169,9 @@ def ssh_failure_troubleshooting(error_type: str, host: str, port: int, user: str
         ]
     if error_type == "SSH_AUTHENTICATION_FAILED":
         return [
-            "Stop the deployment and ask Ryan to unlock 1Password",
-            "Retry SSH only after Ryan confirms 1Password is ready",
-            "Do not retry repeatedly or switch credentials, hosts, or authentication paths",
+            "Stop the deployment and ask Ryan to run the human-only `just ha-ssh-key-copy`",
+            "Retry only after Ryan confirms the repository-local key is installed",
+            "Do not retry repeatedly or fall back to 1Password, another host, an IP address, or alternate credentials",
         ]
     return [
         f"Inspect the exact failure with: {command}",
@@ -226,7 +257,7 @@ def validate_deployment_prerequisites(
     try:
         with timer.phase("prerequisites.ssh"):
             result = run_cmd([
-                "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+                "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}",
                 "-o", "ConnectTimeout=10",
                 "-o", "BatchMode=yes",
                 "-o", "StrictHostKeyChecking=no",  # For automated deployments
@@ -243,7 +274,7 @@ def validate_deployment_prerequisites(
             "user": ha_user,
             "exit_code": e.returncode,
             "stderr": stderr,
-            "command": f"ssh -p {ha_port} {ha_user}@{ha_host}"
+            "command": ssh_command(ha_host, ha_port, ha_user)
         }
 
         raise DeploymentError(
@@ -277,7 +308,7 @@ def validate_deployment_prerequisites(
     try:
         with timer.phase("prerequisites.disk"):
             result = run_cmd([
-                "ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}",
+                "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}",
                 "df -h / | tail -1 | awk '{print $4}'"
             ], verbose=False, capture_output=True)
 
@@ -1092,7 +1123,10 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
             console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
 
         # Upload addon tarball
-        scp_cmd = ["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"]
+        scp_cmd = [
+            "scp", *scp_transport_args(ha_port), str(archive),
+            f"{ha_user}@{ha_host}:{remote_tar}",
+        ]
         try:
             with timer.phase("addon.upload", addon=addon_key):
                 run_cmd(scp_cmd, dry_run=dry_run, verbose=verbose)
@@ -1108,7 +1142,7 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
                     "exit_code": e.returncode
                 },
                 troubleshooting_steps=[
-                    f"Check SSH connectivity: ssh -p {ha_port} {ha_user}@{ha_host}",
+                    f"Check SSH connectivity: {ssh_command(ha_host, ha_port, ha_user)}",
                     "Verify disk space on target system",
                     "Check file permissions"
                 ]
@@ -1125,7 +1159,9 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
         )
 
         # Execute remote deployment script
-        ssh_cmd = ["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script]
+        ssh_cmd = [
+            "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}", remote_script,
+        ]
         try:
             with timer.phase("addon.remote_deploy", addon=addon_key):
                 remote_result = run_cmd(

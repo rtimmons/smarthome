@@ -1,4 +1,5 @@
 import { execFileSync } from "child_process";
+import * as path from "path";
 
 export type JsonObject = Record<string, any>;
 
@@ -9,15 +10,27 @@ export interface HomeAssistantConnectionOptions {
 
 export const DEFAULT_HASS_HOST = "root@homeassistant.local";
 export const DEFAULT_HASS_SERVER = "http://homeassistant.local:8123";
+export const DEFAULT_HASS_SSH_IDENTITY = path.resolve(
+  __dirname,
+  "../../../../.ssh/id_ed25519_codex_smarthome"
+);
 
-export const SSH_OPTIONS = [
-  "-o",
-  "BatchMode=yes",
-  "-o",
-  "ConnectTimeout=10",
-  "-o",
-  "StrictHostKeyChecking=no",
-];
+export function getSshOptions(
+  env: NodeJS.ProcessEnv = process.env
+): string[] {
+  return [
+    "-i",
+    env.HASS_SSH_IDENTITY ?? DEFAULT_HASS_SSH_IDENTITY,
+    "-o",
+    "IdentitiesOnly=yes",
+    "-o",
+    "BatchMode=yes",
+    "-o",
+    "ConnectTimeout=10",
+    "-o",
+    "StrictHostKeyChecking=no",
+  ];
+}
 
 export function runCommand(
   command: string,
@@ -48,7 +61,7 @@ export function runCommand(
 }
 
 export function runSsh(host: string, remoteCommand: string): string {
-  return runCommand("ssh", [...SSH_OPTIONS, host, remoteCommand]);
+  return runCommand("ssh", [...getSshOptions(), host, remoteCommand]);
 }
 
 function normalizeClientId(clientId: string): string {

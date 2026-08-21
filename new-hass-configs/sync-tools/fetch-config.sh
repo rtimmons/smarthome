@@ -7,6 +7,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+source "${SCRIPT_DIR}/ha-ssh.sh"
 TEMP_DIR="/tmp/ha-fetch-config-$$"
 REMOTE_HOST="root@homeassistant.local"
 FORCE_FLAG="${FORCE_FLAG:-false}"
@@ -164,7 +165,7 @@ fetch_live_config() {
         --exclude '*.pyc' \
         --exclude '__pycache__/' \
         --exclude '*' \
-        -e "ssh -p 22" \
+        -e "${HA_RSYNC_SHELL}" \
         "${REMOTE_HOST}:/config/" "${TEMP_DIR}/fetched/"
 }
 
@@ -300,7 +301,7 @@ sync_ui_automations() {
     local ui_automations="${CONFIG_DIR}/automations.yaml"
 
     # Fetch the live UI automations file
-    if ! rsync -avz --timeout=30 "root@homeassistant.local:/config/automations.yaml" "$live_ui_automations" >/dev/null 2>&1; then
+    if ! rsync -avz --timeout=30 -e "${HA_RSYNC_SHELL}" "root@homeassistant.local:/config/automations.yaml" "$live_ui_automations" >/dev/null 2>&1; then
         warning "Could not fetch live UI automations - keeping existing UI automations"
         return 0
     fi
@@ -323,7 +324,7 @@ update_manual_automations() {
     local manual_automations="${CONFIG_DIR}/manual/automations.yaml"
 
     # Fetch the live manual automations file
-    if ! rsync -avz --timeout=30 "root@homeassistant.local:/config/manual/automations.yaml" "$live_manual_automations" >/dev/null 2>&1; then
+    if ! rsync -avz --timeout=30 -e "${HA_RSYNC_SHELL}" "root@homeassistant.local:/config/manual/automations.yaml" "$live_manual_automations" >/dev/null 2>&1; then
         log "Could not fetch live manual automations - skipping updates"
         return 0
     fi

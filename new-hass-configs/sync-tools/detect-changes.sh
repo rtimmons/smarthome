@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="${SYNC_CONFIG_DIR:-$(cd "${SCRIPT_DIR}/.." && pwd)}"
+source "${SCRIPT_DIR}/ha-ssh.sh"
 TEMP_DIR="${SYNC_TEMP_DIR:-/tmp/ha-sync-$$}"
 LIVE_CONFIG_DIR="${SYNC_LIVE_CONFIG_DIR:-}"
 REMOTE_HOST="root@homeassistant.local"
@@ -71,16 +72,16 @@ fetch_live_configs() {
         --include='generated/' \
         --include='generated/automations.yaml' \
         --exclude='*' \
-        -e "ssh -p 22" \
+        -e "${HA_RSYNC_SHELL}" \
         "${REMOTE_HOST}:${REMOTE_CONFIG}/" "${TEMP_DIR}/live/"
     
     # Also fetch any UI-created configs if they exist
-    ssh -p 22 "${REMOTE_HOST}" "find ${REMOTE_CONFIG} -name '*.yaml' -path '*/ui_*' 2>/dev/null || true" | \
+    ssh "${HA_SSH_ARGS[@]}" "${REMOTE_HOST}" "find ${REMOTE_CONFIG} -name '*.yaml' -path '*/ui_*' 2>/dev/null || true" | \
     while read -r file; do
         if [[ -n "$file" ]]; then
             rel_path="${file#"${REMOTE_CONFIG}"/}"
             mkdir -p "${TEMP_DIR}/live/$(dirname "$rel_path")"
-            scp "${REMOTE_HOST}:${file}" "${TEMP_DIR}/live/${rel_path}"
+            scp "${HA_SCP_ARGS[@]}" "${REMOTE_HOST}:${file}" "${TEMP_DIR}/live/${rel_path}"
         fi
     done
 }

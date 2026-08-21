@@ -48,10 +48,10 @@ deploy-ha-addon-verbose:
 	./scripts/deploy-ha-addon.sh --verbose
 
 ha-addon-logs:
-	ssh root@homeassistant.local ha addons logs local_TODO_ADDON_SLUG --lines 120
+	ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local ha addons logs local_TODO_ADDON_SLUG --lines 120
 
 ha-addon-info:
-	ssh root@homeassistant.local ha addons info local_TODO_ADDON_SLUG
+	ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local ha addons info local_TODO_ADDON_SLUG
 ```
 
 Edit the copied files and replace every `TODO_*` placeholder:
@@ -165,8 +165,8 @@ just ha-addon-logs
 Or directly:
 
 ```sh
-ssh root@homeassistant.local ha addons info local_<slug>
-ssh root@homeassistant.local ha addons logs local_<slug> --lines 120
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local ha addons info local_<slug>
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local ha addons logs local_<slug> --lines 120
 ```
 
 To package without touching the Home Assistant host:

@@ -4,6 +4,8 @@ ha_container := "homeassistant"
 backup_dir := "backups"
 rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .cache/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***'"
 local_repo_excludes := "--exclude 'config-generator/***' --exclude 'backups/***' --exclude 'inventory_snapshots/***'"
+ha_ssh_identity := justfile_directory() + "/../.ssh/id_ed25519_codex_smarthome"
+ha_ssh_command := "ssh -i " + ha_ssh_identity + " -o IdentitiesOnly=yes -p 22"
 
 preflight:
 	#!/usr/bin/env bash
@@ -38,6 +40,7 @@ home-assistant-build: config-generator-install
 test: config-generator-install
 	bash sync-tools/test-detect-changes.sh
 	bash sync-tools/test-generated-config-policy.sh
+	bash sync-tools/test-ha-ssh.sh
 	cd config-generator && npm test
 
 # Diagnose Z-Wave scene slowness and generate a ramp-normalization plan
@@ -136,12 +139,12 @@ fetch: preflight
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
 		--exclude '*' \
-		-e "ssh -p 22" \
+		-e "{{ha_ssh_command}}" \
 		root@homeassistant.local:/config/ .
 
 # Validate the current config on Home Assistant and show what would change (no apply).
 check: preflight
-	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
+	{{ha_ssh_command}} root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
 	rsync -av \
 		--delete \
 		{{rsync_protect_filters}} \
@@ -166,10 +169,10 @@ check: preflight
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
 		--exclude '*' \
-		-e "ssh -p 22" \
+		-e "{{ha_ssh_command}}" \
 		. root@homeassistant.local:"{{tmp_dir}}"/
-	ssh -p 22 root@homeassistant.local "if [ -f /config/secrets.yaml ]; then cp /config/secrets.yaml \"{{tmp_dir}}\"/; fi"
-	ssh -p 22 root@homeassistant.local "\
+	{{ha_ssh_command}} root@homeassistant.local "if [ -f /config/secrets.yaml ]; then cp /config/secrets.yaml \"{{tmp_dir}}\"/; fi"
+	{{ha_ssh_command}} root@homeassistant.local "\
 		backup_dir=\"/tmp/hass-config-backup\" && \
 		rm -rf \"\${backup_dir}\" && \
 		mkdir -p \"\${backup_dir}\" && \
@@ -227,10 +230,10 @@ check: preflight
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
 		--exclude '*' \
-		-e "ssh -p 22" \
+		-e "{{ha_ssh_command}}" \
 		. root@homeassistant.local:/config/ \
 		| sed 's/^/  /'
-	ssh -p 22 root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
+	{{ha_ssh_command}} root@homeassistant.local "rm -rf \"{{tmp_dir}}\""
 
 # Run the expensive drift check up front without applying changes.
 [group: 'deploy']
@@ -320,7 +323,7 @@ backup DESCRIPTION="":
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
 		--exclude '*' \
-		-e "ssh -p 22" \
+		-e "{{ha_ssh_command}}" \
 		root@homeassistant.local:/config/ "${backup_path}/"
 	if [ -n "{{DESCRIPTION}}" ]; then
 		echo "{{DESCRIPTION}}" > "${backup_path}/DESCRIPTION.txt"
@@ -400,7 +403,7 @@ restore TIMESTAMP:
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
 		--exclude '*' \
-		-e "ssh -p 22" \
+		-e "{{ha_ssh_command}}" \
 		root@homeassistant.local:/config/ "${safety_backup}/"
 	# Restore the backup
 	rsync -av \
@@ -425,12 +428,12 @@ restore TIMESTAMP:
 		--exclude '*.pyc' \
 		--exclude '__pycache__/' \
 		--exclude '*' \
-		-e "ssh -p 22" \
+		-e "{{ha_ssh_command}}" \
 		"${backup_path}/" root@homeassistant.local:/config/
 	# Validate and restart
-	if ssh -p 22 root@homeassistant.local "ha core check"; then
+	if {{ha_ssh_command}} root@homeassistant.local "ha core check"; then
 		echo "Configuration valid, restarting Home Assistant..."
-		ssh -p 22 root@homeassistant.local "ha core restart"
+		{{ha_ssh_command}} root@homeassistant.local "ha core restart"
 		echo "Restore complete"
 	else
 		echo "Configuration validation failed!"
@@ -457,7 +460,7 @@ restore TIMESTAMP:
 			--exclude '*.pyc' \
 			--exclude '__pycache__/' \
 			--exclude '*' \
-			-e "ssh -p 22" \
+			-e "{{ha_ssh_command}}" \
 			"${safety_backup}/" root@homeassistant.local:/config/
 		echo "Safety backup restored"
 		exit 1

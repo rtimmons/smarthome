@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "purpose": "Stable product identity catalog for Home Assistant hardware where make/model identity matters. Runtime health, availability, node status, and noise counts belong in inventory snapshots, not this file. The filename is historical; this catalog now includes Z-Wave, Zigbee, and ESPHome products.",
+  "purpose": "Stable product identity catalog for installed and temporarily removed Home Assistant hardware where make/model identity matters. Runtime health, availability, node status, and noise counts belong in inventory snapshots, not this file. The filename is historical; this catalog now includes Z-Wave, Zigbee, and ESPHome products.",
   "source_priority": [
     "Home Assistant core.device_registry for installed manufacturer/model identity",
     "Z-Wave JS device config records for stable product identifiers and details URLs",
@@ -190,6 +190,22 @@
         {
           "deviceKey": "living_cornerspot",
           "entityId": "light.light_living_cornerspot"
+        },
+        {
+          "deviceKey": "living_palm",
+          "entityId": "light.light_living_palm",
+          "formerNodeId": 2,
+          "status": "temporarily_removed",
+          "removedAt": "2026-08-21",
+          "note": "Removed from the failed-node list and Home Assistant registries; preserve this desired entity identity for a later re-inclusion."
+        },
+        {
+          "deviceKey": "outdoor_cafe",
+          "entityId": "light.light_outdoor_cafe",
+          "formerNodeId": 16,
+          "status": "temporarily_removed",
+          "removedAt": "2026-08-21",
+          "note": "Removed from the failed-node list and Home Assistant registries; preserve this desired entity identity for a later re-inclusion."
         }
       ]
     },

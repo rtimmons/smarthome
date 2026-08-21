@@ -6,6 +6,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+source "${SCRIPT_DIR}/ha-ssh.sh"
 TEMP_DIR="/tmp/ha-reconcile-$$"
 REMOTE_HOST="root@homeassistant.local"
 
@@ -188,11 +189,11 @@ reconcile_file() {
 
     # Fetch the live file (handle different paths for automation files)
     if [[ "$file_type" == "manual/automations.yaml" ]]; then
-        scp "${REMOTE_HOST}:/config/manual/automations.yaml" "$live_file"
+        scp "${HA_SCP_ARGS[@]}" "${REMOTE_HOST}:/config/manual/automations.yaml" "$live_file"
     elif [[ "$file_type" == "generated/automations.yaml" ]]; then
-        scp "${REMOTE_HOST}:/config/generated/automations.yaml" "$live_file"
+        scp "${HA_SCP_ARGS[@]}" "${REMOTE_HOST}:/config/generated/automations.yaml" "$live_file"
     else
-        scp "${REMOTE_HOST}:/config/${file_type}" "$live_file"
+        scp "${HA_SCP_ARGS[@]}" "${REMOTE_HOST}:/config/${file_type}" "$live_file"
     fi
     
     # Show the diff

@@ -118,12 +118,12 @@ Practical implications:
 ## Useful Inspection Commands
 
 ```bash
-ssh root@homeassistant.local ls -la /config/esphome
-ssh root@homeassistant.local cat /config/esphome/config.yaml
-ssh root@homeassistant.local cat /config/.storage/core.device_registry
-ssh root@homeassistant.local cat /config/.storage/core.entity_registry
-ssh root@homeassistant.local cat /config/.storage/core.config_entries
-ssh root@homeassistant.local ha addons info 5c53de3b_esphome
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local ls -la /config/esphome
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local cat /config/esphome/config.yaml
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local cat /config/.storage/core.device_registry
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local cat /config/.storage/core.entity_registry
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local cat /config/.storage/core.config_entries
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local ha addons info 5c53de3b_esphome
 ```
 
 The ESPHome add-on slug is `5c53de3b_esphome`. As of the last inspection, the add-on was running with version `2026.5.3` and had `2026.6.4` available.

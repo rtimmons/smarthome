@@ -117,13 +117,13 @@ Cached `dns-sd` output is not sufficient proof. The packet capture must show a l
 Read the Companion port from the live `_companion-link._tcp` advertisement rather than permanently assuming a port. Test it from another LAN host, such as Home Assistant:
 
 ```bash
-ssh root@homeassistant.local "nc -zvw 3 <apple-tv-ip> <companion-port>"
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local "nc -zvw 3 <apple-tv-ip> <companion-port>"
 ```
 
 For corroboration, inspect Home Assistant's Apple TV integration without printing pairing credentials:
 
 ```bash
-ssh root@homeassistant.local "ha core logs --lines 2000" | \
+ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local "ha core logs --lines 2000" | \
   rg -i 'apple.?tv|pyatv|<apple-tv-ip>'
 ```
 
