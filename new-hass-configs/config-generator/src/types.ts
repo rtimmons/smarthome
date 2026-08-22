@@ -59,6 +59,11 @@ export interface Device {
    * target should be called at all.
    */
   fastScenePriority?: "normal" | "last";
+  /**
+   * Allow only live-verified, model-homogeneous devices to share a Z-Wave
+   * multicast value. Unmarked devices always remain isolated.
+   */
+  fastSceneMulticastGroup?: string;
   capabilities?: DeviceCapability[];
   events?: Partial<Record<ZWaveEvent, ZWaveEventData>>;
   device_id?: string; // For Z-Wave JS triggers

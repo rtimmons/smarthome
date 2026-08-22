@@ -10,6 +10,7 @@ import {
 } from "./generate";
 import {
   DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
+  FAST_SCENE_DISPATCH_WORKER_ID,
   FAST_SCENE_DISPATCHER_ID,
   FAST_SCENE_SKIPPED_EVENT,
   generateFastSceneCalls,
@@ -47,10 +48,10 @@ function sceneActions(action: Action | Action[]): Array<Extract<Action, { type: 
 }
 
 describe("Fast scene reliability contract", () => {
-  it("keeps every source scene automation in single mode", () => {
+  it("gives every source scene automation latest-intent restart behavior", () => {
     for (const [automationId, automation] of Object.entries(automations)) {
       if (sceneActions(automation.action).length > 0) {
-        expect(automation.mode, automationId).toBe("single");
+        expect(getEffectiveAutomationMode(automation), automationId).toBe("restart");
       }
     }
   });
@@ -71,7 +72,7 @@ describe("Fast scene reliability contract", () => {
 
       const generated = generatedById.get(automationId);
       expect(generated, automationId).toBeDefined();
-      expect(generated!.mode, automationId).toBe("single");
+      expect(generated!.mode, automationId).toBe("restart");
       const generatedActions = collectObjects(
         generated!.actions,
         (candidate) => typeof candidate.action === "string"
@@ -124,10 +125,10 @@ describe("Fast scene reliability contract", () => {
         },
         mode: "restart",
       })
-    ).toBe("single");
+    ).toBe("restart");
   });
 
-  it("keeps hand-written automations on direct single-mode fast-script actions", () => {
+  it("keeps hand-written automations on direct fast-script actions", () => {
     const manualAutomations = yaml.parse(
       fs.readFileSync(
         path.resolve(__dirname, "../../manual/automations.yaml"),
@@ -140,9 +141,6 @@ describe("Fast scene reliability contract", () => {
         automation.actions,
         (candidate) => typeof candidate.action === "string"
       );
-      const fastSceneActions = actions.filter((action) =>
-        action.action.startsWith("script.fast_scene_")
-      );
       const nonBlockingFastSceneActions = actions.filter(
         (action) =>
           action.action === "script.turn_on" &&
@@ -154,20 +152,35 @@ describe("Fast scene reliability contract", () => {
         actions.some((action) => action.action === "scene.turn_on"),
         automation.id
       ).toBe(false);
-      if (fastSceneActions.length > 0) {
-        expect(automation.mode, automation.id).toBe("single");
+      if (
+        actions.length === 1 &&
+        actions[0].action.startsWith("script.fast_scene_")
+      ) {
+        expect(automation.mode, automation.id).toBe("restart");
       }
     }
   });
 
-  it("gives every scene one blocking single-mode wrapper", () => {
+  it("gives every scene a blocking latest-intent wrapper and dispatcher", () => {
     const scripts = generateFastScriptsFromRegistry(scenes);
-    expect(scripts[FAST_SCENE_DISPATCHER_ID].mode).toBe("queued");
-    expect(scripts[FAST_SCENE_DISPATCHER_ID].max).toBe(10);
+    expect(scripts[FAST_SCENE_DISPATCHER_ID].mode).toBe("restart");
+    expect(scripts[FAST_SCENE_DISPATCHER_ID].max).toBeUndefined();
+    expect(scripts[FAST_SCENE_DISPATCH_WORKER_ID].mode).toBe("restart");
+    expect(scripts[FAST_SCENE_DISPATCHER_ID].sequence).toEqual([
+      {
+        action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
+        data: { scene_id: "{{ scene_id }}", retry_mismatches: false },
+      },
+      { delay: { milliseconds: 2000 } },
+      {
+        action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
+        data: { scene_id: "{{ scene_id }}", retry_mismatches: true },
+      },
+    ]);
 
     for (const sceneId of Object.keys(scenes)) {
       expect(scripts[`fast_scene_${sceneId}`], sceneId).toMatchObject({
-        mode: "single",
+        mode: "restart",
         sequence: [
           {
             action: `script.${FAST_SCENE_DISPATCHER_ID}`,
@@ -178,7 +191,7 @@ describe("Fast scene reliability contract", () => {
     }
   });
 
-  it("covers every scene target exactly once and isolates every Z-Wave call", () => {
+  it("covers every target once and isolates Z-Wave except explicit multicast allowlists", () => {
     for (const [sceneId, scene] of Object.entries(scenes)) {
       const targets = generateSceneTargets(scene);
       const calls = generateFastSceneCalls(scene);
@@ -189,17 +202,71 @@ describe("Fast scene reliability contract", () => {
         [...expectedEntityIds].sort()
       );
       expect(new Set(calledEntityIds).size, sceneId).toBe(calledEntityIds.length);
+      const targetsByEntityId = new Map(
+        targets.map((target) => [target.entityId, target])
+      );
 
       for (const target of targets.filter((candidate) => candidate.zwaveBacked)) {
         const call = calls.find((candidate) =>
           candidate.target.entity_id.includes(target.entityId)
         );
         expect(call, `${sceneId}:${target.entityId}`).toBeDefined();
-        expect(call!.target.entity_id, `${sceneId}:${target.entityId}`).toEqual([
-          target.entityId,
-        ]);
+        if (target.device.fastSceneMulticastGroup) {
+          expect(call!.action, `${sceneId}:${target.entityId}`).toBe(
+            "zwave_js.multicast_set_value"
+          );
+          expect(
+            call!.target.entity_id.every(
+              (entityId) =>
+                targetsByEntityId.get(entityId)?.device.fastSceneMulticastGroup ===
+                target.device.fastSceneMulticastGroup
+            ),
+            `${sceneId}:${target.entityId}`
+          ).toBe(true);
+        } else {
+          expect(call!.target.entity_id, `${sceneId}:${target.entityId}`).toEqual([
+            target.entityId,
+          ]);
+        }
       }
     }
+  });
+
+  it("falls back to isolated set_value when only one multicast target is eligible", () => {
+    const sequence = generateFastScriptsFromRegistry({
+      living_room_high: scenes.living_room_high,
+    }).fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+    const serialized = JSON.stringify(sequence);
+
+    expect(serialized).toContain("zwave_js.multicast_set_value");
+    expect(serialized).toContain('count >= 2');
+    expect(serialized).toContain('"default":[{"action":"zwave_js.set_value"');
+    expect(serialized).toContain('"wait_for_result":false');
+  });
+
+  it("submits compatible dimmers without waiting and forces instant transitions", () => {
+    const calls = generateFastSceneCalls(scenes.guest_bathroom_off);
+
+    expect(calls).toHaveLength(2);
+    expect(
+      calls.every(
+        (call) =>
+          call.action === "zwave_js.set_value" &&
+          call.data?.command_class === 38 &&
+          call.data?.property === "targetValue" &&
+          call.data?.value === 0 &&
+          call.data?.options?.transitionDuration === "0s" &&
+          call.data?.wait_for_result === false
+      )
+    ).toBe(true);
+
+    const sequence = generateFastScriptsFromRegistry({
+      guest_bathroom_off: scenes.guest_bathroom_off,
+    }).fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+    const serialized = JSON.stringify(sequence);
+    expect(serialized).toContain("zwave_js.set_value");
+    expect(serialized).toContain('"wait_for_result":false');
+    expect(serialized).toContain("| count >= 1");
   });
 
   it("rejects scenes that cut power to a protected smart-light outlet", () => {
@@ -216,7 +283,7 @@ describe("Fast scene reliability contract", () => {
 
   it("health-filters every scene, isolates action errors, and bounds Z-Wave batches", () => {
     const scripts = generateFastScriptsFromRegistry(scenes);
-    const choices = scripts[FAST_SCENE_DISPATCHER_ID].sequence[0].choose;
+    const choices = scripts[FAST_SCENE_DISPATCH_WORKER_ID].sequence[0].choose;
 
     expect(choices).toHaveLength(Object.keys(scenes).length);
     for (const [sceneIndex, [sceneId, scene]] of Object.entries(scenes).entries()) {
@@ -226,7 +293,9 @@ describe("Fast scene reliability contract", () => {
         sequence,
         (candidate) =>
           typeof candidate.action === "string" &&
-          /^(light|switch)\.turn_(on|off)$/.test(candidate.action)
+          (/^(light|switch)\.turn_(on|off)$/.test(candidate.action) ||
+            candidate.action === "zwave_js.set_value" ||
+            candidate.action === "zwave_js.multicast_set_value")
       );
       const skippedEvents = collectObjects(
         sequence,

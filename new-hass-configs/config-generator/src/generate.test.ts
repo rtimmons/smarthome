@@ -258,17 +258,31 @@ describe("Scene Generation with Pairing", () => {
       expect(yamlOutput).toContain("brightness: 255");
     });
 
-    it("should isolate Z-Wave outlet fast scene calls for living_room_high", () => {
+    it("should submit on/off-only Z-Wave dimmer loads without waiting and isolate weak outlets", () => {
 
       const calls = generateFastCalls(scenes.living_room_high);
 
-      expect(calls).toHaveLength(18);
+      expect(calls).toHaveLength(16);
       expect(
         calls.find(
           (call: any) =>
             call.action === "switch.turn_on" &&
             call.target.entity_id.length === 1 &&
             call.target.entity_id[0] === "switch.light_living_sillleftpower"
+        )
+      ).toBeDefined();
+      expect(
+        calls.find(
+          (call: any) =>
+            call.action === "zwave_js.multicast_set_value" &&
+            call.data?.command_class === 38 &&
+            call.data?.value === 99 &&
+            call.data?.options?.transitionDuration === "0s" &&
+            call.data?.wait_for_result === undefined &&
+            call.target.entity_id.length === 3 &&
+            call.target.entity_id.includes("light.light_living_cornerspot") &&
+            call.target.entity_id.includes("light.light_living_desklamps") &&
+            call.target.entity_id.includes("light.light_living_sliderring")
         )
       ).toBeDefined();
       expect(
@@ -297,6 +311,28 @@ describe("Scene Generation with Pairing", () => {
             call.target.entity_id.includes("light.living_light_nook")
         )
       ).toBeDefined();
+    });
+
+    it("should submit both guest bathroom dimmers immediately without waiting", () => {
+      const calls = generateFastCalls(scenes.guest_bathroom_medium);
+
+      expect(calls).toHaveLength(2);
+      expect(calls.map((call: any) => call.target.entity_id[0]).sort()).toEqual([
+        "light.light_guestbathroom_overhead",
+        "light.light_guestbathroom_sconce",
+      ]);
+      for (const call of calls) {
+        expect(call).toMatchObject({
+          action: "zwave_js.set_value",
+          data: {
+            command_class: 38,
+            property: "targetValue",
+            value: 50,
+            options: { transitionDuration: "0s" },
+            wait_for_result: false,
+          },
+        });
+      }
     });
 
     it("should group all bathroom Zigbee lights into one fast call", () => {
@@ -417,16 +453,21 @@ describe("Scene Generation with Pairing", () => {
     it("should batch large Z-Wave scenes into multiple parallel steps", () => {
 
       const scripts = generateFastScripts({ all_off: scenes.all_off });
-      const script = scripts.fast_scene_dispatch;
+      const script = scripts.fast_scene_dispatch_worker;
       const sequence = script.sequence[0].choose[0].sequence;
       const parallelSteps = collectObjects(sequence, (step) => Boolean(step.parallel));
       const delaySteps = collectObjects(sequence, (step) => Boolean(step.delay));
+      const pacingDelaySteps = delaySteps.filter(
+        (step: any) => step.delay.milliseconds !== 2000
+      );
       const serviceActions = collectObjects(sequence, (step) => Boolean(step.action));
 
       expect(sequence.length).toBeGreaterThan(1);
       expect(parallelSteps[0].parallel.length).toBeGreaterThan(0);
       expect(delaySteps.length).toBeGreaterThan(1);
-      expect(delaySteps.every((step: any) => step.delay.milliseconds === 1000)).toBe(true);
+      expect(
+        pacingDelaySteps.every((step: any) => step.delay.milliseconds === 250)
+      ).toBe(true);
       expect(
         serviceActions.some(
           (call: any) =>
@@ -446,48 +487,65 @@ describe("Scene Generation with Pairing", () => {
       ).toHaveLength(1);
     });
 
-    it("should throttle living_room_high with the conservative default cap", () => {
+    it("should pace residual calls while allowing newer intent to restart scenes", () => {
 
       const scripts = generateFastScripts({ living_room_high: scenes.living_room_high });
       const script = scripts.fast_scene_living_room_high;
       const dispatcher = scripts.fast_scene_dispatch;
-      const sequence = dispatcher.sequence[0].choose[0].sequence;
+      const worker = scripts.fast_scene_dispatch_worker;
+      const sequence = worker.sequence[0].choose[0].sequence;
 
-      expect(script.mode).toBe("single");
+      expect(script.mode).toBe("restart");
       expect(script.sequence).toEqual([
         {
           action: "script.fast_scene_dispatch",
           data: { scene_id: "living_room_high" },
         },
       ]);
-      expect(dispatcher.mode).toBe("queued");
+      expect(dispatcher.mode).toBe("restart");
+      expect(dispatcher.max).toBeUndefined();
+      expect(worker.mode).toBe("restart");
       expect(sequence.length).toBeGreaterThan(1);
       expect(
-        collectObjects(sequence, (step) => step.delay?.milliseconds === 1000).length
+        collectObjects(sequence, (step) => step.delay?.milliseconds === 250).length
       ).toBeGreaterThan(0);
-    });
-
-    it("should skip satisfied off targets and dispatch weak Z-Wave routes last", () => {
-      const scripts = generateFastScripts({ all_off: scenes.all_off });
-      const sequence = scripts.fast_scene_dispatch.sequence[0].choose[0].sequence;
-      const eligibleVariables = sequence.find(
-        (step: any) => step.variables?.fast_scene_eligible_entities
-      );
-      const zwaveBatchSteps = sequence.filter(
-        (step: any) => step.if && step.then?.some((action: any) => action.parallel)
-      );
-
-      expect(eligibleVariables.variables.fast_scene_eligible_entities).toContain(
-        "states(entity_id) != 'off'"
-      );
       expect(
-        JSON.stringify(zwaveBatchSteps.at(-1)).includes(
-          "switch.light_living_sillleftpower"
+        collectObjects(dispatcher.sequence, (step) => step.delay?.milliseconds === 2000)
+      ).toHaveLength(1);
+      expect(JSON.stringify(sequence)).toContain("expected_brightness");
+      expect(
+        sequence.some(
+          (step: any) =>
+            step.parallel?.length === 2 &&
+            step.parallel.every((branch: any) => Array.isArray(branch.sequence))
         )
       ).toBe(true);
     });
 
-    it("should force scene automations to single mode", () => {
+    it("should skip satisfied off targets and dispatch weak Z-Wave routes last", () => {
+      const scripts = generateFastScripts({ all_off: scenes.all_off });
+      const sequence = scripts.fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+      const eligibleVariables = sequence.find(
+        (step: any) => step.variables?.fast_scene_initial_eligible_entities
+      );
+      const zwaveBatchSteps = collectObjects(sequence,
+        (step: any) => step.if && step.then?.some((action: any) => action.parallel)
+      );
+
+      expect(eligibleVariables.variables.fast_scene_initial_eligible_entities).toContain(
+        "states(entity_id) != 'off'"
+      );
+      expect(
+        JSON.stringify(zwaveBatchSteps[zwaveBatchSteps.length - 1]).includes(
+          "switch.light_living_sillleftpower"
+        )
+      ).toBe(true);
+      expect(JSON.stringify(zwaveBatchSteps[0])).toContain(
+        "zwave_js.multicast_set_value"
+      );
+    });
+
+    it("should force scene automations to latest-intent restart mode", () => {
       expect(
         getEffectiveAutomationMode({
           alias: "Test Scene Automation",
@@ -495,7 +553,7 @@ describe("Scene Generation with Pairing", () => {
           action: { type: "scene", scene: "living_room_high" },
           mode: "restart",
         })
-      ).toBe("single");
+      ).toBe("restart");
     });
 
     it("should keep bathroom webhooks on the current fast-scene paths", () => {
@@ -516,7 +574,7 @@ describe("Scene Generation with Pairing", () => {
           automations.bathroom_webhook_high,
           automations.bathroom_webhook_medium,
           automations.bathroom_webhook_off,
-        ].every((automation) => getEffectiveAutomationMode(automation) === "single")
+        ].every((automation) => getEffectiveAutomationMode(automation) === "restart")
       ).toBe(true);
     });
 
@@ -524,12 +582,16 @@ describe("Scene Generation with Pairing", () => {
 
       const scripts = generateFastScripts(
         { living_room_high: scenes.living_room_high },
-        { maxZwaveCallsPerStep: 2 }
+        { maxZwaveCallsPerStep: 1 }
       );
       const dispatcher = scripts.fast_scene_dispatch;
-      const sequence = dispatcher.sequence[0].choose[0].sequence;
+      const sequence = scripts.fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+      const zwaveBatchSteps = collectObjects(
+        sequence,
+        (step: any) => step.if && step.then?.some((action: any) => action.parallel)
+      );
 
-      expect(sequence.length).toBeGreaterThan(4);
+      expect(zwaveBatchSteps.length).toBeGreaterThan(4);
     });
 
     it("should reject invalid Z-Wave batching caps", () => {

@@ -1,6 +1,8 @@
 import {
   buildEntityAuditFindings,
+  buildSceneParallelismFindings,
   ConfiguredDeviceSummary,
+  entityMatchesTarget,
   flattenConfiguredDevices,
 } from "./zwave-scenes";
 
@@ -18,6 +20,29 @@ function configuredDevice(
 }
 
 describe("Z-Wave inventory audit", () => {
+  it("does not flag live-verified multicast groups as accidental parallelism", () => {
+    expect(buildSceneParallelismFindings([])).toEqual([]);
+  });
+
+  it("accepts one-step Z-Wave brightness rounding and ignores transition controls", () => {
+    const target = {
+      entityState: { state: "on", brightness: 128, transition: 0 },
+    } as any;
+
+    expect(
+      entityMatchesTarget(target, {
+        state: "on",
+        attributes: { brightness: 129 },
+      })
+    ).toBe(true);
+    expect(
+      entityMatchesTarget(target, {
+        state: "on",
+        attributes: { brightness: 130 },
+      })
+    ).toBe(false);
+  });
+
   it("keeps the desired identities for temporarily removed nodes 2 and 16", () => {
     const configured = flattenConfiguredDevices();
 

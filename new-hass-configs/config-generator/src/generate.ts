@@ -150,9 +150,9 @@ export function convertAction(action: Action): HAAction {
   switch (action.type) {
     case "scene":
       return {
-        // A direct script action blocks until the wrapper and shared dispatcher
-        // finish. `script.turn_on` would enqueue the wrapper and return early,
-        // making the caller's mode: single ineffective for repeat suppression.
+        // A direct script action keeps cancellation connected end-to-end: when
+        // a restart-mode automation receives newer input, stale wrapper and
+        // dispatcher work is cancelled too.
         action: getFastSceneScriptEntityId(action.scene),
       };
 

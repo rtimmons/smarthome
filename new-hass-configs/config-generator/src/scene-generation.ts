@@ -19,7 +19,7 @@ export interface HAServiceCall {
 
 export interface HAScript {
   alias: string;
-  mode: "single" | "queued";
+  mode: "single" | "restart" | "queued";
   max?: number;
   fields?: Record<string, any>;
   sequence: any[];
@@ -36,8 +36,10 @@ export interface SceneEntityTarget {
 
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
 export const FAST_SCENE_DISPATCHER_ID = "fast_scene_dispatch";
+export const FAST_SCENE_DISPATCH_WORKER_ID = "fast_scene_dispatch_worker";
 export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 2;
-export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 1000;
+export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 250;
+export const FAST_SCENE_CONVERGENCE_DELAY_MS = 2000;
 export const FAST_SCENE_SKIPPED_EVENT = "fast_scene_targets_skipped";
 
 interface HAConditionalAction {
@@ -123,6 +125,11 @@ function isZWaveBackedDevice(device: Device): boolean {
 function buildLightEntityState(light: LightState): Record<string, any> {
   const device = getDevice("lights", light.device);
   const desiredState = light.state || "on";
+  const transition =
+    light.transition ??
+    (isZWaveBackedDevice(device) && device.capabilities?.includes("brightness")
+      ? 0
+      : undefined);
   const entityState: Record<string, any> = {
     state: desiredState,
   };
@@ -132,8 +139,8 @@ function buildLightEntityState(light: LightState): Record<string, any> {
   }
 
   if (desiredState === "off") {
-    if (light.transition !== undefined) {
-      entityState.transition = light.transition;
+    if (transition !== undefined) {
+      entityState.transition = transition;
     }
     return entityState;
   }
@@ -158,8 +165,8 @@ function buildLightEntityState(light: LightState): Record<string, any> {
     entityState.white_value = light.white_value;
   }
 
-  if (light.transition !== undefined) {
-    entityState.transition = light.transition;
+  if (transition !== undefined) {
+    entityState.transition = transition;
   }
 
   return entityState;
@@ -255,6 +262,65 @@ function shouldIsolateTarget(target: SceneEntityTarget): boolean {
   return target.zwaveBacked;
 }
 
+interface ZWaveValueDescriptor {
+  action: "zwave_js.set_value";
+  data: Record<string, any>;
+}
+
+function brightnessToZWaveLevel(brightness: number): number {
+  return Math.round((Math.max(0, Math.min(255, brightness)) * 99) / 255);
+}
+
+function buildZWaveValueDescriptor(
+  target: SceneEntityTarget
+): ZWaveValueDescriptor | undefined {
+  if (!target.zwaveBacked) {
+    return undefined;
+  }
+
+  const desiredState = target.entityState.state;
+  const transitionDuration = `${target.entityState.transition ?? 0}s`;
+  if (target.device.type === "zwave_dimmer_46203") {
+    if (desiredState === "on" && target.entityState.brightness === undefined) {
+      // A normal light.turn_on restores the previous level. A raw 99 would not,
+      // so retain the entity service for scenes without an explicit brightness.
+      return undefined;
+    }
+
+    return {
+      action: "zwave_js.set_value",
+      data: {
+        command_class: 38,
+        property: "targetValue",
+        value:
+          desiredState === "off"
+            ? 0
+            : brightnessToZWaveLevel(target.entityState.brightness),
+        options: { transitionDuration },
+        wait_for_result: false,
+      },
+    };
+  }
+
+  if (target.device.type === "zwave_switch_light") {
+    return {
+      action: "zwave_js.set_value",
+      data: {
+        // These are on/off-only fixtures attached to dimmer hardware (GE 46203
+        // and Minoston MP22ZD), not Binary Switch devices. Their live value
+        // inventories expose Switch Multilevel CC 38 only.
+        command_class: 38,
+        property: "targetValue",
+        value: desiredState === "on" ? 99 : 0,
+        options: { transitionDuration },
+        wait_for_result: false,
+      },
+    };
+  }
+
+  return undefined;
+}
+
 export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
   const groupedCalls = new Map<
     string,
@@ -275,15 +341,28 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
 
     const service = `${domain}.turn_${desiredState}`;
     const data = buildServiceData(domain, desiredState, entityState);
-    const signature = shouldIsolateTarget(target)
-      ? `${service}|${stableStringify(data ?? {})}|${entityId}`
+    const zwaveValue = buildZWaveValueDescriptor(target);
+    const multicastGroup = zwaveValue && target.device.fastSceneMulticastGroup;
+    const groupedService = multicastGroup
+      ? "zwave_js.multicast_set_value"
+      : zwaveValue?.action ?? service;
+    const groupedData = zwaveValue?.data ? { ...zwaveValue.data } : data;
+    if (multicastGroup && groupedData) {
+      // multicast_set_value waits for its one group transmission and does not
+      // accept the unicast-only wait_for_result option.
+      delete groupedData.wait_for_result;
+    }
+    const signature = multicastGroup
+      ? `${groupedService}|${stableStringify(groupedData ?? {})}|multicast:${multicastGroup}`
+      : zwaveValue || shouldIsolateTarget(target)
+      ? `${groupedService}|${stableStringify(groupedData ?? {})}|${entityId}`
       : `${service}|${stableStringify(data ?? {})}`;
 
     if (!groupedCalls.has(signature)) {
       groupedCalls.set(signature, {
-        service,
+        service: groupedService,
         entityIds: [],
-        ...(data && { data }),
+        ...(groupedData && { data: groupedData }),
       });
     }
 
@@ -311,13 +390,15 @@ function entityIdsForCall(call: HAServiceCall): string[] {
 
 function buildEligibleEntitiesTemplate(
   call: HAServiceCall,
-  returnBoolean = false
+  minimumCount?: number
 ): string {
   const entityIds = entityIdsForCall(call);
   const filtered = `fast_scene_eligible_entities | select('in', ${JSON.stringify(
     entityIds
   )}) | list`;
-  return returnBoolean ? `{{ ${filtered} | count > 0 }}` : `{{ ${filtered} }}`;
+  return minimumCount === undefined
+    ? `{{ ${filtered} }}`
+    : `{{ ${filtered} | count >= ${minimumCount} }}`;
 }
 
 function buildSkippedEntitiesTemplate(targets: SceneEntityTarget[]): string {
@@ -370,24 +451,97 @@ function buildSceneEligibleEntitiesTemplate(targets: SceneEntityTarget[]): strin
   ].join("\n");
 }
 
+function buildSceneMismatchedEntitiesTemplate(
+  targets: SceneEntityTarget[]
+): string {
+  const entityIds = targets.map((target) => target.entityId).sort();
+  const expectedStates = Object.fromEntries(
+    targets.map((target) => [target.entityId, target.entityState.state])
+  );
+  const expectedBrightness = Object.fromEntries(
+    targets
+      .filter(
+        (target) =>
+          target.entityState.state === "on" &&
+          typeof target.entityState.brightness === "number"
+      )
+      .map((target) => [target.entityId, target.entityState.brightness])
+  );
+
+  return [
+    "{%- set mismatched = namespace(entities=[]) -%}",
+    `{%- set expected_states = ${JSON.stringify(expectedStates)} -%}`,
+    `{%- set expected_brightness = ${JSON.stringify(expectedBrightness)} -%}`,
+    `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
+    "{%- if entity_id not in fast_scene_skipped_entities -%}",
+    "{%- set brightness = state_attr(entity_id, 'brightness') -%}",
+    "{%- if states(entity_id) != expected_states[entity_id] -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- elif entity_id in expected_brightness and (brightness is none or brightness | int < expected_brightness[entity_id] - 1 or brightness | int > expected_brightness[entity_id] + 1) -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- endif -%}",
+    "{%- endif -%}",
+    "{%- endfor -%}",
+    "{{ mismatched.entities }}",
+  ].join("\n");
+}
+
+function buildRunnableCall(
+  call: Pick<HAServiceCall, "action" | "data">,
+  eligibleEntities: string
+): Record<string, any> {
+  return {
+    action: call.action,
+    continue_on_error: true,
+    target: {
+      entity_id: eligibleEntities,
+    },
+    ...(call.data && { data: call.data }),
+  };
+}
+
 function buildHealthAwareCall(call: HAServiceCall): HAConditionalAction {
   const eligibleEntities = buildEligibleEntitiesTemplate(call);
+
+  if (call.action === "zwave_js.multicast_set_value") {
+    return {
+      if: [
+        {
+          condition: "template",
+          value_template: buildEligibleEntitiesTemplate(call, 1),
+        },
+      ],
+      then: [
+        {
+          choose: [
+            {
+              conditions: buildEligibleEntitiesTemplate(call, 2),
+              sequence: [buildRunnableCall(call, eligibleEntities)],
+            },
+          ],
+          default: [
+            buildRunnableCall(
+              {
+                action: "zwave_js.set_value",
+                data: { ...call.data, wait_for_result: false },
+              },
+              eligibleEntities
+            ),
+          ],
+        },
+      ],
+    };
+  }
 
   return {
     if: [
       {
         condition: "template",
-        value_template: buildEligibleEntitiesTemplate(call, true),
+        value_template: buildEligibleEntitiesTemplate(call, 1),
       },
     ],
     then: [
-      {
-        ...call,
-        continue_on_error: true,
-        target: {
-          entity_id: eligibleEntities,
-        },
-      },
+      buildRunnableCall(call, eligibleEntities),
     ],
   };
 }
@@ -441,7 +595,22 @@ function generateFastSceneSequence(
       )
         ? 1
         : 0;
-    return priority(left) - priority(right);
+    const desiredStateOrder = (call: HAServiceCall) => {
+      if (call.action.endsWith("turn_on")) {
+        return 0;
+      }
+      if (call.action === "zwave_js.set_value") {
+        return call.data?.value === 0 || call.data?.value === false ? 1 : 0;
+      }
+      return 1;
+    };
+    const transmissionOrder = (call: HAServiceCall) =>
+      call.action === "zwave_js.multicast_set_value" ? 0 : 1;
+    return (
+      priority(left) - priority(right) ||
+      desiredStateOrder(left) - desiredStateOrder(right) ||
+      transmissionOrder(left) - transmissionOrder(right)
+    );
   });
 
   const sequence: any[] = [
@@ -453,14 +622,24 @@ function generateFastSceneSequence(
     },
     {
       variables: {
-        fast_scene_eligible_entities: buildSceneEligibleEntitiesTemplate(targets),
+        fast_scene_initial_eligible_entities:
+          buildSceneEligibleEntitiesTemplate(targets),
+        fast_scene_mismatched_entities:
+          buildSceneMismatchedEntitiesTemplate(targets),
+      },
+    },
+    {
+      variables: {
+        fast_scene_eligible_entities:
+          "{{ fast_scene_mismatched_entities if retry_mismatches | default(false) else fast_scene_initial_eligible_entities }}",
       },
     },
     {
       if: [
         {
           condition: "template",
-          value_template: "{{ fast_scene_skipped_entities | count > 0 }}",
+          value_template:
+            "{{ not (retry_mismatches | default(false)) and fast_scene_skipped_entities | count > 0 }}",
         },
       ],
       then: [
@@ -475,12 +654,14 @@ function generateFastSceneSequence(
     },
   ];
 
+  const nonZwaveSequence: any[] = [];
   if (nonZwaveCalls.length > 0) {
-    sequence.push({
+    nonZwaveSequence.push({
       parallel: nonZwaveCalls.map((call) => buildHealthAwareCall(call)),
     });
   }
 
+  const zwaveSequence: any[] = [];
   for (let index = 0; index < zwaveCalls.length; index += maxZwaveCallsPerStep) {
     const batch = zwaveCalls.slice(index, index + maxZwaveCallsPerStep);
     const then: any[] = [];
@@ -501,7 +682,7 @@ function generateFastSceneSequence(
       },
       { variables: { fast_scene_zwave_batch_sent: true } }
     );
-    sequence.push({
+    zwaveSequence.push({
       if: [
         {
           condition: "template",
@@ -511,6 +692,27 @@ function generateFastSceneSequence(
       then,
     });
   }
+
+  let dispatchAction: any;
+  if (nonZwaveSequence.length > 0 && zwaveSequence.length > 0) {
+    // Independent integrations must begin together. Waiting for a slow Hue,
+    // ZHA, or switch service call before the first Z-Wave submission adds a
+    // visible startup pause without protecting the Z-Wave controller.
+    dispatchAction = {
+      parallel: [
+        { sequence: nonZwaveSequence },
+        { sequence: zwaveSequence },
+      ],
+    };
+  } else {
+    dispatchAction = {
+      parallel: [
+        { sequence: [...nonZwaveSequence, ...zwaveSequence] },
+      ],
+    };
+  }
+
+  sequence.push(dispatchAction);
 
   return sequence;
 }
@@ -524,11 +726,11 @@ export function generateFastScriptsFromRegistry(
       getFastSceneScriptId(sceneId),
       {
         alias: `Fast Scene - ${scene.name}`,
-        mode: "single",
+        mode: "restart",
         sequence: [
           {
-            // A blocking call keeps this wrapper on until the queued dispatcher
-            // finishes, so mode: single can suppress repeat activations.
+            // A blocking call lets a restarted wrapper cancel stale dispatcher
+            // work before submitting the newest lighting intent.
             action: `script.${FAST_SCENE_DISPATCHER_ID}`,
             data: { scene_id: sceneId },
           },
@@ -537,16 +739,41 @@ export function generateFastScriptsFromRegistry(
     ])
   );
 
+  const dispatcherFields = {
+    scene_id: {
+      description: "Generated scene identifier to execute",
+      required: true,
+    },
+  };
+
   return {
     [FAST_SCENE_DISPATCHER_ID]: {
       alias: "Fast Scene Dispatcher",
-      // Serialize every fast scene, including different rooms and presets, so
-      // independently triggered scripts cannot multiply the Z-Wave fanout.
-      mode: "queued",
-      max: 10,
+      // Lighting is interactive: a newer room/preset request supersedes any
+      // unsent batches from an older one instead of waiting behind stale work.
+      mode: "restart",
+      fields: dispatcherFields,
+      sequence: [
+        {
+          action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
+          data: { scene_id: "{{ scene_id }}", retry_mismatches: false },
+        },
+        { delay: { milliseconds: FAST_SCENE_CONVERGENCE_DELAY_MS } },
+        {
+          // This direct call and its delay are canceled when newer lighting
+          // intent restarts the dispatcher. Only live mismatches are retried.
+          action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
+          data: { scene_id: "{{ scene_id }}", retry_mismatches: true },
+        },
+      ],
+    },
+    [FAST_SCENE_DISPATCH_WORKER_ID]: {
+      alias: "Fast Scene Dispatch Worker",
+      mode: "restart",
       fields: {
-        scene_id: {
-          description: "Generated scene identifier to execute",
+        ...dispatcherFields,
+        retry_mismatches: {
+          description: "Dispatch only targets that still differ from the scene",
           required: true,
         },
       },

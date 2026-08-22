@@ -17,11 +17,11 @@ function containsSceneAction(value: unknown): boolean {
 export function getEffectiveAutomationMode(
   automation: Automation
 ): Automation["mode"] {
-  // Scene automations call blocking fast-scene wrappers. Keeping the caller in
-  // single mode makes repeated button/webhook events coalesce while the first
-  // activation is still draining through the shared dispatcher.
+  // Lighting controls are interactive. Restart the caller so a newer press can
+  // cancel stale wrapper/dispatcher work instead of being ignored while an
+  // earlier scene is still draining.
   if (containsSceneAction(automation.action)) {
-    return "single";
+    return "restart";
   }
 
   return automation.mode;

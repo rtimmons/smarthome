@@ -14,7 +14,7 @@
         value: KeyPressed2x
   actions:
     - action: script.fast_scene_living_room_high
-  mode: single
+  mode: restart
 
 - id: kitchen_hanging_switch_double_up_kitchen_high
   alias: Kitchen Hanging Switch - Double Up → Kitchen High
@@ -29,7 +29,7 @@
         value: KeyPressed2x
   actions:
     - action: script.fast_scene_kitchen_high
-  mode: single
+  mode: restart
 
 - id: kitchen_hanging_switch_double_down_kitchen_off
   alias: Kitchen Hanging Switch - Double Down → Kitchen Off
@@ -44,7 +44,7 @@
         value: KeyPressed2x
   actions:
     - action: script.fast_scene_kitchen_off
-  mode: single
+  mode: restart
 
 - id: closet_presence_lighting
   alias: "Closet Presence Lighting"

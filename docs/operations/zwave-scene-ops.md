@@ -4,7 +4,7 @@ Reference workflow for diagnosing and fixing slow Home Assistant scenes that are
 
 ## Goals
 
-- Keep scene activation bounded and parallel so one slow node does not block unrelated loads or flood the controller.
+- Keep scene activation bounded and latest-intent so one slow node or stale room request does not block newer lighting input or flood the controller.
 - Normalize Z-Wave ramp and transition parameters to instant or fastest-safe values.
 - Capture timestamped local audit snapshots for future comparison.
 - Check device registry correctness before assuming the network is the only problem.
@@ -43,7 +43,7 @@ Connection failures are stage-specific. Use the ignored repository identity expl
    - `entity_audit_findings`
    - `suspicious_log_summary.nodeCounts`
 3. If `live_ramp_plan` is non-empty, run `just zwave-apply-instant-ramps` and then `just zwave-verify-instant-ramps`.
-4. If scenes still lag, inspect the generated fast scene calls and isolate any remaining Z-Wave-backed entities so they are sent in separate parallel service calls.
+4. If scenes still lag, inspect the generated fast scene calls. The GE 46203 and on/off-only Minoston MP22ZD fixtures expose Switch Multilevel CC38, not Binary Switch CC37. They use `zwave_js.set_value` with `wait_for_result: false` and an explicit zero-second transition; other Z-Wave-backed entities remain isolated service calls unless explicitly allowlisted for multicast.
 5. If a target entity is `unavailable` or its node-status sensor is `dead`, treat the underlying fault as a device/platform issue. The generated dispatcher skips it so the fault does not block healthy targets, but that resilience is not a substitute for repairing or removing the node.
 
 ## Failed-Node Removal and Re-Inclusion
@@ -62,7 +62,7 @@ To re-add either plug later:
 ## Interpretation Notes
 
 - Live websocket reads are authoritative for Z-Wave config verification. Cache files can lag after writes.
-- In this repo, the right fix is usually to preserve grouping for Hue or other non-Z-Wave lights while isolating Z-Wave-backed entities.
+- In this repo, preserve grouping for Hue or other non-Z-Wave lights while isolating Z-Wave-backed entities. Do not use Z-Wave multicast as a generic optimization. It is permitted only through a live-verified `fastSceneMulticastGroup`; runtime fallback uses isolated `set_value` when fewer than two group members are eligible.
 - Registry mismatches matter. If a configured device entity does not exist live, fix the device registry before changing scene logic.
 - Repeated timeout, decode, nonce, or invalid-payload entries isolated to one node usually indicate a bad or noisy route. Clusters spanning multiple nodes at the exact time of a large scene are evidence that the scene's RF concurrency is still too high.
 
@@ -91,26 +91,32 @@ All generated scene entry points must follow this path:
 
 ```text
 button/webhook/dashboard
-  -> script.fast_scene_<scene_id> (mode: single; blocks script/automation callers)
-  -> script.fast_scene_dispatch (mode: queued)
+  -> script.fast_scene_<scene_id> (mode: restart; blocks script/automation callers)
+  -> script.fast_scene_dispatch (mode: restart; newest intent wins)
+  -> script.fast_scene_dispatch_worker (mode: restart; generated scene choices)
   -> health/state filter
-  -> batches of at most 2 parallel Z-Wave calls, paced 1 second apart
+  -> non-Z-Wave and Z-Wave branches start concurrently
+  -> batches of at most 2 parallel Z-Wave submissions, paced 250 ms apart
+  -> after 2 s, resubmit only targets whose actual state still differs
 ```
 
 The layers are intentionally separate:
 
-- The public wrapper remains active until the dispatcher finishes. Its `single` mode therefore coalesces repeated activation of the same scene.
-- Generated and hand-written scene automations use `single`, not `restart`, and call `script.fast_scene_<scene_id>` directly as an action. Do not use `script.turn_on` here: that service returns after starting the wrapper and makes caller-level repeat suppression ineffective. Restarting a blocking caller can cancel it while controller transactions are still draining.
-- The dashboard's authenticated Core API route necessarily starts the wrapper through `script.turn_on`; its one-second request gate handles duplicate browser delivery, and the wrapper's own `single` mode remains active for the full dispatcher run.
-- The shared queued dispatcher prevents different scenes or rooms from multiplying the Z-Wave fanout.
+- The public wrapper and shared dispatcher both use `restart`. A newer request cancels unsent batches from an older room/preset instead of waiting behind stale work.
+- Generated scene automations use `restart` and call `script.fast_scene_<scene_id>` directly as an action. Do not generate `script.turn_on` inside those automations: direct script actions preserve end-to-end cancellation when an automation restarts.
+- The dashboard's authenticated Core API route necessarily starts the wrapper through `script.turn_on`; its one-second request gate still handles duplicate browser delivery, while the wrapper's own `restart` mode makes a later accepted request authoritative.
+- Compatible `zwave_dimmer_46203` and `zwave_switch_light` targets use Switch Multilevel CC38 `zwave_js.set_value` with `wait_for_result: false`, `targetValue`, and `transitionDuration: 0s`. The on/off-only type still represents dimmer hardware, so on/off levels are 99/0 rather than CC37 booleans.
+- Non-Z-Wave calls and the bounded Z-Wave branch begin concurrently. A slow Hue, ZHA, or switch service response must not create a one-second gate before the first Z-Wave transmission.
+- Multicast remains deny-by-default. The four active Minoston MP22ZD plugs are the only current `fastSceneMulticastGroup`: live on/off trials changed all four within 2 ms and completed in 187–339 ms. The generator uses multicast only with at least two eligible members and otherwise falls back to isolated non-waiting CC38 `set_value`. GE 46203 and Zooz ZEN31 devices must not join that group.
 - Before dispatch, unavailable/unknown entities and entities whose enabled Z-Wave node-status sensor is `dead`, `unavailable`, or `unknown` are omitted. Off scenes also omit targets that are already off, which avoids wasting RF transactions on satisfied loads.
 - Every service action uses `continue_on_error: true`. An action-level failure is logged by Home Assistant but does not abort the remaining healthy work.
-- Empty Z-Wave batches are skipped. The one-second delay occurs only before a second batch that actually has work, so dead and already-off targets do not add artificial latency.
+- Empty Z-Wave batches are skipped. The 250 ms delay occurs only before a later batch that actually has work, so dead and already-off targets do not add artificial latency.
 - Skipped targets fire `fast_scene_targets_skipped`. The manual `Fast Scene Skipped Targets Alert` automation turns that into one replace-in-place persistent notification; it does not retry the target inside the scene.
-- Devices with `fastScenePriority: "last"` are placed after normal Z-Wave loads. This is for alive-but-degraded routes such as node 28 and ensures a slow residual transaction starts only after healthy loads have been dispatched.
-- `DEFAULT_MAX_ZWAVE_CALLS_PER_STEP` is the global per-step Z-Wave cap. It is two because a live All Off exercise still produced multi-node timeout and invalid-payload clusters at four. `DEFAULT_ZWAVE_BATCH_DELAY_MS` is one second because Home Assistant service actions return after enqueueing work, not after RF completion; without a delay, adjacent YAML batches still became one burst. Keep both conservative unless a measured exercise and clean logs justify a change.
-- Do not replace the wrapper's direct `script.fast_scene_dispatch` action with non-blocking `script.turn_on`; doing so makes wrapper `mode: single` ineffective.
-- Native `scene.<scene_id>` entities remain generated for Home Assistant UI/compatibility, but operational controls, diagnostics, automations, and tests must activate `script.fast_scene_<scene_id>`. Calling `scene.turn_on` bypasses health filtering, bounded Z-Wave batching, skipped-target reporting, and the shared queue.
+- Devices with `fastScenePriority: "last"` are placed after normal Z-Wave loads. Nodes 23 and 28 currently use it so their acknowledgement timeouts start only after healthy loads have been dispatched.
+- `DEFAULT_MAX_ZWAVE_CALLS_PER_STEP` remains two because a live All Off exercise produced multi-node timeout and invalid-payload clusters at four. `DEFAULT_ZWAVE_BATCH_DELAY_MS` is 250 ms: non-waiting value submissions removed the need for a one-second action drain while retaining enough spacing to avoid collapsing the whole scene into one burst.
+- After the initial worker dispatch and a two-second delay, the dispatcher calls the same compact worker in mismatch-only mode. The delay and correction are canceled by newer intent. This is required because restart can cancel unsent script work but cannot revoke an integration service call already in flight; without convergence, a stale Living High call left `living_light_floor` on after All Off. Keeping the scene choices in one worker avoids duplicating the generated YAML for the correction pass.
+- Do not replace the wrapper's direct `script.fast_scene_dispatch` action with non-blocking `script.turn_on`; the blocking link is what allows restart cancellation to propagate to unsent dispatcher work.
+- Native `scene.<scene_id>` entities remain generated for Home Assistant UI/compatibility, but operational controls, diagnostics, automations, and tests must activate `script.fast_scene_<scene_id>`. Calling `scene.turn_on` bypasses health filtering, bounded Z-Wave batching, skipped-target reporting, and latest-intent cancellation.
 - Never turn off an outlet that supplies a smart bulb. Mark it `includeInAllOff: false` and `allowSceneTurnOff: false`, leave it out of room-off/low scenes, and turn the bulb entity off instead. The generator rejects any future scene that tries to cut a protected outlet.
 
 After changing this path, test both a scene and its opposite in one exercise, for example:
@@ -121,6 +127,8 @@ just zwave-exercise-scene --scene kitchen_high --scene kitchen_off
 
 The exerciser must wait for `script.fast_scene_dispatch` to return to `off`, not merely for targets to momentarily match. Otherwise an earlier scene can still be sending commands after a later scene starts.
 Targets that are missing or already `unavailable` before the exercise are reported and skipped. A target that becomes unavailable during the exercise still fails it; this distinction caught the smart-bulb power-cut bug without making known dead devices render every exercise useless.
+Transition duration is a command option, not a persisted state attribute, so the exerciser does not compare it. It accepts a one-point Home Assistant brightness difference caused by round-tripping Z-Wave's 0..99 level through Home Assistant's 0..255 scale.
+The exerciser reads one bulk Home Assistant state snapshot per poll and records `targetTimings` for each entity. Its console prints first/median/last response for targets that actually changed. Overall settle time includes the two-second convergence window; use the changed-target timing to judge visible responsiveness and settle time to judge end-to-end correctness.
 
 `new-hass-configs/scripts.yaml` is a merged deployment artifact produced by `just generate`. It is ignored and untracked; edit `config-generator/src/scene-generation.ts` and related TypeScript sources, and review `generated/scripts.yaml` when inspecting output. `just check` and deployment prechecks regenerate the root file before syncing it.
 
@@ -138,8 +146,8 @@ Lights.Scene
 - Every mapped dashboard room must have generated `high`, `medium`, and `off` scripts. The dashboard test suite checks this against `generated/scripts.yaml`.
 - Dashboard room names may intentionally point at a differently named lighting area. `Move` maps to `outdoor`, so its Sun, Dim, and Moon buttons call `outdoor_high`, `outdoor_medium`, and `outdoor_off`.
 - The Moon double-press action is global `all_off`. Its single-click action must be delayed/cancelled so a desktop double-click cannot run both room-off and all-off.
-- The dashboard server coalesces identical scene requests received within one second. This catches duplicate browser/touch delivery while preserving intentional retries after the window; Home Assistant's single-mode wrapper remains the longer-running concurrency guard.
-- The authenticated add-on path starts a fast-scene wrapper through the Core API and returns promptly. Standalone development can use `HASS_WEBHOOK_BASE`; that fallback waits up to 60 seconds because the webhook automation blocks until the queued dispatcher completes, and All Off can legitimately run for roughly 30 seconds.
+- The dashboard server coalesces identical scene requests received within one second. This catches duplicate browser/touch delivery while preserving intentional retries after the window; Home Assistant's restart-mode wrapper makes the newest accepted request authoritative.
+- The authenticated add-on path starts a fast-scene wrapper through the Core API and returns promptly. Standalone development can use `HASS_WEBHOOK_BASE`; that fallback retains its request timeout, but generated webhook automations now use the same restart/latest-intent path.
 - Validate at least one live dashboard pair after deployment: click Sun, verify the intended `script.fast_scene_*_high` `last_triggered`, click Moon, and confirm every target is off.
 
 ## Persistent Logs and Route Maintenance
@@ -184,6 +192,15 @@ Operationally, a dead mains-powered node should be repaired, excluded, or replac
 - Live All Off verification exposed a separate power-model error: it cut power to the Flamingo Hue bulb, making the bulb unavailable. The power outlet is now excluded from All Off and bedroom off/low scenes.
 - The 2026-08-20 post-deployment All Off replay settled all 50 reachable targets in 27.46 seconds and skipped five unavailable entities without aborting. Nodes 2 and 16 were already dead and were omitted; the only new RF errors were two timeouts from node 4 and one from last-priority node 28. This confirms the resilience path works while also showing that batching cannot repair weak physical routes.
 - On 2026-08-21, nodes 2 and 16 were removed from the controller. Each removal was accepted but its completion event timed out; a single Z-Wave JS restart reconciled runtime state with controller NVM and Home Assistant then cleaned the active device/entity registry. A fresh inventory showed all 31 remaining nodes Alive and ready, with zero unhealthy Z-Wave nodes. The pre-removal NVM backup is ignored at `new-hass-configs/backups/zwave-js/zwave_js_backup_2026-08-21_before-removing-nodes-2-16.bin` (SHA-256 `0430357f705cd330f1c3dbb94eab6a229dbb35170b1a3403b8a5a965312e7356`).
+- Later on 2026-08-21, recorder/logbook history showed the shared queued dispatcher active for 19.3 seconds while Living Room, Guest Bathroom, and Kitchen requests waited behind one another. Guest Bathroom Medium was requested at 22:02:00 but its two lights were not commanded until 22:02:06/07. This was stale-work serialization, not unavoidable RF latency.
+- Guest-bath hold notifications were received as `KeyHeldDown`/`KeyReleased`; they were not lost events. Those holds directly changed the local loads after the paired-off scene, which explains the apparent scene reversal. Only single/double taps are mapped to room scenes today; use direct Z-Wave association if synchronized hold-to-dim behavior is desired rather than adding an HA polling loop.
+- A same-value `zwave_js.multicast_set_value` trial on nodes 23 and 24 partially updated node 23, left node 24 unchanged, and logged `Unable to set value via multicast`. A later GE 46203 group trial generated an invalid-payload storm, and a Zooz ZEN31 group was a no-op. Those devices remain isolated.
+- A model-homogeneous multicast trial on Minoston MP22ZD nodes 4, 6, 9, and 12 succeeded in both directions: all four state timestamps landed within 2 ms, with the action completing in 187–339 ms. These four devices are explicitly allowlisted and their group transmission is ordered before normal-priority unicast work.
+- After switching wrappers/automations/dispatcher to `restart`, using `wait_for_result: false`, forcing `transitionDuration: 0s`, and reducing residual pacing to 250 ms, the pre-convergence guest-bath dispatcher returned to `off` in about 10 ms. A real off-to-medium exercise settled both nodes in 1.36 seconds and medium-to-off in 1.27 seconds, with no new Core scene-service error. The current public dispatcher deliberately remains active through its convergence check.
+- Node 23 continues to time out while acknowledging commands even after a targeted route rebuild completed successfully. Its load still changes, but the device/security exchange is defective. Keep it isolated and non-waiting; plan to exclude/re-include or replace node 23 if the timeout traffic continues.
+- Live inventory exposed a protocol regression in Kitchen High: nodes 12, 19, and 20 have CC38 `targetValue` but no CC37 value, so Core rejected the generated Binary Switch commands and three lights never turned on. The generator now uses CC38 99/0 for every `zwave_switch_light`; five repeated Kitchen High/Off cycles then settled all 9/9 targets.
+- A 100 ms pacing trial made Living High faster but produced four invalid payloads and a new node-3 timeout, so the production cadence remains 250 ms. Running the independent non-Z-Wave branch concurrently and prioritizing the verified Minoston multicast provides immediate visible response without that error increase.
+- In two final rapid sequences (Living High, Kitchen High, Guest Bathroom Medium, All Off at 300 ms intervals), All Off was accepted in 39–92 ms, all 46 reachable targets were off 3.9–5.9 seconds after the final request, and no stale command reactivated a target during either five-second quiet window. Before the mismatch-only convergence pass, the same test left `living_light_floor` on for more than 30 seconds.
 
 ## Files Involved
 
@@ -197,10 +214,10 @@ Operationally, a dead mains-powered node should be repaired, excluded, or replac
 
 Patch the generator when one of these is true:
 
-- a Z-Wave-backed light or switch is still grouped with other loads
+- a Z-Wave-backed light or switch is grouped without an explicit live-verified multicast allowlist, or a compatible CC38 device waits for a command result
 - a scene includes a controller-only entity that should never be toggled directly
 - a paired RGBW/white device is not being expanded correctly
 - a device registry entry points at the wrong live entity
-- a generated automation or operational tool invokes `scene.turn_on` or non-blocking `script.turn_on` instead of the blocking fast-scene action
+- a generated automation or operational tool invokes `scene.turn_on`, queues stale scene work, or loses direct restart cancellation by using `script.turn_on` inside the automation
 
 Do not patch the generator to compensate for an entity that is simply offline or unavailable.

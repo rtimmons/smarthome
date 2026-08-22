@@ -20,7 +20,6 @@ import { Device } from "../types";
 import {
   callHomeAssistantWs,
   callService,
-  fetchState,
   fetchStates,
   getAccessToken,
   getSshOptions,
@@ -166,6 +165,12 @@ interface ExercisedEntityState {
   actualAttributes?: Record<string, any>;
 }
 
+interface ExercisedEntityTiming {
+  entityId: string;
+  initiallyMatched: boolean;
+  firstMatchedAtMs?: number;
+}
+
 interface SceneExerciseResult {
   sceneId: string;
   scriptEntityId: string;
@@ -175,6 +180,7 @@ interface SceneExerciseResult {
   settleTimeMs: number;
   pending: ExercisedEntityState[];
   skippedUnavailable: ExercisedEntityState[];
+  targetTimings: ExercisedEntityTiming[];
 }
 
 function parseArgs(argv: string[]): Options {
@@ -822,7 +828,7 @@ function summarizeSuspiciousLogs(
   };
 }
 
-function buildSceneParallelismFindings(sceneIds: string[]): SceneParallelismFinding[] {
+export function buildSceneParallelismFindings(sceneIds: string[]): SceneParallelismFinding[] {
   const ids = sceneIds.length > 0 ? sceneIds : Object.keys(scenes);
   const findings: SceneParallelismFinding[] = [];
 
@@ -848,6 +854,20 @@ function buildSceneParallelismFindings(sceneIds: string[]): SceneParallelismFind
         continue;
       }
 
+      const multicastGroups = new Set(
+        call.target.entity_id.map(
+          (entityId) =>
+            targetsByEntityId.get(entityId)?.device.fastSceneMulticastGroup
+        )
+      );
+      if (
+        call.action === "zwave_js.multicast_set_value" &&
+        multicastGroups.size === 1 &&
+        !multicastGroups.has(undefined)
+      ) {
+        continue;
+      }
+
       findings.push({
         sceneId,
         service: call.action,
@@ -866,7 +886,6 @@ function pickComparableAttributes(entityState: Record<string, any>): Record<stri
     "rgbw_color",
     "color_temp",
     "white_value",
-    "transition",
   ];
   const comparable: Record<string, any> = {};
 
@@ -879,7 +898,10 @@ function pickComparableAttributes(entityState: Record<string, any>): Record<stri
   return comparable;
 }
 
-function entityMatchesTarget(target: ReturnType<typeof generateSceneTargets>[number], state: JsonObject | null) {
+export function entityMatchesTarget(
+  target: ReturnType<typeof generateSceneTargets>[number],
+  state: JsonObject | null
+) {
   if (!state) {
     return false;
   }
@@ -894,6 +916,16 @@ function entityMatchesTarget(target: ReturnType<typeof generateSceneTargets>[num
 
   const expectedAttributes = pickComparableAttributes(target.entityState);
   for (const [key, value] of Object.entries(expectedAttributes)) {
+    if (
+      key === "brightness" &&
+      typeof value === "number" &&
+      typeof state.attributes?.[key] === "number" &&
+      Math.abs(state.attributes[key] - value) <= 1
+    ) {
+      // Switch Multilevel uses 0..99 while Home Assistant exposes 0..255;
+      // round-tripping an exact scene brightness can differ by one.
+      continue;
+    }
     if (JSON.stringify(state.attributes?.[key]) !== JSON.stringify(value)) {
       return false;
     }
@@ -935,15 +967,12 @@ async function exerciseScene(
   const dispatcherEntityId = `script.${FAST_SCENE_DISPATCHER_ID}`;
   const targets = generateSceneTargets(scene);
   const initialStatesByEntityId = new Map(
-    targets.map((target) => [
-      target.entityId,
-      fetchState(options, accessToken, target.entityId),
-    ])
+    fetchStates(options, accessToken).map((state) => [state.entity_id, state])
   );
   const skippedUnavailable = targets
     .filter((target) => {
       const state = initialStatesByEntityId.get(target.entityId);
-      return !state || state.state === "unavailable";
+      return !state || state.state === "unavailable" || state.state === "unknown";
     })
     .map((target) => {
       const state = initialStatesByEntityId.get(target.entityId) ?? null;
@@ -960,6 +989,17 @@ async function exerciseScene(
   const testableTargets = targets.filter(
     (target) => !skippedEntityIds.has(target.entityId)
   );
+  const targetTimings: ExercisedEntityTiming[] = testableTargets.map((target) => {
+    const initiallyMatched = entityMatchesTarget(
+      target,
+      initialStatesByEntityId.get(target.entityId) ?? null
+    );
+    return {
+      entityId: target.entityId,
+      initiallyMatched,
+      ...(initiallyMatched && { firstMatchedAtMs: 0 }),
+    };
+  });
   const startedAt = Date.now();
 
   callService(options, accessToken, "script", "turn_on", {
@@ -968,13 +1008,19 @@ async function exerciseScene(
 
   while (Date.now() - startedAt < options.settleTimeoutMs) {
     const statesByEntityId = new Map(
-      testableTargets.map((target) => [
-        target.entityId,
-        fetchState(options, accessToken, target.entityId),
-      ])
+      fetchStates(options, accessToken).map((state) => [state.entity_id, state])
     );
+    const elapsedMs = Date.now() - startedAt;
+    for (const [index, target] of testableTargets.entries()) {
+      if (
+        targetTimings[index].firstMatchedAtMs === undefined &&
+        entityMatchesTarget(target, statesByEntityId.get(target.entityId) ?? null)
+      ) {
+        targetTimings[index].firstMatchedAtMs = elapsedMs;
+      }
+    }
     const pending = buildPendingExerciseStates(testableTargets, statesByEntityId);
-    const dispatcherState = fetchState(options, accessToken, dispatcherEntityId);
+    const dispatcherState = statesByEntityId.get(dispatcherEntityId) ?? null;
 
     if (pending.length === 0 && dispatcherState?.state === "off") {
       return {
@@ -986,6 +1032,7 @@ async function exerciseScene(
         settleTimeMs: Date.now() - startedAt,
         pending: [],
         skippedUnavailable,
+        targetTimings,
       };
     }
 
@@ -993,13 +1040,10 @@ async function exerciseScene(
   }
 
   const finalStatesByEntityId = new Map(
-    testableTargets.map((target) => [
-      target.entityId,
-      fetchState(options, accessToken, target.entityId),
-    ])
+    fetchStates(options, accessToken).map((state) => [state.entity_id, state])
   );
   const finalPending = buildPendingExerciseStates(testableTargets, finalStatesByEntityId);
-  const finalDispatcherState = fetchState(options, accessToken, dispatcherEntityId);
+  const finalDispatcherState = finalStatesByEntityId.get(dispatcherEntityId) ?? null;
   if (finalDispatcherState?.state !== "off") {
     finalPending.unshift({
       entityId: dispatcherEntityId,
@@ -1017,6 +1061,7 @@ async function exerciseScene(
     settleTimeMs: options.settleTimeoutMs,
     pending: finalPending,
     skippedUnavailable,
+    targetTimings,
   };
 }
 
@@ -1308,6 +1353,19 @@ async function exerciseScenes(options: Options) {
     console.log(
       `${result.sceneId}: ${status} in ${result.settleTimeMs}ms (${result.testedTargetCount}/${result.targetCount} targets tested)`
     );
+    const observedTimings = result.targetTimings
+      .filter(
+        (timing) =>
+          !timing.initiallyMatched && timing.firstMatchedAtMs !== undefined
+      )
+      .map((timing) => timing.firstMatchedAtMs as number)
+      .sort((left, right) => left - right);
+    if (observedTimings.length > 0) {
+      const median = observedTimings[Math.floor(observedTimings.length / 2)];
+      console.log(
+        `  changed-target response: first ${observedTimings[0]}ms | median ${median}ms | last ${observedTimings[observedTimings.length - 1]}ms`
+      );
+    }
     for (const skipped of result.skippedUnavailable) {
       console.log(
         `  skipped ${skipped.entityId}: unavailable before exercise (${skipped.actualState ?? "missing"})`
