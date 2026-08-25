@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>{% block page_title %}{{ active_template.display_name }}{% endblock %}</title>
+    <title>{% block page_title %}{{ active_template.display_name if active_template else "Printer" }}{% endblock %}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         :root {
@@ -645,10 +645,14 @@
             <div class="template-nav" role="list">
                 {% for template in templates %}
                     <a href="{{ url_for('bb_route', tpl=template.slug) }}"
-                       class="{% if template.slug == active_template.slug %}active{% endif %}">
+                       class="{% if active_template and template.slug == active_template.slug %}active{% endif %}">
                         {{ template.display_name }}
                     </a>
                 {% endfor %}
+                <a href="{{ url_for('png_route') }}"
+                   class="{% if active_nav | default('') == 'png' %}active{% endif %}">
+                    PNG Upload
+                </a>
             </div>
             <div class="theme-toggle" id="themeToggle" role="group" aria-label="Theme">
                 <span class="theme-toggle__label">Theme</span>
@@ -683,7 +687,7 @@
                 </div>
             </div>
             <h2>{% block form_heading %}{{ active_template.display_name }}{% endblock %}</h2>
-            <form id="labelForm" data-template="{{ active_template.slug }}" {% block form_attributes %}{% endblock %}>
+            <form id="labelForm" data-template="{{ active_template.slug if active_template else '' }}" {% block form_attributes %}{% endblock %}>
                 <div class="form-grid">
                     <div class="form-fields">
                         {% block form_fields %}{% endblock %}
@@ -754,6 +758,7 @@
                         </section>
                     {% endblock %}
                 </div>
+                {% block preset_panel %}
                 <section class="preset-panel" id="presetPanel" aria-labelledby="presetHeading">
                     <div class="preset-header">
                         <h3 id="presetHeading">Presets</h3>
@@ -805,6 +810,7 @@
                     </div>
                     <p id="presetEmpty" class="preset-empty" hidden>No presets saved yet.</p>
                 </section>
+                {% endblock %}
                 {% block form_actions %}
                 {% endblock %}
             </form>

@@ -21,6 +21,7 @@ from . import label_templates
 from .label_templates import TemplateFormData, TemplateFormValue
 from .label_templates import best_by as best_by_label
 from .mongo import mongo_health
+from .png_upload import PNG_LABEL_SPEC, PNGUploadError, PreparedPNG, prepare_png_upload
 from .presets import Preset, PresetStore, canonical_query_string, get_cached_store
 from .preview import PreviewPayloadBuilder, PreviewPayloadError
 from .print_dispatcher import PrintDispatchService
@@ -147,6 +148,63 @@ def create_app() -> Flask:
             form_data,
             include_qr_label=include_qr_label,
         )
+
+    @app.get("/png")
+    def png_route():
+        return render_template(
+            "png_upload.html",
+            templates=label_templates.all_templates(),
+            active_template=None,
+            active_nav="png",
+        )
+
+    @app.post("/png/preview")
+    def preview_png_route():
+        try:
+            prepared = _prepared_png_from_request()
+        except PNGUploadError as exc:
+            return jsonify({"error": str(exc)}), 400
+        metrics = analyze_label_image(
+            prepared.image,
+            PrinterConfig.from_env(),
+            target_spec=PNG_LABEL_SPEC,
+        )
+        return jsonify(
+            {
+                "filename": prepared.filename,
+                "image": _data_url_for_image(prepared.image),
+                "metrics": metrics.to_dict(),
+                "rotated": prepared.rotated,
+                "source": {
+                    "width_px": prepared.source_size[0],
+                    "height_px": prepared.source_size[1],
+                },
+            }
+        )
+
+    @app.post("/png/print")
+    def print_png_route():
+        try:
+            prepared = _prepared_png_from_request()
+        except PNGUploadError as exc:
+            return jsonify({"error": str(exc)}), 400
+        config = PrinterConfig.from_env()
+        metrics = analyze_label_image(
+            prepared.image,
+            config,
+            target_spec=PNG_LABEL_SPEC,
+        )
+        try:
+            result = dispatch_image(
+                prepared.image,
+                config,
+                target_spec=PNG_LABEL_SPEC,
+            )
+        except ValueError as exc:
+            return jsonify({"error": str(exc)}), 400
+        except OSError as exc:
+            return jsonify({"error": f"Printer unavailable: {exc}"}), 503
+        return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
 
     @app.post("/print")
     def print_route():
@@ -389,6 +447,10 @@ def _success_payload(
     if warnings:
         payload["warnings"] = list(warnings)
     return payload
+
+
+def _prepared_png_from_request() -> PreparedPNG:
+    return prepare_png_upload(request.files.get("file"))
 
 
 class PresetServiceError(Exception):

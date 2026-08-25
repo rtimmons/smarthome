@@ -219,10 +219,26 @@ function cancelCountdown() {
 }
 
 function buildExecutePrintUrl() {
+    if (form && form.dataset.printUrl) {
+        return form.dataset.printUrl;
+    }
     const current = new URL(window.location.href);
     current.searchParams.delete('countdown_duration');
     const query = current.searchParams.toString();
     return query ? `/bb/execute-print?${query}` : '/bb/execute-print';
+}
+
+function buildExecutePrintOptions() {
+    if (form && form.dataset.printRequest === 'multipart') {
+        const body = typeof window.printerBuildPrintFormData === 'function'
+            ? window.printerBuildPrintFormData()
+            : new FormData(form);
+        if (!body) {
+            return null;
+        }
+        return { method: 'POST', body };
+    }
+    return { method: 'POST' };
 }
 
 async function executeCountdownPrint() {
@@ -245,7 +261,13 @@ async function executeCountdownPrint() {
 
     try {
         const printUrl = buildExecutePrintUrl();
-        const result = await requestJson(printUrl, { method: 'POST' });
+        const printOptions = buildExecutePrintOptions();
+        if (!printOptions) {
+            window.alert('Choose a PNG before printing.');
+            resetCountdownDialog();
+            return;
+        }
+        const result = await requestJson(printUrl, printOptions);
         if (!result || !result.ok) {
             window.alert((result && result.error) || 'Print failed');
             resetCountdownDialog();
@@ -279,6 +301,14 @@ function showPrintSuccess() {
         cancelButton.textContent = 'Done';
     }
     loadPresets();
+
+    if (form && form.dataset.ephemeralUpload === 'true') {
+        window.dispatchEvent(new CustomEvent('printer:print-success'));
+        window.setTimeout(() => {
+            resetCountdownDialog();
+        }, 600);
+        return;
+    }
 
     if (autoBackAfterPrint) {
         autoBackAfterPrint = false;
@@ -449,6 +479,10 @@ const URLState = {
 
 function transitionToPrintState(target) {
     autoBackAfterPrint = false;
+    if (form && form.dataset.ephemeralUpload === 'true') {
+        startCountdown(target);
+        return;
+    }
     const formData = getFormStateForUrl();
     const templateSlug = form && form.dataset.template ? form.dataset.template : URLState.getTemplate();
 
@@ -464,6 +498,13 @@ function transitionToPrintState(target) {
 
 function transitionToFormState(options = {}) {
     const { hideCountdown = true } = options;
+    if (form && form.dataset.ephemeralUpload === 'true') {
+        const countdownContainer = document.getElementById('printCountdownContainer');
+        if (countdownContainer) {
+            countdownContainer.style.display = hideCountdown ? 'none' : 'block';
+        }
+        return;
+    }
     const formData = getFormStateForUrl();
     const templateSlug = form && form.dataset.template ? form.dataset.template : URLState.getTemplate();
 

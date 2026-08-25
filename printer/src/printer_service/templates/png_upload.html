@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block page_title %}PNG Upload{% endblock %}
+
+{% block form_heading %}PNG Upload{% endblock %}
+
+{% block form_attributes %}enctype="multipart/form-data" data-disable-default-handlers="true" data-ephemeral-upload="true" data-preview-url="{{ url_for('preview_png_route') }}" data-print-url="{{ url_for('print_png_route') }}" data-print-request="multipart"{% endblock %}
+
+{% block form_fields %}
+    <style>
+        .png-upload-help {
+            color: var(--muted-color);
+            margin: 0;
+        }
+        .png-drop-zone {
+            display: grid;
+            gap: 0.8rem;
+            padding: 1.5rem;
+            border: 2px dashed var(--border-color);
+            border-radius: 12px;
+            background: var(--label-panel-bg);
+            text-align: center;
+            transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+        }
+        .png-drop-zone.is-dragging {
+            border-color: var(--accent-color);
+            background: var(--preview-bg);
+            box-shadow: 0 0 0 4px rgba(44, 111, 227, 0.18);
+        }
+        .png-drop-zone strong {
+            font-size: 1.05rem;
+        }
+        .png-drop-zone input[type="file"] {
+            width: 100%;
+        }
+        .png-upload-status {
+            min-height: 1.4rem;
+            margin: 0;
+        }
+        .png-upload-preview {
+            filter: none !important;
+        }
+    </style>
+    <p class="png-upload-help">
+        Drop a PNG to fit it proportionally onto the same 62 mm × 1.3″ label used by Bluey.
+        Portrait artwork is rotated automatically.
+    </p>
+    <div id="pngDropZone" class="png-drop-zone">
+        <strong>Drop a PNG here</strong>
+        <span>or choose one from this device</span>
+        <input id="pngFile" name="file" type="file" accept="image/png,.png" required>
+    </div>
+    <p class="png-upload-help">
+        The server validates the image in memory. It is sent again only after Print is confirmed and is not retained.
+    </p>
+    <p id="pngUploadStatus" class="preview-status png-upload-status" role="status" aria-live="polite"></p>
+{% endblock %}
+
+{% block preview_area %}
+    <section id="previewContainer" class="preview" aria-live="polite">
+        <h3>Preview: Click to Print</h3>
+        <div class="bb-preview-grid">
+            <article class="bb-preview-card">
+                <div class="bb-preview-meta">
+                    <h4>Uploaded label</h4>
+                    <p id="labelPreviewSummary" class="bb-preview-note">Choose a PNG to preview it.</p>
+                </div>
+                <button type="button"
+                        id="pngPrintTrigger"
+                        class="bb-preview-trigger print-trigger"
+                        data-print-target="label"
+                        aria-label="Print the uploaded PNG"
+                        disabled>
+                    <img id="labelPreviewImage" class="preview-image png-upload-preview" src="" alt="Preview of the uploaded PNG" hidden>
+                </button>
+                <p id="labelPreviewWarnings" class="bb-preview-note"></p>
+            </article>
+        </div>
+    </section>
+{% endblock %}
+
+{% block preset_panel %}{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='png-upload.js') }}" defer></script>
+{% endblock %}

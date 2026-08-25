@@ -17,6 +17,11 @@ just start        # Starts just the printer service
 The printer service will be available at http://localhost:8099
 Use the header emoji picker (☀️/🌙/🖥️) to switch between light, dark, and system themes.
 
+The **PNG Upload** navigation route accepts drag-and-dropped PNG files, validates and
+fits them to the 62 mm × 1.3-inch label canvas, and uses the standard print countdown.
+Uploads are processed in memory and are sent again only when printing is confirmed;
+the source image is not stored by the service.
+
 ## Build the Home Assistant Add-on Image
 
 Build the talos add-on payload and a local container image to catch Dockerfile issues before deploying:
