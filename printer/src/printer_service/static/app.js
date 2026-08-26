@@ -273,7 +273,7 @@ async function executeCountdownPrint() {
             resetCountdownDialog();
             return;
         }
-        showPrintSuccess();
+        showPrintSuccess(result.data || {});
     } catch (error) {
         console.error('Print error:', error);
         window.alert('Print failed: ' + error.message);
@@ -281,7 +281,7 @@ async function executeCountdownPrint() {
     }
 }
 
-function showPrintSuccess() {
+function showPrintSuccess(resultData = {}) {
     const countdownTimerElement = document.getElementById('countdownTimer');
     const printButtonText = document.getElementById('printButtonText');
     const printNowButton = document.getElementById('printNowButton');
@@ -303,7 +303,7 @@ function showPrintSuccess() {
     loadPresets();
 
     if (form && form.dataset.ephemeralUpload === 'true') {
-        window.dispatchEvent(new CustomEvent('printer:print-success'));
+        window.dispatchEvent(new CustomEvent('printer:print-success', { detail: resultData }));
         window.setTimeout(() => {
             resetCountdownDialog();
         }, 600);
@@ -618,7 +618,8 @@ const BASE_PATH = (() => {
 async function requestJson(url, options) {
     const normalized = normalizeRequestOptions(options);
     const prefix = BASE_PATH || '';
-    const requestUrl = url.startsWith('http')
+    const alreadyPrefixed = prefix && (url === prefix || url.startsWith(`${prefix}/`));
+    const requestUrl = url.startsWith('http') || alreadyPrefixed
         ? url
         : `${prefix}${url.startsWith('/') ? '' : '/'}${url}`;
     let response;

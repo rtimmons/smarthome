@@ -12,7 +12,17 @@ from pathlib import Path
 from typing import Any, Callable, List, Optional, Sequence, TypeGuard
 from urllib.parse import urlencode, urljoin
 
-from flask import Flask, abort, current_app, jsonify, redirect, render_template, request, url_for
+from flask import (
+    Flask,
+    abort,
+    current_app,
+    jsonify,
+    redirect,
+    render_template,
+    request,
+    send_file,
+    url_for,
+)
 from PIL import Image, UnidentifiedImageError
 from werkzeug.serving import make_server
 
@@ -25,6 +35,7 @@ from .png_upload import PNG_LABEL_SPEC, PNGUploadError, PreparedPNG, prepare_png
 from .presets import Preset, PresetStore, canonical_query_string, get_cached_store
 from .preview import PreviewPayloadBuilder, PreviewPayloadError
 from .print_dispatcher import PrintDispatchService
+from .printed_labels import PrintedLabel, PrintedLabelNotFound, PrintedLabelStore
 from .label import (
     SUPPORTED_BACKENDS,
     PrinterConfig,
@@ -70,6 +81,7 @@ def _dispatch_image(
 def create_app() -> Flask:
     app = Flask(__name__)
     app.wsgi_app = _IngressPrefixMiddleware(app.wsgi_app)  # type: ignore[method-assign]
+    printed_label_store = PrintedLabelStore.from_env()
     preview_builder = PreviewPayloadBuilder(
         analyze_label_image=analyze_label_image,
         data_url_for_image=_data_url_for_image,
@@ -188,23 +200,86 @@ def create_app() -> Flask:
             prepared = _prepared_png_from_request()
         except PNGUploadError as exc:
             return jsonify({"error": str(exc)}), 400
-        config = PrinterConfig.from_env()
-        metrics = analyze_label_image(
-            prepared.image,
-            config,
-            target_spec=PNG_LABEL_SPEC,
-        )
         try:
-            result = dispatch_image(
+            archived = printed_label_store.archive(
                 prepared.image,
-                config,
+                prepared.filename,
                 target_spec=PNG_LABEL_SPEC,
             )
-        except ValueError as exc:
-            return jsonify({"error": str(exc)}), 400
         except OSError as exc:
-            return jsonify({"error": f"Printer unavailable: {exc}"}), 503
-        return jsonify(_success_payload(result, warnings=metrics.warnings, metrics=metrics))
+            app.logger.warning("Printed-label archive write failed: %s", exc)
+            return jsonify(
+                {"error": "Printed-label storage is unavailable; nothing was printed."}
+            ), 503
+        return _dispatch_archived_png(
+            printed_label_store,
+            archived,
+            prepared.image,
+            target_spec=PNG_LABEL_SPEC,
+        )
+
+    @app.get("/png/labels")
+    def list_printed_pngs_route():
+        sort_by = request.args.get("sort", "created").strip().lower() or "created"
+        if sort_by not in {"name", "created", "last_printed", "prints"}:
+            sort_by = "created"
+        direction = request.args.get("direction", "").strip().lower()
+        if direction not in {"asc", "desc"}:
+            direction = "desc" if sort_by in {"created", "last_printed", "prints"} else "asc"
+        try:
+            labels = printed_label_store.list_labels(sort_by=sort_by, direction=direction)
+        except OSError as exc:
+            app.logger.warning("Printed-label archive list failed: %s", exc)
+            return jsonify({"error": "Printed-label storage is unavailable."}), 503
+        payload = [_printed_label_payload(label) for label in labels]
+        return jsonify({"labels": payload, "count": len(payload)})
+
+    @app.get("/png/labels/<label_id>/image")
+    def printed_png_image_route(label_id: str):
+        try:
+            label = printed_label_store.get(label_id)
+        except PrintedLabelNotFound:
+            abort(404)
+        except OSError as exc:
+            app.logger.warning("Printed-label archive read failed: %s", exc)
+            return jsonify({"error": "Printed-label storage is unavailable."}), 503
+        return send_file(
+            label.path,
+            mimetype="image/png",
+            as_attachment=_is_truthy(request.args.get("download")),
+            download_name=label.name,
+            conditional=True,
+        )
+
+    @app.post("/png/labels/<label_id>/print")
+    def reprint_png_route(label_id: str):
+        try:
+            label, image = printed_label_store.load_image(label_id)
+        except PrintedLabelNotFound:
+            return jsonify({"error": "Printed label not found."}), 404
+        except OSError as exc:
+            app.logger.warning("Printed-label archive read failed: %s", exc)
+            return jsonify({"error": "The archived PNG is unavailable or unreadable."}), 503
+        target_spec = label_spec_from_metadata(image) or PNG_LABEL_SPEC
+        return _dispatch_archived_png(
+            printed_label_store,
+            label,
+            image,
+            target_spec=target_spec,
+        )
+
+    @app.delete("/png/labels/<label_id>")
+    def delete_printed_png_route(label_id: str):
+        try:
+            deleted = printed_label_store.delete(label_id)
+        except PrintedLabelNotFound:
+            deleted = False
+        except OSError as exc:
+            app.logger.warning("Printed-label archive delete failed: %s", exc)
+            return jsonify({"error": "Printed-label storage is unavailable."}), 503
+        if not deleted:
+            return jsonify({"error": "Printed label not found."}), 404
+        return jsonify({"deleted": True, "id": label_id})
 
     @app.post("/print")
     def print_route():
@@ -446,6 +521,55 @@ def _success_payload(
         payload["metrics"] = metrics.to_dict()
     if warnings:
         payload["warnings"] = list(warnings)
+    return payload
+
+
+def _dispatch_archived_png(
+    store: PrintedLabelStore,
+    archived: PrintedLabel,
+    image: Image.Image,
+    *,
+    target_spec: BrotherLabelSpec,
+):
+    try:
+        config = PrinterConfig.from_env()
+        metrics = analyze_label_image(image, config, target_spec=target_spec)
+        result = dispatch_image(image, config, target_spec=target_spec)
+    except ValueError as exc:
+        return jsonify({"error": str(exc)}), 400
+    except OSError as exc:
+        return jsonify({"error": f"Printer unavailable: {exc}"}), 503
+
+    updated = archived
+    archive_warning: str | None = None
+    try:
+        updated = store.record_print(archived.id)
+    except OSError as exc:
+        current_app.logger.warning("Printed-label count update failed: %s", exc)
+        archive_warning = "The label printed, but its archive count could not be updated."
+
+    warnings = list(metrics.warnings)
+    if archive_warning:
+        warnings.append(archive_warning)
+    payload = _success_payload(result, warnings=warnings, metrics=metrics)
+    payload["printed_label"] = _printed_label_payload(updated)
+    return jsonify(payload)
+
+
+def _printed_label_payload(label: PrintedLabel) -> dict[str, object]:
+    payload = label.to_dict()
+    payload.update(
+        {
+            "image_url": url_for("printed_png_image_route", label_id=label.id),
+            "download_url": url_for(
+                "printed_png_image_route",
+                label_id=label.id,
+                download="1",
+            ),
+            "print_url": url_for("reprint_png_route", label_id=label.id),
+            "delete_url": url_for("delete_printed_png_route", label_id=label.id),
+        }
+    )
     return payload
 
 

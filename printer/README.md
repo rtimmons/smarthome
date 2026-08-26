@@ -19,8 +19,11 @@ Use the header emoji picker (☀️/🌙/🖥️) to switch between light, dark,
 
 The **PNG Upload** navigation route accepts drag-and-dropped PNG files, validates and
 fits them to the 62 mm × 1.3-inch label canvas, and uses the standard print countdown.
-Uploads are processed in memory and are sent again only when printing is confirmed;
-the source image is not stored by the service.
+When a print is confirmed, the prepared PNG is archived in `/data/printed-labels`, the
+printer add-on's Supervisor-backed data directory. The PNG Upload page lists that
+archive and supports previewing, downloading, reprinting, and deleting saved labels.
+Local development uses `printer/label-output/printed-labels` by default and can be
+overridden with `PRINTED_LABELS_DIR`.
 
 ### Print a PNG from the repository
 
@@ -58,8 +61,8 @@ ingress authentication. Configuration precedence is:
   `PRINTER_SERVICE_TIMEOUT` for the request timeout (45 seconds by default).
 
 Credentials embedded in URLs and HTTP redirects are rejected so a print body or
-bearer token cannot be forwarded to an unexpected host. Uploaded bytes remain only in
-client/server memory and are not retained after the command exits.
+bearer token cannot be forwarded to an unexpected host. Server preflights remain
+in-memory only; a confirmed print is retained in the printed-label archive.
 
 ## Build the Home Assistant Add-on Image
 

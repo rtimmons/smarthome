@@ -126,6 +126,8 @@ run_env:
     value: "::"
   - env: FLASK_PORT
     value: "8099"
+  - env: PRINTED_LABELS_DIR
+    value: "/data/printed-labels"
   - env: LABEL_OUTPUT_DIR
     from_option: label_output_dir
     default: "/share/printer-labels"

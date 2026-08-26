@@ -139,7 +139,10 @@ class AddonConfig:
 
             if "value" in env_spec:
                 # Static value
-                env[env_name] = str(env_spec["value"])
+                value = str(env_spec["value"])
+                if env_name == "PRINTED_LABELS_DIR" and value.startswith("/data/"):
+                    value = str(self.source_dir / "label-output" / value.removeprefix("/data/"))
+                env[env_name] = value
             elif "from_option" in env_spec:
                 # Use default value, localizing URLs
                 default = env_spec.get("default", "")

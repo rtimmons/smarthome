@@ -76,3 +76,24 @@ def test_canonical_mongodb_hostname_is_a_dependency_and_rewrites_for_local_dev()
 
     assert addon.get_dependencies() == {"mongodb"}
     assert addon.build_env_vars()["MONGODB_URL"] == "mongodb://localhost:27017/smarthome"
+
+
+def test_printer_addon_data_archive_is_localized_for_local_dev():
+    addon = AddonConfig(
+        key="printer",
+        yaml_path=Path("printer/addon.yaml"),
+        data={
+            "name": "printer",
+            "ports": {"8099": 8099},
+            "run_env": [
+                {
+                    "env": "PRINTED_LABELS_DIR",
+                    "value": "/data/printed-labels",
+                }
+            ],
+        },
+    )
+
+    assert addon.build_env_vars()["PRINTED_LABELS_DIR"] == (
+        "printer/label-output/printed-labels"
+    )

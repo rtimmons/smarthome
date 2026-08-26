@@ -40,6 +40,37 @@
         .png-upload-preview {
             filter: none !important;
         }
+        .png-archive-table {
+            min-width: 920px;
+        }
+        .png-archive-table th:nth-child(1) {
+            width: 12%;
+        }
+        .png-archive-table th:nth-child(2) {
+            width: 24%;
+        }
+        .png-archive-table th:nth-child(3) {
+            width: 22%;
+        }
+        .png-archive-table th:nth-child(4) {
+            width: 10%;
+        }
+        .png-archive-table th:nth-child(5) {
+            width: 32%;
+        }
+        .png-archive-thumbnail {
+            display: block;
+            width: 92px;
+            max-height: 58px;
+            object-fit: contain;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: #fff;
+            filter: none !important;
+        }
+        .png-archive-name {
+            overflow-wrap: anywhere;
+        }
     </style>
     <p class="png-upload-help">
         Drop a PNG to fit it proportionally onto the same 62 mm × 1.3″ label used by Bluey.
@@ -51,7 +82,8 @@
         <input id="pngFile" name="file" type="file" accept="image/png,.png" required>
     </div>
     <p class="png-upload-help">
-        The server validates the image in memory. It is sent again only after Print is confirmed and is not retained.
+        The server validates the image in memory. Once printing is confirmed, the prepared PNG is
+        saved in the add-on's backed-up data and appears in Saved PNG labels below.
     </p>
     <p id="pngUploadStatus" class="preview-status png-upload-status" role="status" aria-live="polite"></p>
 {% endblock %}
@@ -79,7 +111,46 @@
     </section>
 {% endblock %}
 
-{% block preset_panel %}{% endblock %}
+{% block preset_panel %}
+    <section class="preset-panel" id="pngArchivePanel" aria-labelledby="pngArchiveHeading"
+             data-list-url="{{ url_for('list_printed_pngs_route') }}">
+        <div class="preset-header">
+            <h3 id="pngArchiveHeading">Saved PNG labels</h3>
+            <p>Reprint, download, or delete PNGs retained in the printer add-on's backup data.</p>
+        </div>
+        <p id="pngArchiveStatus" class="preset-status" role="status" aria-live="polite"></p>
+        <div class="preset-list">
+            <table class="preset-table png-archive-table" id="pngArchiveList">
+                <thead>
+                    <tr class="preset-row--header">
+                        <th scope="col">Preview</th>
+                        <th scope="col" data-png-archive-sort-header="name" aria-sort="none">
+                            <button type="button" class="preset-sort" data-png-archive-sort="name">
+                                <span>Name</span>
+                                <span class="preset-sort__indicator" aria-hidden="true">↕</span>
+                            </button>
+                        </th>
+                        <th scope="col" data-png-archive-sort-header="created" aria-sort="descending">
+                            <button type="button" class="preset-sort" data-png-archive-sort="created">
+                                <span>Date added</span>
+                                <span class="preset-sort__indicator" aria-hidden="true">↓</span>
+                            </button>
+                        </th>
+                        <th scope="col" data-png-archive-sort-header="prints" aria-sort="none">
+                            <button type="button" class="preset-sort" data-png-archive-sort="prints">
+                                <span>Printed</span>
+                                <span class="preset-sort__indicator" aria-hidden="true">↕</span>
+                            </button>
+                        </th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="pngArchiveListBody"></tbody>
+            </table>
+        </div>
+        <p id="pngArchiveEmpty" class="preset-empty" hidden>No PNG labels saved yet.</p>
+    </section>
+{% endblock %}
 
 {% block extra_scripts %}
 <script src="{{ url_for('static', filename='png-upload.js') }}" defer></script>

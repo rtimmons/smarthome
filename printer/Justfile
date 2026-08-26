@@ -85,6 +85,7 @@ start: ensure-current-venv
     brew_prefix="$(brew --prefix)"; \
     brew_lib="${brew_prefix}/lib"; \
     export LABEL_OUTPUT_DIR="${LABEL_OUTPUT_DIR:-label-output}"; \
+    export PRINTED_LABELS_DIR="${PRINTED_LABELS_DIR:-label-output/printed-labels}"; \
     export PRINTER_BACKEND="${PRINTER_BACKEND:-brother-network}"; \
     export DYLD_LIBRARY_PATH="${brew_lib}:${DYLD_LIBRARY_PATH:-}"; \
     export DYLD_FALLBACK_LIBRARY_PATH="${brew_lib}:${DYLD_FALLBACK_LIBRARY_PATH:-}"; \
