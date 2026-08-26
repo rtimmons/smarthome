@@ -21,6 +21,7 @@ Smart home system packaged as Home Assistant add-ons (UI, Sonos control, printer
 ## Deploying to Home Assistant
 - Build add-ons: `just ha-addon` (or `just ha-addon <addon>`).
 - Deploy add-ons and Home Assistant config: `just deploy` (or target an add-on with `just deploy <addon>`). Defaults: `HA_HOST=homeassistant.local`, `HA_PORT=22`, `HA_USER=root`.
+- Validate and print a PNG label: `just print <file.png>`; use `just print-check <file.png>` for a no-print preflight.
 - Printer container preflight: `just printer-image` (optionally `PRINTER_DOCKER_PLATFORM=linux/arm64 just printer-image`).
 
 ## Home Assistant configuration (`new-hass-configs`)

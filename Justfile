@@ -128,6 +128,37 @@ printer-image:
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 	just --justfile "${REPO_ROOT}/printer/Justfile" --working-directory "${REPO_ROOT}/printer" build
 
+# Show the resolved, non-secret endpoint and auth configuration for PNG printing
+[group: 'print']
+printer-config:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+	exec just --justfile "${REPO_ROOT}/printer/Justfile" \
+		--working-directory "${REPO_ROOT}/printer" print-client-config
+
+# Validate a PNG locally and against the printer service without printing
+[group: 'print']
+print-check file:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+	FILE="$1"
+	if [[ "${FILE}" != /* ]]; then FILE="${REPO_ROOT}/${FILE}"; fi
+	exec just --justfile "${REPO_ROOT}/printer/Justfile" \
+		--working-directory "${REPO_ROOT}/printer" print-file-check "${FILE}"
+
+# Validate, preflight, and print one PNG (print requests are never retried)
+[group: 'print']
+print file:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+	FILE="$1"
+	if [[ "${FILE}" != /* ]]; then FILE="${REPO_ROOT}/${FILE}"; fi
+	exec just --justfile "${REPO_ROOT}/printer/Justfile" \
+		--working-directory "${REPO_ROOT}/printer" print-file "${FILE}"
+
 # ============================================================================
 # ADDON MANAGEMENT
 # ============================================================================

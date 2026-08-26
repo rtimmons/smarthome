@@ -39,6 +39,25 @@ setup-printer:
 [group: 'setup']
 setup: setup-printer
 
+# Show the resolved, non-secret configuration used by command-line PNG printing.
+[group: 'print']
+print-client-config: ensure-current-venv
+    @"{{python}}" -m printer_service.print_client --show-config
+
+# Validate a PNG locally and against the service without consuming a label.
+[group: 'print']
+print-file-check file: ensure-current-venv
+    #!/usr/bin/env bash
+    set -euo pipefail
+    exec "{{python}}" -m printer_service.print_client --preview-only "$1"
+
+# Validate, preflight, and print one PNG. The client never retries a print request.
+[group: 'print']
+print-file file: ensure-current-venv
+    #!/usr/bin/env bash
+    set -euo pipefail
+    exec "{{python}}" -m printer_service.print_client "$1"
+
 # Start the printer service in development mode
 [private]
 ensure-local-mongodb:

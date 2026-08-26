@@ -22,6 +22,45 @@ fits them to the 62 mm × 1.3-inch label canvas, and uses the standard print cou
 Uploads are processed in memory and are sent again only when printing is confirmed;
 the source image is not stored by the service.
 
+### Print a PNG from the repository
+
+From the repository root, validate and print a PNG with:
+
+```bash
+just print durban.png
+```
+
+The command validates the file locally with the same rules as the upload page, sends
+it to `/png/preview` as a non-printing server preflight, then sends exactly one request
+to `/png/print`. It never retries the print request: after a network timeout, check the
+physical printer before deciding whether to run it again.
+
+Two helpers make endpoint and authentication setup testable without using a label:
+
+```bash
+just printer-config          # resolved URLs/auth source; never prints a token
+just print-check durban.png  # local validation plus remote preview; does not print
+```
+
+By default the client uses the add-on's mapped direct endpoint at
+`http://${HA_HOST:-homeassistant.local}:8099/`, which does not require Home Assistant
+ingress authentication. Configuration precedence is:
+
+- `PRINTER_SERVICE_URL` for a complete base URL, or the component variables
+  `PRINTER_SERVICE_SCHEME`, `PRINTER_SERVICE_HOST`, `PRINTER_SERVICE_PORT`, and
+  `PRINTER_SERVICE_PATH`.
+- The add-on-compatible `PUBLIC_SERVICE_*` variables, with `HA_HOST` as the host
+  fallback.
+- `PRINTER_SERVICE_TOKEN_FILE` for a bearer token required by a trusted reverse
+  proxy. The file must be mode `0600`; `PRINTER_SERVICE_TOKEN` is also supported for
+  ephemeral environments but is easier to expose through shell/process state.
+- `PRINTER_SERVICE_CA_FILE` for a private HTTPS certificate authority and
+  `PRINTER_SERVICE_TIMEOUT` for the request timeout (45 seconds by default).
+
+Credentials embedded in URLs and HTTP redirects are rejected so a print body or
+bearer token cannot be forwarded to an unexpected host. Uploaded bytes remain only in
+client/server memory and are not retained after the command exits.
+
 ## Build the Home Assistant Add-on Image
 
 Build the talos add-on payload and a local container image to catch Dockerfile issues before deploying:
