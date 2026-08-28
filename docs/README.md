@@ -40,6 +40,7 @@ This directory contains project-specific documentation for the smarthome reposit
 - [**unifi-network-setup.md**](operations/unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
 - [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — Cloud Key host and adopted-device SSH access through the 1Password agent
 - [**unifi-apple-tv-remote.md**](operations/unifi-apple-tv-remote.md) — Evidence-first UniFi, Bonjour, and Apple TV Remote troubleshooting
+- [**nest-integration.md**](operations/nest-integration.md) — Google Nest OAuth, Device Access, Pub/Sub, entity naming, and verification
 - [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow
 - [**esphome-fancontrollers.md**](operations/esphome-fancontrollers.md) — ESPHome fan controller inventory and setup workflow
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
