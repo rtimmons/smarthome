@@ -178,6 +178,13 @@ class CellView {
     setZoneUnknown(enabled) {
         this.$element.toggleClass('zone-unknown', Boolean(enabled));
     }
+
+    setZoneMutationPending(enabled) {
+        this.$element.toggleClass(
+            'zone-mutation-pending',
+            Boolean(enabled)
+        );
+    }
 }
 
 if (typeof module !== 'undefined' && module.exports) {

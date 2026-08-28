@@ -173,6 +173,46 @@ async function run(): Promise<void> {
   }
 
   {
+    let joinedRooms = ['Kitchen'];
+    const joinResolvers: Array<() => void> = [];
+    const coordinator = new SonosIntentCoordinator(
+      {
+        async getZones(): Promise<Sonos.Zone[]> {
+          return [zone('Kitchen', joinedRooms)];
+        },
+        async joinRoom(): Promise<void> {
+          return new Promise<void>(resolve => {
+            joinResolvers.push(resolve);
+          });
+        },
+        async getState(): Promise<Sonos.State> {
+          throw new Error('unused');
+        },
+        async setVolume(): Promise<void> {
+          return;
+        },
+      },
+      {
+        observeDelayMs: 1,
+        terminalRetentionMs: 1000,
+        sleep: async () => {
+          joinedRooms = ['Kitchen', 'Living Room', 'Bedroom'];
+        },
+      }
+    );
+
+    coordinator.createGroupAllIntent(roomRequest);
+    await new Promise(resolve => setTimeout(resolve, 25));
+
+    const status = coordinator.getStatus();
+    assert.equal(status.activeIntent, null);
+    assert(status.recentIntent);
+    assert.equal(status.recentIntent && status.recentIntent.status, 'completed');
+    assert.equal(joinResolvers.length, 2);
+    joinResolvers.forEach(resolve => resolve());
+  }
+
+  {
     const coordinator = new SonosIntentCoordinator(
       {
         async getZones(): Promise<Sonos.Zone[]> {

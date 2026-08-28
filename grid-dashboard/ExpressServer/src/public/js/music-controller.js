@@ -56,18 +56,10 @@ class MusicController {
     }
 
     leaveRoom(r) {
-        this.pubsub.submit('Room.ZonesObserved', {
-            Zones: null,
-            Meta: { unknown: true },
-        });
-        this.request('sonos', r, 'leave');
+        return this.request('sonos', r, 'leave');
     }
     joinRoom(a, b) {
-        this.pubsub.submit('Room.ZonesObserved', {
-            Zones: null,
-            Meta: { unknown: true },
-        });
-        this.request('sonos', a, 'join', b);
+        return this.request('sonos', a, 'join', b);
     }
 
     onMessage(e) {}

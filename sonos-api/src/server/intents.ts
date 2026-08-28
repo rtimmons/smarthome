@@ -80,6 +80,12 @@ interface SonosIntentCoordinatorOptions {
   sleep?: (ms: number) => Promise<void>;
 }
 
+interface InFlightJoin {
+  promise: Promise<void>;
+  coordinatorRoom: string;
+  startedAt: string;
+}
+
 const DEFAULT_TIMEOUT_MS = 45 * 1000;
 const DEFAULT_OBSERVE_DELAY_MS = 500;
 const DEFAULT_TERMINAL_RETENTION_MS = 1500;
@@ -325,6 +331,7 @@ export class SonosIntentCoordinator implements SonosIntentStore {
 
   private async runIntent(intent: GroupAllIntent): Promise<void> {
     const startedAt = this.now();
+    const inFlightJoins: {[roomName: string]: InFlightJoin} = {};
 
     while (this.activeIntent === intent) {
       if (this.now() - startedAt >= this.timeoutMs) {
@@ -368,54 +375,68 @@ export class SonosIntentCoordinator implements SonosIntentStore {
         }
 
         const roomsToJoin = intent.roomNames.filter(roomName =>
-          intent.missingRooms.indexOf(roomName) >= 0
+          intent.missingRooms.indexOf(roomName) >= 0 &&
+          !inFlightJoins[roomName]
         );
 
-        if (roomsToJoin.length === 0) {
-          await this.sleep(this.observeDelayMs);
-          continue;
-        }
-
-        intent.attemptCount += 1;
-        intent.currentStep = {
-          action: 'join',
-          room: roomsToJoin[0],
-          joiningToRoom: intent.coordinatorRoom,
-          startedAt: isoNow(this.now),
-        };
-        intent.message =
-          `Joining all to ${intent.targetRoom} (${formatJoinedProgress(intent)} joined; attempting ${roomsToJoin.length})`;
-
-        console.log(
-          `[sonos-intents] ${intent.id} joining ${roomsToJoin.join(', ')} -> ${intent.coordinatorRoom} attempt=${intent.attemptCount}`
-        );
-
-        const joinErrors: string[] = [];
-        await Promise.all(
-          roomsToJoin.map(async roomName => {
-            try {
-              await this.client.joinRoom(roomName, intent.coordinatorRoom as string);
-            } catch (err) {
-              const message = err instanceof Error ? err.message : 'Unknown Sonos join error';
-              joinErrors.push(`${roomName}: ${message}`);
-            }
-          })
-        );
-        if (this.activeIntent !== intent) {
-          return;
-        }
-
-        if (joinErrors.length > 0) {
-          intent.lastError = {
-            message: joinErrors.join('; '),
-            at: isoNow(this.now),
-          };
-          intent.message =
-            `Joining all to ${intent.targetRoom} (${formatJoinedProgress(intent)} joined; retrying ${intent.missingRooms.length} rooms)`;
-          console.warn(`[sonos-intents] ${intent.id} join wave errors: ${joinErrors.join('; ')}`);
-        } else {
+        if (roomsToJoin.length > 0) {
+          const coordinatorRoom = intent.coordinatorRoom;
+          intent.attemptCount += 1;
           intent.lastError = null;
+
+          console.log(
+            `[sonos-intents] ${intent.id} joining ${roomsToJoin.join(', ')} -> ${coordinatorRoom} attempt=${intent.attemptCount}`
+          );
+
+          roomsToJoin.forEach(roomName => {
+            const startedAt = isoNow(this.now);
+            const promise = Promise.resolve().then(() =>
+              this.client.joinRoom(roomName, coordinatorRoom)
+            );
+            inFlightJoins[roomName] = {
+              promise,
+              coordinatorRoom,
+              startedAt,
+            };
+
+            promise.catch(err => {
+              if (this.activeIntent !== intent) {
+                return;
+              }
+              const message = err instanceof Error
+                ? err.message
+                : 'Unknown Sonos join error';
+              intent.lastError = {
+                message: `${roomName}: ${message}`,
+                at: isoNow(this.now),
+              };
+              console.warn(
+                `[sonos-intents] ${intent.id} join error: ${roomName}: ${message}`
+              );
+            }).finally(() => {
+              if (
+                inFlightJoins[roomName] &&
+                inFlightJoins[roomName].promise === promise
+              ) {
+                delete inFlightJoins[roomName];
+              }
+            });
+          });
         }
+
+        const activeJoinRoom = Object.keys(inFlightJoins)[0];
+        const activeJoin = activeJoinRoom && inFlightJoins[activeJoinRoom];
+        intent.currentStep = activeJoin
+          ? {
+            action: 'join',
+            room: activeJoinRoom,
+            joiningToRoom: activeJoin.coordinatorRoom,
+            startedAt: activeJoin.startedAt,
+          }
+          : null;
+        intent.message = activeJoin
+          ? `Joining all to ${intent.targetRoom} (${formatJoinedProgress(intent)} joined; awaiting ${Object.keys(inFlightJoins).length})`
+          : buildRunningMessage(intent);
       } catch (err) {
         if (this.activeIntent !== intent) {
           return;

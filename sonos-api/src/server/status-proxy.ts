@@ -3,6 +3,7 @@ import {getText} from './http';
 export interface SonosStatusProxyOptions {
   cacheTtlMs?: number;
   requestTimeoutMs?: number;
+  actionRequestTimeoutMs?: number;
   now?: () => number;
   request?: SonosRequestFn;
 }
@@ -42,6 +43,7 @@ const defaultRequest: SonosRequestFn = async options => {
 
 const DEFAULT_CACHE_TTL_MS = 30 * 1000;
 const DEFAULT_REQUEST_TIMEOUT_MS = 900;
+const DEFAULT_ACTION_REQUEST_TIMEOUT_MS = 8 * 1000;
 const DEFAULT_CONTENT_TYPE = 'application/json; charset=utf-8';
 
 const HEADER_SOURCE = 'X-Sonos-Response-Source';
@@ -121,6 +123,7 @@ const responseHeaders = (source: 'live' | 'cache', insertedAt: number, now: numb
 export class SonosStatusProxy {
   private readonly cacheTtlMs: number;
   private readonly requestTimeoutMs: number;
+  private readonly actionRequestTimeoutMs: number;
   private readonly now: () => number;
   private readonly request: SonosRequestFn;
   private readonly cache: {[key: string]: CacheEntry} = {};
@@ -129,6 +132,8 @@ export class SonosStatusProxy {
   constructor(options: SonosStatusProxyOptions = {}) {
     this.cacheTtlMs = options.cacheTtlMs || DEFAULT_CACHE_TTL_MS;
     this.requestTimeoutMs = options.requestTimeoutMs || DEFAULT_REQUEST_TIMEOUT_MS;
+    this.actionRequestTimeoutMs =
+      options.actionRequestTimeoutMs || DEFAULT_ACTION_REQUEST_TIMEOUT_MS;
     this.now = options.now || (() => Date.now());
     this.request = options.request || defaultRequest;
   }
@@ -195,7 +200,9 @@ export class SonosStatusProxy {
         uri: `${baseUrl}/${route}`,
         resolveWithFullResponse: true,
         simple: false,
-        timeout: this.requestTimeoutMs,
+        timeout: isCacheableRoute(route)
+          ? this.requestTimeoutMs
+          : this.actionRequestTimeoutMs,
       }) as UpstreamResponse;
       const body = serializeBody(response.body);
       const contentType = normalizeContentType(response.headers);

@@ -64,6 +64,10 @@ class App {
         this.intentBannerHasError = false;
         this.sonosStateIsStale = false;
         this.zoneStateIsUnknown = false;
+        this.knownZones = null;
+        this.intentStatus = {};
+        this.pendingZoneMutations = {};
+        this.zoneMutationTimeoutMs = 15 * 1000;
     }
 
     // TODO: move to config class
@@ -259,6 +263,7 @@ class App {
             this.setZonesUnknown(true);
             return;
         }
+        this.knownZones = zones;
         this.setZonesUnknown(false);
         var sameZone = myZone.members;
         var arg = {
@@ -266,12 +271,75 @@ class App {
             off: this.rooms.filter(r => sameZone.indexOf(r) < 0),
         };
         this.grid.updateZones(arg);
+        this._reconcileZoneMutations(zones);
+        this._refreshIntentPresentation();
     }
 
     setZonesUnknown(isUnknown) {
         this.zoneStateIsUnknown = Boolean(isUnknown);
         if (this.zoneStateIsUnknown) {
             this.grid.setZonesUnknown();
+        }
+    }
+
+    updateIntentStatus(status) {
+        this.intentStatus = status || {};
+        this._refreshIntentPresentation();
+    }
+
+    _refreshIntentPresentation() {
+        var status = reconcileIntentStatus(
+            this.intentStatus,
+            this.knownZones
+        );
+        this.grid.updateIntent(status);
+        this.setIntentBanner(
+            intentBannerText(status),
+            intentHasError(status)
+        );
+    }
+
+    _clearZoneMutation(roomName) {
+        delete this.pendingZoneMutations[roomName];
+        this.grid.setZoneMutationPending(roomName, false);
+    }
+
+    _reconcileZoneMutations(zones) {
+        var now = new Date().getTime();
+        Object.keys(this.pendingZoneMutations).forEach(roomName => {
+            var mutation = this.pendingZoneMutations[roomName];
+            if (
+                zoneMutationSatisfied(mutation, zones) ||
+                now >= mutation.expiresAt
+            ) {
+                this._clearZoneMutation(roomName);
+            }
+        });
+    }
+
+    _toggleRoomMembership(roomName, cell) {
+        var now = new Date().getTime();
+        var existing = this.pendingZoneMutations[roomName];
+        if (existing && now < existing.expiresAt) {
+            return;
+        }
+        if (existing) {
+            this._clearZoneMutation(roomName);
+        }
+
+        var currentlyJoined = cell.isActive();
+        this.pendingZoneMutations[roomName] = {
+            room: roomName,
+            anchorRoom: this.room,
+            desiredJoined: !currentlyJoined,
+            expiresAt: now + this.zoneMutationTimeoutMs,
+        };
+        this.grid.setZoneMutationPending(roomName, true);
+
+        if (currentlyJoined) {
+            this.musicController.leaveRoom(roomName);
+        } else {
+            this.musicController.joinRoom(roomName, this.room);
         }
     }
 
@@ -355,11 +423,7 @@ class App {
 
             // TODO: move to Music.* listeners to MusicController
             case 'Music.ToggleRoom':
-                if (evt.Event.Cell.isActive()) {
-                    this.musicController.leaveRoom(params[0]);
-                } else {
-                    this.musicController.joinRoom(params[0], this.room);
-                }
+                this._toggleRoomMembership(params[0], evt.Event.Cell);
                 break;
             case 'Music.FetchState':
                 this.fetchState();

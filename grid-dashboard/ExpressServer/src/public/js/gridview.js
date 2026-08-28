@@ -56,9 +56,15 @@ class GridView {
             if (!room) {
                 return;
             }
-            c.setActive(false);
             c.setZoneUnknown(true);
         });
+    }
+
+    setZoneMutationPending(roomName, enabled) {
+        var cell = this._findToggleCell(roomName);
+        if (cell) {
+            cell.setZoneMutationPending(enabled);
+        }
     }
 
     _createElement(size) {
@@ -106,13 +112,16 @@ class GridView {
             return;
         }
 
+        if (
+            !Array.isArray(activeIntent.missingRooms) ||
+            activeIntent.missingRooms.length === 0
+        ) {
+            return;
+        }
+
         var roomCell = this._findRoomCell(activeIntent.targetRoom);
         if (roomCell) {
             roomCell.setIntentClass('intent-target', true);
-        }
-
-        if (!Array.isArray(activeIntent.missingRooms)) {
-            return;
         }
 
         pendingStrength = Math.max(
@@ -177,4 +186,10 @@ class GridView {
             grid.onResize($win.width(), $win.height());
         }).resize();
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        GridView: GridView,
+    };
 }

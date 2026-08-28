@@ -98,6 +98,95 @@ describe('listeners banner formatting', () => {
         expect(hasError).to.equal(true);
     });
 
+    it('uses observed zones instead of lagging join-all progress', () => {
+        const status = listeners.reconcileIntentStatus(
+            {
+                activeIntent: {
+                    status: 'running',
+                    targetRoom: 'Kitchen',
+                    roomNames: ['Kitchen', 'Bedroom', 'Office'],
+                    joinedRooms: ['Kitchen'],
+                    missingRooms: ['Bedroom', 'Office'],
+                    message: 'Joining all to Kitchen (1/3 joined; awaiting 2)',
+                },
+                recentIntent: null,
+            },
+            [
+                { members: ['Kitchen', 'Bedroom', 'Office'] },
+            ]
+        );
+
+        expect(status.activeIntent.joinedRooms).to.deep.equal([
+            'Kitchen',
+            'Bedroom',
+            'Office',
+        ]);
+        expect(status.activeIntent.missingRooms).to.deep.equal([]);
+        expect(status.activeIntent.observedComplete).to.equal(true);
+        expect(status.activeIntent.message).to.equal(
+            'Joined all to Kitchen (3/3)'
+        );
+    });
+
+    it('does not show a timeout error after topology was observed complete', () => {
+        const status = listeners.reconcileIntentStatus(
+            {
+                activeIntent: null,
+                recentIntent: {
+                    status: 'timed_out',
+                    targetRoom: 'Kitchen',
+                    roomNames: ['Kitchen', 'Bedroom'],
+                    missingRooms: ['Bedroom'],
+                    message: 'Join-all to Kitchen timed out',
+                },
+            },
+            [{ members: ['Kitchen', 'Bedroom'] }]
+        );
+
+        expect(listeners.intentHasError(status)).to.equal(false);
+        expect(listeners.intentBannerText(status)).to.equal(
+            'Joined all to Kitchen (2/2)'
+        );
+    });
+
+    it('recognizes observed manual join and leave outcomes', () => {
+        const zones = [
+            { members: ['Kitchen'] },
+            { members: ['Bedroom', 'Office'] },
+        ];
+
+        expect(
+            listeners.zoneMutationSatisfied(
+                {
+                    room: 'Office',
+                    anchorRoom: 'Bedroom',
+                    desiredJoined: true,
+                },
+                zones
+            )
+        ).to.equal(true);
+        expect(
+            listeners.zoneMutationSatisfied(
+                {
+                    room: 'Office',
+                    anchorRoom: 'Kitchen',
+                    desiredJoined: false,
+                },
+                zones
+            )
+        ).to.equal(true);
+        expect(
+            listeners.zoneMutationSatisfied(
+                {
+                    room: 'Kitchen',
+                    anchorRoom: 'Kitchen',
+                    desiredJoined: false,
+                },
+                zones
+            )
+        ).to.equal(true);
+    });
+
     it('clears intent banner when no active or recent intent exists', () => {
         const banner = listeners.intentBannerText({
             activeIntent: null,

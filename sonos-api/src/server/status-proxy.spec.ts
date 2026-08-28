@@ -63,6 +63,28 @@ async function run(): Promise<void> {
   }
 
   {
+    const timeouts: {[uri: string]: number} = {};
+    const proxy = new SonosStatusProxy({
+      requestTimeoutMs: 111,
+      actionRequestTimeoutMs: 222,
+      request: async options => {
+        timeouts[options.uri] = options.timeout;
+        return {
+          statusCode: 200,
+          body: {},
+          headers: {'content-type': 'application/json'},
+        };
+      },
+    });
+
+    await proxy.get('http://localhost:5005', 'Kitchen/state');
+    await proxy.get('http://localhost:5005', 'Kitchen/leave');
+
+    assert.equal(timeouts['http://localhost:5005/Kitchen/state'], 111);
+    assert.equal(timeouts['http://localhost:5005/Kitchen/leave'], 222);
+  }
+
+  {
     let now = 10_000;
     const proxy = new SonosStatusProxy({
       cacheTtlMs: 2_000,

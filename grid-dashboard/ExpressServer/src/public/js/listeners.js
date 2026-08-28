@@ -123,6 +123,102 @@ function displayedIntent(status) {
     return status.activeIntent || status.recentIntent || null;
 }
 
+function zoneMembersForRoom(zones, roomName) {
+    if (!Array.isArray(zones) || !roomName) {
+        return null;
+    }
+
+    var zone = zones.find(candidate =>
+        Array.isArray(candidate.members) &&
+        candidate.members.indexOf(roomName) >= 0
+    );
+    return zone ? zone.members : null;
+}
+
+function reconcileGroupAllIntent(intent, zones) {
+    if (
+        !intent ||
+        !intent.targetRoom ||
+        !Array.isArray(intent.roomNames)
+    ) {
+        return intent;
+    }
+
+    var members = zoneMembersForRoom(zones, intent.targetRoom);
+    if (!members) {
+        return intent;
+    }
+
+    var joinedRooms = intent.roomNames.filter(
+        roomName => members.indexOf(roomName) >= 0
+    );
+    var missingRooms = intent.roomNames.filter(
+        roomName => joinedRooms.indexOf(roomName) < 0
+    );
+    var observedComplete = missingRooms.length === 0;
+    var message = intent.message;
+
+    if (observedComplete) {
+        message =
+            'Joined all to ' +
+            intent.targetRoom +
+            ' (' +
+            joinedRooms.length +
+            '/' +
+            intent.roomNames.length +
+            ')';
+    } else if (intent.status === 'running') {
+        message =
+            'Joining all to ' +
+            intent.targetRoom +
+            ' (' +
+            joinedRooms.length +
+            '/' +
+            intent.roomNames.length +
+            ')';
+    }
+
+    return Object.assign({}, intent, {
+        joinedRooms: joinedRooms,
+        missingRooms: missingRooms,
+        observedComplete: observedComplete,
+        message: message,
+    });
+}
+
+function reconcileIntentStatus(status, zones) {
+    if (!status || !Array.isArray(zones)) {
+        return status || {};
+    }
+
+    return Object.assign({}, status, {
+        activeIntent: reconcileGroupAllIntent(status.activeIntent, zones),
+        recentIntent: reconcileGroupAllIntent(status.recentIntent, zones),
+    });
+}
+
+function zoneMutationSatisfied(mutation, zones) {
+    if (!mutation || !Array.isArray(zones)) {
+        return false;
+    }
+
+    var anchorMembers = zoneMembersForRoom(zones, mutation.anchorRoom);
+    var roomMembers = zoneMembersForRoom(zones, mutation.room);
+    if (!anchorMembers || !roomMembers) {
+        return false;
+    }
+
+    if (mutation.desiredJoined) {
+        return anchorMembers.indexOf(mutation.room) >= 0;
+    }
+
+    if (mutation.room === mutation.anchorRoom) {
+        return roomMembers.length === 1;
+    }
+
+    return anchorMembers.indexOf(mutation.room) < 0;
+}
+
 function intentBannerText(status) {
     var intent = displayedIntent(status);
     if (!intent || !intent.message) {
@@ -138,7 +234,10 @@ function intentHasError(status) {
         return false;
     }
 
-    return intent.status === 'failed' || intent.status === 'timed_out';
+    return (
+        !intent.observedComplete &&
+        (intent.status === 'failed' || intent.status === 'timed_out')
+    );
 }
 
 class BackgroundChanger {
@@ -222,11 +321,7 @@ class GenericOnDoublePress {
 class IntentUpdater {
     onMessage(e) {
         var status = e.Event.Status || {};
-        e.Globals.App.grid.updateIntent(status);
-        e.Globals.App.setIntentBanner(
-            intentBannerText(status),
-            intentHasError(status)
-        );
+        e.Globals.App.updateIntentStatus(status);
     }
 }
 
@@ -238,5 +333,7 @@ if (typeof module !== 'undefined' && module.exports) {
         intentBannerText: intentBannerText,
         intentHasError: intentHasError,
         parseSiriusMetadata: parseSiriusMetadata,
+        reconcileIntentStatus: reconcileIntentStatus,
+        zoneMutationSatisfied: zoneMutationSatisfied,
     };
 }
