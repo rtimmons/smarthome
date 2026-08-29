@@ -7,14 +7,14 @@ This record is the evidence log for `docs/plan-replace-sonos-node-api.md`. It co
 | Item | Value |
 | --- | --- |
 | Baseline Git revision | `36882c3` |
-| Candidate branch | `codex/docs-sonos-replacement-plan` |
+| Candidate branch | `codex/docs-sonos-replacement-plan` (merged to `master` as `598e76b`) |
 | Runtime candidate revision | `915730d0ccfb6e90b4ed842a21a6dc3f45985bab` (`Specify Sonos source compatibility across backends`). |
 | Validation evidence revision | This evidence update is documentation-only; runtime/package inputs remain at the candidate revision above. |
 | Home Assistant Core | 2026.8.3 |
 | Baseline Sonos API add-on | 1.0.0, node backend via `http://local-node-sonos-http-api:5005` |
 | Baseline Node Sonos HTTP API add-on | 1.0.2 |
-| Prepared Sonos API / Grid Dashboard source version | 1.1.1 / 1.1.1; not yet the validated deployed candidate |
-| Currently deployed Sonos API / Grid Dashboard | 1.1.1 / 1.1.1, deployed from the candidate worktree; backend remains `node` for rollback safety |
+| Prepared Sonos API / Grid Dashboard source version | 1.1.1 / 1.1.1 |
+| Currently deployed Sonos API / Grid Dashboard | 1.1.1 / 1.1.1, deployed from the merged candidate; Sonos API backend is explicitly `home_assistant` |
 | Deployed MongoDB metadata package | 0.0.1; metadata-only version activation explicitly approved on 2026-08-28 |
 | Home Assistant Supervisor | 2026.08.0, healthy and supported |
 | Baseline capture | 2026-08-28, before deployment or speaker mutation |
@@ -38,13 +38,13 @@ The old diagnostic pause/play restoration is useful history but does not satisfy
 
 | Field | Required restored observation | Final immutable evidence |
 | --- | --- | --- |
-| Group count and coordinator | Exactly one group, Bathroom coordinator | Pass at 2026-08-29T04:40Z via direct node, Sonos API, and Home Assistant `group_members` |
-| Member set | Bathroom, Closet, Bedroom, Move, Kitchen, Living Room, Guest Bathroom, Office; non-coordinator order ignored | Pass at 2026-08-29T04:40Z via direct node and Sonos API |
-| Volumes | All eight rooms exactly 20 | Pass at 2026-08-29T04:40Z via direct node and Home Assistant state |
-| Mute | All eight rooms false | Pass at 2026-08-29T04:40Z via direct node and Home Assistant state |
-| Playback | Bathroom-coordinated group playing; no test-caused paused/stopped/buffering room and no pending operation | Pass at 2026-08-29T04:40Z via direct node and Sonos API |
-| Station | HA source `735 - Steve Aoki's Remix Radio`; live channel `CH 735 - Steve Aoki's Remix Radio` | Pass at 2026-08-29T04:40Z via direct node, Sonos API, and Home Assistant state |
-| Agreement surfaces | HA `group_members`, direct node `/zones` while retained, Sonos API and Grid zones/state, and Sonos app agree | API surfaces pass at 04:40Z; Sonos-app visual confirmation remains pending because no local Sonos app is available |
+| Group count and coordinator | Exactly one group, Bathroom coordinator | Pass at 2026-08-29T04:59Z via Home Assistant `group_members`, Sonos API, and Grid zones |
+| Member set | Bathroom, Closet, Bedroom, Move, Kitchen, Living Room, Guest Bathroom, Office; non-coordinator order ignored | Pass at 2026-08-29T04:59Z via Home Assistant and Sonos API |
+| Volumes | All eight rooms exactly 20 | Pass at 2026-08-29T04:59Z via Home Assistant state and Sonos API |
+| Mute | All eight rooms false | Pass at 2026-08-29T04:59Z via Home Assistant state and Sonos API |
+| Playback | Bathroom-coordinated group playing; no test-caused paused/stopped/buffering room and no pending operation | Pass at 2026-08-29T04:59Z via Home Assistant state and Sonos API |
+| Station | HA source `735 - Steve Aoki's Remix Radio`; live channel `CH 735 - Steve Aoki's Remix Radio` | Pass at 2026-08-29T04:59Z via Home Assistant state, Sonos API, and Grid state |
+| Agreement surfaces | HA `group_members`, Sonos API and Grid zones/state, and Sonos app agree | API surfaces pass at 04:59Z; Sonos-app visual confirmation remains pending because no local Sonos app is available |
 
 Changing track title, artist, or album on the live station is expected and is not a restoration failure. Changing the station is a failure.
 
@@ -222,16 +222,36 @@ An unchecked plan criterion remains a blocker. A green root command alone does n
 
 ## Live rollout evidence
 
-The dirty 1.1.0 diagnostic build is deployed in `shadow` mode. Node remains the only command backend; Home Assistant is read-only and no Home Assistant-backed speaker write or topology mutation has occurred. This is not the immutable candidate and no live observation clock is running.
+The merged 1.1.1 candidate is deployed and the live Sonos API is explicitly configured in `home_assistant` mode. The node add-on remains installed for rollback, but it was not used for the final restoration writes. The required long observation windows are still pending, so this evidence does not claim migration completion.
 
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | Shadow comparison | Diagnostic; restart required | Shadow began at 2026-08-29T02:59:39Z. Health is ready with node and HA both ready, all eight rooms present, and no unavailable rooms or missing favorite/preset sources. The first live comparison exposed the characterized structured live-radio metadata envelope and that node reports paused live radio as `STOPPED` while HA reports `paused`. Semantic metadata normalization and media-aware playback projection now have regressions, but this dirty-build window is invalid; redeploying an immutable candidate starts a new 24-hour clock. |
 | Configuration rollback rehearsal | Pending | Must use the exact Supervisor options POST and separate restart in the plan, prove a new node-backend startup marker, parse ready/node health, verify node/API/Grid/state/action parity, satisfy full restoration, and finish within 10 minutes. |
 | Home Assistant pilot matrix | Pending |  |
-| Starting-state restoration | Diagnostic only; final pending | The dirty 1.1.0 pause/play check returned HA and node to the original eight-room group, volume 20, unmuted, playing the Steve Aoki Remix Radio station. The immutable candidate must repeat the complete table above across every verification surface. |
+| Starting-state restoration | Pass (final-candidate checkpoint) | The 1.1.1 HA-backed deployment restored the original eight-room group, volume 20, unmuted, playing the Steve Aoki Remix Radio station; see the complete table above and the HA-backed evidence below. |
 | Whole-house observation | Pending |  |
 | Runtime retirement | Pending |  |
+
+### HA-backed deployment and restoration evidence (2026-08-29)
+
+Supervisor reports `local_sonos_api` version 1.1.1, `state: started`, and
+`options.backend_mode: home_assistant`. Its health endpoint reports
+`backendMode: home_assistant`, live freshness, and no missing rooms, favorites,
+or preset sources. The user-facing
+`http://homeassistant.local:3000/sonos/zones` and
+`/sonos/Bathroom/state` responses carry `X-Sonos-Response-Source:
+home_assistant`.
+
+All eight rooms were grouped, set to volume 20 and unmuted, selected to the
+Home Assistant source `735 - Steve Aoki's Remix Radio`, and started through
+Home Assistant `media_player` services. A same-value
+`GET /sonos/Bathroom/volume/20` through the dashboard returned
+`{"status":"success"}`; the subsequent Home Assistant state remained playing
+at volume 0.2 with the same eight-member group and station. This is the
+low-risk control-path proof that dashboard control is using the HA-backed
+adapter. Sonos-app visual confirmation, the 24/24/48/24-hour windows, and
+explicit node-uninstall approval remain pending.
 
 ### Configuration rollback rehearsal evidence
 
