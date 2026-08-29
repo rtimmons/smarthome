@@ -108,6 +108,26 @@ The Grid Dashboard currently calls the following routes through its own server. 
 
 The compatibility layer may introduce a new compact state endpoint, but the legacy routes cannot be removed until the deployed dashboard no longer calls them and the observation logs show no other callers.
 
+### Source-family compatibility (frozen)
+
+Home Assistant's `source`, `source_list`, and `media_content_*` fields are not a
+provider-neutral replacement for node API inputs. SiriusXM/radio favorites,
+Apple Music, TV/SPDIF, line-in, and other favorites each have distinct action
+and URI semantics. The detailed matrix is maintained in
+[Sonos source compatibility](sonos/source-compatibility.md) and is part of the
+acceptance contract:
+
+- Normalize state transport, metadata, artwork, volume, and mute into the
+  legacy response, while retaining coordinator-owned metadata and
+  requested-member volume/mute.
+- Match favorites by exact observed title; use physical `TV`/`Line-in` source
+  names only when advertised by the target model; never persist raw RINCON or
+  `x-sonos-htastream` values in repository presets.
+- Treat Apple Music as `play_media` (share link or stable favorite item ID),
+  not as an assumed `source_list` entry or `select_source` provider.
+- Preserve URI families and source-specific metadata, but ignore dynamic
+  stream UUIDs and independent elapsed clocks in parity comparisons.
+
 Every root route classified as deprecated must return `410` with `code: "deprecated_route"` through both the Grid Dashboard and Sonos API boundaries and make zero node or Home Assistant writes in HA mode. In node/shadow rollback modes the same Grid routes remain exact pass-throughs so current behavior is recoverable until retirement.
 
 ### State projection rules
@@ -260,6 +280,8 @@ Actions:
 - [x] Freeze table-driven contracts for both browser-facing `/sonos-intents/*` routes and internal Sonos API `/intents/sonos/*` routes, plus the complete `/zones`, room-state, and artwork responses.
 - [ ] Characterize node `groupVolume` for relative and absolute changes with unequal member volumes, including clamping at 0 and 100. This result becomes the parity specification; do not guess the algorithm.
 - [ ] Verify every configured favorite name in `grid-dashboard/ExpressServer/src/public/js/config.js` appears in the live Home Assistant `source_list`.
+- [x] Freeze the source-family matrix for SiriusXM/radio, Apple Music, TV/SPDIF, line-in, and other favorites, including source-specific input, URI, metadata, and legacy-state normalization rules in [Sonos source compatibility](sonos/source-compatibility.md).
+- [x] Add source-family projection and exact source-selection regressions for radio, Apple Music service URIs, TV/SPDIF, line-in, and grouped coordinator/member ownership.
 - [ ] Verify the eight-room entity map and capture representative playing, paused, stopped, unavailable, single-room, and multi-room HA state fixtures.
 - [x] Add frozen backend interfaces, room mapping, normalized error shape, and fixtures in files reserved for foundation ownership.
 - [x] Add the backend-mode contract: `node`, `shadow`, and `home_assistant`. Shadow serves and writes through node while comparing HA reads; it never duplicates a write.
@@ -294,6 +316,7 @@ Foundation acceptance criteria:
 - [x] `just test sonos-api` reports and executes every discovered suite, including the new route-contract suite.
 - [ ] All operational limits and rollout budgets are numeric, named, and represented by boundary tests or a named live measurement.
 - [ ] The checked-in characterization covers the room map, complete route classifications, presets, favorites, group-volume algorithm, operation/unknown schemas, representative fixtures, and every approved parity exception.
+- [x] The checked-in characterization explicitly records that Apple Music node-only queue/search endpoints are not interchangeable with Home Assistant `select_source`; retained compatibility routes use exact favorite titles/IDs or physical `TV`/`Line-in` names only.
 - [ ] `just test sonos-api` passes.
 - [ ] The foundation commit hash is supplied to every parallel agent.
 
@@ -418,6 +441,7 @@ Deliverables:
 - [ ] Define rollback behavior for partial preset failure. At minimum, surface the failed step and current observed topology; do not claim atomicity.
 - [ ] Implement the used root convenience policies `/up` and `/down`; enforce the frozen mode-dependent contract for `/tv`, `/07`, `/quiet`, `/pause`, and `/play` (`410`/zero writes in HA mode, exact pass-through in node/shadow until retirement).
 - [ ] Validate repository preset/favorite structure at startup in every mode. Treat live Home Assistant `source_list` mismatches as diagnostics in shadow mode and readiness failures in Home Assistant mode; node rollback mode must not become unhealthy merely because HA source data is absent.
+- [x] Document and test that TV/SPDIF presets select exact `TV`, never a raw `x-sonos-htastream` URI; physical `Line-in` is a separate source and is not inferred from a TV preset.
 
 Suggested files:
 

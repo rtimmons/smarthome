@@ -80,6 +80,130 @@ const run = (): void => {
     assert.equal(projected.elapsedTime, expected.elapsedTime, expected.label);
   }
 
+  const sourceProjectionCases = [
+    {
+      label: 'SiriusXM radio keeps channel identity separate from song metadata',
+      attributes: {
+        media_content_type: 'music',
+        media_content_id: 'x-sonosapi-hls:r%3a735?sid=37&flags=8480&sn=11',
+        media_channel: "CH 735 - Steve Aoki's Remix Radio",
+        media_title: 'Current song',
+        media_artist: 'Current artist',
+      },
+      expected: {
+        type: 'radio',
+        uri: 'x-sonosapi-hls:r%3a735?sid=37&flags=8480&sn=11',
+        stationName: "CH 735 - Steve Aoki's Remix Radio",
+        title: 'Current song',
+        artist: 'Current artist',
+      },
+    },
+    {
+      label: 'Apple Music preserves service URI and on-demand metadata',
+      attributes: {
+        media_content_type: 'music',
+        media_content_id: 'x-sonos-http:12345.mp4?sid=204&flags=8224&sn=4',
+        media_title: 'Apple track',
+        media_artist: 'Apple artist',
+        media_album_name: 'Apple album',
+      },
+      expected: {
+        type: 'track',
+        uri: 'x-sonos-http:12345.mp4?sid=204&flags=8224&sn=4',
+        stationName: '',
+        title: 'Apple track',
+        artist: 'Apple artist',
+      },
+    },
+    {
+      label: 'Apple Music playlist preserves container URI as a track-family value',
+      attributes: {
+        media_content_type: 'playlist',
+        media_content_id: 'x-rincon-cpcontainer:0004206cplaylist-123',
+        media_title: 'Apple playlist',
+        media_artist: '',
+      },
+      expected: {
+        type: 'track',
+        uri: 'x-rincon-cpcontainer:0004206cplaylist-123',
+        stationName: '',
+        title: 'Apple playlist',
+        artist: '',
+      },
+    },
+    {
+      label: 'TV input preserves dynamic stream URI without treating it as a favorite',
+      attributes: {
+        source: 'TV',
+        media_content_type: 'music',
+        media_content_id: 'x-sonos-htastream:RINCON123:spdif',
+        media_title: 'TV',
+      },
+      expected: {
+        type: 'line_in',
+        uri: 'x-sonos-htastream:RINCON123:spdif',
+        stationName: '',
+        title: 'TV',
+        artist: '',
+      },
+    },
+    {
+      label: 'line-in input preserves stream identity and physical-input metadata',
+      attributes: {
+        source: 'Line-in',
+        media_content_type: 'music',
+        media_content_id: 'x-rincon-stream:RINCON456',
+        media_title: 'Line-in',
+      },
+      expected: {
+        type: 'line_in',
+        uri: 'x-rincon-stream:RINCON456',
+        stationName: '',
+        title: 'Line-in',
+        artist: '',
+      },
+    },
+  ] as const;
+  for (const testCase of sourceProjectionCases) {
+    const state = haState('Kitchen', {attributes: testCase.attributes});
+    const projected = projectLegacySonosState(state, state, 'Kitchen', {
+      now: () => projectionNow,
+    });
+    assert.equal(projected.currentTrack.type, testCase.expected.type, testCase.label);
+    assert.equal(projected.currentTrack.uri, testCase.expected.uri, testCase.label);
+    assert.equal(projected.currentTrack.trackUri, testCase.expected.uri, testCase.label);
+    assert.equal(projected.currentTrack.stationName, testCase.expected.stationName, testCase.label);
+    assert.equal(projected.currentTrack.title, testCase.expected.title, testCase.label);
+    assert.equal(projected.currentTrack.artist, testCase.expected.artist, testCase.label);
+  }
+
+  {
+    const coordinator = haState('Bedroom', {
+      state: 'playing',
+      members: ['Bedroom', 'Kitchen'],
+      attributes: {
+        source: 'TV',
+        media_content_id: 'x-sonos-htastream:RINCON-COORDINATOR:spdif',
+        media_title: 'TV',
+      },
+    });
+    const follower = haState('Kitchen', {
+      state: 'idle',
+      members: ['Bedroom', 'Kitchen'],
+      attributes: {volume_level: 0.42, is_volume_muted: true},
+    });
+    const projected = projectRoomState(haSnapshot([coordinator, follower]), 'Kitchen', {
+      now: () => projectionNow,
+    });
+    assert.equal(projected.currentTrack.title, 'TV',
+      'grouped physical-input metadata belongs to the coordinator');
+    assert.equal(projected.currentTrack.uri, 'x-sonos-htastream:RINCON-COORDINATOR:spdif');
+    assert.equal(projected.volume, 42,
+      'grouped physical-input volume remains owned by the requested member');
+    assert.equal(projected.mute, true,
+      'grouped physical-input mute remains owned by the requested member');
+  }
+
   const missingMetadataState = haState('Kitchen', {
     state: 'idle',
     attributes: {

@@ -53,6 +53,35 @@ Changing track title, artist, or album on the live station is expected and is no
 - The active private preset inventory contains the three repository TV presets plus an `example` preset containing out-of-allowlist `TV Room`. The candidate must reject/deprecate `example`; it must not migrate that target.
 - Active node preset data is under add-on `/data`, so a verified Supervisor add-on-state backup is required before node uninstall.
 
+### Source-family research (2026-08-29)
+
+The live inventory and source review confirm that Home Assistant source values
+are not interchangeable with node API inputs:
+
+- The restored SiriusXM station reports `media_content_type: music`, an
+  `x-sonosapi-hls:` media ID, the current song in `media_title`/`media_artist`,
+  the station in `media_channel`, and no provider-valued `source`. The node
+  projection classifies the same URI as `radio` and keeps the station in
+  `stationName`.
+- Apple Music is not present as a physical `source_list` entry. Home Assistant
+  uses `media_player.play_media` (share link or favorite item ID), while the
+  node API's `/applemusic/{now,next,queue}` actions construct service-specific
+  track/container URIs and queue behavior. No Apple Music-specific route is
+  silently mapped to `select_source` in the candidate.
+- TV/SPDIF and line-in are physical, model-dependent inputs. Home Assistant
+  accepts exact `TV` or `Line-in` source names and generates dynamic stream
+  URIs; legacy presets/actions persisted raw UUID-bearing
+  `x-sonos-htastream`/`x-rincon-stream` values. Candidate presets contain only
+  `TV`, and dynamic stream UUIDs are not compared literally.
+- Metadata/artwork/transport are coordinator-owned in grouped state; volume
+  and mute remain requested-member-owned for every source family.
+
+The normative matrix is [Sonos source compatibility](source-compatibility.md).
+Automated source projection and exact source-selection regressions were added
+in the candidate tree; they must be rerun at the final immutable commit before
+any observation clock starts. Live Apple Music, TV, and line-in checks remain
+pilot-only and must restore the captured station/group/volume state.
+
 ### Retained route inventory, callers, and disposition
 
 This is the frozen two-layer inventory. Except where a row says otherwise, the Grid Dashboard route is forwarded to the same method/path on Sonos API. JSON responses use `application/json`; validation, availability, and backend failures use the normalized `{error, code, retryable?}` shape with the row's `4xx`, `502`, or `503` status, and Grid preserves that upstream status/body/content type. Read responses carry `X-Sonos-Response-Source`, `X-Sonos-Response-Stale`, `X-Sonos-Observed-At`, and `X-Sonos-Age-Ms`. Artwork additionally carries `X-Content-Type-Options: nosniff`. Every Home Assistant-backed write requires a `live` snapshot; stale or unknown writes return normalized `503` with zero Home Assistant service calls, including at disconnect age zero.
@@ -171,6 +200,7 @@ Only a command run from the clean, committed runtime candidate revision can clos
 | Two-layer route success/error contracts and intent aliases | HA success/failure/policy matrices and Grid contract/alias matrices named in the route inventory above | Automated complete for retained route families represented in the inventory | Final clean-SHA rerun; external-caller observation and five deprecated-route approvals pending |
 | Node/shadow/HA read and write backend isolation; comparison failures preserve node responses | Four backend-isolation matrices named in the route inventory; `shadow mismatch logging waits for the full grace interval and resets on convergence`; `shadow observer comparison failure cannot alter the real node response` | Automated complete | Final clean-SHA rerun and correlated live node-write/zero-HA-write evidence pending |
 | Shadow semantic comparison excludes ordering, elapsed time for every medium, and artwork URL while retaining topology/playback/volume/metadata signal | `sonos-shadow-compare.spec.ts` and shadow grace tests in `sonos-service.spec.ts` | Automated complete | Final clean-SHA rerun and new uninterrupted shadow evidence pending |
+| Source-family inputs and projection (SiriusXM/radio, Apple Music track/container URIs, TV/SPDIF, line-in, exact favorites, coordinator/member ownership) | `home-assistant-sonos-state.spec.ts` source projection matrix and `home-assistant-sonos-actions.spec.ts` exact source-selection matrix | Added; final candidate rerun pending | Live Apple Music, TV, and line-in observations are required in the HA pilot when available; restore the frozen station/group state |
 | Dashboard authoritative membership, pending lifecycle, stale/unknown/fresh recovery, metadata/art clearing, request generations, and ingress URLs | `app.spec.ts`, `gridview.spec.ts` (`recovers stale then unknown presentation when fresh memberships arrive`), `listeners.spec.ts`, `music-controller.spec.ts`, and `sonos-operation-state.spec.ts` | Automated complete | Final clean-SHA rerun and actual-panel pilot pending |
 | Safari 12 directly served first-party syntax | `checks every directly served first-party Grid Dashboard script` in `safari12-compat.spec.ts` | Automated complete | Final clean-SHA rerun and actual iOS 12 panel proof pending |
 | Add-on options/default mode, launcher/package/container, repository identity transport, and backup manifest | `config.spec.ts`, relevant Talos add-on/launcher/backup/worktree tests, and pre-commit root/container run | Automated complete only for the current pre-commit tree | Final immutable root/container/transport reruns, package digests, and later retirement/clean-install evidence pending |

@@ -103,6 +103,36 @@ const emptyTrack = () => ({
   uri: '',
 });
 
+/**
+ * Keep the node API's legacy source-family discriminator. Home Assistant
+ * reports radio, TV, line-in, and Apple Music as media_content_type "music";
+ * the URI is the stable discriminator available to the compatibility layer.
+ */
+const legacyTrackType = (uri: string, source: string): string => {
+  if (!uri && !source) {
+    return '';
+  }
+  if (
+    uri.startsWith('x-sonosapi-stream:') ||
+    uri.startsWith('x-sonosapi-radio:') ||
+    uri.startsWith('pndrradio:') ||
+    uri.startsWith('x-sonosapi-hls:') ||
+    uri.startsWith('x-sonosprog-http:') ||
+    uri.startsWith('x-rincon-mp3radio:')
+  ) {
+    return 'radio';
+  }
+  if (
+    uri.startsWith('x-rincon-stream:') ||
+    uri.startsWith('x-sonos-htastream:') ||
+    source === 'Line-in' ||
+    source === 'TV'
+  ) {
+    return 'line_in';
+  }
+  return 'track';
+};
+
 export const projectLegacySonosState = (
   memberState: HomeAssistantEntityState,
   coordinatorState: HomeAssistantEntityState = memberState,
@@ -122,6 +152,7 @@ export const projectLegacySonosState = (
     );
   const uri = stringAttribute(coordinatorState, 'media_content_id');
   const stationName = stringAttribute(coordinatorState, 'media_channel');
+  const source = stringAttribute(coordinatorState, 'source');
   const artist = stringAttribute(coordinatorState, 'media_artist') || stationName;
 
   return {
@@ -137,7 +168,7 @@ export const projectLegacySonosState = (
       duration: numberAttribute(coordinatorState, 'media_duration'),
       uri,
       trackUri: uri,
-      type: stringAttribute(coordinatorState, 'media_content_type'),
+      type: legacyTrackType(uri, source),
       stationName,
     },
     nextTrack: emptyTrack(),

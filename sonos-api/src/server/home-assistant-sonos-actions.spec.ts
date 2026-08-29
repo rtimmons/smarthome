@@ -83,6 +83,42 @@ const run = async (): Promise<void> => {
 
   {
     const calls: Call[] = [];
+    const sources = [
+      '735 - Steve Aoki\'s Remix Radio',
+      'Apple Music playlist',
+      'TV',
+      'Line-in',
+    ];
+    const store = new FakeStore([haState('Kitchen', {
+      attributes: {source_list: sources},
+    })]);
+    const actions = new HomeAssistantSonosActions({
+      stateStore: store,
+      client: {
+        async callService(_domain, service, data) {
+          calls.push({service, data});
+          return {};
+        },
+      },
+    });
+    for (const source of sources) {
+      await actions.favorite('Kitchen', source);
+    }
+    assert.deepEqual(calls, sources.map(source => ({
+      service: 'select_source',
+      data: {entity_id: 'media_player.kitchen', source},
+    })),
+    'radio, Apple Music favorite, TV, and Line-in all use exact observed source names');
+    await assert.rejects(
+      actions.favorite('Kitchen', 'apple music playlist'),
+      /not available/
+    );
+    assert.equal(calls.length, sources.length,
+      'case-changed source names are rejected before any Home Assistant call');
+  }
+
+  {
+    const calls: Call[] = [];
     const store = new FakeStore([
       haState('Bedroom', {
         attributes: {source_list: ['Synthetic Radio']},

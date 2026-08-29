@@ -31,6 +31,11 @@ Sonos speakers
 
 The browser never receives a Home Assistant bearer token or signed artwork URL. `sonos-api` loads an initial allowlisted entity snapshot, follows `state_changed` events, canonicalizes coordinator-first groups, and proxies only approved raster artwork. The Grid server forwards the compatibility response and freshness headers.
 
+Source names are not interchangeable across backends. SiriusXM/radio, Apple
+Music, TV/SPDIF, line-in, and other favorites have different Home Assistant
+inputs and metadata/URI shapes; the compatibility rules and test obligations
+are frozen in [the source compatibility contract](source-compatibility.md).
+
 Topology writes are serialized and complete only after authoritative Home Assistant state matches the request or a bounded deadline is reached. Playback and volume calls remain outside that topology queue. Unknown topology is a `503`, never an invented empty or singleton group.
 
 ## Room and policy ownership
