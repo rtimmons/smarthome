@@ -86,6 +86,27 @@ describe('MusicController Sonos state', () => {
         ]);
     });
 
+    it('keeps a live zones response usable while naming unavailable portable rooms', () => {
+        const fixture = controllerFixture();
+        const headers: {[name: string]: string} = {
+            'X-Sonos-Age-Ms': '0',
+            'X-Sonos-Response-Source': 'home_assistant',
+            'X-Sonos-Response-Stale': 'false',
+            'X-Sonos-Unavailable-Rooms': 'Move',
+        };
+
+        expect(fixture.controller.responseMeta({
+            getResponseHeader: (name: string) => headers[name] || null,
+        })).to.deep.equal({
+            source: 'home_assistant',
+            unknown: false,
+            stale: false,
+            observedAt: '',
+            ageMs: 0,
+            unavailableRooms: ['Move'],
+        });
+    });
+
     it('publishes unknown media and topology after request failures', () => {
         const fixture = controllerFixture();
 

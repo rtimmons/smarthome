@@ -20,6 +20,25 @@ const App = loadApp();
 const {SonosOperationGate}: any = require('./sonos-operation-state');
 
 describe('App Sonos topology pending lifecycle', () => {
+    it('keeps reachable zones live while warning about an unavailable portable room', () => {
+        const app: any = Object.create(App.prototype);
+        app.room = 'Kitchen';
+        app.rooms = ['Kitchen', 'Move'];
+        app.pendingZoneMutations = {};
+        app.grid = {
+            updateZones: () => undefined,
+            setZonesStale: () => undefined,
+        };
+        app.setZonesUnknown = () => undefined;
+        app._reconcileZoneMutations = () => undefined;
+        app._refreshIntentPresentation = () => undefined;
+
+        app.updateZones([{members: ['Kitchen']}], {unavailableRooms: ['Move']});
+
+        expect(app.zoneStateFreshness).to.equal('live');
+        expect(app.topologyBanner).to.equal('Sonos unavailable: Move');
+    });
+
     it('adopts a last-confirmed stale zones payload on a fresh page', () => {
         const zoneUpdates: unknown[] = [];
         const app: any = Object.create(App.prototype);

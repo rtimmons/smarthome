@@ -73,6 +73,23 @@ describe('listeners banner formatting', () => {
         expect(updates).to.deep.equal([['Kitchen']]);
     });
 
+    it('passes an unavailable portable-room marker through with live zones', () => {
+        const updater = new listeners.ZoneUpdater();
+        let observedMeta: any = null;
+        updater.onMessage({
+            Event: {
+                Zones: [{members: [{roomName: 'Kitchen'}]}],
+                Meta: {unavailableRooms: ['Move']},
+                RequestSequence: 1,
+            },
+            Globals: {App: {
+                updateZones: (_zones: unknown, meta: unknown) => { observedMeta = meta; },
+            }},
+        });
+
+        expect(observedMeta).to.deep.equal({unavailableRooms: ['Move']});
+    });
+
     it('keeps stale artwork but clears it when media state becomes unknown', () => {
         const changer = new listeners.BackgroundChanger();
         const calls: Array<[string, unknown]> = [];
