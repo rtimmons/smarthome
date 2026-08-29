@@ -8,13 +8,13 @@ This record is the evidence log for `docs/plan-replace-sonos-node-api.md`. It co
 | --- | --- |
 | Baseline Git revision | `36882c3` |
 | Candidate branch | `codex/docs-sonos-replacement-plan` |
-| Runtime candidate revision | Pending final immutable 1.1.1 runtime/test commit. The currently deployed 1.1.0 packages were built from this branch's dirty worktree, so their tests and shadow window are diagnostic or superseded and cannot satisfy a candidate gate. |
-| Validation evidence revision | Pending later evidence-only documentation commit. It may record tests and live observations for the runtime candidate revision, but no runtime, package input, manifest, lockfile, or test may change between the two revisions. |
+| Runtime candidate revision | `915730d0ccfb6e90b4ed842a21a6dc3f45985bab` (`Specify Sonos source compatibility across backends`). |
+| Validation evidence revision | This evidence update is documentation-only; runtime/package inputs remain at the candidate revision above. |
 | Home Assistant Core | 2026.8.3 |
 | Baseline Sonos API add-on | 1.0.0, node backend via `http://local-node-sonos-http-api:5005` |
 | Baseline Node Sonos HTTP API add-on | 1.0.2 |
 | Prepared Sonos API / Grid Dashboard source version | 1.1.1 / 1.1.1; not yet the validated deployed candidate |
-| Currently deployed Sonos API / Grid Dashboard | 1.1.0 / 1.1.0 dirty-worktree diagnostic build |
+| Currently deployed Sonos API / Grid Dashboard | 1.1.1 / 1.1.1, deployed from the candidate worktree; backend remains `node` for rollback safety |
 | Deployed MongoDB metadata package | 0.0.1; metadata-only version activation explicitly approved on 2026-08-28 |
 | Home Assistant Supervisor | 2026.08.0, healthy and supported |
 | Baseline capture | 2026-08-28, before deployment or speaker mutation |
@@ -30,6 +30,7 @@ This record is the evidence log for `docs/plan-replace-sonos-node-api.md`. It co
 - Node returned Bathroom as coordinator but did not place it first in the member array, confirming that non-coordinator/member ordering is not a compatibility invariant.
 - The node and HA representations differ materially for live-radio title, album, and elapsed time; candidate comparison must use the frozen, documented projection rather than treating these as small drift.
 - All active Dashboard favorites were present in every room's Home Assistant `source_list`.
+- Every room also advertised the physical `Line-in` and `TV` inputs; no `Apple Music` provider source name was present.
 
 ### Full restoration acceptance
 
@@ -37,13 +38,13 @@ The old diagnostic pause/play restoration is useful history but does not satisfy
 
 | Field | Required restored observation | Final immutable evidence |
 | --- | --- | --- |
-| Group count and coordinator | Exactly one group, Bathroom coordinator | Pending |
-| Member set | Bathroom, Closet, Bedroom, Move, Kitchen, Living Room, Guest Bathroom, Office; non-coordinator order ignored | Pending |
-| Volumes | All eight rooms exactly 20 | Pending |
-| Mute | All eight rooms false | Pending |
-| Playback | Bathroom-coordinated group playing; no test-caused paused/stopped/buffering room and no pending operation | Pending |
-| Station | HA source `735 - Steve Aoki's Remix Radio`; live channel `CH 735 - Steve Aoki's Remix Radio` | Pending |
-| Agreement surfaces | HA `group_members`, direct node `/zones` while retained, Sonos API and Grid zones/state, and Sonos app agree | Pending |
+| Group count and coordinator | Exactly one group, Bathroom coordinator | Pass at 2026-08-29T04:40Z via direct node, Sonos API, and Home Assistant `group_members` |
+| Member set | Bathroom, Closet, Bedroom, Move, Kitchen, Living Room, Guest Bathroom, Office; non-coordinator order ignored | Pass at 2026-08-29T04:40Z via direct node and Sonos API |
+| Volumes | All eight rooms exactly 20 | Pass at 2026-08-29T04:40Z via direct node and Home Assistant state |
+| Mute | All eight rooms false | Pass at 2026-08-29T04:40Z via direct node and Home Assistant state |
+| Playback | Bathroom-coordinated group playing; no test-caused paused/stopped/buffering room and no pending operation | Pass at 2026-08-29T04:40Z via direct node and Sonos API |
+| Station | HA source `735 - Steve Aoki's Remix Radio`; live channel `CH 735 - Steve Aoki's Remix Radio` | Pass at 2026-08-29T04:40Z via direct node, Sonos API, and Home Assistant state |
+| Agreement surfaces | HA `group_members`, direct node `/zones` while retained, Sonos API and Grid zones/state, and Sonos app agree | API surfaces pass at 04:40Z; Sonos-app visual confirmation remains pending because no local Sonos app is available |
 
 Changing track title, artist, or album on the live station is expected and is not a restoration failure. Changing the station is a failure.
 
@@ -169,16 +170,16 @@ Only a command run from the clean, committed runtime candidate revision can clos
 | Talos fast suite before implementation | Pass | 97 passed, 11 deselected. |
 | Initial root `just test` | Environment stop | The clean worktree initially lacked JavaScript dependencies; `vitest` was not installed. Dependencies were then installed with the pinned lockfiles. |
 | Clean `36882c3` baseline reproduction | Characterized pre-existing failure | A detached worktree was bootstrapped with `just setup`, then generated HA artifacts before rerunning root `just test`. Talos passed 97 tests (11 deselected), Grid Dashboard passed 36 tests plus TypeScript, and node dependency validation passed. The root command then stopped on the pre-existing Ruff formatting drift in `printer/docs/testing.md`; the candidate contains only Ruff's mechanical rewrite and its later root run passes. A separate baseline `just test sonos-api` passed the three enumerated legacy suites, TypeScript build, and container build. |
-| Final candidate `just test sonos-api` | Pending | Must run from the clean committed immutable SHA and record discovered suites, counts, TypeScript result, and container build. |
-| Final candidate `just test grid-dashboard` | Pending | Must run from the runtime candidate revision and record test counts, type-check result, and container build. |
-| Final candidate root `just test` | Pending | Must run from the runtime candidate revision and record every add-on test/build result. No earlier count may be copied forward. |
+| Final candidate `just test sonos-api` | Pass | `just test sonos-api` at `915730d`: discovery runner, all Sonos suites, TypeScript build, and container build passed. |
+| Final candidate `just test grid-dashboard` | Pass | Included in root `just test` at `915730d`: 14 files / 76 tests and TypeScript check passed. |
+| Final candidate root `just test` | Pass | `just test` at `915730d`: Talos 116 passed (11 deselected), Grid 76 passed, Printer 198 passed (1 warning), Snapshot 7 passed, Sonos suites/build/container passed, TinyURL 16 passed/build, node validation, and all seven container builds passed. |
 | Final package provenance | Pending | Record exact candidate SHA, source versions, installed versions, and SHA-256 digests for the uploaded Sonos API, Grid, and retained node packages. |
 | Backup identity and add-on builder tests | Superseded; rerun pending | A pre-commit run passed 35 tests after adding repository-identity enforcement. Rerun and record exact counts at the final candidate SHA. |
 | Repository unit/integration/root/container gate | Superseded; rerun pending | A pre-commit root `just test` passed Talos, Grid Dashboard, Sonos, Printer, Snapshot, TinyURL, node validation, and all seven package/container builds. Exact counts varied as acceptance fixes landed; only the final clean immutable run will be authoritative. |
 | Separate-worktree SSH transport | Superseded; rerun pending | Pre-commit focused tests passed for common-worktree identity resolution and `IdentitiesOnly=yes`. Final candidate evidence is pending. |
 | Shadow persistence/write isolation | Superseded; rerun pending | Pre-commit fake-clock and route tests covered the 5-second grace and one-node/zero-HA shadow writes. Final candidate evidence is pending. |
-| Node-mode deployment | Diagnostic only | Root `just deploy` completed for all seven add-ons plus HA configuration and activated 1.1.0. The deployed package was not built from an immutable commit and must be replaced. |
-| Node-mode post-deploy parity | Diagnostic only | The dirty 1.1.0 Dashboard-to-Sonos chain showed the restored eight-room state. The immutable 1.1.1 node-mode baseline and full restoration proof remain pending. |
+| Node-mode deployment | Pass (candidate deployment) | `just deploy` completed all seven add-ons on 2026-08-29; Supervisor metadata refresh and app inspection report Sonos API/Grid 1.1.1 with `update_available:false`. |
+| Node-mode post-deploy parity | Pass (checkpoint; observation gates pending) | At 04:40Z direct node and deployed Sonos API matched on Bathroom state: `radio`, Steve Aoki channel, `PLAYING`, same HLS URI, volume 20, mute false; all eight members were restored. |
 | MongoDB metadata activation | Pass | With explicit approval, MongoDB was versioned as 0.0.1, deployed, reloaded, and restarted. MongoDB, Printer, and TinyURL returned healthy before backup. The Supervisor app-info response still omits the `backup` field, so the backup preflight verifies the exact deployed `backup: cold` manifest when that API field is absent. |
 | Supervisor add-on-state backup | Pass | Backup `1f8546aa` was created at 2026-08-29T02:52:54Z and downloaded to the ignored, mode-0700 validation directory. The compressed 1,383,516,160-byte archive has SHA-256 `a97b1117e03ab41487faabb6e8da959b24634d1cd73f6aff76457efd78e3a94a`, contains all seven local add-ons plus `share`, excludes Core, and passed nested node-state checks for `presets.json`, preset contents, and `settings.json`. The failed uncompressed attempt `f759d7a4` was removed before the successful run. |
 
@@ -200,7 +201,7 @@ Only a command run from the clean, committed runtime candidate revision can clos
 | Two-layer route success/error contracts and intent aliases | HA success/failure/policy matrices and Grid contract/alias matrices named in the route inventory above | Automated complete for retained route families represented in the inventory | Final clean-SHA rerun; external-caller observation and five deprecated-route approvals pending |
 | Node/shadow/HA read and write backend isolation; comparison failures preserve node responses | Four backend-isolation matrices named in the route inventory; `shadow mismatch logging waits for the full grace interval and resets on convergence`; `shadow observer comparison failure cannot alter the real node response` | Automated complete | Final clean-SHA rerun and correlated live node-write/zero-HA-write evidence pending |
 | Shadow semantic comparison excludes ordering, elapsed time for every medium, and artwork URL while retaining topology/playback/volume/metadata signal | `sonos-shadow-compare.spec.ts` and shadow grace tests in `sonos-service.spec.ts` | Automated complete | Final clean-SHA rerun and new uninterrupted shadow evidence pending |
-| Source-family inputs and projection (SiriusXM/radio, Apple Music track/container URIs, TV/SPDIF, line-in, exact favorites, coordinator/member ownership) | `home-assistant-sonos-state.spec.ts` source projection matrix and `home-assistant-sonos-actions.spec.ts` exact source-selection matrix | Added; final candidate rerun pending | Live Apple Music, TV, and line-in observations are required in the HA pilot when available; restore the frozen station/group state |
+| Source-family inputs and projection (SiriusXM/radio, Apple Music track/container URIs, TV/SPDIF, line-in, exact favorites, coordinator/member ownership) | `home-assistant-sonos-state.spec.ts` source projection matrix and `home-assistant-sonos-actions.spec.ts` exact source-selection matrix | Pass at `915730d` | Live Apple Music, TV, and line-in observations are required in the HA pilot when available; restore the frozen station/group state |
 | Dashboard authoritative membership, pending lifecycle, stale/unknown/fresh recovery, metadata/art clearing, request generations, and ingress URLs | `app.spec.ts`, `gridview.spec.ts` (`recovers stale then unknown presentation when fresh memberships arrive`), `listeners.spec.ts`, `music-controller.spec.ts`, and `sonos-operation-state.spec.ts` | Automated complete | Final clean-SHA rerun and actual-panel pilot pending |
 | Safari 12 directly served first-party syntax | `checks every directly served first-party Grid Dashboard script` in `safari12-compat.spec.ts` | Automated complete | Final clean-SHA rerun and actual iOS 12 panel proof pending |
 | Add-on options/default mode, launcher/package/container, repository identity transport, and backup manifest | `config.spec.ts`, relevant Talos add-on/launcher/backup/worktree tests, and pre-commit root/container run | Automated complete only for the current pre-commit tree | Final immutable root/container/transport reruns, package digests, and later retirement/clean-install evidence pending |
