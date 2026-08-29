@@ -1,128 +1,266 @@
-import { Request as RQ, Response as RS, Router } from 'express';
+import {Request as RQ, Response as RS, Router} from 'express';
 
 import '../types/sonos';
 
-import { appConfig } from './config';
-import { requestText } from './http';
+import {appConfig} from './config';
+import {
+    requestBinary,
+    requestText,
+    type BinaryHttpResponse,
+    type HttpResponse,
+} from './http';
 
-const app = Router();
+export const SONOS_ARTWORK_MAX_BYTES = 5 * 1024 * 1024;
+export const SONOS_INTENT_UPSTREAM_ROUTES = Object.freeze({
+    groupAll: 'intents/sonos/group-all',
+    status: 'intents/sonos/status',
+});
+export const SONOS_DEPRECATED_ROOT_ROUTES = Object.freeze([
+    'pause',
+    'play',
+    'tv',
+    '07',
+    'quiet',
+]);
 
-const proxySonosGet = async (route: string, res: RS): Promise<void> => {
-    const url = `${appConfig.sonosUrl}/${route}`;
+type TextRequester = (
+    url: string,
+    options?: RequestInit,
+    timeoutMs?: number
+) => Promise<HttpResponse>;
+type BinaryRequester = (
+    url: string,
+    options?: RequestInit,
+    timeoutMs?: number,
+    maximumBytes?: number
+) => Promise<BinaryHttpResponse>;
 
-    try {
-        const response = await requestText(url, {
-            method: 'GET',
-        });
+export interface SonosRouterDependencies {
+    sonosUrl?: string;
+    requestText?: TextRequester;
+    requestBinary?: BinaryRequester;
+    artworkMaximumBytes?: number;
+}
 
-        const contentType =
-            response.headers.get('content-type') ||
-            'application/json; charset=utf-8';
-        const forwardedHeaders = [
-            'x-sonos-response-source',
-            'x-sonos-response-stale',
-            'x-sonos-observed-at',
-            'x-sonos-age-ms',
-        ];
+export interface SonosProxy {
+    get(route: string, res: RS): Promise<void>;
+    request(
+        method: string,
+        route: string,
+        res: RS,
+        body?: unknown
+    ): Promise<void>;
+}
 
-        forwardedHeaders.forEach(headerName => {
-            const headerValue = response.headers.get(headerName);
-            if (headerValue) {
-                res.setHeader(headerName, headerValue);
-            }
-        });
+const freshnessHeaders = [
+    'x-sonos-response-source',
+    'x-sonos-response-stale',
+    'x-sonos-observed-at',
+    'x-sonos-age-ms',
+];
 
-        res.type(contentType)
-            .status(response.statusCode)
-            .send(response.body);
-    } catch (err) {
-        const message = err instanceof Error ? err.message : 'Sonos API request failed';
-        console.error(
-            `Sonos API error for ${route}:`,
-            message
-        );
-        res.status(502).json({
-            error: message,
-            route,
-        });
-    }
+const artworkHeaders = freshnessHeaders.concat([
+    'cache-control',
+    'etag',
+    'last-modified',
+]);
+
+const safeArtworkTypes: {[contentType: string]: boolean} = {
+    'image/gif': true,
+    'image/jpeg': true,
+    'image/png': true,
+    'image/webp': true,
 };
 
-const proxySonosRequest = async (
-    method: string,
-    route: string,
+const normalizedMediaType = (contentType: string | null): string => {
+    return String(contentType || '')
+        .split(';')[0]
+        .trim()
+        .toLowerCase();
+};
+
+const isArtworkRoute = (route: string): boolean => {
+    return /^sonos\/[^/]+\/artwork$/.test(route);
+};
+
+const forwardHeaders = (
     res: RS,
-    body?: unknown
-): Promise<void> => {
-    const url = `${appConfig.sonosUrl}/${route}`;
-
-    try {
-        const response = await requestText(url, {
-            method,
-            headers: body === undefined ? undefined : {'Content-Type': 'application/json'},
-            body: body === undefined ? undefined : JSON.stringify(body),
-        });
-
-        res.type(response.headers.get('content-type') || 'application/json')
-            .status(response.statusCode)
-            .send(response.body);
-    } catch (err) {
-        const message = err instanceof Error ? err.message : 'Sonos API request failed';
-        console.error(
-            `Sonos API error for ${method} ${route}:`,
-            message
-        );
-        res.status(502).json({
-            error: message,
-            route,
-        });
-    }
+    headers: Headers,
+    names: string[]
+): void => {
+    names.forEach(headerName => {
+        const headerValue = headers.get(headerName);
+        if (headerValue !== null) {
+            res.setHeader(headerName, headerValue);
+        }
+    });
 };
 
-const sonosGet = (
-    routeFactory: string | ((req: RQ) => string)
-): ((req: RQ, res: RS) => Promise<void>) => {
-    return async (req: RQ, res: RS) => {
-        const route =
-            typeof routeFactory === 'function'
-                ? routeFactory(req)
-                : routeFactory;
-        await proxySonosGet(route, res);
+const sendProxyFailure = (
+    res: RS,
+    route: string,
+    err: unknown,
+    method?: string
+): void => {
+    const message = err instanceof Error ? err.message : 'Sonos API request failed';
+    console.error(
+        `Sonos API error for ${method ? `${method} ` : ''}${route}:`,
+        message
+    );
+    res.status(502).json({
+        error: message,
+        route,
+    });
+};
+
+export const createSonosProxy = (
+    dependencies: SonosRouterDependencies = {}
+): SonosProxy => {
+    const sonosUrl = dependencies.sonosUrl || appConfig.sonosUrl;
+    const fetchText = dependencies.requestText || requestText;
+    const fetchBinary = dependencies.requestBinary || requestBinary;
+    const artworkMaximumBytes =
+        dependencies.artworkMaximumBytes || SONOS_ARTWORK_MAX_BYTES;
+
+    const proxySonosGet = async (route: string, res: RS): Promise<void> => {
+        const url = `${sonosUrl}/${route}`;
+
+        try {
+            if (isArtworkRoute(route)) {
+                const response = await fetchBinary(
+                    url,
+                    {method: 'GET'},
+                    10000,
+                    artworkMaximumBytes
+                );
+                const contentType =
+                    response.headers.get('content-type') ||
+                    'application/octet-stream';
+                if (
+                    response.statusCode >= 200 &&
+                    response.statusCode < 300 &&
+                    !safeArtworkTypes[normalizedMediaType(contentType)]
+                ) {
+                    throw new Error('Sonos artwork response was not a safe raster image');
+                }
+
+                forwardHeaders(res, response.headers, artworkHeaders);
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('X-Content-Type-Options', 'nosniff');
+                res.status(response.statusCode).send(response.body);
+                return;
+            }
+
+            const response = await fetchText(url, {method: 'GET'});
+            const contentType =
+                response.headers.get('content-type') ||
+                'application/json; charset=utf-8';
+            forwardHeaders(res, response.headers, freshnessHeaders);
+            res.type(contentType).status(response.statusCode).send(response.body);
+        } catch (err) {
+            sendProxyFailure(res, route, err);
+        }
+    };
+
+    const proxySonosRequest = async (
+        method: string,
+        route: string,
+        res: RS,
+        body?: unknown
+    ): Promise<void> => {
+        const url = `${sonosUrl}/${route}`;
+
+        try {
+            const response = await fetchText(url, {
+                method,
+                headers:
+                    body === undefined
+                        ? undefined
+                        : {'Content-Type': 'application/json'},
+                body: body === undefined ? undefined : JSON.stringify(body),
+            });
+
+            res.type(response.headers.get('content-type') || 'application/json')
+                .status(response.statusCode)
+                .send(response.body);
+        } catch (err) {
+            sendProxyFailure(res, route, err, method);
+        }
+    };
+
+    return {
+        get: proxySonosGet,
+        request: proxySonosRequest,
     };
 };
 
-app.get('/pause', sonosGet('pause'));
-app.get('/play', sonosGet('play'));
-app.get('/tv', sonosGet('preset/all-tv'));
-app.get('/07', sonosGet('favorite/Zero 7 Radio'));
-app.get('/quiet', sonosGet('groupVolume/7'));
-app.post('/sonos-intents/group-all', async (req: RQ, res: RS) => {
-    await proxySonosRequest('POST', 'intents/sonos/group-all', res, req.body);
-});
-app.get('/sonos-intents/status', async (_req: RQ, res: RS) => {
-    await proxySonosRequest('GET', 'intents/sonos/status', res);
-});
+export const createSonosRouter = (
+    dependencies: SonosRouterDependencies = {}
+): Router => {
+    const app = Router();
+    const proxy = createSonosProxy(dependencies);
 
-(() => {
-    const rex: RegExp = /sonos\/(.*)$/;
-    app.get(rex, async (req: RQ, res: RS) => {
-        const match = req.path.match(rex);
-        if (match === null) {
-            res.status(400).json({
-                error: `Invalid sonos request ${req.path}`,
-            });
-            return;
-        }
+    const sonosGet = (
+        routeFactory: string | ((req: RQ) => string)
+    ): ((req: RQ, res: RS) => Promise<void>) => {
+        return async (req: RQ, res: RS) => {
+            const route =
+                typeof routeFactory === 'function'
+                    ? routeFactory(req)
+                    : routeFactory;
+            await proxy.get(route, res);
+        };
+    };
 
-        const rest = match[1];
-        await proxySonosGet(`sonos/${rest}`, res);
+    for (const route of SONOS_DEPRECATED_ROOT_ROUTES) {
+        // Keep these as exact pass-throughs. The compatibility service owns
+        // mode-aware deprecation, including the normalized 410 response in
+        // Home Assistant mode and legacy behavior in node rollback mode.
+        app.get(`/${route}`, sonosGet(route));
+    }
+    app.post('/sonos-intents/group-all', async (req: RQ, res: RS) => {
+        await proxy.request(
+            'POST',
+            SONOS_INTENT_UPSTREAM_ROUTES.groupAll,
+            res,
+            req.body
+        );
     });
-})();
+    app.get('/sonos-intents/status', async (_req: RQ, res: RS) => {
+        await proxy.request(
+            'GET',
+            SONOS_INTENT_UPSTREAM_ROUTES.status,
+            res
+        );
+    });
 
-// Custom routes /same/:room, /down, /up are now handled by sonos-api add-on
-// Simple proxy routes below forward to sonos-api which has the business logic
-app.get('/same/:room', sonosGet((req: RQ) => `same/${req.params.room}`));
-app.get('/down', sonosGet('down'));
-app.get('/up', sonosGet('up'));
+    (() => {
+        const rex: RegExp = /sonos\/(.*)$/;
+        app.get(rex, async (req: RQ, res: RS) => {
+            const match = req.path.match(rex);
+            if (match === null) {
+                res.status(400).json({
+                    error: `Invalid sonos request ${req.path}`,
+                });
+                return;
+            }
 
-export const sonos = app;
+            await proxy.get(`sonos/${match[1]}`, res);
+        });
+    })();
+
+    app.get(
+        '/same/:room',
+        sonosGet((req: RQ) => {
+            const roomParam = req.params.room;
+            const room = Array.isArray(roomParam) ? roomParam[0] : roomParam;
+            return `same/${encodeURIComponent(room || '')}`;
+        })
+    );
+    app.get('/down', sonosGet('down'));
+    app.get('/up', sonosGet('up'));
+
+    return app;
+};
+
+export const sonos = createSonosRouter();

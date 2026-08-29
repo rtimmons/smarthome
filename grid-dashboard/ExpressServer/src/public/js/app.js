@@ -9,6 +9,9 @@ class App {
         this.baseConfig = args.config;
         this.rooms = args.config.rooms;
         this.pubsub = args.pubsub;
+        this.now = args.now || function() {
+            return new Date().getTime();
+        };
 
         // TODO: move to object-factory
         this.musicController = new MusicController({
@@ -60,14 +63,18 @@ class App {
         this.bannerPixelsPerSecond = 100;
         this.trackBanner = '';
         this.intentBanner = '';
+        this.topologyBanner = '';
         this.renderedBanner = '';
         this.intentBannerHasError = false;
         this.sonosStateIsStale = false;
-        this.zoneStateIsUnknown = false;
+        this.sonosStateIsUnknown = true;
+        this.zoneStateIsUnknown = true;
+        this.zoneStateFreshness = 'unknown';
         this.knownZones = null;
         this.intentStatus = {};
         this.pendingZoneMutations = {};
-        this.zoneMutationTimeoutMs = 15 * 1000;
+        this.zoneMutationTimeoutMs = SONOS_ZONE_MUTATION_TIMEOUT_MS;
+        this.topologyOperationGate = new SonosOperationGate();
     }
 
     // TODO: move to config class
@@ -83,6 +90,8 @@ class App {
     // This is the one method called from main.js
     run() {
         this.grid.init($(this.window), this);
+        this.setZonesUnknown(true);
+        this.setSonosMediaFreshness('unknown');
 
         this.pubsub.setGlobal('App', this);
         this.pubsub.submit('App.Initialized', {});
@@ -216,7 +225,10 @@ class App {
     _refreshBanner() {
         this._bannerCell().toggleClass('intent-error', this.intentBannerHasError);
         this._bannerCell().toggleClass('stale', this.sonosStateIsStale);
-        this._setRenderedBanner(this.intentBanner || this.trackBanner);
+        this._bannerCell().toggleClass('unknown', this.sonosStateIsUnknown);
+        this._setRenderedBanner(
+            this.intentBanner || this.topologyBanner || this.trackBanner
+        );
     }
 
     setTrackBanner(msg) {
@@ -232,6 +244,13 @@ class App {
 
     setSonosStateStale(isStale) {
         this.sonosStateIsStale = Boolean(isStale);
+        this.sonosStateIsUnknown = false;
+        this._refreshBanner();
+    }
+
+    setSonosMediaFreshness(freshness) {
+        this.sonosStateIsStale = freshness === 'stale';
+        this.sonosStateIsUnknown = freshness === 'unknown';
         this._refreshBanner();
     }
 
@@ -264,7 +283,10 @@ class App {
             return;
         }
         this.knownZones = zones;
+        this.zoneStateFreshness = 'live';
+        this.topologyBanner = '';
         this.setZonesUnknown(false);
+        this.grid.setZonesStale(false);
         var sameZone = myZone.members;
         var arg = {
             on: sameZone,
@@ -278,13 +300,103 @@ class App {
     setZonesUnknown(isUnknown) {
         this.zoneStateIsUnknown = Boolean(isUnknown);
         if (this.zoneStateIsUnknown) {
+            this.zoneStateFreshness = 'unknown';
+            this.topologyBanner = 'Sonos groups unavailable';
             this.grid.setZonesUnknown();
+        } else {
+            this.grid.clearZonesUnknown();
         }
+        this._refreshBanner();
+    }
+
+    setZonesStale(meta, zones) {
+        if (Array.isArray(zones) && zones.length > 0) {
+            var myZone = zones.filter(z => z.members.indexOf(this.room) >= 0)[0];
+            if (!myZone || !Array.isArray(myZone.members)) {
+                this.setZonesUnknown(true);
+                return;
+            }
+            this.knownZones = zones;
+            this.grid.updateZones({
+                on: myZone.members,
+                off: this.rooms.filter(r => myZone.members.indexOf(r) < 0),
+            });
+            this._reconcileZoneMutations(zones);
+            this._refreshIntentPresentation();
+        }
+        if (!this.knownZones) {
+            this.setZonesUnknown(true);
+            return;
+        }
+
+        this.zoneStateIsUnknown = false;
+        this.zoneStateFreshness = 'stale';
+        var ageMs = Number(meta && meta.ageMs);
+        var ageText = Number.isFinite(ageMs) && ageMs > 0
+            ? ' (' + Math.round(ageMs / 1000) + 's)'
+            : '';
+        this.topologyBanner = 'Sonos groups stale' + ageText;
+        this.grid.setZonesStale(true);
+        this._refreshBanner();
     }
 
     updateIntentStatus(status) {
-        this.intentStatus = status || {};
+        var filtered = this.topologyOperationGate.filterStatus(status || {});
+        if (filtered === null) {
+            return false;
+        }
+        this.intentStatus = filtered;
+        this._reconcilePendingOperationStatus(filtered);
         this._refreshIntentPresentation();
+        return true;
+    }
+
+    beginTopologyOperation() {
+        var generation = this.topologyOperationGate.begin();
+        Object.keys(this.pendingZoneMutations).forEach(roomName => {
+            this._clearZoneMutation(roomName);
+        });
+        this.intentStatus = {};
+        this.grid.updateIntent({});
+        this.setIntentBanner('', false);
+        return generation;
+    }
+
+    acceptTopologyOperation(generation, response) {
+        var operation = this.topologyOperationGate.acceptResponse(
+            generation,
+            response
+        );
+        if (!operation || !operation.id) {
+            return operation;
+        }
+
+        Object.keys(this.pendingZoneMutations).forEach(roomName => {
+            var mutation = this.pendingZoneMutations[roomName];
+            if (mutation.operationGeneration === generation) {
+                mutation.operationId = operation.id;
+            }
+        });
+        this._reconcilePendingOperationStatus({
+            activeIntent: operation.status === 'running' ? operation : null,
+            recentIntent: operation.status === 'running' ? null : operation,
+        });
+        return operation;
+    }
+
+    failTopologyOperation(generation, message, roomName) {
+        if (!this.topologyOperationGate.fail(generation)) {
+            return false;
+        }
+
+        if (roomName) {
+            var mutation = this.pendingZoneMutations[roomName];
+            if (mutation && mutation.operationGeneration === generation) {
+                this._clearZoneMutation(roomName);
+            }
+        }
+        this.setIntentBanner(message || 'Sonos grouping request failed', true);
+        return true;
     }
 
     _refreshIntentPresentation() {
@@ -300,12 +412,46 @@ class App {
     }
 
     _clearZoneMutation(roomName) {
+        var mutation = this.pendingZoneMutations[roomName];
+        if (mutation && mutation.timeoutHandle) {
+            this.window.clearTimeout(mutation.timeoutHandle);
+        }
         delete this.pendingZoneMutations[roomName];
         this.grid.setZoneMutationPending(roomName, false);
     }
 
+    _reconcilePendingOperationStatus(status) {
+        var operation = terminalOperationFromStatus(status);
+        if (!operation || !operation.id) {
+            return;
+        }
+
+        Object.keys(this.pendingZoneMutations).forEach(roomName => {
+            var mutation = this.pendingZoneMutations[roomName];
+            if (mutation.operationId === operation.id) {
+                this._clearZoneMutation(roomName);
+            }
+        });
+    }
+
+    _expireZoneMutation(roomName, operationGeneration) {
+        var mutation = this.pendingZoneMutations[roomName];
+        if (
+            !mutation ||
+            mutation.operationGeneration !== operationGeneration
+        ) {
+            return;
+        }
+        this._clearZoneMutation(roomName);
+        this.failTopologyOperation(
+            operationGeneration,
+            'Sonos grouping request timed out',
+            null
+        );
+    }
+
     _reconcileZoneMutations(zones) {
-        var now = new Date().getTime();
+        var now = this.now();
         Object.keys(this.pendingZoneMutations).forEach(roomName => {
             var mutation = this.pendingZoneMutations[roomName];
             if (
@@ -318,7 +464,16 @@ class App {
     }
 
     _toggleRoomMembership(roomName, cell) {
-        var now = new Date().getTime();
+        if (!topologyMutationAllowed(this.zoneStateFreshness)) {
+            this.setIntentBanner(
+                this.zoneStateFreshness === 'stale'
+                    ? 'Sonos groups are stale; grouping is temporarily disabled'
+                    : 'Sonos groups are unavailable; grouping is disabled',
+                true
+            );
+            return false;
+        }
+        var now = this.now();
         var existing = this.pendingZoneMutations[roomName];
         if (existing && now < existing.expiresAt) {
             return;
@@ -328,19 +483,33 @@ class App {
         }
 
         var currentlyJoined = cell.isActive();
-        this.pendingZoneMutations[roomName] = {
+        var operationGeneration = this.beginTopologyOperation();
+        var mutation = {
             room: roomName,
             anchorRoom: this.room,
             desiredJoined: !currentlyJoined,
             expiresAt: now + this.zoneMutationTimeoutMs,
+            operationGeneration: operationGeneration,
+            operationId: null,
+            timeoutHandle: null,
         };
+        mutation.timeoutHandle = this.window.setTimeout(
+            () => this._expireZoneMutation(roomName, operationGeneration),
+            this.zoneMutationTimeoutMs
+        );
+        this.pendingZoneMutations[roomName] = mutation;
         this.grid.setZoneMutationPending(roomName, true);
 
         if (currentlyJoined) {
-            this.musicController.leaveRoom(roomName);
+            this.musicController.leaveRoom(roomName, operationGeneration);
         } else {
-            this.musicController.joinRoom(roomName, this.room);
+            this.musicController.joinRoom(
+                roomName,
+                this.room,
+                operationGeneration
+            );
         }
+        return true;
     }
 
     currentRoom() {
@@ -405,7 +574,19 @@ class App {
 
             // TODO: is this used?
             case 'AllJoin':
-                this.musicController.allJoin(params[0]);
+                if (!topologyMutationAllowed(this.zoneStateFreshness)) {
+                    this.setIntentBanner(
+                        this.zoneStateFreshness === 'stale'
+                            ? 'Sonos groups are stale; join-all is temporarily disabled'
+                            : 'Sonos groups are unavailable; join-all is disabled',
+                        true
+                    );
+                    break;
+                }
+                this.musicController.allJoin(
+                    params[0],
+                    this.beginTopologyOperation()
+                );
                 break;
 
             case 'ChangeRoom':
@@ -438,7 +619,19 @@ class App {
                 this.musicController.favorite(params[0]);
                 break;
             case 'Music.Preset':
-                this.musicController.preset(params[0]);
+                if (!topologyMutationAllowed(this.zoneStateFreshness)) {
+                    this.setIntentBanner(
+                        this.zoneStateFreshness === 'stale'
+                            ? 'Sonos groups are stale; presets are temporarily disabled'
+                            : 'Sonos groups are unavailable; presets are disabled',
+                        true
+                    );
+                    break;
+                }
+                this.musicController.preset(
+                    params[0],
+                    this.beginTopologyOperation()
+                );
                 break;
             case 'Printer.Preset':
                 this.printerController.preset(params[0]);
@@ -468,4 +661,10 @@ class App {
                 consle.error('Unknown action ' + action);
         }
     }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        App: App,
+    };
 }

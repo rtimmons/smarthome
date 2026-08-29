@@ -71,3 +71,35 @@ test('graceful shutdown closes persistent connections after the drain window', a
   assert.equal(closeAllCalls, 1);
   assert.deepEqual(exitCodes, [0]);
 });
+
+test('graceful shutdown waits for asynchronous cleanup before exiting', async () => {
+  const signalBus = new EventEmitter();
+  const exitCodes: number[] = [];
+  let finishCleanup: (() => void) | undefined;
+  const server = {
+    close(callback: (error?: Error) => void) {
+      callback();
+    },
+    closeIdleConnections() {},
+  } as unknown as Server;
+
+  installGracefulShutdown(server, {
+    service: 'test-service',
+    beforeClose: () => new Promise<void>(resolve => {
+      finishCleanup = resolve;
+    }),
+    exit: code => exitCodes.push(code),
+    log: () => {},
+    signalTarget: signalBus as unknown as Pick<
+      NodeJS.Process,
+      'once' | 'removeListener'
+    >,
+  });
+  signalBus.emit('SIGTERM');
+  await Promise.resolve();
+  assert.deepEqual(exitCodes, []);
+
+  finishCleanup?.();
+  await new Promise(resolve => setTimeout(resolve, 0));
+  assert.deepEqual(exitCodes, [0]);
+});

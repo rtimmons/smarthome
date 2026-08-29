@@ -43,7 +43,37 @@ def backup_metadata() -> dict[str, object]:
     }
 
 
-def make_archive(path: Path, metadata: dict[str, object] | None = None) -> None:
+def make_node_sonos_archive(state: dict[str, bytes | None] | None = None) -> bytes:
+    state = state or {
+        "presets.json": b"{}\n",
+        "presets/favorite.json": b"{}\n",
+        "settings.json": b"{}\n",
+    }
+    data_stream = io.BytesIO()
+    with tarfile.open(fileobj=data_stream, mode="w:gz") as data_archive:
+        for name, content in state.items():
+            info = tarfile.TarInfo(name)
+            if content is None:
+                info.type = tarfile.DIRTYPE
+                data_archive.addfile(info)
+            else:
+                info.size = len(content)
+                data_archive.addfile(info, io.BytesIO(content))
+
+    addon_stream = io.BytesIO()
+    data = data_stream.getvalue()
+    with tarfile.open(fileobj=addon_stream, mode="w:gz") as addon_archive:
+        info = tarfile.TarInfo("data.tar.gz")
+        info.size = len(data)
+        addon_archive.addfile(info, io.BytesIO(data))
+    return addon_stream.getvalue()
+
+
+def make_archive(
+    path: Path,
+    metadata: dict[str, object] | None = None,
+    node_state: dict[str, bytes | None] | None = None,
+) -> None:
     payload = json.dumps(metadata or backup_metadata()).encode()
     members = {
         "backup.json": payload,
@@ -51,6 +81,7 @@ def make_archive(path: Path, metadata: dict[str, object] | None = None) -> None:
         "share.tar.gz": b"share",
         **{f"{app_id}.tar.gz": app_id.encode() for app_id in expected_ids()},
     }
+    members[f"{addon_backup.NODE_SONOS_ADDON_ID}.tar.gz"] = make_node_sonos_archive(node_state)
     with tarfile.open(path, "w") as archive:
         for name, content in members.items():
             info = tarfile.TarInfo(name)
@@ -62,6 +93,7 @@ class FakeTransport:
     def __init__(self, archive: Path):
         self.archive = archive
         self.fail_contains: str | None = None
+        self.failure_stderr: str | None = None
         self.health_failure: str | None = None
         self.scp_failure = False
         self.remote_free = addon_backup.MIN_REMOTE_FREE_BYTES + 1
@@ -76,7 +108,7 @@ class FakeTransport:
         self.commands.append(command)
         if self.fail_contains and self.fail_contains in command:
             if check:
-                raise subprocess.CalledProcessError(1, command)
+                raise subprocess.CalledProcessError(1, command, stderr=self.failure_stderr)
             return self._result(command, returncode=1)
         if command.startswith("ha core info"):
             data = {"version": "2026.8.0"}
@@ -124,7 +156,7 @@ class FakeTransport:
 
     def scp_from(self, remote_path: str, local_path: Path) -> None:
         if self.scp_failure:
-            raise subprocess.CalledProcessError(1, ["scp"])
+            raise subprocess.CalledProcessError(1, ["scp"], stderr=self.failure_stderr)
         shutil.copyfile(self.archive, local_path)
 
 
@@ -166,7 +198,7 @@ def test_backup_publishes_verified_private_artifacts_without_secrets(tmp_path: P
     assert create_command.count("--app") == 7
     assert "--folders share" in create_command
     assert "--password" not in create_command
-    assert "--uncompressed=false" in create_command
+    assert "--uncompressed" not in create_command
 
 
 def test_backup_rejects_old_deployed_mongodb_configuration_before_creation(tmp_path: Path):
@@ -188,6 +220,51 @@ def test_backup_rejects_old_deployed_mongodb_configuration_before_creation(tmp_p
     with pytest.raises(Exception, match="startup: system and backup: cold"):
         create_with_fake(tmp_path, fake)
     assert not any(command.startswith("ha backups new") for command in fake.commands)
+
+
+def test_backup_accepts_cold_manifest_when_supervisor_omits_backup_field(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    original = fake.ssh
+
+    def missing_api_field(command: str, *, check: bool = True):
+        result = original(command, check=check)
+        if command.startswith("ha apps info local_mongodb"):
+            payload = json.loads(result.stdout)
+            payload["data"]["backup"] = None
+            result.stdout = json.dumps(payload)
+        return result
+
+    fake.ssh = missing_api_field  # type: ignore[method-assign]
+    destination = create_with_fake(tmp_path, fake)
+
+    assert destination.exists()
+    assert any(
+        command.startswith("grep -Eq") and "/addons/mongodb/config.yaml" in command
+        for command in fake.commands
+    )
+
+
+def test_backup_rejects_missing_api_field_and_non_cold_manifest(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    original = fake.ssh
+
+    def missing_both(command: str, *, check: bool = True):
+        result = original(command, check=check)
+        if command.startswith("ha apps info local_mongodb"):
+            payload = json.loads(result.stdout)
+            payload["data"]["backup"] = None
+            result.stdout = json.dumps(payload)
+        if command.startswith("grep -Eq"):
+            return fake._result(command, returncode=1)
+        return result
+
+    fake.ssh = missing_both  # type: ignore[method-assign]
+    with pytest.raises(Exception, match="startup: system and backup: cold"):
+        create_with_fake(tmp_path, fake)
 
 
 def test_backup_requires_database_dependents_running_for_preflight(tmp_path: Path):
@@ -324,6 +401,68 @@ def test_archive_inspection_rejects_truncated_and_unexpected_archives(tmp_path: 
         )
 
 
+@pytest.mark.parametrize(
+    ("node_state", "missing"),
+    [
+        (
+            {"presets/favorite.json": b"{}\n", "settings.json": b"{}\n"},
+            "presets.json",
+        ),
+        (
+            {"presets.json": b"{}\n", "settings.json": b"{}\n"},
+            "presets/ contents",
+        ),
+        (
+            {"presets.json": b"{}\n", "presets/favorite.json": b"{}\n"},
+            "settings.json",
+        ),
+    ],
+)
+def test_archive_inspection_requires_node_sonos_preset_and_settings_state(
+    tmp_path: Path, node_state: dict[str, bytes | None], missing: str
+):
+    archive = tmp_path / "missing-node-state.tar"
+    make_archive(archive, node_state=node_state)
+
+    with pytest.raises(Exception, match=missing):
+        addon_backup.inspect_archive(
+            archive,
+            expected_ids=expected_ids(),
+            expected_slug=BACKUP_SLUG,
+            expected_name=BACKUP_NAME,
+        )
+
+
+@pytest.mark.parametrize(
+    "node_state",
+    [
+        {
+            "other/presets.json": b"{}\n",
+            "other/presets/favorite.json": b"{}\n",
+            "other/settings.json": b"{}\n",
+        },
+        {
+            "presets.json": b"{}\n",
+            "presets/": None,
+            "settings.json": b"{}\n",
+        },
+    ],
+)
+def test_archive_inspection_rejects_wrong_directory_and_empty_preset_lookalikes(
+    tmp_path: Path, node_state: dict[str, bytes | None]
+):
+    archive = tmp_path / "lookalike-node-state.tar"
+    make_archive(archive, node_state=node_state)
+
+    with pytest.raises(Exception, match="presets"):
+        addon_backup.inspect_archive(
+            archive,
+            expected_ids=expected_ids(),
+            expected_slug=BACKUP_SLUG,
+            expected_name=BACKUP_NAME,
+        )
+
+
 def test_cli_renders_addon_state_command(monkeypatch, tmp_path: Path):
     destination = tmp_path / "published"
     monkeypatch.setattr(
@@ -348,3 +487,109 @@ def test_cli_renders_addon_state_command(monkeypatch, tmp_path: Path):
     )
     assert result.exit_code == 0
     assert str(destination) in result.output
+
+
+def test_ssh_transport_requires_and_selects_repository_identity(monkeypatch, tmp_path: Path):
+    identity = tmp_path / "id_ed25519_codex_smarthome"
+    identity.write_text("synthetic", encoding="utf-8")
+    calls: list[list[str]] = []
+
+    def fake_run(command, **_kwargs):
+        calls.append(command)
+        return subprocess.CompletedProcess(command, 0, "", "")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    transport = addon_backup.SshTransport(
+        "homeassistant.local", 22, "root", identity_file=identity
+    )
+    transport.ssh("ha core info")
+    transport.scp_from("/backup/example.tar", tmp_path / "example.tar")
+
+    assert len(calls) == 2
+    for command in calls:
+        assert ["-i", str(identity)] == command[3:5]
+        assert "IdentitiesOnly=yes" in command
+        assert any(part.startswith("root@homeassistant.local") for part in command)
+
+
+def test_ssh_transport_stops_when_repository_identity_is_missing(tmp_path: Path):
+    transport = addon_backup.SshTransport(
+        "homeassistant.local", 22, "root", identity_file=tmp_path / "missing"
+    )
+
+    with pytest.raises(Exception, match="ha-ssh-key-copy"):
+        transport.ssh("ha core info")
+
+
+def test_ssh_transport_uses_explicit_identity_override(monkeypatch, tmp_path: Path):
+    override = tmp_path / "explicit-identity"
+    override.write_text("synthetic", encoding="utf-8")
+    monkeypatch.setenv("HASS_SSH_IDENTITY", str(override))
+
+    assert addon_backup.ha_ssh_identity() == override
+
+
+def test_ssh_transport_uses_primary_worktree_key_when_linked_worktree_has_none(
+    monkeypatch, tmp_path: Path
+):
+    missing_current = tmp_path / "linked-worktree" / ".ssh" / "id_ed25519_codex_smarthome"
+    primary_identity = tmp_path / "primary-worktree" / ".ssh" / "id_ed25519_codex_smarthome"
+    primary_identity.parent.mkdir(parents=True)
+    primary_identity.write_text("synthetic", encoding="utf-8")
+    monkeypatch.delenv("HASS_SSH_IDENTITY", raising=False)
+    monkeypatch.setattr(addon_backup, "DEFAULT_HA_SSH_IDENTITY", missing_current)
+    monkeypatch.setattr(addon_backup, "_common_repository_identity", lambda: primary_identity)
+
+    assert addon_backup.ha_ssh_identity() == primary_identity
+
+
+def test_ssh_authentication_failure_stops_and_requires_human_key_copy(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    fake.fail_contains = "ha core info"
+    fake.failure_stderr = "Permission denied (publickey)."
+
+    with pytest.raises(Exception, match="just ha-ssh-key-copy") as error:
+        create_with_fake(tmp_path, fake)
+
+    assert "alternate credentials" in str(error.value)
+    assert len(fake.commands) == 1
+
+
+def test_ssh_hostname_failure_preserves_mdns_hostname_workflow(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    fake.fail_contains = "ha core info"
+    fake.failure_stderr = "ssh: Could not resolve hostname homeassistant.local"
+
+    with pytest.raises(Exception, match="mDNS/network failure") as error:
+        create_with_fake(tmp_path, fake)
+
+    assert "do not substitute an IP address" in str(error.value)
+    assert len(fake.commands) == 1
+
+
+def test_scp_authentication_failure_stops_and_requires_human_key_copy(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    fake.scp_failure = True
+    fake.failure_stderr = "Permission denied (publickey)."
+
+    with pytest.raises(Exception, match="just ha-ssh-key-copy"):
+        create_with_fake(tmp_path, fake)
+
+
+def test_scp_hostname_failure_preserves_mdns_hostname_workflow(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    fake.scp_failure = True
+    fake.failure_stderr = "scp: Could not resolve hostname homeassistant.local"
+
+    with pytest.raises(Exception, match="mDNS/network failure") as error:
+        create_with_fake(tmp_path, fake)
+
+    assert "do not substitute an IP address" in str(error.value)

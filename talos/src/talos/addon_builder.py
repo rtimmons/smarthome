@@ -19,21 +19,12 @@ from jinja2 import Environment, FileSystemLoader
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn
 
+from .addon_backup import DEFAULT_HA_SSH_IDENTITY, ha_ssh_identity
 from .paths import ADDON_BUILD_ROOT, REPO_ROOT, TEMPLATE_DIR
 from .addon_manifest import discover_addons
 from .timing import DeployTimer
 
 console = Console()
-
-DEFAULT_HA_SSH_IDENTITY = REPO_ROOT / ".ssh" / "id_ed25519_codex_smarthome"
-
-
-def ha_ssh_identity() -> Path:
-    """Return the explicit repository-local Home Assistant SSH identity."""
-    return Path(
-        os.environ.get("HASS_SSH_IDENTITY", str(DEFAULT_HA_SSH_IDENTITY))
-    ).expanduser()
-
 
 def ssh_transport_args(port: int) -> list[str]:
     return [

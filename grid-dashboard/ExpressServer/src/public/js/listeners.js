@@ -115,6 +115,31 @@ function formatBannerText(track) {
     return [title, artist].filter(Boolean).join(' — ');
 }
 
+function freshnessFromMeta(meta) {
+    if (meta && meta.unknown) {
+        return 'unknown';
+    }
+    if (meta && meta.stale) {
+        return 'stale';
+    }
+    return 'live';
+}
+
+function acceptsRequestSequence(listener, event) {
+    var sequence = event && event.RequestSequence;
+    if (typeof sequence !== 'number') {
+        return true;
+    }
+    if (
+        typeof listener.latestRequestSequence === 'number' &&
+        sequence < listener.latestRequestSequence
+    ) {
+        return false;
+    }
+    listener.latestRequestSequence = sequence;
+    return true;
+}
+
 function displayedIntent(status) {
     if (!status) {
         return null;
@@ -236,16 +261,37 @@ function intentHasError(status) {
 
     return (
         !intent.observedComplete &&
-        (intent.status === 'failed' || intent.status === 'timed_out')
+        (intent.status === 'failed' ||
+            intent.status === 'timed_out' ||
+            intent.status === 'partial' ||
+            intent.status === 'partially_completed' ||
+            intent.status === 'partial_success')
     );
 }
 
 class BackgroundChanger {
+    constructor() {
+        this.latestRequestSequence = 0;
+    }
+
     onMessage(e) {
+        if (!acceptsRequestSequence(this, e.Event)) {
+            return;
+        }
         var state = (e.Event && e.Event.State) || {};
         var meta = (e.Event && e.Event.Meta) || {};
+        var freshness = freshnessFromMeta(meta);
         var track = state.currentTrack;
-        e.Globals.App.setSonosStateStale(meta.stale);
+        if (typeof e.Globals.App.setSonosMediaFreshness === 'function') {
+            e.Globals.App.setSonosMediaFreshness(freshness, meta);
+        } else {
+            e.Globals.App.setSonosStateStale(freshness === 'stale');
+        }
+        if (freshness === 'unknown') {
+            e.Globals.App.setBackgroundImage('');
+            e.Globals.App.setTrackBanner('');
+            return;
+        }
         if (!track) {
             e.Globals.App.setBackgroundImage('');
             e.Globals.App.setTrackBanner('');
@@ -256,7 +302,7 @@ class BackgroundChanger {
         e.Globals.App.setBackgroundImage(artUrl);
 
         var bannerText = formatBannerText(track);
-        if (meta.stale && meta.ageMs > 0) {
+        if (freshness === 'stale' && meta.ageMs > 0) {
             bannerText = [bannerText, '(stale ' + Math.round(meta.ageMs / 1000) + 's)']
                 .filter(Boolean)
                 .join(' ');
@@ -266,6 +312,10 @@ class BackgroundChanger {
 }
 
 class ZoneUpdater {
+    constructor() {
+        this.latestRequestSequence = 0;
+    }
+
     // TODO: move to MusicController
     simplify(zones) {
         if (!Array.isArray(zones)) {
@@ -279,14 +329,22 @@ class ZoneUpdater {
     }
 
     onMessage(e) {
+        if (!acceptsRequestSequence(this, e.Event)) {
+            return;
+        }
         var meta = (e.Event && e.Event.Meta) || {};
-        if (meta.unknown || meta.stale) {
+        var freshness = freshnessFromMeta(meta);
+        if (freshness === 'unknown') {
             e.Globals.App.setZonesUnknown(true);
+            return;
+        }
+        if (freshness === 'stale') {
+            e.Globals.App.setZonesStale(meta, this.simplify(e.Event.Zones));
             return;
         }
 
         var zones = this.simplify(e.Event.Zones);
-        e.Globals.App.updateZones(zones);
+        e.Globals.App.updateZones(zones, meta);
     }
 }
 
@@ -319,7 +377,14 @@ class GenericOnDoublePress {
 }
 
 class IntentUpdater {
+    constructor() {
+        this.latestRequestSequence = 0;
+    }
+
     onMessage(e) {
+        if (!acceptsRequestSequence(this, e.Event)) {
+            return;
+        }
         var status = e.Event.Status || {};
         e.Globals.App.updateIntentStatus(status);
     }
@@ -328,12 +393,16 @@ class IntentUpdater {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         ActiveCells: ActiveCells,
+        BackgroundChanger: BackgroundChanger,
         displayedIntent: displayedIntent,
+        freshnessFromMeta: freshnessFromMeta,
         formatBannerText: formatBannerText,
         intentBannerText: intentBannerText,
         intentHasError: intentHasError,
         parseSiriusMetadata: parseSiriusMetadata,
         reconcileIntentStatus: reconcileIntentStatus,
+        IntentUpdater: IntentUpdater,
+        ZoneUpdater: ZoneUpdater,
         zoneMutationSatisfied: zoneMutationSatisfied,
     };
 }

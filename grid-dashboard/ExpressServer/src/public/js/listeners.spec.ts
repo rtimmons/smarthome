@@ -3,6 +3,120 @@ import { expect } from 'chai';
 const listeners: any = require('./listeners');
 
 describe('listeners banner formatting', () => {
+    it('distinguishes live, stale, and unknown response metadata', () => {
+        expect(listeners.freshnessFromMeta({})).to.equal('live');
+        expect(listeners.freshnessFromMeta({stale: true})).to.equal('stale');
+        expect(
+            listeners.freshnessFromMeta({stale: true, unknown: true})
+        ).to.equal('unknown');
+    });
+
+    it('retains known zones while stale and marks only missing state unknown', () => {
+        const updater = new listeners.ZoneUpdater();
+        const calls: Array<string | string[][]> = [];
+        const app = {
+            setZonesStale: (_meta: unknown, zones: Array<{members: string[]}>) => {
+                calls.push('stale');
+                calls.push(zones.map(zone => zone.members));
+            },
+            setZonesUnknown: () => calls.push('unknown'),
+            updateZones: () => calls.push('live'),
+        };
+
+        updater.onMessage({
+            Event: {
+                Zones: [{members: [{roomName: 'Kitchen'}]}],
+                Meta: {stale: true, ageMs: 2_000},
+                RequestSequence: 1,
+            },
+            Globals: {App: app},
+        });
+        updater.onMessage({
+            Event: {
+                Zones: null,
+                Meta: {unknown: true},
+                RequestSequence: 2,
+            },
+            Globals: {App: app},
+        });
+
+        expect(calls).to.deep.equal(['stale', [['Kitchen']], 'unknown']);
+    });
+
+    it('ignores an older zones response that arrives after a newer one', () => {
+        const updater = new listeners.ZoneUpdater();
+        const updates: string[][] = [];
+        const app = {
+            setZonesStale: () => undefined,
+            setZonesUnknown: () => undefined,
+            updateZones: (zones: Array<{members: string[]}>) =>
+                updates.push(zones[0].members),
+        };
+
+        updater.onMessage({
+            Event: {
+                Zones: [{members: [{roomName: 'Kitchen'}]}],
+                Meta: {},
+                RequestSequence: 2,
+            },
+            Globals: {App: app},
+        });
+        updater.onMessage({
+            Event: {
+                Zones: [{members: [{roomName: 'Bedroom'}]}],
+                Meta: {},
+                RequestSequence: 1,
+            },
+            Globals: {App: app},
+        });
+
+        expect(updates).to.deep.equal([['Kitchen']]);
+    });
+
+    it('keeps stale artwork but clears it when media state becomes unknown', () => {
+        const changer = new listeners.BackgroundChanger();
+        const calls: Array<[string, unknown]> = [];
+        const app = {
+            setSonosMediaFreshness: (value: string) =>
+                calls.push(['freshness', value]),
+            setBackgroundImage: (value: string) =>
+                calls.push(['art', value]),
+            setTrackBanner: (value: string) => calls.push(['track', value]),
+        };
+
+        changer.onMessage({
+            Event: {
+                State: {
+                    currentTrack: {
+                        title: 'Teardrop',
+                        artist: 'Massive Attack',
+                        absoluteAlbumArtUri: './sonos/Kitchen/artwork',
+                    },
+                },
+                Meta: {stale: true, ageMs: 3_000},
+                RequestSequence: 1,
+            },
+            Globals: {App: app},
+        });
+        changer.onMessage({
+            Event: {
+                State: null,
+                Meta: {unknown: true},
+                RequestSequence: 2,
+            },
+            Globals: {App: app},
+        });
+
+        expect(calls).to.deep.equal([
+            ['freshness', 'stale'],
+            ['art', './sonos/Kitchen/artwork'],
+            ['track', 'Teardrop — Massive Attack (stale 3s)'],
+            ['freshness', 'unknown'],
+            ['art', ''],
+            ['track', ''],
+        ]);
+    });
+
     it('does not clear zone toggle cells on room change', () => {
         const activeCells = new listeners.ActiveCells();
         const roomSelector = {
@@ -56,12 +170,12 @@ describe('listeners banner formatting', () => {
     it('parses SiriusXM metadata embedded in the title', () => {
         const banner = listeners.formatBannerText({
             title:
-                "TYPE=SNG|TITLE Immortal (Steve Aoki Remix)|ARTIST 2LOT|ALBUM HiROQUEST 3: Paragon Remixed — CH 735 - Steve Aoki's Remix Radio",
+                'TYPE=SNG|TITLE Synthetic Track|ARTIST Test Artist|ALBUM Fixture Album — CH 999 - Test Radio',
             artist: '',
-            stationName: "CH 735 - Steve Aoki's Remix Radio",
+            stationName: 'CH 999 - Test Radio',
         });
 
-        expect(banner).to.equal('Immortal (Steve Aoki Remix) - 2LOT');
+        expect(banner).to.equal('Synthetic Track - Test Artist');
     });
 
     it('falls back to the station name when artist is unavailable', () => {

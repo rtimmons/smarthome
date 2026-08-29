@@ -52,6 +52,8 @@ class TestDeploymentValidation:
     
     def test_validate_deployment_prerequisites_success(self, monkeypatch):
         """Test successful prerequisite validation."""
+        identity = "/tmp/test-home-assistant-key"
+        monkeypatch.setenv("HASS_SSH_IDENTITY", identity)
         # Mock successful SSH and HA core checks
         mock_run = Mock(side_effect=[
             Mock(returncode=0, stdout="", stderr=""),  # SSH test succeeds
@@ -65,7 +67,7 @@ class TestDeploymentValidation:
 
         first_command = mock_run.call_args_list[0].args[0]
         assert first_command[:2] == ["ssh", "-i"]
-        assert str(addon_builder.DEFAULT_HA_SSH_IDENTITY) in first_command
+        assert identity in first_command
         assert "IdentitiesOnly=yes" in first_command
     
     def test_validate_deployment_prerequisites_auth_failure_requires_key_copy(self, monkeypatch):
@@ -121,6 +123,20 @@ class TestDeploymentValidation:
             "-o", "IdentitiesOnly=yes",
             "-P", "2222",
         ]
+
+    def test_home_assistant_transport_uses_primary_worktree_identity(
+        self, monkeypatch, tmp_path
+    ):
+        current = tmp_path / "linked" / ".ssh" / "id_ed25519_codex_smarthome"
+        primary = tmp_path / "primary" / ".ssh" / "id_ed25519_codex_smarthome"
+        primary.parent.mkdir(parents=True)
+        primary.write_text("synthetic", encoding="utf-8")
+        monkeypatch.delenv("HASS_SSH_IDENTITY", raising=False)
+        monkeypatch.setattr(addon_builder, "DEFAULT_HA_SSH_IDENTITY", current)
+        monkeypatch.setattr("talos.addon_backup.DEFAULT_HA_SSH_IDENTITY", current)
+        monkeypatch.setattr("talos.addon_backup._common_repository_identity", lambda: primary)
+
+        assert addon_builder.ssh_transport_args(22)[:2] == ["-i", str(primary)]
 
     @pytest.mark.parametrize(
         ("stderr", "expected"),

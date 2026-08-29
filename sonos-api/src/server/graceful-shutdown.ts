@@ -8,6 +8,7 @@ export interface GracefulShutdownOptions {
   exit?: (code: number) => void;
   log?: (message: string) => void;
   signalTarget?: Pick<NodeJS.Process, 'once' | 'removeListener'>;
+  beforeClose?: () => void | Promise<void>;
 }
 
 export function installGracefulShutdown(
@@ -60,7 +61,11 @@ export function installGracefulShutdown(
       }, drainTimeoutMs);
       drainTimer.unref();
 
-      server.close((error?: Error) => {
+      let serverClosed = false;
+      let cleanupCompleted = !options.beforeClose;
+      let shutdownError: Error | undefined;
+      const completeIfReady = () => {
+        if (!serverClosed || !cleanupCompleted) return;
         clearTimeout(forceTimer);
         clearTimeout(drainTimer);
         log(
@@ -69,13 +74,33 @@ export function installGracefulShutdown(
             service: options.service,
             signal,
             elapsedMs: Math.round(performance.now() - started),
-            status: error ? 'error' : 'ok',
-            error: error?.message,
+            status: shutdownError ? 'error' : 'ok',
+            error: shutdownError?.message,
           }),
         );
-        exit(error ? 1 : 0);
+        exit(shutdownError ? 1 : 0);
+      };
+
+      server.close((error?: Error) => {
+        serverClosed = true;
+        shutdownError = error || shutdownError;
+        completeIfReady();
       });
       server.closeIdleConnections?.();
+
+      if (options.beforeClose) {
+        Promise.resolve()
+          .then(options.beforeClose)
+          .catch(error => {
+            shutdownError = error instanceof Error
+              ? error
+              : new Error('Shutdown cleanup failed');
+          })
+          .finally(() => {
+            cleanupCompleted = true;
+            completeIfReady();
+          });
+      }
     };
     handlers.set(signal, handler);
     signalTarget.once(signal, handler);

@@ -1,6 +1,29 @@
 import { expect } from 'chai';
 
-const { PressDispatcher }: any = require('./cellview');
+const { CellView, PressDispatcher }: any = require('./cellview');
+
+describe('CellView Sonos zone state', () => {
+    it('shows unknown without changing the last active membership', () => {
+        const content: string[] = [];
+        const classes: Array<[string, boolean]> = [];
+        const cell: any = Object.create(CellView.prototype);
+        cell.active = true;
+        cell.zoneUnknown = false;
+        cell.config = {togglesRoom: 'Kitchen', emoji: 'speaker'};
+        cell.app = {emojiWithName: (name: string) => name};
+        cell.setContent = (value: string) => content.push(value);
+        cell.$element = {
+            toggleClass: (name: string, enabled: boolean) =>
+                classes.push([name, enabled]),
+        };
+
+        cell.setZoneUnknown(true);
+
+        expect(cell.isActive()).to.equal(true);
+        expect(content).to.deep.equal(['?']);
+        expect(classes).to.deep.equal([['zone-unknown', true]]);
+    });
+});
 
 describe('PressDispatcher', () => {
     it('cancels a pending single press when a double press arrives', () => {

@@ -22,6 +22,8 @@ from .paths import REPO_ROOT
 SCHEMA_VERSION = 1
 MIN_REMOTE_FREE_BYTES = 2 * 1024 * 1024 * 1024
 DEFAULT_OUTPUT_ROOT = REPO_ROOT / "backups" / "addon-state"
+DEFAULT_HA_SSH_IDENTITY = REPO_ROOT / ".ssh" / "id_ed25519_codex_smarthome"
+NODE_SONOS_ADDON_ID = "local_node_sonos_http_api"
 
 
 class Transport(Protocol):
@@ -30,11 +32,127 @@ class Transport(Protocol):
     def scp_from(self, remote_path: str, local_path: Path) -> None: ...
 
 
+def _common_repository_identity() -> Path | None:
+    """Find the primary worktree's dedicated key when running from a linked worktree."""
+    try:
+        common_git_dir = subprocess.run(
+            ["git", "rev-parse", "--git-common-dir"],
+            cwd=REPO_ROOT,
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    if not common_git_dir:
+        return None
+    common_git_path = Path(common_git_dir)
+    if not common_git_path.is_absolute():
+        common_git_path = (REPO_ROOT / common_git_path).resolve()
+    return common_git_path.parent / ".ssh" / "id_ed25519_codex_smarthome"
+
+
+def ha_ssh_identity() -> Path:
+    """Resolve the explicit override, current worktree key, or primary worktree key."""
+    override = os.environ.get("HASS_SSH_IDENTITY")
+    if override:
+        return Path(override).expanduser()
+    if DEFAULT_HA_SSH_IDENTITY.is_file():
+        return DEFAULT_HA_SSH_IDENTITY
+    common_identity = _common_repository_identity()
+    if common_identity is not None and common_identity.is_file():
+        return common_identity
+    return DEFAULT_HA_SSH_IDENTITY
+
+
+def classify_transport_failure(stderr: str | bytes | None) -> str:
+    """Keep pre-auth hostname failures distinct from dedicated-key failures."""
+    if isinstance(stderr, bytes):
+        stderr = stderr.decode("utf-8", errors="replace")
+    message = (stderr or "").lower()
+    if any(
+        marker in message
+        for marker in (
+            "could not resolve hostname",
+            "name or service not known",
+            "nodename nor servname provided",
+            "temporary failure in name resolution",
+            "no address associated with hostname",
+        )
+    ):
+        return "hostname"
+    if any(
+        marker in message
+        for marker in (
+            "permission denied",
+            "agent refused operation",
+            "sign_and_send_pubkey",
+            "too many authentication failures",
+            "identity file",
+            "no such identity",
+        )
+    ):
+        return "authentication"
+    return "connection"
+
+
+def _transport_exception(operation: str, error: subprocess.CalledProcessError) -> click.ClickException:
+    failure = classify_transport_failure(error.stderr)
+    if failure == "authentication":
+        return click.ClickException(
+            f"{operation} could not authenticate with the repository Home Assistant SSH key. "
+            "Stop and ask Ryan to rerun the human-only 'just ha-ssh-key-copy'. "
+            "Do not retry with alternate credentials, hosts, or IP addresses."
+        )
+    if failure == "hostname":
+        return click.ClickException(
+            f"{operation} could not resolve the Home Assistant hostname (mDNS/network failure). "
+            "Retry the same hostname once outside the Codex sandbox; do not substitute an IP address. "
+            "If it still does not resolve, stop and report the mDNS/network failure."
+        )
+    return click.ClickException(f"{operation} failed on Home Assistant.")
+
+
+def _raise_if_classified_transport_failure(
+    result: subprocess.CompletedProcess[str], operation: str
+) -> None:
+    if result.returncode == 0:
+        return
+    failure = classify_transport_failure(result.stderr)
+    if failure in {"authentication", "hostname"}:
+        raise _transport_exception(
+            operation,
+            subprocess.CalledProcessError(
+                result.returncode, result.args, result.stdout, result.stderr
+            ),
+        )
+
+
 @dataclass
 class SshTransport:
     host: str
     port: int
     user: str
+    identity_file: Path | None = None
+
+    def _identity_args(self) -> list[str]:
+        identity_file = self.identity_file or ha_ssh_identity()
+        if not identity_file.is_file():
+            raise click.ClickException(
+                f"Repository Home Assistant SSH key is missing: {identity_file}. "
+                "Run 'just ha-ssh-key-create', then ask Ryan to run the human-only "
+                "'just ha-ssh-key-copy'."
+            )
+        return [
+            "-i",
+            str(identity_file),
+            "-o",
+            "IdentitiesOnly=yes",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "ConnectTimeout=10",
+        ]
 
     def ssh(self, command: str, *, check: bool = True) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
@@ -42,10 +160,7 @@ class SshTransport:
                 "ssh",
                 "-p",
                 str(self.port),
-                "-o",
-                "BatchMode=yes",
-                "-o",
-                "ConnectTimeout=10",
+                *self._identity_args(),
                 f"{self.user}@{self.host}",
                 command,
             ],
@@ -60,10 +175,7 @@ class SshTransport:
                 "scp",
                 "-P",
                 str(self.port),
-                "-o",
-                "BatchMode=yes",
-                "-o",
-                "ConnectTimeout=10",
+                *self._identity_args(),
                 f"{self.user}@{self.host}:{remote_path}",
                 str(local_path),
             ],
@@ -91,7 +203,7 @@ def _ha_json(transport: Transport, arguments: Sequence[str], operation: str) -> 
     try:
         result = transport.ssh(command)
     except subprocess.CalledProcessError as error:
-        raise click.ClickException(f"{operation} failed on Home Assistant.") from error
+        raise _transport_exception(operation, error) from error
     return _unwrap_ha_json(result.stdout, operation)
 
 
@@ -121,7 +233,9 @@ def _preflight_remote_storage(transport: Transport) -> int:
     try:
         result = transport.ssh(command)
         free_bytes = int(float(result.stdout.strip()))
-    except (subprocess.CalledProcessError, ValueError) as error:
+    except subprocess.CalledProcessError as error:
+        raise _transport_exception("Inspecting remote backup storage", error) from error
+    except ValueError as error:
         raise click.ClickException("Remote /backup is unavailable or its free space cannot be read.") from error
     if free_bytes < MIN_REMOTE_FREE_BYTES:
         raise click.ClickException(
@@ -164,6 +278,7 @@ def _check_health_once(
         result = transport.ssh(
             _health_command(record["repo_key"], record["hostname"]), check=False
         )
+        _raise_if_classified_transport_failure(result, "Running Home Assistant add-on health checks")
         if result.returncode != 0:
             failures.append(record["repo_key"])
     return failures
@@ -224,11 +339,25 @@ def _collect_app_records(
     return records
 
 
-def _validate_mongodb_deployment(app_records: Sequence[dict[str, Any]]) -> None:
+def _validate_mongodb_deployment(
+    transport: Transport, app_records: Sequence[dict[str, Any]]
+) -> None:
     mongo = next(record for record in app_records if record["repo_key"] == "mongodb")
-    if mongo["startup"] != "system" or mongo["backup"] != "cold":
+    backup_is_cold = mongo["backup"] == "cold"
+    if not backup_is_cold:
+        manifest_path = f"/addons/{mongo['manifest_slug']}/config.yaml"
+        deployed_manifest = transport.ssh(
+            "grep -Eq '^backup:[[:space:]]+\"?cold\"?[[:space:]]*$' "
+            + shlex.quote(manifest_path),
+            check=False,
+        )
+        _raise_if_classified_transport_failure(
+            deployed_manifest, "Inspecting deployed MongoDB backup metadata"
+        )
+        backup_is_cold = deployed_manifest.returncode == 0
+    if mongo["startup"] != "system" or not backup_is_cold:
         raise click.ClickException(
-            "Deployed MongoDB must report startup: system and backup: cold before backup."
+            "Deployed MongoDB must use startup: system and backup: cold before backup."
         )
     required_running = {"mongodb", "printer", "tinyurl-service"}
     stopped = sorted(
@@ -273,6 +402,58 @@ def _normalized_member_names(archive: tarfile.TarFile) -> set[str]:
     return {member.name.removeprefix("./") for member in archive.getmembers()}
 
 
+def _nested_tar_members(stream: Any, *, depth: int = 0) -> dict[str, bool]:
+    """List nested add-on paths and regular-file status without extracting contents."""
+    members: dict[str, bool] = {}
+    with tarfile.open(fileobj=stream, mode="r|*") as archive:
+        for member in archive:
+            name = member.name.removeprefix("./")
+            members[name] = member.isfile()
+            if depth >= 2 or not member.isfile() or not name.endswith((".tar", ".tar.gz")):
+                continue
+            nested_stream = archive.extractfile(member)
+            if nested_stream is None:
+                continue
+            nested_members = _nested_tar_members(nested_stream, depth=depth + 1)
+            members.update(
+                (f"{name}/{nested_name}", is_file)
+                for nested_name, is_file in nested_members.items()
+            )
+    return members
+
+
+def _validate_node_sonos_state(archive: tarfile.TarFile) -> None:
+    member_name = f"{NODE_SONOS_ADDON_ID}.tar.gz"
+    member = next(
+        (item for item in archive.getmembers() if item.name.removeprefix("./") == member_name),
+        None,
+    )
+    if member is None:
+        raise click.ClickException("Downloaded archive is missing the Node Sonos add-on state.")
+    stream = archive.extractfile(member)
+    if stream is None:
+        raise click.ClickException("Node Sonos add-on state cannot be read from the archive.")
+    members = _nested_tar_members(stream)
+    has_presets_json = members.get("data.tar.gz/presets.json") is True
+    has_settings_json = members.get("data.tar.gz/settings.json") is True
+    has_preset_content = any(
+        name.startswith("data.tar.gz/presets/") and is_file
+        for name, is_file in members.items()
+    )
+    missing: list[str] = []
+    if not has_presets_json:
+        missing.append("presets.json")
+    if not has_preset_content:
+        missing.append("presets/ contents")
+    if not has_settings_json:
+        missing.append("settings.json")
+    if missing:
+        raise click.ClickException(
+            "Node Sonos add-on backup is missing required /data/node-sonos-http-api state: "
+            + ", ".join(missing)
+        )
+
+
 def inspect_archive(
     archive_path: Path,
     *,
@@ -300,6 +481,7 @@ def inspect_archive(
             if stream is None:
                 raise click.ClickException("Archive backup.json cannot be read.")
             metadata = json.loads(stream.read().decode("utf-8"))
+            _validate_node_sonos_state(archive)
     except (tarfile.TarError, OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
         raise click.ClickException("Downloaded backup archive is malformed or truncated.") from error
     if not isinstance(metadata, dict) or metadata.get("slug") != expected_slug:
@@ -384,9 +566,11 @@ def create_addon_state_backup(
         if isinstance(item, dict) and item.get("slug")
     }
     app_records = _collect_app_records(transport, manifests, ordered_keys, installed)
-    _validate_mongodb_deployment(app_records)
+    _validate_mongodb_deployment(transport, app_records)
     _preflight_remote_storage(transport)
-    if transport.ssh(f"test ! -e {shlex.quote(remote_path)}", check=False).returncode != 0:
+    remote_path_check = transport.ssh(f"test ! -e {shlex.quote(remote_path)}", check=False)
+    _raise_if_classified_transport_failure(remote_path_check, "Checking the remote backup path")
+    if remote_path_check.returncode != 0:
         raise click.ClickException(f"Remote backup path already exists: {remote_path}")
     wait_for_health(transport, app_records)
 
@@ -397,7 +581,6 @@ def create_addon_state_backup(
         backup_name,
         "--filename",
         filename,
-        "--uncompressed=false",
     ]
     for app_id in expected_ids:
         arguments.extend(["--app", app_id])
@@ -438,7 +621,9 @@ def create_addon_state_backup(
         remote_sha256 = remote_lines[1].strip()
         if len(remote_sha256) != 64:
             raise ValueError("invalid remote digest")
-    except (subprocess.CalledProcessError, ValueError) as error:
+    except subprocess.CalledProcessError as error:
+        raise _transport_exception("Securing the remote backup archive", error) from error
+    except ValueError as error:
         raise click.ClickException("Unable to secure or size the remote backup archive.") from error
     metadata_size = metadata.get("size_bytes")
     if isinstance(metadata_size, int) and metadata_size != remote_size:
@@ -456,6 +641,9 @@ def create_addon_state_backup(
         try:
             transport.scp_from(remote_path, archive_path)
         except subprocess.CalledProcessError as error:
+            failure = classify_transport_failure(error.stderr)
+            if failure in {"authentication", "hostname"}:
+                raise _transport_exception("Downloading the backup archive", error) from error
             raise click.ClickException("Backup archive download was interrupted or failed.") from error
         archive_path.chmod(0o600)
         if archive_path.stat().st_size != remote_size:

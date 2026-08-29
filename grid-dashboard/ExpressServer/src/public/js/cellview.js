@@ -52,6 +52,7 @@ class CellView {
         this.config = args.config;
         this.app = args.app;
         this.active = false;
+        this.zoneUnknown = false;
         this.pubsub = args.pubsub;
 
         // console.log('args', args);
@@ -116,8 +117,7 @@ class CellView {
             this.$element.addClass(this.config.claz);
         }
 
-        var emoji = this.app.emojiWithName(this.config.emoji);
-        this.setContent(emoji);
+        this._refreshZoneContent();
     }
 
     togglesRoom() {
@@ -176,7 +176,21 @@ class CellView {
     }
 
     setZoneUnknown(enabled) {
-        this.$element.toggleClass('zone-unknown', Boolean(enabled));
+        this.zoneUnknown = Boolean(enabled);
+        this.$element.toggleClass('zone-unknown', this.zoneUnknown);
+        this._refreshZoneContent();
+    }
+
+    setZoneStale(enabled) {
+        this.$element.toggleClass('zone-stale', Boolean(enabled));
+    }
+
+    _refreshZoneContent() {
+        var emojiName =
+            this.zoneUnknown && this.config.togglesRoom
+                ? '?'
+                : this.config.emoji;
+        this.setContent(this.app.emojiWithName(emojiName));
     }
 
     setZoneMutationPending(enabled) {

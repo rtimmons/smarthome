@@ -1,13 +1,13 @@
 {
   "name": "sonos-api",
-  "version": "1.0.0",
-  "description": "Sonos HTTP API proxy for node-sonos-http-api",
+  "version": "1.1.1",
+  "description": "Sonos compatibility API with Home Assistant native control and node rollback modes",
   "main": "src/server/index.ts",
   "scripts": {
     "build": "tsc",
     "start": "node dist/server/index.js",
     "start:dev": "tsx src/server/index.ts",
-    "test": "tsx src/server/intents.spec.ts && tsx src/server/status-proxy.spec.ts && tsx src/server/graceful-shutdown.spec.ts",
+    "test": "node scripts/run-tests.cjs",
     "stop": "pkill -f sonos-api-server",
     "dev": "supervisor -p 200 -RV -x npm -- run start:dev"
   },

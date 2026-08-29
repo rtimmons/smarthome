@@ -46,6 +46,7 @@ class GridView {
                 return;
             }
             c.setZoneUnknown(false);
+            c.setZoneStale(false);
             c.setActive(onoff.on.indexOf(c.togglesRoom()) >= 0);
         });
     }
@@ -56,7 +57,26 @@ class GridView {
             if (!room) {
                 return;
             }
+            c.setZoneStale(false);
             c.setZoneUnknown(true);
+        });
+    }
+
+    clearZonesUnknown() {
+        this.allCells().forEach(c => {
+            if (c.togglesRoom()) {
+                c.setZoneUnknown(false);
+            }
+        });
+    }
+
+    setZonesStale(enabled) {
+        this.allCells().forEach(c => {
+            if (!c.togglesRoom()) {
+                return;
+            }
+            c.setZoneUnknown(false);
+            c.setZoneStale(enabled);
         });
     }
 

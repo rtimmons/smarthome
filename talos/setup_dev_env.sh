@@ -459,12 +459,31 @@ echo ""
 HA_HOST=${HA_HOST:-homeassistant.local}
 HA_PORT=${HA_PORT:-22}
 HA_USER=${HA_USER:-root}
+HA_IDENTITY="$REPO_ROOT/.ssh/id_ed25519_codex_smarthome"
+if [ ! -f "$HA_IDENTITY" ]; then
+    COMMON_GIT_DIR=$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)
+    if [ -n "$COMMON_GIT_DIR" ] && [ -f "$(dirname "$COMMON_GIT_DIR")/.ssh/id_ed25519_codex_smarthome" ]; then
+        HA_IDENTITY="$(dirname "$COMMON_GIT_DIR")/.ssh/id_ed25519_codex_smarthome"
+    fi
+fi
 info "Checking SSH access to Home Assistant (${HA_USER}@${HA_HOST}:${HA_PORT})..."
-if ssh -o BatchMode=yes -o ConnectTimeout=5 -p "$HA_PORT" "$HA_USER@$HA_HOST" "exit 0" >/dev/null 2>&1; then
+if [ ! -f "$HA_IDENTITY" ]; then
+    warn "Repository Home Assistant SSH key is missing. Run 'just ha-ssh-key-create', then ask Ryan to run the human-only 'just ha-ssh-key-copy'."
+    ERRORS=$((ERRORS + 1))
+elif HA_SSH_ERROR=$(ssh -i "$HA_IDENTITY" -o IdentitiesOnly=yes -o BatchMode=yes -o ConnectTimeout=5 -p "$HA_PORT" "$HA_USER@$HA_HOST" "exit 0" 2>&1 >/dev/null); then
     success "SSH to Home Assistant is reachable"
 else
-    warn "Could not SSH to ${HA_USER}@${HA_HOST}:${HA_PORT}."
-    warn "If Home Assistant is up, add your public key (e.g., contents of ~/.ssh/id_rsa.pub) to the authorized_keys field in the Supervisor SSH add-on config: http://${HA_HOST}:8123/hassio/addon/core_ssh/config"
+    case "$HA_SSH_ERROR" in
+        *"Could not resolve hostname"*|*"Name or service not known"*|*"nodename nor servname provided"*|*"Temporary failure in name resolution"*)
+            warn "Could not resolve ${HA_HOST}; this is an mDNS/network failure. Retry the same hostname once outside the sandbox and do not substitute an IP address."
+            ;;
+        *"Permission denied"*|*"Too many authentication failures"*|*"No such identity"*|*"sign_and_send_pubkey"*)
+            warn "Dedicated repository-key authentication to ${HA_USER}@${HA_HOST}:${HA_PORT} failed. Ask Ryan to rerun the human-only 'just ha-ssh-key-copy'."
+            ;;
+        *)
+            warn "Could not connect to ${HA_USER}@${HA_HOST}:${HA_PORT} with the dedicated repository key; do not try alternate credentials, hosts, or IP addresses."
+            ;;
+    esac
     ERRORS=$((ERRORS + 1))
 fi
 
