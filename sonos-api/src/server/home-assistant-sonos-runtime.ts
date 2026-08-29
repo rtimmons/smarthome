@@ -244,19 +244,14 @@ export class HomeAssistantSonosRuntime {
   }
 
   zones(snapshot: SonosStateSnapshot = this.snapshot()): unknown {
-    const topology = projectCanonicalSonosTopology(snapshot);
-    if (topology.unknownRooms.length > 0) {
-      throw new SonosBackendError(
-        'topology_incomplete',
-        `Sonos topology is unknown for ${topology.unknownRooms.join(', ')}`,
-        503,
-        true
-      );
-    }
+    return this.topology(snapshot).zones;
+  }
+
+  topology(snapshot: SonosStateSnapshot = this.snapshot()) {
     return projectCanonicalSonosTopology(snapshot, {
       now: this.now,
       artworkPath: room => this.artworkPath(snapshot, room),
-    }).zones;
+    });
   }
 
   roomState(
@@ -542,8 +537,12 @@ export const createHomeAssistantSonosRouter = (
 
   app.get('/sonos/zones', wrap((_req, res) => {
     const snapshot = runtime.snapshot();
+    const topology = runtime.topology(snapshot);
     setFreshnessHeaders(res, snapshot);
-    res.status(200).json(runtime.zones(snapshot));
+    if (topology.unknownRooms.length > 0) {
+      res.setHeader('X-Sonos-Unavailable-Rooms', topology.unknownRooms.join(','));
+    }
+    res.status(200).json(topology.zones);
   }));
 
   app.get('/sonos/:room/state', wrap((req, res) => {

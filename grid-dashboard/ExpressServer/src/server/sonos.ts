@@ -57,6 +57,7 @@ const freshnessHeaders = [
     'x-sonos-response-stale',
     'x-sonos-observed-at',
     'x-sonos-age-ms',
+    'x-sonos-unavailable-rooms',
 ];
 
 const artworkHeaders = freshnessHeaders.concat([

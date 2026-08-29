@@ -798,7 +798,26 @@ test('topology, preset, status, and retained convenience policies are explicit',
   });
 });
 
-test('zones fail closed when any configured room has unknown topology', async () => {
+test('zones omit an unavailable portable room when no reachable group claims it', async () => {
+  const {runtime, stateStore} = fixture();
+  for (const [entityId, state] of stateStore.entities) {
+    state.attributes.group_members = [entityId];
+  }
+  const office = stateStore.entities.get(SONOS_ROOM_TO_ENTITY.Office);
+  assert.ok(office);
+  office.state = 'unavailable';
+
+  await withServer(runtime, async baseUrl => {
+    const response = await fetch(`${baseUrl}/sonos/zones`);
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('x-sonos-unavailable-rooms'), 'Office');
+    const zones = await response.json() as Array<{members: Array<{roomName: string}>}>;
+    assert.equal(zones.length, SONOS_ROOM_NAMES.length - 1);
+    assert.ok(zones.every(zone => zone.members.every(member => member.roomName !== 'Office')));
+  });
+});
+
+test('zones fail closed when a reachable group still claims an unavailable room', async () => {
   const {runtime, stateStore} = fixture();
   const office = stateStore.entities.get(SONOS_ROOM_TO_ENTITY.Office);
   assert.ok(office);
@@ -806,10 +825,10 @@ test('zones fail closed when any configured room has unknown topology', async ()
 
   await withServer(runtime, async baseUrl => {
     const response = await fetch(`${baseUrl}/sonos/zones`);
-    assert.equal(response.status, 503);
+    assert.equal(response.status, 502);
     assert.deepEqual(await response.json(), {
-      error: 'Sonos topology is unknown for Office',
-      code: 'topology_incomplete',
+      error: 'Unavailable room Office is still claimed by a group',
+      code: 'invalid_topology',
       retryable: true,
     });
   });

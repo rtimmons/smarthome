@@ -209,12 +209,14 @@ export const projectCanonicalSonosTopology = (
 
   const groups = new Map<string, {coordinatorId: string; memberIds: string[]} >();
   const unknownRooms = new Set<SonosRoomName>();
+  const unknownEntityIds = new Set<string>();
 
   for (const entityId of SONOS_ENTITY_IDS) {
     const state = snapshot.entities.get(entityId);
     const roomName = roomForSonosEntity(entityId) as SonosRoomName;
     if (!state || state.state === 'unavailable' || state.state === 'unknown') {
       unknownRooms.add(roomName);
+      unknownEntityIds.add(entityId);
       continue;
     }
     const members = groupMembers(state);
@@ -238,6 +240,15 @@ export const projectCanonicalSonosTopology = (
       throw new SonosProjectionError(`Conflicting coordinators for group ${key}`);
     }
     groups.set(key, {coordinatorId, memberIds: sortedSet});
+  }
+
+  for (const group of groups.values()) {
+    const unavailableMember = group.memberIds.find(memberId => unknownEntityIds.has(memberId));
+    if (unavailableMember) {
+      throw new SonosProjectionError(
+        `Unavailable room ${roomForSonosEntity(unavailableMember)} is still claimed by a group`
+      );
+    }
   }
 
   const claimedMembers = new Map<string, string>();

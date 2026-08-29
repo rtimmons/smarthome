@@ -276,7 +276,7 @@ class App {
      * zones is like
      * [ {members: [list string room names]} ]
      */
-    updateZones(zones) {
+    updateZones(zones, meta) {
         var myZone = zones.filter(z => z.members.indexOf(this.room) >= 0)[0];
         if (!myZone || !Array.isArray(myZone.members)) {
             this.setZonesUnknown(true);
@@ -284,7 +284,12 @@ class App {
         }
         this.knownZones = zones;
         this.zoneStateFreshness = 'live';
-        this.topologyBanner = '';
+        var unavailableRooms = meta && Array.isArray(meta.unavailableRooms)
+            ? meta.unavailableRooms
+            : [];
+        this.topologyBanner = unavailableRooms.length > 0
+            ? 'Sonos unavailable: ' + unavailableRooms.join(', ')
+            : '';
         this.setZonesUnknown(false);
         this.grid.setZonesStale(false);
         var sameZone = myZone.members;

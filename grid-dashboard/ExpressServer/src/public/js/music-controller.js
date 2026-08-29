@@ -102,6 +102,7 @@ class MusicController {
 
         var ageMs = Number(xhr.getResponseHeader('X-Sonos-Age-Ms'));
         var source = xhr.getResponseHeader('X-Sonos-Response-Source') || 'live';
+        var unavailableRooms = xhr.getResponseHeader('X-Sonos-Unavailable-Rooms') || '';
         return {
             source: source,
             unknown:
@@ -113,6 +114,7 @@ class MusicController {
                     .toLowerCase() === 'true',
             observedAt: xhr.getResponseHeader('X-Sonos-Observed-At') || '',
             ageMs: Number.isFinite(ageMs) ? ageMs : 0,
+            unavailableRooms: unavailableRooms.split(',').filter(Boolean),
         };
     }
 
