@@ -1,140 +1,61 @@
-# Sonos Home Assistant Add-ons Overview
+# Sonos architecture overview
 
-This project now includes two Home Assistant add-ons for Sonos control:
+The Grid Dashboard uses `sonos-api` as a stable compatibility and orchestration layer. During the staged migration it supports three modes:
 
-## 1. Node Sonos HTTP API Add-on
+| Mode | Reads | Writes | Purpose |
+| --- | --- | --- | --- |
+| `node` | node-sonos-http-api | node-sonos-http-api | Safe default and rollback |
+| `shadow` | Node response is served; Home Assistant is compared asynchronously | node-sonos-http-api only | Read-parity observation without duplicate commands |
+| `home_assistant` | Home Assistant Sonos entities | Home Assistant media-player services | Native target architecture |
 
-**Location:** `node-sonos-http-api/`
+## Target request path
 
-This add-on wraps the official [node-sonos-http-api](https://github.com/jishi/node-sonos-http-api) project.
-
-### What it does:
-- Runs the actual node-sonos-http-api server
-- Discovers and controls Sonos speakers on your network
-- Provides the base HTTP API for Sonos control
-- Runs on port 5005
-- Uses host networking to discover Sonos devices
-
-### Building:
-```bash
-cd node-sonos-http-api
-just ha-addon
+```text
+Grid Dashboard browser
+        |
+        v
+Grid Dashboard server (port 3000 / ingress)
+        |
+        v
+sonos-api (port 5006)
+        |
+        v
+Home Assistant Core REST + WebSocket APIs
+        |
+        v
+Home Assistant Sonos integration
+        |
+        v
+Sonos speakers
 ```
 
-### Deploying:
-```bash
-cd node-sonos-http-api
-just deploy
-# Or with custom host:
-HA_HOST=smarterhome5.local just deploy
-```
+The browser never receives a Home Assistant bearer token or signed artwork URL. `sonos-api` loads an initial allowlisted entity snapshot, follows `state_changed` events, canonicalizes coordinator-first groups, and proxies only approved raster artwork. The Grid server forwards the compatibility response and freshness headers.
 
-### Configuration:
-- `sonos_discovery_timeout`: Timeout in seconds for discovering Sonos speakers (default: 5)
-- `presets.json`: Place at `/config/node-sonos-http-api/presets.json` (auto-linked). If missing, the add-on
-  will create and use `/data/node-sonos-http-api/presets.json` so presets persist across restarts. If nothing is present,
-  the bundled `presets.example.json` is copied there on first start. Per-preset files in `/config/node-sonos-http-api/presets/`
-  are also supported.
-- Default TV presets from the legacy Ansible install are stored in `node-sonos-http-api/presets/`
-  and combined in `node-sonos-http-api/presets.example.json` for quick copy into `/config/node-sonos-http-api/`.
+Topology writes are serialized and complete only after authoritative Home Assistant state matches the request or a bounded deadline is reached. Playback and volume calls remain outside that topology queue. Unknown topology is a `503`, never an invented empty or singleton group.
 
-### Access:
-- External: `http://<ha-host>:5005`
-- From other add-ons: `http://node-sonos-http-api:5005`
+## Room and policy ownership
 
-## 2. Sonos API Add-on
+The room-to-entity map, configured favorites, and TV presets are repository-owned allowlists under `sonos-api/src/server/`. `media_player.maker_room` and dynamically discovered entities are intentionally excluded.
 
-**Location:** `sonos-api/`
+The retained root policies are `/up`, `/down`, and `/same/:room`. The unused legacy root routes `/pause`, `/play`, `/tv`, `/07`, and `/quiet` return the frozen `410` deprecated-route response only in `home_assistant` mode. They remain exact pass-throughs in `node` and `shadow` so configuration rollback retains baseline behavior until retirement. Room-scoped playback, favorite, volume, and preset routes remain available below `/sonos/` in every mode.
 
-This add-on is a TypeScript/Express proxy that adds custom convenience routes on top of node-sonos-http-api.
+## Staged dependency and rollback
 
-### What it does:
-- Proxies all node-sonos-http-api endpoints via `/sonos/*`
-- Adds custom convenience routes:
-  - `/pause`, `/play` - Basic playback control
-  - `/tv` - Switch all speakers to TV mode
-  - `/07` - Play Zero 7 Radio
-  - `/quiet` - Set group volume to 7
-  - `/same/:room` - Sync all volumes in a room's zone
-  - `/down`, `/up` - Smart volume control
-- Runs on port 5006
+`node-sonos-http-api` remains installed and is listed as a temporary add-on dependency while `node` or `shadow` mode can be selected. It continues to expose port 5005 for baseline and rollback validation. Do not stop, uninstall, or remove it from the repository until the shadow, pilot, whole-house, stopped-node, backup, and explicit-approval gates in [the migration plan](../plan-replace-sonos-node-api.md) have passed.
 
-### Dependencies:
-**IMPORTANT:** This add-on requires the Node Sonos HTTP API add-on to be installed and running first.
+Every live test must restore the frozen household state before its stage can pass: one Bathroom-coordinated group containing all eight configured rooms, volume 20 and mute false on every member, playing `CH 735 - Steve Aoki's Remix Radio`. Home Assistant, direct node while retained, Sonos API, Grid Dashboard, and the Sonos app must agree, with no pending operation. See the validation record for the complete checkpoint.
 
-### Building:
-```bash
-cd sonos-api
-just ha-addon
-```
+## Development and validation
 
-### Deploying:
-```bash
-cd sonos-api
-just deploy
-```
-
-### Configuration:
-- `sonos_base_url`: Base URL for node-sonos-http-api (default: `http://node-sonos-http-api:5005`)
-
-### Access:
-- External: `http://<ha-host>:5006`
-- From other add-ons: `http://sonos-api:5006`
-
-## Installation Order
-
-1. **First**, install and start the **Node Sonos HTTP API** add-on
-2. **Then**, install and start the **Sonos API** add-on
-
-The Sonos API add-on will automatically connect to the Node Sonos HTTP API add-on using the hostname `node-sonos-http-api`.
-
-## Architecture
-
-```
-┌─────────────────────────────────────────┐
-│  Home Assistant                         │
-│                                         │
-│  ┌──────────────────────────────────┐  │
-│  │ Sonos API Add-on                 │  │
-│  │ Port: 5006                       │  │
-│  │ Custom convenience routes        │  │
-│  └──────────┬───────────────────────┘  │
-│             │                           │
-│             │ http://node-sonos-http-api:5005
-│             │                           │
-│  ┌──────────▼───────────────────────┐  │
-│  │ Node Sonos HTTP API Add-on       │  │
-│  │ Port: 5005                       │  │
-│  │ Discovers & controls Sonos       │  │
-│  └──────────┬───────────────────────┘  │
-│             │                           │
-└─────────────┼───────────────────────────┘
-              │ Host Network
-              │ SSDP/UPnP Discovery
-              ▼
-    ┌──────────────────┐
-    │ Sonos Speakers   │
-    │ on local network │
-    └──────────────────┘
-```
-
-## Development
-
-### Node Sonos HTTP API Add-on
-This add-on clones and runs the upstream node-sonos-http-api directly from GitHub, so no local development is needed. The upstream project is maintained at: https://github.com/jishi/node-sonos-http-api
-
-### Sonos API Add-on
-For local development of the custom proxy:
+Use the repository workflows:
 
 ```bash
-cd sonos-api
-npm install
-npm run dev
+just setup
+just test sonos-api
+just test grid-dashboard
+just test
 ```
 
-Set environment variables to point to your node-sonos-http-api instance:
-```bash
-export SONOS_BASE_URL=http://localhost:5005
-export PORT=5006
-npm run dev
-```
+For local Home Assistant mode, supply non-committed `HOME_ASSISTANT_REST_URL`, `HOME_ASSISTANT_WEBSOCKET_URL`, and `HOME_ASSISTANT_TOKEN` values. Supervisor provides `SUPERVISOR_TOKEN` automatically in the deployed add-on.
+
+Live evidence, rollback artifacts, operational deadlines, and rollout status are recorded in [Home Assistant Sonos migration validation](ha-migration-validation.md).

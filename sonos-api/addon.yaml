@@ -1,6 +1,6 @@
 slug: sonos_api
 name: Sonos API
-description: Proxy API for node-sonos-http-api with custom routes and helpers.
+description: Sonos compatibility and orchestration API backed by Home Assistant, with a node rollback mode.
 url: https://github.com/rtimmons/smarthome
 depends_on:
   - node-sonos-http-api
@@ -11,9 +11,9 @@ copy:
   - tsconfig.json
 container_workdir: /opt/sonos-api/app
 npm_build: true
-homeassistant_min: "2024.6.0"
+homeassistant_min: "2026.8.3"
 ingress: false
-homeassistant_api: false
+homeassistant_api: true
 auth_api: false
 host_network: false
 ports:
@@ -24,30 +24,37 @@ deploy_health_path: "/health"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
 options:
+  backend_mode: "node"
   sonos_base_url: "http://local-node-sonos-http-api:5005"
 schema:
+  backend_mode: "list(node|shadow|home_assistant)"
   sonos_base_url: "str?"
 translations:
   configuration:
+    backend_mode:
+      name: Sonos backend mode
+      description: Use node for rollback, shadow to compare Home Assistant reads without duplicate writes, or home_assistant for native control.
     sonos_base_url:
       name: Sonos API base URL
       description: Base URL for node-sonos-http-api (e.g., http://node-sonos-http-api:5005).
 docs:
   readme: >
-    Local add-on that provides a proxy API for node-sonos-http-api with custom routes and helper endpoints
-    for controlling Sonos speakers.
+    Local compatibility API that preserves the Grid Dashboard Sonos routes while supporting Home Assistant native control.
   docs: >
-    This add-on provides a proxy API for node-sonos-http-api with custom routes and helper endpoints
-    tailored for controlling Sonos speakers in your smart home setup.
+    This add-on can use node-sonos-http-api for rollback, compare Home Assistant state in shadow mode,
+    or control the allowlisted Sonos rooms through Home Assistant.
   access: >
     Access the API at http://<ha-host>:5006/ or use it from other add-ons via http://sonos-api:5006/.
   dependencies:
-    - "Requires the Node Sonos HTTP API add-on to be installed and running first."
+    - "Node Sonos HTTP API is required only while backend_mode is node or shadow."
 run_env:
   - env: PORT
     value: "5006"
   - env: APP_PORT
     value: "5006"
+  - env: SONOS_BACKEND_MODE
+    from_option: backend_mode
+    default: "node"
   - env: SONOS_BASE_URL
     from_option: sonos_base_url
     default: "http://local-node-sonos-http-api:5005"

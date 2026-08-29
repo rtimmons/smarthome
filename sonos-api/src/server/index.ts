@@ -1,32 +1,47 @@
-import cors = require('cors');
 import express = require('express');
 import morgan = require('morgan');
 
-// The below value matches with stop in package.json.
-process.title = 'sonos-api-server';
-
-import {sonos} from './sonos';
 import {appConfig} from './config';
 import {installGracefulShutdown} from './graceful-shutdown';
+import {createSonosService, type SelectedSonosService} from './sonos-service';
 
-const app = express();
+// The value matches the stop script in package.json.
+process.title = 'sonos-api-server';
 
-// Community middle-ware.
-app.use(morgan('tiny'));
-app.use(express.json()); // support json encoded bodies
-app.use(express.urlencoded({extended: true})); // support encoded bodies
-app.use(cors());
+export const createApp = (service: SelectedSonosService): express.Express => {
+  const app = express();
+  app.use(morgan('tiny'));
+  app.use(express.json());
+  app.use(express.urlencoded({extended: true}));
+  app.get('/health', (_req, res) => {
+    const health = service.health();
+    res.status(health.statusCode).json(health.body);
+  });
+  app.use(service.router);
+  return app;
+};
 
-// Sonos API routes
-app.use(sonos);
+export const startServer = async (): Promise<void> => {
+  const service = createSonosService(appConfig);
+  await service.start();
+  const app = createApp(service);
+  const server = app.listen(appConfig.port, () => {
+    console.log(
+      `Sonos API listening on port ${appConfig.port} in ${appConfig.backendMode} mode!`
+    );
+  });
+  installGracefulShutdown(server, {
+    service: 'sonos-api',
+    beforeClose: () => service.stop(),
+  });
+};
 
-// Health check endpoint
-app.get('/health', (req: express.Request, res: express.Response) => {
-  res.json({ status: 'ok' });
-});
-
-// Run the thing.
-const server = app.listen(appConfig.port, () =>
-  console.log(`Sonos API listening on port ${appConfig.port}!`),
-);
-installGracefulShutdown(server, {service: 'sonos-api'});
+if (require.main === module) {
+  void startServer().catch(error => {
+    console.error(
+      'Sonos API startup failed:',
+      error instanceof Error ? error.message : 'unknown startup error'
+    );
+    process.exitCode = 1;
+  });
+}

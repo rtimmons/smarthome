@@ -41,7 +41,7 @@ translations:
   configuration:
     sonos_base_url:
       name: Sonos API base URL
-      description: Base URL for node-sonos-http-api (e.g., http://node-sonos-http-api:5005).
+      description: Base URL for the Sonos compatibility API (default http://local-sonos-api:5006).
     ledgrid_base_url:
       name: LEDGrid API base URL
       description: Base URL for ledgrid-poc web API (e.g., http://ledwallleft.local:5000).
