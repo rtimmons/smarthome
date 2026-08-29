@@ -129,10 +129,12 @@ To add a new visual regression test:
 def test_my_new_label(regenerate_baselines):
     """Description of what this label tests."""
     template = my_template.TEMPLATE
-    form_data = TemplateFormData({
-        "param1": "value1",
-        "param2": "value2",
-    })
+    form_data = TemplateFormData(
+        {
+            "param1": "value1",
+            "param2": "value2",
+        }
+    )
 
     image = template.render(form_data)
     assert_visual_match(image, "my_new_label.png", regenerate=regenerate_baselines)

@@ -69,6 +69,14 @@ def test_cold_backup_rejects_hot_backup_hooks():
         addon_builder.build_context("mongodb", addons)
 
 
+def test_mongodb_has_versioned_cold_backup_metadata():
+    context = addon_builder.build_context("mongodb", addon_builder.discover_addons())
+
+    assert context["addon"]["version"] == "0.0.1"
+    assert context["addon"]["startup"] == "system"
+    assert context["addon"]["backup"] == "cold"
+
+
 def test_remote_deploy_script_uses_quiet_wrapper_without_fixed_reload_sleep():
     script = addon_builder.render_remote_deploy_script(
         slug="grid_dashboard",
@@ -244,3 +252,12 @@ def test_slow_stopping_node_addons_exec_the_service_as_pid_one():
     assert "exec node dist/server/index.js" in sonos_run
     assert "npm start" not in grid_run
     assert "npm start" not in sonos_run
+
+
+def test_sonos_custom_launcher_reads_backend_mode_with_safe_node_default():
+    sonos_run = (addon_builder.REPO_ROOT / "sonos-api/run.sh").read_text()
+
+    assert "config_get 'backend_mode'" in sonos_run
+    assert 'SONOS_BACKEND_MODE="node"' in sonos_run
+    assert "node|shadow|home_assistant" in sonos_run
+    assert "export SONOS_BACKEND_MODE" in sonos_run
