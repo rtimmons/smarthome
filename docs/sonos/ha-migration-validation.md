@@ -253,6 +253,18 @@ low-risk control-path proof that dashboard control is using the HA-backed
 adapter. Sonos-app visual confirmation, the 24/24/48/24-hour windows, and
 explicit node-uninstall approval remain pending.
 
+### Portable-room degraded-mode check (2026-08-29)
+
+The battery-powered Move became unavailable and was absent from both the Home
+Assistant entity state and retained node discovery. This is a normal portable
+speaker condition, not a transport-wide Home Assistant outage. The deployed
+adapter returned the four complete reachable groups with HTTP 200 and
+`X-Sonos-Unavailable-Rooms: Move`; the user-facing Grid Dashboard forwarded
+the same header, including on a cached `304` response. Its rendered state had
+no global unknown marker. This confirms that an unclaimed unavailable portable
+room no longer blanks every other room/group; an unavailable room still claimed
+by a reachable group remains a tested fail-closed condition.
+
 ### Configuration rollback rehearsal evidence
 
 The authoritative command sequence is in the plan's **Rollback** section. The rehearsal does not pass merely because Supervisor again reports `started`. Record all of the following in this file when it is run:
