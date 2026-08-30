@@ -30,7 +30,7 @@ The devices are assigned to matching Home Assistant areas. Entity IDs were norma
 | Office | `climate.office` | `sensor.office_temperature` | `sensor.office_humidity` | `sensor.office_fan_timer_timeout` |
 | Kitchen | `climate.kitchen` | `sensor.kitchen_temperature` | `sensor.kitchen_humidity` | `sensor.kitchen_fan_timer_timeout` |
 
-The climate entities support heat, cool, heat/cool, off, fan on/off, and Eco preset control. No repository automation changes HVAC settings automatically.
+The climate entities support heat, cool, heat/cool, off, fan on/off, and Eco preset control. No repository automation changes HVAC settings automatically. The Living Room Nest's read-only `hvac_action` attribute drives the external ESPHome heat-pump fans documented in [`esphome-fancontrollers.md`](esphome-fancontrollers.md).
 
 ## Verification
 

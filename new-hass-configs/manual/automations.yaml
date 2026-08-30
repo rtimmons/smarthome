@@ -169,3 +169,60 @@
   actions:
     - action: rest_command.printer_made_today
   mode: single
+
+- id: living_room_heat_pump_fans_follow_nest
+  alias: Living Room Heat Pump Fans - Follow Nest
+  description: >-
+    Run both living-room fan controllers only while the Living Room Nest is
+    actively heating or cooling.
+  triggers:
+    - trigger: homeassistant
+      event: start
+    - trigger: state
+      entity_id: climate.living_room
+      attribute: hvac_action
+    - trigger: state
+      entity_id:
+        - fan.fancontroller_1_fan_1
+        - fan.fancontroller_1_fan_2
+        - fan.fancontroller_1_fan_3
+        - fan.fancontroller_1_fan_4
+        - fan.fancontroller_2_fan_1
+        - fan.fancontroller_2_fan_2
+        - fan.fancontroller_2_fan_3
+        - fan.fancontroller_2_fan_4
+      to: "on"
+  actions:
+    - choose:
+        - conditions:
+            - condition: template
+              value_template: >-
+                {{ state_attr('climate.living_room', 'hvac_action') in
+                   ['heating', 'cooling'] }}
+          sequence:
+            - action: fan.turn_on
+              continue_on_error: true
+              target:
+                entity_id:
+                  - fan.fancontroller_1_fan_1
+                  - fan.fancontroller_1_fan_2
+                  - fan.fancontroller_1_fan_3
+                  - fan.fancontroller_1_fan_4
+                  - fan.fancontroller_2_fan_1
+                  - fan.fancontroller_2_fan_2
+                  - fan.fancontroller_2_fan_3
+                  - fan.fancontroller_2_fan_4
+      default:
+        - action: fan.turn_off
+          continue_on_error: true
+          target:
+            entity_id:
+              - fan.fancontroller_1_fan_1
+              - fan.fancontroller_1_fan_2
+              - fan.fancontroller_1_fan_3
+              - fan.fancontroller_1_fan_4
+              - fan.fancontroller_2_fan_1
+              - fan.fancontroller_2_fan_2
+              - fan.fancontroller_2_fan_3
+              - fan.fancontroller_2_fan_4
+  mode: restart

@@ -4,7 +4,7 @@ Operational notes for the ESPHome-based multi-fan controller boards installed in
 
 ## Current Deployment
 
-The fan controllers are ESPHome devices connected directly to Home Assistant through the ESPHome native API on port `6053`. They are not MQTT devices and are not currently referenced by checked-in automations or generated scene config.
+The fan controllers are ESPHome devices connected directly to Home Assistant through the ESPHome native API on port `6053`. They are not MQTT devices and are not referenced by generated scene config. A checked-in manual automation controls the two living-room boards from the Living Room Nest's active HVAC state.
 
 | HA device name | Area | Web UI | ESPHome device name | MAC |
 | --- | --- | --- | --- | --- |
@@ -69,6 +69,17 @@ light.fancontroller_1_neopixel_light
 ```
 
 Controllers 2 and 3 use the same pattern with `fancontroller_2` and `fancontroller_3`.
+
+## Living Room Heat Pump Automation
+
+`Living Room Heat Pump Fans - Follow Nest` (`living_room_heat_pump_fans_follow_nest`) in `new-hass-configs/manual/automations.yaml` controls all four outputs on both living-room boards. It turns them on only while `climate.living_room` reports `hvac_action` as `heating` or `cooling`, and turns them off for idle, off, or unavailable states.
+
+| Controller | Automation targets |
+| --- | --- |
+| `fancontroller 1` | `fan.fancontroller_1_fan_1`, `fan.fancontroller_1_fan_2`, `fan.fancontroller_1_fan_3`, `fan.fancontroller_1_fan_4` |
+| `fancontroller 2` | `fan.fancontroller_2_fan_1`, `fan.fancontroller_2_fan_2`, `fan.fancontroller_2_fan_3`, `fan.fancontroller_2_fan_4` |
+
+The automation also reconciles on Home Assistant startup and turns the fans back off if ESPHome restores an output to on while the Nest is inactive. `fan.turn_on` deliberately omits a percentage so each output keeps its configured/restored speed.
 
 ## Hardware Mapping
 

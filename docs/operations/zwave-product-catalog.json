@@ -31,6 +31,13 @@
         {
           "deviceKey": "fancontroller_1",
           "entityId": "fan.fancontroller_1_fan_1",
+          "fanEntityIds": [
+            "fan.fancontroller_1_fan_1",
+            "fan.fancontroller_1_fan_2",
+            "fan.fancontroller_1_fan_3",
+            "fan.fancontroller_1_fan_4"
+          ],
+          "controlledByAutomation": "living_room_heat_pump_fans_follow_nest",
           "haDeviceName": "fancontroller 1",
           "area": "living_room",
           "host": "192.168.1.238",
@@ -40,6 +47,13 @@
         {
           "deviceKey": "fancontroller_2",
           "entityId": "fan.fancontroller_2_fan_1",
+          "fanEntityIds": [
+            "fan.fancontroller_2_fan_1",
+            "fan.fancontroller_2_fan_2",
+            "fan.fancontroller_2_fan_3",
+            "fan.fancontroller_2_fan_4"
+          ],
+          "controlledByAutomation": "living_room_heat_pump_fans_follow_nest",
           "haDeviceName": "fancontroller 2",
           "area": "living_room",
           "host": "192.168.1.52",
@@ -49,6 +63,12 @@
         {
           "deviceKey": "fancontroller_3",
           "entityId": "fan.fancontroller_3_fan_1",
+          "fanEntityIds": [
+            "fan.fancontroller_3_fan_1",
+            "fan.fancontroller_3_fan_2",
+            "fan.fancontroller_3_fan_3",
+            "fan.fancontroller_3_fan_4"
+          ],
           "haDeviceName": "fancontroller 3",
           "area": "bedroom",
           "host": "192.168.1.49",
