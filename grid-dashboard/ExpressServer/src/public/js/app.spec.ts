@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import {readFileSync} from 'fs';
 import {createContext, runInContext} from 'vm';
 
-const loadApp = (): any => {
+const loadAppModule = (): any => {
     const context: any = createContext({
         console,
         module: {exports: {}},
@@ -13,11 +13,29 @@ const loadApp = (): any => {
     );
     context.module = {exports: {}};
     runInContext(readFileSync(require.resolve('./app.js'), 'utf8'), context);
-    return context.module.exports.App;
+    return context.module.exports;
 };
 
-const App = loadApp();
+const {App, bannerTrackIsCurrent} = loadAppModule();
 const {SonosOperationGate}: any = require('./sonos-operation-state');
+
+describe('App banner lifecycle', () => {
+    it('reuses only a banner track still attached to the current grid cell', () => {
+        const currentTrack = {};
+        const detachedTrack = {};
+        const bannerContent = {
+            0: {contains: (candidate: unknown) => candidate === currentTrack},
+            length: 1,
+        };
+
+        expect(
+            bannerTrackIsCurrent(bannerContent, {0: currentTrack, length: 1})
+        ).to.equal(true);
+        expect(
+            bannerTrackIsCurrent(bannerContent, {0: detachedTrack, length: 1})
+        ).to.equal(false);
+    });
+});
 
 describe('App Sonos topology pending lifecycle', () => {
     it('keeps reachable zones live while warning about an unavailable portable room', () => {

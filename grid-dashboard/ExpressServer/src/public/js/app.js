@@ -1,5 +1,16 @@
 const log = console.log;
 
+function bannerTrackIsCurrent(bannerContent, bannerTrack) {
+    return Boolean(
+        bannerContent &&
+        bannerContent.length &&
+        bannerContent[0] &&
+        bannerTrack &&
+        bannerTrack.length &&
+        bannerContent[0].contains(bannerTrack[0])
+    );
+}
+
 class App {
     constructor(args) {
         this.window = args.window;
@@ -113,12 +124,12 @@ class App {
     }
 
     _ensureBannerTrack() {
-        if (this.$bannerTrack && this.$bannerTrack.length) {
-            return this.$bannerTrack;
-        }
         var bannerContent = this.$.find('.state-Music .content');
         if (!bannerContent.length) {
             return $();
+        }
+        if (bannerTrackIsCurrent(bannerContent, this.$bannerTrack)) {
+            return this.$bannerTrack;
         }
         bannerContent.empty();
         var marquee = $('<div class="banner-marquee"></div>');
@@ -714,5 +725,6 @@ class App {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         App: App,
+        bannerTrackIsCurrent: bannerTrackIsCurrent,
     };
 }
