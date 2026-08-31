@@ -277,10 +277,7 @@ function intentHasError(status) {
     return (
         !intent.observedComplete &&
         (intent.status === 'failed' ||
-            intent.status === 'timed_out' ||
-            intent.status === 'partial' ||
-            intent.status === 'partially_completed' ||
-            intent.status === 'partial_success')
+            intent.status === 'timed_out')
     );
 }
 

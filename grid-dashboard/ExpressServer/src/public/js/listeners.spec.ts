@@ -229,6 +229,22 @@ describe('listeners banner formatting', () => {
         expect(hasError).to.equal(true);
     });
 
+    it('does not flag partial joins around unavailable rooms as errors', () => {
+        ['partial', 'partially_completed', 'partial_success'].forEach(status => {
+            const hasError = listeners.intentHasError({
+                recentIntent: {
+                    status,
+                    unavailableRooms: ['Bedroom'],
+                    missingRooms: ['Bedroom'],
+                    message:
+                        'Joined available rooms to Living Room; Bedroom unavailable',
+                },
+            });
+
+            expect(hasError).to.equal(false);
+        });
+    });
+
     it('uses observed zones instead of lagging join-all progress', () => {
         const status = listeners.reconcileIntentStatus(
             {
