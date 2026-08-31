@@ -3,6 +3,40 @@ import { expect } from 'chai';
 const { GridView }: any = require('./gridview');
 
 describe('GridView zone state', () => {
+    it('restores the active room after a responsive grid rebuild', () => {
+        const grid = new GridView({
+            container: {},
+            config: {cols: 1, rows: 1},
+            pubsub: {},
+        });
+        const calls: Array<[string, boolean]> = [];
+        grid.cells = [
+            {
+                config: {activeWhenRoom: 'Kitchen'},
+                isActiveForRoom: (room: string) => room === 'Kitchen',
+                setActive: (enabled: boolean) =>
+                    calls.push(['Kitchen', enabled]),
+            },
+            {
+                config: {activeWhenRoom: 'Office'},
+                isActiveForRoom: (room: string) => room === 'Office',
+                setActive: (enabled: boolean) =>
+                    calls.push(['Office', enabled]),
+            },
+            {
+                config: {},
+                setActive: () => undefined,
+            },
+        ];
+
+        grid.setActiveRoom('Kitchen');
+
+        expect(calls).to.deep.equal([
+            ['Kitchen', true],
+            ['Office', false],
+        ]);
+    });
+
     it('keeps the last observed memberships when zones become uncertain', () => {
         const grid = new GridView({
             container: {},

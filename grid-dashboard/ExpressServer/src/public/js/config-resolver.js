@@ -118,7 +118,7 @@
         }
     };
 
-    const validateConfig = function(config) {
+    const validateRoomOverrides = function(config) {
         var baseIndex = createBaseIndex(config);
         var roomOverrides = config.roomOverrides || {};
         Object.keys(roomOverrides).forEach(function(roomName) {
@@ -148,6 +148,15 @@
                     baseIndex.cellsByKey[key]
                 );
             });
+        });
+    };
+
+    const validateConfig = function(config) {
+        validateRoomOverrides(config);
+
+        var layoutOverrides = config.layoutOverrides || {};
+        Object.keys(layoutOverrides).forEach(function(layoutName) {
+            validateRoomOverrides(resolveLayoutConfig(config, layoutName));
         });
     };
 
@@ -186,7 +195,39 @@
         return resolved;
     };
 
+    const resolveLayoutConfig = function(baseConfig, layoutName) {
+        if (!layoutName || layoutName === 'default') {
+            return baseConfig;
+        }
+
+        var override =
+            baseConfig.layoutOverrides && baseConfig.layoutOverrides[layoutName];
+        if (!override) {
+            return baseConfig;
+        }
+
+        var resolved = Object.assign({}, baseConfig, override);
+        resolved.cells = override.cells || baseConfig.cells;
+        resolved.roomOverrides = Object.prototype.hasOwnProperty.call(
+            override,
+            'roomOverrides'
+        )
+            ? override.roomOverrides
+            : baseConfig.roomOverrides;
+        resolved.layoutOverrides = baseConfig.layoutOverrides;
+        return resolved;
+    };
+
+    const resolveDisplayConfig = function(baseConfig, layoutName, roomName) {
+        return resolveRoomConfig(
+            resolveLayoutConfig(baseConfig, layoutName),
+            roomName
+        );
+    };
+
     return {
+        resolveDisplayConfig: resolveDisplayConfig,
+        resolveLayoutConfig: resolveLayoutConfig,
         resolveRoomConfig: resolveRoomConfig,
         validateConfig: validateConfig,
     };

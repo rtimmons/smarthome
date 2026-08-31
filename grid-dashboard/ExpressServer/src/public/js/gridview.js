@@ -16,6 +16,45 @@ class GridView {
         return this.cells;
     }
 
+    renderConfig(config) {
+        this.config = config;
+        this.cols = config.cols;
+        this.rows = config.rows;
+        this.cells = [];
+        this.zoneCells = {};
+        this.cellsByKey = {};
+        this.$element.empty();
+
+        for (var row = 0; row < this.rows; row++) {
+            var tr = $('<tr>');
+            for (var col = 0; col < this.cols; col++) {
+                var cell = $('<td class="cell">');
+                cell.attr('id', 'cell-' + row + '-' + col);
+                cell.append($('<div class="content"></div>'));
+                tr.append(cell);
+            }
+            this.$element.append(tr);
+        }
+
+        this.config.cells.forEach(cellConfig => {
+            var cell = new CellView({
+                grid: this,
+                app: this.app,
+                pubsub: this.pubsub,
+                $element: this._createElement(cellConfig),
+                config: cellConfig,
+            });
+            this.cells.push(cell);
+            this.cellsByKey[
+                this._cellKey(cellConfig.x, cellConfig.y)
+            ] = cell;
+        });
+
+        if (this.$window) {
+            this.onResize(this.$window.width(), this.$window.height());
+        }
+    }
+
     onResize(width, height) {
         // A rounded-up cell overflows once that extra fraction is repeated
         // across every column, and iOS Safari honors the table width exactly.
@@ -50,6 +89,14 @@ class GridView {
             c.setZoneUnknown(false);
             c.setZoneStale(false);
             c.setActive(onoff.on.indexOf(c.togglesRoom()) >= 0);
+        });
+    }
+
+    setActiveRoom(roomName) {
+        this.allCells().forEach(cell => {
+            if (cell.config && cell.config.activeWhenRoom) {
+                cell.setActive(cell.isActiveForRoom(roomName));
+            }
         });
     }
 
@@ -96,6 +143,7 @@ class GridView {
             cell.remove();
         } else {
             cell.attr('colspan', size.w);
+            cell.attr('rowspan', size.h);
         }
         return cell;
     }
@@ -162,6 +210,7 @@ class GridView {
 
     updateCells(cells) {
         var grid = this;
+        this.config = Object.assign({}, this.config, {cells: cells});
         cells.forEach(function(config) {
             var key = grid._cellKey(config.x, config.y);
             var cell = grid.cellsByKey[key];
@@ -174,35 +223,12 @@ class GridView {
         });
     }
 
-    init($win, app) {
+    init($win, app, config) {
         this.app = app;
+        this.$window = $win;
         var grid = this;
 
-        for (var row = 0; row < this.rows; row++) {
-            var tr = $('<tr>');
-            for (var col = 0; col < this.cols; col++) {
-                var cell = $('<td class="cell">');
-                // cell.addClass('row-'+row);
-                // cell.addClass('col-'+col);
-                cell.attr('id', 'cell-' + row + '-' + col);
-                var span = $('<div class="content"></div>');
-                cell.append(span);
-                tr.append(cell);
-            }
-            this.$element.append(tr);
-        }
-
-        this.config.cells.forEach(b => {
-            var cell = new CellView({
-                grid: grid,
-                app: this.app,
-                pubsub: this.pubsub,
-                $element: this._createElement(b),
-                config: b,
-            });
-            this.cells.push(cell);
-            this.cellsByKey[this._cellKey(b.x, b.y)] = cell;
-        });
+        this.renderConfig(config || this.config);
 
         $win.resize(function() {
             grid.onResize($win.width(), $win.height());

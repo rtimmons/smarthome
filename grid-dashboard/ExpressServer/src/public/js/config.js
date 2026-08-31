@@ -22,6 +22,30 @@ const roomTiles = function({ xPos, roomName, emojiName }) {
     ];
 };
 
+const phoneRoomPair = function({ xPos, yPos, roomName, emojiName }) {
+    return [
+        {
+            w: 1,
+            h: 1,
+            x: xPos,
+            y: yPos,
+            emoji: emojiName,
+            activeWhenRoom: roomName,
+            onPress: { action: 'ChangeRoom', args: [roomName] },
+            onDoublePress: { action: 'AllJoin', args: [roomName] },
+        },
+        {
+            w: 1,
+            h: 1,
+            x: xPos + 1,
+            y: yPos,
+            emoji: 'Speaker',
+            togglesRoom: roomName,
+            onPress: { action: 'Music.ToggleRoom', args: [roomName] },
+        },
+    ];
+};
+
 const buildCells = function(rows, cols, cells) {
     const cellMap = {};
     cells.forEach(cell => {
@@ -83,8 +107,33 @@ const ledGridButtons = function(yPos) {
     ];
 };
 
+const phoneLedGridButtons = function(yPos) {
+    return [
+        {
+            x: 0,
+            y: yPos,
+            emoji: 'Rainbow',
+            onPress: { action: 'LedGrid.Start', args: ['rainbow'] },
+        },
+        {
+            x: 1,
+            y: yPos,
+            emoji: 'Sparkles',
+            onPress: { action: 'LedGrid.Start', args: ['sparkle'] },
+        },
+        {
+            x: 2,
+            y: yPos,
+            emoji: 'Tetris',
+            onPress: { action: 'LedGrid.Start', args: ['tetris'] },
+        },
+    ];
+};
+
 const rows = 8;
 const cols = 11;
+const phoneRows = 12;
+const phoneCols = 6;
 
 const lightSceneRooms = {
     Bathroom: 'bathroom',
@@ -602,6 +651,245 @@ const config = {
                     onPress: { action: 'Printer.Preset', args: ['S3nysytjA14'] },
                 },
             ],
+        },
+    },
+    layoutOverrides: {
+        phonePortrait: {
+            when: {
+                orientation: 'portrait',
+                maxWidth: 500,
+            },
+            rows: phoneRows,
+            cols: phoneCols,
+            cells: buildCells(phoneRows, phoneCols, [
+                // Room selection and Sonos membership stay paired, just as
+                // they are in the two top rows of the default dashboard.
+                ...phoneRoomPair({
+                    xPos: 0,
+                    yPos: 0,
+                    emojiName: 'Shower',
+                    roomName: 'Bathroom',
+                }),
+                ...phoneRoomPair({
+                    xPos: 2,
+                    yPos: 0,
+                    emojiName: 'Kimono',
+                    roomName: 'Closet',
+                }),
+                ...phoneRoomPair({
+                    xPos: 4,
+                    yPos: 0,
+                    emojiName: 'Bed',
+                    roomName: 'Bedroom',
+                }),
+                ...phoneRoomPair({
+                    xPos: 0,
+                    yPos: 1,
+                    emojiName: 'Tent',
+                    roomName: 'Move',
+                }),
+                ...phoneRoomPair({
+                    xPos: 2,
+                    yPos: 1,
+                    emojiName: 'Rice',
+                    roomName: 'Kitchen',
+                }),
+                ...phoneRoomPair({
+                    xPos: 4,
+                    yPos: 1,
+                    emojiName: 'TV',
+                    roomName: 'Living Room',
+                }),
+                ...phoneRoomPair({
+                    xPos: 0,
+                    yPos: 2,
+                    emojiName: 'Guest',
+                    roomName: 'Guest Bathroom',
+                }),
+                ...phoneRoomPair({
+                    xPos: 2,
+                    yPos: 2,
+                    emojiName: 'Briefcase',
+                    roomName: 'Office',
+                }),
+                {
+                    x: 5,
+                    y: 2,
+                    claz: 'state-Thermostat',
+                },
+
+                // Window coverings.
+                {
+                    x: 1,
+                    y: 4,
+                    emoji: 'SingleUp',
+                    onPress: { action: 'Blinds.Move', args: ['Roller', 'Up'] },
+                },
+                {
+                    x: 2,
+                    y: 4,
+                    emoji: 'SingleDown',
+                    onPress: { action: 'Blinds.Move', args: ['Roller', 'Down'] },
+                },
+                {
+                    x: 3,
+                    y: 4,
+                    emoji: 'DoubleUp',
+                    onPress: { action: 'Blinds.Move', args: ['Blackout', 'Up'] },
+                },
+                {
+                    x: 4,
+                    y: 4,
+                    emoji: 'DoubleDown',
+                    onPress: { action: 'Blinds.Move', args: ['Blackout', 'Down'] },
+                },
+
+                // Lighting and volume controls share one thumb-friendly row.
+                {
+                    x: 0,
+                    y: 5,
+                    emoji: 'Sun',
+                    onPress: { action: 'Lights.Scene', args: ['$room', 'High'] },
+                },
+                {
+                    x: 1,
+                    y: 5,
+                    emoji: 'Dim',
+                    onPress: { action: 'Lights.Scene', args: ['$room', 'Medium'] },
+                },
+                {
+                    x: 2,
+                    y: 5,
+                    emoji: 'Moon',
+                    onPress: { action: 'Lights.Scene', args: ['$room', 'Off'] },
+                    onDoublePress: { action: 'Lights.Scene', args: ['all', 'off'] },
+                },
+                {
+                    x: 3,
+                    y: 5,
+                    emoji: 'Up',
+                    onPress: { action: 'Music.VolumeUp', args: [] },
+                },
+                {
+                    x: 4,
+                    y: 5,
+                    emoji: 'Klingon',
+                    onPress: { action: 'Music.VolumeSame', args: [] },
+                },
+                {
+                    x: 5,
+                    y: 5,
+                    emoji: 'Down',
+                    onPress: { action: 'Music.VolumeDown', args: [] },
+                    onDoublePress: { action: 'Music.SetVolume', args: [10] },
+                },
+
+                // The same music shortcuts as the default grid.
+                {
+                    x: 0,
+                    y: 6,
+                    emoji: 'Boat',
+                    onPress: { action: 'Music.Favorite', args: ['Rockboat'] },
+                },
+                {
+                    x: 1,
+                    y: 6,
+                    emoji: 'Sunglasses',
+                    onPress: { action: 'Music.Favorite', args: ['Office DJ'] },
+                },
+                {
+                    x: 2,
+                    y: 6,
+                    emoji: 'Banjo',
+                    onPress: { action: 'Music.Favorite', args: ['Carbon Leaf'] },
+                },
+                {
+                    x: 3,
+                    y: 6,
+                    emoji: 'Chill',
+                    onPress: { action: 'Music.Favorite', args: ['53 - SiriusXM Chill'] },
+                },
+                {
+                    x: 4,
+                    y: 6,
+                    emoji: 'MilkyWay',
+                    onPress: { action: 'Music.Favorite', args: ['Zero 7'] },
+                },
+                {
+                    x: 5,
+                    y: 6,
+                    emoji: 'SteveAoki',
+                    onPress: {
+                        action: 'Music.Favorite',
+                        args: ['735 - Steve Aoki\'s Remix Radio'],
+                    },
+                },
+                {
+                    x: 0,
+                    y: 7,
+                    emoji: 'Film',
+                    onPress: { action: 'Music.Preset', args: ['$room-tv'] },
+                },
+                {
+                    x: 2,
+                    y: 7,
+                    emoji: 'Play',
+                    onPress: { action: 'Music.PlayPause', args: [] },
+                },
+                {
+                    x: 3,
+                    y: 7,
+                    emoji: 'Pause',
+                    onPress: { action: 'Music.Pause', args: [] },
+                },
+                {
+                    x: 4,
+                    y: 7,
+                    emoji: 'Skip',
+                    onPress: { action: 'Music.Next', args: [] },
+                },
+
+                // Keep the now-playing banner at the bottom of the tall grid.
+                {
+                    x: 0,
+                    y: 11,
+                    emoji: 'Notes',
+                    onPress: { action: 'App.Refresh', args: [] },
+                },
+                {
+                    w: 4,
+                    h: 1,
+                    x: 1,
+                    y: 11,
+                    claz: 'state-Music',
+                    onPress: { action: 'Music.FetchState', args: [] },
+                },
+                { x: 2, y: 11, w: 0 },
+                { x: 3, y: 11, w: 0 },
+                { x: 4, y: 11, w: 0 },
+                { x: 5, y: 11, emoji: 'Notes' },
+            ]),
+            roomOverrides: {
+                'Living Room': {
+                    cells: [
+                        ...phoneLedGridButtons(8),
+                    ],
+                },
+                Kitchen: {
+                    cells: [
+                        ...phoneLedGridButtons(8),
+                        {
+                            x: 3,
+                            y: 8,
+                            emoji: 'Calendar',
+                            onPress: {
+                                action: 'Printer.Preset',
+                                args: ['S3nysytjA14'],
+                            },
+                        },
+                    ],
+                },
+            },
         },
     },
     poll: [

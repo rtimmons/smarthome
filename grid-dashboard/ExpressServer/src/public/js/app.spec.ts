@@ -4,6 +4,7 @@ import {createContext, runInContext} from 'vm';
 
 const loadAppModule = (): any => {
     const context: any = createContext({
+        ConfigResolver: require('./config-resolver'),
         console,
         module: {exports: {}},
     });
@@ -16,7 +17,11 @@ const loadAppModule = (): any => {
     return context.module.exports;
 };
 
-const {App, bannerTrackIsCurrent} = loadAppModule();
+const {
+    App,
+    bannerTrackIsCurrent,
+    layoutNameForViewport,
+} = loadAppModule();
 const {SonosOperationGate}: any = require('./sonos-operation-state');
 
 describe('App banner lifecycle', () => {
@@ -34,6 +39,89 @@ describe('App banner lifecycle', () => {
         expect(
             bannerTrackIsCurrent(bannerContent, {0: detachedTrack, length: 1})
         ).to.equal(false);
+    });
+});
+
+describe('App responsive layout selection', () => {
+    const config = {
+        layoutOverrides: {
+            phonePortrait: {
+                when: {
+                    orientation: 'portrait',
+                    maxWidth: 500,
+                },
+            },
+        },
+    };
+
+    it('selects the phone layout only for narrow portrait viewports', () => {
+        expect(
+            layoutNameForViewport(
+                {innerWidth: 440, innerHeight: 956},
+                config
+            )
+        ).to.equal('phonePortrait');
+        expect(
+            layoutNameForViewport(
+                {innerWidth: 956, innerHeight: 440},
+                config
+            )
+        ).to.equal('default');
+        expect(
+            layoutNameForViewport(
+                {innerWidth: 768, innerHeight: 1024},
+                config
+            )
+        ).to.equal('default');
+    });
+
+    it('rebuilds the grid when an orientation change selects a new layout', () => {
+        const rendered: any[] = [];
+        const markers: string[] = [];
+        const app: any = Object.create(App.prototype);
+        app.window = {
+            innerWidth: 440,
+            innerHeight: 956,
+            document: {
+                body: {
+                    setAttribute: (_name: string, value: string) =>
+                        markers.push(value),
+                },
+            },
+        };
+        app.baseConfig = {
+            rows: 1,
+            cols: 1,
+            cells: [{x: 0, y: 0, emoji: 'Default'}],
+            roomOverrides: {},
+            layoutOverrides: {
+                phonePortrait: {
+                    when: config.layoutOverrides.phonePortrait.when,
+                    rows: 2,
+                    cols: 1,
+                    cells: [
+                        {x: 0, y: 0, emoji: 'Phone-top'},
+                        {x: 0, y: 1, emoji: 'Phone-bottom'},
+                    ],
+                    roomOverrides: {},
+                },
+            },
+        };
+        app.layoutMode = 'default';
+        app.room = 'Kitchen';
+        app.grid = {
+            rows: 1,
+            cols: 1,
+            renderConfig: (resolved: any) => rendered.push(resolved),
+        };
+        app._restoreGridPresentation = () => undefined;
+
+        expect(app._syncLayoutMode()).to.equal(true);
+        expect(app.layoutMode).to.equal('phonePortrait');
+        expect(markers).to.deep.equal(['phonePortrait']);
+        expect(rendered).to.have.length(1);
+        expect(rendered[0].rows).to.equal(2);
+        expect(rendered[0].cells[1].emoji).to.equal('Phone-bottom');
     });
 });
 

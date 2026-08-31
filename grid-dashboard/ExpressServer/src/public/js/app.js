@@ -11,13 +11,66 @@ function bannerTrackIsCurrent(bannerContent, bannerTrack) {
     );
 }
 
+function layoutMatchesViewport(rule, width, height) {
+    if (!rule || !width || !height) {
+        return false;
+    }
+    if (rule.orientation === 'portrait' && height <= width) {
+        return false;
+    }
+    if (rule.orientation === 'landscape' && width <= height) {
+        return false;
+    }
+    if (rule.minWidth !== undefined && width < rule.minWidth) {
+        return false;
+    }
+    if (rule.maxWidth !== undefined && width > rule.maxWidth) {
+        return false;
+    }
+    if (rule.minHeight !== undefined && height < rule.minHeight) {
+        return false;
+    }
+    if (rule.maxHeight !== undefined && height > rule.maxHeight) {
+        return false;
+    }
+    return true;
+}
+
+function layoutNameForViewport(windowObject, config) {
+    var width = Number(windowObject && windowObject.innerWidth);
+    var height = Number(windowObject && windowObject.innerHeight);
+    var layoutOverrides = (config && config.layoutOverrides) || {};
+    var layoutNames = Object.keys(layoutOverrides);
+
+    for (var i = 0; i < layoutNames.length; i++) {
+        var layoutName = layoutNames[i];
+        if (
+            layoutMatchesViewport(
+                layoutOverrides[layoutName].when,
+                width,
+                height
+            )
+        ) {
+            return layoutName;
+        }
+    }
+    return 'default';
+}
+
 class App {
     constructor(args) {
         this.window = args.window;
         this.$ = args.container;
         this.grid = args.grid;
-        this.config = args.config;
         this.baseConfig = args.config;
+        this.layoutMode = layoutNameForViewport(
+            this.window,
+            this.baseConfig
+        );
+        this.config = ConfigResolver.resolveLayoutConfig(
+            this.baseConfig,
+            this.layoutMode
+        );
         this.rooms = args.config.rooms;
         this.pubsub = args.pubsub;
         this.now = args.now || function() {
@@ -91,6 +144,7 @@ class App {
         this.knownZones = null;
         this.intentStatus = {};
         this.pendingZoneMutations = {};
+        this.thermostatStates = {};
         this.zoneMutationTimeoutMs = SONOS_ZONE_MUTATION_TIMEOUT_MS;
         this.topologyOperationGate = new SonosOperationGate();
     }
@@ -107,7 +161,8 @@ class App {
 
     // This is the one method called from main.js
     run() {
-        this.grid.init($(this.window), this);
+        this.grid.init($(this.window), this, this.config);
+        this._bindLayoutWatcher();
         this.setZonesUnknown(true);
         this.setSonosMediaFreshness('unknown');
 
@@ -121,6 +176,107 @@ class App {
                 this.onAction(p.action, p.args, { Submitted: new Date() });
             setInterval(f, p.period);
         });
+    }
+
+    _bindLayoutWatcher() {
+        $(this.window).on('resize orientationchange', () => {
+            this._syncLayoutMode();
+        });
+        this._markLayoutMode();
+    }
+
+    _markLayoutMode() {
+        var body =
+            this.window && this.window.document
+                ? this.window.document.body
+                : null;
+        if (body) {
+            body.setAttribute('data-dashboard-layout', this.layoutMode);
+        }
+    }
+
+    _syncLayoutMode() {
+        var nextLayoutMode = layoutNameForViewport(
+            this.window,
+            this.baseConfig
+        );
+        if (nextLayoutMode === this.layoutMode) {
+            return false;
+        }
+
+        this.layoutMode = nextLayoutMode;
+        this._markLayoutMode();
+        this._applyDisplayConfig(this.room, true);
+        return true;
+    }
+
+    _applyDisplayConfig(roomName, forceRebuild) {
+        var resolved = ConfigResolver.resolveDisplayConfig(
+            this.baseConfig,
+            this.layoutMode,
+            roomName
+        );
+        var geometryChanged =
+            resolved.rows !== this.grid.rows ||
+            resolved.cols !== this.grid.cols;
+
+        this.config = resolved;
+        if (forceRebuild || geometryChanged) {
+            this.grid.renderConfig(resolved);
+            this._restoreGridPresentation();
+            return;
+        }
+        this.grid.updateCells(resolved.cells);
+    }
+
+    _restoreGridPresentation() {
+        this.grid.setActiveRoom(this.room);
+
+        if (this.knownZones && this.room) {
+            var myZone = this.knownZones.filter(
+                zone => zone.members.indexOf(this.room) >= 0
+            )[0];
+            if (myZone) {
+                this.grid.updateZones({
+                    on: myZone.members,
+                    off: this.rooms.filter(
+                        roomName => myZone.members.indexOf(roomName) < 0
+                    ),
+                });
+                this.grid.setZonesStale(
+                    this.zoneStateFreshness === 'stale'
+                );
+            } else {
+                this.grid.setZonesUnknown();
+            }
+        } else if (this.zoneStateIsUnknown) {
+            this.grid.setZonesUnknown();
+        }
+
+        Object.keys(this.pendingZoneMutations).forEach(roomName => {
+            this.grid.setZoneMutationPending(roomName, true);
+        });
+        this.grid.updateIntent(reconcileIntentStatus(
+            this.intentStatus,
+            this.knownZones
+        ));
+
+        this.$bannerTrack = null;
+        this.renderedBanner = '';
+        this._refreshBanner();
+
+        if (
+            this.room &&
+            Object.prototype.hasOwnProperty.call(
+                this.thermostatStates,
+                this.room
+            )
+        ) {
+            this.setThermostatState(
+                this.room,
+                this.thermostatStates[this.room]
+            );
+        }
     }
 
     _ensureBannerTrack() {
@@ -273,6 +429,7 @@ class App {
     }
 
     setThermostatState(room, thermostat) {
+        this.thermostatStates[room] = thermostat;
         if (room !== this.currentRoom()) {
             return;
         }
@@ -568,18 +725,10 @@ class App {
     }
 
     _applyRoomConfig(roomName) {
-        if (!this.baseConfig || !this.baseConfig.roomOverrides) {
+        if (!this.baseConfig) {
             return;
         }
-        var resolved = ConfigResolver.resolveRoomConfig(
-            this.baseConfig,
-            roomName
-        );
-        if (resolved === this.config) {
-            return;
-        }
-        this.config = resolved;
-        this.grid.updateCells(resolved.cells);
+        this._applyDisplayConfig(roomName, false);
     }
 
     changeRoom(toRoom) {
@@ -726,5 +875,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         App: App,
         bannerTrackIsCurrent: bannerTrackIsCurrent,
+        layoutMatchesViewport: layoutMatchesViewport,
+        layoutNameForViewport: layoutNameForViewport,
     };
 }
