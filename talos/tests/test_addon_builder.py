@@ -210,6 +210,12 @@ def test_python_context_exposes_runtime_and_build_dependencies():
     assert context["addon"]["deploy_health_path"] == "/health/mongo"
 
 
+def test_sonos_deploy_readiness_uses_operational_topology():
+    context = addon_builder.build_context("sonos-api", addon_builder.discover_addons())
+
+    assert context["addon"]["deploy_health_path"] == "/sonos/zones"
+
+
 def test_python_dependencies_are_exported_from_uv_lock_with_hashes(tmp_path):
     addons = addon_builder.discover_addons()
     context = addon_builder.build_context("printer", addons)

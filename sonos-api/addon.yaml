@@ -20,7 +20,7 @@ ports:
   "5006": 5006
 ports_description:
   "5006": Sonos API HTTP port
-deploy_health_path: "/health"
+deploy_health_path: "/sonos/zones"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
 options:

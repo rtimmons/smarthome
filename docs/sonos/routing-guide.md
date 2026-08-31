@@ -67,6 +67,7 @@ In `node` or `shadow` mode, `curl http://local-node-sonos-http-api:5005/zones` i
 ## Troubleshooting
 
 - A `503` health response in Home Assistant mode means the authenticated snapshot is not live/complete or a configured room/source is unavailable. Check the sanitized health diagnostics and add-on logs.
+- Deployment and backup readiness probe `/sonos/zones`, not `/health`, so an explicitly reported unavailable room does not make an otherwise operational add-on fail deployment or block Grid Dashboard. Invalid or unavailable topology still fails that probe.
 - A stale response indicates a lost WebSocket liveness signal. Wait for authenticated reconnect and resnapshot; do not retry topology writes against unknown state.
 - A `502` from the Grid proxy means its request to `sonos-api` failed or artwork violated the binary safety contract.
 - Add-on hostnames use the `local-` prefix: `local-grid-dashboard`, `local-sonos-api`, and, while retained, `local-node-sonos-http-api`.

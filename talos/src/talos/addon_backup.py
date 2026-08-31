@@ -258,7 +258,7 @@ def _health_command(repo_key: str, hostname: str) -> str:
         return f"curl -fsS --max-time 5 http://{host}:4100/api/urls >/dev/null"
     endpoints = {
         "grid-dashboard": (3000, "/"),
-        "sonos-api": (5006, "/health"),
+        "sonos-api": (5006, "/sonos/zones"),
         "snapshot-service": (4010, "/healthz"),
     }
     if repo_key == "node-sonos-http-api":

@@ -201,6 +201,15 @@ def test_backup_publishes_verified_private_artifacts_without_secrets(tmp_path: P
     assert "--uncompressed" not in create_command
 
 
+def test_sonos_health_checks_allow_degraded_room_inventory():
+    command = addon_backup._health_command("sonos-api", "local-sonos-api")
+
+    assert command == (
+        "curl -fsS --max-time 5 "
+        "http://local-sonos-api:5006/sonos/zones >/dev/null"
+    )
+
+
 def test_backup_rejects_old_deployed_mongodb_configuration_before_creation(tmp_path: Path):
     source = tmp_path / "source.tar"
     make_archive(source)
