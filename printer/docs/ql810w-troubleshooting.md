@@ -19,10 +19,10 @@ The controller's last retained printer record on 2026-08-31 was:
 | Address | `192.168.1.192` |
 | SSID/radio | `sintheta`, U7 Pro XG, 2.4 GHz |
 | Routed network | `Default` / `192.168.1.0/24` |
-| Fixed-IP reservation | **Not configured** |
+| Fixed-IP reservation | `192.168.1.192` to `ac:f2:3c:32:13:c4` (verified 2026-08-31) |
 | Add-on target | `tcp://192.168.1.192:9100` |
 
-The missing reservation is a configuration risk: `printer/addon.yaml`, the service default, and the operator README all expect `.192`, but DHCP is free to assign another address. The recommended first change is to reserve `192.168.1.192` for the MAC above, renew/reconnect the printer, and verify the lease before diagnosing intermittent Wi-Fi.
+`printer/addon.yaml`, the service default, and the operator README all expect `.192`. The controller reservation now owns that mapping, and the printer remained online at the expected address when the reservation was applied. Confirm both the reservation and live client address before changing the add-on target.
 
 ## Do Not Put the Printer on `sintheta-printer`
 
@@ -32,7 +32,7 @@ The Brother printer must accept a connection initiated by Home Assistant on TCP/
 
 ## Quick Diagnostics
 
-First find the live address in **UniFi Network > Client Devices** by searching for the hostname or MAC. Do not assume `.192` until the reservation exists and the current lease confirms it.
+Start with the reserved `.192` address. If it does not respond, find the live record in **UniFi Network > Client Devices** by searching for the hostname or MAC and confirm both the current address and fixed-IP setting before changing either side.
 
 ```bash
 PRINTER_IP=<current-printer-ip>
@@ -91,7 +91,7 @@ Do not apply the following as generic fixes:
 
 Use a UniFi fixed-IP reservation rather than a printer-side static address unless there is a documented reason not to. A reservation keeps the address plan in one place and avoids collisions with the DHCP pool.
 
-After creating the reservation:
+Post-reservation verification:
 
 1. Reconnect or renew the printer so UniFi shows `192.168.1.192` for `ac:f2:3c:32:13:c4`.
 2. Verify TCP/9100 from Home Assistant or another `Default` client.
@@ -136,8 +136,8 @@ Check Brother's official support page for the current firmware applicable to thi
 
 | Setting | Current/expected value | Recommendation | Open question |
 | --- | --- | --- | --- |
-| Printer SSID | Last seen on `sintheta`; intended `sintheta-iot` | Move only after reserving the address and preserving a rollback | Is there an active reliability problem, or is this preventive compatibility work? |
-| Address | `.192`, but dynamic | Reserve `.192` to the recorded MAC | Must any other system besides this add-on be updated if the address changes? |
+| Printer SSID | Last seen on `sintheta`; intended `sintheta-iot` | Move only after preserving the current address and a rollback | Is there an active reliability problem, or is this preventive compatibility work? |
+| Address | `.192`, reserved to `ac:f2:3c:32:13:c4` | Keep the UniFi reservation and verify it after network changes | Must any other system besides this add-on be updated if the address changes? |
 | Client isolation | Off for the printer SSID | Keep off while Home Assistant must initiate TCP/9100 | Will a future routed VLAN replace same-Layer-2 access? |
 | Minimum RSSI | No printer-specific threshold | Keep disabled unless measured evidence supports one | What is the worst normal RSSI at the printer, and which AP should serve it? |
 | IGMP snooping | Off | Keep off unless multicast measurements and querier design justify it | Is there actual multicast flooding or loss, rather than ordinary sleep/reassociation? |

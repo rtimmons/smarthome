@@ -206,7 +206,7 @@ BROTHER_LABEL: "62x29"
 MONGODB_URL: "mongodb://local-mongodb:27017/smarthome"
 ```
 
-`192.168.1.192` is part of the service contract, not a discovery mechanism. Reserve it in UniFi for Brother MAC `ac:f2:3c:32:13:c4` and verify the renewed lease; the 2026-08-31 audit found the expected address but no fixed-IP reservation. The printer belongs on `Default` (preferably via `sintheta-iot`), not on the restricted `sintheta-printer` print-client VLAN. See the troubleshooting guide before changing either side.
+`192.168.1.192` is part of the service contract, not a discovery mechanism. UniFi reserves it for Brother MAC `ac:f2:3c:32:13:c4`; the mapping and active address were verified on 2026-08-31. The printer belongs on `Default` (preferably via `sintheta-iot`), not on the restricted `sintheta-printer` print-client VLAN. See the troubleshooting guide before changing either side.
 
 Presets are stored in MongoDB. Configure `mongodb_url` in the add-on options (or
 set `MONGODB_URL` when running locally). See [addon.yaml](./addon.yaml) for all

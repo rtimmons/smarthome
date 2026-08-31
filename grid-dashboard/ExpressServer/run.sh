@@ -27,7 +27,7 @@ fi
 export SONOS_BASE_URL
 LEDGRID_URL="$(config_get 'ledgrid_base_url')"
 if [ -z "$LEDGRID_URL" ]; then
-  LEDGRID_URL="http://ledwallleft.local:5000"
+  LEDGRID_URL="http://192.168.1.98:5000"
 fi
 export LEDGRID_URL
 HASS_WEBHOOK_BASE="$(config_get 'webhook_base')"

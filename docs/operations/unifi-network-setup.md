@@ -37,15 +37,30 @@ On 2026-08-31 the controller had exactly four device records, all adopted, and s
 | Name | Purpose | Addressing | Internet | Discovery and isolation | Audit note |
 | --- | --- | --- | --- | --- | --- |
 | `Default` | Trusted LAN | Untagged, `192.168.1.0/24`; DHCP `.20`-`.254` | Allowed | mDNS on; IGMP snooping off; UPnP allowed | Most infrastructure, media, and IoT clients still share this Layer-2 segment |
-| `esp` | Unresolved legacy network | VLAN 2, `192.168.5.0/24`; DHCP `.6`-`.254` | Disabled | mDNS on; IGMP snooping off; network isolation not enabled | No SSID and no retained client records; determine its owner and purpose before reusing or deleting it |
 | `sintheta-printer` | Restricted print clients | VLAN 3, `192.168.6.0/24`; DHCP `.6`-`.254` | Disabled | Network and Wi-Fi client isolation on; mDNS on; IGMP snooping off | Firewall permits only Home Assistant TCP/8099 plus gateway DHCP and mDNS |
 
-The global inter-network security posture is `ALLOW_ALL`. The five `sintheta-printer` rules are the only custom firewall rules, so `esp` is not a security boundary from the trusted LAN or site-to-site VPN merely because its Internet toggle is off. The `sintheta-iot` SSID uses `Default`; it is also not a routed security boundary.
+The global inter-network security posture is `ALLOW_ALL`. The five `sintheta-printer` rules are the only custom firewall rules. The `sintheta-iot` SSID uses `Default`; it is not a routed security boundary.
+
+## Infrastructure Address Inventory
+
+The following service endpoints use UniFi fixed-IP reservations on `Default`. Treat the numeric address as the stable network contract for embedded clients and repository configuration; do not depend on a `.local` name when the caller cannot reliably use mDNS.
+
+| Device or service | UniFi identity | Reserved address | Repository or operational dependency |
+| --- | --- | --- | --- |
+| Home Assistant | `00:c0:08:97:1a:8d` | `192.168.1.163` | `sintheta-printer` TCP/8099 firewall destination and direct embedded-client API calls |
+| QNAP NAS | `24:5e:be:5f:d6:ae` | `192.168.1.66` | Stable storage and administration endpoint |
+| Canon printer | `34:9f:7b:a4:69:e0` | `192.168.1.150` | Stable printer/scanner endpoint |
+| Brother QL-810W | `BRWACF23C3213C4` / `ac:f2:3c:32:13:c4` | `192.168.1.192` | `printer` add-on raw TCP/9100 target |
+| LED Grid Wall | `ledgridwall` / `88:a2:9e:36:1b:dc` | `192.168.1.98` | `grid-dashboard` LEDGrid API target on TCP/5000 |
+
+All five mappings had `use_fixedip:true` in controller state on 2026-08-31. The Brother and LED Grid Wall reservations were created that day at their already-active addresses; the other three were verified as existing reservations. Fan controllers are deliberately outside this infrastructure reservation set and were not changed.
+
+Current [UniFi DNS documentation](https://help.ui.com/hc/en-us/articles/15179064940439-UniFi-DNS-Records-and-Local-Hostnames) supports a per-client **Local DNS Record** or a gateway DNS host record on capable gateways. This legacy USG site exposes neither control in the supported Network UI, and the five client records above have no `local_dns_record` value. Continue using the reserved numeric addresses where ordinary DNS is required. If the gateway is replaced or a dedicated resolver is introduced, use an internal namespace such as `home.arpa`; do not overload `.local`, which is reserved for mDNS.
 
 ### WAN, VPN, and exposure baseline
 
-- `FiOS` is the primary DHCP WAN. `Internet 2` is a DHCP, failover-only secondary WAN.
-- Smart Queues are disabled on both WANs. IPv6 protocol selection is disabled even though a legacy `ipv6_enabled` field remains true; treat IPv6 as not configured until verified from a client and gateway firewall.
+- `FiOS` is the only configured Internet connection and uses WAN1 with DHCP. WAN2 is unconfigured, so there is no automatic Internet failover.
+- Smart Queues are disabled on `FiOS`. IPv6 protocol selection is disabled even though a legacy `ipv6_enabled` field remains true; treat IPv6 as not configured until verified from a client and gateway firewall.
 - The enabled `300Newarkto2117Lehigh` site-to-site IPsec VPN reaches `192.168.8.0/24`, selects **all** local subnets, and uses IKEv1, AES-128, SHA-1, DH group 14, and PFS. Ubiquiti's current [manual IPsec guidance](https://help.ui.com/hc/en-us/articles/31176030265111-IPSec-Site-to-Site-VPN-for-UMR) recommends at least AES-256 with SHA-256 for stronger security, subject to peer support.
 - No manual port forwards, static routes, or firewall address groups exist. UPnP and NAT-PMP are enabled in secure mode for `Default`; live dynamic mappings were visible during the audit, so “no manual port forwards” does not mean “no inbound exposure.” Ubiquiti's [UPnP guidance](https://help.ui.com/hc/en-us/articles/12648697125783-UniFi-Gateway-UPnP) recommends leaving it disabled unless required.
 - No-IP dynamic DNS publishes `timmonslee.hopto.org` on the primary WAN.
@@ -156,7 +171,7 @@ Keep performance-sensitive or roaming clients on `sintheta`:
 
 Do not move a wired device merely because it is an IoT product. For another printer, move it only if it is wireless and benefits from the compatibility settings; same-subnet AirPrint discovery works across these two SSIDs.
 
-The Brother printer's last retained record was `192.168.1.192` on `sintheta` through the U7's 2.4 GHz radio. The printer add-on is configured for that address, but the controller has **no fixed-IP reservation** for its MAC. Create and verify the reservation before relying on `.192` or moving the printer to `sintheta-iot`. Do not join the Brother printer itself to `sintheta-printer`: that SSID is for untrusted print-request clients and intentionally cannot accept Home Assistant's TCP/9100 connection to the printer.
+The Brother printer was online at `192.168.1.192` on `sintheta` through the U7's 2.4 GHz radio when its fixed-IP reservation was created and verified on 2026-08-31. The printer add-on is configured for that address. Keep the reservation if moving the printer to `sintheta-iot`, and do not join the Brother printer itself to `sintheta-printer`: that SSID is for untrusted print-request clients and intentionally cannot accept Home Assistant's TCP/9100 connection to the printer.
 
 ## Switch Baseline
 
@@ -171,19 +186,16 @@ The recommendation is not permission to change live state. Answer the question i
 | Priority | Setting or scope | Observed value | Recommended next step | Question that determines the target value |
 | --- | --- | --- | --- | --- |
 | High | `sintheta-printer` validation | Saved and provisioned; no client test | Join an expendable client and prove DHCP, `homeassistant.local`, TCP/8099, blocked Internet, blocked other LAN/gateway ports, and client isolation | Which device types will join, and do any require NTP or other traffic beyond the print API? |
-| High | Brother address | Add-on expects `192.168.1.192`; no reservation exists | Reserve `.192` to `ac:f2:3c:32:13:c4`, verify a renewed lease, then move it to `sintheta-iot` only if desired | Must existing jobs keep `.192`, and is the printer staying on `Default` long-term? |
 | High | Gateway lifecycle | USG 3P / firmware 4.4.57; Ubiquiti classifies USG as Legacy | Plan replacement before a controller update or hardware failure forces it | Preserve Cloud Key or consolidate into a Cloud Gateway? Required WAN count, site VPNs, rack form, throughput, IDS/IPS rate, and migration window? |
 | High | UPnP/NAT-PMP | Enabled on `Default`; live dynamic mappings exist | Inventory mappings and owners, then disable UPnP if each need can be removed or replaced with VPN/manual narrowly scoped access | Are Plex remote access, gaming, peer-to-peer apps, or Home Assistant integrations relying on a mapping? |
-| High | Site-to-site VPN crypto and scope | IKEv1/AES-128/SHA-1; all local subnets included | Coordinate both peers toward IKEv2, AES-256, and SHA-256, and explicitly select only required local networks | What gateway is at 2117 Lehigh, what does it support, and should it reach `esp` or any future IoT VLAN? |
+| High | Site-to-site VPN crypto and scope | IKEv1/AES-128/SHA-1; all local subnets included | Coordinate both peers toward IKEv2, AES-256, and SHA-256, and explicitly select only required local networks | What gateway is at 2117 Lehigh, what does it support, and should it reach any future IoT VLAN? |
 | Medium | IoT segmentation | `sintheta-iot` shares trusted `Default` | Inventory dependencies and migrate small device groups to a real restricted VLAN with explicit Home Assistant and discovery exceptions | Which Sonos, AirPlay, Chromecast, printer, cloud, and phone-to-device flows must cross the boundary? |
-| Medium | Dormant `esp` network | VLAN 2, no Internet, mDNS on, no isolation, no SSID or retained clients | Identify its owner; document and secure it, repurpose it deliberately, or remove it | Was it intended for ESPHome provisioning, and does any static device use it without appearing in controller history? |
 | Medium | mDNS proxy | All services across all eligible networks | Move toward custom networks/services only after a test proves raw `homeassistant.local` A-record resolution still works for print clients | Which cross-VLAN services are actually required, and can UniFi's custom service model preserve hostname-only lookup? |
 | Medium | Backups | 14 daily controller-local Network backups; cloud backup off | Maintain an encrypted off-device System Config backup and test that the intended replacement hardware can restore it | Is UI cloud backup acceptable, or where will offline exports be stored and how often will restoration be tested? |
 | Medium | Management access and logs | One recorded owner; device password auth enabled; NetFlow/syslog off | Verify MFA/recovery and a break-glass path; repair USG key access before considering key-only device SSH; choose a log destination if forensic history matters | Who must recover the site if the owner account or Cloud Key fails, and what event retention/privacy budget is appropriate? |
 | Medium | Hidden/test WLANs | Element Adoption and `sintheta-6-test` enabled | Disable each only when its owner confirms it is unused; verify AP generated state afterward | Are any AutoLink/Element devices still present, and what experiment/expiry date owns `sintheta-6-test`? |
 | Medium | STP | Classic STP, sole switch priority 4096 | Document the intended root and consider RSTP during a maintenance window; set edge/BPDU behavior only after mapping downstream switches | Is `Switch Server Closet` the permanent root, and which ports lead to switches or bridges rather than endpoints? |
-| Low | Dual WAN | `Internet 2` is failover-only; WAN event reporting off | Document the provider and run a witnessed failover/restore test at an acceptable time | What outage duration is acceptable, and should failover generate an external alert? |
-| Low | DNS/filtering | DHCP DNS is automatic; a stored `.163` value is inactive-looking; ad filtering is enabled; DoH off | Verify DNS servers from a fresh client lease before changing DNS, filtering, or encrypted DNS | Is Home Assistant intended to be the resolver, and must filtering be enforceable rather than best-effort? |
+| Low | DNS/filtering | DHCP DNS is automatic; legacy USG exposes no supported local-DNS record control; ad filtering is enabled; DoH off | Use the reserved addresses above for ordinary unicast access; verify DNS servers from a fresh lease before introducing a capable gateway or dedicated `home.arpa` resolver | Should a replacement gateway own local DNS, or should Home Assistant/QNAP host an independently managed resolver? |
 | Low | Smart Queues and IPv6 | Smart Queues off; IPv6 protocol disabled | Leave off unless a measured latency or IPv6 requirement justifies an end-to-end design and gateway-capacity test | What are sustained WAN rates, bufferbloat under load, ISP IPv6 support, and VPN/firewall requirements? |
 
 ### Optional audit automation
@@ -210,6 +222,7 @@ Never update UniFi configuration through its MongoDB database. The database is a
 ### Relevant UI locations
 
 - SSID settings: **Network > Settings > WiFi**
+- Client reservations: **Network > Client Devices > select client > Settings > IP Settings > Fixed IP Address**
 - Per-AP radios and meshing: **Network > UniFi Devices > select AP > Settings gear > Radios**
 - Controller SSH: **Control Plane > Console > SSH**
 - Adopted-device SSH: search Network settings for **Device SSH Authentication**
@@ -239,6 +252,39 @@ db.wlanconf.find(
 ).forEach(printjson)
 '"
 ```
+
+The named WLAN inventory should contain exactly `sintheta`, `sintheta-iot`,
+`sintheta-printer`, and `sintheta-6-test`, plus the controller-owned hidden
+Element adoption WLAN while that feature remains enabled. There should be no
+WLAN named `esp`; the retired `esp` object was a routed network, not an SSID.
+
+### Controller network and WAN state
+
+In **Network > Settings > Overview**, verify that the Networks table contains
+only `Default` and `sintheta-printer`, and that the Internet table contains only
+`FiOS` on WAN1. The Internet section should offer **Add Secondary Internet
+Connection** instead of listing WAN2. This supported-UI check is authoritative
+for the intended configuration; do not attempt to recreate or delete these
+objects through MongoDB.
+
+### Infrastructure fixed-IP reservations
+
+Verify the five intended mappings without printing unrelated client data:
+
+```bash
+ssh root@192.168.1.180 "mongo --quiet --port 27117 ace --eval '
+db.user.find(
+  {mac:{\$in:[
+    \"00:c0:08:97:1a:8d\", \"24:5e:be:5f:d6:ae\",
+    \"34:9f:7b:a4:69:e0\", \"88:a2:9e:36:1b:dc\",
+    \"ac:f2:3c:32:13:c4\"
+  ]}},
+  {_id:0, hostname:1, mac:1, use_fixedip:1, fixed_ip:1, local_dns_record:1}
+).sort({mac:1}).forEach(printjson)
+'"
+```
+
+The result must match [Infrastructure Address Inventory](#infrastructure-address-inventory), with `use_fixedip:true` for every row. An empty `local_dns_record` is expected on the current USG and is not evidence that the hostname resolves through ordinary DNS. Use the supported client UI to change a reservation; never write controller MongoDB.
 
 ### Controller AP state
 
@@ -333,12 +379,28 @@ Do not raise AP transmit power solely to hide poor client RSSI; asymmetric links
 - Recorded recommendations and the intent questions that must be answered before changing security, multicast, VPN, STP, WAN, DNS, or update settings.
 - Performed no live changes during this audit.
 
+### 2026-08-31: retired orphan network and unused WAN2
+
+- Confirmed in the supported UI that `esp` was a routed VLAN 2 network, not a Wi-Fi SSID, and had no DHCP leases or associated WLAN.
+- Confirmed `Internet 2` was an inactive failover-only WAN2 definition with no IPv4 or IPv6 address and 0% uptime.
+- Removed `Internet 2`, then removed `esp`, through **Network > Settings > Overview > Manage**.
+- Verified the post-change UI lists only `FiOS` on WAN1 and only `Default` plus `sintheta-printer` as routed networks; all four intended client WLANs remain present.
+- WAN2 is now unconfigured and provides no failover. Roll back only by deliberately recreating the required network or secondary Internet connection from recorded addressing/provider requirements or by restoring an appropriate controller backup.
+
+### 2026-08-31: infrastructure fixed-IP reservations
+
+- Verified the existing Home Assistant (`192.168.1.163`), QNAP (`192.168.1.66`), and Canon printer (`192.168.1.150`) reservations.
+- Created fixed-IP reservations for the online Brother QL-810W at `192.168.1.192` and LED Grid Wall at `192.168.1.98`, preserving their active addresses.
+- Re-read controller state and confirmed `use_fixedip:true` with the expected MAC/address mapping for all five infrastructure clients.
+- Deliberately excluded all fan controllers from this reservation change.
+- Confirmed the current legacy-USG UI does not offer per-client or policy local-DNS records. Numeric reserved addresses remain the supported stable endpoints; `.local` remains mDNS-only.
+
 ### Next controlled iterations
 
-1. Complete the `sintheta-printer` client validation and Brother fixed-IP reservation in the decision register.
+1. Complete the `sintheta-printer` end-to-end client validation in the decision register.
 2. Inventory live UPnP mappings and decide whether each one is still required before disabling UPnP.
 3. Plan the legacy USG replacement and coordinated IPsec modernization.
-4. Resolve the purpose of `esp`, Element Adoption, and `sintheta-6-test` before retaining or removing them.
+4. Resolve the purpose of Element Adoption and `sintheta-6-test` before retaining or removing them.
 5. Move documented IoT clients in small groups only after defining a real segmentation policy and required flows.
 6. Compare 2.4 GHz utilization and retries after migration.
 7. Confirm primary-bath coverage remains acceptable before reducing Bedroom AP power further or removing it.
