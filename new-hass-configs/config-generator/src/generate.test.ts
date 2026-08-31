@@ -258,11 +258,11 @@ describe("Scene Generation with Pairing", () => {
       expect(yamlOutput).toContain("brightness: 255");
     });
 
-    it("should submit on/off-only Z-Wave dimmer loads without waiting and isolate weak outlets", () => {
+    it("should submit on/off-only Z-Wave dimmer loads without waiting and isolate every target", () => {
 
       const calls = generateFastCalls(scenes.living_room_high);
 
-      expect(calls).toHaveLength(16);
+      expect(calls).toHaveLength(18);
       expect(
         calls.find(
           (call: any) =>
@@ -272,19 +272,26 @@ describe("Scene Generation with Pairing", () => {
         )
       ).toBeDefined();
       expect(
-        calls.find(
-          (call: any) =>
-            call.action === "zwave_js.multicast_set_value" &&
-            call.data?.command_class === 38 &&
-            call.data?.value === 99 &&
-            call.data?.options?.transitionDuration === "0s" &&
-            call.data?.wait_for_result === undefined &&
-            call.target.entity_id.length === 3 &&
-            call.target.entity_id.includes("light.light_living_cornerspot") &&
-            call.target.entity_id.includes("light.light_living_desklamps") &&
-            call.target.entity_id.includes("light.light_living_sliderring")
+        [
+          "light.light_living_cornerspot",
+          "light.light_living_desklamps",
+          "light.light_living_sliderring",
+        ].every((entityId) =>
+          calls.some(
+            (call: any) =>
+              call.action === "zwave_js.set_value" &&
+              call.data?.command_class === 38 &&
+              call.data?.value === 99 &&
+              call.data?.options?.transitionDuration === "0s" &&
+              call.data?.wait_for_result === false &&
+              call.target.entity_id.length === 1 &&
+              call.target.entity_id[0] === entityId
+          )
         )
-      ).toBeDefined();
+      ).toBe(true);
+      expect(
+        calls.some((call: any) => call.action === "zwave_js.multicast_set_value")
+      ).toBe(false);
       expect(
         calls.find(
           (call: any) =>
@@ -540,9 +547,10 @@ describe("Scene Generation with Pairing", () => {
           "switch.light_living_sillleftpower"
         )
       ).toBe(true);
-      expect(JSON.stringify(zwaveBatchSteps[0])).toContain(
+      expect(JSON.stringify(zwaveBatchSteps)).not.toContain(
         "zwave_js.multicast_set_value"
       );
+      expect(JSON.stringify(zwaveBatchSteps)).toContain("zwave_js.set_value");
     });
 
     it("should force scene automations to latest-intent restart mode", () => {

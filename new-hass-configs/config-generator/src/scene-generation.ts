@@ -37,7 +37,7 @@ export interface SceneEntityTarget {
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
 export const FAST_SCENE_DISPATCHER_ID = "fast_scene_dispatch";
 export const FAST_SCENE_DISPATCH_WORKER_ID = "fast_scene_dispatch_worker";
-export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 2;
+export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 1;
 export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 250;
 export const FAST_SCENE_CONVERGENCE_DELAY_MS = 2000;
 export const FAST_SCENE_SKIPPED_EVENT = "fast_scene_targets_skipped";

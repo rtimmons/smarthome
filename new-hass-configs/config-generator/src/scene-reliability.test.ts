@@ -191,7 +191,7 @@ describe("Fast scene reliability contract", () => {
     }
   });
 
-  it("covers every target once and isolates Z-Wave except explicit multicast allowlists", () => {
+  it("covers every target once and isolates every currently configured Z-Wave target", () => {
     for (const [sceneId, scene] of Object.entries(scenes)) {
       const targets = generateSceneTargets(scene);
       const calls = generateFastSceneCalls(scene);
@@ -202,45 +202,26 @@ describe("Fast scene reliability contract", () => {
         [...expectedEntityIds].sort()
       );
       expect(new Set(calledEntityIds).size, sceneId).toBe(calledEntityIds.length);
-      const targetsByEntityId = new Map(
-        targets.map((target) => [target.entityId, target])
-      );
-
       for (const target of targets.filter((candidate) => candidate.zwaveBacked)) {
         const call = calls.find((candidate) =>
           candidate.target.entity_id.includes(target.entityId)
         );
         expect(call, `${sceneId}:${target.entityId}`).toBeDefined();
-        if (target.device.fastSceneMulticastGroup) {
-          expect(call!.action, `${sceneId}:${target.entityId}`).toBe(
-            "zwave_js.multicast_set_value"
-          );
-          expect(
-            call!.target.entity_id.every(
-              (entityId) =>
-                targetsByEntityId.get(entityId)?.device.fastSceneMulticastGroup ===
-                target.device.fastSceneMulticastGroup
-            ),
-            `${sceneId}:${target.entityId}`
-          ).toBe(true);
-        } else {
-          expect(call!.target.entity_id, `${sceneId}:${target.entityId}`).toEqual([
-            target.entityId,
-          ]);
-        }
+        expect(call!.target.entity_id, `${sceneId}:${target.entityId}`).toEqual([
+          target.entityId,
+        ]);
       }
     }
   });
 
-  it("falls back to isolated set_value when only one multicast target is eligible", () => {
+  it("does not generate multicast calls for the current device registry", () => {
     const sequence = generateFastScriptsFromRegistry({
       living_room_high: scenes.living_room_high,
     }).fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
     const serialized = JSON.stringify(sequence);
 
-    expect(serialized).toContain("zwave_js.multicast_set_value");
-    expect(serialized).toContain('count >= 2');
-    expect(serialized).toContain('"default":[{"action":"zwave_js.set_value"');
+    expect(serialized).not.toContain("zwave_js.multicast_set_value");
+    expect(serialized).toContain("zwave_js.set_value");
     expect(serialized).toContain('"wait_for_result":false');
   });
 
@@ -315,18 +296,25 @@ describe("Fast scene reliability contract", () => {
         sceneId
       ).toBe(true);
 
-      for (const parallel of collectObjects(
+      for (const batch of collectObjects(
         sequence,
-        (candidate) => Array.isArray(candidate.parallel)
+        (candidate) =>
+          Array.isArray(candidate.if) &&
+          Array.isArray(candidate.then) &&
+          candidate.then.some((step: any) => Array.isArray(step.parallel))
       )) {
-        const batchText = JSON.stringify(parallel.parallel);
-        const containsZwave = zwaveEntityIds.some((entityId) =>
-          batchText.includes(entityId)
-        );
-        if (containsZwave) {
-          expect(parallel.parallel.length, sceneId).toBeLessThanOrEqual(
-            DEFAULT_MAX_ZWAVE_CALLS_PER_STEP
+        for (const parallel of batch.then.filter((step: any) =>
+          Array.isArray(step.parallel)
+        )) {
+          const batchText = JSON.stringify(parallel.parallel);
+          const containsZwave = zwaveEntityIds.some((entityId) =>
+            batchText.includes(entityId)
           );
+          if (containsZwave) {
+            expect(parallel.parallel.length, sceneId).toBeLessThanOrEqual(
+              DEFAULT_MAX_ZWAVE_CALLS_PER_STEP
+            );
+          }
         }
       }
     }

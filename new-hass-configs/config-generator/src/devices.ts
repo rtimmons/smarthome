@@ -157,13 +157,11 @@ export const devices: DeviceRegistry = {
     living_desklamps: {
       entity: "light.light_living_desklamps",
       type: "zwave_switch_light",
-      fastSceneMulticastGroup: "minoston_mp22zd_cc38",
       capabilities: ["on_off"]
     },
     living_sliderring: {
       entity: "light.light_living_sliderring",
       type: "zwave_switch_light",
-      fastSceneMulticastGroup: "minoston_mp22zd_cc38",
       capabilities: ["on_off"]
     },
     living_palm: {
@@ -185,7 +183,6 @@ export const devices: DeviceRegistry = {
     living_cornerspot: {
       entity: "light.light_living_cornerspot",
       type: "zwave_switch_light",
-      fastSceneMulticastGroup: "minoston_mp22zd_cc38",
       capabilities: ["on_off"]
     },
     living_hallway: {
@@ -244,7 +241,6 @@ export const devices: DeviceRegistry = {
     kitchen_ring: {
       entity: "light.light_kitchen_ring",
       type: "zwave_switch_light",
-      fastSceneMulticastGroup: "minoston_mp22zd_cc38",
       capabilities: ["on_off"]
     },
     kitchen_hanging: {
