@@ -48,6 +48,7 @@ interface RoomGroup {
 }
 
 const DEFAULT_TOPOLOGY_DEADLINE_MS = 45_000;
+const JOIN_ALL_OBSERVATION_WINDOW_MS = 5_000;
 
 const parseGroup = (
   snapshot: SonosStateSnapshot,
@@ -110,6 +111,22 @@ const volumeForRoom = (snapshot: SonosStateSnapshot, roomName: SonosRoomName): n
 
 const uniqueRooms = (rooms: readonly SonosRoomName[]): SonosRoomName[] => {
   return [...new Set(rooms)];
+};
+
+const isIsolatedRoomJoinFailure = (error: unknown): boolean => {
+  if (error instanceof SonosBackendError) {
+    return error.code === 'room_unavailable';
+  }
+  if (!(error instanceof HomeAssistantClientError)) {
+    return false;
+  }
+  return error.code === 'network' || error.code === 'timeout' ||
+    (error.code === 'http' && (error.statusCode || 0) >= 500);
+};
+
+const isDefiniteRoomJoinFailure = (error: unknown): boolean => {
+  return error instanceof SonosBackendError ||
+    (error instanceof HomeAssistantClientError && error.code === 'http');
 };
 
 export class HomeAssistantSonosActions {
@@ -292,9 +309,7 @@ export class HomeAssistantSonosActions {
           );
         }
         const targetEntity = SONOS_ROOM_TO_ENTITY[targetRoom];
-        const memberEntities = currentAvailable
-          .filter(roomName => roomName !== targetRoom)
-          .map(roomName => SONOS_ROOM_TO_ENTITY[roomName]);
+        const memberRooms = currentAvailable.filter(roomName => roomName !== targetRoom);
 
         if (targetGroup.coordinator !== targetRoom) {
           this.stateStore.assertCommandable([targetEntity]);
@@ -317,28 +332,81 @@ export class HomeAssistantSonosActions {
           targetGroup = parseGroup(this.stateStore.snapshot(), targetRoom);
         }
 
-        this.stateStore.assertCommandable([targetEntity, ...memberEntities]);
-        const allAlreadyJoined = currentAvailable.every(roomName =>
-          targetGroup.members.includes(roomName)
+        const definiteFailures = new Set<SonosRoomName>();
+        for (const memberRoom of memberRooms) {
+          if (context.isObsolete()) {
+            return;
+          }
+          this.stateStore.assertCommandable([targetEntity]);
+          targetGroup = parseGroup(this.stateStore.snapshot(), targetRoom);
+          if (targetGroup.coordinator !== targetRoom) {
+            throw new SonosBackendError(
+              'invalid_topology',
+              `Join-all target ${targetRoom} is no longer the coordinator`,
+              503,
+              true
+            );
+          }
+          if (targetGroup.members.includes(memberRoom)) {
+            continue;
+          }
+
+          try {
+            const memberEntity = SONOS_ROOM_TO_ENTITY[memberRoom];
+            this.stateStore.assertCommandable([memberEntity]);
+            context.recordServiceCall();
+            await this.call('join', {
+              entity_id: targetEntity,
+              group_members: [memberEntity],
+            });
+          } catch (error) {
+            if (context.isObsolete()) {
+              return;
+            }
+            if (!isIsolatedRoomJoinFailure(error)) {
+              throw error;
+            }
+            if (isDefiniteRoomJoinFailure(error)) {
+              definiteFailures.add(memberRoom);
+            }
+          }
+        }
+
+        if (context.isObsolete()) {
+          return;
+        }
+        const expectedJoinedRooms = currentAvailable.filter(
+          roomName => !definiteFailures.has(roomName)
         );
-        if (!allAlreadyJoined) {
-          await this.callTopologyAndObserve(
-            'join',
-            {entity_id: targetEntity, group_members: memberEntities},
+        try {
+          await this.waitForTopology(
             next => {
               const observed = parseGroup(next, targetRoom);
               return observed.coordinator === targetRoom &&
-                currentAvailable.every(roomName => observed.members.includes(roomName));
+                expectedJoinedRooms.every(roomName => observed.members.includes(roomName));
             },
+            Math.min(context.remainingMs(), JOIN_ALL_OBSERVATION_WINDOW_MS),
             context.isObsolete,
-            context.remainingMs,
-            context.recordServiceCall,
             context.onObsolete
           );
+        } catch (error) {
+          if (context.isObsolete()) {
+            return;
+          }
+          if (!(error instanceof SonosBackendError && error.code === 'operation_timeout')) {
+            throw error;
+          }
         }
+
+        const observed = parseGroup(this.stateStore.snapshot(), targetRoom);
+        const failedRooms = rooms.filter(roomName =>
+          newlyUnavailable.includes(roomName) ||
+          definiteFailures.has(roomName) ||
+          !observed.members.includes(roomName)
+        );
         return {
-          status: newlyUnavailable.length > 0 ? 'partial' : 'completed',
-          unavailableRooms: newlyUnavailable,
+          status: failedRooms.length > 0 ? 'partial' : 'completed',
+          unavailableRooms: failedRooms,
         } satisfies SonosOperationRunResult;
       },
     });

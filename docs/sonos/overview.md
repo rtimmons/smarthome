@@ -38,6 +38,8 @@ are frozen in [the source compatibility contract](source-compatibility.md).
 
 Topology writes are serialized and complete only after authoritative Home Assistant state matches the request or a bounded deadline is reached. Playback and volume calls remain outside that topology queue. Unknown topology is a `503`, never an invented empty or singleton group.
 
+Join-all isolates member writes in requested-room order. A member that is unavailable or fails its Home Assistant join is reported in the terminal partial result, while later healthy members are still joined to the requested coordinator. Failure of the requested coordinator still terminates the operation because there is no safe destination group.
+
 ## Room and policy ownership
 
 The room-to-entity map, configured favorites, and TV presets are repository-owned allowlists under `sonos-api/src/server/`. `media_player.maker_room` and dynamically discovered entities are intentionally excluded.

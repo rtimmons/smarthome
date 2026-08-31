@@ -372,6 +372,8 @@ const run = async (): Promise<void> => {
 
   {
     const calls: Call[] = [];
+    let bedroomJoined = false;
+    let officeJoined = false;
     const store = new FakeStore([
       haState('Bedroom', {members: ['Bedroom', 'Kitchen']}),
       haState('Kitchen', {members: ['Bedroom', 'Kitchen']}),
@@ -389,10 +391,16 @@ const run = async (): Promise<void> => {
               haState('Office'),
             ]);
           } else {
+            const member = (data.group_members as string[])[0];
+            bedroomJoined ||= member === SONOS_ROOM_TO_ENTITY.Bedroom;
+            officeJoined ||= member === SONOS_ROOM_TO_ENTITY.Office;
+            const members: Array<'Kitchen' | 'Bedroom' | 'Office'> = ['Kitchen'];
+            if (bedroomJoined) members.push('Bedroom');
+            if (officeJoined) members.push('Office');
             store.set([
-              haState('Bedroom'),
-              haState('Kitchen', {members: ['Kitchen', 'Bedroom', 'Office']}),
-              haState('Office', {members: ['Kitchen', 'Bedroom', 'Office']}),
+              bedroomJoined ? haState('Bedroom', {members}) : haState('Bedroom'),
+              haState('Kitchen', {members}),
+              officeJoined ? haState('Office', {members}) : haState('Office'),
             ]);
           }
           return {};
@@ -402,8 +410,8 @@ const run = async (): Promise<void> => {
     const result = await actions.joinAll(
       'Kitchen', ['Kitchen', 'Bedroom', 'Office']
     ).finished;
-    assert.equal(result.status, 'completed');
-    assert.equal(result.serviceCallCount, 2);
+    assert.equal(result.status, 'completed', result.error);
+    assert.equal(result.serviceCallCount, 3);
     assert.deepEqual(calls, [
       {
         service: 'unjoin',
@@ -413,13 +421,89 @@ const run = async (): Promise<void> => {
         service: 'join',
         data: {
           entity_id: SONOS_ROOM_TO_ENTITY.Kitchen,
-          group_members: [
-            SONOS_ROOM_TO_ENTITY.Bedroom,
-            SONOS_ROOM_TO_ENTITY.Office,
-          ],
+          group_members: [SONOS_ROOM_TO_ENTITY.Bedroom],
         },
       },
-    ], 'join-all first detaches a follower and then makes it the requested coordinator');
+      {
+        service: 'join',
+        data: {
+          entity_id: SONOS_ROOM_TO_ENTITY.Kitchen,
+          group_members: [SONOS_ROOM_TO_ENTITY.Office],
+        },
+      },
+    ], 'join-all detaches a follower, then joins each member to the requested coordinator');
+  }
+
+  {
+    const calls: Call[] = [];
+    let kitchenJoined = false;
+    let officeJoined = false;
+    const store = new FakeStore([
+      haState('Living Room'),
+      haState('Bedroom'),
+      haState('Kitchen'),
+      haState('Office'),
+      haState('Guest Bathroom', {state: 'unavailable'}),
+    ]);
+    const updateObservedGroup = (): void => {
+      const members: Array<'Living Room' | 'Kitchen' | 'Office'> = ['Living Room'];
+      if (kitchenJoined) members.push('Kitchen');
+      if (officeJoined) members.push('Office');
+      store.set([
+        haState('Living Room', {members}),
+        haState('Bedroom'),
+        kitchenJoined ? haState('Kitchen', {members}) : haState('Kitchen'),
+        officeJoined ? haState('Office', {members}) : haState('Office'),
+        haState('Guest Bathroom', {state: 'unavailable'}),
+      ]);
+    };
+    const actions = new HomeAssistantSonosActions({
+      stateStore: store,
+      client: {
+        async callService(_domain, service, data) {
+          calls.push({service, data});
+          const member = (data.group_members as string[])[0];
+          if (member === SONOS_ROOM_TO_ENTITY.Bedroom) {
+            throw new HomeAssistantClientError(
+              'http',
+              'Home Assistant request failed with status 500',
+              500
+            );
+          }
+          kitchenJoined ||= member === SONOS_ROOM_TO_ENTITY.Kitchen;
+          officeJoined ||= member === SONOS_ROOM_TO_ENTITY.Office;
+          updateObservedGroup();
+          return {};
+        },
+      },
+    });
+
+    const result = await actions.joinAll('Living Room', [
+      'Living Room',
+      'Bedroom',
+      'Kitchen',
+      'Office',
+      'Guest Bathroom',
+    ]).finished;
+
+    assert.equal(result.status, 'partial');
+    assert.deepEqual(result.unavailableRooms, ['Bedroom', 'Guest Bathroom']);
+    assert.equal(result.serviceCallCount, 3);
+    assert.deepEqual(calls.map(call => call.data.group_members), [
+      [SONOS_ROOM_TO_ENTITY.Bedroom],
+      [SONOS_ROOM_TO_ENTITY.Kitchen],
+      [SONOS_ROOM_TO_ENTITY.Office],
+    ], 'a failed room is isolated and later healthy rooms are still submitted');
+    assert.deepEqual(
+      store.snapshot().entities.get(SONOS_ROOM_TO_ENTITY['Living Room'])
+        ?.attributes.group_members,
+      [
+        SONOS_ROOM_TO_ENTITY['Living Room'],
+        SONOS_ROOM_TO_ENTITY.Kitchen,
+        SONOS_ROOM_TO_ENTITY.Office,
+      ],
+      'healthy rooms converge under the requested coordinator despite one stale room'
+    );
   }
 
   {
