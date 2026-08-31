@@ -17,9 +17,11 @@ class GridView {
     }
 
     onResize(width, height) {
+        // A rounded-up cell overflows once that extra fraction is repeated
+        // across every column, and iOS Safari honors the table width exactly.
         var square = Math.min(
-            Math.ceil(width / this.cols),
-            Math.ceil(height / this.rows)
+            Math.floor(width / this.cols),
+            Math.floor(height / this.rows)
         );
         this.square = square;
         $('.cell').each(function() {
@@ -34,7 +36,7 @@ class GridView {
             });
         });
 
-        this.$element.width((square + 2) * this.cols);
+        this.$element.width(square * this.cols);
     }
 
     // TODO: each cell is a listener

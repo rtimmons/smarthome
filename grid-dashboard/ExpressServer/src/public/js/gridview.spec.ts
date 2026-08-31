@@ -95,3 +95,82 @@ describe('GridView zone state', () => {
         expect(cell.setZoneStaleCalls).to.deep.equal([true, false, false]);
     });
 });
+
+describe('GridView sizing', () => {
+    const originalDollar = (globalThis as any).$;
+
+    afterEach(() => {
+        (globalThis as any).$ = originalDollar;
+    });
+
+    it('keeps every column within an evenly divisible viewport', () => {
+        const assignedWidths: number[] = [];
+        const container = {
+            width(value: number) {
+                assignedWidths.push(value);
+            },
+        };
+        const cellStyles: Record<string, string> = {};
+        const cell = {
+            attr() {
+                return undefined;
+            },
+            css(styles: Record<string, string>) {
+                Object.assign(cellStyles, styles);
+            },
+        };
+        (globalThis as any).$ = (target: unknown) =>
+            target === cell
+                ? cell
+                : {
+                      each(callback: (this: typeof cell) => void) {
+                          callback.call(cell);
+                      },
+                  };
+        const grid = new GridView({
+            container,
+            config: {cols: 11, rows: 8},
+            pubsub: {},
+        });
+
+        grid.onResize(440, 956);
+
+        expect(grid.square).to.equal(40);
+        expect(cellStyles.width).to.equal('40px');
+        expect(assignedWidths).to.deep.equal([440]);
+    });
+
+    it('rounds cell size down so uneven viewports cannot overflow', () => {
+        const assignedWidths: number[] = [];
+        const container = {
+            width(value: number) {
+                assignedWidths.push(value);
+            },
+        };
+        const cell = {
+            attr() {
+                return undefined;
+            },
+            css() {},
+        };
+        (globalThis as any).$ = (target: unknown) =>
+            target === cell
+                ? cell
+                : {
+                      each(callback: (this: typeof cell) => void) {
+                          callback.call(cell);
+                      },
+                  };
+        const grid = new GridView({
+            container,
+            config: {cols: 11, rows: 8},
+            pubsub: {},
+        });
+
+        grid.onResize(414, 896);
+
+        expect(grid.square).to.equal(37);
+        expect(assignedWidths).to.deep.equal([407]);
+        expect(assignedWidths[0]).to.be.at.most(414);
+    });
+});
