@@ -143,6 +143,8 @@ This case provides a baseline for future comparisons, not a permanent topology g
 
 The strongest remaining hypothesis was the phone's weak 6 GHz selection or a transient U7 state, not persistent multicast failure on the Apple TV's link. Ubiquiti's official [8.6.11 release discussion](https://community.ui.com/releases/0d476b79-b684-4370-96af-ccb21ce35cbd) also contains a report of 6 GHz trouble from another iPhone 17 Pro Max user; treat community reports as supporting evidence rather than confirmation.
 
+The whole-site audit on 2026-08-31 found the U7 on `8.7.11.19419`. Keep `8.6.11` above as part of the historical incident fingerprint; compare a recurrence against the current baseline rather than assuming the older firmware observation still applies.
+
 ## If the Problem Returns
 
 Do not immediately reprovision the AP. Capture one failed Remote attempt first, then:

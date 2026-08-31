@@ -8,6 +8,16 @@ For Bonjour, AirPlay, or Apple TV Remote failures after AP changes, continue wit
 
 ## Current Configuration
 
+The following matrix was verified on **2026-08-31**. A controller setting is not proof that every legacy device accepted the key, so keep per-device results here.
+
+| Target | Address | User | Key result | Notes |
+| --- | --- | --- | --- | --- |
+| Cloud Key Gen2 Plus | `192.168.1.180` | `root` | Works | Host SSH is independent of adopted-device SSH |
+| AP Bedroom | `192.168.1.128` | `ubnt` | Works | U6+ |
+| U7 Pro XG | `192.168.1.67` | `ubnt` | Works | — |
+| Switch Server Closet | `192.168.1.158` | `ubnt` | Works | US 24 PoE 250W |
+| Security Gateway | `192.168.1.1` | `ubnt` | **Public-key authentication failed** | USG 3P is a legacy-device exception; do not claim adopted-device SSH is fully verified until fixed |
+
 ### Cloud Key OS
 
 - Console: **Cloud Key Gen2 Plus**
@@ -29,7 +39,9 @@ ssh -o BatchMode=yes root@192.168.1.180 exit
 - SSH username: `ubnt`
 - Registered key label: **Ryan Timmons - 1Password id_rsa**
 
-The Network application's **Device SSH Authentication** setting applies to adopted APs, switches, and other managed Network devices. It does not enable SSH or install the key on the Cloud Key operating system.
+The Network application's **Device SSH Authentication** setting is intended to apply to adopted APs, switches, and gateways. Live verification succeeded on both APs and the switch but not the USG 3P. It does not enable SSH or install the key on the Cloud Key operating system.
+
+The controller reports adopted-device password authentication enabled in addition to the registered key. Do not disable password authentication until key access is verified on every device that must remain supportable, especially the USG. Store any required password only in the approved password manager.
 
 ## Local SSH Agent
 
@@ -116,6 +128,8 @@ Find the current device IP in **Network > UniFi Devices**, then connect with:
 ssh ubnt@<device-ip>
 ```
 
+For the gateway, use its LAN address `192.168.1.1`; the controller's generic device `ip` field currently contains the public WAN address and is not the management target.
+
 ## Network Reachability
 
 The client must already have network reachability to the Cloud Key or adopted device through the local LAN or an approved VPN/site-to-site route. Key installation does not expose SSH to the public internet. Do not publish port 22 directly; prefer VPN access.
@@ -135,6 +149,11 @@ The client must already have network reachability to the Cloud Key or adopted de
 3. For the Cloud Key, verify `/root/.ssh/authorized_keys` and its permissions using the console password or another authorized key.
 4. For adopted devices, confirm the key label is still listed under **Device SSH Settings**.
 5. Compare the installed public key with `ssh-add -L`.
+6. For the USG 3P, treat public-key denial as the known 2026-08-31 exception. Check whether the legacy gateway received the current Device SSH Authentication configuration; do not retry many identities, do not use its WAN address, and do not weaken host-key checking.
+
+### The host key changed
+
+An AP, switch, or gateway replacement, reset, or firmware recovery may legitimately rotate its SSH host key. It may also indicate the address now belongs to another device. Before removing a `known_hosts` entry, compare the target's current MAC/model/address in UniFi and obtain the new fingerprint through a trusted path. Remove only that exact stale host entry, reconnect with strict checking, and record the reason. Never globally disable `StrictHostKeyChecking`.
 
 ### The connection times out or is refused
 
