@@ -7,6 +7,7 @@ import signal
 import threading
 import time
 from collections.abc import Mapping
+from datetime import datetime
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Callable, List, Optional, Sequence, TypeGuard
@@ -36,6 +37,22 @@ from .presets import Preset, PresetStore, canonical_query_string, get_cached_sto
 from .preview import PreviewPayloadBuilder, PreviewPayloadError
 from .print_dispatcher import PrintDispatchService
 from .printed_labels import PrintedLabel, PrintedLabelNotFound, PrintedLabelStore
+from .text_idempotency import (
+    STATE_DISPATCHING,
+    STATE_OUTCOME_UNKNOWN,
+    STATE_RESERVED,
+    STATE_SUCCESS,
+    IdempotencyRecord,
+    IdempotencyStoreError,
+    TextPrintIdempotencyStore,
+)
+from .text_print import (
+    TextPrintValidationError,
+    canonical_request_hash,
+    render_text_label,
+    validate_idempotency_key,
+    validate_text_print_request,
+)
 from .label import (
     SUPPORTED_BACKENDS,
     PrinterConfig,
@@ -78,10 +95,23 @@ def _dispatch_image(
     return dispatch_image(image, config, target_spec=target_spec)
 
 
-def create_app() -> Flask:
+def create_app(*, text_print_clock: Callable[[], datetime] | None = None) -> Flask:
     app = Flask(__name__)
     app.wsgi_app = _IngressPrefixMiddleware(app.wsgi_app)  # type: ignore[method-assign]
     printed_label_store = PrintedLabelStore.from_env()
+    render_clock = text_print_clock or (lambda: datetime.now().astimezone())
+    text_store_lock = threading.Lock()
+    text_store: TextPrintIdempotencyStore | None = None
+
+    def get_text_store() -> TextPrintIdempotencyStore:
+        nonlocal text_store
+        with text_store_lock:
+            if text_store is None:
+                text_store = TextPrintIdempotencyStore.from_env()
+                text_store.initialize()
+                app.extensions["text_print_idempotency_store"] = text_store
+            return text_store
+
     preview_builder = PreviewPayloadBuilder(
         analyze_label_image=analyze_label_image,
         data_url_for_image=_data_url_for_image,
@@ -217,6 +247,182 @@ def create_app() -> Flask:
             prepared.image,
             target_spec=PNG_LABEL_SPEC,
         )
+
+    @app.post("/text/print")
+    def print_text_route():
+        try:
+            idempotency_key = validate_idempotency_key(request.headers.get("Idempotency-Key"))
+            if request.mimetype != "application/json":
+                raise TextPrintValidationError("Content-Type must be application/json.")
+            text_request = validate_text_print_request(request.get_json(silent=True))
+        except TextPrintValidationError as exc:
+            return jsonify({"code": "invalid_request", "error": str(exc)}), 400
+
+        payload_hash = canonical_request_hash(text_request)
+        try:
+            idempotency_store = get_text_store()
+            existing = idempotency_store.lookup(idempotency_key)
+        except IdempotencyStoreError as exc:
+            app.logger.warning("Text-print idempotency lookup failed: %s", exc)
+            return _text_storage_error()
+        if existing is not None:
+            return _text_record_response(existing, payload_hash)
+
+        try:
+            rendered = render_text_label(text_request, render_time=render_clock())
+            config = PrinterConfig.from_env()
+            metrics = analyze_label_image(
+                rendered.image,
+                config,
+                target_spec=PNG_LABEL_SPEC,
+            )
+        except TextPrintValidationError as exc:
+            return jsonify({"code": "invalid_request", "error": str(exc)}), 400
+        except ValueError as exc:
+            return jsonify({"code": "invalid_request", "error": str(exc)}), 400
+
+        try:
+            reservation = idempotency_store.reserve(
+                idempotency_key,
+                payload_hash,
+                rendered.rendered_at,
+            )
+        except IdempotencyStoreError as exc:
+            app.logger.warning("Text-print reservation failed: %s", exc)
+            return _text_storage_error()
+        if not reservation.reserved:
+            return _text_record_response(reservation.record, payload_hash)
+
+        try:
+            archived = printed_label_store.archive(
+                rendered.image,
+                rendered.filename,
+                target_spec=PNG_LABEL_SPEC,
+            )
+        except Exception as exc:
+            app.logger.warning("Text-label archive write failed: %s", exc)
+            _release_text_reservation(
+                idempotency_store,
+                idempotency_key,
+                payload_hash,
+                logger=app.logger,
+            )
+            return jsonify(
+                {
+                    "code": "storage_unavailable",
+                    "error": "Printed-label storage is unavailable; nothing was printed.",
+                }
+            ), 503
+
+        try:
+            idempotency_store.record_archived(
+                idempotency_key,
+                payload_hash,
+                archived.id,
+            )
+        except IdempotencyStoreError as exc:
+            app.logger.warning("Text-print archive state update failed: %s", exc)
+            try:
+                printed_label_store.delete(archived.id)
+            except OSError as delete_exc:
+                app.logger.warning("Text-label archive cleanup failed: %s", delete_exc)
+            _release_text_reservation(
+                idempotency_store,
+                idempotency_key,
+                payload_hash,
+                logger=app.logger,
+            )
+            return _text_storage_error()
+
+        try:
+            idempotency_store.mark_dispatching(idempotency_key, payload_hash)
+        except IdempotencyStoreError as exc:
+            app.logger.warning("Text-print dispatch state update failed: %s", exc)
+            released = _release_text_reservation(
+                idempotency_store,
+                idempotency_key,
+                payload_hash,
+                logger=app.logger,
+            )
+            if released:
+                try:
+                    printed_label_store.delete(archived.id)
+                except OSError as delete_exc:
+                    app.logger.warning("Text-label archive cleanup failed: %s", delete_exc)
+            return _text_storage_error()
+
+        try:
+            result = dispatch_image(rendered.image, config, target_spec=PNG_LABEL_SPEC)
+        except Exception as exc:
+            app.logger.warning("Text-label printer outcome is unknown: %s", exc)
+            response_payload = _unknown_text_print_payload(
+                idempotency_key,
+                rendered.rendered_at,
+                printed_label=_printed_label_payload(archived),
+            )
+            try:
+                idempotency_store.finish(
+                    idempotency_key,
+                    payload_hash,
+                    state=STATE_OUTCOME_UNKNOWN,
+                    http_status=503,
+                    response_body=response_payload,
+                )
+            except IdempotencyStoreError as store_exc:
+                app.logger.error(
+                    "Text-print uncertain result could not be persisted: %s", store_exc
+                )
+            return jsonify(response_payload), 503
+
+        updated = archived
+        archive_warning: str | None = None
+        try:
+            updated = printed_label_store.record_print(archived.id)
+        except Exception as exc:
+            app.logger.warning("Printed-label count update failed: %s", exc)
+            archive_warning = "The label printed, but its archive count could not be updated."
+
+        warnings = list(metrics.warnings)
+        if archive_warning:
+            warnings.append(archive_warning)
+        response_payload = _success_payload(result, warnings=warnings, metrics=metrics)
+        response_payload.update(
+            {
+                "idempotency_key": idempotency_key,
+                "idempotent_replay": False,
+                "rendered_at": rendered.rendered_at,
+                "printed_label": _printed_label_payload(updated),
+            }
+        )
+        try:
+            idempotency_store.finish(
+                idempotency_key,
+                payload_hash,
+                state=STATE_SUCCESS,
+                http_status=200,
+                response_body=response_payload,
+            )
+        except IdempotencyStoreError as exc:
+            app.logger.error("Text-print success could not be persisted: %s", exc)
+            unknown_payload = _unknown_text_print_payload(
+                idempotency_key,
+                rendered.rendered_at,
+                printed_label=_printed_label_payload(updated),
+            )
+            try:
+                idempotency_store.finish(
+                    idempotency_key,
+                    payload_hash,
+                    state=STATE_OUTCOME_UNKNOWN,
+                    http_status=503,
+                    response_body=unknown_payload,
+                )
+            except IdempotencyStoreError as store_exc:
+                app.logger.error(
+                    "Text-print uncertain result could not be persisted: %s", store_exc
+                )
+            return jsonify(unknown_payload), 503
+        return jsonify(response_payload)
 
     @app.get("/png/labels")
     def list_printed_pngs_route():
@@ -522,6 +728,74 @@ def _success_payload(
     if warnings:
         payload["warnings"] = list(warnings)
     return payload
+
+
+def _text_record_response(record: IdempotencyRecord, payload_hash: str):
+    if record.payload_hash != payload_hash:
+        return jsonify(
+            {
+                "code": "idempotency_conflict",
+                "error": "Idempotency-Key was already used with a different request.",
+                "idempotency_key": record.idempotency_key,
+            }
+        ), 409
+    if record.state in {STATE_RESERVED, STATE_DISPATCHING}:
+        return jsonify(
+            {
+                "code": "in_progress",
+                "error": "A print with this Idempotency-Key is already in progress.",
+                "idempotency_key": record.idempotency_key,
+                "rendered_at": record.rendered_at,
+            }
+        ), 409
+    if record.state in {STATE_SUCCESS, STATE_OUTCOME_UNKNOWN} and record.response_body is not None:
+        payload = dict(record.response_body)
+        payload["idempotent_replay"] = True
+        status_code = record.http_status or (200 if record.state == STATE_SUCCESS else 503)
+        return jsonify(payload), status_code
+    return _text_storage_error()
+
+
+def _unknown_text_print_payload(
+    idempotency_key: str,
+    rendered_at: str,
+    *,
+    printed_label: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "code": STATE_OUTCOME_UNKNOWN,
+        "error": (
+            "The print dispatch outcome is unknown. This Idempotency-Key will not be "
+            "dispatched again automatically."
+        ),
+        "idempotency_key": idempotency_key,
+        "idempotent_replay": False,
+        "rendered_at": rendered_at,
+        "printed_label": printed_label,
+    }
+
+
+def _text_storage_error():
+    return jsonify(
+        {
+            "code": "storage_unavailable",
+            "error": "Text-print idempotency storage is unavailable; nothing was printed.",
+        }
+    ), 503
+
+
+def _release_text_reservation(
+    store: TextPrintIdempotencyStore,
+    idempotency_key: str,
+    payload_hash: str,
+    *,
+    logger: Any,
+) -> bool:
+    try:
+        return store.release_reservation(idempotency_key, payload_hash)
+    except IdempotencyStoreError as exc:
+        logger.warning("Text-print reservation release failed: %s", exc)
+        return False
 
 
 def _dispatch_archived_png(

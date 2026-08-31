@@ -64,6 +64,64 @@ Credentials embedded in URLs and HTTP redirects are rejected so a print body or
 bearer token cannot be forwarded to an unexpected host. Server preflights remain
 in-memory only; a confirmed print is retained in the printed-label archive.
 
+## Generic JSON text printing
+
+`POST /text/print` renders caller-supplied text onto the same 62 mm, 720 × 390
+monochrome label used by PNG printing, archives it, and sends it through the configured
+printer backend. This API is domain-neutral: callers provide the title, ordered body
+lines, footer, and optional archive filename. All text sections are left-aligned within
+0.1-inch margins.
+
+Every request must use `Content-Type: application/json` and include a unique
+`Idempotency-Key` header containing 1–200 printable ASCII characters. The version 1
+body accepts only these fields:
+
+- `version` (required): must be `1`.
+- `lines` (required): one to six ordered strings.
+- `filename`, `title`, and `footer` (optional): strings used for the archive name and
+  label layout.
+
+Each string is trimmed at its edges while internal spaces are preserved. Individual
+fields are limited to 256 Unicode characters and all request text together is limited
+to 2,000 characters. Newlines, control characters, unknown fields, unknown variables,
+and text that cannot fit without clipping are rejected.
+
+The case-sensitive variables `{{Timestamp}}`, `{{Date}}`, and `{{Time}}` resolve to
+the service's local time. Timestamp and time values include the numeric UTC offset.
+Variables resolve once on the first execution; replays return the originally rendered
+time.
+
+```bash
+curl --fail-with-body \
+  -X POST 'http://homeassistant.local:8099/text/print' \
+  -H 'Content-Type: application/json' \
+  -H 'Idempotency-Key: scorebot-game-42' \
+  --data '{
+    "version": 1,
+    "filename": "scorebot-game-42.png",
+    "title": "CRIBBAGE",
+    "lines": ["RED    121", "BLUE    96", "TURN: RED"],
+    "footer": "Printed {{Timestamp}}"
+  }'
+```
+
+The first successful request returns the normal `status`, `output`, warnings, and
+metrics fields where applicable, plus `idempotency_key`, `idempotent_replay`,
+`rendered_at`, and `printed_label`. Repeating the same key and normalized request
+returns the stored response with `idempotent_replay: true` and does not render,
+archive, or dispatch again. Reusing a key with different content returns
+`409 idempotency_conflict`; an active duplicate returns `409 in_progress`.
+
+Idempotency records are stored in SQLite at
+`/data/text-print-idempotency.sqlite3` by default, configurable with
+`TEXT_PRINT_IDEMPOTENCY_DB`. Successful records are retained for at least 30 days.
+Interrupted or otherwise uncertain dispatches are retained indefinitely and return
+`outcome_unknown` on every retry.
+
+This endpoint provides at-most-once dispatch, not guaranteed exactly-once physical
+delivery. If the service cannot prove whether dispatch occurred, it will not print the
+request automatically again; this favors a missing label over a duplicate.
+
 ## Build the Home Assistant Add-on Image
 
 Build the talos add-on payload and a local container image to catch Dockerfile issues before deploying:

@@ -128,6 +128,8 @@ run_env:
     value: "8099"
   - env: PRINTED_LABELS_DIR
     value: "/data/printed-labels"
+  - env: TEXT_PRINT_IDEMPOTENCY_DB
+    value: "/data/text-print-idempotency.sqlite3"
   - env: LABEL_OUTPUT_DIR
     from_option: label_output_dir
     default: "/share/printer-labels"
