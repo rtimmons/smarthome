@@ -249,6 +249,14 @@ const config = {
         { y: 7, x: 9, w: 0 },
         { w: 1, h: 1, y: 7, x: 10, emoji: 'Notes' },
 
+        {
+            w: 1,
+            h: 1,
+            y: 6,
+            x: 10,
+            claz: 'state-Thermostat',
+        },
+
         { w:1, h:1,
             y:2, x:2,
             emoji: 'SingleUp',
@@ -596,7 +604,10 @@ const config = {
             ],
         },
     },
-    poll: [{ action: 'Music.FetchState', args: [], period: 2000 }],
+    poll: [
+        { action: 'Music.FetchState', args: [], period: 2000 },
+        { action: 'Thermostat.FetchState', args: [], period: 30000 },
+    ],
 };
 
 if (typeof module !== 'undefined' && module.exports) {

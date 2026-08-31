@@ -30,6 +30,13 @@ class App {
             sceneRooms: this.config.lightSceneRooms,
         });
 
+        this.thermostatController = new ThermostatController({
+            requester: this,
+            root: '', // Empty root for relative URLs (ingress compatible)
+            app: this,
+            pubsub: this.pubsub,
+        });
+
         this.ledgridController = new LedGridController({
             requester: this,
             root: '', // Empty root for relative URLs (ingress compatible)
@@ -252,6 +259,34 @@ class App {
         this.sonosStateIsStale = freshness === 'stale';
         this.sonosStateIsUnknown = freshness === 'unknown';
         this._refreshBanner();
+    }
+
+    setThermostatState(room, thermostat) {
+        if (room !== this.currentRoom()) {
+            return;
+        }
+
+        var cell = this.$.find('.state-Thermostat');
+        var currentTemperature = thermostat
+            ? thermostat.currentTemperature
+            : null;
+        var displayTemperature = formatTemperature(currentTemperature);
+        var hasTemperature = Boolean(displayTemperature);
+        var temperatureUnit =
+            thermostat && thermostat.temperatureUnit
+                ? ' ' + thermostat.temperatureUnit
+                : '';
+
+        cell.toggleClass('thermostat-available', hasTemperature);
+        cell.children('.content').text(displayTemperature);
+        if (hasTemperature) {
+            cell.attr(
+                'title',
+                room + ': ' + currentTemperature + temperatureUnit
+            );
+        } else {
+            cell.removeAttr('title');
+        }
     }
 
     // TODO: remove after callers migrate to setTrackBanner
@@ -540,6 +575,7 @@ class App {
         var oldRoom = this.room;
         this.room = toRoom;
         this._applyRoomConfig(toRoom);
+        this.setThermostatState(toRoom, null);
         this.pubsub.submit('Room.Changed', {
             FromRoom: oldRoom,
             ToRoom: toRoom,
@@ -561,6 +597,10 @@ class App {
     // TODO: don't call directly/ expose musicController?
     fetchState() {
         this.musicController.fetchState();
+    }
+
+    fetchThermostatState() {
+        this.thermostatController.fetchState();
     }
 
     // TODO: move to action listeners
@@ -613,6 +653,9 @@ class App {
                 break;
             case 'Music.FetchState':
                 this.fetchState();
+                break;
+            case 'Thermostat.FetchState':
+                this.fetchThermostatState();
                 break;
             case 'Music.PlayPause':
                 this.musicController.playPause();

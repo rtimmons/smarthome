@@ -17,6 +17,21 @@ class FetchStateOnRoomChange {
     }
 }
 
+class FetchThermostatStateOnRoomChange {
+    onMessage(e) {
+        e.Globals.App.fetchThermostatState();
+    }
+}
+
+class ThermostatUpdater {
+    onMessage(e) {
+        e.Globals.App.setThermostatState(
+            e.Event.Room,
+            e.Event.Thermostat
+        );
+    }
+}
+
 class RoomSaver {
     onMessage(e) {
         if (e.Topic == 'App.Initialized') {
@@ -394,6 +409,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         ActiveCells: ActiveCells,
         BackgroundChanger: BackgroundChanger,
+        FetchThermostatStateOnRoomChange: FetchThermostatStateOnRoomChange,
         displayedIntent: displayedIntent,
         freshnessFromMeta: freshnessFromMeta,
         formatBannerText: formatBannerText,
@@ -403,6 +419,7 @@ if (typeof module !== 'undefined' && module.exports) {
         reconcileIntentStatus: reconcileIntentStatus,
         IntentUpdater: IntentUpdater,
         ZoneUpdater: ZoneUpdater,
+        ThermostatUpdater: ThermostatUpdater,
         zoneMutationSatisfied: zoneMutationSatisfied,
     };
 }

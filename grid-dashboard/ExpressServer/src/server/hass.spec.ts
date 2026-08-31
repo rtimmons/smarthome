@@ -2,9 +2,11 @@ import { expect } from 'chai';
 
 import {
     createSceneActivator,
+    createThermostatStateReader,
     fastSceneEntityId,
     SCENE_WEBHOOK_TIMEOUT_MS,
     SceneActivationGate,
+    thermostatEntityId,
     type SceneActivationRuntime,
 } from './hass';
 
@@ -289,5 +291,167 @@ describe('Home Assistant scene routing', () => {
         expect(requestCount).to.equal(0);
         expect(response.statusCode).to.equal(400);
         expect(response.body).to.equal('Invalid scene');
+    });
+});
+
+describe('Home Assistant thermostat routing', () => {
+    it('maps dashboard rooms to their Home Assistant temperature sources', () => {
+        expect(thermostatEntityId('Bedroom')).to.equal('climate.bedroom');
+        expect(thermostatEntityId('Living Room')).to.equal(
+            'climate.living_room'
+        );
+        expect(thermostatEntityId('Kitchen')).to.equal('climate.kitchen');
+        expect(thermostatEntityId('Move')).to.equal(
+            'weather.forecast_home'
+        );
+        expect(thermostatEntityId('Office')).to.equal('climate.office');
+        expect(thermostatEntityId('Bathroom')).to.equal(undefined);
+    });
+
+    it('reads and sanitizes current climate state for the selected room', async () => {
+        const requests: Array<{ url: string; options?: RequestInit }> = [];
+        const readState = createThermostatStateReader({
+            runtime: coreRuntime,
+            request: async (url, options) => {
+                requests.push({ url, options });
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        state: 'heat_cool',
+                        attributes: {
+                            current_temperature: 71.5,
+                            temperature: 72,
+                            temperature_unit: '°F',
+                        },
+                    }),
+                    headers: new Headers(),
+                };
+            },
+        });
+        const response = new FakeResponse();
+
+        await readState(
+            { params: { room: 'Living Room' } } as any,
+            response as any
+        );
+
+        expect(requests).to.deep.equal([
+            {
+                url:
+                    'http://supervisor/core/api/states/climate.living_room',
+                options: {
+                    headers: { Authorization: 'Bearer test-token' },
+                },
+            },
+        ]);
+        expect(response.statusCode).to.equal(200);
+        expect(response.headers.get('Cache-Control')).to.equal('no-store');
+        expect(response.body).to.deep.equal({
+            room: 'Living Room',
+            thermostat: {
+                entityId: 'climate.living_room',
+                currentTemperature: 71.5,
+                targetTemperature: 72,
+                temperatureUnit: '°F',
+                hvacMode: 'heat_cool',
+            },
+        });
+    });
+
+    it('reads outdoor temperature for Move from native Home Assistant weather', async () => {
+        const requests: Array<{ url: string; options?: RequestInit }> = [];
+        const readState = createThermostatStateReader({
+            runtime: coreRuntime,
+            request: async (url, options) => {
+                requests.push({ url, options });
+                return {
+                    statusCode: 200,
+                    body: JSON.stringify({
+                        state: 'cloudy',
+                        attributes: {
+                            temperature: 74,
+                            temperature_unit: '°F',
+                        },
+                    }),
+                    headers: new Headers(),
+                };
+            },
+        });
+        const response = new FakeResponse();
+
+        await readState(
+            { params: { room: 'Move' } } as any,
+            response as any
+        );
+
+        expect(requests).to.deep.equal([
+            {
+                url:
+                    'http://supervisor/core/api/states/weather.forecast_home',
+                options: {
+                    headers: { Authorization: 'Bearer test-token' },
+                },
+            },
+        ]);
+        expect(response.body).to.deep.equal({
+            room: 'Move',
+            thermostat: {
+                entityId: 'weather.forecast_home',
+                currentTemperature: 74,
+                targetTemperature: null,
+                temperatureUnit: '°F',
+                hvacMode: null,
+            },
+        });
+    });
+
+    it('returns no thermostat without querying Home Assistant', async () => {
+        let requestCount = 0;
+        const readState = createThermostatStateReader({
+            runtime: coreRuntime,
+            request: async () => {
+                requestCount += 1;
+                throw new Error('should not be called');
+            },
+        });
+        const response = new FakeResponse();
+
+        await readState(
+            { params: { room: 'Guest Bathroom' } } as any,
+            response as any
+        );
+
+        expect(requestCount).to.equal(0);
+        expect(response.body).to.deep.equal({
+            room: 'Guest Bathroom',
+            thermostat: null,
+        });
+    });
+
+    it('preserves missing temperatures as unavailable instead of zero', async () => {
+        const readState = createThermostatStateReader({
+            runtime: coreRuntime,
+            request: async () => ({
+                statusCode: 200,
+                body: JSON.stringify({
+                    state: 'unavailable',
+                    attributes: {},
+                }),
+                headers: new Headers(),
+            }),
+        });
+        const response = new FakeResponse();
+
+        await readState(
+            { params: { room: 'Office' } } as any,
+            response as any
+        );
+
+        expect((response.body as any).thermostat.currentTemperature).to.equal(
+            null
+        );
+        expect((response.body as any).thermostat.targetTemperature).to.equal(
+            null
+        );
     });
 });

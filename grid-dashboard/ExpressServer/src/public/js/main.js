@@ -26,11 +26,16 @@ $(() => {
     });
 
     pubsub.subscribe('Room.StateObserved', new BackgroundChanger());
+    pubsub.subscribe('Thermostat.StateObserved', new ThermostatUpdater());
     pubsub.subscribe('Room.Changed', new ActiveCells());
     pubsub.subscribe('Cell.Press', new GenericOnPress());
     pubsub.subscribe('Cell.DoublePress', new GenericOnDoublePress());
     pubsub.subscribe('Intent.StateObserved', new IntentUpdater());
     pubsub.subscribe('Room.Changed', new FetchStateOnRoomChange());
+    pubsub.subscribe(
+        'Room.Changed',
+        new FetchThermostatStateOnRoomChange()
+    );
     pubsub.subscribe('Room.ZonesObserved', new ZoneUpdater());
     pubsub.subscribe(['App.Initialized', 'Room.Changed'], new RoomSaver());
 
