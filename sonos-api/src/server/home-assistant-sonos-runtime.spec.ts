@@ -817,7 +817,7 @@ test('zones omit an unavailable portable room when no reachable group claims it'
   });
 });
 
-test('zones fail closed when a reachable group still claims an unavailable room', async () => {
+test('zones omit an unavailable room still claimed by a reachable group', async () => {
   const {runtime, stateStore} = fixture();
   const office = stateStore.entities.get(SONOS_ROOM_TO_ENTITY.Office);
   assert.ok(office);
@@ -825,12 +825,12 @@ test('zones fail closed when a reachable group still claims an unavailable room'
 
   await withServer(runtime, async baseUrl => {
     const response = await fetch(`${baseUrl}/sonos/zones`);
-    assert.equal(response.status, 502);
-    assert.deepEqual(await response.json(), {
-      error: 'Unavailable room Office is still claimed by a group',
-      code: 'invalid_topology',
-      retryable: true,
-    });
+    assert.equal(response.status, 200);
+    assert.equal(response.headers.get('x-sonos-unavailable-rooms'), 'Office');
+    const zones = await response.json() as Array<{members: Array<{roomName: string}>}>;
+    assert.equal(zones.length, 1);
+    assert.equal(zones[0].members.length, SONOS_ROOM_NAMES.length - 1);
+    assert.ok(zones[0].members.every(member => member.roomName !== 'Office'));
   });
 });
 

@@ -468,6 +468,23 @@ const run = (): void => {
     zone.members.some(member => member.roomName === 'Office')), false,
   'an unavailable room is not invented as a singleton');
 
+  const staleUnavailableClaim = projectCanonicalSonosTopology(haSnapshot(
+    SONOS_ROOM_NAMES.map(room => haState(room, {
+      state: room === 'Office' ? 'unavailable' : 'idle',
+      members: room === 'Kitchen' || room === 'Office'
+        ? ['Kitchen', 'Office']
+        : [room],
+    }))
+  ));
+  assert.ok(staleUnavailableClaim.unknownRooms.includes('Office'));
+  assert.deepEqual(
+    staleUnavailableClaim.zones.find(zone =>
+      zone.members.some(member => member.roomName === 'Kitchen')
+    )?.members.map(member => member.roomName),
+    ['Kitchen'],
+    'reachable groups ignore stale claims for unavailable rooms'
+  );
+
   assert.throws(
     () => projectCanonicalSonosTopology({...snapshot, freshness: 'unknown'}),
     /topology is unknown/

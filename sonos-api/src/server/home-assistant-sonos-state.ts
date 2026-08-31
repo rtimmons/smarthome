@@ -217,6 +217,12 @@ export const projectCanonicalSonosTopology = (
     if (!state || state.state === 'unavailable' || state.state === 'unknown') {
       unknownRooms.add(roomName);
       unknownEntityIds.add(entityId);
+    }
+  }
+
+  for (const entityId of SONOS_ENTITY_IDS) {
+    const state = snapshot.entities.get(entityId);
+    if (!state || unknownEntityIds.has(entityId)) {
       continue;
     }
     const members = groupMembers(state);
@@ -232,23 +238,18 @@ export const projectCanonicalSonosTopology = (
       }
     }
 
-    const coordinatorId = members[0];
-    const sortedSet = [...members].sort();
+    // Home Assistant can retain an unavailable player in the reachable
+    // speakers' group_members list. Project the reachable subset so one
+    // offline room does not make every healthy zone unusable.
+    const reachableMembers = members.filter(member => !unknownEntityIds.has(member));
+    const coordinatorId = reachableMembers[0];
+    const sortedSet = [...reachableMembers].sort();
     const key = sortedSet.join('|');
     const existing = groups.get(key);
     if (existing && existing.coordinatorId !== coordinatorId) {
       throw new SonosProjectionError(`Conflicting coordinators for group ${key}`);
     }
     groups.set(key, {coordinatorId, memberIds: sortedSet});
-  }
-
-  for (const group of groups.values()) {
-    const unavailableMember = group.memberIds.find(memberId => unknownEntityIds.has(memberId));
-    if (unavailableMember) {
-      throw new SonosProjectionError(
-        `Unavailable room ${roomForSonosEntity(unavailableMember)} is still claimed by a group`
-      );
-    }
   }
 
   const claimedMembers = new Map<string, string>();
