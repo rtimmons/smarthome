@@ -107,6 +107,7 @@ export const devices: DeviceRegistry = {
     living_curtains: {
       entity: "light.light_living_curtains",
       type: "zwave_zen31_rgbw",
+      fastSceneForceOnDispatch: true,
       capabilities: ["brightness", "rgbw_color"]
     },
     living_curtains_white: {
@@ -493,6 +494,8 @@ export const devices: DeviceRegistry = {
     living_ledwall: {
       entity: "switch.light_living_ledwall",
       type: "outlet",
+      includeInAllOff: false,
+      allowSceneTurnOff: false,
       capabilities: ["on_off"]
     },
 

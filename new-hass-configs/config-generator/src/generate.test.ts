@@ -210,6 +210,48 @@ describe("Scene Generation", () => {
       }
     });
 
+    it("should force-dispatch only the optimistic living-curtain target", () => {
+      const scripts = generateFastScripts({
+        living_room_high: scenes.living_room_high,
+        living_room_off: scenes.living_room_off,
+        kitchen_high: scenes.kitchen_high,
+      });
+      const livingSequence = getSceneWorkerSequence(
+        scripts,
+        "living_room",
+        "living_room_high"
+      );
+      const kitchenSequence = getSceneWorkerSequence(
+        scripts,
+        "kitchen",
+        "kitchen_high"
+      );
+      const livingOffSequence = getSceneWorkerSequence(
+        scripts,
+        "living_room",
+        "living_room_off"
+      );
+      const livingMismatchTemplate =
+        livingSequence[1].variables.fast_scene_mismatched_entities;
+      const kitchenMismatchTemplate =
+        kitchenSequence[1].variables.fast_scene_mismatched_entities;
+      const livingOffMismatchTemplate =
+        livingOffSequence[1].variables.fast_scene_mismatched_entities;
+
+      expect(livingMismatchTemplate).toContain(
+        '{%- set force_dispatch_entities = ["light.light_living_curtains"] -%}'
+      );
+      expect(livingMismatchTemplate).toContain(
+        "{%- if entity_id in force_dispatch_entities -%}"
+      );
+      expect(kitchenMismatchTemplate).toContain(
+        "{%- set force_dispatch_entities = [] -%}"
+      );
+      expect(livingOffMismatchTemplate).toContain(
+        "{%- set force_dispatch_entities = [] -%}"
+      );
+    });
+
     it("should omit every temporarily excluded device from every scene", () => {
       const excludedEntities = new Set(
         [
@@ -431,6 +473,7 @@ describe("Scene Generation", () => {
 
       expect(allTargets).not.toContain("switch.office_wall_switch");
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
+      expect(allTargets).not.toContain("switch.light_living_ledwall");
       expect(allTargets).toContain("light.light_bathroom_abovesauna");
       expect(allTargets).toContain("light.light_bathroom_edison_bottom");
       expect(allTargets).toContain("light.light_bathroom_edison_top");
@@ -454,6 +497,27 @@ describe("Scene Generation", () => {
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
     });
 
+    it("should never turn off the protected living LED wall outlet", () => {
+      for (const scene of [
+        scenes.living_room_medium,
+        scenes.living_room_low,
+        scenes.living_room_off,
+        scenes.all_off,
+      ]) {
+        const calls = generateFastCalls(scene);
+        const allTargets = calls.flatMap((call: any) => call.target.entity_id);
+        expect(allTargets).not.toContain("switch.light_living_ledwall");
+      }
+
+      expect(
+        generateFastCalls(scenes.living_room_high).some(
+          (call: any) =>
+            call.action === "switch.turn_on" &&
+            call.target.entity_id.includes("switch.light_living_ledwall")
+        )
+      ).toBe(true);
+    });
+
     it("should batch Z-Wave submissions behind one paced RF gate", () => {
 
       const scripts = generateFastScripts({ all_off: scenes.all_off });
@@ -466,7 +530,7 @@ describe("Scene Generation", () => {
       expect(parallelSteps[0].parallel.length).toBeGreaterThan(0);
       expect(gate.mode).toBe("queued");
       expect(gate.max).toBe(32);
-      expect(collectObjects(gate.sequence, (step) => step.delay?.milliseconds === 250))
+      expect(collectObjects(gate.sequence, (step) => step.delay?.milliseconds === 500))
         .toHaveLength(1);
       expect(
         serviceActions.some(
@@ -524,7 +588,7 @@ describe("Scene Generation", () => {
       expect(scripts.fast_scene_zwave_gate.mode).toBe("queued");
       expect(
         collectObjects(scripts.fast_scene_zwave_gate.sequence,
-          (step) => step.delay?.milliseconds === 250)
+          (step) => step.delay?.milliseconds === 500)
       ).toHaveLength(1);
       expect(JSON.stringify(sequence)).toContain("expected_brightness");
       expect(

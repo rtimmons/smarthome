@@ -66,6 +66,12 @@ export interface Device {
    */
   fastScenePriority?: "normal" | "last";
   /**
+   * Send turn-on requests during both the initial and convergence passes even
+   * when Home Assistant already reports the requested state. Use only when
+   * live testing proves the integration can report an optimistic false match.
+   */
+  fastSceneForceOnDispatch?: boolean;
+  /**
    * Allow only live-verified, model-homogeneous devices to share a Z-Wave
    * multicast value. Unmarked devices always remain isolated.
    */

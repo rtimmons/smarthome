@@ -41,7 +41,7 @@ export const FAST_SCENE_ZWAVE_GATE_ID = "fast_scene_zwave_gate";
 export const FAST_SCENE_RF_QUIET_ID = "fast_scene_rf_quiet";
 export const FAST_SCENE_INTENT_HELPER_PREFIX = "fast_scene_intent_";
 export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 1;
-export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 250;
+export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 500;
 export const FAST_SCENE_CONVERGENCE_DELAY_MS = 2000;
 export const FAST_SCENE_RF_QUIET_MS = 900;
 export const FAST_SCENE_SKIPPED_EVENT = "fast_scene_targets_skipped";
@@ -518,6 +518,14 @@ function buildSceneMismatchedEntitiesTemplate(
   targets: SceneEntityTarget[]
 ): string {
   const entityIds = targets.map((target) => target.entityId).sort();
+  const forceDispatchEntityIds = targets
+    .filter(
+      (target) =>
+        target.device.fastSceneForceOnDispatch === true &&
+        target.entityState.state === "on"
+    )
+    .map((target) => target.entityId)
+    .sort();
   const expectedStates = Object.fromEntries(
     targets.map((target) => [target.entityId, target.entityState.state])
   );
@@ -563,10 +571,15 @@ function buildSceneMismatchedEntitiesTemplate(
       expectedColorTemperature
     )} -%}`,
     `{%- set expected_white_value = ${JSON.stringify(expectedWhiteValue)} -%}`,
+    `{%- set force_dispatch_entities = ${JSON.stringify(
+      forceDispatchEntityIds
+    )} -%}`,
     `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
     "{%- if entity_id not in fast_scene_skipped_entities -%}",
     "{%- set brightness = state_attr(entity_id, 'brightness') -%}",
-    "{%- if states(entity_id) != expected_states[entity_id] -%}",
+    "{%- if entity_id in force_dispatch_entities -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- elif states(entity_id) != expected_states[entity_id] -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
     "{%- elif entity_id in expected_brightness and (brightness is none or brightness | int < expected_brightness[entity_id] - 1 or brightness | int > expected_brightness[entity_id] + 1) -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
