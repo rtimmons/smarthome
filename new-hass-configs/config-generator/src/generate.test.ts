@@ -86,7 +86,7 @@ describe("Scene Generation", () => {
       expect(sceneEntities["light.light_office_abovetv_white"]).toBeUndefined();
     });
 
-    it("should target only endpoint 5 when the white device is specified", () => {
+    it("should preserve an explicitly requested individual endpoint without auto-expanding", () => {
       const testScene: Scene = {
         name: "Test Scene",
         lights: [
@@ -193,6 +193,23 @@ describe("Scene Generation", () => {
       }
     });
 
+    it("should use aggregate RGBW entities for every operational scene", () => {
+      const individualEndpointEntities = new Set(
+        Object.entries(devices.lights)
+          .filter(([deviceName]) => deviceName.endsWith("_white"))
+          .map(([, device]) => device.entity)
+      );
+
+      for (const [sceneId, scene] of Object.entries(scenes)) {
+        for (const target of generateSceneTargets(scene)) {
+          expect(
+            individualEndpointEntities.has(target.entityId),
+            `${sceneId} targets diagnostic-only endpoint ${target.entityId}`
+          ).toBe(false);
+        }
+      }
+    });
+
     it("should omit every temporarily excluded device from every scene", () => {
       const excludedEntities = new Set(
         [
@@ -214,38 +231,29 @@ describe("Scene Generation", () => {
       }
     });
 
-    it("should generate white-only YAML without an aggregate RGBW command", () => {
-      const testScenes: Record<string, Scene> = {
-        office_high: {
-          name: "Office - High",
-          lights: [
-            {
-              device: "office_abovetv_white",
-              state: "on",
-              brightness: 255,
-            },
-          ],
-        },
-      };
-
-      const result = generateScenes(testScenes);
+    it("should generate deterministic white through one aggregate RGBW command", () => {
+      const result = generateScenes({ office_high: scenes.office_high });
       const yamlOutput = yaml.stringify(result);
 
-      expect(yamlOutput).toContain("light.light_office_abovetv_white:");
-      expect(yamlOutput).not.toContain("light.light_office_abovetv:");
+      expect(yamlOutput).toContain("light.light_office_abovetv:");
+      expect(yamlOutput).not.toContain("light.light_office_abovetv_white:");
       expect(yamlOutput).toContain("brightness: 255");
+      expect(yamlOutput).toContain("rgbw_color:");
     });
 
-    it("should restore the recovered dining nook with one explicit RGBW endpoint per scene", () => {
-      const highTargets = generateSceneTargets(scenes.kitchen_high).map(
-        (target) => target.entityId
+    it("should restore the recovered dining nook through its aggregate RGBW entity", () => {
+      const highTarget = generateSceneTargets(scenes.kitchen_high).find(
+        (target) => target.entityId === "light.light_dining_nook"
       );
       const offTargets = generateSceneTargets(scenes.kitchen_off).map(
         (target) => target.entityId
       );
 
-      expect(highTargets).toContain("light.light_dining_nook_white");
-      expect(highTargets).not.toContain("light.light_dining_nook");
+      expect(highTarget?.entityState).toMatchObject({
+        state: "on",
+        brightness: 255,
+        rgbw_color: [0, 0, 0, 255],
+      });
       expect(offTargets).toContain("light.light_dining_nook");
       expect(offTargets).not.toContain("light.light_dining_nook_white");
     });
@@ -292,8 +300,9 @@ describe("Scene Generation", () => {
           (call: any) =>
             call.action === "light.turn_on" &&
             call.data?.brightness === 255 &&
+            call.data?.rgbw_color?.join(",") === "0,0,0,255" &&
             call.target.entity_id.length === 1 &&
-            call.target.entity_id[0] === "light.light_living_curtains_white"
+            call.target.entity_id[0] === "light.light_living_curtains"
         )
       ).toBeDefined();
       expect(
@@ -406,13 +415,13 @@ describe("Scene Generation", () => {
       ]);
     });
 
-    it("should not add aggregate RGBW targets to white-channel scenes", () => {
+    it("should use aggregate RGBW targets instead of individual channel entities", () => {
 
       const calls = generateFastCalls(scenes.office_high);
       const allTargets = calls.flatMap((call: any) => call.target.entity_id);
 
-      expect(allTargets).not.toContain("light.light_office_abovetv");
-      expect(allTargets).toContain("light.light_office_abovetv_white");
+      expect(allTargets).toContain("light.light_office_abovetv");
+      expect(allTargets).not.toContain("light.light_office_abovetv_white");
     });
 
     it("should exclude controller-only switches from all_off fast calls", () => {
@@ -626,21 +635,23 @@ describe("Scene Generation", () => {
       ).toThrow("zwaveBatchDelayMs must be a non-negative integer");
     });
 
-    it("should restore kitchen upper/lower brightness in high scenes", () => {
+    it("should restore kitchen upper/lower physical white output in high scenes", () => {
 
       const testScenes: Record<string, Scene> = {
         kitchen_high: {
           name: "Kitchen - High",
           lights: [
             {
-              device: "kitchen_upper_white",
+              device: "kitchen_upper",
               state: "on",
               brightness: 255,
+              rgbw_color: [0, 0, 0, 255],
             },
             {
-              device: "kitchen_lower_white",
+              device: "kitchen_lower",
               state: "on",
               brightness: 255,
+              rgbw_color: [0, 0, 0, 255],
             },
           ],
         },
@@ -649,10 +660,16 @@ describe("Scene Generation", () => {
       const result = generateScenes(testScenes);
       const entities = result[0].entities;
 
-      expect(entities["light.light_kitchen_upper_white"].brightness).toBe(255);
-      expect(entities["light.light_kitchen_lower_white"].brightness).toBe(255);
-      expect(entities["light.light_kitchen_upper"]).toBeUndefined();
-      expect(entities["light.light_kitchen_lower"]).toBeUndefined();
+      expect(entities["light.light_kitchen_upper"]).toMatchObject({
+        brightness: 255,
+        rgbw_color: [0, 0, 0, 255],
+      });
+      expect(entities["light.light_kitchen_lower"]).toMatchObject({
+        brightness: 255,
+        rgbw_color: [0, 0, 0, 255],
+      });
+      expect(entities["light.light_kitchen_upper_white"]).toBeUndefined();
+      expect(entities["light.light_kitchen_lower_white"]).toBeUndefined();
     });
   });
 });

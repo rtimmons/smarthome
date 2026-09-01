@@ -445,9 +445,9 @@ lights: [
 
 ### RGBW Endpoint Selection
 
-Zooz ZEN31 and Fibaro RGBW controllers expose an aggregate RGBW light on endpoint 1 and individual channels on endpoints 2-5. The canonical `_white` entity must be bound to endpoint 5.
+Zooz ZEN31 and Fibaro RGBW controllers expose an aggregate RGBW light on endpoint 1 and individual channels on endpoints 2-5. In this installation, operational scenes always use the aggregate entity. The individual channel entities, including `_white`, remain available for registry and device diagnostics only.
 
-Scenes select exactly one endpoint. White brightness targets `_white`; RGB color targets the aggregate entity; off scenes target the aggregate entity once so every channel is extinguished. The generator deliberately does not auto-pair these targets because that doubles traffic to the same Z-Wave node and can produce contradictory state feedback.
+Scenes select exactly one endpoint. White scenes send the aggregate entity an explicit RGBW white value plus matching brightness; color and off scenes also target the aggregate entity once. The generator deliberately does not auto-pair endpoints because that doubles traffic to the same Z-Wave node and can produce contradictory state feedback.
 
 #### White scene
 
@@ -456,23 +456,25 @@ office_high: {
   name: "Office - High",
   lights: [
     {
-      device: "office_abovetv_white",
+      device: "office_abovetv",
       state: "on",
-      brightness: 255
+      brightness: 255,
+      rgbw_color: [0, 0, 0, 255]
     }
   ]
 }
 ```
 
-The generated scene contains only endpoint 5:
+The generated scene contains one aggregate command:
 
 ```yaml
 - id: office_high
   name: Office - High
   entities:
-    light.light_office_abovetv_white:
+    light.light_office_abovetv:
       state: on
       brightness: 255
+      rgbw_color: [0, 0, 0, 255]
 ```
 
 #### Color and off scenes
@@ -502,10 +504,12 @@ After deploying scene changes, verify the intended physical endpoint and the gen
 
 ```bash
 just zwave-exercise-scene --scene office_high
-just ha-state light.light_office_abovecouch_white
+just ha-state light.light_office_abovecouch
 ```
 
-When adding an RGBW controller, register both logical entities and verify `_white` by its immutable Z-Wave value ID:
+State feedback is not sufficient by itself for these strips. On 2026-09-01, every `_white` entity reported `on` while the Kitchen and Living strips were physically dark; paced aggregate commands immediately energized all eight strips. Confirm physical output after an RGBW change and inspect the aggregate `rgbw_color` attribute.
+
+When adding an RGBW controller, register the aggregate entity for scene use. Individual channel entities may remain registered for diagnostics:
 
 ```typescript
 lights: {
@@ -522,14 +526,15 @@ lights: {
 }
 ```
 
-Use only the endpoint required by each scene:
+Use only the aggregate endpoint in operational scenes:
 
 ```typescript
 lights: [
   {
-    device: "new_rgbw_light_white",
+    device: "new_rgbw_light",
     state: "on",
-    brightness: 255
+    brightness: 255,
+    rgbw_color: [0, 0, 0, 255]
   }
 ]
 ```
