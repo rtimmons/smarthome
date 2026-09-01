@@ -25,6 +25,7 @@ import {
 import {
   HAScene,
   generateFastScriptsFromRegistry,
+  generateFastSceneIntentHelpersFromRegistry,
   generateScenesFromRegistry,
   getFastSceneScriptEntityId,
 } from "./scene-generation";
@@ -37,6 +38,7 @@ const OUTPUT_DIR = path.join(__dirname, "../../generated");
 const SCENES_OUTPUT = path.join(OUTPUT_DIR, "scenes.yaml");
 const AUTOMATIONS_OUTPUT = path.join(OUTPUT_DIR, "automations.yaml");
 const SCRIPTS_OUTPUT = path.join(OUTPUT_DIR, "scripts.yaml");
+const INPUT_TEXT_OUTPUT = path.join(OUTPUT_DIR, "input_text.yaml");
 
 // ============================================================================
 // Automation Generation
@@ -146,14 +148,14 @@ function convertTrigger(trigger: Trigger): HATrigger {
   }
 }
 
-export function convertAction(action: Action): HAAction {
+export function convertAction(action: Action, originEntityId?: string): HAAction {
   switch (action.type) {
     case "scene":
       return {
-        // A direct script action keeps cancellation connected end-to-end: when
-        // a restart-mode automation receives newer input, stale wrapper and
-        // dispatcher work is cancelled too.
+        // Keep the wrapper call blocking so the source automation represents
+        // the complete scene request, including its convergence pass.
         action: getFastSceneScriptEntityId(action.scene),
+        ...(originEntityId && { data: { origin_entity_id: originEntityId } }),
       };
 
     case "service":
@@ -178,9 +180,15 @@ export function convertAction(action: Action): HAAction {
       return {
         choose: action.choices.map((choice) => ({
           conditions: choice.conditions.map(convertCondition),
-          sequence: choice.sequence.map(convertAction),
+          sequence: choice.sequence.map((nestedAction) =>
+            convertAction(nestedAction, originEntityId)
+          ),
         })),
-        ...(action.default && { default: action.default.map(convertAction) }),
+        ...(action.default && {
+          default: action.default.map((nestedAction) =>
+            convertAction(nestedAction, originEntityId)
+          ),
+        }),
       };
 
     case "repeat":
@@ -189,7 +197,9 @@ export function convertAction(action: Action): HAAction {
           ...(action.count && { count: action.count }),
           ...(action.while && { while: action.while.map(convertCondition) }),
           ...(action.until && { until: action.until.map(convertCondition) }),
-          sequence: action.sequence.map(convertAction),
+          sequence: action.sequence.map((nestedAction) =>
+            convertAction(nestedAction, originEntityId)
+          ),
         },
       };
 
@@ -267,14 +277,24 @@ export function generateAutomationsFromRegistry(
   for (const [id, automation] of Object.entries(automationRegistry)) {
     try {
       const effectiveMode = getEffectiveAutomationMode(automation);
+      const sourceTriggers = Array.isArray(automation.trigger)
+        ? automation.trigger
+        : [automation.trigger];
+      const zwaveSourceEntities = sourceTriggers
+        .filter((trigger): trigger is ZWaveJsSceneTrigger =>
+          trigger.type === "zwave_js_scene"
+        )
+        .map((trigger) => getDevice("switches", trigger.device).entity);
+      const uniqueZwaveSourceEntities = [...new Set(zwaveSourceEntities)];
+      const originEntityId =
+        sourceTriggers.length === 1 && uniqueZwaveSourceEntities.length === 1
+          ? uniqueZwaveSourceEntities[0]
+          : undefined;
       const haAutomation: HAAutomation = {
         id,
         alias: automation.alias,
         ...(automation.description && { description: automation.description }),
-        triggers: (Array.isArray(automation.trigger)
-          ? automation.trigger
-          : [automation.trigger]
-        ).map(convertTrigger),
+        triggers: sourceTriggers.map(convertTrigger),
         ...(automation.condition && {
           conditions: (Array.isArray(automation.condition)
             ? automation.condition
@@ -284,7 +304,7 @@ export function generateAutomationsFromRegistry(
         actions: (Array.isArray(automation.action)
           ? automation.action
           : [automation.action]
-        ).map(convertAction),
+        ).map((action) => convertAction(action, originEntityId)),
         ...(effectiveMode && { mode: effectiveMode }),
         ...(automation.max && { max: automation.max }),
       };
@@ -330,6 +350,14 @@ function main() {
   fs.writeFileSync(SCRIPTS_OUTPUT, scriptsYaml, "utf8");
   console.log(
     `  ✓ Generated ${Object.keys(haScripts).length} scripts -> ${SCRIPTS_OUTPUT}`
+  );
+
+  console.log("Generating fast-scene intent helpers...");
+  const intentHelpers = generateFastSceneIntentHelpersFromRegistry(scenes);
+  const inputTextYaml = yaml.stringify(intentHelpers);
+  fs.writeFileSync(INPUT_TEXT_OUTPUT, inputTextYaml, "utf8");
+  console.log(
+    `  ✓ Generated ${Object.keys(intentHelpers).length} intent helpers -> ${INPUT_TEXT_OUTPUT}`
   );
 
   // Generate automations

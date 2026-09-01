@@ -438,28 +438,25 @@ lights: [
     device: "bedroom_nightstand",
     state: "on",
     brightness: 255,
-    color_temp: 2732  // Warm white (366 mireds)
+    color_temp_kelvin: 2732  // Warm white
   }
 ]
 ```
 
-### RGBW Lights and Automatic Pairing
+### RGBW Endpoint Selection
 
-**IMPORTANT**: RGBW lights (e.g., Zooz ZEN31 RGBW Dimmer) expose **two separate entities** in Home Assistant:
-1. **RGBW entity** - Controls RGBW color channels (e.g., `office_abovetv`)
-2. **White entity** - Controls white-only channel (e.g., `office_abovetv_white`)
+Zooz ZEN31 and Fibaro RGBW controllers expose an aggregate RGBW light on endpoint 1 and individual channels on endpoints 2-5. The canonical `_white` entity must be bound to endpoint 5.
 
-**The config-generator automatically synchronizes these paired entities!** You only need to specify **one** entity in your scene definition, and the paired entity will be automatically included with matching on/off state and brightness.
+Scenes select exactly one endpoint. White brightness targets `_white`; RGB color targets the aggregate entity; off scenes target the aggregate entity once so every channel is extinguished. The generator deliberately does not auto-pair these targets because that doubles traffic to the same Z-Wave node and can produce contradictory state feedback.
 
-#### Example - Automatic Pairing
+#### White scene
 
 ```typescript
-// You only need to specify ONE entity:
 office_high: {
   name: "Office - High",
   lights: [
     {
-      device: "office_abovetv_white",  // Specify only the white entity
+      device: "office_abovetv_white",
       state: "on",
       brightness: 255
     }
@@ -467,80 +464,48 @@ office_high: {
 }
 ```
 
-**Generated output includes BOTH entities automatically:**
+The generated scene contains only endpoint 5:
 
 ```yaml
 - id: office_high
   name: Office - High
   entities:
-    light.light_office_abovetv_white:    # Explicitly defined
-      state: on
-      brightness: 255
-    light.light_office_abovetv:          # Automatically added!
+    light.light_office_abovetv_white:
       state: on
       brightness: 255
 ```
 
-#### Paired Devices
-
-The following device pairs are **automatically synchronized**:
-
-- `office_abovecouch` ↔ `office_abovecouch_white`
-- `office_abovetv` ↔ `office_abovetv_white`
-- `living_curtains` ↔ `living_curtains_white`
-- `living_windowsillleft` ↔ `living_windowsillleft_white`
-- `living_windowsillright` ↔ `living_windowsillright_white`
-- `living_behindtv` ↔ `living_behindtv_white`
-- `living_abovetv` ↔ `living_abovetv_white`
-- `kitchen_upper` ↔ `kitchen_upper_white`
-- `kitchen_lower` ↔ `kitchen_lower_white`
-- `kitchen_dining_nook` ↔ `kitchen_dining_nook_white`
-
-#### When to Specify Both Entities
-
-If you need **different settings** for each entity, you can explicitly define both:
+#### Color and off scenes
 
 ```typescript
 lights: [
   {
     device: "office_abovetv",
     state: "on",
-    rgbw_color: [255, 0, 0, 0],  // Red RGBW
+    rgbw_color: [255, 0, 0, 0],
     brightness: 255
-  },
+  }
+]
+
+// A separate off scene uses the aggregate endpoint once.
+lights: [
   {
-    device: "office_abovetv_white",
-    state: "on",
-    brightness: 100  // Different brightness for white channel
+    device: "office_abovetv",
+    state: "off"
   }
 ]
 ```
 
-When both are explicitly defined, **auto-pairing is skipped** and your explicit settings are used.
-
 #### Verifying Scene Behavior
 
-After deploying scene changes, verify both entities are controlled correctly:
+After deploying scene changes, verify the intended physical endpoint and the generated calls:
 
 ```bash
-# Trigger the real path and wait for both target state and dispatcher drain
 just zwave-exercise-scene --scene office_high
-
-# Check both paired entities are in sync
-just ha-state light.light_office_abovecouch
 just ha-state light.light_office_abovecouch_white
 ```
 
-Both entities should show the same on/off state and brightness. If they don't match:
-1. Check that `generated/scenes.yaml` includes both entities and `generated/scripts.yaml` contains the fast wrapper/dispatcher calls
-2. Run `just deploy` from `new-hass-configs/` to deploy the updated config
-3. Verify the scene was reloaded in Home Assistant
-
-#### Adding New Paired Devices
-
-To add a new RGBW device with automatic pairing:
-
-1. **Add both entities to `devices.ts`** with the `_white` suffix:
+When adding an RGBW controller, register both logical entities and verify `_white` by its immutable Z-Wave value ID:
 
 ```typescript
 lights: {
@@ -549,7 +514,7 @@ lights: {
     type: "zwave_zen31_rgbw",
     capabilities: ["brightness", "rgbw_color"]
   },
-  new_rgbw_light_white: {  // Must end with _white
+  new_rgbw_light_white: {
     entity: "light.light_new_rgbw_white",
     type: "dimmer_light",
     capabilities: ["brightness"]
@@ -557,7 +522,7 @@ lights: {
 }
 ```
 
-2. **Use in scenes** (specify only one, the other is auto-added):
+Use only the endpoint required by each scene:
 
 ```typescript
 lights: [
@@ -569,14 +534,12 @@ lights: [
 ]
 ```
 
-3. **Run tests** to verify pairing works:
+Run the tests and inspect the generated output:
 
 ```bash
 cd config-generator
-npm test  # Tests automatically verify all _white pairs
+npm test
 ```
-
-The pairing is detected automatically based on the `_white` suffix naming convention. See `src/devices.test.ts` and `src/generate.test.ts` for comprehensive test coverage.
 
 ---
 

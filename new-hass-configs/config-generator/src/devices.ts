@@ -99,20 +99,10 @@ export const devices: DeviceRegistry = {
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
-    living_nook: {
-      entity: "light.living_light_nook",
-      type: "color_light",
-      capabilities: ["brightness", "color_temp"]
-    },
     entry_nook: {
       entity: "light.entry_light_nook",
       type: "color_light",
       capabilities: ["brightness", "color_temp"]
-    },
-    living_corner: {
-      entity: "light.living_light_corner",
-      type: "color_light",
-      capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     living_curtains: {
       entity: "light.light_living_curtains",
@@ -266,7 +256,10 @@ export const devices: DeviceRegistry = {
     guestbathroom_overhead: {
       entity: "light.light_guestbathroom_overhead",
       type: "zwave_dimmer_46203",
-      fastScenePriority: "last",
+      // Node 23 changes its load locally but repeatedly times out acknowledging
+      // commands. The physical paddle remains an automation trigger; scenes
+      // temporarily control only the healthy guest-bathroom sconce.
+      sceneStatus: "temporarily_excluded",
       capabilities: ["brightness"]
     },
     guestbathroom_sconce: {
@@ -283,11 +276,6 @@ export const devices: DeviceRegistry = {
     // Bedroom lights - Hue
     bedroom_dresser: {
       entity: "light.bedroom_light_dresser",
-      type: "color_light",
-      capabilities: ["brightness", "color_temp", "rgb_color"]
-    },
-    bedroom_mikedesk: {
-      entity: "light.bedroom_light_mikedesk",
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
@@ -390,6 +378,9 @@ export const devices: DeviceRegistry = {
     guestbathroom_switch: {
       entity: "light.light_guestbathroom_overhead",
       type: "zwave_dimmer_46203",
+      // Same node-23 load as lights.guestbathroom_overhead. Keep its Central
+      // Scene events active while suppressing generated commands to the load.
+      sceneStatus: "temporarily_excluded",
       device_id: "df50c0c6853f8878742f1917f44f3060",
       events: {
         singleUp: {
@@ -488,9 +479,8 @@ export const devices: DeviceRegistry = {
     living_sillleftpower: {
       entity: "switch.light_living_sillleftpower",
       type: "zwave_outlet",
-      // Node 28 has a repeatedly failing route. Keep it from delaying healthy
-      // loads while its placement/repeater path is repaired.
-      fastScenePriority: "last",
+      // Node 28 is dead. Preserve it in inventory, but send it no scene traffic.
+      sceneStatus: "temporarily_excluded",
       capabilities: ["on_off"]
     },
     dining_weenie: {

@@ -54,6 +54,12 @@ export interface Device {
    */
   inventoryStatus?: "active" | "temporarily_removed";
   /**
+   * Keep the device in inventory/health reporting but omit it from every
+   * generated native and fast scene while a hardware or route fault is being
+   * repaired.
+   */
+  sceneStatus?: "active" | "temporarily_excluded";
+  /**
    * Send this device after normal-priority Z-Wave loads in generated scenes.
    * Use only for a known weak route: health checks still decide whether the
    * target should be called at all.
@@ -90,7 +96,7 @@ export interface LightState {
   brightness?: number; // 0-255
   rgb_color?: [number, number, number]; // RGB values 0-255
   rgbw_color?: [number, number, number, number]; // RGBW values 0-255
-  color_temp?: number; // Kelvin
+  color_temp_kelvin?: number; // Kelvin
   white_value?: number; // 0-255
   transition?: number; // Transition time in seconds
 }

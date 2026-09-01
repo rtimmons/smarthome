@@ -8,7 +8,7 @@
  */
 
 import { SceneRegistry, Scene } from "./types";
-import { devices } from "./devices";
+import { devices, getPairedDeviceName } from "./devices";
 
 /**
  * Scene Registry
@@ -90,15 +90,10 @@ export const scenes: SceneRegistry = {
         brightness: 255
       },
       {
-        device: "lights_office_abovetv",
-        state: "on",
-        brightness: 255
-      },
-      {
         device: "office_sidetable",
         state: "on",
         brightness: 255,
-        color_temp: 2732  // Warm white (366 mireds)
+        color_temp_kelvin: 2732  // Warm white (366 mireds)
       }
     ],
     switches: {
@@ -120,15 +115,10 @@ export const scenes: SceneRegistry = {
         brightness: 180
       },
       {
-        device: "lights_office_abovetv",
-        state: "on",
-        brightness: 180
-      },
-      {
         device: "office_sidetable",
         state: "on",
         brightness: 180,
-        color_temp: 2732  // Warm white
+        color_temp_kelvin: 2732  // Warm white
       }
     ],
     switches: {
@@ -143,7 +133,7 @@ export const scenes: SceneRegistry = {
         device: "office_sidetable",
         state: "on",
         brightness: 50,
-        color_temp: 2732  // Warm white
+        color_temp_kelvin: 2732  // Warm white
       }
     ],
     switches: {
@@ -159,19 +149,7 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "office_abovecouch_white",
-        state: "off"
-      },
-      {
         device: "office_abovetv",
-        state: "off"
-      },
-      {
-        device: "office_abovetv_white",
-        state: "off"
-      },
-      {
-        device: "lights_office_abovetv",
         state: "off"
       },
       {
@@ -416,11 +394,6 @@ export const scenes: SceneRegistry = {
         brightness: 255
       },
       {
-        device: "living_nook",
-        state: "on",
-        brightness: 255
-      },
-      {
         device: "entry_nook",
         state: "on",
         brightness: 255
@@ -457,11 +430,6 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_palm",
-        state: "on",
-        brightness: 255
-      },
-      {
-        device: "living_corner",
         state: "on",
         brightness: 255
       },
@@ -496,11 +464,6 @@ export const scenes: SceneRegistry = {
         brightness: 180
       },
       {
-        device: "living_nook",
-        state: "on",
-        brightness: 180
-      },
-      {
         device: "entry_nook",
         state: "on",
         brightness: 180
@@ -511,11 +474,11 @@ export const scenes: SceneRegistry = {
         brightness: 180
       },
       {
-        device: "living_windowsillleft_white",
+        device: "living_windowsillleft",
         state: "off"
       },
       {
-        device: "living_windowsillright_white",
+        device: "living_windowsillright",
         state: "off"
       },
       {
@@ -536,20 +499,12 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "living_corner",
-        state: "off"
-      },
-      {
         device: "living_abovetv_white",
         state: "on",
         brightness: 51
       },
       {
         device: "kitchen_dining_nook",
-        state: "off"
-      },
-      {
-        device: "kitchen_dining_nook_white",
         state: "off"
       },
       {
@@ -578,11 +533,6 @@ export const scenes: SceneRegistry = {
         device: "living_floor",
         state: "on",
         brightness: 50
-      },
-      {
-        device: "living_nook",
-        state: "on",
-        brightness: 50
       }
     ],
     switches: {
@@ -599,27 +549,23 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "living_nook",
-        state: "off"
-      },
-      {
         device: "entry_nook",
         state: "off"
       },
       {
-        device: "living_curtains_white",
+        device: "living_curtains",
         state: "off"
       },
       {
-        device: "living_windowsillleft_white",
+        device: "living_windowsillleft",
         state: "off"
       },
       {
-        device: "living_windowsillright_white",
+        device: "living_windowsillright",
         state: "off"
       },
       {
-        device: "living_behindtv_white",
+        device: "living_behindtv",
         state: "off"
       },
       {
@@ -635,11 +581,7 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "living_corner",
-        state: "off"
-      },
-      {
-        device: "living_abovetv_white",
+        device: "living_abovetv",
         state: "off"
       },
       {
@@ -717,7 +659,7 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "makerroom_undershelf_white",
+        device: "makerroom_undershelf",
         state: "off"
       }
     ]
@@ -803,15 +745,7 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "kitchen_upper_white",
-        state: "off"
-      },
-      {
         device: "kitchen_lower",
-        state: "off"
-      },
-      {
-        device: "kitchen_lower_white",
         state: "off"
       },
       {
@@ -843,15 +777,7 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "kitchen_upper_white",
-        state: "off"
-      },
-      {
         device: "kitchen_lower",
-        state: "off"
-      },
-      {
-        device: "kitchen_lower_white",
         state: "off"
       },
       {
@@ -864,10 +790,6 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "kitchen_dining_nook",
-        state: "off"
-      },
-      {
-        device: "kitchen_dining_nook_white",
         state: "off"
       },
       {
@@ -891,11 +813,6 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "bedroom_dresser",
-        state: "on",
-        brightness: 255
-      },
-      {
-        device: "bedroom_mikedesk",
         state: "on",
         brightness: 255
       },
@@ -924,11 +841,6 @@ export const scenes: SceneRegistry = {
         brightness: 180
       },
       {
-        device: "bedroom_mikedesk",
-        state: "on",
-        brightness: 180
-      },
-      {
         device: "bedroom_flamingo",
         state: "on",
         brightness: 180
@@ -952,10 +864,6 @@ export const scenes: SceneRegistry = {
         state: "off"
       },
       {
-        device: "bedroom_mikedesk",
-        state: "off"
-      },
-      {
         device: "bedroom_flamingo",
         state: "off"
       }
@@ -971,10 +879,6 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "bedroom_dresser",
-        state: "off"
-      },
-      {
-        device: "bedroom_mikedesk",
         state: "off"
       },
       {
@@ -1009,8 +913,14 @@ function generateAllOffScene(): { all_off: Scene } {
   const switches: Record<string, "on" | "off"> = {};
 
   // Collect all lights (except blocklisted ones)
-  for (const [deviceName, _device] of Object.entries(devices.lights)) {
-    if (!blocklist.includes(deviceName)) {
+  for (const [deviceName, device] of Object.entries(devices.lights)) {
+    const isWhiteEndpoint =
+      deviceName.endsWith("_white") && getPairedDeviceName(deviceName) !== null;
+    if (
+      !blocklist.includes(deviceName) &&
+      !isWhiteEndpoint &&
+      device.includeInAllOff !== false
+    ) {
       lights.push({
         device: deviceName,
         state: "off"

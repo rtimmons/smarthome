@@ -1,4 +1,4 @@
-import { getDevice, getPairedDeviceName } from "./devices";
+import { getDevice } from "./devices";
 import { Device, LightState, Scene } from "./types";
 
 export interface HAScene {
@@ -19,7 +19,7 @@ export interface HAServiceCall {
 
 export interface HAScript {
   alias: string;
-  mode: "single" | "restart" | "queued";
+  mode: "single" | "restart" | "queued" | "parallel";
   max?: number;
   fields?: Record<string, any>;
   sequence: any[];
@@ -37,10 +37,28 @@ export interface SceneEntityTarget {
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
 export const FAST_SCENE_DISPATCHER_ID = "fast_scene_dispatch";
 export const FAST_SCENE_DISPATCH_WORKER_ID = "fast_scene_dispatch_worker";
+export const FAST_SCENE_ZWAVE_GATE_ID = "fast_scene_zwave_gate";
+export const FAST_SCENE_RF_QUIET_ID = "fast_scene_rf_quiet";
+export const FAST_SCENE_INTENT_HELPER_PREFIX = "fast_scene_intent_";
 export const DEFAULT_MAX_ZWAVE_CALLS_PER_STEP = 1;
 export const DEFAULT_ZWAVE_BATCH_DELAY_MS = 250;
 export const FAST_SCENE_CONVERGENCE_DELAY_MS = 2000;
+export const FAST_SCENE_RF_QUIET_MS = 900;
 export const FAST_SCENE_SKIPPED_EVENT = "fast_scene_targets_skipped";
+const FAST_SCENE_MAX_PARALLEL_INTENTS = 16;
+const FAST_SCENE_GATE_MAX_QUEUED_CALLS = 32;
+
+export interface HAInputText {
+  name: string;
+  initial: string;
+  max: number;
+}
+
+interface FastSceneIntentRegistry {
+  scopeByEntityId: Map<string, string>;
+  helperIdByScope: Map<string, string>;
+  scopesBySceneId: Map<string, string[]>;
+}
 
 interface HAConditionalAction {
   if: Array<{
@@ -78,37 +96,97 @@ export function getFastSceneScriptEntityId(sceneId: string): string {
   return `script.${getFastSceneScriptId(sceneId)}`;
 }
 
-export function expandLightsWithPairs(lights: LightState[]): LightState[] {
-  const result: LightState[] = [...lights];
-  const definedDevices = new Set(lights.map((light) => light.device));
+function getSceneFamilyId(sceneId: string): string {
+  const match = sceneId.match(/^(.*)_(?:high|medium|low|off)$/);
+  return match?.[1] || sceneId;
+}
 
-  for (const light of lights) {
-    const pairedDeviceName = getPairedDeviceName(light.device);
+function sanitizeEntityObjectId(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9_]+/g, "_")
+    .replace(/_+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
 
-    if (pairedDeviceName && !definedDevices.has(pairedDeviceName)) {
-      const pairedLight: LightState = {
-        device: pairedDeviceName,
-        state: light.state || "on",
-      };
+function getIntentHelperId(scope: string): string {
+  const scopeSlug = scope
+    .split("__")
+    .map(sanitizeEntityObjectId)
+    .join("_and_");
+  return `${FAST_SCENE_INTENT_HELPER_PREFIX}${scopeSlug}`;
+}
 
-      if (light.state === "on" && light.brightness !== undefined) {
-        pairedLight.brightness = light.brightness;
+function getFamilyDispatcherId(familyId: string): string {
+  return `${FAST_SCENE_DISPATCHER_ID}_${sanitizeEntityObjectId(familyId)}`;
+}
+
+function getFamilyWorkerId(familyId: string): string {
+  return `${FAST_SCENE_DISPATCH_WORKER_ID}_${sanitizeEntityObjectId(familyId)}`;
+}
+
+function buildFastSceneIntentRegistry(
+  sceneRegistry: Record<string, Scene>
+): FastSceneIntentRegistry {
+  const familiesByEntityId = new Map<string, Set<string>>();
+
+  for (const [sceneId, scene] of Object.entries(sceneRegistry)) {
+    if (sceneId === "all_off") {
+      continue;
+    }
+    const familyId = getSceneFamilyId(sceneId);
+    for (const target of generateSceneTargets(scene)) {
+      if (!familiesByEntityId.has(target.entityId)) {
+        familiesByEntityId.set(target.entityId, new Set());
       }
-
-      if (light.state === "on" && light.device.endsWith("_white")) {
-        const pairedDevice = getDevice("lights", pairedDeviceName);
-        if (pairedDevice.type === "zwave_zen31_rgbw") {
-          const whiteValue = light.brightness ?? 255;
-          pairedLight.rgbw_color = [0, 0, 0, whiteValue];
-        }
-      }
-
-      result.push(pairedLight);
-      definedDevices.add(pairedDeviceName);
+      familiesByEntityId.get(target.entityId)!.add(familyId);
     }
   }
 
-  return result;
+  const allEntityIds = new Set(
+    Object.values(sceneRegistry).flatMap((scene) =>
+      generateSceneTargets(scene).map((target) => target.entityId)
+    )
+  );
+  const scopeByEntityId = new Map<string, string>();
+  const helperIdByScope = new Map<string, string>();
+
+  for (const entityId of [...allEntityIds].sort()) {
+    const families = [...(familiesByEntityId.get(entityId) ?? [])].sort();
+    const scope = families.length > 0 ? families.join("__") : "global";
+    scopeByEntityId.set(entityId, scope);
+    helperIdByScope.set(scope, getIntentHelperId(scope));
+  }
+
+  const scopesBySceneId = new Map<string, string[]>();
+  for (const [sceneId, scene] of Object.entries(sceneRegistry)) {
+    const scopes = new Set(
+      generateSceneTargets(scene).map(
+        (target) => scopeByEntityId.get(target.entityId) ?? "global"
+      )
+    );
+    scopesBySceneId.set(sceneId, [...scopes].sort());
+  }
+
+  return { scopeByEntityId, helperIdByScope, scopesBySceneId };
+}
+
+export function generateFastSceneIntentHelpersFromRegistry(
+  sceneRegistry: Record<string, Scene>
+): Record<string, HAInputText> {
+  const registry = buildFastSceneIntentRegistry(sceneRegistry);
+  return Object.fromEntries(
+    [...registry.helperIdByScope.entries()]
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([scope, helperId]) => [
+        helperId,
+        {
+          name: `Fast Scene Intent - ${scope.replace(/__/g, " + ").replace(/_/g, " ")}`,
+          initial: "idle",
+          max: 64,
+        },
+      ])
+  );
 }
 
 function isZWaveBackedDevice(device: Device): boolean {
@@ -157,8 +235,8 @@ function buildLightEntityState(light: LightState): Record<string, any> {
     entityState.rgbw_color = light.rgbw_color;
   }
 
-  if (light.color_temp) {
-    entityState.color_temp = light.color_temp;
+  if (light.color_temp_kelvin) {
+    entityState.color_temp_kelvin = light.color_temp_kelvin;
   }
 
   if (light.white_value !== undefined) {
@@ -184,10 +262,12 @@ export function generateSceneEntities(scene: Scene): Record<string, any> {
 
 export function generateSceneTargets(scene: Scene): SceneEntityTarget[] {
   const targetsByEntityId = new Map<string, SceneEntityTarget>();
-  const expandedLights = expandLightsWithPairs(scene.lights);
 
-  for (const light of expandedLights) {
+  for (const light of scene.lights) {
     const device = getDevice("lights", light.device);
+    if (device.sceneStatus === "temporarily_excluded") {
+      continue;
+    }
     targetsByEntityId.set(device.entity, {
       entityId: device.entity,
       entityState: buildLightEntityState(light),
@@ -205,6 +285,9 @@ export function generateSceneTargets(scene: Scene): SceneEntityTarget[] {
         device = getDevice("switches", switchName);
       } catch {
         device = getDevice("outlets", switchName);
+      }
+      if (device.sceneStatus === "temporarily_excluded") {
+        continue;
       }
       if (state === "off" && device.allowSceneTurnOff === false) {
         throw new Error(
@@ -431,26 +514,6 @@ function buildSkippedEntitiesTemplate(targets: SceneEntityTarget[]): string {
   ].join("\n");
 }
 
-function buildSceneEligibleEntitiesTemplate(targets: SceneEntityTarget[]): string {
-  const entityIds = targets.map((target) => target.entityId).sort();
-  const offEntityIds = targets
-    .filter((target) => target.entityState.state === "off")
-    .map((target) => target.entityId)
-    .sort();
-
-  return [
-    "{%- set eligible = namespace(entities=[]) -%}",
-    `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
-    `{%- if entity_id not in fast_scene_skipped_entities and (entity_id not in ${JSON.stringify(
-      offEntityIds
-    )} or states(entity_id) != 'off') -%}`,
-    "{%- set eligible.entities = eligible.entities + [entity_id] -%}",
-    "{%- endif -%}",
-    "{%- endfor -%}",
-    "{{ eligible.entities }}",
-  ].join("\n");
-}
-
 function buildSceneMismatchedEntitiesTemplate(
   targets: SceneEntityTarget[]
 ): string {
@@ -467,17 +530,53 @@ function buildSceneMismatchedEntitiesTemplate(
       )
       .map((target) => [target.entityId, target.entityState.brightness])
   );
+  const expectedRgb = Object.fromEntries(
+    targets
+      .filter((target) => Array.isArray(target.entityState.rgb_color))
+      .map((target) => [target.entityId, target.entityState.rgb_color])
+  );
+  const expectedRgbw = Object.fromEntries(
+    targets
+      .filter((target) => Array.isArray(target.entityState.rgbw_color))
+      .map((target) => [target.entityId, target.entityState.rgbw_color])
+  );
+  const expectedColorTemperature = Object.fromEntries(
+    targets
+      .filter(
+        (target) => typeof target.entityState.color_temp_kelvin === "number"
+      )
+      .map((target) => [target.entityId, target.entityState.color_temp_kelvin])
+  );
+  const expectedWhiteValue = Object.fromEntries(
+    targets
+      .filter((target) => typeof target.entityState.white_value === "number")
+      .map((target) => [target.entityId, target.entityState.white_value])
+  );
 
   return [
     "{%- set mismatched = namespace(entities=[]) -%}",
     `{%- set expected_states = ${JSON.stringify(expectedStates)} -%}`,
     `{%- set expected_brightness = ${JSON.stringify(expectedBrightness)} -%}`,
+    `{%- set expected_rgb = ${JSON.stringify(expectedRgb)} -%}`,
+    `{%- set expected_rgbw = ${JSON.stringify(expectedRgbw)} -%}`,
+    `{%- set expected_color_temp_kelvin = ${JSON.stringify(
+      expectedColorTemperature
+    )} -%}`,
+    `{%- set expected_white_value = ${JSON.stringify(expectedWhiteValue)} -%}`,
     `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
     "{%- if entity_id not in fast_scene_skipped_entities -%}",
     "{%- set brightness = state_attr(entity_id, 'brightness') -%}",
     "{%- if states(entity_id) != expected_states[entity_id] -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
     "{%- elif entity_id in expected_brightness and (brightness is none or brightness | int < expected_brightness[entity_id] - 1 or brightness | int > expected_brightness[entity_id] + 1) -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- elif entity_id in expected_rgb and (state_attr(entity_id, 'rgb_color') is none or state_attr(entity_id, 'rgb_color') | list != expected_rgb[entity_id]) -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- elif entity_id in expected_rgbw and (state_attr(entity_id, 'rgbw_color') is none or state_attr(entity_id, 'rgbw_color') | list != expected_rgbw[entity_id]) -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- elif entity_id in expected_color_temp_kelvin and state_attr(entity_id, 'color_temp_kelvin') | int(0) != expected_color_temp_kelvin[entity_id] -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- elif entity_id in expected_white_value and state_attr(entity_id, 'white_value') | int(-1) != expected_white_value[entity_id] -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
     "{%- endif -%}",
     "{%- endif -%}",
@@ -500,17 +599,25 @@ function buildRunnableCall(
   };
 }
 
-function buildHealthAwareCall(call: HAServiceCall): HAConditionalAction {
+function buildIntentAwareCall(
+  call: HAServiceCall,
+  intentHelperEntityId: string
+): HAConditionalAction {
   const eligibleEntities = buildEligibleEntitiesTemplate(call);
+  const conditions = [
+    {
+      condition: "template" as const,
+      value_template: `{{ states('${intentHelperEntityId}') == intent_token }}`,
+    },
+    {
+      condition: "template" as const,
+      value_template: buildEligibleEntitiesTemplate(call, 1),
+    },
+  ];
 
   if (call.action === "zwave_js.multicast_set_value") {
     return {
-      if: [
-        {
-          condition: "template",
-          value_template: buildEligibleEntitiesTemplate(call, 1),
-        },
-      ],
+      if: conditions,
       then: [
         {
           choose: [
@@ -534,15 +641,62 @@ function buildHealthAwareCall(call: HAServiceCall): HAConditionalAction {
   }
 
   return {
-    if: [
-      {
-        condition: "template",
-        value_template: buildEligibleEntitiesTemplate(call, 1),
-      },
-    ],
+    if: conditions,
     then: [
       buildRunnableCall(call, eligibleEntities),
     ],
+  };
+}
+
+function splitCallByIntentScope(
+  call: HAServiceCall,
+  intentRegistry: FastSceneIntentRegistry
+): Array<{ call: HAServiceCall; scope: string; helperEntityId: string }> {
+  const entityIdsByScope = new Map<string, string[]>();
+  for (const entityId of call.target.entity_id) {
+    const scope = intentRegistry.scopeByEntityId.get(entityId) ?? "global";
+    if (!entityIdsByScope.has(scope)) {
+      entityIdsByScope.set(scope, []);
+    }
+    entityIdsByScope.get(scope)!.push(entityId);
+  }
+
+  return [...entityIdsByScope.entries()].map(([scope, entityIds]) => ({
+    scope,
+    helperEntityId: `input_text.${
+      intentRegistry.helperIdByScope.get(scope) ?? getIntentHelperId(scope)
+    }`,
+    call: {
+      ...call,
+      target: { entity_id: [...entityIds].sort() },
+    },
+  }));
+}
+
+function buildZWaveGateCall(
+  call: HAServiceCall,
+  intentHelperEntityId: string
+): Record<string, any> {
+  const fallbackData =
+    call.action === "zwave_js.multicast_set_value"
+      ? { ...call.data, wait_for_result: false }
+      : {};
+
+  return {
+    action: `script.${FAST_SCENE_ZWAVE_GATE_ID}`,
+    continue_on_error: true,
+    data: {
+      intent_helper_entity_id: intentHelperEntityId,
+      intent_token: "{{ intent_token }}",
+      service_action: call.action,
+      entity_ids: buildEligibleEntitiesTemplate(call),
+      service_data: call.data ?? {},
+      fallback_service_action:
+        call.action === "zwave_js.multicast_set_value"
+          ? "zwave_js.set_value"
+          : "",
+      fallback_service_data: fallbackData,
+    },
   };
 }
 
@@ -553,8 +707,21 @@ function buildBatchHasWorkTemplate(calls: HAServiceCall[]): string {
   )}) | list | count > 0 }}`;
 }
 
+function buildOriginFilteredEligibleEntitiesTemplate(): string {
+  return [
+    "{%- set eligible = namespace(entities=[]) -%}",
+    "{%- for entity_id in fast_scene_mismatched_entities -%}",
+    "{%- if retry_mismatches | default(false) or entity_id != (origin_entity_id | default('')) -%}",
+    "{%- set eligible.entities = eligible.entities + [entity_id] -%}",
+    "{%- endif -%}",
+    "{%- endfor -%}",
+    "{{ eligible.entities }}",
+  ].join("\n");
+}
+
 function generateFastSceneSequence(
   scene: Scene,
+  intentRegistry: FastSceneIntentRegistry,
   options: FastSceneGenerationOptions = {}
 ): any[] {
   const maxZwaveCallsPerStep =
@@ -617,21 +784,21 @@ function generateFastSceneSequence(
     {
       variables: {
         fast_scene_skipped_entities: buildSkippedEntitiesTemplate(targets),
-        fast_scene_zwave_batch_sent: false,
       },
     },
     {
       variables: {
-        fast_scene_initial_eligible_entities:
-          buildSceneEligibleEntitiesTemplate(targets),
         fast_scene_mismatched_entities:
           buildSceneMismatchedEntitiesTemplate(targets),
       },
     },
     {
       variables: {
+        // Initial activation and convergence both send only live mismatches.
+        // The physical switch that emitted a Central Scene notification is
+        // omitted from the first pass and can be corrected by convergence.
         fast_scene_eligible_entities:
-          "{{ fast_scene_mismatched_entities if retry_mismatches | default(false) else fast_scene_initial_eligible_entities }}",
+          buildOriginFilteredEligibleEntitiesTemplate(),
       },
     },
     {
@@ -656,40 +823,42 @@ function generateFastSceneSequence(
 
   const nonZwaveSequence: any[] = [];
   if (nonZwaveCalls.length > 0) {
+    const intentAwareCalls = nonZwaveCalls.flatMap((call) =>
+      splitCallByIntentScope(call, intentRegistry).map((partition) =>
+        buildIntentAwareCall(partition.call, partition.helperEntityId)
+      )
+    );
     nonZwaveSequence.push({
-      parallel: nonZwaveCalls.map((call) => buildHealthAwareCall(call)),
+      parallel: intentAwareCalls,
     });
   }
 
   const zwaveSequence: any[] = [];
-  for (let index = 0; index < zwaveCalls.length; index += maxZwaveCallsPerStep) {
-    const batch = zwaveCalls.slice(index, index + maxZwaveCallsPerStep);
-    const then: any[] = [];
-    if (zwaveBatchDelayMs > 0) {
-      then.push({
-        if: [
-          {
-            condition: "template",
-            value_template: "{{ fast_scene_zwave_batch_sent }}",
-          },
-        ],
-        then: [{ delay: { milliseconds: zwaveBatchDelayMs } }],
-      });
-    }
-    then.push(
-      {
-        parallel: batch.map((call) => buildHealthAwareCall(call)),
-      },
-      { variables: { fast_scene_zwave_batch_sent: true } }
-    );
+  const scopedZwaveCalls = zwaveCalls.flatMap((call) =>
+    splitCallByIntentScope(call, intentRegistry)
+  );
+  for (
+    let index = 0;
+    index < scopedZwaveCalls.length;
+    index += maxZwaveCallsPerStep
+  ) {
+    const batch = scopedZwaveCalls.slice(index, index + maxZwaveCallsPerStep);
     zwaveSequence.push({
       if: [
         {
           condition: "template",
-          value_template: buildBatchHasWorkTemplate(batch),
+          value_template: buildBatchHasWorkTemplate(
+            batch.map((partition) => partition.call)
+          ),
         },
       ],
-      then,
+      then: [
+        {
+          parallel: batch.map((partition) =>
+            buildZWaveGateCall(partition.call, partition.helperEntityId)
+          ),
+        },
+      ],
     });
   }
 
@@ -721,18 +890,80 @@ export function generateFastScriptsFromRegistry(
   sceneRegistry: Record<string, Scene>,
   options: FastSceneGenerationOptions = {}
 ): Record<string, HAScript> {
+  const zwaveBatchDelayMs =
+    options.zwaveBatchDelayMs ?? DEFAULT_ZWAVE_BATCH_DELAY_MS;
+  if (!Number.isInteger(zwaveBatchDelayMs) || zwaveBatchDelayMs < 0) {
+    throw new Error("zwaveBatchDelayMs must be a non-negative integer");
+  }
+  const intentRegistry = buildFastSceneIntentRegistry(sceneRegistry);
+  const sceneEntriesByFamily = new Map<string, Array<[string, Scene]>>();
+  for (const entry of Object.entries(sceneRegistry)) {
+    const familyId = getSceneFamilyId(entry[0]);
+    if (!sceneEntriesByFamily.has(familyId)) {
+      sceneEntriesByFamily.set(familyId, []);
+    }
+    sceneEntriesByFamily.get(familyId)!.push(entry);
+  }
+
+  const wrapperFields = {
+    origin_entity_id: {
+      description:
+        "Physical entity that emitted the scene event; omitted from the initial RF pass",
+      required: false,
+    },
+  };
   const sceneScripts = Object.fromEntries(
     Object.entries(sceneRegistry).map(([sceneId, scene]) => [
       getFastSceneScriptId(sceneId),
       {
         alias: `Fast Scene - ${scene.name}`,
         mode: "restart",
+        fields: wrapperFields,
         sequence: [
           {
-            // A blocking call lets a restarted wrapper cancel stale dispatcher
-            // work before submitting the newest lighting intent.
+            variables: {
+              intent_token:
+                "scene-{{ now().strftime('%Y%m%d%H%M%S%f') }}",
+              origin_entity_id: "{{ origin_entity_id | default('') }}",
+            },
+          },
+          {
+            action: "input_text.set_value",
+            target: {
+              entity_id: (intentRegistry.scopesBySceneId.get(sceneId) ?? []).map(
+                (scope) =>
+                  `input_text.${
+                    intentRegistry.helperIdByScope.get(scope) ??
+                    getIntentHelperId(scope)
+                  }`
+              ),
+            },
+            data: { value: "{{ intent_token }}" },
+          },
+          {
+            // This restartable, non-blocking quiet timer prevents immediate RF
+            // replies from colliding with Central Scene reports. Dashboard and
+            // webhook calls omit the physical origin and start immediately.
+            if: [
+              {
+                condition: "template",
+                value_template: "{{ origin_entity_id != '' }}",
+              },
+            ],
+            then: [
+              {
+                action: "script.turn_on",
+                target: { entity_id: `script.${FAST_SCENE_RF_QUIET_ID}` },
+              },
+            ],
+          },
+          {
             action: `script.${FAST_SCENE_DISPATCHER_ID}`,
-            data: { scene_id: sceneId },
+            data: {
+              scene_id: sceneId,
+              intent_token: "{{ intent_token }}",
+              origin_entity_id: "{{ origin_entity_id }}",
+            },
           },
         ],
       },
@@ -744,45 +975,198 @@ export function generateFastScriptsFromRegistry(
       description: "Generated scene identifier to execute",
       required: true,
     },
+    intent_token: {
+      description: "Unique token for the latest affected entity scopes",
+      required: true,
+    },
+    origin_entity_id: wrapperFields.origin_entity_id,
   };
 
-  return {
-    [FAST_SCENE_DISPATCHER_ID]: {
-      alias: "Fast Scene Dispatcher",
-      // Lighting is interactive: a newer room/preset request supersedes any
-      // unsent batches from an older one instead of waiting behind stale work.
+  const workerFields = {
+    ...dispatcherFields,
+    retry_mismatches: {
+      description: "Dispatch only targets that still differ from the scene",
+      required: true,
+    },
+  };
+
+  const familyScripts: Record<string, HAScript> = {};
+  for (const [familyId, entries] of sceneEntriesByFamily) {
+    const familyDispatcherId = getFamilyDispatcherId(familyId);
+    const familyWorkerId = getFamilyWorkerId(familyId);
+    familyScripts[familyDispatcherId] = {
+      alias: `Fast Scene Dispatcher - ${familyId.replace(/_/g, " ")}`,
       mode: "restart",
       fields: dispatcherFields,
       sequence: [
         {
-          action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
-          data: { scene_id: "{{ scene_id }}", retry_mismatches: false },
+          action: `script.${familyWorkerId}`,
+          data: {
+            scene_id: "{{ scene_id }}",
+            intent_token: "{{ intent_token }}",
+            origin_entity_id: "{{ origin_entity_id | default('') }}",
+            retry_mismatches: false,
+          },
         },
         { delay: { milliseconds: FAST_SCENE_CONVERGENCE_DELAY_MS } },
         {
-          // This direct call and its delay are canceled when newer lighting
-          // intent restarts the dispatcher. Only live mismatches are retried.
+          action: `script.${familyWorkerId}`,
+          data: {
+            scene_id: "{{ scene_id }}",
+            intent_token: "{{ intent_token }}",
+            origin_entity_id: "{{ origin_entity_id | default('') }}",
+            retry_mismatches: true,
+          },
+        },
+      ],
+    };
+    familyScripts[familyWorkerId] = {
+      alias: `Fast Scene Dispatch Worker - ${familyId.replace(/_/g, " ")}`,
+      mode: "restart",
+      fields: workerFields,
+      sequence: [
+        {
+          choose: entries.map(([sceneId, scene]) => ({
+            conditions: `{{ scene_id == '${sceneId}' }}`,
+            sequence: generateFastSceneSequence(scene, intentRegistry, options),
+          })),
+          default: [
+            {
+              stop: "Unknown fast scene identifier for intent family",
+              error: true,
+            },
+          ],
+        },
+      ],
+    };
+  }
+
+  return {
+    [FAST_SCENE_RF_QUIET_ID]: {
+      alias: "Fast Scene RF Quiet Window",
+      mode: "restart",
+      sequence: [{ delay: { milliseconds: FAST_SCENE_RF_QUIET_MS } }],
+    },
+    [FAST_SCENE_ZWAVE_GATE_ID]: {
+      alias: "Fast Scene Z-Wave Gate",
+      mode: "queued",
+      max: FAST_SCENE_GATE_MAX_QUEUED_CALLS,
+      fields: {
+        intent_helper_entity_id: {
+          description: "Input-text helper holding the current target-scope token",
+          required: true,
+        },
+        intent_token: dispatcherFields.intent_token,
+        service_action: {
+          description: "Z-Wave service action to execute",
+          required: true,
+        },
+        entity_ids: {
+          description: "Eligible entity IDs for this isolated call",
+          required: true,
+        },
+        service_data: {
+          description: "Service data for the Z-Wave action",
+          required: true,
+        },
+        fallback_service_action: {
+          description: "Unicast fallback action for undersized multicast calls",
+          required: false,
+        },
+        fallback_service_data: {
+          description: "Service data for the unicast fallback",
+          required: false,
+        },
+      },
+      sequence: [
+        {
+          wait_template: `{{ is_state('script.${FAST_SCENE_RF_QUIET_ID}', 'off') }}`,
+          timeout: { seconds: 5 },
+          continue_on_timeout: true,
+        },
+        {
+          if: [
+            {
+              condition: "template",
+              value_template:
+                "{{ states(intent_helper_entity_id) == intent_token and entity_ids | count > 0 }}",
+            },
+          ],
+          then: [
+            {
+              choose: [
+                {
+                  conditions:
+                    "{{ fallback_service_action | default('') != '' and entity_ids | count < 2 }}",
+                  sequence: [
+                    {
+                      action: "{{ fallback_service_action }}",
+                      continue_on_error: true,
+                      target: { entity_id: "{{ entity_ids }}" },
+                      data: "{{ fallback_service_data }}",
+                    },
+                  ],
+                },
+              ],
+              default: [
+                {
+                  action: "{{ service_action }}",
+                  continue_on_error: true,
+                  target: { entity_id: "{{ entity_ids }}" },
+                  data: "{{ service_data }}",
+                },
+              ],
+            },
+            ...(zwaveBatchDelayMs > 0
+              ? [{ delay: { milliseconds: zwaveBatchDelayMs } }]
+              : []),
+          ],
+        },
+      ],
+    },
+    [FAST_SCENE_DISPATCHER_ID]: {
+      alias: "Fast Scene Dispatcher",
+      // Multiple disjoint scene intents may run together. Family dispatchers
+      // below retain restart/latest-intent semantics for overlapping targets.
+      mode: "parallel",
+      max: FAST_SCENE_MAX_PARALLEL_INTENTS,
+      fields: dispatcherFields,
+      sequence: [
+        {
           action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
-          data: { scene_id: "{{ scene_id }}", retry_mismatches: true },
+          data: {
+            scene_id: "{{ scene_id }}",
+            intent_token: "{{ intent_token }}",
+            origin_entity_id: "{{ origin_entity_id | default('') }}",
+          },
         },
       ],
     },
     [FAST_SCENE_DISPATCH_WORKER_ID]: {
       alias: "Fast Scene Dispatch Worker",
-      mode: "restart",
-      fields: {
-        ...dispatcherFields,
-        retry_mismatches: {
-          description: "Dispatch only targets that still differ from the scene",
-          required: true,
-        },
-      },
+      mode: "parallel",
+      max: FAST_SCENE_MAX_PARALLEL_INTENTS,
+      fields: dispatcherFields,
       sequence: [
         {
-          choose: Object.entries(sceneRegistry).map(([sceneId, scene]) => ({
-            conditions: `{{ scene_id == '${sceneId}' }}`,
-            sequence: generateFastSceneSequence(scene, options),
-          })),
+          choose: [...sceneEntriesByFamily.entries()].map(
+            ([familyId, entries]) => ({
+              conditions: `{{ scene_id in ${JSON.stringify(
+                entries.map(([sceneId]) => sceneId)
+              )} }}`,
+              sequence: [
+                {
+                  action: `script.${getFamilyDispatcherId(familyId)}`,
+                  data: {
+                    scene_id: "{{ scene_id }}",
+                    intent_token: "{{ intent_token }}",
+                    origin_entity_id:
+                      "{{ origin_entity_id | default('') }}",
+                  },
+                },
+              ],
+            })
+          ),
           default: [
             {
               stop: "Unknown fast scene identifier",
@@ -792,6 +1176,7 @@ export function generateFastScriptsFromRegistry(
         },
       ],
     },
+    ...familyScripts,
     ...sceneScripts,
   };
 }

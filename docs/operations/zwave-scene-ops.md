@@ -91,31 +91,33 @@ All generated scene entry points must follow this path:
 
 ```text
 button/webhook/dashboard
-  -> script.fast_scene_<scene_id> (mode: restart; blocks script/automation callers)
-  -> script.fast_scene_dispatch (mode: restart; newest intent wins)
-  -> script.fast_scene_dispatch_worker (mode: restart; generated scene choices)
-  -> health/state filter
+  -> script.fast_scene_<scene_id> (mode: restart; records affected-scope intent)
+  -> script.fast_scene_dispatch (mode: parallel; disjoint requests may overlap)
+  -> per-room dispatcher (mode: restart; newest preset in that room wins)
+  -> health and full target-state mismatch filter
   -> non-Z-Wave and Z-Wave branches start concurrently
-  -> one Z-Wave submission per batch, paced 250 ms apart
+  -> global queued Z-Wave gate, one submission paced every 250 ms
   -> after 2 s, resubmit only targets whose actual state still differs
 ```
 
 The layers are intentionally separate:
 
-- The public wrapper and shared dispatcher both use `restart`. A newer request cancels unsent batches from an older room/preset instead of waiting behind stale work.
-- Generated scene automations use `restart` and call `script.fast_scene_<scene_id>` directly as an action. Do not generate `script.turn_on` inside those automations: direct script actions preserve end-to-end cancellation when an automation restarts.
+- Each target is assigned to an intent scope derived from every room family that controls it. Disjoint scopes remain additive; a newer request invalidates only unsent work for scopes it touches. A shared kitchen/living target therefore uses the newest of those two intents, while Kitchen High and Living High can complete together. `all_off` writes every scope and remains a whole-house override.
+- The public wrapper uses `restart`, while the shared dispatcher uses bounded `parallel`. Per-room dispatchers use `restart`, so a newer preset in one room cancels that room's older unsent work without canceling a different room. Every queued Z-Wave call checks its scope token immediately before transmission, which also makes already-queued stale calls harmless.
+- Generated scene automations use `restart`, call `script.fast_scene_<scene_id>` directly, and pass the physical source entity as `origin_entity_id`. The initial pass omits that locally operated load because the paddle already changed it; the convergence pass can still correct it. Hand-written Central Scene automations must pass the same field.
+- A physical Central Scene request restarts a 900 ms RF quiet window before the global gate transmits. This protects a second nearby double-tap notification from immediate command traffic. Dashboard and webhook requests have no physical origin and start without that delay.
 - The dashboard's authenticated Core API route necessarily starts the wrapper through `script.turn_on`; its one-second request gate still handles duplicate browser delivery, while the wrapper's own `restart` mode makes a later accepted request authoritative.
 - Compatible `zwave_dimmer_46203` and `zwave_switch_light` targets use Switch Multilevel CC38 `zwave_js.set_value` with `wait_for_result: false`, `targetValue`, and `transitionDuration: 0s`. The on/off-only type still represents dimmer hardware, so on/off levels are 99/0 rather than CC37 booleans.
 - Non-Z-Wave calls and the bounded Z-Wave branch begin concurrently. A slow Hue, ZHA, or switch service response must not create a one-second gate before the first Z-Wave transmission.
 - Multicast remains deny-by-default, with no current allowlist. The former Minoston MP22ZD group initially passed controlled trials but later failed repeatedly in normal operation, so all compatible devices now use isolated non-waiting CC38 `set_value`. GE 46203 and Zooz ZEN31 devices remain isolated as well.
-- Before dispatch, unavailable/unknown entities and entities whose enabled Z-Wave node-status sensor is `dead`, `unavailable`, or `unknown` are omitted. Off scenes also omit targets that are already off, which avoids wasting RF transactions on satisfied loads.
+- Before dispatch, unavailable/unknown entities and entities whose enabled Z-Wave node-status sensor is `dead`, `unavailable`, or `unknown` are omitted. Every scene sends only targets whose complete requested state differs, including brightness, RGB/RGBW, white value, and Kelvin color temperature. This avoids redundant RF traffic for both on and off scenes.
 - Every service action uses `continue_on_error: true`. An action-level failure is logged by Home Assistant but does not abort the remaining healthy work.
-- Empty Z-Wave batches are skipped. The 250 ms delay occurs only before a later batch that actually has work, so dead and already-off targets do not add artificial latency.
+- Empty Z-Wave batches are skipped. The global queued gate places the 250 ms spacing after each actual submission, so concurrent room requests cannot collapse back into an unsafe burst.
 - Skipped targets fire `fast_scene_targets_skipped`. The manual `Fast Scene Skipped Targets Alert` automation turns that into one replace-in-place persistent notification; it does not retry the target inside the scene.
-- Devices with `fastScenePriority: "last"` are placed after normal Z-Wave loads. Nodes 23 and 28 currently use it so their acknowledgement timeouts start only after healthy loads have been dispatched.
-- `DEFAULT_MAX_ZWAVE_CALLS_PER_STEP` is one. After removing the failed Minoston multicast allowlist, a live two-call Living High/Off replay still produced a same-burst decode/invalid-payload cluster on nodes 4 and 6, so submissions were serialized on 2026-08-31. `DEFAULT_ZWAVE_BATCH_DELAY_MS` remains 250 ms: non-waiting value submissions avoid an acknowledgement drain while retaining enough spacing to avoid collapsing the scene into one burst.
-- After the initial worker dispatch and a two-second delay, the dispatcher calls the same compact worker in mismatch-only mode. The delay and correction are canceled by newer intent. This is required because restart can cancel unsent script work but cannot revoke an integration service call already in flight; without convergence, a stale Living High call left `living_light_floor` on after All Off. Keeping the scene choices in one worker avoids duplicating the generated YAML for the correction pass.
-- Do not replace the wrapper's direct `script.fast_scene_dispatch` action with non-blocking `script.turn_on`; the blocking link is what allows restart cancellation to propagate to unsent dispatcher work.
+- Devices with `fastScenePriority: "last"` are placed after normal Z-Wave loads. For a device that must receive no operational traffic, use `sceneStatus: "temporarily_excluded"` instead. Nodes 23 and 28 currently use that stronger exclusion and remain present only for inventory/health reporting; node 23's Central Scene trigger remains active. Node 11 returned on 2026-09-01 and was restored to normal scene generation only after live Off/High exercises proved its explicit RGBW endpoints responsive without new RF errors.
+- `DEFAULT_MAX_ZWAVE_CALLS_PER_STEP` is one. After removing the failed Minoston multicast allowlist, a live two-call Living High/Off replay still produced a same-burst decode/invalid-payload cluster on nodes 4 and 6, so submissions were serialized on 2026-08-31. `DEFAULT_ZWAVE_BATCH_DELAY_MS` remains 250 ms, now enforced by the one global queued gate across all concurrent scene requests.
+- After the initial worker dispatch and a two-second delay, the per-room dispatcher calls the same compact worker in mismatch-only mode. A newer preset restarts that room's convergence delay; a newer overlapping or whole-house intent invalidates stale calls through scope tokens. This is required because a service call already in flight cannot be revoked.
+- Do not replace the wrapper's direct `script.fast_scene_dispatch` action with non-blocking `script.turn_on`; the blocking link keeps automation completion and diagnostics tied to the entire scene request.
 - Native `scene.<scene_id>` entities remain generated for Home Assistant UI/compatibility, but operational controls, diagnostics, automations, and tests must activate `script.fast_scene_<scene_id>`. Calling `scene.turn_on` bypasses health filtering, bounded Z-Wave batching, skipped-target reporting, and latest-intent cancellation.
 - Never turn off an outlet that supplies a smart bulb. Mark it `includeInAllOff: false` and `allowSceneTurnOff: false`, leave it out of room-off/low scenes, and turn the bulb entity off instead. The generator rejects any future scene that tries to cut a protected outlet.
 
@@ -131,6 +133,7 @@ Transition duration is a command option, not a persisted state attribute, so the
 The exerciser reads one bulk Home Assistant state snapshot per poll and records `targetTimings` for each entity. Its console prints first/median/last response for targets that actually changed. Overall settle time includes the two-second convergence window; use the changed-target timing to judge visible responsiveness and settle time to judge end-to-end correctness.
 
 `new-hass-configs/scripts.yaml` is a merged deployment artifact produced by `just generate`. It is ignored and untracked; edit `config-generator/src/scene-generation.ts` and related TypeScript sources, and review `generated/scripts.yaml` when inspecting output. `just check` and deployment prechecks regenerate the root file before syncing it.
+The intent helpers are generated at `new-hass-configs/generated/input_text.yaml` and included by `configuration.yaml`; do not edit helper names or values manually.
 
 ## Grid Dashboard Lighting Contract
 
@@ -170,6 +173,28 @@ Individual route rebuilds are Home Assistant WebSocket commands, not registered 
 
 Run rebuilds sequentially. Confirm `rebuilt routes successfully` for each node in the persistent log before starting the next one.
 
+## RGBW Controller Findings
+
+The Zooz ZEN31 and Fibaro FGRGBW-442 controllers expose an aggregate RGBW light on endpoint 1, individual color-channel dimmers on endpoints 2-5, and unused 0-10 V sensor inputs on endpoints 6-9. Two distinct issues must not be conflated:
+
+- Z-Wave JS automatically refreshes Multilevel Sensor values when all of a command class's values are more than six hours old. On these controllers that produces one root voltage query plus queries for endpoints 6-9, often taking roughly a minute per node. Every installed RGBW controller currently has parameters 20-23 set to `2` (ordinary momentary-switch mode), so none is using an analog input. Disabling the Home Assistant voltage entities does not stop this driver-level refresh.
+- Scene generation does not pair RGBW entities automatically. White scenes explicitly address Switch Multilevel endpoint 5 through the canonical `_white` entity. Color scenes address aggregate endpoint 1. Off scenes use aggregate endpoint 1 once so all four channels are extinguished without sending a second command to the same node.
+
+The official Z-Wave JS device definitions for ZEN31 and FGRGBW-442 do not currently set the documented `compat.disableAutoRefresh` flag. That flag is the appropriate driver-level remedy for unused sensor inputs; setting parameter 64 to periodic reporting is not, because the device manuals say it only applies in analog-input mode and time-based reports add mesh traffic. Home Assistant's Z-Wave JS app 1.7.1 configures its supported priority directory as `/config/config`, persistently mapped to `/addon_configs/core_zwave_js/config`. Repo-owned imports under `new-hass-configs/zwave-device-configs/` preserve the embedded definitions and add only `disableAutoRefresh: true`. Deploy them with `just zwave-deploy-device-configs`; the recipe restarts only Z-Wave JS. Startup must report `User-provided device config loaded` for every installed RGBW node.
+
+Registry bindings must also be audited by immutable Z-Wave value ID, not by a friendly entity name. As of 2026-09-01, most `_white` entities point to Switch Multilevel endpoint 5, but two do not:
+
+- node 7 `light.light_living_curtains_white` points to endpoint 4; endpoint 5 is `light.light_living_curtains_5` and is disabled
+- node 10 `light.light_living_windowsillright_white` points to endpoint 2; endpoint 5 is `light.light_living_windowsillright_5`
+
+The two bindings were corrected on 2026-09-01: both canonical `_white` entities now point to endpoint 5, and their endpoint 2-4 entities are explicitly named red/green/blue and disabled. Registry audits must continue to verify the immutable endpoint in each `unique_id`, because a friendly entity name alone cannot prove the binding.
+
+After any RGBW change, verify all three layers:
+
+1. The live entity registry maps `_white` to `-38-5-currentValue` and keeps endpoints 2-4 disabled.
+2. Generated white scenes contain `_white` but not the aggregate entity; generated off scenes contain the aggregate entity but not `_white`.
+3. The Z-Wave JS startup log reports `User-provided device config loaded` for the RGBW nodes after `just zwave-deploy-device-configs`.
+
 ## Home Assistant and Community Guidance
 
 - Home Assistant scripts are sequential by default, stop on an action error by default, and wait for every branch in a `parallel` block. Use `continue_on_error` for expected device failures, but do not mistake parallel syntax for a timeout: [Home Assistant script syntax](https://www.home-assistant.io/docs/scripts).
@@ -202,6 +227,10 @@ Operationally, a dead mains-powered node should be repaired, excluded, or replac
 - Live inventory exposed a protocol regression in Kitchen High: nodes 12, 19, and 20 have CC38 `targetValue` but no CC37 value, so Core rejected the generated Binary Switch commands and three lights never turned on. The generator now uses CC38 99/0 for every `zwave_switch_light`; five repeated Kitchen High/Off cycles then settled all 9/9 targets.
 - A 100 ms pacing trial made Living High faster but produced four invalid payloads and a new node-3 timeout, so the production cadence remains 250 ms. Running the independent non-Z-Wave branch concurrently still provides immediate visible response while isolated Z-Wave calls remain bounded.
 - In two final rapid sequences (Living High, Kitchen High, Guest Bathroom Medium, All Off at 300 ms intervals), All Off was accepted in 39–92 ms, all 46 reachable targets were off 3.9–5.9 seconds after the final request, and no stale command reactivated a target during either five-second quiet window. Before the mismatch-only convergence pass, the same test left `living_light_floor` on for more than 30 seconds.
+- On 2026-09-01, Kitchen High followed about 0.8 seconds later by Living High canceled Kitchen's global restart dispatcher. Repeating the order reversed which room was canceled, and the associated command bursts produced invalid frames and node timeouts. Dispatch was changed to per-scope additive intent plus per-room restart dispatchers, a single global paced RF gate, a 900 ms Central Scene quiet window, and initial suppression of the physical source load. The same audit also found Office High/Medium/Low using the retired scene key `color_temp`; generated scenes now use `color_temp_kelvin`.
+- On 2026-09-01, nodes 11 and 28 were still dead and node 23 still produced acknowledgement timeouts. All logical entries for those loads were marked `sceneStatus: "temporarily_excluded"`, removing them from native scenes, fast calls, All Off, intent scopes, and convergence while retaining inventory visibility and node-23 Central Scene events.
+- The same remediation corrected node 7 and node 10 `_white` registry bindings from endpoints 4 and 2 to endpoint 5, disabled and named the individual color endpoints, removed automatic RGBW pair expansion, and changed off scenes to use one aggregate command. Repo-owned priority configs loaded successfully for every installed ZEN31/FGRGBW-442 node and disable the unused-sensor auto-refresh path.
+- Later on 2026-09-01, node 11 (`kitchen_dining_nook`, also called the living nook) returned to `alive` without being targeted by a scene. While it was still structurally excluded, a Kitchen Off/High exercise changed the other kitchen loads but left both node-11 entity timestamps untouched, proving the exclusion was effective. A subsequent fresh inventory showed node 11 healthy with zero registry drift; its temporary exclusion was then removed. Nodes 23 and 28 remain excluded.
 
 ## Files Involved
 
@@ -219,6 +248,6 @@ Patch the generator when one of these is true:
 - a scene includes a controller-only entity that should never be toggled directly
 - a paired RGBW/white device is not being expanded correctly
 - a device registry entry points at the wrong live entity
-- a generated automation or operational tool invokes `scene.turn_on`, queues stale scene work, or loses direct restart cancellation by using `script.turn_on` inside the automation
+- a generated automation or operational tool invokes `scene.turn_on`, queues stale scene work, cancels disjoint room intent, or omits a Central Scene source entity
 
 Do not patch the generator to compensate for an entity that is simply offline or unavailable.

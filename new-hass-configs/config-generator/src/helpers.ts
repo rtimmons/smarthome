@@ -402,7 +402,7 @@ const livingRoomScenes = createStandardRoomScenes({
   roomId: "living_room",
   devices: [
     "living_floor",
-    "living_nook",
+    "entry_nook",
     "living_curtains"
   ]
 });

@@ -41,6 +41,7 @@ test: config-generator-install
 	bash sync-tools/test-detect-changes.sh
 	bash sync-tools/test-generated-config-policy.sh
 	bash sync-tools/test-ha-ssh.sh
+	bash sync-tools/test-zwave-device-configs.sh
 	cd config-generator && npm test
 
 # Diagnose Z-Wave scene slowness and generate a ramp-normalization plan
@@ -77,6 +78,12 @@ zwave-apply-instant-ramps *args="": preflight config-generator-install
 # Verify that all targeted Z-Wave ramp settings are already normalized
 zwave-verify-instant-ramps *args="": preflight config-generator-install
 	cd config-generator && npm run build && node dist/cli/zwave-scenes.js verify-instant-ramps {{args}}
+
+# Install repo-owned priority device configs and restart only the Z-Wave JS app
+zwave-deploy-device-configs: preflight
+	bash sync-tools/test-zwave-device-configs.sh
+	rsync -av -e "{{ha_ssh_command}}" zwave-device-configs/ root@homeassistant.local:/addon_configs/core_zwave_js/config/
+	{{ha_ssh_command}} root@homeassistant.local "ha addons restart core_zwave_js"
 
 # Generate Home Assistant configs from TypeScript sources
 generate: config-generator-install

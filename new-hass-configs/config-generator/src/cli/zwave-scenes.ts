@@ -93,6 +93,7 @@ export interface ConfiguredDeviceSummary {
   deviceId?: string;
   includeInAllOff: boolean;
   inventoryStatus: "active" | "temporarily_removed";
+  sceneStatus: "active" | "temporarily_excluded";
 }
 
 export interface EntityAuditFinding {
@@ -188,7 +189,7 @@ function parseArgs(argv: string[]): Options {
     host: "root@homeassistant.local",
     server: "http://homeassistant.local:8123",
     sceneIds: [],
-    logLines: 400,
+    logLines: 2000,
     settleTimeoutMs: 30000,
     pollIntervalMs: 500,
     failOnDrift: false,
@@ -568,6 +569,7 @@ export function flattenConfiguredDevices(): ConfiguredDeviceSummary[] {
         deviceId: device.device_id,
         includeInAllOff: device.includeInAllOff !== false,
         inventoryStatus: device.inventoryStatus ?? "active",
+        sceneStatus: device.sceneStatus ?? "active",
       });
     }
   }
@@ -884,7 +886,7 @@ function pickComparableAttributes(entityState: Record<string, any>): Record<stri
     "brightness",
     "rgb_color",
     "rgbw_color",
-    "color_temp",
+    "color_temp_kelvin",
     "white_value",
   ];
   const comparable: Record<string, any> = {};
@@ -1151,6 +1153,9 @@ async function inventory(options: Options) {
   const temporarilyRemovedConfiguredDevices = configuredDevices.filter(
     (device) => device.inventoryStatus === "temporarily_removed"
   );
+  const temporarilyExcludedSceneDevices = configuredDevices.filter(
+    (device) => device.sceneStatus === "temporarily_excluded"
+  );
   const unhealthyNodeFindings = buildUnhealthyNodeFindings(nodeMap, states);
   const sceneAvailabilityFindings = buildSceneAvailabilityFindings(states, nodeMap);
   const configuredUnavailable = collectUnavailableConfiguredEntities(
@@ -1175,6 +1180,8 @@ async function inventory(options: Options) {
       configured_device_count: configuredDevices.length,
       temporarily_removed_configured_device_count:
         temporarilyRemovedConfiguredDevices.length,
+      temporarily_excluded_scene_device_count:
+        temporarilyExcludedSceneDevices.length,
       scene_count: sceneSummaries.length,
       live_ramp_plan_count: liveRampPlan.length,
       unavailable_configured_entity_count: configuredUnavailable.length,
@@ -1193,6 +1200,7 @@ async function inventory(options: Options) {
     unhealthy_zwave_nodes: unhealthyNodeFindings,
     configured_unavailable_entities: configuredUnavailable,
     temporarily_removed_configured_devices: temporarilyRemovedConfiguredDevices,
+    temporarily_excluded_scene_devices: temporarilyExcludedSceneDevices,
     registry_drift_summary: registryDriftSummary,
     entity_audit_findings: entityAuditFindings,
     suspicious_log_summary: suspiciousLogSummary,
@@ -1214,6 +1222,9 @@ async function inventory(options: Options) {
   );
   console.log(
     `Temporarily removed configured devices: ${temporarilyRemovedConfiguredDevices.length}`
+  );
+  console.log(
+    `Temporarily excluded scene devices: ${temporarilyExcludedSceneDevices.length}`
   );
   console.log(`Pending ramp changes: ${liveRampPlan.length}`);
   console.log(

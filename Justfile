@@ -326,6 +326,11 @@ zwave-apply-instant-ramps *args="":
 zwave-verify-instant-ramps *args="":
 	@cd new-hass-configs && just zwave-verify-instant-ramps {{args}}
 
+# Install repo-owned priority device configs and restart only Z-Wave JS
+[group: 'deploy']
+zwave-deploy-device-configs:
+	@cd new-hass-configs && just zwave-deploy-device-configs
+
 # List all available addons
 [group: 'info']
 addons:

@@ -1,0 +1,6 @@
+{
+  "$import": "~/0x027a/zen31.json",
+  "compat": {
+    "disableAutoRefresh": true
+  }
+}

@@ -16,6 +16,7 @@ function configuredDevice(
     type: "zwave_switch_light",
     includeInAllOff: true,
     inventoryStatus,
+    sceneStatus: "active",
   };
 }
 

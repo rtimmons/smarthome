@@ -1,0 +1,6 @@
+{
+  "$import": "~/0x010f/fgrgbw-442.json",
+  "compat": {
+    "disableAutoRefresh": true
+  }
+}

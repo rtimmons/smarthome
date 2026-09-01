@@ -1,11 +1,13 @@
 /**
- * Tests for scene generation with automatic pairing
+ * Tests for explicit-endpoint scene generation and fast-scene reliability.
  */
 
 import * as yaml from "yaml";
 import { getEffectiveAutomationMode } from "./automation-generation";
 import { automations } from "./automations";
+import { devices, getPairedDeviceName } from "./devices";
 import { generateFastCalls, generateFastScripts, generateScenes } from "./generate-test-helper";
+import { generateSceneTargets } from "./scene-generation";
 import { scenes } from "./scenes";
 import type { Scene } from "./types";
 
@@ -29,7 +31,19 @@ function collectObjects(
   ];
 }
 
-describe("Scene Generation with Pairing", () => {
+function getSceneWorkerSequence(
+  scripts: Record<string, any>,
+  familyId: string,
+  sceneId: string
+): any[] {
+  const worker = scripts[`fast_scene_dispatch_worker_${familyId}`];
+  const choice = worker.sequence[0].choose.find((candidate: any) =>
+    String(candidate.conditions).includes(`'${sceneId}'`)
+  );
+  return choice.sequence;
+}
+
+describe("Scene Generation", () => {
   describe("Outdoor dashboard scenes", () => {
     it("should control both outdoor light entities", () => {
       const high = generateScenes({ outdoor_high: scenes.outdoor_high })[0];
@@ -51,13 +65,13 @@ describe("Scene Generation with Pairing", () => {
     });
   });
 
-  describe("Paired device synchronization", () => {
-    it("should automatically add _white pair when RGBW device is specified", () => {
+  describe("Explicit RGBW endpoint selection", () => {
+    it("should target only the aggregate endpoint when it is specified", () => {
       const testScene: Scene = {
         name: "Test Scene",
         lights: [
           {
-            device: "office_abovetv", // RGBW device
+            device: "office_abovetv",
             state: "on",
             brightness: 255,
           },
@@ -67,25 +81,17 @@ describe("Scene Generation with Pairing", () => {
       const result = generateScenes({ test_scene: testScene });
       const sceneEntities = result[0].entities;
 
-      // Both the RGBW and white entities should be present
       expect(sceneEntities["light.light_office_abovetv"]).toBeDefined();
-      expect(sceneEntities["light.light_office_abovetv_white"]).toBeDefined();
-
-      // RGBW entity should have brightness
       expect(sceneEntities["light.light_office_abovetv"].brightness).toBe(255);
-
-      // White entity should also have brightness to match
-      expect(sceneEntities["light.light_office_abovetv_white"].brightness).toBe(255);
-      expect(sceneEntities["light.light_office_abovetv_white"].state).toBe("on");
+      expect(sceneEntities["light.light_office_abovetv_white"]).toBeUndefined();
     });
 
-    it("should automatically add RGBW pair when _white device is specified", () => {
-
+    it("should target only endpoint 5 when the white device is specified", () => {
       const testScene: Scene = {
         name: "Test Scene",
         lights: [
           {
-            device: "office_abovetv_white", // White device
+            device: "office_abovetv_white",
             state: "on",
             brightness: 180,
           },
@@ -95,38 +101,12 @@ describe("Scene Generation with Pairing", () => {
       const result = generateScenes({ test_scene: testScene });
       const sceneEntities = result[0].entities;
 
-      // Both entities should be present
-      expect(sceneEntities["light.light_office_abovetv"]).toBeDefined();
       expect(sceneEntities["light.light_office_abovetv_white"]).toBeDefined();
-
-      // White entity should have its specified brightness
       expect(sceneEntities["light.light_office_abovetv_white"].brightness).toBe(180);
-
-      // RGBW entity should also have brightness
-      expect(sceneEntities["light.light_office_abovetv"].brightness).toBe(180);
-      expect(sceneEntities["light.light_office_abovetv"].rgbw_color).toEqual([0, 0, 0, 180]);
+      expect(sceneEntities["light.light_office_abovetv"]).toBeUndefined();
     });
 
-    it("should default paired RGBW white channel to full when _white brightness is omitted", () => {
-
-      const testScene: Scene = {
-        name: "Test White Default Brightness",
-        lights: [
-          {
-            device: "living_abovetv_white",
-            state: "on",
-          },
-        ],
-      };
-
-      const result = generateScenes({ test_scene: testScene });
-      const sceneEntities = result[0].entities;
-
-      expect(sceneEntities["light.light_living_abovetv"].rgbw_color).toEqual([0, 0, 0, 255]);
-    });
-
-    it("should turn off both paired devices when one is turned off", () => {
-
+    it("should use one aggregate command to turn every RGBW channel off", () => {
       const testScene: Scene = {
         name: "Test Off Scene",
         lights: [
@@ -140,13 +120,11 @@ describe("Scene Generation with Pairing", () => {
       const result = generateScenes({ test_scene: testScene });
       const sceneEntities = result[0].entities;
 
-      // Both should be off
       expect(sceneEntities["light.light_office_abovetv"].state).toBe("off");
-      expect(sceneEntities["light.light_office_abovetv_white"].state).toBe("off");
+      expect(sceneEntities["light.light_office_abovetv_white"]).toBeUndefined();
     });
 
-    it("should respect explicitly defined paired devices", () => {
-
+    it("should preserve both endpoints only when both are explicitly requested", () => {
       const testScene: Scene = {
         name: "Test Explicit Scene",
         lights: [
@@ -158,7 +136,7 @@ describe("Scene Generation with Pairing", () => {
           {
             device: "office_abovetv_white",
             state: "on",
-            brightness: 100, // Different brightness explicitly set
+            brightness: 100,
           },
         ],
       };
@@ -166,58 +144,18 @@ describe("Scene Generation with Pairing", () => {
       const result = generateScenes({ test_scene: testScene });
       const sceneEntities = result[0].entities;
 
-      // Both should be present
       expect(sceneEntities["light.light_office_abovetv"]).toBeDefined();
       expect(sceneEntities["light.light_office_abovetv_white"]).toBeDefined();
-
-      // RGBW should have 255
       expect(sceneEntities["light.light_office_abovetv"].brightness).toBe(255);
-
-      // White should have explicitly set 100 (not auto-synced to 255)
       expect(sceneEntities["light.light_office_abovetv_white"].brightness).toBe(100);
     });
 
-    it("should handle multiple paired devices in one scene", () => {
-
-      const testScene: Scene = {
-        name: "Test Multiple Pairs",
-        lights: [
-          {
-            device: "office_abovetv",
-            state: "on",
-            brightness: 255,
-          },
-          {
-            device: "living_curtains",
-            state: "on",
-            brightness: 180,
-          },
-        ],
-      };
-
-      const result = generateScenes({ test_scene: testScene });
-      const sceneEntities = result[0].entities;
-
-      // All four devices should be present
-      expect(sceneEntities["light.light_office_abovetv"]).toBeDefined();
-      expect(sceneEntities["light.light_office_abovetv_white"]).toBeDefined();
-      expect(sceneEntities["light.light_living_curtains"]).toBeDefined();
-      expect(sceneEntities["light.light_living_curtains_white"]).toBeDefined();
-
-      // Each pair should have matching brightness
-      expect(sceneEntities["light.light_office_abovetv"].brightness).toBe(255);
-      expect(sceneEntities["light.light_office_abovetv_white"].brightness).toBe(255);
-      expect(sceneEntities["light.light_living_curtains"].brightness).toBe(180);
-      expect(sceneEntities["light.light_living_curtains_white"].brightness).toBe(180);
-    });
-
-    it("should not add pairs for unpaired devices", () => {
-
+    it("should leave ordinary lights as one explicit target", () => {
       const testScene: Scene = {
         name: "Test Unpaired",
         lights: [
           {
-            device: "office_sidetable", // No pair
+            device: "office_sidetable",
             state: "on",
             brightness: 255,
           },
@@ -227,15 +165,56 @@ describe("Scene Generation with Pairing", () => {
       const result = generateScenes({ test_scene: testScene });
       const sceneEntities = result[0].entities;
 
-      // Only the specified device should be present
       expect(sceneEntities["light.office_light_sidetable"]).toBeDefined();
       expect(Object.keys(sceneEntities).length).toBe(1);
     });
   });
 
   describe("Integration test with actual scenes", () => {
-    it("should generate valid YAML with paired devices", () => {
+    it("should use at most one endpoint per RGBW controller in every scene", () => {
+      for (const [sceneId, scene] of Object.entries(scenes)) {
+        const targetEntities = new Set(
+          generateSceneTargets(scene).map((target) => target.entityId)
+        );
+        for (const [deviceName, device] of Object.entries(devices.lights)) {
+          if (deviceName.endsWith("_white")) {
+            continue;
+          }
+          const pairedName = getPairedDeviceName(deviceName);
+          if (!pairedName) {
+            continue;
+          }
+          const pairedEntity = devices.lights[pairedName].entity;
+          expect(
+            targetEntities.has(device.entity) && targetEntities.has(pairedEntity),
+            `${sceneId} targets both ${device.entity} and ${pairedEntity}`
+          ).toBe(false);
+        }
+      }
+    });
 
+    it("should omit every temporarily excluded device from every scene", () => {
+      const excludedEntities = new Set(
+        [
+          ...Object.values(devices.lights),
+          ...Object.values(devices.switches),
+          ...Object.values(devices.outlets),
+        ]
+          .filter((device) => device.sceneStatus === "temporarily_excluded")
+          .map((device) => device.entity)
+      );
+
+      for (const [sceneId, scene] of Object.entries(scenes)) {
+        for (const target of generateSceneTargets(scene)) {
+          expect(
+            excludedEntities.has(target.entityId),
+            `${sceneId} still targets excluded ${target.entityId}`
+          ).toBe(false);
+        }
+      }
+    });
+
+    it("should generate white-only YAML without an aggregate RGBW command", () => {
       const testScenes: Record<string, Scene> = {
         office_high: {
           name: "Office - High",
@@ -252,25 +231,33 @@ describe("Scene Generation with Pairing", () => {
       const result = generateScenes(testScenes);
       const yamlOutput = yaml.stringify(result);
 
-      // YAML should include both entities
-      expect(yamlOutput).toContain("light.light_office_abovetv:");
       expect(yamlOutput).toContain("light.light_office_abovetv_white:");
+      expect(yamlOutput).not.toContain("light.light_office_abovetv:");
       expect(yamlOutput).toContain("brightness: 255");
+    });
+
+    it("should restore the recovered dining nook with one explicit RGBW endpoint per scene", () => {
+      const highTargets = generateSceneTargets(scenes.kitchen_high).map(
+        (target) => target.entityId
+      );
+      const offTargets = generateSceneTargets(scenes.kitchen_off).map(
+        (target) => target.entityId
+      );
+
+      expect(highTargets).toContain("light.light_dining_nook_white");
+      expect(highTargets).not.toContain("light.light_dining_nook");
+      expect(offTargets).toContain("light.light_dining_nook");
+      expect(offTargets).not.toContain("light.light_dining_nook_white");
     });
 
     it("should submit on/off-only Z-Wave dimmer loads without waiting and isolate every target", () => {
 
       const calls = generateFastCalls(scenes.living_room_high);
 
-      expect(calls).toHaveLength(18);
+      expect(calls).toHaveLength(12);
       expect(
-        calls.find(
-          (call: any) =>
-            call.action === "switch.turn_on" &&
-            call.target.entity_id.length === 1 &&
-            call.target.entity_id[0] === "switch.light_living_sillleftpower"
-        )
-      ).toBeDefined();
+        calls.flatMap((call: any) => call.target.entity_id)
+      ).not.toContain("switch.light_living_sillleftpower");
       expect(
         [
           "light.light_living_cornerspot",
@@ -315,17 +302,18 @@ describe("Scene Generation with Pairing", () => {
             call.action === "light.turn_on" &&
             call.data?.brightness === 255 &&
             call.target.entity_id.includes("light.living_light_floor") &&
-            call.target.entity_id.includes("light.living_light_nook")
+            call.target.entity_id.includes("light.entry_light_nook") &&
+            !call.target.entity_id.includes("light.living_light_nook") &&
+            !call.target.entity_id.includes("light.living_light_corner")
         )
       ).toBeDefined();
     });
 
-    it("should submit both guest bathroom dimmers immediately without waiting", () => {
+    it("should route guest bathroom scenes around noisy node 23", () => {
       const calls = generateFastCalls(scenes.guest_bathroom_medium);
 
-      expect(calls).toHaveLength(2);
-      expect(calls.map((call: any) => call.target.entity_id[0]).sort()).toEqual([
-        "light.light_guestbathroom_overhead",
+      expect(calls).toHaveLength(1);
+      expect(calls[0].target.entity_id).toEqual([
         "light.light_guestbathroom_sconce",
       ]);
       for (const call of calls) {
@@ -418,13 +406,13 @@ describe("Scene Generation with Pairing", () => {
       ]);
     });
 
-    it("should not duplicate targets when a paired RGBW entity is already explicit", () => {
+    it("should not add aggregate RGBW targets to white-channel scenes", () => {
 
       const calls = generateFastCalls(scenes.office_high);
       const allTargets = calls.flatMap((call: any) => call.target.entity_id);
 
-      expect(allTargets.filter((entityId: string) => entityId === "light.light_office_abovetv"))
-        .toHaveLength(1);
+      expect(allTargets).not.toContain("light.light_office_abovetv");
+      expect(allTargets).toContain("light.light_office_abovetv_white");
     });
 
     it("should exclude controller-only switches from all_off fast calls", () => {
@@ -457,24 +445,20 @@ describe("Scene Generation with Pairing", () => {
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
     });
 
-    it("should batch large Z-Wave scenes into multiple parallel steps", () => {
+    it("should batch Z-Wave submissions behind one paced RF gate", () => {
 
       const scripts = generateFastScripts({ all_off: scenes.all_off });
-      const script = scripts.fast_scene_dispatch_worker;
-      const sequence = script.sequence[0].choose[0].sequence;
+      const sequence = getSceneWorkerSequence(scripts, "all", "all_off");
       const parallelSteps = collectObjects(sequence, (step) => Boolean(step.parallel));
-      const delaySteps = collectObjects(sequence, (step) => Boolean(step.delay));
-      const pacingDelaySteps = delaySteps.filter(
-        (step: any) => step.delay.milliseconds !== 2000
-      );
       const serviceActions = collectObjects(sequence, (step) => Boolean(step.action));
+      const gate = scripts.fast_scene_zwave_gate;
 
       expect(sequence.length).toBeGreaterThan(1);
       expect(parallelSteps[0].parallel.length).toBeGreaterThan(0);
-      expect(delaySteps.length).toBeGreaterThan(1);
-      expect(
-        pacingDelaySteps.every((step: any) => step.delay.milliseconds === 250)
-      ).toBe(true);
+      expect(gate.mode).toBe("queued");
+      expect(gate.max).toBe(32);
+      expect(collectObjects(gate.sequence, (step) => step.delay?.milliseconds === 250))
+        .toHaveLength(1);
       expect(
         serviceActions.some(
           (call: any) =>
@@ -483,6 +467,11 @@ describe("Scene Generation with Pairing", () => {
             call.continue_on_error === true
         )
       ).toBe(true);
+      expect(
+        serviceActions.filter(
+          (call: any) => call.action === "script.fast_scene_zwave_gate"
+        ).length
+      ).toBeGreaterThan(0);
       expect(
         sequence.some(
           (step: any) =>
@@ -499,25 +488,34 @@ describe("Scene Generation with Pairing", () => {
       const scripts = generateFastScripts({ living_room_high: scenes.living_room_high });
       const script = scripts.fast_scene_living_room_high;
       const dispatcher = scripts.fast_scene_dispatch;
-      const worker = scripts.fast_scene_dispatch_worker;
-      const sequence = worker.sequence[0].choose[0].sequence;
+      const familyDispatcher = scripts.fast_scene_dispatch_living_room;
+      const worker = scripts.fast_scene_dispatch_worker_living_room;
+      const sequence = getSceneWorkerSequence(
+        scripts,
+        "living_room",
+        "living_room_high"
+      );
 
       expect(script.mode).toBe("restart");
-      expect(script.sequence).toEqual([
-        {
+      expect(script.sequence).toEqual(expect.arrayContaining([
+        expect.objectContaining({ action: "input_text.set_value" }),
+        expect.objectContaining({
           action: "script.fast_scene_dispatch",
-          data: { scene_id: "living_room_high" },
-        },
-      ]);
-      expect(dispatcher.mode).toBe("restart");
-      expect(dispatcher.max).toBeUndefined();
+          data: expect.objectContaining({ scene_id: "living_room_high" }),
+        }),
+      ]));
+      expect(dispatcher.mode).toBe("parallel");
+      expect(dispatcher.max).toBe(16);
+      expect(familyDispatcher.mode).toBe("restart");
       expect(worker.mode).toBe("restart");
       expect(sequence.length).toBeGreaterThan(1);
       expect(
-        collectObjects(sequence, (step) => step.delay?.milliseconds === 250).length
-      ).toBeGreaterThan(0);
+        collectObjects(familyDispatcher.sequence, (step) => step.delay?.milliseconds === 2000)
+      ).toHaveLength(1);
+      expect(scripts.fast_scene_zwave_gate.mode).toBe("queued");
       expect(
-        collectObjects(dispatcher.sequence, (step) => step.delay?.milliseconds === 2000)
+        collectObjects(scripts.fast_scene_zwave_gate.sequence,
+          (step) => step.delay?.milliseconds === 250)
       ).toHaveLength(1);
       expect(JSON.stringify(sequence)).toContain("expected_brightness");
       expect(
@@ -529,24 +527,28 @@ describe("Scene Generation with Pairing", () => {
       ).toBe(true);
     });
 
-    it("should skip satisfied off targets and dispatch weak Z-Wave routes last", () => {
+    it("should omit temporarily excluded Z-Wave routes from generated workers", () => {
       const scripts = generateFastScripts({ all_off: scenes.all_off });
-      const sequence = scripts.fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+      const sequence = getSceneWorkerSequence(scripts, "all", "all_off");
       const eligibleVariables = sequence.find(
-        (step: any) => step.variables?.fast_scene_initial_eligible_entities
+        (step: any) => step.variables?.fast_scene_eligible_entities
       );
       const zwaveBatchSteps = collectObjects(sequence,
         (step: any) => step.if && step.then?.some((action: any) => action.parallel)
       );
 
-      expect(eligibleVariables.variables.fast_scene_initial_eligible_entities).toContain(
-        "states(entity_id) != 'off'"
+      expect(eligibleVariables.variables.fast_scene_eligible_entities).toContain(
+        "fast_scene_mismatched_entities"
       );
-      expect(
-        JSON.stringify(zwaveBatchSteps[zwaveBatchSteps.length - 1]).includes(
-          "switch.light_living_sillleftpower"
-        )
-      ).toBe(true);
+      expect(eligibleVariables.variables.fast_scene_eligible_entities).toContain(
+        "origin_entity_id"
+      );
+      expect(JSON.stringify(zwaveBatchSteps)).not.toContain(
+        "switch.light_living_sillleftpower"
+      );
+      expect(JSON.stringify(sequence)).not.toContain(
+        "light.light_guestbathroom_overhead"
+      );
       expect(JSON.stringify(zwaveBatchSteps)).not.toContain(
         "zwave_js.multicast_set_value"
       );
@@ -592,8 +594,11 @@ describe("Scene Generation with Pairing", () => {
         { living_room_high: scenes.living_room_high },
         { maxZwaveCallsPerStep: 1 }
       );
-      const dispatcher = scripts.fast_scene_dispatch;
-      const sequence = scripts.fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+      const sequence = getSceneWorkerSequence(
+        scripts,
+        "living_room",
+        "living_room_high"
+      );
       const zwaveBatchSteps = collectObjects(
         sequence,
         (step: any) => step.if && step.then?.some((action: any) => action.parallel)
@@ -646,8 +651,8 @@ describe("Scene Generation with Pairing", () => {
 
       expect(entities["light.light_kitchen_upper_white"].brightness).toBe(255);
       expect(entities["light.light_kitchen_lower_white"].brightness).toBe(255);
-      expect(entities["light.light_kitchen_upper"].brightness).toBe(255);
-      expect(entities["light.light_kitchen_lower"].brightness).toBe(255);
+      expect(entities["light.light_kitchen_upper"]).toBeUndefined();
+      expect(entities["light.light_kitchen_lower"]).toBeUndefined();
     });
   });
 });

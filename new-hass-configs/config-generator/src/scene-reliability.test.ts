@@ -12,8 +12,11 @@ import {
   DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
   FAST_SCENE_DISPATCH_WORKER_ID,
   FAST_SCENE_DISPATCHER_ID,
+  FAST_SCENE_RF_QUIET_ID,
   FAST_SCENE_SKIPPED_EVENT,
+  FAST_SCENE_ZWAVE_GATE_ID,
   generateFastSceneCalls,
+  generateFastSceneIntentHelpersFromRegistry,
   generateFastScriptsFromRegistry,
   generateSceneTargets,
   getFastSceneScriptEntityId,
@@ -47,6 +50,29 @@ function sceneActions(action: Action | Action[]): Array<Extract<Action, { type: 
   >;
 }
 
+function sceneFamilyId(sceneId: string): string {
+  return sceneId.replace(/_(?:high|medium|low|off)$/, "");
+}
+
+function getSceneWorkerSequence(
+  scripts: Record<string, any>,
+  sceneId: string
+): any[] {
+  const worker = scripts[
+    `${FAST_SCENE_DISPATCH_WORKER_ID}_${sceneFamilyId(sceneId)}`
+  ];
+  const choice = worker.sequence[0].choose.find((candidate: any) =>
+    String(candidate.conditions).includes(`'${sceneId}'`)
+  );
+  return choice.sequence;
+}
+
+function intentHelpersForWrapper(script: Record<string, any>): string[] {
+  return script.sequence.find(
+    (step: any) => step.action === "input_text.set_value"
+  ).target.entity_id;
+}
+
 describe("Fast scene reliability contract", () => {
   it("gives every source scene automation latest-intent restart behavior", () => {
     for (const [automationId, automation] of Object.entries(automations)) {
@@ -78,15 +104,26 @@ describe("Fast scene reliability contract", () => {
         (candidate) => typeof candidate.action === "string"
       );
       for (const sceneAction of expectedSceneActions) {
-        expect(generatedActions, automationId).toContainEqual({
-          action: getFastSceneScriptEntityId(sceneAction.scene),
-        });
+        expect(
+          generatedActions.some(
+            (action) =>
+              action.action === getFastSceneScriptEntityId(sceneAction.scene)
+          ),
+          automationId
+        ).toBe(true);
       }
       expect(
         generatedActions.some((action) => action.action === "script.turn_on"),
         automationId
       ).toBe(false);
     }
+
+    expect(generatedById.get("office_switch_doubleup")!.actions).toEqual([
+      {
+        action: "script.fast_scene_office_high",
+        data: { origin_entity_id: "light.light_office_toggle" },
+      },
+    ]);
   });
 
   it("keeps nested scene actions blocking too", () => {
@@ -159,36 +196,111 @@ describe("Fast scene reliability contract", () => {
         expect(automation.mode, automation.id).toBe("restart");
       }
     }
+
+    for (const automationId of [
+      "living_hallway_switch_double_up_living_room_high",
+      "kitchen_hanging_switch_double_up_kitchen_high",
+      "kitchen_hanging_switch_double_down_kitchen_off",
+    ]) {
+      const automation = manualAutomations.find(
+        (candidate) => candidate.id === automationId
+      );
+      expect(automation?.actions[0].data?.origin_entity_id, automationId).toMatch(
+        /^light\./
+      );
+    }
   });
 
-  it("gives every scene a blocking latest-intent wrapper and dispatcher", () => {
+  it("gives every scene a blocking intent wrapper and family restart dispatcher", () => {
     const scripts = generateFastScriptsFromRegistry(scenes);
-    expect(scripts[FAST_SCENE_DISPATCHER_ID].mode).toBe("restart");
-    expect(scripts[FAST_SCENE_DISPATCHER_ID].max).toBeUndefined();
-    expect(scripts[FAST_SCENE_DISPATCH_WORKER_ID].mode).toBe("restart");
+    expect(scripts[FAST_SCENE_DISPATCHER_ID].mode).toBe("parallel");
+    expect(scripts[FAST_SCENE_DISPATCHER_ID].max).toBe(16);
+    expect(scripts[FAST_SCENE_DISPATCH_WORKER_ID].mode).toBe("parallel");
     expect(scripts[FAST_SCENE_DISPATCHER_ID].sequence).toEqual([
       {
         action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
-        data: { scene_id: "{{ scene_id }}", retry_mismatches: false },
-      },
-      { delay: { milliseconds: 2000 } },
-      {
-        action: `script.${FAST_SCENE_DISPATCH_WORKER_ID}`,
-        data: { scene_id: "{{ scene_id }}", retry_mismatches: true },
+        data: {
+          scene_id: "{{ scene_id }}",
+          intent_token: "{{ intent_token }}",
+          origin_entity_id: "{{ origin_entity_id | default('') }}",
+        },
       },
     ]);
 
     for (const sceneId of Object.keys(scenes)) {
+      const familyDispatcher = scripts[
+        `${FAST_SCENE_DISPATCHER_ID}_${sceneFamilyId(sceneId)}`
+      ];
       expect(scripts[`fast_scene_${sceneId}`], sceneId).toMatchObject({
         mode: "restart",
         sequence: [
           {
-            action: `script.${FAST_SCENE_DISPATCHER_ID}`,
-            data: { scene_id: sceneId },
+            variables: {
+              intent_token: expect.stringMatching(/^scene-.*strftime/),
+            },
           },
+          { action: "input_text.set_value" },
+          {
+            if: [{ value_template: "{{ origin_entity_id != '' }}" }],
+            then: [
+              {
+                action: "script.turn_on",
+                target: { entity_id: `script.${FAST_SCENE_RF_QUIET_ID}` },
+              },
+            ],
+          },
+          { action: `script.${FAST_SCENE_DISPATCHER_ID}` },
         ],
       });
+      expect(familyDispatcher.mode, sceneId).toBe("restart");
+      expect(
+        collectObjects(
+          familyDispatcher.sequence,
+          (candidate) => candidate.delay?.milliseconds === 2000
+        ),
+        sceneId
+      ).toHaveLength(1);
     }
+  });
+
+  it("keeps disjoint double-tap scenes additive and makes overlap newest-wins", () => {
+    const scripts = generateFastScriptsFromRegistry(scenes);
+    const kitchenHelpers = intentHelpersForWrapper(scripts.fast_scene_kitchen_high);
+    const livingHighHelpers = intentHelpersForWrapper(
+      scripts.fast_scene_living_room_high
+    );
+    const livingMediumHelpers = intentHelpersForWrapper(
+      scripts.fast_scene_living_room_medium
+    );
+    const allOffHelpers = intentHelpersForWrapper(scripts.fast_scene_all_off);
+
+    expect(kitchenHelpers).toContain("input_text.fast_scene_intent_kitchen");
+    expect(kitchenHelpers).toContain(
+      "input_text.fast_scene_intent_kitchen_and_living_room"
+    );
+    expect(livingHighHelpers).toEqual([
+      "input_text.fast_scene_intent_living_room",
+    ]);
+    expect(livingHighHelpers).not.toContain(
+      "input_text.fast_scene_intent_kitchen_and_living_room"
+    );
+    expect(livingMediumHelpers).toContain(
+      "input_text.fast_scene_intent_kitchen_and_living_room"
+    );
+    expect(allOffHelpers).toEqual(
+      expect.arrayContaining([
+        "input_text.fast_scene_intent_kitchen",
+        "input_text.fast_scene_intent_kitchen_and_living_room",
+        "input_text.fast_scene_intent_living_room",
+      ])
+    );
+    expect(Object.keys(generateFastSceneIntentHelpersFromRegistry(scenes))).toEqual(
+      expect.arrayContaining([
+        "fast_scene_intent_kitchen",
+        "fast_scene_intent_kitchen_and_living_room",
+        "fast_scene_intent_living_room",
+      ])
+    );
   });
 
   it("covers every target once and isolates every currently configured Z-Wave target", () => {
@@ -215,9 +327,10 @@ describe("Fast scene reliability contract", () => {
   });
 
   it("does not generate multicast calls for the current device registry", () => {
-    const sequence = generateFastScriptsFromRegistry({
+    const scripts = generateFastScriptsFromRegistry({
       living_room_high: scenes.living_room_high,
-    }).fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+    });
+    const sequence = getSceneWorkerSequence(scripts, "living_room_high");
     const serialized = JSON.stringify(sequence);
 
     expect(serialized).not.toContain("zwave_js.multicast_set_value");
@@ -228,7 +341,10 @@ describe("Fast scene reliability contract", () => {
   it("submits compatible dimmers without waiting and forces instant transitions", () => {
     const calls = generateFastSceneCalls(scenes.guest_bathroom_off);
 
-    expect(calls).toHaveLength(2);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].target.entity_id).toEqual([
+      "light.light_guestbathroom_sconce",
+    ]);
     expect(
       calls.every(
         (call) =>
@@ -241,13 +357,14 @@ describe("Fast scene reliability contract", () => {
       )
     ).toBe(true);
 
-    const sequence = generateFastScriptsFromRegistry({
+    const scripts = generateFastScriptsFromRegistry({
       guest_bathroom_off: scenes.guest_bathroom_off,
-    }).fast_scene_dispatch_worker.sequence[0].choose[0].sequence;
+    });
+    const sequence = getSceneWorkerSequence(scripts, "guest_bathroom_off");
     const serialized = JSON.stringify(sequence);
     expect(serialized).toContain("zwave_js.set_value");
     expect(serialized).toContain('"wait_for_result":false');
-    expect(serialized).toContain("| count >= 1");
+    expect(serialized).toContain("| count > 0");
   });
 
   it("rejects scenes that cut power to a protected smart-light outlet", () => {
@@ -264,19 +381,20 @@ describe("Fast scene reliability contract", () => {
 
   it("health-filters every scene, isolates action errors, and bounds Z-Wave batches", () => {
     const scripts = generateFastScriptsFromRegistry(scenes);
-    const choices = scripts[FAST_SCENE_DISPATCH_WORKER_ID].sequence[0].choose;
+    expect(scripts[FAST_SCENE_ZWAVE_GATE_ID]).toMatchObject({
+      mode: "queued",
+      max: 32,
+    });
 
-    expect(choices).toHaveLength(Object.keys(scenes).length);
-    for (const [sceneIndex, [sceneId, scene]] of Object.entries(scenes).entries()) {
-      const sequence = choices[sceneIndex].sequence;
+    for (const [sceneId, scene] of Object.entries(scenes)) {
+      const sequence = getSceneWorkerSequence(scripts, sceneId);
       const serialized = JSON.stringify(sequence);
       const serviceActions = collectObjects(
         sequence,
         (candidate) =>
           typeof candidate.action === "string" &&
           (/^(light|switch)\.turn_(on|off)$/.test(candidate.action) ||
-            candidate.action === "zwave_js.set_value" ||
-            candidate.action === "zwave_js.multicast_set_value")
+            candidate.action === `script.${FAST_SCENE_ZWAVE_GATE_ID}`)
       );
       const skippedEvents = collectObjects(
         sequence,
@@ -296,25 +414,22 @@ describe("Fast scene reliability contract", () => {
         sceneId
       ).toBe(true);
 
-      for (const batch of collectObjects(
+      for (const parallel of collectObjects(
         sequence,
-        (candidate) =>
-          Array.isArray(candidate.if) &&
-          Array.isArray(candidate.then) &&
-          candidate.then.some((step: any) => Array.isArray(step.parallel))
+        (candidate) => Array.isArray(candidate.parallel)
       )) {
-        for (const parallel of batch.then.filter((step: any) =>
-          Array.isArray(step.parallel)
-        )) {
-          const batchText = JSON.stringify(parallel.parallel);
-          const containsZwave = zwaveEntityIds.some((entityId) =>
-            batchText.includes(entityId)
-          );
-          if (containsZwave) {
-            expect(parallel.parallel.length, sceneId).toBeLessThanOrEqual(
-              DEFAULT_MAX_ZWAVE_CALLS_PER_STEP
-            );
-          }
+        const batchText = JSON.stringify(parallel.parallel);
+        const containsZwave = zwaveEntityIds.some((entityId) =>
+          batchText.includes(entityId)
+        );
+        if (containsZwave) {
+          expect(
+            parallel.parallel.filter(
+              (candidate: any) =>
+                candidate.action === `script.${FAST_SCENE_ZWAVE_GATE_ID}`
+            ).length,
+            sceneId
+          ).toBeLessThanOrEqual(DEFAULT_MAX_ZWAVE_CALLS_PER_STEP);
         }
       }
     }
