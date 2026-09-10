@@ -27,6 +27,7 @@ Last updated: 2026-09-10
       the server-enforced read-only subaccount can read but cannot overwrite/delete.
 - [ ] Provision Usenet provider/indexer accounts and complete their application setup.
 - [ ] Reconnoiter and bootstrap the QNAP without disturbing existing services.
+- [ ] Add and validate the authenticated, LAN-only catalog dashboard on the QNAP.
 - [ ] Run the authorized end-to-end test and complete the handoff documentation.
 
 Material decisions made:
@@ -43,6 +44,11 @@ Material decisions made:
 - Use NZBGeek plus NZBFinder because DrunkenSlug registration is closed.
 - Require deliberate manifest-backed promotion and server-enforced read-only QNAP
   credentials; no unattended acquisition path is enabled.
+- Make a declaratively configured OliveTin dashboard the primary cache-management
+  interface. Keep the existing catalog commands as its tested backend and as the
+  recovery/automation interface; do not replace the safety semantics with raw file copies.
+- Treat QNAP HybridMount as an optional compatibility experiment, not a dependency.
+  Never weaken the server-enforced read-only credential to make HybridMount work.
 
 Current checkpoint: the approved $23.09/month Hetzner infrastructure is live and
 the cloud bootstrap is complete. One protected CX43 VM, protected Primary IPv4
@@ -90,7 +96,8 @@ reconnaissance, obtain from the user the exact dedicated Docker-capable
 `user@LAN-host`, have the user install that public key through the supported QNAP
 workflow, pin the verified NAS host key, and record the NAS data-share path and
 numeric UID/GID. Do not use the Storage Box `qnap-reader` key as the NAS login key.
-Do not reboot the QNAP.
+Do not reboot the QNAP. The QNAP implementation must include the OliveTin dashboard
+described in sections 18-19; do not stop after making the fallback commands work.
 
 Last verified on 2026-09-10:
 
@@ -142,9 +149,9 @@ Build this architecture:
                │ local selective     │
                │ content cache       │
                │                     │
-               │ catalog-list        │
-               │ catalog-pull        │
-               │ catalog-evict       │
+               │ catalog dashboard   │
+               │ browse/pull/evict   │
+               │ verified CLI backend│
                └─────────────────────┘
 ```
 
@@ -158,6 +165,8 @@ Expected operating pattern:
 - Acquisition and post-processing happen on the Hetzner VM, not the NAS.
 - The QNAP should not need to be online for acquisition to continue.
 - Normal cloud-to-NAS transfers should go directly Storage Box → QNAP rather than Storage Box → VM → QNAP.
+- Day-to-day remote-versus-local decisions should be point-and-click; copying item
+  IDs between terminal commands is a supported fallback, not the primary workflow.
 
 This is a private system for content I am authorized to obtain and store.
 
@@ -183,6 +192,9 @@ Prefer:
 - Docker Compose for application deployment.
 - Docker Compose on QNAP wherever practical.
 - rclone over SFTP for Storage Box transfers.
+- A small, authenticated OliveTin web dashboard over building a bespoke catalog UI.
+- Declarative, least-privilege UI actions that call the same verified catalog backend
+  used by the command-line wrappers.
 - Git as the source of truth for non-secret configuration.
 - sops + age, or an equivalently simple encrypted-secret mechanism, if secrets need to exist alongside the repository.
 
@@ -209,6 +221,11 @@ In particular verify:
 - DrunkenSlug registration status.
 - At least one good alternative if DrunkenSlug registration is closed.
 - Current QNAP Container Station / Docker Compose behavior relevant to my NAS.
+- Current OliveTin stable release, container architecture support, authentication,
+  access-control, validated arguments/entities, and long-running action behavior.
+- Whether this exact QNAP and a Hetzner server-enforced read-only subaccount can use
+  HybridMount File Cloud Gateway caching over WebDAV without write access. Hetzner
+  warns that many WebDAV clients cannot mount its read-only mode; do not assume this works.
 
 Prefer provider/operator documentation over blogs, Reddit, affiliate review sites, or forum folklore.
 
@@ -346,7 +363,9 @@ usenet-infra/
 │   ├── cloud/
 │   │   └── compose.yaml
 │   └── qnap/
-│       └── compose.yaml
+│       ├── compose.yaml
+│       └── olivetin/
+│           └── config.yaml
 │
 ├── config/
 │   ├── catalog.schema.*
@@ -631,6 +650,9 @@ Before changing the NAS, discover:
 - Container Station version,
 - Docker version,
 - Compose V2 availability,
+- OliveTin image compatibility with the exact CPU architecture and kernel,
+- HybridMount version, available mount modes, free-license availability, and whether
+  reserved cache is supported on this model/OS,
 - existing shares,
 - relevant filesystem paths,
 - available local storage,
@@ -653,6 +675,7 @@ Human/manual steps may include:
 - temporarily enabling SSH,
 - confirming an administrative account that can SSH,
 - creating a dedicated QNAP shared folder if QTS requires GUI/API management for it.
+- approving a stable LAN-only address and local account for the catalog dashboard.
 
 Document each unavoidable step precisely in `docs/qnap-bootstrap.md`.
 
@@ -676,17 +699,20 @@ Verify on this particular NAS.
 
 The QNAP does NOT need SABnzbd or Prowlarr.
 
-Its job is selective caching.
+Its job is selective caching and providing the primary catalog-management UI.
 
 Prefer a containerized rclone implementation under Container Station so QNAP firmware updates do not erase miscellaneous packages installed into the base OS.
 
-Create a QNAP Compose stack using the current official/well-maintained rclone image.
+Create a QNAP Compose stack using the current official/well-maintained rclone image
+and a pinned OliveTin image. OliveTin is the user-facing control surface; the
+existing manifest-aware catalog tool remains the implementation of list, status,
+pull, evict, verification, and failure recording.
 
 Conceptually it needs access to:
 
 ```text
 /share/Container/usenet/
-    configuration/scripts
+    configuration/scripts/UI configuration
 
 /share/<LOCAL_LIBRARY>/
     local cached content
@@ -696,9 +722,77 @@ The Storage Box credential on the QNAP must be read-only remotely.
 
 Do not put that private key or rclone secret in Git.
 
-## 19. QNAP user-facing commands
+Run the dashboard with least privilege:
 
-Give me very simple commands as `just` recipes for normal operation.
+- bind it only to the NAS LAN address or loopback behind an already trusted private
+  access path; do not expose it directly to the Internet;
+- require authentication even on the LAN;
+- expose only predefined catalog actions with validated arguments, never a general
+  shell or arbitrary rclone command field;
+- give it only the catalog scripts, read-only Storage Box configuration/key material,
+  catalog state, transfer staging, and local cache paths it requires;
+- do not mount the Docker socket into the dashboard container;
+- run as the dedicated numeric QNAP UID/GID with a read-only root filesystem where
+  practical; and
+- keep the UI configuration declarative and versioned in Git, with credentials kept
+  in ignored runtime files or the chosen encrypted-secret mechanism.
+
+The dashboard must invoke the same catalog backend as the CLI. It must not implement
+raw remote-to-local copies that bypass manifest resolution, free-space checks, hidden
+staging, SHA-256 verification, atomic publication, retry behavior, or failure records.
+
+## 19. QNAP catalog dashboard and fallback commands
+
+The authenticated OliveTin dashboard is the primary interface for normal cache
+management. It should be usable from a desktop or phone without copying item IDs or
+shell commands.
+
+The main view should show at minimum:
+
+- remote item count and total size;
+- local item count and total size;
+- available NAS capacity and configured reserve;
+- transfers in progress and recorded failures;
+- one row or card per catalog item with title, category, size, and state;
+- clear states such as `remote only`, `downloading`, `local`, and `failed`; and
+- only the action valid for the current state, such as **Download**, **Retry**, or
+  **Remove local copy**.
+
+Generate the dashboard's item choices/cards from structured catalog output rather
+than requiring a free-form item ID. Refresh that data on demand and after each action.
+Display long-running pull progress or, where exact byte progress is unavailable,
+provide an unambiguous running state plus accessible execution output/history.
+
+Required interactions:
+
+### Browse and inspect
+
+- Search or filter by title and category.
+- Distinguish remote-only content from verified local content at a glance.
+- Show useful failure text without requiring an SSH session for the first diagnosis.
+- Provide a compact status/capacity summary on the same dashboard.
+
+### Download to QNAP
+
+- Select an item and press **Download**; do not require copying its ID.
+- Validate that the item exists remotely and that sufficient local free space remains.
+- Copy directly from Storage Box to QNAP through hidden staging.
+- Support safe retry, verify all manifest SHA-256 values, atomically publish the local
+  object, update local state, and refresh the dashboard.
+
+### Remove the local copy
+
+- Show a confirmation that explicitly says the canonical remote copy will remain.
+- Delete only the QNAP object and local state record.
+- Refresh the item to `remote only` after success.
+- Never issue an rclone delete or other remote-mutating operation.
+
+OliveTin execution history should provide a simple audit trail of who initiated each
+operation, its arguments, status, and output. Configure timeouts so large transfers
+can remain active without becoming orphaned merely because a browser closes.
+
+Keep very simple `just` recipes for recovery, automation, testing, and advanced
+operation. They are not the primary day-to-day interface.
 
 I want recipes conceptually like:
 
@@ -762,9 +856,24 @@ It should:
 
 Because the NAS credential is read-only, even a bug in this tooling should not be able to erase the canonical copy.
 
-Do not overbuild a web application unless there is a compelling usability advantage.
+Do not use rclone's general-purpose Web GUI as the primary interface: it can initiate
+raw transfers that bypass catalog invariants. It may be enabled temporarily for
+administrative diagnosis only, bound to loopback and authenticated, then disabled.
 
-Good CLI wrappers are fine.
+During QNAP reconnaissance, run a time-boxed HybridMount compatibility experiment if
+the installed version supports File Cloud Gateway with generic WebDAV storage:
+
+1. use only the existing server-enforced read-only Storage Box subaccount;
+2. verify that the mount can browse and read without any write permission;
+3. verify the cloud/local/downloading icons and reserved-cache behavior;
+4. attempt overwrite and delete against a disposable writer-created sentinel and
+   require both to fail remotely; and
+5. record the result in `docs/qnap-bootstrap.md`.
+
+HybridMount is optional. If it cannot mount the read-only account, requires a writable
+credential, obscures integrity/failure state, or cannot preserve the manifest-aware
+workflow, stop the experiment and retain OliveTin. Do not adopt ordinary two-way sync,
+an automatic bidirectional mount, or a writable remote credential as a workaround.
 
 ## 20. Transfer tuning
 
@@ -840,6 +949,8 @@ Back up important application configuration separately from the 20 TB catalog:
 
 - SABnzbd settings,
 - Prowlarr settings/database,
+- OliveTin authentication/runtime state and execution history where it is not
+  reproducible from Git,
 - catalog metadata,
 - critical scripts/configuration.
 
@@ -849,7 +960,8 @@ I am primarily concerned with being able to rebuild the service configuration. T
 
 ## 24. Observability
 
-Create a useful health/status command.
+Create a useful health/status backend and surface the QNAP-relevant results in the
+catalog dashboard. Retain the command for automation and recovery.
 
 At minimum detect:
 
@@ -862,7 +974,9 @@ At minimum detect:
 - Storage Box approaching capacity,
 - VM scratch storage approaching capacity,
 - failed remote promotions,
-- QNAP local storage approaching capacity.
+- QNAP local storage approaching capacity,
+- catalog dashboard unavailable or unhealthy, and
+- failed or stalled QNAP pulls visible in both health output and the dashboard.
 
 Avoid deploying Prometheus/Grafana just because they exist.
 
@@ -934,15 +1048,19 @@ Verify:
 5. Verification/unpacking works if applicable.
 6. Promotion to Storage Box succeeds.
 7. Provenance/catalog record exists.
-8. QNAP sees the remote item.
-9. `catalog-pull` transfers it to QNAP.
-10. Integrity is checked.
-11. Local status reports it present.
-12. `catalog-evict` deletes the NAS copy.
-13. Remote item still exists.
-14. QNAP read-only credentials cannot delete or overwrite the remote item.
-15. Restarting the relevant containers does not break the configuration.
-16. Git contains no credentials.
+8. The catalog dashboard sees the remote item and shows it as `remote only`.
+9. The item can be selected and downloaded in the dashboard without copying its ID.
+10. The dashboard shows a running state and retains useful success/failure output.
+11. The underlying pull stages safely and checks every manifest SHA-256 value.
+12. Local status and the dashboard report the verified item as `local`.
+13. The dashboard requires confirmation and removes only the NAS copy.
+14. The dashboard returns the item to `remote only`, and the remote item still exists.
+15. The fallback `catalog-list`, `catalog-status`, `catalog-pull`, and `catalog-evict`
+    commands operate through the same backend and preserve identical safety behavior.
+16. QNAP read-only credentials cannot delete or overwrite the remote item.
+17. The dashboard requires authentication and is unreachable from the public Internet.
+18. Restarting the relevant containers does not break configuration or execution history.
+19. Git contains no credentials.
 
 Do not reboot the entire QNAP without asking me first.
 
@@ -974,11 +1092,12 @@ The finished repository must explain:
 
 ### `README.md`
 
-Very short overview and normal commands.
+Very short overview, primary dashboard URL/access method, and fallback commands.
 
 ### `docs/architecture.md`
 
-Architecture, trust boundaries and data flow.
+Architecture, trust boundaries, data flow, dashboard-to-catalog-backend boundary, and
+why the UI has neither a Docker socket nor remote write authority.
 
 ### `docs/account-setup.md`
 
@@ -988,7 +1107,8 @@ Never include actual passwords/API keys.
 
 ### `docs/qnap-bootstrap.md`
 
-Any manual QNAP setup required before IaC takes over.
+Any manual QNAP setup required before IaC takes over, dashboard authentication/access,
+and the result of the optional HybridMount read-only compatibility experiment.
 
 ### `docs/operations.md`
 
@@ -997,19 +1117,23 @@ Normal operations:
 - searching,
 - intentional acquisition,
 - catalog promotion,
-- listing catalog,
-- pulling to NAS,
-- evicting from NAS,
+- browsing and filtering the catalog in the dashboard,
+- downloading to and removing from the NAS through dashboard controls,
+- reading transfer output/history and diagnosing a failed pull,
+- using listing, pull, status, and eviction commands as a fallback,
 - checking failures,
 - updating software.
 
 ### `docs/recovery.md`
 
-Rebuild/recovery steps.
+Rebuild/recovery steps, including recreating the dashboard and using the CLI backend
+while it is unavailable.
 
 ### `docs/costs.md`
 
-Current recurring costs with date checked.
+Current recurring costs with date checked. Record OliveTin as no recurring software
+cost and include any QNAP license only if an optional HybridMount feature is actually
+adopted after testing.
 
 ## 30. How to interact with me
 
@@ -1051,6 +1175,16 @@ If an implementation choice is minor, choose a sensible default and proceed.
 
 The project is complete when I can do all of the following:
 
+- open the authenticated catalog dashboard through its private LAN access path;
+- browse or filter catalog items and distinguish `remote only`, `downloading`,
+  `local`, and `failed` states;
+- select **Download** without copying an item ID and see its execution status;
+- select **Remove local copy**, confirm the action, and see the item return to
+  `remote only`; and
+- perform the same operations with the recovery CLI when the dashboard is unavailable.
+
+The underlying infrastructure and recovery interface must also support:
+
 ```text
 # inspect infrastructure
 terraform plan
@@ -1079,7 +1213,10 @@ and the following statements are true:
 - Hetzner Storage Box is the canonical content store.
 - Acquisition continues even if the QNAP is offline.
 - Completed cloud acquisitions are safely promoted to Storage Box.
-- The QNAP can pull selectively.
+- The QNAP can pull selectively through a point-and-click dashboard.
+- Dashboard actions use the same manifest-aware, verified catalog backend as the CLI.
+- The dashboard requires authentication, is not Internet-exposed, provides no general
+  shell, has no Docker socket, and has no remote write authority.
 - QNAP credentials cannot destroy remote content.
 - Administrative web UIs are not exposed publicly.
 - NNTP uses TLS.
@@ -1094,7 +1231,7 @@ When finished, give me a concise system handoff containing:
 
 1. architecture actually implemented,
 2. repository location,
-3. service endpoints/access commands,
-4. five or fewer commands I will normally use,
+3. dashboard and service endpoints/private access methods,
+4. normal dashboard workflow plus five or fewer fallback commands,
 5. recurring monthly cost,
 6. known remaining limitations.
