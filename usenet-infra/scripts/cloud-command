@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${CLOUD_SSH_TARGET:?Set CLOUD_SSH_TARGET in usenet-infra/.env}"
+
+if (($# == 0)); then
+  echo "usage: cloud-command <remote command> [arguments ...]" >&2
+  exit 2
+fi
+
+printf -v arguments_q ' %q' "$@"
+ssh_args=(-o BatchMode=yes)
+if [[ -n "${CLOUD_SSH_KEY:-}" ]]; then
+  ssh_args+=(-i "${CLOUD_SSH_KEY}" -o IdentitiesOnly=yes)
+fi
+if [[ -n "${CLOUD_SSH_KNOWN_HOSTS:-}" ]]; then
+  ssh_args+=(-o "UserKnownHostsFile=${CLOUD_SSH_KNOWN_HOSTS}")
+fi
+
+exec ssh "${ssh_args[@]}" "${CLOUD_SSH_TARGET}" \
+  "exec${arguments_q}"

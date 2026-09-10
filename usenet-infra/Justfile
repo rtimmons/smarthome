@@ -1,0 +1,103 @@
+set dotenv-load
+
+default:
+	@just --list
+
+# Run all checks that do not require live infrastructure.
+[group: 'validation']
+test: ansible-setup
+	python3 -m unittest discover -s tests -v
+	python3 -m py_compile scripts/catalogctl.py scripts/healthcheck.py scripts/sync-health-api-keys.py
+	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
+	shellcheck scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/catalog-promote scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
+	@ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_file(f) }' $(find ansible compose -path 'ansible/.collections' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print)
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml site.yml --syntax-check
+	./scripts/secret-scan
+
+# Check tracked content and repository history for high-confidence credential forms.
+[group: 'validation']
+secret-scan:
+	@./scripts/secret-scan
+
+# Prompt without echo and save the Hetzner token to an ignored mode-0600 file.
+[group: 'setup']
+store-hcloud-token:
+	@./scripts/store-hcloud-token
+
+# Create or validate the four ignored, purpose-specific Ed25519 keypairs.
+[group: 'setup']
+generate-ssh-keys:
+	@./scripts/generate-ssh-keys
+
+# Generate ignored Terraform inputs from dedicated keys and the current public IPv4.
+[group: 'setup']
+prepare-terraform-vars:
+	@./scripts/prepare-terraform-vars
+
+# Show canonical items and whether each is cached on the QNAP.
+[group: 'catalog']
+catalog-list:
+	@./scripts/qnap-command list
+
+# Summarize canonical, local-cache, transfer, failure, and free-space state.
+[group: 'catalog']
+catalog-status:
+	@./scripts/qnap-command status
+
+# Copy, SHA-256 verify, and atomically publish one item in the QNAP cache.
+[group: 'catalog']
+catalog-pull item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/qnap-command pull "$1"
+
+# Delete one QNAP copy. This command never invokes a remote deletion.
+[group: 'catalog']
+catalog-evict item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/qnap-command evict "$1"
+
+# Check cloud applications, Storage Box, promotion failures, and scratch space.
+[group: 'health']
+cloud-health:
+	@./scripts/cloud-command /srv/usenet/scripts/healthcheck
+
+# Check Storage Box reachability, transfer failures, and QNAP cache capacity.
+[group: 'health']
+qnap-health:
+	@./scripts/qnap-command healthcheck
+
+# Deliberately publish a completed SAB directory to the canonical catalog.
+[group: 'catalog']
+catalog-promote path title category source authorization:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command /srv/usenet/scripts/catalog-promote "$1" \
+		--title "$2" --category "$3" --source "$4" --authorization "$5"
+
+# Initialize both independent Terraform roots.
+[group: 'terraform']
+terraform-init:
+	terraform -chdir=terraform/cloud init
+	terraform -chdir=terraform/storage init
+
+# Produce non-destructive plans for both independent Terraform roots.
+[group: 'terraform']
+terraform-plan:
+	./scripts/terraform-with-token -chdir=terraform/cloud plan
+	./scripts/terraform-with-token -chdir=terraform/storage plan
+
+# Install the pinned Ansible collections into the ignored local directory.
+[group: 'ansible']
+ansible-setup:
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-galaxy collection install -r requirements.yml -p .collections
+
+# Apply host configuration after inventory and secret files exist.
+[group: 'ansible']
+configure-cloud: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud.yml
+
+[group: 'ansible']
+configure-qnap: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap.yml

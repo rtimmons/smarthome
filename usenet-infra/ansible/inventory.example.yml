@@ -1,0 +1,42 @@
+---
+all:
+  children:
+    cloud:
+      hosts:
+        usenet-cloud:
+          ansible_host: 203.0.113.10
+          # Hetzner's stock image initially accepts the provisioned key as
+          # root. The first run creates the non-root administrator below.
+          ansible_user: root
+          ansible_ssh_private_key_file: "{{ playbook_dir }}/../secrets/ssh/cloud-admin"
+          ansible_ssh_common_args: >-
+            -o IdentitiesOnly=yes
+            -o UserKnownHostsFile={{ playbook_dir }}/files/secrets/cloud-known-hosts
+          cloud_admin_user: usenet-admin
+          cloud_admin_authorized_key_source: "{{ playbook_dir }}/../secrets/ssh/cloud-admin.pub"
+          # Optional after Storage Box setup:
+          # cloud_storagebox_private_key_source: "{{ playbook_dir }}/../secrets/ssh/storage-writer"
+          # cloud_storagebox_known_hosts_source: "{{ playbook_dir }}/files/secrets/storagebox/known_hosts"
+          # rclone_config_source: "{{ playbook_dir }}/files/rclone.conf"
+          # cloud_catalog_env_source: "{{ playbook_dir }}/files/catalog.env"
+          # Replace with every trusted administrative source before enabling UFW.
+          cloud_ssh_allowed_cidrs:
+            - 198.51.100.25/32
+    qnap:
+      hosts:
+        usenet-qnap:
+          ansible_host: 192.0.2.20
+          # Use the dedicated account that owns the application paths and has
+          # Container Station/Docker access, not the built-in admin account.
+          ansible_user: qnapusenet
+          ansible_ssh_private_key_file: "{{ playbook_dir }}/../secrets/ssh/qnap-admin"
+          # Set these to the numeric owner of the QNAP media share.
+          qnap_uid: 1000
+          qnap_gid: 1000
+          qnap_container_root: /share/Container/usenet
+          qnap_data_root: /share/Usenet
+          # Keep live values in ignored inventory.yml, never this example.
+          qnap_storagebox_host: uXXXXX-subX.your-storagebox.de
+          qnap_storagebox_user: uXXXXX-subX
+          qnap_storagebox_private_key_source: "{{ playbook_dir }}/../secrets/ssh/qnap-reader"
+          qnap_storagebox_known_hosts_source: "{{ playbook_dir }}/files/secrets/storagebox/known_hosts"

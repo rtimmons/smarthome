@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd "$(dirname "$0")/.." && pwd)"
+token_file="${project_root}/secrets/hetzner.env"
+
+if [[ ! -f "${token_file}" ]]; then
+  echo "Missing ${token_file}; run just store-hcloud-token first." >&2
+  exit 1
+fi
+if [[ "$(stat -f '%Lp' "${token_file}" 2>/dev/null || stat -c '%a' "${token_file}")" != "600" ]]; then
+  echo "Refusing to use ${token_file}: expected mode 0600." >&2
+  exit 1
+fi
+
+set -a
+# shellcheck disable=SC1090
+source "${token_file}"
+set +a
+: "${HCLOUD_TOKEN:?Token file did not define HCLOUD_TOKEN}"
+
+# Terraform state and saved plans can contain sensitive Storage Box passwords.
+# Constrain newly created local artifacts even if the caller's shell is permissive.
+umask 077
+
+exec "${TERRAFORM_BIN:-terraform}" "$@"

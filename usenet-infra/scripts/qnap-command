@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${QNAP_SSH_TARGET:?Set QNAP_SSH_TARGET in usenet-infra/.env}"
+: "${QNAP_PROJECT_DIR:?Set QNAP_PROJECT_DIR in usenet-infra/.env}"
+
+if (($# == 0)); then
+  echo "usage: qnap-command <catalog command> [arguments ...]" >&2
+  exit 2
+fi
+
+tool="$1"
+shift
+case "${tool}" in
+  list|status|pull|evict)
+    set -- "catalog-${tool}" "$@"
+    ;;
+  healthcheck)
+    set -- "${tool}" "$@"
+    ;;
+  *)
+    echo "qnap-command: unsupported command: ${tool}" >&2
+    exit 2
+    ;;
+esac
+
+printf -v project_q '%q' "${QNAP_PROJECT_DIR}"
+printf -v arguments_q ' %q' "$@"
+ssh_args=(-o BatchMode=yes)
+if [[ -n "${QNAP_SSH_KEY:-}" ]]; then
+  ssh_args+=(-i "${QNAP_SSH_KEY}" -o IdentitiesOnly=yes)
+fi
+if [[ -n "${QNAP_SSH_KNOWN_HOSTS:-}" ]]; then
+  ssh_args+=(-o "UserKnownHostsFile=${QNAP_SSH_KNOWN_HOSTS}")
+fi
+
+exec ssh "${ssh_args[@]}" "${QNAP_SSH_TARGET}" \
+  "cd ${project_q} && docker compose run --rm catalog${arguments_q}"

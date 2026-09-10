@@ -1,0 +1,15 @@
+# Install as /srv/usenet/config/rclone/rclone.conf with mode 0600.
+# The private key and verified known_hosts file live outside the repository.
+[storagebox]
+type = sftp
+host = uXXXXX.your-storagebox.de
+user = uXXXXX
+port = 23
+key_file = /srv/usenet/secrets/storagebox/id_ed25519
+known_hosts_file = /srv/usenet/secrets/storagebox/known_hosts
+shell_type = unix
+hashes = sha256
+sha256sum_command = sha256sum
+skip_links = true
+chunk_size = 32Ki
+concurrency = 64

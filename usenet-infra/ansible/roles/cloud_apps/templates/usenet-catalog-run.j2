@@ -1,0 +1,18 @@
+#!/bin/sh
+set -eu
+
+tool="${1:-}"
+case "$tool" in
+    catalog-evict|catalog-list|catalog-promote|catalog-pull|catalog-status|healthcheck)
+        ;;
+    *)
+        echo "usenet-catalog-run: unsupported command: $tool" >&2
+        exit 64
+        ;;
+esac
+shift
+
+set -a
+. {{ (cloud_data_root ~ '/config/catalog.env') | quote }}
+set +a
+exec {{ (cloud_data_root ~ '/libexec') | quote }}/"$tool" "$@"

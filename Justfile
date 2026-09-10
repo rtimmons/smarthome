@@ -389,6 +389,79 @@ deploy-force *args="":
 	@cd new-hass-configs && just deploy-force {{args}}
 
 # ============================================================================
+# USENET CATALOG
+# ============================================================================
+
+# List canonical items and whether each is cached on the QNAP
+[group: 'usenet']
+catalog-list:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-list
+
+# Summarize canonical and QNAP cache state
+[group: 'usenet']
+catalog-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-status
+
+# Pull and verify one canonical item into the QNAP cache
+[group: 'usenet']
+catalog-pull item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-pull "$1"
+
+# Delete only one QNAP cached copy
+[group: 'usenet']
+catalog-evict item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-evict "$1"
+
+# Run local validation for the Usenet infrastructure project
+[group: 'usenet']
+usenet-test:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra test
+
+# Securely store a Hetzner API token without putting it in chat or shell history
+[group: 'usenet']
+usenet-store-hcloud-token:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra store-hcloud-token
+
+# Create or validate the purpose-specific Usenet infrastructure SSH keys
+[group: 'usenet']
+usenet-generate-ssh-keys:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra generate-ssh-keys
+
+# Generate ignored Terraform inputs using the dedicated keys and current public IP
+[group: 'usenet']
+usenet-prepare-terraform-vars:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra prepare-terraform-vars
+
+# Produce read-only Terraform plans for cloud and canonical storage
+[group: 'usenet']
+usenet-terraform-plan:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra terraform-plan
+
+# Configure or converge the Usenet cloud host
+[group: 'usenet']
+usenet-configure-cloud:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cloud
+
+# Reconnoiter, configure, and converge the QNAP after its dedicated SSH account is ready
+[group: 'usenet']
+usenet-configure-qnap:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-qnap
+
+# Check cloud applications, Storage Box access, failures, and scratch space
+[group: 'usenet']
+usenet-cloud-health:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
+
+# Check Storage Box access, transfer failures, and QNAP cache capacity
+[group: 'usenet']
+usenet-qnap-health:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra qnap-health
+
+# ============================================================================
 # ALIASES FOR COMMON COMMANDS
 # ============================================================================
 

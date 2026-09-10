@@ -1,0 +1,10 @@
+{{ cloud_data_root }}/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    su usenet usenet
+}

@@ -1,0 +1,242 @@
+---
+- name: Check QNAP Compose sources on the controller
+  ansible.builtin.stat:
+    path: "{{ qnap_compose_source_dir }}/{{ item }}"
+  delegate_to: localhost
+  register: qnap_compose_sources
+  loop:
+    - compose.yaml
+    - .env.example
+    - README.md
+    - Dockerfile.catalog
+    - catalog-run
+
+- name: Require complete QNAP deployment inputs
+  ansible.builtin.assert:
+    that:
+      - >-
+        qnap_compose_sources.results
+        | selectattr('stat.exists', 'equalto', false)
+        | list
+        | length == 0
+      - qnap_storagebox_host | length > 0
+      - qnap_storagebox_user | length > 0
+      - qnap_storagebox_private_key_source | length > 0
+      - qnap_storagebox_known_hosts_source | length > 0
+    fail_msg: >-
+      QNAP Compose/build sources or the Storage Box read-only subaccount
+      host/user and ignored local key/known_hosts paths are missing.
+  no_log: true
+
+- name: Check the Storage Box private key on the controller
+  ansible.builtin.stat:
+    path: "{{ qnap_storagebox_private_key_source }}"
+  delegate_to: localhost
+  register: qnap_storagebox_private_key_stat
+  no_log: true
+
+- name: Check the verified Storage Box known_hosts on the controller
+  ansible.builtin.stat:
+    path: "{{ qnap_storagebox_known_hosts_source }}"
+  delegate_to: localhost
+  register: qnap_storagebox_known_hosts_stat
+  no_log: true
+
+- name: Require readable Storage Box credential files
+  ansible.builtin.assert:
+    that:
+      - qnap_storagebox_private_key_stat.stat.exists
+      - qnap_storagebox_private_key_stat.stat.isreg
+      - qnap_storagebox_known_hosts_stat.stat.exists
+      - qnap_storagebox_known_hosts_stat.stat.isreg
+    fail_msg: >-
+      The ignored Storage Box private key or verified known_hosts file is
+      missing. No credentials were written to QNAP.
+  no_log: true
+
+- name: Create QNAP application directories as the dedicated account
+  ansible.builtin.raw: |
+    qnap_changed=0
+    if test ! -d {{ item.path | quote }}; then
+      mkdir -p {{ item.path | quote }}
+      qnap_changed=1
+    fi
+    chmod {{ item.mode | quote }} {{ item.path | quote }}
+    if test "$qnap_changed" -eq 1; then
+      echo ANSIBLE_CHANGED
+    fi
+  register: qnap_directory_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_directory_result.stdout"
+  loop:
+    - path: "{{ qnap_container_root }}"
+      mode: "0750"
+    - path: "{{ qnap_deploy_dir }}"
+      mode: "0750"
+    - path: "{{ qnap_catalog_scripts_dir }}"
+      mode: "0750"
+    - path: "{{ qnap_container_root }}/config/catalog"
+      mode: "0750"
+    - path: "{{ qnap_catalog_state_dir }}"
+      mode: "0750"
+    - path: "{{ qnap_catalog_cache_dir }}"
+      mode: "0750"
+    # Nested staging makes catalog-pull's final os.replace stay on one filesystem.
+    - path: "{{ qnap_catalog_cache_dir }}/.staging"
+      mode: "0750"
+    - path: "{{ qnap_storagebox_key_file | dirname }}"
+      mode: "0700"
+
+- name: Transfer QNAP Compose, build, script, and schema files
+  ansible.builtin.raw: |
+    desired_hash={{ qnap_payload_sha256 | quote }}
+    current_hash=$(sha256sum {{ item.dest | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 077
+      printf '%s' {{ qnap_payload_b64 | quote }} | base64 -d > {{ (item.dest ~ '.ansible') | quote }}
+      chmod {{ item.mode | quote }} {{ (item.dest ~ '.ansible') | quote }}
+      mv -f {{ (item.dest ~ '.ansible') | quote }} {{ item.dest | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_payload: "{{ lookup('ansible.builtin.file', item.src, rstrip=false) }}"
+    qnap_payload_b64: "{{ qnap_payload | b64encode }}"
+    qnap_payload_sha256: "{{ qnap_payload | hash('sha256') }}"
+  register: qnap_file_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_file_result.stdout"
+  loop:
+    - src: "{{ qnap_compose_source_dir }}/compose.yaml"
+      dest: "{{ qnap_deploy_dir }}/compose.yaml"
+      mode: "0640"
+    - src: "{{ qnap_compose_source_dir }}/README.md"
+      dest: "{{ qnap_deploy_dir }}/README.md"
+      mode: "0640"
+    - src: "{{ qnap_compose_source_dir }}/.env.example"
+      dest: "{{ qnap_deploy_dir }}/.env.example"
+      mode: "0640"
+    - src: "{{ qnap_compose_source_dir }}/Dockerfile.catalog"
+      dest: "{{ qnap_deploy_dir }}/Dockerfile.catalog"
+      mode: "0640"
+    - src: "{{ qnap_compose_source_dir }}/catalog-run"
+      dest: "{{ qnap_deploy_dir }}/catalog-run"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/catalog-evict"
+      dest: "{{ qnap_catalog_scripts_dir }}/catalog-evict"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/catalog-list"
+      dest: "{{ qnap_catalog_scripts_dir }}/catalog-list"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/catalog-pull"
+      dest: "{{ qnap_catalog_scripts_dir }}/catalog-pull"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/catalog-status"
+      dest: "{{ qnap_catalog_scripts_dir }}/catalog-status"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/catalogctl.py"
+      dest: "{{ qnap_catalog_scripts_dir }}/catalogctl.py"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/healthcheck"
+      dest: "{{ qnap_catalog_scripts_dir }}/healthcheck"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/healthcheck.py"
+      dest: "{{ qnap_catalog_scripts_dir }}/healthcheck.py"
+      mode: "0750"
+    - src: "{{ usenet_project_root }}/config/catalog.schema.json"
+      dest: "{{ qnap_container_root }}/config/catalog/catalog.schema.json"
+      mode: "0640"
+    - src: "{{ usenet_project_root }}/config/examples/catalog-item.json"
+      dest: "{{ qnap_container_root }}/config/catalog/catalog-item.example.json"
+      mode: "0640"
+
+- name: Render and transfer the host-specific QNAP environment
+  ansible.builtin.raw: |
+    desired_hash={{ qnap_env_sha256 | quote }}
+    current_hash=$(sha256sum {{ (qnap_deploy_dir ~ '/.env') | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 077
+      printf '%s' {{ qnap_env_b64 | quote }} | base64 -d > {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }}
+      chmod 0600 {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }}
+      mv -f {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }} {{ (qnap_deploy_dir ~ '/.env') | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_env_payload: "{{ lookup('ansible.builtin.template', 'qnap.env.j2') }}"
+    qnap_env_b64: "{{ qnap_env_payload | b64encode }}"
+    qnap_env_sha256: "{{ qnap_env_payload | hash('sha256') }}"
+  register: qnap_env_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_env_result.stdout"
+  no_log: true
+
+- name: Transfer the Storage Box private key
+  ansible.builtin.raw: |
+    desired_hash={{ qnap_secret_sha256 | quote }}
+    current_hash=$(sha256sum {{ qnap_storagebox_key_file | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 077
+      printf '%s' {{ qnap_secret_b64 | quote }} | base64 -d > {{ (qnap_storagebox_key_file ~ '.ansible') | quote }}
+      chmod 0600 {{ (qnap_storagebox_key_file ~ '.ansible') | quote }}
+      mv -f {{ (qnap_storagebox_key_file ~ '.ansible') | quote }} {{ qnap_storagebox_key_file | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_secret_payload: >-
+      {{ lookup('ansible.builtin.file', qnap_storagebox_private_key_source, rstrip=false) }}
+    qnap_secret_b64: "{{ qnap_secret_payload | b64encode }}"
+    qnap_secret_sha256: "{{ qnap_secret_payload | hash('sha256') }}"
+  register: qnap_secret_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_secret_result.stdout"
+  no_log: true
+
+- name: Transfer the verified Storage Box known_hosts file
+  ansible.builtin.raw: |
+    desired_hash={{ qnap_known_hosts_sha256 | quote }}
+    current_hash=$(sha256sum {{ qnap_storagebox_known_hosts_file | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 077
+      printf '%s' {{ qnap_known_hosts_b64 | quote }} | base64 -d > {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }}
+      chmod 0644 {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }}
+      mv -f {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }} {{ qnap_storagebox_known_hosts_file | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_known_hosts_payload: >-
+      {{ lookup('ansible.builtin.file', qnap_storagebox_known_hosts_source, rstrip=false) }}
+    qnap_known_hosts_b64: "{{ qnap_known_hosts_payload | b64encode }}"
+    qnap_known_hosts_sha256: "{{ qnap_known_hosts_payload | hash('sha256') }}"
+  register: qnap_known_hosts_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_known_hosts_result.stdout"
+  no_log: true
+
+- name: Validate the QNAP Compose project
+  ansible.builtin.raw: >-
+    cd {{ qnap_deploy_dir | quote }} && docker compose config --quiet
+  changed_when: false
+
+- name: Check whether the pinned QNAP images already exist
+  ansible.builtin.raw: >-
+    docker image inspect rclone/rclone:1.75.1 >/dev/null 2>&1 &&
+    docker image inspect usenet-catalog-tools:rclone-1.75.1-python-3.14.7 >/dev/null 2>&1
+  register: qnap_images_present
+  changed_when: false
+  failed_when: false
+  when: qnap_start_compose | bool
+
+- name: Pull and build QNAP images when inputs change or images are absent
+  ansible.builtin.raw: >-
+    cd {{ qnap_deploy_dir | quote }} &&
+    docker compose pull rclone &&
+    docker compose build --pull catalog
+  register: qnap_compose_build
+  changed_when: true
+  when:
+    - qnap_start_compose | bool
+    - qnap_file_result.changed or qnap_images_present.rc != 0
+
+- name: Start the QNAP service and wait for health
+  ansible.builtin.raw: >-
+    cd {{ qnap_deploy_dir | quote }} &&
+    docker compose up -d --wait rclone
+  register: qnap_compose_apply
+  changed_when: >-
+    (qnap_compose_apply.stdout ~ qnap_compose_apply.stderr)
+    is search('Created|Started|Recreated')
+  when: qnap_start_compose | bool

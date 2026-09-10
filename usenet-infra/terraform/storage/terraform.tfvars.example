@@ -1,0 +1,23 @@
+name_prefix      = "usenet"
+environment      = "production"
+location         = "hel1"
+storage_box_name = "usenet-catalog"
+storage_box_type = "bx11"
+
+# Generate unique high-entropy values outside Terraform. These examples are
+# placeholders only. Real values are stored in Terraform state.
+storage_box_password     = "REPLACE-With-A-Unique-Main-Password-123!"
+qnap_subaccount_password = "REPLACE-With-A-Unique-QNAP-Password-456!"
+
+# Set the main-account key before the first apply. Subsequent key rotation is
+# performed in authorized_keys because the API cannot update this attribute.
+storage_box_ssh_public_keys = [
+  "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIREPLACE_WITH_A_REAL_PUBLIC_KEY storage-writer",
+]
+
+qnap_subaccount_name = "qnap-reader"
+qnap_home_directory  = "catalog"
+
+additional_labels = {
+  owner = "ryan"
+}

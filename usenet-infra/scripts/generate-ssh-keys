@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd "$(dirname "$0")/.." && pwd)"
+key_dir="${project_root}/secrets/ssh"
+
+umask 077
+mkdir -p "${key_dir}"
+chmod 0700 "${key_dir}"
+
+for key_name in cloud-admin storage-writer qnap-reader qnap-admin; do
+  private_key="${key_dir}/${key_name}"
+  public_key="${private_key}.pub"
+
+  if [[ -e "${private_key}" || -e "${public_key}" ]]; then
+    if [[ ! -f "${private_key}" || ! -f "${public_key}" ]]; then
+      echo "Incomplete SSH keypair at ${private_key}; refusing to overwrite it." >&2
+      exit 1
+    fi
+    ssh-keygen -lf "${public_key}" >/dev/null
+    chmod 0600 "${private_key}"
+    chmod 0644 "${public_key}"
+    echo "Validated existing ${key_name} keypair."
+    continue
+  fi
+
+  ssh-keygen -q -t ed25519 -N "" \
+    -C "usenet-${key_name}" -f "${private_key}"
+  chmod 0600 "${private_key}"
+  chmod 0644 "${public_key}"
+  echo "Created ${key_name} keypair."
+done

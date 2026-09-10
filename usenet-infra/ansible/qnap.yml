@@ -1,0 +1,9 @@
+---
+- name: Validate and deploy to the QNAP host
+  hosts: qnap
+  become: false
+  gather_facts: false
+  serial: 1
+  roles:
+    - role: qnap_preflight
+    - role: qnap_apps

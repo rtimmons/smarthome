@@ -1,0 +1,15 @@
+name_prefix = "usenet"
+environment = "production"
+location    = "hel1"
+
+# CX43: 8 shared x86 vCPU, 16 GB RAM, 160 GB NVMe. If unavailable or too
+# variable under measured PAR/unpack load, evaluate CPX42 or CCX23.
+server_type = "cx43"
+image_name  = "ubuntu-26.04"
+
+admin_ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIREPLACE_WITH_A_REAL_PUBLIC_KEY usenet-admin"
+admin_ssh_cidrs      = ["203.0.113.10/32", "2001:db8::10/128"]
+
+additional_labels = {
+  owner = "ryan"
+}

@@ -1,0 +1,290 @@
+---
+- name: Check the cloud Compose source on the controller
+  ansible.builtin.stat:
+    path: "{{ cloud_compose_source }}"
+  delegate_to: localhost
+  become: false
+  register: cloud_compose_source_stat
+
+- name: Require the cloud Compose source
+  ansible.builtin.assert:
+    that:
+      - cloud_compose_source_stat.stat.exists
+      - cloud_compose_source_stat.stat.isreg
+    fail_msg: "Cloud Compose source is missing: {{ cloud_compose_source }}"
+
+- name: Parse the cloud Compose source
+  ansible.builtin.set_fact:
+    cloud_compose_document: "{{ lookup('ansible.builtin.file', cloud_compose_source) | from_yaml }}"
+
+- name: Require loopback-only Compose port publishing
+  ansible.builtin.assert:
+    that:
+      - >-
+        item.1 is match(
+          '^127\\.0\\.0\\.1:(?:[0-9]+|\\$\\{[A-Za-z_][A-Za-z0-9_]*(?::-[0-9]+)?\\}):[0-9]+(?:/(?:tcp|udp))?$'
+        )
+    fail_msg: >-
+      {{ item.0.key }} publishes {{ item.1 }}. Every cloud Compose port must
+      use short syntax with a 127.0.0.1 host address because Docker-published
+      ports can bypass host UFW policy.
+  loop: >-
+    {{ cloud_compose_document.services | dict2items | subelements('value.ports', skip_missing=True) }}
+  loop_control:
+    label: "{{ item.0.key }}: {{ item.1 }}"
+
+- name: Create cloud application directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: usenet
+    group: usenet
+    mode: "0750"
+  loop:
+    - "{{ cloud_deploy_dir }}"
+    - "{{ cloud_data_root }}/config/catalog"
+    - "{{ cloud_data_root }}/config/rclone"
+    - "{{ cloud_data_root }}/config/sabnzbd"
+    - "{{ cloud_data_root }}/config/prowlarr"
+    - "{{ cloud_data_root }}/state/catalog"
+    - "{{ cloud_data_root }}/state/staging"
+
+- name: Create the cloud Storage Box secret directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: usenet
+    group: usenet
+    mode: "0700"
+  loop:
+    - "{{ cloud_data_root }}/secrets"
+    - "{{ cloud_data_root }}/secrets/storagebox"
+
+- name: Create protected catalog executable directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: usenet
+    mode: "0750"
+  loop:
+    - "{{ cloud_data_root }}/libexec"
+    - "{{ cloud_data_root }}/scripts"
+
+- name: Deploy the cloud Compose project
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: usenet
+    group: usenet
+    mode: "{{ item.mode }}"
+  loop:
+    - src: "{{ cloud_compose_source }}"
+      dest: "{{ cloud_deploy_dir }}/compose.yaml"
+      mode: "0640"
+    - src: "{{ usenet_project_root }}/compose/cloud/README.md"
+      dest: "{{ cloud_deploy_dir }}/README.md"
+      mode: "0640"
+
+- name: Render the non-secret cloud Compose environment
+  ansible.builtin.template:
+    src: cloud.env.j2
+    dest: "{{ cloud_deploy_dir }}/.env"
+    owner: usenet
+    group: usenet
+    mode: "0600"
+
+- name: Deploy protected catalog implementations
+  ansible.builtin.copy:
+    src: "{{ usenet_project_root }}/scripts/{{ item }}"
+    dest: "{{ cloud_data_root }}/libexec/{{ item }}"
+    owner: root
+    group: usenet
+    mode: "0550"
+  loop:
+    - catalog-evict
+    - catalog-list
+    - catalog-promote
+    - catalog-pull
+    - catalog-status
+    - catalogctl.py
+    - healthcheck
+    - healthcheck.py
+    - sync-health-api-keys.py
+
+- name: Deploy administrator-facing catalog wrappers
+  ansible.builtin.template:
+    src: catalog-wrapper.j2
+    dest: "{{ cloud_data_root }}/scripts/{{ item }}"
+    owner: root
+    group: usenet
+    mode: "0550"
+  loop:
+    - catalog-evict
+    - catalog-list
+    - catalog-promote
+    - catalog-pull
+    - catalog-status
+    - healthcheck
+
+- name: Install the allowlisted catalog privilege helper
+  ansible.builtin.template:
+    src: usenet-catalog-run.j2
+    dest: /usr/local/sbin/usenet-catalog-run
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Deploy catalog schema and example
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    owner: usenet
+    group: usenet
+    mode: "0640"
+  loop:
+    - src: "{{ usenet_project_root }}/config/catalog.schema.json"
+      dest: "{{ cloud_data_root }}/config/catalog/catalog.schema.json"
+    - src: "{{ usenet_project_root }}/config/examples/catalog-item.json"
+      dest: "{{ cloud_data_root }}/config/catalog/catalog-item.example.json"
+
+- name: Check the optional rclone configuration on the controller
+  ansible.builtin.stat:
+    path: "{{ rclone_config_source }}"
+  delegate_to: localhost
+  become: false
+  register: rclone_config_source_stat
+  when: rclone_config_source | length > 0
+  no_log: true
+
+- name: Require the configured rclone secret source
+  ansible.builtin.assert:
+    that:
+      - rclone_config_source_stat.stat.exists
+      - rclone_config_source_stat.stat.isreg
+    fail_msg: "The configured rclone secret source does not exist."
+  when: rclone_config_source | length > 0
+  no_log: true
+
+- name: Deploy the rclone secret configuration
+  ansible.builtin.copy:
+    src: "{{ rclone_config_source }}"
+    dest: "{{ rclone_config_destination }}"
+    owner: usenet
+    group: usenet
+    mode: "0640"
+  when: rclone_config_source | length > 0
+  no_log: true
+
+- name: Check the optional catalog environment on the controller
+  ansible.builtin.stat:
+    path: "{{ cloud_catalog_env_source }}"
+  delegate_to: localhost
+  become: false
+  register: cloud_catalog_env_source_stat
+  when: cloud_catalog_env_source | length > 0
+  no_log: true
+
+- name: Require the configured catalog environment source
+  ansible.builtin.assert:
+    that:
+      - cloud_catalog_env_source_stat.stat.exists
+      - cloud_catalog_env_source_stat.stat.isreg
+    fail_msg: "The configured catalog environment source does not exist."
+  when: cloud_catalog_env_source | length > 0
+  no_log: true
+
+- name: Deploy the catalog health-environment defaults
+  ansible.builtin.copy:
+    src: "{{ cloud_catalog_env_source }}"
+    dest: "{{ cloud_data_root }}/config/catalog.env.defaults"
+    owner: usenet
+    group: usenet
+    mode: "0640"
+  when: cloud_catalog_env_source | length > 0
+  no_log: true
+
+- name: Require both cloud Storage Box SSH source files together
+  ansible.builtin.assert:
+    that:
+      - >-
+        (cloud_storagebox_private_key_source | length > 0) ==
+        (cloud_storagebox_known_hosts_source | length > 0)
+    fail_msg: >-
+      Set both cloud_storagebox_private_key_source and
+      cloud_storagebox_known_hosts_source, or leave both empty.
+
+- name: Check optional cloud Storage Box SSH files on the controller
+  ansible.builtin.stat:
+    path: "{{ item }}"
+  delegate_to: localhost
+  become: false
+  register: cloud_storagebox_source_stats
+  loop:
+    - "{{ cloud_storagebox_private_key_source }}"
+    - "{{ cloud_storagebox_known_hosts_source }}"
+  when: cloud_storagebox_private_key_source | length > 0
+  no_log: true
+
+- name: Require configured cloud Storage Box SSH files
+  ansible.builtin.assert:
+    that:
+      - >-
+        cloud_storagebox_source_stats.results
+        | rejectattr('stat.isreg', 'defined')
+        | list
+        | length == 0
+      - >-
+        cloud_storagebox_source_stats.results
+        | selectattr('stat.isreg', 'equalto', false)
+        | list
+        | length == 0
+    fail_msg: "A configured cloud Storage Box SSH source file is missing."
+  when: cloud_storagebox_private_key_source | length > 0
+  no_log: true
+
+- name: Deploy the cloud Storage Box writer private key
+  ansible.builtin.copy:
+    src: "{{ cloud_storagebox_private_key_source }}"
+    dest: "{{ cloud_storagebox_private_key_destination }}"
+    owner: usenet
+    group: usenet
+    mode: "0600"
+  when: cloud_storagebox_private_key_source | length > 0
+  no_log: true
+
+- name: Deploy verified cloud Storage Box known_hosts
+  ansible.builtin.copy:
+    src: "{{ cloud_storagebox_known_hosts_source }}"
+    dest: "{{ cloud_storagebox_known_hosts_destination }}"
+    owner: usenet
+    group: usenet
+    mode: "0644"
+  when: cloud_storagebox_known_hosts_source | length > 0
+  no_log: true
+
+- name: Start the cloud Compose project
+  community.docker.docker_compose_v2:
+    project_src: "{{ cloud_deploy_dir }}"
+    state: present
+    pull: missing
+    wait: true
+    wait_timeout: 180
+  when: cloud_start_compose | bool
+
+- name: Synchronize generated application API keys into the health environment
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - "{{ cloud_data_root }}/libexec/sync-health-api-keys.py"
+      - "{{ cloud_data_root }}/config/sabnzbd/sabnzbd.ini"
+      - "{{ cloud_data_root }}/config/prowlarr/config.xml"
+      - "{{ cloud_data_root }}/config/catalog.env.defaults"
+      - "{{ cloud_data_root }}/config/catalog.env"
+  become_user: usenet
+  register: cloud_health_api_key_sync
+  changed_when: "'updated health API keys' in cloud_health_api_key_sync.stdout"
+  when:
+    - cloud_start_compose | bool
+    - cloud_catalog_env_source | length > 0
+  no_log: true

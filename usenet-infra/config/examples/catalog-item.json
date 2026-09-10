@@ -1,0 +1,27 @@
+{
+  "acquired_at": "2026-09-10T12:00:00+00:00",
+  "authorization": {
+    "basis": "Generated specifically for the integration test"
+  },
+  "category": "other",
+  "files": [
+    {
+      "path": "authorized-test.txt",
+      "sha256": "f462ae5194801f3adf61265ac338f6f20daeeac1cce17a0a0fb91c6ca2636e45",
+      "size_bytes": 31
+    }
+  ],
+  "id": "authorized-test-example",
+  "integrity": {
+    "algorithm": "sha256",
+    "verified_at": "2026-09-10T12:01:00+00:00"
+  },
+  "notes": "Example only; not a deployed catalog record.",
+  "remote_path": "objects/other/authorized-test-example",
+  "schema_version": 1,
+  "size_bytes": 31,
+  "source": {
+    "description": "Local generated fixture"
+  },
+  "title": "Authorized integration test"
+}

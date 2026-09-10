@@ -1,0 +1,25 @@
+#!/bin/sh
+set -eu
+
+tool="${1:-healthcheck}"
+case "$tool" in
+    catalog-list|catalog-status|catalog-pull|catalog-evict|healthcheck)
+        ;;
+    *)
+        echo "catalog-run: unsupported QNAP command: $tool" >&2
+        exit 64
+        ;;
+esac
+
+if [ "$#" -gt 0 ]; then
+    shift
+fi
+
+script="/opt/usenet/scripts/$tool"
+if [ ! -r "$script" ]; then
+    echo "catalog-run: repository script is not readable: $script" >&2
+    exit 66
+fi
+
+# The repository wrappers need not be executable on the NAS bind mount.
+exec /bin/sh "$script" "$@"

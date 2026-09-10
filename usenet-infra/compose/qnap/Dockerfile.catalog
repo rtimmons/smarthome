@@ -1,0 +1,16 @@
+FROM rclone/rclone:1.75.1 AS rclone
+
+# Use an exact Docker Official Image tag rather than a floating Python tag.
+# The application is dependency-free, so no package installation is required.
+FROM python:3.14.7-alpine3.24
+
+COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
+COPY catalog-run /usr/local/bin/catalog-run
+
+RUN chmod 0555 /usr/local/bin/catalog-run \
+    && test "$(rclone version | sed -n '1s/^rclone v//p')" = "1.75.1" \
+    && python3 --version
+
+WORKDIR /data
+ENTRYPOINT ["/usr/local/bin/catalog-run"]
+CMD ["healthcheck"]

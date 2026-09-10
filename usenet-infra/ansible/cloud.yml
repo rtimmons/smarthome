@@ -1,0 +1,43 @@
+---
+- name: Provision the Ubuntu cloud host
+  hosts: cloud
+  become: true
+  gather_facts: true
+  serial: 1
+  pre_tasks:
+    - name: Require a supported Ubuntu release
+      ansible.builtin.assert:
+        that:
+          - ansible_facts["distribution"] == "Ubuntu"
+          - ansible_facts["distribution_release"] in cloud_supported_ubuntu_codenames
+        fail_msg: >-
+          The cloud playbook supports Ubuntu releases
+          {{ cloud_supported_ubuntu_codenames | join(', ') }} only.
+    - name: Require a controller-side public key for the cloud administrator
+      ansible.builtin.assert:
+        that:
+          - cloud_admin_authorized_key_source | length > 0
+        fail_msg: >-
+          Set cloud_admin_authorized_key_source to the public key that the new
+          non-root cloud administrator will use.
+    - name: Check the cloud administrator public key on the controller
+      ansible.builtin.stat:
+        path: "{{ cloud_admin_authorized_key_source }}"
+      delegate_to: localhost
+      become: false
+      register: cloud_admin_public_key_stat
+    - name: Require a readable cloud administrator public key
+      ansible.builtin.assert:
+        that:
+          - cloud_admin_public_key_stat.stat.exists
+          - cloud_admin_public_key_stat.stat.isreg
+          - >-
+            lookup('ansible.builtin.file', cloud_admin_authorized_key_source)
+            is match('^(ssh-|ecdsa-|sk-)')
+        fail_msg: "The configured cloud administrator public key is missing or invalid."
+  roles:
+    - role: cloud_base
+    - role: cloud_apps
+    # Keep SSH/firewall changes last so a root bootstrap connection is not
+    # needed again after PermitRootLogin is disabled.
+    - role: cloud_security

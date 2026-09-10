@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd "$(dirname "$0")/.." && pwd)"
+key_dir="${project_root}/secrets/ssh"
+cloud_vars="${project_root}/terraform/cloud/terraform.tfvars"
+storage_vars="${project_root}/terraform/storage/terraform.tfvars"
+
+for key in cloud-admin storage-writer qnap-reader; do
+  if [[ ! -f "${key_dir}/${key}" || ! -f "${key_dir}/${key}.pub" ]]; then
+    echo "Missing dedicated keypair ${key_dir}/${key}." >&2
+    exit 1
+  fi
+done
+if [[ -e "${cloud_vars}" || -e "${storage_vars}" ]]; then
+  echo "Refusing to overwrite an existing Terraform variable file." >&2
+  exit 1
+fi
+
+public_ipv4="$(curl -4 -fsS https://api.ipify.org)"
+python3 -c 'import ipaddress,sys; ipaddress.IPv4Address(sys.argv[1])' "${public_ipv4}"
+cloud_public_key="$(<"${key_dir}/cloud-admin.pub")"
+writer_public_key="$(<"${key_dir}/storage-writer.pub")"
+storage_password="Aa1!$(openssl rand -hex 30)"
+qnap_password="Aa1!$(openssl rand -hex 30)"
+
+umask 077
+cloud_temporary="$(mktemp "${cloud_vars}.tmp.XXXXXX")"
+storage_temporary="$(mktemp "${storage_vars}.tmp.XXXXXX")"
+trap 'rm -f "${cloud_temporary}" "${storage_temporary}"' EXIT
+
+printf '%s\n' \
+  'name_prefix = "usenet"' \
+  'environment = "production"' \
+  'location    = "hel1"' \
+  'server_type = "cx43"' \
+  'image_name  = "ubuntu-26.04"' \
+  '' \
+  "admin_ssh_public_key = \"${cloud_public_key}\"" \
+  "admin_ssh_cidrs      = [\"${public_ipv4}/32\"]" \
+  '' \
+  'additional_labels = {' \
+  '  owner = "ryan"' \
+  '}' >"${cloud_temporary}"
+
+printf '%s\n' \
+  'name_prefix      = "usenet"' \
+  'environment      = "production"' \
+  'location         = "hel1"' \
+  'storage_box_name = "usenet-catalog"' \
+  'storage_box_type = "bx11"' \
+  '' \
+  "storage_box_password     = \"${storage_password}\"" \
+  "qnap_subaccount_password = \"${qnap_password}\"" \
+  '' \
+  'storage_box_ssh_public_keys = [' \
+  "  \"${writer_public_key}\"," \
+  ']' \
+  '' \
+  'qnap_subaccount_name = "qnap-reader"' \
+  'qnap_home_directory  = "catalog"' \
+  '' \
+  'additional_labels = {' \
+  '  owner = "ryan"' \
+  '}' >"${storage_temporary}"
+
+chmod 0600 "${cloud_temporary}" "${storage_temporary}"
+mv "${cloud_temporary}" "${cloud_vars}"
+mv "${storage_temporary}" "${storage_vars}"
+trap - EXIT
+unset storage_password qnap_password
+
+echo "Prepared ignored mode-0600 Terraform inputs."
+echo "Administrative SSH is restricted to ${public_ipv4}/32."

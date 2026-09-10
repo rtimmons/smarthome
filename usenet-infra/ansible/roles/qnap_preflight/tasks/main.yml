@@ -1,0 +1,154 @@
+---
+- name: Read the QNAP kernel and architecture
+  ansible.builtin.raw: uname -srm
+  register: qnap_uname
+  changed_when: false
+
+- name: Check transfer primitives without requiring Python
+  ansible.builtin.raw: >-
+    command -v base64 && command -v sha256sum && command -v sed &&
+    command -v mkdir && command -v chmod && command -v mv &&
+    test "$(printf 'cW5hcC1iYXNlNjQ=' | base64 -d)" = qnap-base64
+  register: qnap_transfer_tools
+  changed_when: false
+  failed_when: false
+
+- name: Read the dedicated QNAP account identity
+  ansible.builtin.raw: id -u && id -g
+  register: qnap_account_identity
+  changed_when: false
+
+- name: Check the existing Docker Engine
+  ansible.builtin.raw: docker version
+  register: qnap_docker_version
+  changed_when: false
+  failed_when: false
+
+- name: Check the existing Docker Compose plugin
+  ansible.builtin.raw: docker compose version
+  register: qnap_compose_version
+  changed_when: false
+  failed_when: false
+
+- name: Check that the precreated application root is writable
+  ansible.builtin.raw: "test -d {{ qnap_container_root | quote }} && test -w {{ qnap_container_root | quote }}"
+  register: qnap_container_root_check
+  changed_when: false
+  failed_when: false
+
+- name: Check that the selected data share is writable
+  ansible.builtin.raw: "test -d {{ qnap_data_root | quote }} && test -w {{ qnap_data_root | quote }}"
+  register: qnap_data_root_check
+  changed_when: false
+  failed_when: false
+
+- name: Read Container Station metadata when QNAP exposes it
+  ansible.builtin.raw: >-
+    test -x /sbin/getcfg &&
+    /sbin/getcfg container-station Version -f /etc/config/qpkg.conf || true
+  register: qnap_container_station_version
+  changed_when: false
+
+- name: Read QNAP model and firmware metadata
+  ansible.builtin.raw: >-
+    if test -x /sbin/getcfg; then
+      echo "model=$(/sbin/getcfg System 'Model' -f /etc/config/uLinux.conf)";
+      echo "version=$(/sbin/getcfg System 'Version' -f /etc/config/uLinux.conf)";
+      echo "build=$(/sbin/getcfg System 'Build Number' -f /etc/config/uLinux.conf)";
+      echo "platform=$(/sbin/getcfg System 'Platform Name' -f /etc/config/uLinux.conf)";
+    else
+      echo "QNAP getcfg is unavailable";
+    fi
+  register: qnap_firmware_metadata
+  changed_when: false
+
+- name: Read QTS or QuTS operating-system identity
+  ansible.builtin.raw: >-
+    test -r /etc/os-release && cat /etc/os-release ||
+    echo "QTS/QuTS identity not exposed in /etc/os-release"
+  register: qnap_os_release
+  changed_when: false
+
+- name: Read QNAP memory page size
+  ansible.builtin.raw: getconf PAGESIZE
+  register: qnap_page_size
+  changed_when: false
+  failed_when: false
+
+- name: List configured shared folders
+  ansible.builtin.raw: >-
+    test -r /etc/config/smb.conf &&
+    sed -n 's/^\[\(.*\)\]$/\1/p' /etc/config/smb.conf || true
+  register: qnap_share_names
+  changed_when: false
+
+- name: Read storage available at the selected data share
+  ansible.builtin.raw: "df -h {{ qnap_data_root | quote }}"
+  register: qnap_data_root_capacity
+  changed_when: false
+  failed_when: false
+
+- name: Read NAS network addresses
+  ansible.builtin.raw: >-
+    if command -v ip >/dev/null 2>&1; then
+      ip -brief address;
+    else
+      /sbin/ifconfig -a;
+    fi
+  register: qnap_network_addresses
+  changed_when: false
+  failed_when: false
+
+- name: Require an already-compatible QNAP base system
+  ansible.builtin.assert:
+    that:
+      - "'Linux' in qnap_uname.stdout"
+      - qnap_transfer_tools.rc == 0
+      - qnap_docker_version.rc == 0
+      - qnap_compose_version.rc == 0
+      - qnap_container_root_check.rc == 0
+      - qnap_data_root_check.rc == 0
+      - qnap_uid is integer
+      - qnap_gid is integer
+      - qnap_uid | int > 0
+      - qnap_gid | int > 0
+      - (qnap_account_identity.stdout_lines[0] | int) == (qnap_uid | int)
+      - (qnap_account_identity.stdout_lines[1] | int) == (qnap_gid | int)
+    fail_msg: >-
+      QNAP prerequisites are incomplete. Install/upgrade Container Station and
+      grant the dedicated SSH user Docker access and write permissions, precreate
+      writable application/data roots, and set qnap_uid/qnap_gid to that account's
+      actual numeric identity. This raw-transfer playbook requires no target
+      Python and will not alter QTS/QuTS or install NAS packages.
+
+- name: Extract the Docker Compose plugin version
+  ansible.builtin.set_fact:
+    qnap_compose_version_number: >-
+      {{ qnap_compose_version.stdout | regex_search('[0-9]+\.[0-9]+\.[0-9]+') | default('', true) }}
+
+- name: Require a Compose version supported by Ansible
+  ansible.builtin.assert:
+    that:
+      - qnap_compose_version_number | length > 0
+      - qnap_compose_version_number is version('2.18.0', '>=')
+    fail_msg: >-
+      Existing Docker Compose {{ qnap_compose_version.stdout | trim }} is too
+      old or unparseable. Upgrade Container Station through QNAP before using
+      this deployment; Ansible will not replace NAS components.
+
+- name: Report QNAP reconnaissance
+  ansible.builtin.debug:
+    msg:
+      kernel: "{{ qnap_uname.stdout | trim }}"
+      firmware: "{{ qnap_firmware_metadata.stdout_lines }}"
+      operating_system: "{{ qnap_os_release.stdout_lines }}"
+      page_size: "{{ qnap_page_size.stdout | trim | default('not reported', true) }}"
+      container_station: "{{ qnap_container_station_version.stdout | trim | default('not reported', true) }}"
+      docker_compose: "{{ qnap_compose_version.stdout | trim }}"
+      account_identity: "{{ qnap_account_identity.stdout_lines }}"
+      transfer_tools: "{{ qnap_transfer_tools.stdout_lines }}"
+      shares: "{{ qnap_share_names.stdout_lines }}"
+      selected_storage: "{{ qnap_data_root_capacity.stdout_lines }}"
+      network: "{{ qnap_network_addresses.stdout_lines }}"
+      deployment_root: "{{ qnap_container_root }}"
+      data_root: "{{ qnap_data_root }}"

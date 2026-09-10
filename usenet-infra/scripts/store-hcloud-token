@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+project_root="$(cd "$(dirname "$0")/.." && pwd)"
+secret_dir="${project_root}/secrets"
+target="${secret_dir}/hetzner.env"
+
+umask 077
+mkdir -p "${secret_dir}"
+read -r -s -p "Paste the Hetzner Cloud Read & Write API token: " token
+printf '\n'
+if [[ ${#token} -ne 64 || "${token}" == *[$'\r\n']* ]]; then
+  echo "Hetzner currently issues 64-character tokens; nothing was saved." >&2
+  exit 1
+fi
+
+temporary="$(mktemp "${target}.tmp.XXXXXX")"
+trap 'rm -f "${temporary}"' EXIT
+printf 'HCLOUD_TOKEN=%q\n' "${token}" >"${temporary}"
+chmod 0600 "${temporary}"
+mv -f "${temporary}" "${target}"
+trap - EXIT
+unset token
+
+echo "Stored the token at ${target} with mode 0600."

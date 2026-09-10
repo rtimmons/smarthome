@@ -1,0 +1,304 @@
+---
+- name: Install operating-system prerequisites
+  ansible.builtin.apt:
+    name:
+      - apt-listchanges
+      - ca-certificates
+      - curl
+      - gnupg
+      - logrotate
+      - python3-debian
+      - sudo
+      - unattended-upgrades
+      - ufw
+      - unzip
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Read installed package inventory
+  ansible.builtin.package_facts:
+    manager: auto
+
+- name: Identify packages that conflict with Docker Engine
+  ansible.builtin.set_fact:
+    cloud_docker_conflicts: >-
+      {{
+        ansible_facts.packages.keys()
+        | intersect([
+            'docker.io',
+            'docker-doc',
+            'docker-compose',
+            'docker-compose-v2',
+            'podman-docker',
+            'containerd',
+            'runc'
+          ])
+        | list
+      }}
+
+- name: Refuse to replace an existing container stack implicitly
+  ansible.builtin.assert:
+    that:
+      - cloud_docker_conflicts | length == 0 or cloud_allow_docker_package_replacement | bool
+    fail_msg: >-
+      Conflicting packages are installed: {{ cloud_docker_conflicts | join(', ') }}.
+      Review workloads, then explicitly set cloud_allow_docker_package_replacement=true
+      if Ansible may remove them.
+
+- name: Remove reviewed Docker Engine conflicts
+  ansible.builtin.apt:
+    name: "{{ cloud_docker_conflicts }}"
+    state: absent
+  when:
+    - cloud_allow_docker_package_replacement | bool
+    - cloud_docker_conflicts | length > 0
+
+- name: Create the apt keyring directory
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download Docker's official apt signing key
+  ansible.builtin.get_url:
+    url: "{{ docker_apt_key_url }}"
+    dest: /etc/apt/keyrings/docker.asc
+    owner: root
+    group: root
+    mode: "0644"
+    force: true
+
+- name: Inspect the Docker apt signing key
+  ansible.builtin.command:
+    argv:
+      - gpg
+      - --batch
+      - --show-keys
+      - --with-colons
+      - /etc/apt/keyrings/docker.asc
+  register: docker_apt_key_details
+  changed_when: false
+
+- name: Require the expected Docker apt signing key
+  ansible.builtin.assert:
+    that:
+      - "('fpr:::::::::' ~ docker_apt_key_fingerprint ~ ':') in docker_apt_key_details.stdout"
+    fail_msg: "Docker apt signing-key fingerprint did not match the pinned value."
+
+- name: Read the Debian package architecture
+  ansible.builtin.command:
+    argv:
+      - dpkg
+      - --print-architecture
+  register: docker_dpkg_architecture
+  changed_when: false
+
+- name: Configure Docker's official Ubuntu repository
+  ansible.builtin.deb822_repository:
+    name: docker
+    types:
+      - deb
+    uris:
+      - https://download.docker.com/linux/ubuntu
+    suites:
+      - "{{ ansible_facts['distribution_release'] }}"
+    components:
+      - stable
+    architectures:
+      - "{{ docker_dpkg_architecture.stdout }}"
+    signed_by: /etc/apt/keyrings/docker.asc
+    state: present
+  register: docker_apt_repository
+
+- name: Refresh apt metadata after adding Docker's repository
+  ansible.builtin.apt:
+    update_cache: true
+  when: docker_apt_repository.changed
+
+- name: Install Docker Engine and the Compose plugin
+  ansible.builtin.apt:
+    name: >-
+      {{ item }}{{ ('=' ~ docker_package_versions[item]) if item in docker_package_versions else '' }}
+    state: present
+    allow_downgrade: true
+  loop: "{{ docker_packages }}"
+
+- name: Enable Docker Engine
+  ansible.builtin.systemd_service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Require a supported rclone architecture
+  ansible.builtin.assert:
+    that:
+      - ansible_facts["architecture"] in rclone_arch_map
+    fail_msg: >-
+      No pinned rclone archive is configured for
+      {{ ansible_facts["architecture"] }}.
+
+- name: Create the rclone source directory
+  ansible.builtin.file:
+    path: /usr/local/src
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Download the pinned official rclone archive
+  ansible.builtin.get_url:
+    url: >-
+      https://downloads.rclone.org/v{{ rclone_version }}/rclone-v{{ rclone_version }}-linux-{{ rclone_arch_map[ansible_facts["architecture"]] }}.zip
+    dest: >-
+      /var/cache/rclone-v{{ rclone_version }}-linux-{{ rclone_arch_map[ansible_facts["architecture"]] }}.zip
+    checksum: "sha256:https://downloads.rclone.org/v{{ rclone_version }}/SHA256SUMS"
+    owner: root
+    group: root
+    mode: "0644"
+  register: rclone_archive
+
+- name: Extract the pinned rclone archive
+  ansible.builtin.unarchive:
+    src: "{{ rclone_archive.dest }}"
+    dest: /usr/local/src
+    remote_src: true
+    creates: >-
+      /usr/local/src/rclone-v{{ rclone_version }}-linux-{{ rclone_arch_map[ansible_facts["architecture"]] }}/rclone
+
+- name: Install the pinned rclone executable
+  ansible.builtin.copy:
+    src: >-
+      /usr/local/src/rclone-v{{ rclone_version }}-linux-{{ rclone_arch_map[ansible_facts["architecture"]] }}/rclone
+    dest: /usr/local/bin/rclone
+    remote_src: true
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Verify the installed rclone version
+  ansible.builtin.command:
+    argv:
+      - /usr/local/bin/rclone
+      - version
+  register: rclone_version_output
+  changed_when: false
+  failed_when: "('rclone v' ~ rclone_version) not in rclone_version_output.stdout"
+
+- name: Create the usenet service group
+  ansible.builtin.group:
+    name: usenet
+    gid: "{{ usenet_gid }}"
+    system: true
+    state: present
+
+- name: Create the usenet service user
+  ansible.builtin.user:
+    name: usenet
+    uid: "{{ usenet_uid }}"
+    group: usenet
+    home: "{{ cloud_data_root }}"
+    create_home: false
+    shell: /usr/sbin/nologin
+    system: true
+    state: present
+
+- name: Create the cloud administrator primary group
+  ansible.builtin.group:
+    name: "{{ cloud_admin_user }}"
+    state: present
+
+- name: Create the non-root cloud administrator
+  ansible.builtin.user:
+    name: "{{ cloud_admin_user }}"
+    group: "{{ cloud_admin_user }}"
+    groups:
+      - sudo
+      - usenet
+    append: true
+    create_home: true
+    home: "/home/{{ cloud_admin_user }}"
+    shell: /bin/bash
+    state: present
+
+- name: Create the cloud administrator SSH directory
+  ansible.builtin.file:
+    path: "/home/{{ cloud_admin_user }}/.ssh"
+    state: directory
+    owner: "{{ cloud_admin_user }}"
+    group: "{{ cloud_admin_user }}"
+    mode: "0700"
+
+- name: Install the cloud administrator authorized key
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.file', cloud_admin_authorized_key_source) | trim }}\n"
+    dest: "/home/{{ cloud_admin_user }}/.ssh/authorized_keys"
+    owner: "{{ cloud_admin_user }}"
+    group: "{{ cloud_admin_user }}"
+    mode: "0600"
+
+- name: Grant the cloud administrator passwordless sudo
+  ansible.builtin.copy:
+    content: "{{ cloud_admin_user }} ALL=(ALL:ALL) NOPASSWD: ALL\n"
+    dest: "/etc/sudoers.d/90-{{ cloud_admin_user }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: /usr/sbin/visudo -cf %s
+
+- name: Create the persistent usenet directory tree
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: usenet
+    group: usenet
+    mode: "{{ item.mode }}"
+  loop:
+    - path: "{{ cloud_data_root }}"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/config"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/downloads"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/downloads/incomplete"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/downloads/complete"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/logs"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/state"
+      mode: "0750"
+    - path: "{{ cloud_data_root }}/compose"
+      mode: "0750"
+
+- name: Enable periodic security upgrades
+  ansible.builtin.template:
+    src: 20auto-upgrades.j2
+    dest: /etc/apt/apt.conf.d/20auto-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Limit unattended upgrades to Ubuntu security pockets
+  ansible.builtin.template:
+    src: 52usenet-unattended-upgrades.j2
+    dest: /etc/apt/apt.conf.d/52usenet-unattended-upgrades
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Enable the unattended-upgrades timer
+  ansible.builtin.systemd_service:
+    name: apt-daily-upgrade.timer
+    enabled: true
+    state: started
+
+- name: Install usenet log rotation policy
+  ansible.builtin.template:
+    src: usenet.logrotate.j2
+    dest: /etc/logrotate.d/usenet
+    owner: root
+    group: root
+    mode: "0644"

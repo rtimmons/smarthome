@@ -4,6 +4,105 @@ Do not merely give me instructions. Perform everything you reasonably can using 
 
 Keep this document updated as agents make progress.
 
+## Implementation progress
+
+Last updated: 2026-09-10
+
+- [x] Dedicated `usenet` branch and implementation plan created.
+- [x] Cold-state repository review completed; implementation lives in `usenet-infra/`.
+- [x] Fresh official-source research completed for Hetzner, Usenet providers/indexers,
+      application versions, and QNAP/Container Station behavior.
+- [x] Material architecture decisions confirmed; Hetzner account setup is ready to provision.
+- [x] Reproducible Terraform, Ansible, Compose, catalog tooling, tests, and operational
+      documentation scaffolded and locally validated where installed tooling permits.
+- [x] Hetzner token stored and validated without exposing it; dedicated SSH keys and
+      ignored mode-0600 Terraform inputs generated.
+- [x] Live Terraform plans validated: cloud is 5 additions and storage is 2 additions,
+      with no changes or destroys and no existing project servers.
+- [x] Provision protected CX43 cloud infrastructure, BX11 Storage Box, and
+      server-enforced read-only QNAP subaccount; post-apply plans show no drift.
+- [x] Bootstrap and harden the cloud VM; deploy healthy loopback-only SABnzbd and
+      Prowlarr containers; connect and verify Storage Box writer access.
+- [x] Install the QNAP reader public key and prove with a disposable sentinel that
+      the server-enforced read-only subaccount can read but cannot overwrite/delete.
+- [ ] Provision Usenet provider/indexer accounts and complete their application setup.
+- [ ] Reconnoiter and bootstrap the QNAP without disturbing existing services.
+- [ ] Run the authorized end-to-end test and complete the handoff documentation.
+
+Material decisions made:
+
+- Use the now-supported first-party Terraform resources for the Storage Box and
+  read-only subaccount, isolated in a protected state from the replaceable VM.
+- Start with BX11 (1 TB) at $4/month, warn at 80%, and upgrade in place before
+  90% utilization through BX21 (5 TB), BX31 (10 TB), or BX41 (20 TB).
+- Start with the x86 CX43 (8 shared vCPU, 16 GB RAM, 160 GB NVMe); benchmark before
+  paying for a much more expensive compute tier.
+- Pin SABnzbd 5.1.3, Prowlarr 2.5.2.5491, and rclone 1.75.1.
+- Keep Eweka as primary; retain UsenetExpress 500 GB as the proposed fill block only
+  after its checkout confirms one-time/non-expiring terms.
+- Use NZBGeek plus NZBFinder because DrunkenSlug registration is closed.
+- Require deliberate manifest-backed promotion and server-enforced read-only QNAP
+  credentials; no unattended acquisition path is enabled.
+
+Current checkpoint: the approved $23.09/month Hetzner infrastructure is live and
+the cloud bootstrap is complete. One protected CX43 VM, protected Primary IPv4
+and IPv6, one firewall, one SSH-key record, one protected BX11 Storage Box, and
+one protected server-enforced read-only QNAP subaccount exist. Post-apply
+Terraform plans report no changes. Live authenticated pricing for this account
+is $18.49/month for CX43, $0.60/month for IPv4, and $4.00/month for BX11 in
+Helsinki, with a $0 setup fee and 0% VAT reported.
+
+The VM accepts only the dedicated non-root administrator key, denies direct root
+and password login, and allows inbound SSH only from the currently approved
+source CIDR. SABnzbd and Prowlarr are container-healthy on VM loopback only.
+Ansible automatically reads their locally generated API keys into the protected
+health environment without printing or returning them. Storage Box access,
+catalog failure state, SABnzbd, and VM scratch checks pass. The health command's
+only current failure is expected: Prowlarr reports that no indexers are enabled
+because those accounts have not been purchased yet.
+
+### Cold-agent resume checkpoint
+
+Do not recreate, replace, or destroy the live Hetzner resources, and do not ask
+the user to restate the already-stored Hetzner token or any generated key. Start
+by reading this file and `usenet-infra/README.md`, then inspect the current Git
+and ignored local state. `just usenet-terraform-plan` should remain no-change;
+never apply a plan containing a destroy or replacement of the Storage Box.
+
+The next and only immediate human action is the Eweka signup/payment. Ask the
+user to create the verified 15-month Eweka unlimited offer: €104.85 prepaid
+(€6.99/month effective), recurring every 15 months unless checkout shows changed
+renewal terms, with 50 connections, TLS, and more than 6,597 days advertised
+retention as researched on 2026-09-10. Have the user complete payment/CAPTCHA/2FA
+privately and reply only that the account exists; never ask them to paste the
+password into chat. No Usenet provider, block account, or indexer purchase has
+yet been made.
+
+After Eweka exists, continue the one-account-at-a-time flow in section 4 and
+`usenet-infra/docs/account-setup.md`: configure Eweka in SABnzbd over TLS through
+an SSH-tunneled UI, then confirm the UsenetExpress block checkout before buying,
+then create/configure NZBGeek and NZBFinder in Prowlarr. Do not purchase anything
+without the user's explicit approval at the checkout decision.
+
+QNAP work is intentionally not started. An ignored dedicated `qnap-admin` keypair
+has been generated, but its public key is not installed on the NAS. Before QNAP
+reconnaissance, obtain from the user the exact dedicated Docker-capable
+`user@LAN-host`, have the user install that public key through the supported QNAP
+workflow, pin the verified NAS host key, and record the NAS data-share path and
+numeric UID/GID. Do not use the Storage Box `qnap-reader` key as the NAS login key.
+Do not reboot the QNAP.
+
+Last verified on 2026-09-10:
+
+- `just test` in `usenet-infra/` passes 10 unit tests, Python compilation,
+  ShellCheck, JSON/YAML parsing, pinned Ansible syntax checking, and secret scan.
+- The cloud Ansible play converges with `changed=0` and proves a fresh non-root
+  SSH login before retaining SSH hardening; managed UFW rules are reconciled.
+- The live read-only sentinel test allowed list/read, rejected overwrite/delete,
+  preserved the SHA-256 hash, and the writer removed the disposable fixture.
+- `just usenet-cloud-health` reaches all configured systems; its nonzero exit is
+  expected only until at least one Prowlarr indexer is enabled.
+
 ## 1. Goal
 
 Build this architecture:

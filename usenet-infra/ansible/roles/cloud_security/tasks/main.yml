@@ -1,0 +1,180 @@
+---
+- name: Require explicit SSH firewall sources
+  ansible.builtin.assert:
+    that:
+      - cloud_ssh_allowed_cidrs | length > 0
+      - cloud_admin_user | length > 0
+      - cloud_admin_user != "root"
+    fail_msg: >-
+      Set at least one cloud_ssh_allowed_cidrs entry and use a non-root
+      cloud_admin_user before SSH and UFW hardening can proceed.
+
+- name: Read the configured SSH user's account
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ cloud_admin_user }}"
+
+- name: Require the configured SSH user to exist
+  ansible.builtin.assert:
+    that:
+      - cloud_admin_user in ansible_facts.getent_passwd
+    fail_msg: "Configured SSH user {{ cloud_admin_user }} does not exist."
+
+- name: Inspect the configured SSH user's authorized keys
+  ansible.builtin.stat:
+    path: "{{ ansible_facts.getent_passwd[cloud_admin_user][4] }}/.ssh/authorized_keys"
+  register: cloud_authorized_keys
+
+- name: Refuse to disable password login without an authorized key
+  ansible.builtin.assert:
+    that:
+      - cloud_authorized_keys.stat.exists
+      - cloud_authorized_keys.stat.isreg
+      - cloud_authorized_keys.stat.size | int > 0
+    fail_msg: >-
+      {{ cloud_admin_user }} has no non-empty ~/.ssh/authorized_keys file;
+      refusing to disable password authentication.
+
+- name: Require the controller connection key for the administrator login probe
+  ansible.builtin.assert:
+    that:
+      - ansible_ssh_private_key_file | default('') | length > 0
+    fail_msg: >-
+      Set ansible_ssh_private_key_file so Ansible can prove a fresh non-root
+      SSH login before disabling root and password authentication.
+
+- name: Prove a fresh non-root administrator SSH login
+  ansible.builtin.command:
+    argv: >-
+      {{
+        [
+          '/usr/bin/ssh',
+          '-F', '/dev/null',
+          '-i', ansible_ssh_private_key_file,
+          '-p', cloud_ssh_port | string,
+          '-o', 'BatchMode=yes'
+        ]
+        + (ansible_ssh_common_args | default('') | split)
+        + [cloud_admin_user ~ '@' ~ (ansible_host | default(inventory_hostname)), '/usr/bin/true']
+      }}
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Read the active SSH connection endpoints
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/printenv
+      - SSH_CONNECTION
+  become: false
+  register: cloud_active_ssh_connection
+  changed_when: false
+  failed_when: false
+
+- name: Check that UFW will preserve the active SSH source
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - -c
+      - >-
+        import ipaddress,sys;
+        address=ipaddress.ip_address(sys.argv[1]);
+        networks=[ipaddress.ip_network(value, strict=False) for value in sys.argv[2].split(',')];
+        sys.exit(0 if any(address in network for network in networks) else 1)
+      - "{{ (cloud_active_ssh_connection.stdout.split() | first) | default('') }}"
+      - "{{ cloud_ssh_allowed_cidrs | join(',') }}"
+  register: cloud_active_ssh_source_allowed
+  changed_when: false
+  failed_when: false
+  when: cloud_active_ssh_connection.rc == 0
+
+- name: Refuse firewall activation that would drop the active SSH source
+  ansible.builtin.assert:
+    that:
+      - cloud_active_ssh_connection.rc == 0
+      - cloud_active_ssh_connection.stdout.split() | length == 4
+      - cloud_active_ssh_source_allowed.rc | default(1) == 0
+    fail_msg: >-
+      The active SSH source is not covered by cloud_ssh_allowed_cidrs, so UFW
+      and SSH hardening were not activated. Add the controller or jump-host
+      source network and rerun.
+
+- name: Install the SSH hardening drop-in
+  ansible.builtin.template:
+    src: 00-usenet-hardening.conf.j2
+    dest: /etc/ssh/sshd_config.d/00-usenet-hardening.conf
+    owner: root
+    group: root
+    mode: "0644"
+    validate: /usr/sbin/sshd -t -f %s
+  register: ssh_hardening_config
+
+- name: Validate the complete SSH server configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/sshd
+      - -t
+  changed_when: false
+
+- name: Reload SSH after a valid configuration change
+  ansible.builtin.systemd_service:
+    name: ssh
+    state: reloaded
+  when: ssh_hardening_config.changed
+
+- name: Permit SSH only from explicitly trusted source networks
+  community.general.ufw:
+    rule: allow
+    port: "{{ cloud_ssh_port | string }}"
+    proto: tcp
+    from_ip: "{{ item }}"
+    comment: Managed SSH administration
+  loop: "{{ cloud_ssh_allowed_cidrs }}"
+
+- name: Read managed UFW rules
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/ufw
+      - status
+  register: cloud_ufw_status
+  changed_when: false
+
+- name: Identify obsolete managed SSH source networks
+  ansible.builtin.set_fact:
+    cloud_obsolete_ssh_cidrs: >-
+      {{
+        cloud_ufw_status.stdout
+        | regex_findall(
+            '(?m)^' ~ (cloud_ssh_port | string) ~
+            '/tcp(?: \\(v6\\))?\\s+ALLOW\\s+(\\S+)\\s+# Managed SSH administration$'
+          )
+        | difference(cloud_ssh_allowed_cidrs)
+      }}
+
+- name: Remove obsolete managed SSH source networks
+  community.general.ufw:
+    rule: allow
+    port: "{{ cloud_ssh_port | string }}"
+    proto: tcp
+    from_ip: "{{ item }}"
+    comment: Managed SSH administration
+    delete: true
+  loop: "{{ cloud_obsolete_ssh_cidrs }}"
+
+- name: Deny unsolicited inbound traffic by default
+  community.general.ufw:
+    direction: incoming
+    policy: deny
+
+- name: Allow outbound traffic by default
+  community.general.ufw:
+    direction: outgoing
+    policy: allow
+
+- name: Enable UFW logging
+  community.general.ufw:
+    logging: low
+
+- name: Enable UFW as the final cloud mutation
+  community.general.ufw:
+    state: enabled

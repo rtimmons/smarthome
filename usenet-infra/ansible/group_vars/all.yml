@@ -1,0 +1,81 @@
+---
+# Project-relative paths are resolved from this ansible/ directory.
+usenet_project_root: "{{ playbook_dir }}/.."
+# Keep the service identity stable for bind-mounted container files. Ubuntu
+# 26.04 reserves lower system IDs including GID 991 (`render`).
+usenet_uid: 1991
+usenet_gid: 1991
+usenet_timezone: America/New_York
+
+cloud_ssh_port: "{{ ansible_port | default(22) }}"
+cloud_admin_user: usenet-admin
+cloud_admin_authorized_key_source: ""
+# Intentionally empty: the firewall role refuses to run until trusted source
+# CIDRs are supplied in inventory.yml or an ignored vars/vault file.
+cloud_ssh_allowed_cidrs: []
+cloud_supported_ubuntu_codenames:
+  - jammy
+  - noble
+  - resolute
+
+docker_apt_key_url: https://download.docker.com/linux/ubuntu/gpg
+docker_apt_key_fingerprint: 9DC858229FC7DD38854AE2D88D81803C0EBFCD88
+docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin
+# Exact package releases published by Docker's official Ubuntu repository on
+# 2026-09-10. Rerun research before intentionally updating these pins.
+docker_package_versions:
+  docker-ce: "5:29.8.0-1~ubuntu.{{ ansible_facts['distribution_version'] }}~{{ ansible_facts['distribution_release'] }}"
+  docker-ce-cli: "5:29.8.0-1~ubuntu.{{ ansible_facts['distribution_version'] }}~{{ ansible_facts['distribution_release'] }}"
+  containerd.io: "2.3.5-1~ubuntu.{{ ansible_facts['distribution_version'] }}~{{ ansible_facts['distribution_release'] }}"
+  docker-buildx-plugin: "0.37.0-1~ubuntu.{{ ansible_facts['distribution_version'] }}~{{ ansible_facts['distribution_release'] }}"
+  docker-compose-plugin: "5.5.1-1~ubuntu.{{ ansible_facts['distribution_version'] }}~{{ ansible_facts['distribution_release'] }}"
+cloud_allow_docker_package_replacement: false
+
+rclone_version: 1.75.1
+rclone_arch_map:
+  x86_64: amd64
+  aarch64: arm64
+
+cloud_data_root: /srv/usenet
+cloud_deploy_dir: /srv/usenet/compose/cloud
+cloud_compose_source: "{{ usenet_project_root }}/compose/cloud/compose.yaml"
+cloud_start_compose: true
+
+# Optional controller-side secret files. Put them at ignored paths (for
+# example ansible/files/rclone.conf) and override these variables in an
+# ignored inventory or vaulted vars file.
+rclone_config_source: ""
+rclone_config_destination: /srv/usenet/config/rclone/rclone.conf
+cloud_catalog_env_source: ""
+cloud_storagebox_private_key_source: ""
+cloud_storagebox_known_hosts_source: ""
+cloud_storagebox_private_key_destination: /srv/usenet/secrets/storagebox/id_ed25519
+cloud_storagebox_known_hosts_destination: /srv/usenet/secrets/storagebox/known_hosts
+
+qnap_container_root: /share/Container/usenet
+qnap_data_root: /share/Usenet
+qnap_deploy_dir: "{{ qnap_container_root }}/compose/qnap"
+qnap_compose_source_dir: "{{ usenet_project_root }}/compose/qnap"
+qnap_start_compose: true
+qnap_uid: null
+qnap_gid: null
+qnap_catalog_cache_dir: "{{ qnap_data_root }}/usenet-cache"
+qnap_catalog_state_dir: "{{ qnap_container_root }}/state"
+qnap_catalog_scripts_dir: "{{ qnap_container_root }}/scripts"
+qnap_storagebox_key_file: "{{ qnap_container_root }}/secrets/storagebox/id_ed25519"
+qnap_storagebox_known_hosts_file: "{{ qnap_container_root }}/secrets/storagebox/known_hosts"
+qnap_storagebox_private_key_source: ""
+qnap_storagebox_known_hosts_source: ""
+qnap_storagebox_host: ""
+qnap_storagebox_user: ""
+qnap_storagebox_port: 23
+qnap_storagebox_shell_type: unix
+qnap_storagebox_hashes: sha256
+qnap_storagebox_sha256sum_command: sha256sum
+qnap_rclone_sftp_chunk_size: 32Ki
+qnap_rclone_sftp_concurrency: 64
