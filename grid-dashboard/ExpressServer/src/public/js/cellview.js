@@ -45,6 +45,65 @@ class PressDispatcher {
     }
 }
 
+function bindCellPressEvents($element, pressDispatcher, options) {
+    options = options || {};
+    var now = options.now || function() {
+        return new Date().getTime();
+    };
+    var schedule = options.schedule || function(callback, delay) {
+        return setTimeout(callback, delay);
+    };
+    var cancel = options.cancel || function(timer) {
+        clearTimeout(timer);
+    };
+    var tapped = null;
+    var ignoreClicksUntil = 0;
+
+    // Complete touch gestures on touchend. FastClick can synthesize a click
+    // for the same gesture, so remember the touch and ignore that duplicate.
+    // Handling touchstart directly made a single tap travel through both
+    // paths on mobile webviews and left the result browser-dependent.
+    $element.on('touchend', function(e) {
+        ignoreClicksUntil = now() + 500;
+        if (!pressDispatcher.hasDouble()) {
+            pressDispatcher.commitSingle();
+            e.preventDefault();
+            return;
+        }
+        if (!tapped) {
+            tapped = schedule(function() {
+                tapped = null;
+                pressDispatcher.commitSingle();
+            }, 300);
+        } else {
+            cancel(tapped);
+            tapped = null;
+            pressDispatcher.double();
+        }
+        e.preventDefault();
+    });
+
+    $element.on('touchcancel', function() {
+        if (tapped) {
+            cancel(tapped);
+            tapped = null;
+        }
+    });
+
+    $element.on('click', function() {
+        if (now() < ignoreClicksUntil) {
+            return;
+        }
+        pressDispatcher.single();
+    });
+    $element.on('dblclick', function() {
+        if (now() < ignoreClicksUntil) {
+            return;
+        }
+        pressDispatcher.double();
+    });
+}
+
 class CellView {
     constructor(args) {
         // $element, config, app
@@ -69,36 +128,7 @@ class CellView {
             hasDouble: () => Boolean(this.config.onDoublePress),
         });
 
-        // Touch events do not reliably emit dblclick. Delay only cells that
-        // actually have a double-press action, then commit exactly one event.
-        /**
-         * @type {boolean|function|null}
-         */
-        var tapped = false;
-        $element.on('touchstart', function(e) {
-            if (!pressDispatcher.hasDouble()) {
-                pressDispatcher.commitSingle();
-                e.preventDefault();
-                return;
-            }
-            if (!tapped) {
-                tapped = setTimeout(function() {
-                    tapped = null;
-                    pressDispatcher.commitSingle();
-                }, 300);
-            } else {
-                clearTimeout(tapped);
-                tapped = null;
-                pressDispatcher.double();
-            }
-            e.preventDefault();
-        });
-
-        // Native desktop dblclick fires after click events. Hold the single
-        // action briefly so the double action can cancel it instead of firing
-        // room-off and all-off together.
-        $element.on('click', () => pressDispatcher.single());
-        $element.on('dblclick', () => pressDispatcher.double());
+        bindCellPressEvents($element, pressDispatcher);
     }
 
     setContent(c) {
@@ -205,5 +235,6 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         CellView: CellView,
         PressDispatcher: PressDispatcher,
+        bindCellPressEvents: bindCellPressEvents,
     };
 }

@@ -1,6 +1,10 @@
 import { expect } from 'chai';
 
-const { CellView, PressDispatcher }: any = require('./cellview');
+const {
+    CellView,
+    PressDispatcher,
+    bindCellPressEvents,
+}: any = require('./cellview');
 
 describe('CellView Sonos zone state', () => {
     it('shows unknown without changing the last active membership', () => {
@@ -76,5 +80,81 @@ describe('PressDispatcher', () => {
         await new Promise(resolve => setTimeout(resolve, 5));
 
         expect(singles).to.equal(1);
+    });
+});
+
+describe('cell press event binding', () => {
+    const eventElement = () => {
+        const handlers: Record<string, (event: any) => void> = {};
+        return {
+            handlers,
+            on(name: string, handler: (event: any) => void) {
+                handlers[name] = handler;
+            },
+        };
+    };
+
+    it('commits one action for a touch followed by a FastClick click', () => {
+        const element = eventElement();
+        let now = 1000;
+        let singles = 0;
+        const dispatcher = new PressDispatcher({
+            onSingle: () => singles++,
+            onDouble: () => undefined,
+            hasDouble: () => false,
+        });
+        bindCellPressEvents(element, dispatcher, {now: () => now});
+
+        element.handlers.touchend({preventDefault() {}});
+        now += 10;
+        element.handlers.click({});
+
+        expect(singles).to.equal(1);
+    });
+
+    it('still accepts an independent mouse click after a touch', () => {
+        const element = eventElement();
+        let now = 1000;
+        let singles = 0;
+        const dispatcher = new PressDispatcher({
+            onSingle: () => singles++,
+            onDouble: () => undefined,
+            hasDouble: () => false,
+        });
+        bindCellPressEvents(element, dispatcher, {now: () => now});
+
+        element.handlers.touchend({preventDefault() {}});
+        now += 501;
+        element.handlers.click({});
+
+        expect(singles).to.equal(2);
+    });
+
+    it('recognizes a double tap without also firing the single action', () => {
+        const element = eventElement();
+        const scheduled: Array<() => void> = [];
+        const cancelled = new Set<() => void>();
+        let singles = 0;
+        let doubles = 0;
+        const dispatcher = new PressDispatcher({
+            onSingle: () => singles++,
+            onDouble: () => doubles++,
+            hasDouble: () => true,
+        });
+        bindCellPressEvents(element, dispatcher, {
+            schedule: (callback: () => void) => {
+                scheduled.push(callback);
+                return callback;
+            },
+            cancel: (callback: () => void) => cancelled.add(callback),
+        });
+
+        element.handlers.touchend({preventDefault() {}});
+        element.handlers.touchend({preventDefault() {}});
+        scheduled.filter(callback => !cancelled.has(callback))
+            .forEach(callback => callback());
+
+        expect(singles).to.equal(0);
+        expect(doubles).to.equal(1);
     });
 });

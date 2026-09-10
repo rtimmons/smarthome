@@ -4,28 +4,46 @@ const configResolver: any = require('./config-resolver');
 const {config: dashboardConfig}: any = require('./config');
 
 describe('ConfigResolver', () => {
-    it('keeps the same interaction vocabulary in the phone layout', () => {
-        const actionNames = (config: any) =>
-            Array.from(
-                new Set(
-                    config.cells.flatMap((cell: any) => [
-                        cell.onPress && cell.onPress.action,
-                        cell.onDoublePress && cell.onDoublePress.action,
-                    ]).filter(Boolean)
-                )
-            ).sort();
+    it('keeps every desktop interaction in the phone layout', () => {
+        const actions = (config: any) =>
+            config.cells.flatMap((cell: any) => [
+                cell.onPress && JSON.stringify(cell.onPress),
+                cell.onDoublePress && JSON.stringify(cell.onDoublePress),
+            ]).filter(Boolean).sort();
         const phoneConfig = configResolver.resolveLayoutConfig(
             dashboardConfig,
             'phonePortrait'
         );
 
-        expect(actionNames(phoneConfig)).to.deep.equal(
-            actionNames(dashboardConfig)
+        expect(actions(phoneConfig)).to.deep.equal(
+            actions(dashboardConfig)
         );
         expect(phoneConfig.cells.filter((cell: any) => cell.togglesRoom))
             .to.have.length(dashboardConfig.rooms.length);
         expect(phoneConfig.cells.filter((cell: any) => cell.activeWhenRoom))
             .to.have.length(dashboardConfig.rooms.length);
+    });
+
+    it('keeps room-specific desktop interactions in the phone layout', () => {
+        const actions = (config: any) =>
+            config.cells.flatMap((cell: any) => [
+                cell.onPress && JSON.stringify(cell.onPress),
+                cell.onDoublePress && JSON.stringify(cell.onDoublePress),
+            ]).filter(Boolean).sort();
+
+        dashboardConfig.rooms.forEach((room: string) => {
+            const desktop = configResolver.resolveDisplayConfig(
+                dashboardConfig,
+                'default',
+                room
+            );
+            const phone = configResolver.resolveDisplayConfig(
+                dashboardConfig,
+                'phonePortrait',
+                room
+            );
+            expect(actions(phone), room).to.deep.equal(actions(desktop));
+        });
     });
 
     it('merges room overrides over base cells', () => {
