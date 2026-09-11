@@ -1,0 +1,21 @@
+[Unit]
+Description=Publish verified completed Usenet downloads and reclaim cloud scratch
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=usenet
+Group=usenet
+EnvironmentFile={{ cloud_data_root }}/config/catalog.env
+ExecStart=/usr/bin/python3 {{ cloud_data_root }}/libexec/catalog-autopublish.py run
+WorkingDirectory={{ cloud_data_root }}
+UMask=0077
+TimeoutStartSec=infinity
+KillMode=control-group
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ cloud_data_root }}/downloads/complete {{ cloud_data_root }}/state/catalog {{ cloud_data_root }}/state/staging

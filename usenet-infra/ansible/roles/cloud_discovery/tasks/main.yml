@@ -62,7 +62,7 @@
     wait: true
     wait_timeout: 180
 
-- name: Apply and read back manual discovery controls before exposing the UI
+- name: Apply and read back discovery controls before exposing the UI
   tags: [discovery-config]
   ansible.builtin.command:
     argv: [python3, /srv/usenet/libexec/discovery-config.py, configure]

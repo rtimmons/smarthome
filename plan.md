@@ -7,12 +7,13 @@ Keep this document updated as agents make progress.
 ## Resume here — current handoff, September 11, 2026
 
 This section is authoritative over chronological notes below. The Usenet
-secrets/state milestone is closed; resume curated discovery with Radarr/Sonarr,
-explicitly selected by the user on September 11. The small SOPS vault, locked Terraform
+secrets/state milestone is closed; Radarr/Sonarr discovery, automatic publication
+and the NAS/Plex layout are deployed. Continue with native import/storage and
+playback validation as described below. The small SOPS vault, locked Terraform
 state/archive capture, immutable QNAP ciphertext store, offline content checks,
 and full-clone drill tooling are implemented. Do not repeat account setup,
 purchases, credential generation, NAS bootstrap, diagnostic downloads or VPN
-provisioning. Use parallel agents for independent implementation and review.
+provisioning. Read `usenet-infra/AGENTS.md` before operating this stack.
 
 **Current recovery milestone:** NAS snapshot
 `20260911T191749Z-5150bea3423e3707` contains all 15 present non-vault entries,
@@ -80,7 +81,7 @@ fails on those findings; do not claim the repository's history is credential-fre
 | Cloud | Hetzner `usenet-acquisition`, IPv4 `89.167.18.138`; Ubuntu 26.04; SABnzbd, Prowlarr, writer/catalog, private proxy and strongSwan |
 | Storage | BX11 canonical Storage Box; QNAP subaccount is server-enforced read-only; VM scratch and NAS cache are disposable |
 | NAS | `usenet-deploy@rynapqnap.local`, LAN `192.168.1.66`; QNAP TS-451D2/QTS 5.2.10.3577; UID:GID `1004:100` |
-| QNAP data | Application root `/share/Container/usenet`; cache `/share/Usenet/usenet-cache`; 100 GiB minimum free space |
+| QNAP data | Application root `/share/Container/usenet`; cache `/share/FromDrobo/Movies`; 100 GiB minimum free space |
 | UniFi | Cloud Key `192.168.1.180`, UniFi OS 5.1.31/Network 10.6.101; USG 3P `192.168.1.1`, firmware 4.4.57.5578372 |
 | Search | `http://10.77.0.1:19696/`: catalog credentials in browser popup, then existing Prowlarr Forms credentials |
 | Downloads | `http://10.77.0.1:18080/`: catalog credentials in browser popup |
@@ -97,20 +98,62 @@ indexer and application credentials stay in private forms/files, never chat.
 **Curated discovery is live.** The user selected Radarr and Sonarr on September
 11. Movies are at `http://10.77.0.1:19696/radarr/`; TV is at
 `http://10.77.0.1:19696/sonarr/`, using the existing catalog login. Prowlarr syncs
-both existing indexers with interactive search enabled and RSS/automatic search
-disabled. Both apps have a tested SAB client; completed imports, automatic
+both existing indexers with interactive/automatic search and RSS enabled, as
+explicitly authorized on September 11. RSS runs every 15 minutes for monitored
+titles; existing monitoring selections are preserved. Both apps have a tested SAB client; completed imports, automatic
 retries and download removal are disabled. They have no download or canonical
-storage mounts. No titles or list subscriptions were added and no content was
-downloaded. A request portal remains deferred. See `usenet-infra/docs/discovery.md`.
+storage mounts. Initial setup added no titles or list subscriptions; the user
+subsequently downloaded four movies. A request portal remains deferred.
+See `usenet-infra/docs/discovery.md`.
 
 Live acceptance: Radarr Discover returned 30 movies; movie/series metadata
 lookups returned results; both private routes return 401 anonymously. The two
 application configurations repeat without writes after accounting for the API's
-masked credential responses. Their three health notices concern intentionally
-disabled RSS, automatic search and importing; the dedicated policy health check
-passes and rejects unrelated warnings/errors. Existing cloud/catalog health
+masked credential responses. The current policy permits only the disabled-import
+health notice; RSS/search problems now fail the check. Existing cloud/catalog health
 passes, with the same seven historical SAB warnings. The in-app browser blocked
 the private VPN URL, so visual login acceptance remains for the user's browser.
+
+**Automatic search and RSS update verified.** Both apps report automatic search
+and RSS enabled at 15-minute intervals, with imports still disabled. The 398-case
+Usenet suite passed with eight opt-in skips. Encrypted supplemental snapshot
+`20260911T210232Z-ae56b33b7f0488c7` was uploaded, fetched and decrypted successfully.
+The source changes and receipt are included in the September 11 automation and
+NAS/Plex checkpoint; no newer complete secrets/state drill has been performed.
+
+**Automatic publication and NAS/Plex layout deployed.** The publisher processed
+all four completed movies, verified remote bytes/manifests and reclaimed cloud
+scratch; free space rose from 55.1 to 123.7 GiB. The NAS catalog's existing tab
+now refreshes automatically. Its cache was renamed on the same volume from
+`/share/Usenet/usenet-cache` to `/share/FromDrobo/Movies`, alongside `loljk` and
+the new `TV Shows` directory; zero media bytes were copied by that move. Private
+inventory and live Compose bindings agree. Plex libraries `Movies (NAS)` and
+`TV Shows (NAS)` use separate roots. The `Movies & TV` managed profile sees
+only those libraries; direct private-library access returned 403. The original
+5,258 entries, media path and directory inode were preserved. Plex home/search
+visibility excludes the private library, partial scans and hourly fallback are
+enabled, and automatic trash emptying is disabled. The owner's PIN and TV-client
+profile selection still require the user's private/client-side setup.
+
+The first real movie NAS pull completed and passed SHA-256 verification;
+Plex automatically indexed `media-003` in `Movies (NAS)`. The 13.5 GiB copy
+took approximately 30 minutes with variable throughput. Actual TV-client
+playback remains untested. Native Arr imports and remote Plex mounts are not
+deployed; do not run another file mover against
+the automatic publisher's sources. See `usenet-infra/docs/nas-plex-layout.md`
+and `usenet-infra/docs/media-workflow-review.md`. Latest local validation ran
+406 cases (398 passed, eight opt-in skips); source/index secret scanning passes,
+while the full test recipe still fails on the known historical RSA-key findings
+described above. A new supplemental backup was refused by the existing
+empty-SAB-queue requirement (three jobs remain paused); the previous verified
+snapshot remains available. Do not empty or resume that queue just for a backup.
+
+Next: pilot a real mounted library with native Arr completed imports, coordinating
+file ownership with the publisher; validate remote-read performance before
+exposing a remote Plex library. Keep NAS copying selective. Test Apple TV/Roku
+playback and startup using the restricted profile. Repeat supplemental cloud/NAS
+backups when their existing idle checks permit; preserve the original bound
+recovery snapshot. Do not claim the new Plex state is covered by the old backup.
 
 **New app-state backup is verified on the NAS.** Supplemental snapshot
 `20260911T201003Z-bcb62179eb783aef` contains 601 files and four SQLite databases;
@@ -1153,8 +1196,9 @@ private discovery layer using the user's selected Radarr and Sonarr:
 The required flow is:
 
 ```text
-curated list / calendar -> choose a title -> interactive indexer search
--> explicitly submit one result to SABnzbd -> inspect completed output
+curated list / calendar -> choose and monitor a title
+-> automatic search / RSS match (or interactive selection) -> SABnzbd
+-> inspect completed output
 -> explicit manifest-backed catalog promotion
 ```
 

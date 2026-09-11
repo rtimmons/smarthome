@@ -18,6 +18,8 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml backup.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-lan-ui.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml discovery.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml publish.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml dashboard-refresh.yml --syntax-check
 	./scripts/secret-scan
 
 # Check tracked content and repository history for high-confidence credential forms.
@@ -79,12 +81,12 @@ catalog-evict item:
 cloud-health:
 	@./scripts/cloud-command /srv/usenet/scripts/healthcheck
 
-# Install and verify the selected manual-only Radarr/Sonarr integration.
+# Install and verify the selected Radarr/Sonarr integration.
 [group: 'setup']
 configure-discovery: age-bootstrap ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook discovery.yml
 
-# Read back all manual acquisition controls without searching or downloading.
+# Read back all acquisition controls without searching or downloading.
 [group: 'health']
 discovery-health:
 	@./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/discovery-config.py inspect
@@ -334,3 +336,8 @@ backup-restore archive destination: age-bootstrap
 [group: 'ansible']
 configure-qnap: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap.yml
+
+# Publish completed SAB jobs automatically after canonical verification.
+[group: 'setup']
+configure-publishing: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook publish.yml

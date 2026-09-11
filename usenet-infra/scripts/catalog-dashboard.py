@@ -104,7 +104,7 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
         summary += f'<p><strong>Catalog refresh failed. Values may be stale; actions are disabled.</strong><br>{escaped(refresh_error)}</p>'
     contents = [{'type': 'fieldset', 'title': 'Capacity and activity', 'contents': [
         {'type': 'display', 'title': summary}, {'title': 'Refresh catalog'},
-        {'type': 'display', 'title': 'Use the top search box for title or category. The Entities view also provides a filterable catalog table. Execution logs retain status and output; downloads continue when this browser closes.'},
+        {'type': 'display', 'title': 'This catalog updates automatically. Use the top search box for title or category. The Entities view also provides a filterable catalog table. Execution logs retain status and output; downloads continue when this browser closes.'},
     ]}]
     seen = set()
     for item in sorted(data.get('items', []), key=lambda i: (i['title'].casefold(), i['id'])):
@@ -150,6 +150,9 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
 
 def publish(data: dict, error: str | None = None) -> None:
     config = dashboard_config(data, error)
+    refresh_script = SCRIPT.with_name('catalog-refresh.js')
+    if refresh_script.is_file():
+        atomic_write(root() / 'runtime/custom-webui/custom.js', refresh_script.read_text())
     entities = [{
         'id': i['id'], 'title': f'{i["title"]} · {i["category"]}', 'item_title': i['title'], 'category': i['category'],
         'size': bytes_label(i['size_bytes']), 'state': STATES[i['state']],

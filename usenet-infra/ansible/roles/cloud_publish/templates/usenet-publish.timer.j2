@@ -1,0 +1,11 @@
+[Unit]
+Description=Check for completed Usenet downloads automatically
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=30s
+AccuracySec=5s
+Unit=usenet-publish.service
+
+[Install]
+WantedBy=timers.target

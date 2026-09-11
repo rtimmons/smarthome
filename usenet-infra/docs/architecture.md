@@ -56,21 +56,25 @@ and the provider exposes those controls on
 1. A person searches and selects material they are authorized to obtain.
    Prowlarr provides search/indexer management. The private Radarr/Sonarr
    [discovery layer](discovery.md) provides movie discovery and TV tracking,
-   with interactive-only indexer sync. Watch-folder automation, RSS grabs,
-   automatic search/retry and automatic imports are disabled.
-2. The operator intentionally submits the chosen job to SABnzbd. SABnzbd
+   with interactive/automatic search and 15-minute RSS checks for monitored
+   titles. Automatic retries and imports remain disabled.
+2. An interactive selection, automatic search, or monitored RSS match submits
+   the chosen job to SABnzbd. SABnzbd
    downloads to the VM's local NVMe scratch, verifies, repairs, and unpacks it
    there. It never downloads into an SFTP mount.
-3. The completed directory remains ordinary scratch until the operator invokes
-   `catalog-promote` with title, category, provenance, and authorization basis.
+3. The automatic publisher reads successful completed SAB history entries,
+   derives a stable catalog ID from the job ID, and invokes the existing
+   promotion implementation with the source and user's authorization basis.
+   Exceptional manual imports can still use `catalog-promote`.
 4. Promotion inventories every file and computes SHA-256 hashes. It uploads to
    a unique `.incoming` path, runs a remote verification check, moves the data
    to `objects/<category>/<id>`, and publishes the immutable manifest last.
    Only an item with a manifest is visible as a complete catalog entry.
-5. Promotion removes the local completed directory only when explicitly run
-   with `--delete-local`, and only after the verified data move and manifest
-   publication succeed. Failures leave recoverable local/remote staging and a
-   failure record for inspection.
+5. The automatic publisher verifies the published manifest and local bytes,
+   records a durable receipt, then renames the completed directory into a
+   cleanup area and reclaims it. Retries use the same ID and verify existing
+   remote objects. Failures retain recoverable local/remote staging. The manual
+   command still requires `--delete-local` to remove its source.
 6. The authenticated OliveTin dashboard selects a manifest-backed item and
    invokes the same catalog backend as `catalog-pull <item>`. A pull copies
    directly from the Storage Box into a

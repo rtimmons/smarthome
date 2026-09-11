@@ -38,6 +38,7 @@
   roles:
     - role: cloud_base
     - role: cloud_apps
+    - role: cloud_publish
     - role: cloud_backup
     - role: cloud_vpn
       when: cloud_lan_ui_enabled | bool

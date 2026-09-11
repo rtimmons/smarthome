@@ -1,0 +1,7 @@
+---
+- name: Enable verified automatic publication of completed Usenet downloads
+  hosts: cloud
+  become: true
+  gather_facts: false
+  roles:
+    - role: cloud_publish

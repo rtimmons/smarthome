@@ -1,0 +1,19 @@
+{
+  "baseline_snapshot_id": "20260911T191749Z-5150bea3423e3707",
+  "ciphertext_bytes": 13817332,
+  "ciphertext_sha256": "91c728bce53d2bd8d4dfa9944aa22d633a52a12257b05b4960b2dea28f9ba457",
+  "deletion_safe": false,
+  "nas_path": "/share/Container/usenet-recovery/20260911T210232Z-ae56b33b7f0488c7",
+  "nas_roundtrip_verified": true,
+  "recipient": "existing cloud-admin SSH identity; restored by the SOPS vault",
+  "restore_tool": "config-backup.py; not recovery-bundle.py",
+  "schema_version": 1,
+  "scope": "supplemental-cloud-config",
+  "snapshot_id": "20260911T210232Z-ae56b33b7f0488c7",
+  "verification": {
+    "archive_sha256": "91c728bce53d2bd8d4dfa9944aa22d633a52a12257b05b4960b2dea28f9ba457",
+    "files": 602,
+    "sqlite_databases": 4,
+    "status": "verified"
+  }
+}

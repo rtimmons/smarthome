@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Configure/inspect pinned, manual-only Radarr and Sonarr on the cloud host.
+"""Configure/inspect pinned Radarr and Sonarr acquisition settings on the cloud host.
 
 No search, grab, import, download deletion, or arbitrary URL entry point exists.
 Only sanitized summaries leave this helper; application keys remain in memory.
@@ -19,14 +19,16 @@ import xml.etree.ElementTree as ET
 
 APPS = {'radarr': (7878, '6.3.0.10514'), 'sonarr': (8989, '4.0.19.2979'),
         'prowlarr': (9696, '2.5.2.5491')}
+# Keep the existing resource name so upgrades preserve its ID and bindings.
 PROFILE = 'Manual discovery only'
 CLIENT = 'SABnzbd manual discovery'
 DOWNLOAD_POLICY = {'enableCompletedDownloadHandling': False,
                    'autoRedownloadFailed': False,
                    'autoRedownloadFailedFromInteractiveSearch': False}
-PROFILE_POLICY = {'enableRss': False, 'enableAutomaticSearch': False,
+RSS_INTERVAL = 15
+PROFILE_POLICY = {'enableRss': True, 'enableAutomaticSearch': True,
                   'enableInteractiveSearch': True}
-EXPECTED_HEALTH = {'IndexerRssCheck', 'IndexerSearchCheck', 'ImportMechanismCheck'}
+EXPECTED_HEALTH = {'ImportMechanismCheck'}
 
 
 class DiscoveryError(RuntimeError):
@@ -186,6 +188,22 @@ def check_lists(api, app):
             raise DiscoveryError('automatic_import_list_requires_review')
 
 
+def run_configuration_command(api, app, name):
+    # Deliberately restricted to definition sync and health checks, never grabs.
+    if (app, name) not in {('prowlarr', 'ApplicationIndexerSync'),
+                          ('radarr', 'CheckHealth'), ('sonarr', 'CheckHealth')}:
+        raise DiscoveryError('configuration_command_not_allowed')
+    command = api.call(app, 'command', 'POST', {'name': name})
+    for attempt in range(30):
+        state = api.call(app, 'command/' + str(command['id']))
+        if state.get('status') == 'completed':
+            return
+        if state.get('status') in ('failed', 'aborted', 'cancelled'):
+            raise DiscoveryError('configuration_command_failed')
+        time.sleep(2)
+    raise DiscoveryError('configuration_command_timeout')
+
+
 def configure(api):
     ensure_versions(api)
     # Refuse unrelated application wiring before changing shared indexer profiles.
@@ -195,7 +213,7 @@ def configure(api):
     changed = False
     for app in ('radarr', 'sonarr'):
         check_lists(api, app)
-        changed |= config_policy(api, app, 'config/indexer', {'rssSyncInterval': 0})
+        changed |= config_policy(api, app, 'config/indexer', {'rssSyncInterval': RSS_INTERVAL})
         changed |= config_policy(api, app, 'config/downloadclient', DOWNLOAD_POLICY)
         roots = api.call(app, 'rootfolder')
         if any(item.get('path') != '/library' for item in roots):
@@ -238,7 +256,9 @@ def configure(api):
             app.title())
         changed |= update
     # This command synchronizes definitions only, never searches for content.
-    api.call('prowlarr', 'command', 'POST', {'name': 'ApplicationIndexerSync'})
+    run_configuration_command(api, 'prowlarr', 'ApplicationIndexerSync')
+    for app in ('radarr', 'sonarr'):
+        run_configuration_command(api, app, 'CheckHealth')
     for attempt in range(20):
         try:
             result = inspect(api)
@@ -259,10 +279,10 @@ def inspect(api):
     source_indexers = api.call('prowlarr', 'indexer')
     if len(source_indexers) != 2 or any(item.get('appProfileId') != owned[0]['id'] for item in source_indexers):
         raise DiscoveryError('source_indexer_policy_not_verified')
-    result = {'status': 'verified', 'automatic_acquisition': False, 'automatic_import': False, 'apps': {}}
+    result = {'status': 'verified', 'automatic_acquisition': True, 'automatic_import': False, 'apps': {}}
     for app in ('radarr', 'sonarr'):
         check_lists(api, app)
-        if not require_policy(api.call(app, 'config/indexer'), {'rssSyncInterval': 0}):
+        if not require_policy(api.call(app, 'config/indexer'), {'rssSyncInterval': RSS_INTERVAL}):
             raise DiscoveryError('rss_policy_not_verified')
         if not require_policy(api.call(app, 'config/downloadclient'), DOWNLOAD_POLICY):
             raise DiscoveryError('download_policy_not_verified')
@@ -278,8 +298,9 @@ def inspect(api):
                for item in health):
             raise DiscoveryError('unexpected_application_health_issue')
         result['apps'][app] = {'version': APPS[app][1], 'interactive_indexers': len(indexers),
-                               'download_clients': len(clients), 'rss_interval': 0,
-                               'expected_manual_mode_notices': len(health)}
+                               'download_clients': len(clients), 'rss_interval': RSS_INTERVAL,
+                               'automatic_search': True, 'rss_enabled': True,
+                               'expected_policy_notices': len(health)}
     return result
 
 
