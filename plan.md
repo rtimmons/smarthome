@@ -8,10 +8,11 @@ Keep this document updated as agents make progress.
 
 This section is authoritative over the chronological notes below. A new session
 should read this document and the repository's `AGENTS.md`, then continue the
-secrets-recovery work below. The inventory and pinned crypto bootstrap are
-implemented; use `just --no-dotenv secrets-check` and read
-`usenet-infra/docs/secrets-recovery.md`, then proceed to independent master
-storage. The infrastructure setup and LAN-access work are
+secrets-recovery work below. The inventory, pinned crypto bootstrap, public
+SOPS recipient, encrypted small vault, and one clean-clone vault restoration
+drill are implemented; use `just --no-dotenv secrets-check` and read
+`usenet-infra/docs/secrets-recovery.md`, then proceed to state/archive recovery
+and independent-master retrieval. The infrastructure setup and LAN-access work are
 complete; do not repeat account creation, purchases, credential setup, diagnostic
 downloads, NAS bootstrap, or VPN provisioning. Use parallel agents for independent
 implementation, review, and validation. No previous chat or browser session is
@@ -21,8 +22,10 @@ required to understand the next task.
 `feat(usenet): complete private LAN access and recovery handoff` on branch `usenet`.
 Live secrets, Terraform states, and verified encrypted backups remain in
 ignored local paths. The existing backup decryption identity is also local.
-Do not delete this checkout until the independent master-key recovery and
-clean-clone drill below pass. SOPS/master-key restoration is planned, not installed.
+Do not delete this checkout until the independent master-key retrieval and the
+full state/archive clean-clone drill below pass. The SOPS vault restores only
+the inventory's small `vault` category; it does not recover Terraform state,
+retained archives, or external services.
 
 ### Live system and operating entry points
 
@@ -162,13 +165,12 @@ historical Z-Wave NVM backup were tightened from 0644 to 0600, without content
 changes. No keys were generated/rotated, no master was stored, and no live
 service or account was changed.
 
-Validation passed: 40 new isolated fixture tests; full `just usenet-test` with
-271 cases (264 passed, seven existing opt-in skips), compilation, ShellCheck,
-JSON/YAML, all three Ansible syntax checks and the existing source/history
-secret scan. The actual metadata check and root/infrastructure recipes also
-passed. Independent coverage and implementation review informed the manifest
-and safety tests. These new source changes are not yet committed or published;
-the remote checkpoints above precede this increment.
+Latest validation passed: full `just usenet-test` with 292 cases (285 passed,
+seven existing opt-in skips), compilation, ShellCheck, JSON/YAML, all three
+Ansible syntax checks and the source/history secret scan. The actual metadata
+check and root/infrastructure recipes also passed. Independent coverage and
+implementation review informed the manifest and safety tests. The public SOPS
+configuration, recipient, and encrypted vault are committed.
 
 Independent coverage review identified additional prerequisites: authoritative
 Home Assistant `/config/secrets.yaml`, Core `.storage` state and ESPHome files
@@ -181,41 +183,26 @@ HA backup trees also need exact-file classification, and the August 21 NVM
 snapshot predates intentional node removals. See the new recovery runbook for
 the full findings and source references.
 
-Next increment: complete the operator-held master creation and second-copy
-retrieval using the implemented pinned, verified SOPS/native-age bootstrap,
-then escrow both old archive-decryption identities. The source-only bootstrap
-adds native `age-keygen` alongside the existing age binary; SOPS 3.13.3 is
-pinned for Darwin/arm64 and Linux/amd64. The checked binaries are now cached
-locally, with the Darwin SOPS version check passing. It has fixture coverage for verified
-offline cache reuse, tampering, redirects, symlinks, stale executables, version
-checks and master-target safety. It has not created an identity, added
-`.sops.yaml`, added a vault, or touched an archive. This
-requires the operator to choose an external mode-0700 identity location and a
-second independently retrievable private-copy path. Full inventory closure still requires the live/external reviews
-above. Independent ciphertext retrieval, safe restore/run/capture/verify recipes,
-fresh state snapshots, clean-clone/failure drills and operator-led second-copy
-retrieval remain pending. **Deleting this checkout remains unsafe.**
+The current increment completed the password-manager-first SOPS boundary.
+`SOPS_AGE_KEY` is the only accepted private identity input; it is briefly held
+in a private temporary file only for reviewed native `age-keygen` to derive the
+public recipient, then removed. `just --no-dotenv usenet-recovery-master-init
+second-copy-planned` wrote the committed public recipient and narrow
+`.sops.yaml`; no private identity is stored in the checkout or output. The
+encrypted, committed `usenet-infra/vault/secrets.sops.json` contains only
+inventory `vault` entries. `setup-secrets` validates/decrypts the entire bundle
+before publication, restores through the inventory allowlist, rebases only
+checkout-path boundaries, refuses unsafe files/symlinks, and preflights conflicts.
 
-The next source increment implements the clean-clone command boundary without
-creating any real ciphertext: `just --no-dotenv setup-secrets` decrypts the
-future single committed SOPS bundle using exactly one injected `SOPS_AGE_KEY`;
-`just --no-dotenv secrets-encrypt` creates and immediately authenticated-decrypts that bundle.
-The bundle includes only inventory `vault` entries as exact-byte base64 payloads
-inside SOPS encryption. Restore validates the whole bundle before touching
-files, uses the inventory as its only destination allowlist, rebases only exact
-checkout path boundaries, refuses unsafe files/symlinks and preflights all
-conflicts before publication. The public `.sops.yaml` recipient must first be
-created by the operator-master step; until then both vault commands correctly
-refuse to run. No actual master, encrypted vault, archive identity, Terraform
-state or live service has been changed by this source implementation.
-
-The master initializer is password-manager-first: `SOPS_AGE_KEY` is placed in a
-private temporary file only long enough for reviewed native `age-keygen` to
-derive the public recipient. `just --no-dotenv usenet-recovery-master-init
-second-copy-planned` then writes only the public recipient and narrow
-`.sops.yaml`; the private value is neither persisted in the checkout nor
-emitted. This remains contingent on a real independent second copy and does
-not itself create or validate that copy.
+The September 11 clean-clone drill restored all 24 present vault entries into
+`/Users/rtimmons/scratch/2026-09-11/smarthome`; byte-equivalence was verified
+under the recorded rebase policy and every restored mode matched the inventory.
+The three optional local application files were absent as expected. The clone
+has no external Git object alternates and points to the GitHub origin. This is
+evidence for the small-vault path only. It did not retrieve the master from its
+independent second copy, restore Terraform state, or authenticate/decrypt the
+14 required non-vault state/archive entries; twelve external dependencies also
+remain. **Deleting this checkout remains unsafe.**
 
 1. **Inventory before migration.** Build an explicit, reviewed allowlist from
    ignored-file metadata and deployment references, never dump secret values.
@@ -235,12 +222,12 @@ not itself create or validate that copy.
    | Stateful backups | Verified cloud, QNAP, VPN, UniFi Network/System and actual USG/config-override archives listed below; canonical media remains on Storage Box |
    | External identity | UniFi's 1Password-managed RSA key, human account passwords, MFA/recovery codes and Git access require an independent password-manager/account recovery path; never export them implicitly |
 
-2. **Use SOPS with a dedicated native age recovery identity.** Generate a random
-   X25519 age identity for recovery, independent of every SSH login key. The
-   operator saves the private identity outside this checkout and outside the
-   systems being recovered, with a second independently retrievable copy. Commit
+2. **Use SOPS with a dedicated native age recovery identity.** The random X25519
+   age identity is independent of every SSH login key and is injected only as
+   `SOPS_AGE_KEY` by the password manager. It needs a second independently
+   retrievable copy outside this checkout and the systems being recovered. Commit
    only the public recipient and narrow `.sops.yaml` rules. A random age private
-   identity is the proposed master key, not an ordinary memorable password.
+   identity is the recovery master, not an ordinary memorable password.
    Pin and verify SOPS/age binaries in the bootstrap recipe. Use the requested
    `SOPS_AGE_KEY` environment input for one process; never persist a master-key
    file in the checkout or recovered systems.
@@ -249,8 +236,8 @@ not itself create or validate that copy.
    environments after the decryption step. A private prompt or password-manager
    injection should avoid typing an actual key into a command line.
 
-3. **Track only the encrypted small vault.** Proposed path:
-   `usenet-infra/vault/`, outside the existing ignored `secrets/` directory, with
+3. **Track only the encrypted small vault.** Implemented at
+   `usenet-infra/vault/secrets.sops.json`, outside the existing ignored `secrets/` directory, with
    fully encrypted SOPS values and exact-byte binary handling for key/config
    files. Keep all existing plaintext/state ignore rules. Extend the secret scan
    with a narrowly scoped ciphertext exception that validates the SOPS envelope;
@@ -283,9 +270,10 @@ not itself create or validate that copy.
    actually retrieves the recovery implementation. Git/account access remains
    an external prerequisite if the repository is private.
 
-6. **Implement safe, idempotent recipes.** Proposed commands (not present yet):
-   `just secrets-check`, `just secrets-restore`, `just secrets-run`,
-   `just recovery-capture`, `just recovery-verify`. Authenticate all ciphertext
+6. **Implement safe, idempotent recipes.** `just secrets-check`,
+   `just setup-secrets`, and `just secrets-encrypt` are implemented for the
+   small vault. `just recovery-capture` and `just recovery-verify` remain
+   pending for state/archive material. Authenticate all ciphertext
    before installation, validate schema/path allowlists, reject symlinks and
    traversal, use private temporary directories, atomic writes, 0700 directories
    and 0600 secret files. Refuse divergent existing files unless an explicit
@@ -296,7 +284,10 @@ not itself create or validate that copy.
    could contain secrets, and clean up on errors/signals. Rebuild local absolute
    paths safely instead of restoring this workstation's checkout prefix.
 
-7. **Run the deletion-safety acceptance drill.** Use a new clone at a different
+7. **Run the deletion-safety acceptance drill.** The vault-only portion passed
+   in a new clone at a different path: 24 present entries restored with policy
+   equivalent bytes and inventoried modes. The full drill remains incomplete.
+   Use a new clone at a different
    path with no access to original ignored files, ambient SSH agent, application
    sessions or live services. Supply only the master and independently available
    ciphertext (with documented Git/backup retrieval access). Restore all
