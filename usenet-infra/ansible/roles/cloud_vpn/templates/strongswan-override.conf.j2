@@ -1,0 +1,9 @@
+[Unit]
+Requires=usenet-vpn-firewall.service usenet-vpn-address.service
+After=network-online.target usenet-vpn-firewall.service usenet-vpn-address.service
+
+[Service]
+ExecStartPost=
+ExecStartPost=/usr/bin/python3 /usr/local/libexec/usenet-vpn/load-vpn.py load
+ExecReload=
+ExecReload=/usr/bin/python3 /usr/local/libexec/usenet-vpn/load-vpn.py load

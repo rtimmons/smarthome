@@ -1,0 +1,19 @@
+[Unit]
+Description=Authenticated private Usenet application proxy
+Requires=docker.service usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+After=docker.service usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+PartOf=usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=/etc/usenet-cloud-ui
+Environment=COMPOSE_ANSI=never
+ExecStart=/usr/bin/docker compose --ansi never up --no-color --no-build --pull never --force-recreate --abort-on-container-exit --exit-code-from proxy
+ExecStop=/usr/bin/docker compose --ansi never down --timeout 10
+Restart=always
+RestartSec=5s
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

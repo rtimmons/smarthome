@@ -2,6 +2,8 @@
 set -euo pipefail
 
 : "${CLOUD_SSH_TARGET:?Set CLOUD_SSH_TARGET in usenet-infra/.env}"
+: "${CLOUD_SSH_KEY:?Set CLOUD_SSH_KEY to the dedicated cloud administrator key}"
+: "${CLOUD_SSH_KNOWN_HOSTS:?Set CLOUD_SSH_KNOWN_HOSTS to the verified cloud host-key file}"
 
 if (($# == 0)); then
   echo "usage: cloud-command <remote command> [arguments ...]" >&2
@@ -9,13 +11,8 @@ if (($# == 0)); then
 fi
 
 printf -v arguments_q ' %q' "$@"
-ssh_args=(-o BatchMode=yes)
-if [[ -n "${CLOUD_SSH_KEY:-}" ]]; then
-  ssh_args+=(-i "${CLOUD_SSH_KEY}" -o IdentitiesOnly=yes)
-fi
-if [[ -n "${CLOUD_SSH_KNOWN_HOSTS:-}" ]]; then
-  ssh_args+=(-o "UserKnownHostsFile=${CLOUD_SSH_KNOWN_HOSTS}")
-fi
+ssh_args=(-o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes
+  -i "${CLOUD_SSH_KEY}" -o "UserKnownHostsFile=${CLOUD_SSH_KNOWN_HOSTS}")
 
 exec ssh "${ssh_args[@]}" "${CLOUD_SSH_TARGET}" \
   "exec${arguments_q}"

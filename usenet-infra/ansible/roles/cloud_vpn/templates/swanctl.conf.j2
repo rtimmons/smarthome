@@ -1,0 +1,51 @@
+# Managed private site-to-site VPN. This file contains a PSK: root:root 0600.
+# USG 3P firmware 4.4.57 exposes SHA1/MD5 only. This deliberate legacy
+# compatibility uses SHA1 exclusively as HMAC for IKE/ESP; never MD5.
+# https://docs.strongswan.org/docs/6.0/howtos/securityRecommendations.html
+# Migrate to SHA256 or stronger with a supporting gateway; SHA1 retirement:
+# https://www.nist.gov/news-events/news/2022/12/nist-transitioning-away-sha-1-all-applications
+connections {
+    usenet-ui {
+        version = 2
+        local_addrs = {{ cloud_vpn_local_ip }}
+        remote_addrs = {{ cloud_vpn_peer_ip }}
+        proposals = aes256-sha1-prfsha1-modp2048
+        encap = yes
+        mobike = no
+        dpd_delay = 30s
+        keyingtries = 0
+        reauth_time = 0s
+        rekey_time = 7h
+        over_time = 1h
+        rand_time = 5m
+        local {
+            auth = psk
+            id = {{ cloud_vpn_local_ip }}
+        }
+        remote {
+            auth = psk
+            id = {{ cloud_vpn_peer_ip }}
+        }
+        children {
+            usenet-ui {
+                mode = tunnel
+                local_ts = {{ cloud_vpn_service_cidr }}
+                remote_ts = {{ cloud_vpn_lan_cidr }}
+                esp_proposals = aes256-sha1-modp2048
+                rekey_time = 50m
+                life_time = 1h
+                rand_time = 5m
+                start_action = trap|start
+                dpd_action = restart
+            }
+        }
+    }
+}
+secrets {
+    ike-usenet-ui {
+        id-cloud = {{ cloud_vpn_local_ip }}
+        id-home = {{ cloud_vpn_peer_ip }}
+        # The hex characters are the literal PSK also entered into UniFi.
+        secret = "{{ lookup('ansible.builtin.file', cloud_vpn_psk_source) | trim }}"
+    }
+}

@@ -3,6 +3,15 @@ set -euo pipefail
 
 : "${QNAP_SSH_TARGET:?Set QNAP_SSH_TARGET in usenet-infra/.env}"
 : "${QNAP_PROJECT_DIR:?Set QNAP_PROJECT_DIR in usenet-infra/.env}"
+: "${QNAP_SSH_KEY:?Set QNAP_SSH_KEY to the dedicated NAS administrator key}"
+: "${QNAP_SSH_KNOWN_HOSTS:?Set QNAP_SSH_KNOWN_HOSTS to the verified NAS host-key file}"
+
+if [[ -z "${QNAP_DOCKER_CONFIG_DIR:-}" ]]; then
+  case "${QNAP_PROJECT_DIR}" in
+    /share/*/compose/qnap) QNAP_DOCKER_CONFIG_DIR="${QNAP_PROJECT_DIR%/compose/qnap}/state/docker-client" ;;
+    *) echo 'qnap-command: set QNAP_DOCKER_CONFIG_DIR for a custom deployment path' >&2; exit 2 ;;
+  esac
+fi
 
 if (($# == 0)); then
   echo "usage: qnap-command <catalog command> [arguments ...]" >&2
@@ -25,14 +34,44 @@ case "${tool}" in
 esac
 
 printf -v project_q '%q' "${QNAP_PROJECT_DIR}"
+printf -v docker_config_q '%q' "${QNAP_DOCKER_CONFIG_DIR}"
 printf -v arguments_q ' %q' "$@"
-ssh_args=(-o BatchMode=yes)
-if [[ -n "${QNAP_SSH_KEY:-}" ]]; then
-  ssh_args+=(-i "${QNAP_SSH_KEY}" -o IdentitiesOnly=yes)
-fi
-if [[ -n "${QNAP_SSH_KNOWN_HOSTS:-}" ]]; then
-  ssh_args+=(-o "UserKnownHostsFile=${QNAP_SSH_KNOWN_HOSTS}")
-fi
+ssh_args=(-T -o BatchMode=yes -o StrictHostKeyChecking=yes -o IdentitiesOnly=yes
+  -o IdentityAgent=none -o PreferredAuthentications=publickey -o PasswordAuthentication=no
+  -o ConnectTimeout=10 -o ConnectionAttempts=1
+  -i "${QNAP_SSH_KEY}" -o "UserKnownHostsFile=${QNAP_SSH_KNOWN_HOSTS}")
 
-exec ssh "${ssh_args[@]}" "${QNAP_SSH_TARGET}" \
-  "cd ${project_q} && docker compose run --rm catalog${arguments_q}"
+# Bash 3.2 misparses case patterns inside a command-substitution heredoc.
+# read retains the literal payload; EOF is the expected nonzero return here.
+IFS= read -r -d '' docker_discovery <<'SH' || :
+qnap_docker=$(command -v docker 2>/dev/null || true)
+case "$qnap_docker" in /*) ;; *) qnap_docker= ;; esac
+if test ! -x "$qnap_docker" && test -x /sbin/getcfg; then
+  qnap_package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf 2>/dev/null)
+  case "$qnap_package" in
+    /share/*)
+      for qnap_candidate in "$qnap_package/bin/docker" "$qnap_package/usr/bin/docker"; do
+        if test -x "$qnap_candidate"; then qnap_docker=$qnap_candidate; break; fi
+      done
+      ;;
+  esac
+fi
+if test ! -x "$qnap_docker"; then
+  echo 'qnap-command: configured Container Station Docker executable is unavailable' >&2
+  exit 1
+fi
+SH
+
+exec ssh "${ssh_args[@]}" -- "${QNAP_SSH_TARGET}" \
+  "${docker_discovery}
+qnap_config=${docker_config_q}
+if test ! -d \"\${qnap_config}\" || test ! -w \"\${qnap_config}\"; then
+  echo 'qnap-command: application Docker client directory is missing or unwritable; configure QNAP first' >&2
+  exit 1
+fi
+DOCKER_CONFIG=\${qnap_config}
+BUILDX_CONFIG=\${qnap_config}/buildx
+COMPOSE_ANSI=never
+BUILDKIT_PROGRESS=plain
+export DOCKER_CONFIG BUILDX_CONFIG COMPOSE_ANSI BUILDKIT_PROGRESS
+cd ${project_q} && \"\${qnap_docker}\" --config \"\${qnap_config}\" compose --ansi never --progress plain run --rm catalog${arguments_q}"

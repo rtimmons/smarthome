@@ -42,6 +42,17 @@ resource "hcloud_firewall" "server" {
   name   = "${var.name_prefix}-server"
   labels = local.common_labels
 
+  dynamic "rule" {
+    for_each = var.vpn_peer_ipv4 == "" ? [] : ["500", "4500"]
+    content {
+      direction   = "in"
+      protocol    = "udp"
+      port        = rule.value
+      source_ips  = ["${var.vpn_peer_ipv4}/32"]
+      description = "Private UI IPsec from home gateway"
+    }
+  }
+
   rule {
     direction   = "in"
     protocol    = "tcp"

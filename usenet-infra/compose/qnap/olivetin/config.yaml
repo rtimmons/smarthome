@@ -1,0 +1,95 @@
+{
+  "pageTitle": "QNAP catalog",
+  "logLevel": "INFO",
+  "checkForUpdates": false,
+  "showNewVersions": false,
+  "showFooter": false,
+  "webUIDir": "/var/www/olivetin",
+  "listenAddressSingleHTTPFrontend": "0.0.0.0:1337",
+  "listenAddressRestActions": "127.0.0.1:1338",
+  "listenAddressWebUI": "127.0.0.1:1340",
+  "listenAddressPrometheus": "127.0.0.1:1341",
+  "prometheus": {
+    "enabled": false
+  },
+  "features": {
+    "headerSearch": true
+  },
+  "authRequireGuestsToLogin": true,
+  "authLocalUsers": {
+    "enabled": true,
+    "users": [
+      {
+        "username": "${{ CATALOG_DASHBOARD_USERNAME }}",
+        "password": "${{ CATALOG_DASHBOARD_PASSWORD_HASH }}",
+        "usergroup": "catalog-operators"
+      }
+    ]
+  },
+  "defaultPermissions": {
+    "view": false,
+    "exec": false,
+    "logs": false,
+    "kill": false
+  },
+  "defaultPolicy": {
+    "showLogList": false,
+    "showDiagnostics": false
+  },
+  "accessControlLists": [
+    {
+      "name": "catalog-operators",
+      "matchUsergroups": [
+        "catalog-operators"
+      ],
+      "addToEveryAction": true,
+      "permissions": {
+        "view": true,
+        "exec": true,
+        "logs": true,
+        "kill": false
+      },
+      "policy": {
+        "showLogList": true,
+        "showDiagnostics": false
+      }
+    }
+  ],
+  "saveLogs": {
+    "resultsDirectory": "/data/dashboard/logs/results",
+    "outputDirectory": "/data/dashboard/logs/output"
+  },
+  "logHistoryPageSize": 25,
+  "defaultPopupOnStart": "execution-dialog",
+  "entities": [
+    {
+      "name": "Catalog",
+      "file": "/data/dashboard/catalog.json",
+      "acls": [
+        "catalog-operators"
+      ],
+      "properties": [
+        {
+          "name": "item_title",
+          "title": "Title"
+        },
+        {
+          "name": "category",
+          "title": "Category"
+        },
+        {
+          "name": "size",
+          "title": "Size"
+        },
+        {
+          "name": "state",
+          "title": "State"
+        },
+        {
+          "name": "error",
+          "title": "Failure"
+        }
+      ]
+    }
+  ]
+}

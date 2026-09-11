@@ -1,0 +1,11 @@
+# Use only the official application's binary and web assets; no Docker CLI/socket.
+FROM ghcr.io/olivetin/olivetin:3000.19.0 AS olivetin
+FROM rclone/rclone:1.75.1 AS rclone
+FROM python:3.14.7-alpine3.24
+COPY --from=olivetin /usr/bin/OliveTin /usr/local/bin/OliveTin
+COPY --from=olivetin /var/www/olivetin /var/www/olivetin
+COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
+RUN /usr/local/bin/OliveTin -version 2>&1 | grep -F 'version="3000.19.0"' \
+    && rclone version && python3 --version
+WORKDIR /data
+ENTRYPOINT ["python3", "/opt/usenet/scripts/catalog-dashboard.py", "serve"]

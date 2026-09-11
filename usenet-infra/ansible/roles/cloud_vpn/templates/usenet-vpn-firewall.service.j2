@@ -1,0 +1,18 @@
+[Unit]
+Description=Private Usenet VPN host firewall
+After=ufw.service
+Before=usenet-vpn-address.service strongswan.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /usr/local/libexec/usenet-vpn/vpn-network.py firewall /etc/usenet-vpn/network.json
+ExecReload=/usr/bin/python3 /usr/local/libexec/usenet-vpn/vpn-network.py firewall /etc/usenet-vpn/network.json
+# No ExecStop: stopping this unit must never remove fail-closed protection.
+UMask=0077
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

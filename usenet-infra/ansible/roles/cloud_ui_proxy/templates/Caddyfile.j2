@@ -1,0 +1,52 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+	grace_period 10s
+	# Application URLs can contain API keys. Do not retain request/error URLs.
+	log {
+		output discard
+	}
+}
+
+(private_auth) {
+	basic_auth argon2id "Usenet private applications" {
+		{{ cloud_ui_auth.username }} {{ cloud_ui_auth.password_hash }}
+	}
+}
+
+http://:18080 {
+	bind {{ cloud_vpn_service_ip }}
+	route {
+		import private_auth
+		reverse_proxy 127.0.0.1:8080 {
+			header_up -Authorization
+			header_up -Proxy-Authorization
+			header_up -Forwarded
+			header_up -X-Forwarded-*
+			header_up -X-Real-IP
+			header_up -Remote-User
+			header_up -X-Remote-User
+			header_up -X-Auth-*
+			header_up Host {{ cloud_vpn_service_ip }}:18080
+		}
+	}
+}
+
+http://:19696 {
+	bind {{ cloud_vpn_service_ip }}
+	route {
+		import private_auth
+		reverse_proxy 127.0.0.1:9696 {
+			header_up -Authorization
+			header_up -Proxy-Authorization
+			header_up -Forwarded
+			header_up -X-Forwarded-*
+			header_up -X-Real-IP
+			header_up -Remote-User
+			header_up -X-Remote-User
+			header_up -X-Auth-*
+			header_up Host {{ cloud_vpn_service_ip }}:19696
+		}
+	}
+}

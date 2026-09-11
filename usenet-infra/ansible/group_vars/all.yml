@@ -10,6 +10,14 @@ usenet_timezone: America/New_York
 cloud_ssh_port: "{{ ansible_port | default(22) }}"
 cloud_admin_user: usenet-admin
 cloud_admin_authorized_key_source: ""
+cloud_lan_ui_enabled: false
+cloud_vpn_service_ip: "10.77.0.1"
+cloud_vpn_service_cidr: "10.77.0.0/30"
+cloud_vpn_lan_cidr: "192.168.1.0/24"
+cloud_vpn_peer_ip: ""
+cloud_vpn_local_ip: ""
+cloud_vpn_psk_source: ""
+cloud_ui_auth_source: ""
 # Intentionally empty: the firewall role refuses to run until trusted source
 # CIDRs are supplied in inventory.yml or an ignored vars/vault file.
 cloud_ssh_allowed_cidrs: []
@@ -79,3 +87,16 @@ qnap_storagebox_hashes: sha256
 qnap_storagebox_sha256sum_command: sha256sum
 qnap_rclone_sftp_chunk_size: 32Ki
 qnap_rclone_sftp_concurrency: 64
+# Choose the NAS RFC1918 IPv4 address, or loopback with an SSH tunnel. An empty
+# value deliberately prevents deployment before the access path is approved.
+qnap_dashboard_bind_address: ""
+qnap_dashboard_port: 1337
+qnap_dashboard_config_dir: "{{ qnap_deploy_dir }}/olivetin"
+qnap_dashboard_state_dir: "{{ qnap_catalog_state_dir }}/dashboard"
+qnap_dashboard_auth_file: "{{ qnap_container_root }}/secrets/dashboard-auth.json"
+qnap_dashboard_auth_source: ""
+qnap_catalog_min_free_bytes: 10737418240
+qnap_rclone_transfers: 2
+qnap_rclone_checkers: 4
+qnap_rclone_bwlimit: ""
+qnap_storage_warn_fraction: 0.80

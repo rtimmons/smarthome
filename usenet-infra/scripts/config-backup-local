@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+infra_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+case "$(uname -s)/$(uname -m)" in
+  Darwin/arm64) platform=darwin-arm64 ;;
+  Linux/x86_64) platform=linux-amd64 ;;
+  *) echo 'No reviewed encryption binary for this controller platform.' >&2; exit 1 ;;
+esac
+exec python3 "$infra_dir/scripts/config-backup.py" \
+  --age-binary "$infra_dir/../build/tools/age-1.3.2/$platform/age" "$@"

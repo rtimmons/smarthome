@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+umask 077
+: "${CLOUD_SSH_KEY:?Set the existing dedicated administrator private-key path}"
+infra_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$infra_dir"
+backup_dir="$infra_dir/backups"
+mkdir -p -- "$backup_dir"
+chmod 0700 "$backup_dir"
+work_dir="$(mktemp -d "$backup_dir/.capture.XXXXXXXX")"
+trap 'rm -rf -- "$work_dir"' EXIT
+filename="cloud-$(date -u +%Y%m%dT%H%M%SZ)-${work_dir##*.}.tar.age"
+remote_archive="/srv/usenet/backups/$filename"
+./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/config-backup.py \
+  --age-binary /srv/usenet/libexec/age capture \
+  --recipient-file /srv/usenet/config/backup-recipient.pub \
+  --output "$remote_archive" > "$work_dir/capture.json"
+./scripts/cloud-command sudo -n -u usenet cat -- "$remote_archive" > "$work_dir/archive.age"
+chmod 0600 "$work_dir/archive.age"
+./scripts/config-backup-local verify --identity-file "$CLOUD_SSH_KEY" \
+  --archive "$work_dir/archive.age" > "$work_dir/verified.json"
+python3 - "$work_dir/capture.json" "$work_dir/verified.json" <<'PY'
+import json
+import sys
+with open(sys.argv[1]) as source, open(sys.argv[2]) as restored:
+    captured, verified = json.load(source), json.load(restored)
+if (captured.get('status') != 'captured' or verified.get('status') != 'verified'
+        or captured.get('archive_sha256') != verified.get('archive_sha256')):
+    raise SystemExit('Transferred backup verification failed; encrypted source remains on the VM.')
+print(json.dumps(verified, sort_keys=True))
+PY
+# Publish only a fully transferred, decrypted, checksum-verified archive.
+ln -- "$work_dir/archive.age" "$backup_dir/$filename"
+ln -- "$work_dir/verified.json" "$backup_dir/$filename.verified.json"
+./scripts/cloud-command sudo -n -u usenet rm -- "$remote_archive"
+printf 'Verified encrypted backup: %s\n' "$backup_dir/$filename"

@@ -7,11 +7,14 @@ default:
 [group: 'validation']
 test: ansible-setup
 	python3 -m unittest discover -s tests -v
-	python3 -m py_compile scripts/catalogctl.py scripts/healthcheck.py scripts/sync-health-api-keys.py
+	python3 -m compileall -q scripts
+	shellcheck scripts/backup-qnap
 	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
-	shellcheck scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/catalog-promote scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
+	shellcheck scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/catalog-promote scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
 	@ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_file(f) }' $(find ansible compose -path 'ansible/.collections' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print)
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml site.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml backup.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-lan-ui.yml --syntax-check
 	./scripts/secret-scan
 
 # Check tracked content and repository history for high-confidence credential forms.
@@ -46,6 +49,7 @@ catalog-status:
 
 # Copy, SHA-256 verify, and atomically publish one item in the QNAP cache.
 [group: 'catalog']
+[positional-arguments]
 catalog-pull item:
 	#!/usr/bin/env bash
 	set -euo pipefail
@@ -53,6 +57,7 @@ catalog-pull item:
 
 # Delete one QNAP copy. This command never invokes a remote deletion.
 [group: 'catalog']
+[positional-arguments]
 catalog-evict item:
 	#!/usr/bin/env bash
 	set -euo pipefail
@@ -63,6 +68,66 @@ catalog-evict item:
 cloud-health:
 	@./scripts/cloud-command /srv/usenet/scripts/healthcheck
 
+# Read NAS versions, resource headroom, and share metadata through dedicated SSH.
+[group: 'setup']
+qnap-recon:
+	@python3 scripts/qnap-recon.py
+
+# Prove server-side read-only access with an isolated writer-created sentinel.
+[group: 'validation']
+verify-reader-access:
+	@python3 scripts/verify-reader-access.py
+
+# Keep a loopback-only SSH tunnel open for private provider/indexer setup.
+[group: 'setup']
+cloud-ui:
+	@./scripts/cloud-ui
+
+# Inspect, prepare, enable, or test the saved NZBGeek indexer privately.
+[group: 'setup']
+[positional-arguments]
+prowlarr-indexer command='inspect' indexer='nzbgeek':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command sudo -n -u usenet python3 - "$1" "$2" < scripts/prowlarr-indexer.py
+
+# Connect Prowlarr to SABnzbd using only credentials already stored on the VM.
+[group: 'setup']
+[positional-arguments]
+prowlarr-download-client command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command python3 - "$1" < scripts/prowlarr-download-client.py
+
+# Inspect, configure, or test the saved Eweka server without returning credentials.
+[group: 'setup']
+[positional-arguments]
+sab-provider command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command python3 - "$1" < scripts/sab-provider.py
+
+# Inspect or apply conservative SAB storage and processing settings while idle.
+[group: 'setup']
+[positional-arguments]
+sab-settings command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command python3 - "$1" < scripts/sab-settings.py
+
+# Start once, or inspect, the official authorized 100 MB SAB download test.
+[group: 'validation']
+[positional-arguments]
+sab-smoke-test command='status':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command sudo -n -u usenet python3 - "$1" < scripts/sab-smoke-test.py
+
+# Privately prompt for a local dashboard login and store only its Argon2id hash.
+[group: 'setup']
+dashboard-credentials:
+	@uv run --with 'argon2-cffi==25.1.0' python scripts/dashboard-credentials.py
+
 # Check Storage Box reachability, transfer failures, and QNAP cache capacity.
 [group: 'health']
 qnap-health:
@@ -70,6 +135,7 @@ qnap-health:
 
 # Deliberately publish a completed SAB directory to the canonical catalog.
 [group: 'catalog']
+[positional-arguments]
 catalog-promote path title category source authorization:
 	#!/usr/bin/env bash
 	set -euo pipefail
@@ -95,8 +161,77 @@ ansible-setup:
 
 # Apply host configuration after inventory and secret files exist.
 [group: 'ansible']
-configure-cloud: ansible-setup
+configure-cloud: age-bootstrap ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud.yml
+
+# Configure the scoped UniFi VPN and authenticated cloud UI proxy.
+[group: 'ansible']
+configure-cloud-lan-ui: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud-lan-ui.yml
+
+# Cache the exact verified encryption binaries for this workstation and cloud VM.
+[group: 'setup']
+age-bootstrap:
+	@python3 scripts/bootstrap-age.py
+
+# Install only backup support; does not restart or reconfigure applications.
+[group: 'ansible']
+configure-backup: age-bootstrap ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook backup.yml
+
+# Capture on the cloud, encrypt there, transfer, decrypt and verify locally.
+[group: 'backup']
+backup-cloud: configure-backup
+	@./scripts/backup-cloud
+
+# Encrypt the exact root-owned VPN and private proxy configuration files.
+[group: 'backup']
+backup-vpn: age-bootstrap
+	@python3 scripts/backup-vpn.py capture
+
+[group: 'backup']
+[positional-arguments]
+backup-vpn-verify archive: age-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/backup-vpn.py verify --archive "$1"
+
+# Stream a private NAS configuration snapshot directly into local encryption.
+[group: 'backup']
+backup-qnap: age-bootstrap
+	@python3 scripts/backup-qnap.py capture
+
+# Verify encrypted NAS configuration without retaining plaintext.
+[group: 'backup']
+[positional-arguments]
+backup-qnap-verify archive: age-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/backup-qnap.py verify --archive "$1"
+
+# Restore NAS configuration into a new private directory only.
+[group: 'backup']
+[positional-arguments]
+backup-qnap-restore archive destination: age-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/backup-qnap.py restore --archive "$1" --destination "$2"
+
+# Verify an existing encrypted backup without retaining decrypted files.
+[group: 'backup']
+[positional-arguments]
+backup-verify archive: age-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/config-backup-local verify --identity-file "$CLOUD_SSH_KEY" --archive "$1"
+
+# Restore only into a new private directory, leaving running services untouched.
+[group: 'backup']
+[positional-arguments]
+backup-restore archive destination: age-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/config-backup-local restore --identity-file "$CLOUD_SSH_KEY" --archive "$1" --destination "$2"
 
 [group: 'ansible']
 configure-qnap: ansible-setup

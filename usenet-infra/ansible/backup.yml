@@ -1,0 +1,7 @@
+---
+- name: Install manual encrypted cloud configuration backup support
+  hosts: cloud
+  become: true
+  gather_facts: true
+  roles:
+    - role: cloud_backup

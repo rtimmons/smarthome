@@ -1,0 +1,19 @@
+[Unit]
+Description=Private Usenet VPN service address
+Requires=usenet-vpn-firewall.service
+After=network-online.target usenet-vpn-firewall.service
+Before=strongswan.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/bin/python3 /usr/local/libexec/usenet-vpn/vpn-network.py address /etc/usenet-vpn/network.json
+# Keep the protected address until shutdown; no routes or interfaces are removed.
+UMask=0077
+NoNewPrivileges=yes
+ProtectHome=yes
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

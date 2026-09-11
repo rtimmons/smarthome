@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import fcntl
 import hashlib
 import json
 import os
@@ -18,6 +19,8 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from collections import deque
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
@@ -32,6 +35,10 @@ class CatalogError(RuntimeError):
     pass
 
 
+class CatalogBusy(CatalogError):
+    """A cache mutation is already running; this is not a transfer failure."""
+
+
 def utc_now() -> str:
     return dt.datetime.now(dt.timezone.utc).replace(microsecond=0).isoformat()
 
@@ -43,7 +50,10 @@ def env_path(name: str, default: str) -> Path:
 def remote_join(remote: str, *parts: str) -> str:
     base = remote.rstrip("/")
     clean = [str(PurePosixPath(part)).strip("/") for part in parts]
-    return "/".join([base, *clean])
+    # SFTP remote:path is relative to the login directory; remote:/path is
+    # absolute. Preserve that distinction for a subaccount rooted at catalog.
+    separator = "" if base.endswith(":") and not remote.endswith("/") else "/"
+    return base + separator + "/".join(clean)
 
 
 def safe_id(value: str) -> str:
@@ -92,14 +102,15 @@ class Settings:
     transfers: int
     checkers: int
     min_free_bytes: int
+    bwlimit: str = "off"
 
     @classmethod
     def from_env(cls) -> "Settings":
         remote = os.environ.get("CATALOG_REMOTE", "").strip()
         if not remote or ":" not in remote:
             raise CatalogError("CATALOG_REMOTE must name an rclone path such as storage:catalog")
-        return cls(
-            remote=remote.rstrip("/"),
+        settings = cls(
+            remote=remote,
             local_root=env_path("CATALOG_LOCAL_ROOT", "/data/library"),
             state_root=env_path("CATALOG_STATE_ROOT", "/data/state"),
             staging_root=env_path("CATALOG_STAGING_ROOT", "/data/staging"),
@@ -112,22 +123,55 @@ class Settings:
             min_free_bytes=int(
                 os.environ.get("CATALOG_MIN_FREE_BYTES", str(10 * 1024**3))
             ),
+            bwlimit=os.environ.get("RCLONE_BWLIMIT", "off").strip() or "off",
         )
+        if settings.min_free_bytes < 0 or settings.transfers < 1 or settings.checkers < 1:
+            raise CatalogError("reserve must be nonnegative and rclone concurrency must be positive")
+        if not re.fullmatch(r"(?:off|\d+(?:\.\d+)?[kKmMgGtT]?)", settings.bwlimit):
+            raise CatalogError("RCLONE_BWLIMIT must be off or a bytes/second limit such as 10M")
+        return settings
 
 
 class Rclone:
     def __init__(self, settings: Settings):
         self.settings = settings
+        self.lock_fds: tuple[int, ...] = ()
 
     def run(self, *args: str, capture: bool = False) -> str:
         command = [self.settings.rclone, *args]
         try:
+            if not capture:
+                tail: deque[str] = deque(maxlen=30)
+                with subprocess.Popen(
+                    command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                    pass_fds=self.lock_fds,
+                ) as process:
+                    assert process.stdout is not None
+                    try:
+                        for line in process.stdout:
+                            print(line, end="", file=sys.stderr, flush=True)
+                            tail.append(line)
+                        code = process.wait()
+                    except BaseException:
+                        process.terminate()
+                        try:
+                            process.wait(timeout=10)
+                        except subprocess.TimeoutExpired:
+                            process.kill()
+                            process.wait()
+                        raise
+                if code:
+                    raise CatalogError(f"rclone {args[0]} failed (exit {code}): {''.join(tail).strip()}")
+                return ""
             result = subprocess.run(
                 command,
                 check=True,
                 text=True,
                 stdout=subprocess.PIPE if capture else None,
                 stderr=subprocess.PIPE if capture else None,
+                # Keep the cache locked if this process dies before its transfer
+                # child exits. A retry must never race an orphaned rclone copy.
+                pass_fds=self.lock_fds,
             )
         except FileNotFoundError as exc:
             raise CatalogError(f"rclone executable not found: {self.settings.rclone}") from exc
@@ -205,6 +249,8 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
     if manifest["schema_version"] != SCHEMA_VERSION:
         raise CatalogError(f"unsupported schema_version {manifest['schema_version']}")
     item_id = safe_id(str(manifest["id"]))
+    if manifest["id"] != item_id:
+        raise CatalogError("manifest id must use its canonical lowercase spelling")
     if not str(manifest["title"]).strip():
         raise CatalogError("manifest title may not be empty")
     if manifest["category"] not in CATEGORIES:
@@ -232,6 +278,8 @@ def validate_manifest(manifest: dict[str, Any]) -> None:
     calculated_size = 0
     seen: set[str] = set()
     for entry in manifest["files"]:
+        if not isinstance(entry, dict):
+            raise CatalogError("manifest file entries must be objects")
         relative = PurePosixPath(str(entry.get("path", "")))
         if not relative.parts or relative.is_absolute() or ".." in relative.parts:
             raise CatalogError(f"unsafe file path in manifest: {relative}")
@@ -260,9 +308,15 @@ def manifests(rclone: Rclone, settings: Settings) -> list[dict[str, Any]]:
     root = remote_join(settings.remote, "manifests")
     listing = rclone.run("lsf", root, "--files-only", "--include", "*.json", capture=True)
     result = []
+    seen: set[str] = set()
     for filename in sorted(line.strip() for line in listing.splitlines() if line.strip()):
+        if not re.fullmatch(r"[a-z0-9][a-z0-9._-]{2,127}\.json", filename):
+            raise CatalogError(f"unsafe manifest filename: {filename}")
         manifest = rclone.read_json(remote_join(root, filename))
         validate_manifest(manifest)
+        if filename != f"{manifest['id']}.json" or manifest["id"] in seen:
+            raise CatalogError(f"manifest filename/id mismatch or duplicate: {filename}")
+        seen.add(manifest["id"])
         if manifest["integrity"]["verified_at"] is None:
             raise CatalogError(f"published manifest is not marked verified: {filename}")
         result.append(manifest)
@@ -288,13 +342,25 @@ def local_record_path(settings: Settings, item_id: str) -> Path:
 
 
 def local_object_path(settings: Settings, manifest: dict[str, Any]) -> Path:
+    raw = settings.local_root / manifest["category"] / manifest["id"]
+    if raw.is_symlink() or raw.parent.is_symlink():
+        raise CatalogError(f"local object path contains a symlink: {raw}")
     return confined(
-        settings.local_root / manifest["category"] / manifest["id"],
+        raw,
         settings.local_root,
     )
 
 
 def verify_local(root: Path, manifest: dict[str, Any]) -> None:
+    expected = {entry["path"] for entry in manifest["files"]}
+    actual = set()
+    for path in root.rglob("*"):
+        if path.is_symlink():
+            raise CatalogError(f"symlinks are not allowed in local objects: {path}")
+        if path.is_file():
+            actual.add(path.relative_to(root).as_posix())
+    if actual != expected:
+        raise CatalogError("local files do not match the manifest; unexpected or missing files")
     for entry in manifest["files"]:
         path = confined(root / entry["path"], root)
         if not path.is_file():
@@ -305,17 +371,20 @@ def verify_local(root: Path, manifest: dict[str, Any]) -> None:
             raise CatalogError(f"SHA-256 mismatch: {entry['path']}")
 
 
+def atomic_json(destination: Path, payload: dict[str, Any]) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile("w", dir=destination.parent, delete=False) as handle:
+        json.dump(payload, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+        temporary = Path(handle.name)
+    os.replace(temporary, destination)
+
+
 def write_state(settings: Settings, manifest: dict[str, Any], object_path: Path) -> None:
     record = dict(manifest)
     record["local_path"] = str(object_path)
     record["local_verified_at"] = utc_now()
-    destination = local_record_path(settings, manifest["id"])
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", dir=destination.parent, delete=False) as handle:
-        json.dump(record, handle, indent=2, sort_keys=True)
-        handle.write("\n")
-        temporary = Path(handle.name)
-    os.replace(temporary, destination)
+    atomic_json(local_record_path(settings, manifest["id"]), record)
 
 
 def record_failure(settings: Settings, operation: str, item: str, error: Exception) -> None:
@@ -328,53 +397,234 @@ def record_failure(settings: Settings, operation: str, item: str, error: Excepti
         "failed_at": utc_now(),
         "error": str(error),
     }
-    (destination / f"{stamp}-{uuid.uuid4().hex[:8]}.json").write_text(
-        json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-    )
+    atomic_json(destination / f"{stamp}-{uuid.uuid4().hex[:8]}.json", payload)
+
+
+def read_json_records(root: Path) -> list[dict[str, Any]]:
+    result = []
+    for path in sorted(root.glob("*.json")):
+        try:
+            value = json.loads(path.read_text(encoding="utf-8"))
+            if not isinstance(value, dict):
+                raise ValueError("expected an object")
+        except (ValueError, OSError) as exc:
+            raise CatalogError(f"invalid catalog state {path}: {exc}") from exc
+        result.append(value)
+    return result
+
+
+def resolve_failures(settings: Settings, item_id: str) -> None:
+    for path in (settings.state_root / "failures").glob("*.json"):
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        if payload.get("item") == item_id and not payload.get("resolved_at"):
+            payload["resolved_at"] = utc_now()
+            atomic_json(path, payload)
+
+
+@contextmanager
+def cache_lock(settings: Settings, rclone: Rclone):
+    """Serialize pulls and evictions, including the free-space admission check."""
+    root = settings.state_root / "locks"
+    root.mkdir(parents=True, exist_ok=True)
+    with (root / "cache.lock").open("a+") as handle:
+        try:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise CatalogBusy("another cache operation is running; wait for it to finish") from exc
+        previous = getattr(rclone, "lock_fds", ())
+        rclone.lock_fds = (*previous, handle.fileno())
+        try:
+            yield handle
+        finally:
+            rclone.lock_fds = previous
+            # Closing (rather than LOCK_UN) retains a shared inherited lock
+            # until any orphaned transfer child also closes its descriptor.
+
+
+@contextmanager
+def cache_operation(settings: Settings, operation: str, item_id: str, lock):
+    destination = settings.state_root / "operations" / f"{safe_id(item_id)}.json"
+    payload = {
+        "id": uuid.uuid4().hex,
+        "item": item_id,
+        "operation": operation,
+        "status": "running",
+        "phase": "preparing",
+        "started_at": utc_now(),
+        "updated_at": utc_now(),
+        "error": None,
+    }
+    lock.seek(0)
+    lock.truncate()
+    json.dump({"id": payload["id"], "item": item_id}, lock)
+    lock.flush()
+
+    def update(phase: str) -> None:
+        payload["phase"] = phase
+        payload["updated_at"] = utc_now()
+        atomic_json(destination, payload)
+        print(f"{operation} {item_id}: {phase}", flush=True)
+
+    update("preparing")
+    try:
+        yield update
+    except (Exception, KeyboardInterrupt) as exc:
+        payload.update(status="failed", error=str(exc) or "operation interrupted")
+        record_failure(settings, operation, item_id, CatalogError(payload["error"]))
+        raise
+    else:
+        payload.update(status="succeeded", error=None)
+        resolve_failures(settings, item_id)
+    finally:
+        payload["updated_at"] = utc_now()
+        if payload["status"] != "running":
+            payload["finished_at"] = payload["updated_at"]
+        atomic_json(destination, payload)
+
+
+def active_operation_id(settings: Settings) -> str | None:
+    path = settings.state_root / "locks" / "cache.lock"
+    try:
+        with path.open("r") as handle:
+            try:
+                fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                try:
+                    return str(json.load(handle)["id"])
+                except (ValueError, KeyError):
+                    return None  # The owner has not published its operation yet.
+    except FileNotFoundError:
+        pass
+    return None
+
+
+def operation_records(settings: Settings) -> list[dict[str, Any]]:
+    active_ids = {active_operation_id(settings)}
+    result = read_json_records(settings.state_root / "operations")
+    # A retry can publish its record during the read; sample both sides to
+    # avoid calling that newly started operation interrupted for one refresh.
+    active_ids.add(active_operation_id(settings))
+    active_ids.discard(None)
+    for operation in result:
+        operation["active"] = operation.get("id") in active_ids
+        operation["stalled"] = (
+            operation.get("status") == "running" and not operation["active"]
+        )
+        if operation["stalled"]:
+            operation["status"] = "stalled"
+            operation["error"] = "Operation interrupted; its process is no longer running. Retry to resume verified staging."
+    return result
+
+
+def catalog_snapshot(settings: Settings, rclone: Rclone) -> dict[str, Any]:
+    """One structured view shared by the dashboard and recovery commands.
+
+    Local means a matching successful verification record still has its files,
+    sizes and paths. Re-hashing terabytes on every UI refresh is deliberately
+    avoided; pull always performs the full SHA-256 verification.
+    """
+    items = manifests(rclone, settings)
+    records = {record["id"]: record for record in load_local_records(settings)}
+    operations = {record["item"]: record for record in operation_records(settings)}
+    failures = read_json_records(settings.state_root / "failures")
+    enriched = []
+    for item in items:
+        item = dict(item)
+        item_id = item["id"]
+        final = local_object_path(settings, item)
+        record = records.get(item_id)
+        operation = operations.get(item_id)
+        item_failures = [failure for failure in failures if failure.get("item") == item_id and not failure.get("resolved_at")]
+        latest_failure = max(item_failures, key=lambda failure: failure.get("failed_at", ""), default=None)
+        local = bool(
+            record and record.get("local_verified_at") and final.is_dir()
+            and record["files"] == item["files"]
+            and record["remote_path"] == item["remote_path"]
+            and local_metadata_matches(final, item)
+        )
+        error = None
+        stalled = bool(operation and operation.get("stalled"))
+        if operation and operation["active"]:
+            state, action = "downloading", None
+        elif operation and operation["status"] in {"failed", "stalled"}:
+            state = "failed"
+            error = operation["error"]
+            action = "evict" if final.exists() and record else "retry"
+        elif local:
+            state, action = "local", "evict"
+        elif latest_failure:
+            state, action, error = "failed", "retry", latest_failure["error"]
+        elif final.exists():
+            state, action = "failed", "evict" if record else "retry"
+            error = "Local files have no matching verification record; retry will verify them before marking local."
+        elif (settings.staging_root / f"{item_id}.partial").exists():
+            state, action, stalled = "failed", "retry", True
+            error = "Interrupted staging is present with no active transfer. Retry to resume."
+        else:
+            state, action = "remote_only", "download"
+        item.update(local=local, state=state, valid_action=action, error=error,
+                    operation=operation, stalled=stalled,
+                    local_verified_at=record.get("local_verified_at") if record else None)
+        enriched.append(item)
+    settings.local_root.mkdir(parents=True, exist_ok=True)
+    usage = shutil.disk_usage(settings.local_root)
+    local_items = [item for item in enriched if item["local"]]
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "generated_at": utc_now(),
+        "remote_items": len(items),
+        "remote_bytes": sum(int(item["size_bytes"]) for item in items),
+        "local_items": len(local_items),
+        "local_bytes": sum(int(item["size_bytes"]) for item in local_items),
+        "local_free_bytes": usage.free,
+        "local_total_bytes": usage.total,
+        "local_reserve_bytes": settings.min_free_bytes,
+        "transfers_in_progress": sum(bool(op["active"] and op["operation"] == "pull") for op in operations.values()),
+        "stalled_transfers": sum(bool(item["stalled"]) for item in enriched),
+        "recorded_failures": len(failures),
+        "unresolved_failures": sum(not failure.get("resolved_at") for failure in failures),
+        "failed_transfers": sum(item["state"] == "failed" for item in enriched),
+        "items": enriched,
+    }
+
+
+def local_metadata_matches(root: Path, manifest: dict[str, Any]) -> bool:
+    expected = {entry["path"]: entry["size_bytes"] for entry in manifest["files"]}
+    actual = {}
+    try:
+        for path in root.rglob("*"):
+            if path.is_symlink():
+                return False
+            if path.is_file():
+                actual[path.relative_to(root).as_posix()] = path.stat().st_size
+    except OSError:
+        return False
+    return actual == expected
 
 
 def cmd_list(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> None:
-    items = manifests(rclone, settings)
+    items = catalog_snapshot(settings, rclone)["items"]
     if args.json:
-        output = []
-        for item in items:
-            enriched = dict(item)
-            enriched["local"] = local_object_path(settings, item).exists()
-            output.append(enriched)
-        print(json.dumps(output, indent=2, sort_keys=True))
+        print(json.dumps(items, indent=2, sort_keys=True))
         return
-    print(f"{'ID':36} {'CATEGORY':10} {'SIZE':>10}  {'LOCAL':5}  TITLE")
+    print(f"{'ID':36} {'CATEGORY':10} {'SIZE':>10}  {'STATE':12}  TITLE")
     for item in items:
-        present = "yes" if local_object_path(settings, item).exists() else "no"
         print(
             f"{item['id'][:36]:36} {item['category'][:10]:10} "
-            f"{human_bytes(item['size_bytes']):>10}  {present:5}  {item['title']}"
+            f"{human_bytes(item['size_bytes']):>10}  {item['state']:12}  {item['title']}"
         )
+        if item["error"]:
+            print(f"  {item['error']}")
 
 
 def cmd_status(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> None:
-    items = manifests(rclone, settings)
-    remote_bytes = sum(int(item["size_bytes"]) for item in items)
-    local_items = [item for item in items if local_object_path(settings, item).exists()]
-    local_bytes = sum(int(item["size_bytes"]) for item in local_items)
-    settings.local_root.mkdir(parents=True, exist_ok=True)
-    free_bytes = shutil.disk_usage(settings.local_root).free
-    transfers = list(settings.staging_root.glob("*.partial")) if settings.staging_root.exists() else []
-    failure_root = settings.state_root / "failures"
-    failures = list(failure_root.glob("*.json")) if failure_root.exists() else []
-    status = {
-        "remote_items": len(items),
-        "remote_bytes": remote_bytes,
-        "local_items": len(local_items),
-        "local_bytes": local_bytes,
-        "local_free_bytes": free_bytes,
-        "transfers_in_progress": len(transfers),
-        "recorded_failures": len(failures),
-    }
+    status = catalog_snapshot(settings, rclone)
     if args.json:
         print(json.dumps(status, indent=2, sort_keys=True))
         return
     for key, value in status.items():
+        if key == "items":
+            continue
         if key.endswith("_bytes"):
             print(f"{key.replace('_', ' '):24} {human_bytes(value)}")
         else:
@@ -382,45 +632,78 @@ def cmd_status(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> 
 
 
 def cmd_pull(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> None:
-    manifest = resolve(manifests(rclone, settings), args.item)
-    final = local_object_path(settings, manifest)
-    if final.exists():
-        verify_local(final, manifest)
-        write_state(settings, manifest, final)
-        print(f"already local and verified: {manifest['id']}")
-        return
-    settings.staging_root.mkdir(parents=True, exist_ok=True)
-    settings.local_root.mkdir(parents=True, exist_ok=True)
-    free = shutil.disk_usage(settings.local_root).free
-    required = int(manifest["size_bytes"]) + settings.min_free_bytes
-    if free < required:
-        raise CatalogError(
-            f"insufficient free space: need {human_bytes(required)}, have {human_bytes(free)}"
-        )
-    staging = confined(settings.staging_root / f"{manifest['id']}.partial", settings.staging_root)
-    staging.mkdir(parents=True, exist_ok=True)
-    source = remote_join(settings.remote, manifest["remote_path"])
-    try:
-        rclone.run(
-            "copy",
-            source,
-            str(staging),
-            "--immutable",
-            "--transfers",
-            str(settings.transfers),
-            "--checkers",
-            str(settings.checkers),
-            "--partial-suffix",
-            ".rclone-partial",
-        )
-        verify_local(staging, manifest)
-        final.parent.mkdir(parents=True, exist_ok=True)
-        os.replace(staging, final)
-        write_state(settings, manifest, final)
-    except Exception as exc:
-        record_failure(settings, "pull", manifest["id"], exc)
-        raise
-    print(f"pulled and verified: {manifest['id']} -> {final}")
+    with cache_lock(settings, rclone) as lock:
+        manifest = resolve(manifests(rclone, settings), args.item)
+        with cache_operation(settings, "pull", manifest["id"], lock) as update:
+            final = local_object_path(settings, manifest)
+            if final.exists():
+                update("verifying existing local copy")
+                verify_local(final, manifest)
+                write_state(settings, manifest, final)
+                remove_staging(settings, manifest["id"])
+                print(f"already local and verified: {manifest['id']}", flush=True)
+                return
+            settings.staging_root.mkdir(parents=True, exist_ok=True)
+            settings.local_root.mkdir(parents=True, exist_ok=True)
+            if settings.staging_root.stat().st_dev != settings.local_root.stat().st_dev:
+                raise CatalogError("staging and local library must share a filesystem for atomic publication")
+            staging_path = settings.staging_root / f"{manifest['id']}.partial"
+            if staging_path.is_symlink():
+                raise CatalogError("staging object path is a symlink; refusing to alter it")
+            staging = confined(staging_path, settings.staging_root)
+            staging.mkdir(parents=True, exist_ok=True)
+            update("checking resumable staging")
+            reusable = prepare_staging(staging, manifest)
+            free = shutil.disk_usage(settings.local_root).free
+            required = int(manifest["size_bytes"]) - reusable + settings.min_free_bytes
+            if free < required:
+                raise CatalogError(
+                    f"insufficient free space: need {human_bytes(required)}, have {human_bytes(free)}"
+                )
+            source = remote_join(settings.remote, manifest["remote_path"])
+            update("downloading; transfer output appears in execution history")
+            rclone.run(
+                "copy", source, str(staging), "--immutable",
+                "--transfers", str(settings.transfers),
+                "--checkers", str(settings.checkers),
+                "--bwlimit", settings.bwlimit,
+                "--partial-suffix", ".rclone-partial",
+                "--stats", "10s", "--stats-one-line", "--stats-log-level", "NOTICE",
+                "--contimeout", "30s", "--timeout", "5m",
+            )
+            update("verifying SHA-256")
+            verify_local(staging, manifest)
+            update("publishing verified local copy")
+            final.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(staging, final)
+            write_state(settings, manifest, final)
+            print(f"pulled and verified: {manifest['id']} -> {final}", flush=True)
+
+
+def prepare_staging(staging: Path, manifest: dict[str, Any]) -> int:
+    """Keep verified files, remove damaged/unlisted local remnants for safe retry."""
+    expected = {entry["path"]: entry for entry in manifest["files"]}
+    reusable = 0
+    paths = list(staging.rglob("*"))
+    if any(path.is_symlink() for path in paths):
+        raise CatalogError("staging contains a symlink; refusing to follow or alter it")
+    for path in paths:
+        if not path.is_file():
+            continue
+        entry = expected.get(path.relative_to(staging).as_posix())
+        if entry and path.stat().st_size == entry["size_bytes"] and sha256_file(path) == entry["sha256"]:
+            reusable += entry["size_bytes"]
+        else:
+            confined(path, staging).unlink()
+    return reusable
+
+
+def remove_staging(settings: Settings, item_id: str) -> None:
+    staging = settings.staging_root / f"{safe_id(item_id)}.partial"
+    if staging.is_symlink():
+        raise CatalogError("staging object path is a symlink; refusing to alter it")
+    if staging.exists():
+        shutil.rmtree(confined(staging, settings.staging_root))
 
 
 def load_local_records(settings: Settings) -> list[dict[str, Any]]:
@@ -431,6 +714,8 @@ def load_local_records(settings: Settings) -> list[dict[str, Any]]:
     for path in sorted(root.glob("*.json")):
         try:
             value = json.loads(path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            continue  # A concurrent eviction removed this record after listing.
         except (OSError, json.JSONDecodeError) as exc:
             raise CatalogError(f"invalid local state file {path}: {exc}") from exc
         validate_manifest(value)
@@ -439,16 +724,19 @@ def load_local_records(settings: Settings) -> list[dict[str, Any]]:
 
 
 def cmd_evict(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> None:
-    del rclone
-    manifest = resolve(load_local_records(settings), args.item)
-    final = local_object_path(settings, manifest)
-    if final.exists():
-        confined(final, settings.local_root)
-        shutil.rmtree(final)
-    record = local_record_path(settings, manifest["id"])
-    if record.exists():
-        record.unlink()
-    print(f"evicted local copy only: {manifest['id']}")
+    with cache_lock(settings, rclone) as lock:
+        manifest = resolve(load_local_records(settings), args.item)
+        with cache_operation(settings, "evict", manifest["id"], lock) as update:
+            final = local_object_path(settings, manifest)
+            update("removing local copy; canonical remote copy remains")
+            if final.exists():
+                confined(final, settings.local_root)
+                shutil.rmtree(final)
+            remove_staging(settings, manifest["id"])
+            record = local_record_path(settings, manifest["id"])
+            if record.exists():
+                record.unlink()
+            print(f"evicted local copy only: {manifest['id']}", flush=True)
 
 
 def cmd_promote(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> None:
@@ -498,6 +786,8 @@ def cmd_promote(args: argparse.Namespace, settings: Settings, rclone: Rclone) ->
                 str(settings.transfers),
                 "--checkers",
                 str(settings.checkers),
+                "--bwlimit",
+                settings.bwlimit,
             )
             rclone.run("check", str(source), incoming_data, "--download", "--one-way")
             rclone.run("moveto", incoming_data, final_data, "--immutable")
@@ -510,6 +800,7 @@ def cmd_promote(args: argparse.Namespace, settings: Settings, rclone: Rclone) ->
             rclone.run("copyto", str(local_manifest), final_manifest, "--immutable")
         if args.delete_local:
             shutil.rmtree(source)
+        resolve_failures(settings, item_id)
     except Exception as exc:
         record_failure(settings, "promote", item_id, exc)
         raise

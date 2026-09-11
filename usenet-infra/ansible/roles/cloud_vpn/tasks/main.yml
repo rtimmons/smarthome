@@ -1,0 +1,240 @@
+---
+- name: Require the reviewed Ubuntu VPN target and explicit configuration
+  ansible.builtin.assert:
+    that:
+      - ansible_facts['distribution'] == 'Ubuntu'
+      - ansible_facts['distribution_release'] == 'resolute'
+      - cloud_vpn_service_ip | default('') | length > 0
+      - cloud_vpn_service_cidr | default('') | length > 0
+      - cloud_vpn_lan_cidr | default('') | length > 0
+      - cloud_vpn_peer_ip | default('') | length > 0
+      - cloud_vpn_local_ip | default('') | length > 0
+      - cloud_vpn_psk_source | default('') | length > 0
+    fail_msg: Configure the reviewed IPv4 selectors, endpoints, and private PSK source first.
+
+- name: Inspect the private PSK source on the controller
+  ansible.builtin.stat:
+    path: "{{ cloud_vpn_psk_source }}"
+    follow: false
+  delegate_to: localhost
+  become: false
+  register: cloud_vpn_psk_stat
+  no_log: true
+
+- name: Require a private regular file containing the literal 64-character hex PSK
+  ansible.builtin.assert:
+    that:
+      - cloud_vpn_psk_stat.stat.exists
+      - cloud_vpn_psk_stat.stat.isreg
+      - not cloud_vpn_psk_stat.stat.islnk
+      - cloud_vpn_psk_stat.stat.mode == '0600'
+      - lookup('ansible.builtin.file', cloud_vpn_psk_source) | trim is match('^[a-fA-F0-9]{64}$')
+    fail_msg: The PSK source must be a mode-0600 regular file containing 64 hexadecimal characters.
+  no_log: true
+
+- name: Create root-owned VPN configuration and helper directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+  loop:
+    - /etc/usenet-vpn
+    - /usr/local/libexec/usenet-vpn
+
+- name: Install the narrow VPN network helper
+  ansible.builtin.copy:
+    src: vpn-network.py
+    dest: /usr/local/libexec/usenet-vpn/vpn-network.py
+    owner: root
+    group: root
+    mode: "0500"
+  register: cloud_vpn_network_helper
+
+- name: Install the VPN loader that verifies the configured connection
+  ansible.builtin.copy:
+    src: load-vpn.py
+    dest: /usr/local/libexec/usenet-vpn/load-vpn.py
+    owner: root
+    group: root
+    mode: "0500"
+  register: cloud_vpn_loader
+
+- name: Render the non-secret network policy
+  ansible.builtin.template:
+    src: network.json.j2
+    dest: /etc/usenet-vpn/network.json
+    owner: root
+    group: root
+    mode: "0600"
+  register: cloud_vpn_network_config
+
+- name: Validate all network selectors before installing or enabling the VPN
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - /usr/local/libexec/usenet-vpn/vpn-network.py
+      - validate
+      - /etc/usenet-vpn/network.json
+  changed_when: false
+
+- name: Refuse a competing legacy IPsec daemon
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/systemctl
+      - is-active
+      - strongswan-starter.service
+  register: cloud_vpn_legacy_service
+  changed_when: false
+  failed_when: cloud_vpn_legacy_service.rc not in [3, 4]
+
+- name: Install only Ubuntu's supported systemd IPsec packages
+  ansible.builtin.apt:
+    name:
+      - charon-systemd
+      - strongswan-swanctl
+      - iptables
+      - iproute2
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    # Do not let package postinst start an unconfigured daemon.
+    policy_rc_d: 101
+
+- name: Read the installed strongSwan package version
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/dpkg-query
+      - --show
+      - --showformat=${Version}
+      - charon-systemd
+  register: cloud_vpn_package_version
+  changed_when: false
+
+- name: Require the Ubuntu security fix or a newer distribution release
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/dpkg
+      - --compare-versions
+      - "{{ cloud_vpn_package_version.stdout }}"
+      - ge
+      - 6.0.4-1ubuntu3.1
+  changed_when: false
+
+- name: Install the root-only IPsec connection and credential configuration
+  ansible.builtin.template:
+    src: swanctl.conf.j2
+    dest: /etc/usenet-vpn/swanctl.conf
+    owner: root
+    group: root
+    mode: "0600"
+  register: cloud_vpn_swanctl_config
+  no_log: true
+  diff: false
+
+- name: Allow the confined VPN loader to read only its managed configuration
+  ansible.builtin.blockinfile:
+    path: /etc/apparmor.d/local/usr.sbin.swanctl
+    create: true
+    owner: root
+    group: root
+    mode: "0644"
+    marker: "# {mark} MANAGED USENET VPN CONFIGURATION"
+    block: |
+      /etc/usenet-vpn/swanctl.conf r,
+  register: cloud_vpn_apparmor
+
+- name: Reload the enforced swanctl profile before loading the VPN configuration
+  ansible.builtin.command:
+    argv:
+      - /usr/sbin/apparmor_parser
+      - --replace
+      - /etc/apparmor.d/usr.sbin.swanctl
+  when: cloud_vpn_apparmor.changed
+
+- name: Create the IPsec systemd override directory
+  ansible.builtin.file:
+    path: /etc/systemd/system/strongswan.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Install the VPN address and policy units
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - usenet-vpn-firewall.service
+    - usenet-vpn-address.service
+  register: cloud_vpn_network_units
+
+- name: Require fail-closed protection before IPsec startup
+  ansible.builtin.template:
+    src: strongswan-override.conf.j2
+    dest: /etc/systemd/system/strongswan.service.d/usenet-vpn.conf
+    owner: root
+    group: root
+    mode: "0644"
+  register: cloud_vpn_strongswan_unit
+
+- name: Permit IKE and encapsulated ESP only from the configured home endpoint
+  community.general.ufw:
+    rule: allow
+    port: "{{ item }}"
+    proto: udp
+    from_ip: "{{ cloud_vpn_peer_ip }}/32"
+    comment: Managed Usenet VPN endpoint
+  loop:
+    - "500"
+    - "4500"
+
+- name: Reload the reviewed VPN service definitions
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+  when: cloud_vpn_network_units.changed or cloud_vpn_strongswan_unit.changed
+
+- name: Install and persist the firewall before assigning any service address
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - /usr/local/libexec/usenet-vpn/vpn-network.py
+      - firewall
+      - /etc/usenet-vpn/network.json
+  changed_when: cloud_vpn_network_config.changed or cloud_vpn_network_helper.changed
+
+- name: Enable the ordered VPN firewall and private address
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    enabled: true
+    state: started
+  loop:
+    - usenet-vpn-firewall.service
+    - usenet-vpn-address.service
+
+- name: Start the systemd IPsec daemon
+  ansible.builtin.systemd_service:
+    name: strongswan.service
+    enabled: true
+    state: started
+
+- name: Reload connection definitions after a private configuration change
+  ansible.builtin.systemd_service:
+    name: strongswan.service
+    state: reloaded
+  when: >-
+    cloud_vpn_swanctl_config.changed or cloud_vpn_strongswan_unit.changed
+    or cloud_vpn_apparmor.changed or cloud_vpn_loader.changed
+  no_log: true
+
+- name: Verify that the expected connection and child are loaded in the running daemon
+  ansible.builtin.command:
+    argv:
+      - /usr/bin/python3
+      - /usr/local/libexec/usenet-vpn/load-vpn.py
+      - check
+  changed_when: false

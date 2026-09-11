@@ -9,7 +9,9 @@
     - .env.example
     - README.md
     - Dockerfile.catalog
+    - Dockerfile.dashboard
     - catalog-run
+    - olivetin/config.yaml
 
 - name: Require complete QNAP deployment inputs
   ansible.builtin.assert:
@@ -23,9 +25,11 @@
       - qnap_storagebox_user | length > 0
       - qnap_storagebox_private_key_source | length > 0
       - qnap_storagebox_known_hosts_source | length > 0
+      - qnap_dashboard_auth_source | length > 0
     fail_msg: >-
       QNAP Compose/build sources or the Storage Box read-only subaccount
-      host/user and ignored local key/known_hosts paths are missing.
+      host/user, ignored local key/known_hosts, or dashboard authentication
+      inputs are missing.
   no_log: true
 
 - name: Check the Storage Box private key on the controller
@@ -54,14 +58,36 @@
       missing. No credentials were written to QNAP.
   no_log: true
 
+- name: Check the dashboard authentication file on the controller
+  ansible.builtin.stat:
+    path: "{{ qnap_dashboard_auth_source }}"
+  delegate_to: localhost
+  register: qnap_dashboard_auth_stat
+  no_log: true
+
+- name: Require private dashboard authentication before publishing a port
+  ansible.builtin.assert:
+    that:
+      - qnap_dashboard_auth_stat.stat.exists
+      - qnap_dashboard_auth_stat.stat.isreg
+      - qnap_dashboard_auth_stat.stat.mode == '0600'
+    fail_msg: >-
+      Generate the ignored mode-0600 dashboard authentication file first.
+      The dashboard will also validate its username and Argon2id hash at startup.
+  no_log: true
+
 - name: Create QNAP application directories as the dedicated account
   ansible.builtin.raw: |
+    set -eu
     qnap_changed=0
     if test ! -d {{ item.path | quote }}; then
       mkdir -p {{ item.path | quote }}
       qnap_changed=1
     fi
-    chmod {{ item.mode | quote }} {{ item.path | quote }}
+    if test "$(stat -c '%a' {{ item.path | quote }})" != {{ (item.mode | regex_replace('^0+', '')) | quote }}; then
+      chmod {{ item.mode | quote }} {{ item.path | quote }}
+      qnap_changed=1
+    fi
     if test "$qnap_changed" -eq 1; then
       echo ANSIBLE_CHANGED
     fi
@@ -78,6 +104,18 @@
       mode: "0750"
     - path: "{{ qnap_catalog_state_dir }}"
       mode: "0750"
+    - path: "{{ qnap_docker_config_dir }}"
+      mode: "0700"
+    - path: "{{ qnap_dashboard_config_dir }}"
+      mode: "0750"
+    - path: "{{ qnap_dashboard_state_dir }}"
+      mode: "0700"
+    - path: "{{ qnap_dashboard_state_dir }}/generated"
+      mode: "0700"
+    - path: "{{ qnap_dashboard_state_dir }}/runtime"
+      mode: "0700"
+    - path: "{{ qnap_dashboard_auth_file | dirname }}"
+      mode: "0700"
     - path: "{{ qnap_catalog_cache_dir }}"
       mode: "0750"
     # Nested staging makes catalog-pull's final os.replace stay on one filesystem.
@@ -88,13 +126,23 @@
 
 - name: Transfer QNAP Compose, build, script, and schema files
   ansible.builtin.raw: |
+    set -eu
     desired_hash={{ qnap_payload_sha256 | quote }}
     current_hash=$(sha256sum {{ item.dest | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    qnap_changed=0
     if test "$current_hash" != "$desired_hash"; then
       umask 077
       printf '%s' {{ qnap_payload_b64 | quote }} | base64 -d > {{ (item.dest ~ '.ansible') | quote }}
       chmod {{ item.mode | quote }} {{ (item.dest ~ '.ansible') | quote }}
+      test "$(sha256sum {{ (item.dest ~ '.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
       mv -f {{ (item.dest ~ '.ansible') | quote }} {{ item.dest | quote }}
+      qnap_changed=1
+    fi
+    if test "$(stat -c '%a' {{ item.dest | quote }})" != {{ (item.mode | regex_replace('^0+', '')) | quote }}; then
+      chmod {{ item.mode | quote }} {{ item.dest | quote }}
+      qnap_changed=1
+    fi
+    if test "$qnap_changed" -eq 1; then
       echo ANSIBLE_CHANGED
     fi
   vars:
@@ -116,6 +164,12 @@
     - src: "{{ qnap_compose_source_dir }}/Dockerfile.catalog"
       dest: "{{ qnap_deploy_dir }}/Dockerfile.catalog"
       mode: "0640"
+    - src: "{{ qnap_compose_source_dir }}/Dockerfile.dashboard"
+      dest: "{{ qnap_deploy_dir }}/Dockerfile.dashboard"
+      mode: "0640"
+    - src: "{{ qnap_compose_source_dir }}/olivetin/config.yaml"
+      dest: "{{ qnap_dashboard_config_dir }}/config.yaml"
+      mode: "0640"
     - src: "{{ qnap_compose_source_dir }}/catalog-run"
       dest: "{{ qnap_deploy_dir }}/catalog-run"
       mode: "0750"
@@ -134,6 +188,9 @@
     - src: "{{ usenet_project_root }}/scripts/catalogctl.py"
       dest: "{{ qnap_catalog_scripts_dir }}/catalogctl.py"
       mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/catalog-dashboard.py"
+      dest: "{{ qnap_catalog_scripts_dir }}/catalog-dashboard.py"
+      mode: "0750"
     - src: "{{ usenet_project_root }}/scripts/healthcheck"
       dest: "{{ qnap_catalog_scripts_dir }}/healthcheck"
       mode: "0750"
@@ -149,13 +206,23 @@
 
 - name: Render and transfer the host-specific QNAP environment
   ansible.builtin.raw: |
+    set -eu
     desired_hash={{ qnap_env_sha256 | quote }}
     current_hash=$(sha256sum {{ (qnap_deploy_dir ~ '/.env') | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    qnap_changed=0
     if test "$current_hash" != "$desired_hash"; then
       umask 077
       printf '%s' {{ qnap_env_b64 | quote }} | base64 -d > {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }}
       chmod 0600 {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
       mv -f {{ (qnap_deploy_dir ~ '/.env.ansible') | quote }} {{ (qnap_deploy_dir ~ '/.env') | quote }}
+      qnap_changed=1
+    fi
+    if test "$(stat -c '%a' {{ (qnap_deploy_dir ~ '/.env') | quote }})" != 600; then
+      chmod 0600 {{ (qnap_deploy_dir ~ '/.env') | quote }}
+      qnap_changed=1
+    fi
+    if test "$qnap_changed" -eq 1; then
       echo ANSIBLE_CHANGED
     fi
   vars:
@@ -166,15 +233,54 @@
   changed_when: "'ANSIBLE_CHANGED' in qnap_env_result.stdout"
   no_log: true
 
+- name: Transfer the dashboard username and password hash privately
+  ansible.builtin.raw: |
+    set -eu
+    desired_hash={{ qnap_dashboard_auth_sha256 | quote }}
+    current_hash=$(sha256sum {{ qnap_dashboard_auth_file | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    qnap_changed=0
+    if test "$current_hash" != "$desired_hash"; then
+      umask 077
+      printf '%s' {{ qnap_dashboard_auth_b64 | quote }} | base64 -d > {{ (qnap_dashboard_auth_file ~ '.ansible') | quote }}
+      chmod 0600 {{ (qnap_dashboard_auth_file ~ '.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_dashboard_auth_file ~ '.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
+      mv -f {{ (qnap_dashboard_auth_file ~ '.ansible') | quote }} {{ qnap_dashboard_auth_file | quote }}
+      qnap_changed=1
+    fi
+    if test "$(stat -c '%a' {{ qnap_dashboard_auth_file | quote }})" != 600; then
+      chmod 0600 {{ qnap_dashboard_auth_file | quote }}
+      qnap_changed=1
+    fi
+    if test "$qnap_changed" -eq 1; then
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_dashboard_auth_payload: "{{ lookup('ansible.builtin.file', qnap_dashboard_auth_source, rstrip=false) }}"
+    qnap_dashboard_auth_b64: "{{ qnap_dashboard_auth_payload | b64encode }}"
+    qnap_dashboard_auth_sha256: "{{ qnap_dashboard_auth_payload | hash('sha256') }}"
+  register: qnap_dashboard_auth_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_dashboard_auth_result.stdout"
+  no_log: true
+
 - name: Transfer the Storage Box private key
   ansible.builtin.raw: |
+    set -eu
     desired_hash={{ qnap_secret_sha256 | quote }}
     current_hash=$(sha256sum {{ qnap_storagebox_key_file | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    qnap_changed=0
     if test "$current_hash" != "$desired_hash"; then
       umask 077
       printf '%s' {{ qnap_secret_b64 | quote }} | base64 -d > {{ (qnap_storagebox_key_file ~ '.ansible') | quote }}
       chmod 0600 {{ (qnap_storagebox_key_file ~ '.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_storagebox_key_file ~ '.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
       mv -f {{ (qnap_storagebox_key_file ~ '.ansible') | quote }} {{ qnap_storagebox_key_file | quote }}
+      qnap_changed=1
+    fi
+    if test "$(stat -c '%a' {{ qnap_storagebox_key_file | quote }})" != 600; then
+      chmod 0600 {{ qnap_storagebox_key_file | quote }}
+      qnap_changed=1
+    fi
+    if test "$qnap_changed" -eq 1; then
       echo ANSIBLE_CHANGED
     fi
   vars:
@@ -188,13 +294,23 @@
 
 - name: Transfer the verified Storage Box known_hosts file
   ansible.builtin.raw: |
+    set -eu
     desired_hash={{ qnap_known_hosts_sha256 | quote }}
     current_hash=$(sha256sum {{ qnap_storagebox_known_hosts_file | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    qnap_changed=0
     if test "$current_hash" != "$desired_hash"; then
       umask 077
       printf '%s' {{ qnap_known_hosts_b64 | quote }} | base64 -d > {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }}
       chmod 0644 {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
       mv -f {{ (qnap_storagebox_known_hosts_file ~ '.ansible') | quote }} {{ qnap_storagebox_known_hosts_file | quote }}
+      qnap_changed=1
+    fi
+    if test "$(stat -c '%a' {{ qnap_storagebox_known_hosts_file | quote }})" != 644; then
+      chmod 0644 {{ qnap_storagebox_known_hosts_file | quote }}
+      qnap_changed=1
+    fi
+    if test "$qnap_changed" -eq 1; then
       echo ANSIBLE_CHANGED
     fi
   vars:
@@ -208,13 +324,14 @@
 
 - name: Validate the QNAP Compose project
   ansible.builtin.raw: >-
-    cd {{ qnap_deploy_dir | quote }} && docker compose config --quiet
+    cd {{ qnap_deploy_dir | quote }} && {{ qnap_docker_command }} compose --ansi never --progress plain config --quiet
   changed_when: false
 
 - name: Check whether the pinned QNAP images already exist
   ansible.builtin.raw: >-
-    docker image inspect rclone/rclone:1.75.1 >/dev/null 2>&1 &&
-    docker image inspect usenet-catalog-tools:rclone-1.75.1-python-3.14.7 >/dev/null 2>&1
+    {{ qnap_docker_command }} image inspect rclone/rclone:1.75.1 >/dev/null 2>&1 &&
+    {{ qnap_docker_command }} image inspect usenet-catalog-tools:rclone-1.75.1-python-3.14.7 >/dev/null 2>&1 &&
+    {{ qnap_docker_command }} image inspect usenet-catalog-dashboard:olivetin-3000.19.0-rclone-1.75.1-python-3.14.7 >/dev/null 2>&1
   register: qnap_images_present
   changed_when: false
   failed_when: false
@@ -223,18 +340,34 @@
 - name: Pull and build QNAP images when inputs change or images are absent
   ansible.builtin.raw: >-
     cd {{ qnap_deploy_dir | quote }} &&
-    docker compose pull rclone &&
-    docker compose build --pull catalog
+    {{ qnap_docker_command }} compose --ansi never --progress plain pull --quiet rclone &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain build --pull catalog dashboard
   register: qnap_compose_build
   changed_when: true
   when:
     - qnap_start_compose | bool
     - qnap_file_result.changed or qnap_images_present.rc != 0
 
-- name: Start the QNAP service and wait for health
+- name: Smoke-test the selected images on this NAS before starting services
+  # OliveTin's version-only path deliberately exits 1; verify its exact output.
   ansible.builtin.raw: >-
     cd {{ qnap_deploy_dir | quote }} &&
-    docker compose up -d --wait rclone
+    {{ qnap_docker_command }} compose --ansi never --progress plain run --rm --no-deps --entrypoint /usr/local/bin/rclone catalog version &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain run --rm --no-deps --entrypoint python3 catalog
+    -c 'import os; assert os.getuid() > 0 and os.getgid() > 0; print("Non-root catalog runtime ready")' &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain run --rm --no-deps catalog --self-test &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain run --rm --no-deps catalog catalog-list --json &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain run --rm --no-deps --entrypoint /bin/sh dashboard
+    -c 'OliveTin -version 2>&1 | grep -F "version=\"3000.19.0\""'
+  changed_when: false
+  when: qnap_start_compose | bool
+
+- name: Start or recreate affected QNAP services and wait for health
+  ansible.builtin.raw: >-
+    cd {{ qnap_deploy_dir | quote }} &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain up -d --wait --wait-timeout 180
+    {{ '--force-recreate' if (qnap_file_result.changed or qnap_secret_result.changed or qnap_known_hosts_result.changed or qnap_dashboard_auth_result.changed) else '' }}
+    rclone dashboard
   register: qnap_compose_apply
   changed_when: >-
     (qnap_compose_apply.stdout ~ qnap_compose_apply.stderr)

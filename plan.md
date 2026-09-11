@@ -4,9 +4,230 @@ Do not merely give me instructions. Perform everything you reasonably can using 
 
 Keep this document updated as agents make progress.
 
+## Resume here — current handoff, September 11, 2026
+
+This section is authoritative over the chronological notes below. A new session
+should read this document and the repository's `AGENTS.md`, then begin the
+secrets-recovery work below. The infrastructure setup and LAN-access work are
+complete; do not repeat account creation, purchases, credential setup, diagnostic
+downloads, NAS bootstrap, or VPN provisioning. Use parallel agents for independent
+implementation, review, and validation. No previous chat or browser session is
+required to understand the next task.
+
+**Deletion safety: not ready.** The source checkpoint for this handoff is titled
+`feat(usenet): complete private LAN access and recovery handoff` on branch `usenet`.
+Live secrets, Terraform states, and verified encrypted backups remain in
+ignored local paths. The existing backup decryption identity is also local.
+Do not delete this checkout until the independent master-key recovery and
+clean-clone drill below pass. SOPS/master-key restoration is planned, not installed.
+
+### Live system and operating entry points
+
+| Component | Current verified state |
+| --- | --- |
+| Cloud | Hetzner `usenet-acquisition`, IPv4 `89.167.18.138`; Ubuntu 26.04; SABnzbd, Prowlarr, writer/catalog, private proxy and strongSwan |
+| Storage | BX11 canonical Storage Box; QNAP subaccount is server-enforced read-only; VM scratch and NAS cache are disposable |
+| NAS | `usenet-deploy@rynapqnap.local`, LAN `192.168.1.66`; QNAP TS-451D2/QTS 5.2.10.3577; UID:GID `1004:100` |
+| QNAP data | Application root `/share/Container/usenet`; cache `/share/Usenet/usenet-cache`; 100 GiB minimum free space |
+| UniFi | Cloud Key `192.168.1.180`, UniFi OS 5.1.31/Network 10.6.101; USG 3P `192.168.1.1`, firmware 4.4.57.5578372 |
+| Search | `http://10.77.0.1:19696/`: catalog credentials in browser popup, then existing Prowlarr Forms credentials |
+| Downloads | `http://10.77.0.1:18080/`: catalog credentials in browser popup |
+| Catalog/cache | `http://192.168.1.66:1337/`: existing dashboard login; explicit Download/Remove actions |
+
+The user confirmed both cloud UIs and the QNAP dashboard work. UniFi maintains
+the private route automatically; no workstation tunnel is needed. IPsec protects
+gateway-to-cloud traffic; these URLs still use HTTP within the trusted LAN.
+Home Assistant can link to them but does not carry the tunnel. Eweka is the only
+provider; **UsenetExpress is explicitly deferred until actual completion gaps
+justify it**. NZBGeek and NZBFinder Pro are paid, enabled and tested. Provider,
+indexer and application credentials stay in private forms/files, never chat.
+
+From repository root use `just usenet-test`, `just usenet-cloud-health`, and
+`just usenet-qnap-health`. Catalog reads use `just --justfile usenet-infra/Justfile
+--working-directory usenet-infra catalog-list` (or `catalog-status`). On this workstation `just` is
+`/opt/homebrew/bin/just`; use the repository runtime wrappers. The ignored
+`usenet-infra/.env` supplies exact SSH targets, dedicated identities and host pins.
+For a reviewed cloud command use `just --justfile usenet-infra/Justfile
+--working-directory usenet-infra --command ./scripts/cloud-command <arguments>`.
+Never fall back to arbitrary SSH-agent identities for cloud/NAS access.
+Ansible's actual deployment values are in ignored `usenet-infra/ansible/inventory.yml`.
+
+The legacy USG needs the checked-in `usenet-infra/unifi/config.gateway.json`
+installed on Cloud Key at `/data/unifi/data/sites/default/config.gateway.json`
+(`unifi:unifi`, 0644). The UI alone incorrectly generated IKEv1 and a printer
+tunnel. The override creates dedicated crypto groups, uses only main LAN
+`192.168.1.0/24` ↔ `10.77.0.0/30`, and disables the printer tunnel. Only cloud
+`10.77.0.1:18080/19696` is permitted. WAN is currently `100.1.188.109`; WAN or
+LAN/VLAN changes require selector/peer/firewall revalidation. See
+`usenet-infra/docs/lan-ui.md` for rebuild/rollback. Do not reboot the gateway or NAS.
+
+Cloud Key SSH uses the existing 1Password agent; do not export that private key.
+USG public-key login still fails; the existing UniFi-managed device login was
+used in memory for read-only inspection, with the preexisting pinned host key.
+Do not assume old browser handles, temporary SSH sockets, or ignored `build/`
+inspection scripts survive a fresh session. Cloud Key pin:
+`SHA256:mokbmi/Llxd7MGWd+/XUzBf4xHW8MNofYHkSrfUVfJI`; USG ED25519 pin:
+`SHA256:kMYrptArIjGa62CAcE/5RSvxwgZXXRqffFRkIdTnIMQ`. NAS approved first-use RSA
+pin: `SHA256:jXVysXlhzn80Tk2BYg8CGNkfMCqjCEpyu0PyyHJX5RA`. Preserve actual
+known-host files and reject unexpected changes. Home Assistant has its separate
+repository identity and mandatory failure procedure in `AGENTS.md`.
+
+### Acceptance and remaining limits
+
+Verified: official 100 MB Eweka diagnostic through canonical promotion and NAS
+download/hash/removal; QNAP read-only enforcement; dashboard authentication and
+restart persistence; isolated cloud/QNAP application restore drills; LAN login
+to both cloud UIs; anonymous denial; blocked backend/public ports; exact IKEv2
+selectors; explicit PFS14 rekey; automatic reconnection after cloud-only
+strongSwan restart; unchanged default route/old site VPN configuration; cloud
+Ansible repeat convergence with zero changes. The current Usenet suite has
+231 cases: 224 pass, seven opt-in skips; those seven proxy runtime cases also
+passed separately during implementation. Fresh closeout `just test` also passed:
+Talos 118 tests (11 slow deselected), grid dashboard 102, printer 225 including
+browser tests, snapshot 7, tinyurl 16, Sonos tests/builds, and all seven add-on
+container checks. Fresh `just usenet-test` passed all compilation, ShellCheck,
+JSON/YAML, three Ansible syntax checks and secret scans. Independent security
+review found no concrete commit blocker; this is not a guarantee against all
+vulnerabilities. Historical counts later in this file reflect earlier stages.
+
+Remaining independent work: encrypted off-checkout recovery (highest priority);
+manual-backup scheduling/retention after recovery is proven; optional LAN HTTPS
+and Home Assistant navigation/status; full machine replacement drills. The
+external public-IP test of NAS port 1337 was rejected by automatic approval
+review and still needs explicit approval; do not retry it under VPN authorization.
+SAB has seven historical setup/Direct Unpack warnings, with current storage,
+Prowlarr and catalog health passing. Legacy USG uses AES-256/HMAC-SHA1/DH14/PFS;
+replace with modern cryptography when hardware supports it. No secrets were reset
+to resolve the two-stage Prowlarr login.
+
+The work is on branch `usenet`, remote `origin` is
+`git@github.com:rtimmons/smarthome.git`. Only this task's `Justfile`, `plan.md`, and
+`usenet-infra/` changes belong in its commits. The unrelated untracked
+`grid-dashboard/ExpressServer/src/public/mobile-layout-mockups.html` is user work;
+preserve it separately before deleting the checkout. Do not silently commit or
+remove it. Ignored evidence is supplemental; the verified outcomes and backup
+paths/checksums necessary for recovery are recorded in this document.
+
+## Next phase — master-key secrets and clean-clone recovery
+
+Requested outcome: delete this checkout only after a fresh clone plus one
+independently held recovery master can restore the required secrets and retrieve
+state backups. Implement this next; do not claim the existing `.age` archives
+already meet that contract. Include the whole smarthome repository in the
+inventory, even if Usenet is the first migrated component.
+
+1. **Inventory before migration.** Build an explicit, reviewed allowlist from
+   ignored-file metadata and deployment references, never dump secret values.
+   Each entry needs an owner/service, exact restore destination, sensitivity,
+   mode, format, consumers, current backup/key dependency and rotation procedure.
+   Cover `.ssh/id_ed25519_codex_smarthome`, Home Assistant secret/configuration
+   inputs and other add-on credentials as well as the Usenet paths below. Do not
+   recursively encrypt the whole checkout, caches, SSH sockets or Downloads.
+
+   | Material | Current source / recovery requirement |
+   | --- | --- |
+   | Deployment inputs | `usenet-infra/.env`, `secrets/hetzner.env`, `ansible/inventory.yml`, `ansible/files/catalog.env`, `ansible/files/rclone.conf`; restore exact values but render checkout-relative paths for the new location |
+   | Dedicated identities | `usenet-infra/secrets/ssh/{cloud-admin,cloud-ui,qnap-admin,qnap-reader,storage-writer}` plus matching public keys; Home Assistant's root `.ssh/` identity is separate |
+   | Authentication | `secrets/dashboard-auth.json`, `secrets/unifi-cloud-vpn.psk`; provider/indexer and application secrets in live SAB/Prowlarr configuration and consistent database backups |
+   | Trust and topology | Verified cloud/QNAP/Storage Box `ansible/files/secrets/` host pins, NAS paths and UID/GID, cloud/storage resource IDs; omit untrusted `.candidate` files and expiring sockets |
+   | Terraform | Independent `usenet-infra/terraform/{cloud,storage}/terraform.tfstate` and live `.tfvars`; states include passwords, lineage and serial; preserve both roots and checked-in provider locks |
+   | Stateful backups | Verified cloud, QNAP, VPN, UniFi Network/System and actual USG/config-override archives listed below; canonical media remains on Storage Box |
+   | External identity | UniFi's 1Password-managed RSA key, human account passwords, MFA/recovery codes and Git access require an independent password-manager/account recovery path; never export them implicitly |
+
+2. **Use SOPS with a dedicated native age recovery identity.** Generate a random
+   X25519 age identity for recovery, independent of every SSH login key. The
+   operator saves the private identity outside this checkout and outside the
+   systems being recovered, with a second independently retrievable copy. Commit
+   only the public recipient and narrow `.sops.yaml` rules. A random age private
+   identity is the proposed master key, not an ordinary memorable password.
+   Pin and verify SOPS/age binaries in the bootstrap recipe. Prefer
+   `SOPS_AGE_KEY_FILE` pointing to the independently stored private file; support
+   the requested `SOPS_AGE_KEY` environment input for one process when needed.
+   Never store the master in repository `.env`, shell history, logs, CI artifacts,
+   or a vault decryptable only by that same master. Clear it from child
+   environments after the decryption step. A private prompt or password-manager
+   injection should avoid typing an actual key into a command line.
+
+3. **Track only the encrypted small vault.** Proposed path:
+   `usenet-infra/vault/`, outside the existing ignored `secrets/` directory, with
+   fully encrypted SOPS values and exact-byte binary handling for key/config
+   files. Keep all existing plaintext/state ignore rules. Extend the secret scan
+   with a narrowly scoped ciphertext exception that validates the SOPS envelope;
+   continue rejecting raw keys, tokens, plaintext `.env`/inventory/state and
+   accidental decrypted files. Do not enable automatic decrypted Git diffs.
+   Store a versioned restore manifest; path metadata should not contain secrets.
+
+4. **Break the current archive-key dependency before rotating anything.**
+   Existing cloud/VPN/UniFi/USG backups use the exact existing `cloud-admin`
+   private key; QNAP backups use the exact existing `qnap-admin` private key.
+   Escrow BOTH old identities under the new master, then prove the restored
+   identities authenticate and decrypt their respective retained archives.
+   Changing an SSH key must never destroy the only way to read an old backup.
+   Future backup helpers should accept the dedicated age public recipient
+   directly; deploy no private master to the VM, QNAP or controller. Keep old
+   decryption keys until all retained archives have a tested alternative path.
+
+5. **Make ciphertext independently retrievable.** Local ignored `backups/` is
+   insufficient. Select a versioned backup destination outside the workstation,
+   cloud VM, QNAP and canonical Storage Box; do not purchase a new service
+   without approval. Store retrieval credentials in the master-encrypted vault
+   and record archive location, revision, timestamp, recipient fingerprint,
+   ciphertext SHA-256 and expected content in a recovery manifest. Bootstrap
+   must not need credentials that exist only inside the archive it is fetching.
+   Capture consistent encrypted snapshots of BOTH Terraform states, preserving
+   lineage/serial and resource IDs, with no concurrent apply. Retain application
+   databases as verified backups rather than treating a static secrets vault as
+   an application backup. Exclude saved `.tfplan` files; regenerate fresh plans.
+   Publish the reviewed Git branch and verify its remote revision so re-cloning
+   actually retrieves the recovery implementation. Git/account access remains
+   an external prerequisite if the repository is private.
+
+6. **Implement safe, idempotent recipes.** Proposed commands (not present yet):
+   `just secrets-check`, `just secrets-restore`, `just secrets-run`,
+   `just recovery-capture`, `just recovery-verify`. Authenticate all ciphertext
+   before installation, validate schema/path allowlists, reject symlinks and
+   traversal, use private temporary directories, atomic writes, 0700 directories
+   and 0600 secret files. Refuse divergent existing files unless an explicit
+   restore/overwrite option was requested; preserve a recoverable prior version.
+   Never `source`/`eval` decrypted content; parse environment data and pass only
+   required values to each consumer. Prefer temporary file/descriptor delivery
+   for commands that need no persistent secret. Suppress subprocess output that
+   could contain secrets, and clean up on errors/signals. Rebuild local absolute
+   paths safely instead of restoring this workstation's checkout prefix.
+
+7. **Run the deletion-safety acceptance drill.** Use a new clone at a different
+   path with no access to original ignored files, ambient SSH agent, application
+   sessions or live services. Supply only the master and independently available
+   ciphertext (with documented Git/backup retrieval access). Restore all
+   allowlisted files, verify identity/public-key matches and permissions,
+   authenticate/decrypt every required archive, check SQLite integrity, and
+   start pinned application images with no network or published ports. Inspect
+   Terraform state offline; do not apply or destroy anything. Exercise missing
+   and wrong keys, tampering/truncation, missing archive, unsafe path, interrupted
+   restore, existing-file conflicts and cleanup. Use fixtures for failure cases;
+   never corrupt actual recovery material. Record sanitized hashes/counts and
+   the exact Git revision. Perform a second operator-led retrieval of the master
+   from its independent copy. Only then mark deleting the original checkout safe.
+
+8. **Add rotation and ongoing maintenance.** Add a new recipient, verify recovery,
+   update encrypted data-key recipients, then rotate SOPS data keys as appropriate.
+   Removing a recipient cannot revoke old Git revisions or archives already
+   obtained; a compromise also requires rotating the underlying service tokens,
+   passwords and SSH keys and updating their consumers. Keep MFA and human login
+   recovery in the password manager: password hashes preserve logins but cannot
+   recover the original password. Schedule capture/verification/retention only
+   after this workflow passes; record freshness and failed-backup alerts.
+
+Official references checked for this design:
+[SOPS age identities](https://getsops.io/docs/usage/identities/age/),
+[SOPS formats](https://getsops.io/docs/reference/),
+[process integration](https://getsops.io/docs/usage/advanced/),
+[key management](https://getsops.io/docs/usage/key-management/),
+[age usage](https://github.com/FiloSottile/age#usage).
+
 ## Implementation progress
 
-Last updated: 2026-09-10
+Last updated: 2026-09-11
 
 - [x] Dedicated `usenet` branch and implementation plan created.
 - [x] Cold-state repository review completed; implementation lives in `usenet-infra/`.
@@ -25,10 +246,205 @@ Last updated: 2026-09-10
       Prowlarr containers; connect and verify Storage Box writer access.
 - [x] Install the QNAP reader public key and prove with a disposable sentinel that
       the server-enforced read-only subaccount can read but cannot overwrite/delete.
-- [ ] Provision Usenet provider/indexer accounts and complete their application setup.
-- [ ] Reconnoiter and bootstrap the QNAP without disturbing existing services.
-- [ ] Add and validate the authenticated, LAN-only catalog dashboard on the QNAP.
-- [ ] Run the authorized end-to-end test and complete the handoff documentation.
+- [x] Provision Usenet provider/indexer accounts and complete their application setup.
+- [x] Eweka credentials saved privately; primary configuration and authenticated
+      SABnzbd server test independently verified.
+- [x] SABnzbd scratch paths, 30 GiB reserves, repair/unpack defaults, and disabled
+      automatic scripts/watched folders applied and read back successfully.
+- [x] Official SABnzbd 100 MB NNTP diagnostic downloaded through Eweka, verified,
+      unpacked, and promoted to the canonical Storage Box with provenance.
+- [x] Implement manual encrypted service-configuration backup; capture the live
+      cloud settings and verify their off-VM archive and database integrity.
+- [x] NZBGeek account created and $12 USD one-year purchase confirmed by the
+      user; active membership and September 13, 2027 expiry verified in the account.
+- [x] NZBGeek API key saved privately; enabled Prowlarr entry and live API test
+      independently verified with strict certificate validation.
+- [x] Prowlarr's internal SABnzbd connection configured, saved-credential test
+      passed, and repeat configuration verified to make no changes.
+- [x] Reconnoiter and bootstrap the QNAP without disturbing existing services.
+- [x] Implement and locally verify the authenticated OliveTin dashboard,
+      shared catalog backend, and reproducible QNAP deployment integration.
+- [x] Add and validate the authenticated catalog dashboard on the QNAP's private LAN address.
+- [x] Run the authorized end-to-end test and document the implemented system.
+- [ ] Complete the external dashboard reachability test; explicit approval pending.
+- [x] Make cloud search/download UIs available by default on the LAN; UniFi VPN,
+      automatic recovery, and user logins to both SABnzbd and Prowlarr verified.
+
+LAN access architecture review (2026-09-10): the repository's August 31 network
+inventory identifies a USG 3P gateway and a separate Cloud Key Gen2 Plus, with an
+existing IPsec site-to-site connection. Prefer evaluating a narrowly scoped
+UniFi-to-cloud IPsec connection for permanent LAN routing. Native UniFi WireGuard
+client requires a next-generation gateway, and Site Magic excludes legacy USG
+models; do not assume these features from the UniFi brand alone. Home Assistant
+can provide navigation and SABnzbd status after connectivity exists. QNAP remains
+the storage/cache host; an application-only NAS tunnel is a fallback if the
+supported USG configuration is impractical.
+
+The user authorized proceeding, and private SSH authorization is now restored.
+Live checks confirm UniFi OS 5.1.31, Network 10.6.101, USG 3P firmware
+4.4.57.5578372, Default LAN 192.168.1.0/24, printer 192.168.6.0/24, existing
+remote site 192.168.8.0/24, and no static routes. The saved UniFi VPN
+`usenet-cloud-ui` is restricted to Default through the verified override below. The controller rejects a /32 remote
+subnet, so it uses 10.77.0.0/30; only 10.77.0.1 is assigned on the cloud VM,
+with authenticated private ports 18080 (SABnzbd) and 19696 (Prowlarr).
+
+The supported UI offers IKEv2/AES-256 but only SHA1 or MD5. The deliberate
+compatibility configuration uses SHA-1 exclusively as HMAC in IKE/ESP,
+AES-256, DH14, PFS, a random 256-bit PSK, and no weak-algorithm fallback.
+strongSwan documents this option for systems without SHA-256. This legacy
+constraint and the future migration path are documented in
+`usenet-infra/docs/lan-ui.md`. Existing application loopback bindings, normal
+Internet routes, the other site VPN, and QNAP services remain unchanged.
+
+Pre-change backups are encrypted and authenticated-decryption/checksum verified:
+- Cloud: `usenet-infra/backups/cloud-20260911T001750Z-UCxzKhOY.tar.age`,
+  589 files, two SQLite databases, ciphertext SHA-256
+  `c7871385ec9de9d82530accd87b0384016298855b6bb5e64f143529bc0a8309d`.
+- UniFi Network: `usenet-infra/backups/unifi-network-20260911T004042Z.unf.age`;
+  original 71,344 bytes, plaintext SHA-256
+  `565f79f3b56eb17dc36249a9e82e4ff91257d18a0bee02627eceaa72bcca1062`.
+- Fresh all-applications System Config export:
+  `usenet-infra/backups/unifi-system-20260911T004201Z.unifi.age`;
+  original 210,752 bytes, plaintext SHA-256
+  `56b993411768f6727a474a2494c604d6698d9270d41dc7de5479c8fc31b056e3`.
+The exact System export in Downloads is retained with mode 0600. Evidence is
+under ignored `build/unifi-*-backup-*.json`; no 1Password private key was exported.
+
+The cloud firewall update is applied: only UDP500/4500 from the verified home
+WAN was added; existing rules were preserved, no resources created/destroyed.
+The new cloud_vpn/cloud_ui_proxy roles use root-owned /etc configuration,
+ordered persistent services, IPsec-policy checks, and exact local health-probe
+exceptions. The separate encrypted VPN backup covers four canonical root-owned
+configuration files. Full validation passed: 224 tests (217 passed, seven
+opt-in runtime cases skipped in the normal suite), compilation, ShellCheck,
+YAML/JSON, all three Ansible entry-point syntax checks, and secret scan. The
+seven actual proxy runtime cases also passed separately. Independent isolated
+Ubuntu/firewall tests verified first/repeat install, IPsec match syntax,
+protected local HTTP health, denied plaintext traffic, and UFW reload behavior.
+Cloud service deployment passed (42 tasks, 20 changed, zero failures); repeat
+convergence passed (39 tasks, zero changed, zero failures). All four VPN/proxy
+services are active. Verified listeners are only 10.77.0.1:18080/19696 and
+existing 127.0.0.1:8080/9696; both private endpoints return HTTP401 without
+credentials. Storage/Prowlarr/scratch health pass; SAB reports seven warnings
+identified as historical setup/Direct Unpack notices predating this change. The new four-file root configuration
+backup was encrypted and verified:
+`usenet-infra/backups/cloud-vpn-20260911T005548.069572Z.tar.age`,
+4,435 source bytes, ciphertext SHA-256
+`e72cb53f590cc9b8ae11455930531680bf358371506b6df28b181d7965eac27a`.
+Public IPv4 checks for 8080, 9696, 18080 and 19696 all timed out as expected;
+a fresh Terraform plan reports no changes. The original external NAS:1337
+reachability test remains separate and was not attempted.
+The user completed the private UniFi PSK entry/save on September 11. Live checks
+then found two issues that service-active checks had missed: Ubuntu AppArmor
+blocked swanctl's custom configuration path, and the USG received legacy IKEv1
+and both LAN selectors despite the UI's IKEv2/main-LAN settings. The cloud fix
+grants swanctl read access to exactly its root-only configuration and verifies
+that the connection, child, and credential actually load. The deployed loader
+uses the installed strongSwan 6.0.4 command syntax. All 231 tests run successfully
+(224 passed, seven opt-in skips), with the supplementary checks passing.
+
+A narrow controller override is deployed and verified at
+`usenet-infra/unifi/config.gateway.json`. It creates dedicated IKEv2/AES-256
+groups for only the new peer and disables its autogenerated printer tunnel.
+Before applying it, the live gateway configuration and exact UniFi VPN record
+were encrypted and verified in
+`usenet-infra/backups/usg-unifi-vpn-pre-fix-20260911T171125.028168Z.tar.age`
+(ciphertext SHA-256 `75666d0490f26fe83edb4f23d7d6976bb4f2955d015c9bf09cd8eaaaf88dba6c`).
+The actual gateway configuration now contains only the intended active new
+tunnel (192.168.1.0/24 to 10.77.0.0/30), with IKEv2, AES-256/HMAC-SHA1, DH14,
+and PFS14. The existing site VPN configuration is unchanged. Only the UniFi
+Network service was restarted; neither the gateway nor NAS was rebooted.
+Live cloud negotiation and increasing traffic counters passed. An explicit
+CHILD-SA rekey verified PFS14. Restarting only the cloud strongSwan service
+automatically restored the tunnel and private proxy, followed by successful
+LAN HTTP401 checks on both ports. Direct backend ports 8080/9696 time out.
+The workstation default route remains the UniFi gateway. Final cloud convergence
+passed with 42 tasks, zero changes, zero failures. The user confirmed both
+SABnzbd and Prowlarr open successfully. Prowlarr requires the catalog credentials
+in the browser popup, then its existing credentials on the Forms login page;
+using these two logins resolved the reported rejection. No credentials reset.
+
+The verified post-change encrypted backup is
+`usenet-infra/backups/usg-unifi-vpn-post-fix-20260911T173623.167151Z.tar.age`
+(ciphertext SHA-256 `b958a55ff27eebeaca973d96577011bb57c753df932271bab1dfa8f0e879752a`).
+It contains the actual gateway configuration (66,027 bytes), exact saved VPN
+record (1,204 bytes), and installed override (991 bytes), and passed authenticated
+decryption/checksum verification. Future LAN/VLAN or WAN changes require scope
+and peer-policy revalidation as documented in `usenet-infra/docs/lan-ui.md`.
+
+References: [UniFi IPsec](https://help.ui.com/hc/en-us/articles/360002426234-UniFi-Gateway-Site-to-Site-IPsec-VPN),
+[WireGuard requirements](https://help.ui.com/hc/en-us/articles/16357883221015-UniFi-Gateway-WireGuard-VPN-Client),
+[Site Magic compatibility](https://help.ui.com/hc/en-us/articles/16750417515159-UniFi-Gateway-Setting-Up-SD-WAN-with-UniFi-Site-Manager-and-Fabrics),
+[Home Assistant SABnzbd integration](https://www.home-assistant.io/integrations/sabnzbd/).
+
+Resume work on 2026-09-10 implemented the OliveTin dashboard, shared catalog
+operation/state safety, and QNAP deployment integration in parallel. The full
+local validation recipe now passes 153 unit tests, compilation, ShellCheck,
+JSON/YAML parsing, pinned Ansible syntax, and source/history secret checks.
+An additional 51 isolated Linux checks verified the rendered QNAP transfer
+templates' exact bytes, atomicity, idempotence, permission repair, failure
+handling, and private-address/path gates. Fresh read-only Terraform plans again
+report no changes for both protected states. Cloud health again passes Storage
+Box, SABnzbd, and scratch checks, with only the expected missing-indexer error.
+The private cloud UI tunnel was smoke-tested and closed afterward.
+
+An isolated arm64 container/browser test verified authentication, category search,
+generated item actions, SHA-256-verified download, explicit local-removal
+confirmation, canonical fixture preservation, and a throttled 16.5 MiB pull that
+continued after closing the browser. Container restart preserved the login
+session and execution history. The dashboard runs as a non-root numeric identity
+with a read-only root filesystem and no Docker socket. Its temporary test
+container is removed after validation.
+
+Eweka account existence and successful private credential entry were confirmed
+by the user on 2026-09-10. Its actual charged tier and renewal details have not
+been independently verified. Saved SABnzbd settings were independently checked:
+`news.eweka.nl`, TLS port 563, Strict certificate verification, 20 connections,
+enabled, priority 0, Required on, Optional off, and retention 0. The authenticated
+SABnzbd server test passed using the saved password without returning credentials.
+A separate VM connection verified TLS 1.3 and an NNTP 200 greeting. Primary
+Required pauses acquisition on primary connection failure to protect fill quota.
+The helper preserves existing credentials and quota and verifies saved settings.
+No password has been requested in chat. NAS access remains unconfigured. The new QNAP code
+has not been deployed to the NAS, and these isolated checks do not substitute
+for the required provider-to-NAS acceptance test. See
+`usenet-infra/docs/validation.md` for detailed evidence and remaining gates.
+
+SABnzbd now uses `/data/incomplete` and `/data/complete` on the intended VM
+scratch mounts, with `30G` free-space floors for both. Default processing is
+repair/unpack with archive cleanup; direct unpack, watched folders, and automatic
+scripts are disabled. The fresh wizard had not created any categories, so the
+helper initialized only `*` while the queue and post-processing were empty.
+All settings were read back with no remaining differences. Reconcile these
+non-secret defaults with `just usenet-sab-settings inspect` / `apply`.
+
+The official `https://sabnzbd.org/tests/test_download_100MB.nzb` diagnostic was
+submitted once with normal priority and a durable private receipt. SABnzbd
+reports completed, 107,455,358 downloaded bytes, successful verification and
+unpack stages, no failure, and the requested processing policy. Its one-second
+download counter is coarse evidence, not a formal throughput benchmark.
+The two resulting files were promoted and remotely byte-checked with zero
+differences under catalog ID `sabnzbd-official-100mb-2026-09-10`; its manifest
+records SHA-256 values and official-test provenance. Inspect the existing job
+with `just usenet-sab-smoke-test status`; `start` never re-enqueues an existing
+receipt. The actual NAS/dashboard and indexer acceptance remain pending;
+secondary-provider acceptance is deferred by the user's decision below.
+
+Manual configuration backup is now implemented and verified. The backup-only
+Ansible play installs pinned, checksum-verified age 1.3.2, the snapshot helper,
+and only the administrator's public encryption recipient, without restarting
+applications. `just usenet-backup-cloud` encrypted on the idle VM, transferred
+only ciphertext to the ignored workstation `usenet-infra/backups/` directory,
+and decrypted/verified 589 files and two SQLite databases in private temporary
+storage. The archive includes service credentials, Storage Box writer identity,
+catalog state, and remote manifests; bulk objects/downloads are excluded.
+Temporary plaintext was removed and the remote encrypted copy was removed only
+after verified local publication. The archive is
+`cloud-20260910T214707Z-NCk4sDjo.tar.age`, SHA-256
+`564a105201c8910b3448c791f061bc03e25fb611ac8a0fee5d8c4203c137d42b`.
+The backup deployment rerun had `changed=0`. Repeat the manual backup after
+remaining account configuration. Scheduling, QNAP backup, independent recovery
+of the decryption key, and a restored application startup drill remain pending.
 
 Material decisions made:
 
@@ -39,8 +455,10 @@ Material decisions made:
 - Start with the x86 CX43 (8 shared vCPU, 16 GB RAM, 160 GB NVMe); benchmark before
   paying for a much more expensive compute tier.
 - Pin SABnzbd 5.1.3, Prowlarr 2.5.2.5491, and rclone 1.75.1.
-- Keep Eweka as primary; retain UsenetExpress 500 GB as the proposed fill block only
-  after its checkout confirms one-time/non-expiring terms.
+- Pin OliveTin 3000.19.0; its image supports amd64/arm64, with actual NAS
+  compatibility still subject to preflight and image smoke tests.
+- Use Eweka alone initially. On 2026-09-10 the user deferred UsenetExpress
+  until/unless actual completion gaps establish a need for a fill provider.
 - Use NZBGeek plus NZBFinder because DrunkenSlug registration is closed.
 - Require deliberate manifest-backed promotion and server-enforced read-only QNAP
   credentials; no unattended acquisition path is enabled.
@@ -62,10 +480,10 @@ The VM accepts only the dedicated non-root administrator key, denies direct root
 and password login, and allows inbound SSH only from the currently approved
 source CIDR. SABnzbd and Prowlarr are container-healthy on VM loopback only.
 Ansible automatically reads their locally generated API keys into the protected
-health environment without printing or returning them. Storage Box access,
-catalog failure state, SABnzbd, and VM scratch checks pass. The health command's
-only current failure is expected: Prowlarr reports that no indexers are enabled
-because those accounts have not been purchased yet.
+health environment without printing or returning them. Earlier checks verified
+Storage Box access, catalog failure state, SABnzbd, and VM scratch. NZBGeek is
+now enabled; a fresh complete health report is being verified after updating
+credential-safe error handling.
 
 ### Cold-agent resume checkpoint
 
@@ -75,40 +493,202 @@ by reading this file and `usenet-infra/README.md`, then inspect the current Git
 and ignored local state. `just usenet-terraform-plan` should remain no-change;
 never apply a plan containing a destroy or replacement of the Storage Box.
 
-The next and only immediate human action is the Eweka signup/payment. Ask the
-user to create the verified 15-month Eweka unlimited offer: €104.85 prepaid
-(€6.99/month effective), recurring every 15 months unless checkout shows changed
-renewal terms, with 50 connections, TLS, and more than 6,597 days advertised
-retention as researched on 2026-09-10. Have the user complete payment/CAPTCHA/2FA
-privately and reply only that the account exists; never ask them to paste the
-password into chat. No Usenet provider, block account, or indexer purchase has
-yet been made.
+Eweka setup is complete and independently verified; do not ask for signup or
+credentials again. `just usenet-sab-provider inspect`, `configure`, and `test`
+inspect, reconcile, or test its existing saved server through the dedicated SSH
+identity. They return only approved non-secret fields. The recommended offer was
+€104.85 prepaid for 15 months, but the actual charge/renewal remains unverified.
+For subsequent private account entry, open `just usenet-cloud-ui` and use SABnzbd
+at `http://127.0.0.1:8080` or Prowlarr at `http://127.0.0.1:9696`.
 
-After Eweka exists, continue the one-account-at-a-time flow in section 4 and
-`usenet-infra/docs/account-setup.md`: configure Eweka in SABnzbd over TLS through
-an SSH-tunneled UI, then confirm the UsenetExpress block checkout before buying,
-then create/configure NZBGeek and NZBFinder in Prowlarr. Do not purchase anything
-without the user's explicit approval at the checkout decision.
+The user explicitly deferred UsenetExpress on 2026-09-10 until/unless needed.
+Use Eweka alone; a secondary provider is not a current purchase, setup, cost,
+or acceptance prerequisite. Revisit a fill block only after evidence of actual
+article availability/completion gaps, with fresh provider/terms research and a
+new purchase decision. Preserve Eweka's verified TLS/Required settings. Historical
+UsenetExpress research remains in account-setup.md for reference only.
 
-QNAP work is intentionally not started. An ignored dedicated `qnap-admin` keypair
-has been generated, but its public key is not installed on the NAS. Before QNAP
-reconnaissance, obtain from the user the exact dedicated Docker-capable
-`user@LAN-host`, have the user install that public key through the supported QNAP
-workflow, pin the verified NAS host key, and record the NAS data-share path and
-numeric UID/GID. Do not use the Storage Box `qnap-reader` key as the NAS login key.
+The provider and both indexer connections are complete. Continue with QNAP
+bootstrap below. NZBGeek is paid and active: the user completed the official
+$12 USD one-year Stripe checkout, and the account independently shows expiry
+2027-09-13 22:01:53 UTC. Do not ask for signup or payment again. Daily API/grab
+quotas and automatic rebilling remain unverified; the advertised 100 API results
+per request is pagination, not a daily quota.
+
+NZBGeek is now configured and enabled in Prowlarr. The user privately created
+Prowlarr's Forms login and saved the indexer key. The agent enabled the existing
+entry only after a successful credentialed API test, then verified saved state
+and retested. HTTPS, global strict certificate validation, priority 25, and
+unchanged/unset provider quotas are verified. No additional NZBGeek signup,
+payment, login-creation, or key-entry prompt is needed.
+`just usenet-prowlarr-indexer inspect`, `test`, and `enable` return only approved
+settings and connection outcomes; `prepare-disabled` preserves an existing entry.
+The internal SAB download-client connection is configured and independently
+verified. It uses `sabnzbd:8080` on the private Docker network and category
+`prowlarr` with repair/unpack, no script, and inherited normal priority. Only the
+literal `sabnzbd` was added to SAB's existing hostname allowlist, preserving its
+other entries. Candidate and persisted-credential tests passed; repeating
+configuration returned no changes. Use
+`just usenet-prowlarr-download-client inspect`, `test`, or `configure`.
+
+The latest encrypted backup is `cloud-20260910T225152Z-SIfVfDwC.tar.age`,
+SHA-256 `07df7ddf0ec8153b5ba5c99f458bce609c6439a2ff1bfd6b34a04c5b43d07088`;
+589 files and two SQLite databases verified. It includes the saved Prowlarr
+login, both indexer keys, rotated Prowlarr API key, SAB client, and hostname
+configuration, including the restored `direct_unpack=false` setting. Prior
+archives remain intact. Health reporting omits raw application/exception text and
+uses credential-safe request handling; the tested helper was deployed without
+restarting services. The tested catalog module was also installed atomically to
+satisfy the health helper imports; schema 1 is unchanged and no migration runs.
+All 159 tests and the complete Usenet validation recipe pass.
+
+The user confirmed NZBFinder signup and purchase of Pro on 2026-09-10.
+The authenticated home page independently showed Pro membership, advertised
+`$30/year` (`$2.50/month` equivalent), 20,000 API requests, unlimited downloads,
+and rolling 24-hour request counters. Dollar currency code, actual receipt,
+expiry, and automatic renewal remain unverified. Do not ask for signup or
+purchase again. NZBFinder's saved key, enabled entry ID 2, HTTPS, strict
+certificates, priority 25, and unset quotas are verified; its live API test
+passed. `just usenet-prowlarr-indexer enable nzbfinder` returned unchanged
+because the user had already enabled it. Both indexers were retested successfully
+after the internal Prowlarr API-key rotation. Do not read form values or emit full browser
+accessibility trees: Prowlarr RSS links embed its application API credential.
+
+Completed security follow-up: the browser tool's automatic Prowlarr page output
+included an RSS link containing the Prowlarr API credential. Do not repeat the
+link or credential. The supported ResetApiKey command rotated that application
+key; the old key now returns HTTP 401 and the new one HTTP 200. Its protected
+health environment reference was synchronized with mode 0640 and ownership
+preserved. Other XML settings were unchanged. Indexer/client tests and refreshed
+encrypted backup passed. No application restart was needed. Older backups must
+have their restored Prowlarr key rotated before use; prefer the latest archive.
+
+QNAP deployment and dashboard/CLI acceptance are complete. The user supplied the web address
+`https://rynapqnap.local/cgi-bin/`, then signed in privately in Firefox after the
+in-app browser rejected the NAS certificate. Use native Firefox controls via
+CUA; do not retry the in-app browser or change certificate trust. Observed:
+TS-451D2, QTS 5.2.10.3577, Intel Celeron J4025 (2 cores/2 threads), 4 GB RAM,
+Container Station 3.1.2.1742 and HybridMount 1.17.5691 are installed. Dedicated
+SSH access is enabled on port 22; Telnet remains disabled.
+
+The user approved and created `usenet-deploy`, description "Dedicated Usenet
+catalog deployment", with administrators/everyone membership; its enabled row
+was independently verified. QTS requires administrator membership for SSH.
+The password was entered privately and must not be inspected. Dedicated login,
+repository public-key installation, SSH enablement, host-key pinning, and NAS
+reconnaissance are complete; do not repeat those human setup requests.
+The user confirmed "NAS login ready" after applying SSH settings and signing in
+as `usenet-deploy`; that dedicated QTS login is independently verified. SSH now
+answers on port 22. Its SSH Keys page initially had zero keys. The Add form
+was completed by the user as `usenet-qnap-admin`. Its saved MD5 fingerprint
+`2d:be:d6:24:51:cb:0a:a6:e3:a0:c2:a3:1c:0e:e0:00` matches the repository public
+key. Keep the existing ED25519 key: official
+QTS 5.2.1 release notes added ED25519/ECDSA support; the form's RSA placeholder
+does not restrict modern QTS to RSA user keys.
+
+The workstation has no prior trusted `rynapqnap.local` known-host entry. The
+candidate public RSA host key (3072 bits) is in ignored
+`usenet-infra/ansible/files/secrets/qnap-known-hosts.candidate`; its fingerprint
+is `SHA256:jXVysXlhzn80Tk2BYg8CGNkfMCqjCEpyu0PyyHJX5RA`. The user explicitly
+authorized first-use trust for this exact key; this is user-approved TOFU, not
+independent console verification. The key is pinned in ignored mode-0600
+`qnap-known-hosts`; future changed keys must fail strict checking.
+The first dedicated public-key SSH login succeeded with no agent/password
+fallback: `usenet-deploy@rynapqnap.local`, UID 1004, primary GID 100, supplementary
+groups 0 (administrators) and 100. Kernel is Linux 5.10.60-qnap, x86_64. Protected
+workstation `.env` now has the exact target/key/known-hosts paths. A parallel
+agent completed read-only Docker, resource, and share reconnaissance. Container
+Station is 3.1.2.1742, Docker 27.1.2-qnap8, Compose 2.29.1-qnap2, overlay2, and
+memory/swap limits are supported. About 2 GB RAM is available. The only existing
+container is `iperf3-1`, using roughly 1 MiB RAM. Docker is absent from the SSH
+PATH; the preflight and recovery wrapper now discover its absolute executable
+through Container Station metadata, without changing the NAS PATH or symlinks.
+`just usenet-qnap-recon` repeats privacy-filtered read-only metadata checks.
+
+The dashboard login was created privately by the user; its ignored Argon2id
+authentication file and mode 0600 were verified without displaying credentials.
+The agent created the empty `Usenet` shared folder through QTS on `GPvQNAP`,
+with only `usenet-deploy` Read/Write, other listed users No Access, and guest
+access denied. `/share/Usenet` resolves to `/share/CACHEDEV2_DATA/Usenet`; that
+volume has about 1.37 TB free and is 69% used. The application directory
+`/share/Container/usenet` is precreated with owner 1004:100 and mode 0750 on the
+Scratch volume (about 42 GB free). No existing share or container was altered.
+Protected inventory now selects `/share/Usenet/usenet-cache`, a 100 GiB free-space
+floor, and the available LAN address `192.168.1.66:1337`. The read-only Storage
+Box credentials come from the existing protected Terraform outputs/key files.
+The first deployment transferred configuration but could not build images because
+Docker tried to write client state in QNAP's protected package home. The fix scopes
+Docker/Buildx state to `/share/Container/usenet/state/docker-client` (1004:100,
+0700), with no global NAS permission changes. The retry built both pinned images
+and passed actual x86_64 NAS image smoke tests; final service health is verified.
+The first authenticated refresh exposed an unsupported single-upstream rclone
+union. The deployment now uses the supported `catalog:` alias to the same
+server-enforced read-only subaccount; an alias is not itself a permission control.
+The fallback launcher also inherited QNAP ACL metadata through Docker COPY despite
+mode 0555. Its build now writes a fresh inode, and prestart checks exercise the
+real launcher plus a remote catalog listing. The combined deployment retry passed.
+The user signed into the dashboard successfully. Runtime checks verified UID/GID
+1004:100, no administrator supplementary groups, read-only container roots, dropped
+capabilities, no Docker socket, only LAN port 192.168.1.66:1337, no global IPv6,
+and unchanged preexisting iperf3 uptime. Actual kernel page size is 4096 bytes.
+The full validation recipe now passes 183 tests, including Mac system Bash 3.2
+compatibility for the fallback wrapper. Full dashboard/CLI acceptance with the
+already-promoted official test object passed; external reachability is unverified.
+The ignored dedicated `qnap-admin` keypair is installed and verified. Exact host,
+versions, shares, and numeric identity are recorded in the protected inventory.
+Do not use the Storage Box `qnap-reader` key as the NAS login key.
 Do not reboot the QNAP. The QNAP implementation must include the OliveTin dashboard
 described in sections 18-19; do not stop after making the fallback commands work.
 
 Last verified on 2026-09-10:
 
-- `just test` in `usenet-infra/` passes 10 unit tests, Python compilation,
+- The corrected QNAP deployment completed with 44 tasks successful, 3 changed,
+  zero failed. Dashboard and rclone are healthy; no existing services changed.
+- Live dashboard acceptance: category search found the official test item;
+  Download ran from 23:33:28 to 23:34:13 UTC, survived closing/reopening the browser,
+  and retained progress, SHA-256 verification, atomic publication, and Completed
+  output. Local state became 1 item / 95.4 MiB. Removal required the explicit
+  remote-preservation checkbox; it completed at 23:37:07 UTC, returning to
+  remote-only with zero local objects or transfer failures.
+- NAS direct reader access read a disposable writer-created sentinel; overwrite
+  and delete both failed with server SFTP SSH_FX_FAILURE, contents remained
+  unchanged, and the writer independently verified SHA-256 before exact cleanup.
+- The latest cloud backup passed isolated startup of both pinned applications,
+  saved-key API authentication, enabled indexers/client, Forms login, empty queue,
+  retained history, database integrity, and preserved credential/configuration
+  values. The drill had no network or published ports; temporary plaintext,
+  containers, and volumes were removed.
+- CLI parity passed with the dashboard stopped: list/status/pull/evict operated
+  through the shared backend. Both files (100,000,019 bytes) were independently
+  hashed locally and remotely before/after, and the canonical manifest SHA stayed
+  unchanged. Both services are healthy again, the login and completed output
+  survived restart, and the unrelated iperf3 container is unchanged.
+- Anonymous dashboard, entities, history, and action-detail API calls returned
+  HTTP 403. Both services use about 108 MiB combined RAM at idle. An external
+  reachability test still awaits explicit user approval after automatic approval
+  review rejected the public-IP probe; private binding is not proof against NAT.
+- Live QNAP encrypted backup captured and verified 32 files including dashboard
+  authentication, sessions, execution output/history, and reader credentials;
+  media and Docker build/client state are excluded. Archive:
+  `qnap-20260910T234609Z-gr0zzbi0.tar.age`, SHA-256
+  `6858b4a9127ce0860acb226fa3f7592ab1bcadfd50cd6bf607b59f284df78a20`.
+  Its isolated application-startup restore drill passed: all three persisted
+  results loaded, guest history was denied, and authentication/session bytes and
+  six history/output files were unchanged. Test containers, volumes, and private
+  plaintext were removed. This used an isolated arm64 runtime, not NAS replacement.
+
+- `just test` in `usenet-infra/` passes 183 unit tests, Python compilation,
   ShellCheck, JSON/YAML parsing, pinned Ansible syntax checking, and secret scan.
 - The cloud Ansible play converges with `changed=0` and proves a fresh non-root
   SSH login before retaining SSH hardening; managed UFW rules are reconciled.
 - The live read-only sentinel test allowed list/read, rejected overwrite/delete,
   preserved the SHA-256 hash, and the writer removed the disposable fixture.
-- `just usenet-cloud-health` reaches all configured systems; its nonzero exit is
-  expected only until at least one Prowlarr indexer is enabled.
+- Fresh cloud health exits successfully: Storage Box, catalog, Prowlarr, and
+  scratch checks pass. Seven retained SABnzbd warnings were classified as six
+  setup hostname refusals and one automatic Direct Unpack enablement notice;
+  there are no provider/authentication/certificate failures. The disk autotest
+  caused real `direct_unpack` drift; `just usenet-sab-settings apply` restored
+  it to false while idle and verified all settings, without other changes.
 
 ## 1. Goal
 
@@ -271,17 +851,12 @@ Do not configure plaintext NNTP.
 
 ### Secondary Usenet provider
 
-I do not initially want two unlimited subscriptions.
-
-Research and propose a well-regarded block account on a genuinely useful alternative network/backbone.
-
-The prior candidate was:
-
-- UsenetExpress 500 GB block.
-
-Verify whether it still makes sense.
-
-Configure it in SABnzbd as a lower-priority/fill server so it is used only when the primary cannot supply an article.
+Deferred by the user on 2026-09-10 until/unless needed. Start with Eweka alone.
+Do not buy or configure UsenetExpress or another secondary provider now.
+If real article availability/completion gaps justify revisiting this decision,
+research a useful alternative backbone and non-recurring block terms afresh.
+UsenetExpress 500 GB was the historical candidate. Only after a new purchase
+decision, configure any future block at lower priority for missing articles.
 
 ### Indexers
 
@@ -530,7 +1105,7 @@ Configure:
 - primary NNTP provider,
 - TLS,
 - appropriate connection count,
-- secondary block provider at lower priority,
+- a lower-priority secondary block only if later justified and approved,
 - incomplete directory,
 - completed staging directory,
 - PAR verification/repair,
@@ -1042,7 +1617,7 @@ Perform an end-to-end integration test with unquestionably authorized test conte
 Verify:
 
 1. Primary Usenet TLS connection succeeds.
-2. Secondary provider is configured correctly.
+2. Secondary provider: deferred; not required for the current Eweka-only baseline.
 3. Both indexers' API tests succeed.
 4. SAB can process an authorized/test NZB or equivalent provider-supported test.
 5. Verification/unpacking works if applicable.
@@ -1074,7 +1649,7 @@ Include:
 - IPv4 if separately charged,
 - Storage Box,
 - primary Usenet provider,
-- secondary/block provider amortization,
+- secondary/block provider amortization only if later purchased (currently deferred),
 - indexer subscriptions,
 - any other recurring service you added.
 

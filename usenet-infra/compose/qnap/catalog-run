@@ -2,6 +2,17 @@
 set -eu
 
 tool="${1:-healthcheck}"
+if [ "$tool" = --self-test ]; then
+    [ "$#" -eq 1 ] || exit 64
+    python3 -c 'import os; assert os.getuid() > 0 and os.getgid() > 0, "Catalog must run without root identity"'
+    for name in catalog-list catalog-status catalog-pull catalog-evict healthcheck; do
+        [ -r "/opt/usenet/scripts/$name" ] || exit 66
+        /bin/sh -n "/opt/usenet/scripts/$name"
+    done
+    [ -r /opt/usenet/scripts/catalogctl.py ] || exit 66
+    printf '%s\n' 'Non-root catalog entrypoint and mounted scripts ready'
+    exit 0
+fi
 case "$tool" in
     catalog-list|catalog-status|catalog-pull|catalog-evict|healthcheck)
         ;;

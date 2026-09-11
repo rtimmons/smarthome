@@ -2,28 +2,115 @@
 
 ## Administrative access
 
-SABnzbd and Prowlarr listen on cloud loopback only. Open a tunnel from the
-workstation:
+SABnzbd and Prowlarr listen on cloud loopback only. From `usenet-infra/`, open
+the dedicated-key tunnel using the ignored workstation connection settings:
 
 ```sh
-ssh -L 8080:127.0.0.1:8080 -L 9696:127.0.0.1:9696 "$CLOUD_SSH_TARGET"
+just cloud-ui
 ```
 
 Then use `http://127.0.0.1:8080` and `http://127.0.0.1:9696`. Do not change the
-Compose bindings to `0.0.0.0`.
+Compose bindings to `0.0.0.0`. Keep the tunnel terminal open; stop it when done.
+The repository-root equivalent is `just usenet-cloud-ui`.
+Prowlarr's Forms login has been configured privately by the user.
 
-Configure SABnzbd's incomplete and complete paths as `/data/incomplete` and
-`/data/complete`. Configure the two TLS providers exactly as recorded in
-`account-setup.md`. Set a conservative free-space pause threshold large enough
-for the biggest expected repair/unpack; the initial operational floor is 30 GiB.
+Inspect or reconcile SABnzbd's non-secret settings from the repository root:
 
-Add NZBGeek and NZBFinder to Prowlarr and run each built-in API test. Add SABnzbd
-as a download client at `http://sabnzbd:8080`. Do not add Sonarr/Radarr-style
+```sh
+just usenet-sab-settings inspect
+just usenet-sab-settings apply
+just usenet-sab-provider inspect
+just usenet-sab-provider configure
+just usenet-sab-provider test
+```
+
+The settings helper selects `/data/incomplete` and `/data/complete`, sets a
+30 GiB free-space floor for both download and completion, and enables normal
+repair/unpack processing. Watched folders and automatic scripts remain disabled;
+catalog promotion is separate. It refuses to change settings while downloads or
+post-processing jobs exist, or when custom category workflows/RSS feeds need
+review. Every change is read back. The provider helper reconciles only the
+existing Eweka server. A fill provider is deferred until actual completion gaps
+justify one; see `account-setup.md`. Both helpers keep credentials on the VM and return
+only approved settings or sanitized failures. Increase the reserve deliberately
+if the largest expected repair/unpack needs more than the initial floor.
+
+NZBGeek is saved and enabled in pinned Prowlarr 2.5.2.5491. Its live
+credentialed test passed with global strict certificate validation enabled,
+base URL `https://api.nzbgeek.info`, path `/api`, and priority 25. Query/grab
+quotas remain unset because daily provider limits are unverified. Inspect or
+repeat that test from the repository root:
+
+```sh
+just usenet-prowlarr-indexer inspect
+just usenet-prowlarr-indexer test
+just usenet-prowlarr-indexer enable
+```
+
+`enable` tests saved credentials before enabling, verifies readback, and
+retests; it is idempotent when already enabled. Output omits the API key.
+The optional second argument is `nzbgeek` (default) or `nzbfinder`.
+From `usenet-infra/`, use `just prowlarr-indexer` with the same subcommands.
+`prepare-disabled` is only for first setup: it creates an empty-key disabled
+entry for private user input. Both indexer entries already exist.
+
+NZBFinder Pro is paid and its saved entry is enabled at
+`https://nzbfinder.ws` with path `/api`, priority 25, strict certificate
+validation, and unset query/grab quotas. Private key entry is complete and
+the live credentialed test passed. Its account key is managed under
+**My Profile**. Inspect or repeat its test:
+
+```sh
+just usenet-prowlarr-indexer inspect nzbfinder
+just usenet-prowlarr-indexer enable nzbfinder
+just usenet-prowlarr-indexer test nzbfinder
+```
+
+Prowlarr now has
+exactly one enabled SABnzbd client at `http://sabnzbd:8080` on the private
+Docker network. Its `prowlarr` category uses `pp=3`, script `None`, an empty
+directory, and normal inherited priority. SABnzbd's host whitelist gained
+only `sabnzbd`, preserving all existing entries and hostname checking.
+Candidate and saved-credential tests passed, including a standalone retest;
+a second configure made no changes. Use these bounded commands from the
+repository root:
+
+```sh
+just usenet-prowlarr-download-client inspect
+just usenet-prowlarr-download-client configure
+just usenet-prowlarr-download-client test
+```
+
+Credentials stay on the VM. From `usenet-infra/`, use
+`just prowlarr-download-client` with the same subcommands. Configuration and
+testing do not initiate downloads or searches.
+Prowlarr's application API key was rotated through the supported `ResetApiKey`
+command without restarting the app. The old key returns HTTP 401, the new key
+HTTP 200, and the protected dependent environment is synchronized with its
+mode `0640` and owner preserved. Other XML settings were unchanged.
+Saved-client and NZBGeek tests also passed after rotation.
+Do not add Sonarr/Radarr-style
 automatic acquisition, RSS grabs, broad automatic search, or another path that
 can silently make an arbitrary result permanent. A human intentionally chooses
 each acquisition and later supplies its provenance when promoting it.
 
 ## Deliberate acquisition and promotion
+
+To search interactively, keep `just usenet-cloud-ui` running from the repository
+root, open Prowlarr at `http://127.0.0.1:9696`, and select **Search**. Enter a
+query, select NZBGeek and NZBFinder (or all Usenet indexers), optionally select
+a category, and press **Search**. The download icon at the right of a result
+sends it to the configured SABnzbd client. Follow its queue and completed
+history at `http://127.0.0.1:8080`. This downloads to the cloud VM; catalog
+promotion and the subsequent QNAP pull remain separate deliberate steps.
+See the [official search guide](https://wiki.servarr.com/prowlarr/search).
+
+The official diagnostic fixture has already passed NNTP downloading,
+verification, unpacking, and promotion. Inspect it from the repository root with
+`just usenet-sab-smoke-test status`; its durable receipt prevents `start` from
+silently creating another job. Canonical item `sabnzbd-official-100mb-2026-09-10`
+has passed the NAS dashboard download/reconnection/eviction checks; remaining
+acceptance is tracked in the validation ledger.
 
 1. Confirm that the material is authorized and record the basis.
 2. Deliberately send the selected NZB to SABnzbd.
@@ -31,7 +118,7 @@ each acquisition and later supplies its provenance when promoting it.
 4. Review the completed directory and promote it from the workstation:
 
 ```sh
-just catalog-promote \
+just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-promote \
   /srv/usenet/downloads/complete/ITEM \
   "Human-readable title" \
   other \
@@ -55,9 +142,63 @@ catalog/
 └── objects/<category>/<item-id>/...
 ```
 
+After changing provider/indexer credentials or important configuration, run
+`just usenet-backup-cloud` from the repository root while SAB is idle. It
+encrypts on the VM and publishes an off-VM archive only after local decryption,
+checksum, and database verification. This is a manual operation; no recurring
+backup schedule is installed yet. See [recovery](recovery.md) for restoring into
+a fresh directory and retaining the separate decryption identity.
+The latest verified archive includes both indexers, the rotated Prowlarr
+application key, login/client configuration, cloud catalog/health updates, and
+the restored Direct Unpack setting.
+Repeat the capture after subsequent settings changes.
+
 ## Selective QNAP cache
 
-From `usenet-infra/` on the workstation:
+Use the authenticated OliveTin dashboard through the private address/tunnel
+recorded during [QNAP bootstrap](qnap-bootstrap.md). The local QTS administration
+address and dedicated SSH access are verified. The deployed dashboard is at
+`http://192.168.1.66:1337`; runtime, login, download/removal, and restart checks
+passed. External reachability verification awaits explicit approval. Repeat
+safe metadata discovery from the repository root
+with `just usenet-qnap-recon`. The runtime setup and pinned configuration are in
+[QNAP Compose](../compose/qnap/README.md).
+
+The normal workflow is:
+
+1. Refresh catalog data, then browse/filter by title and category. Inspect the
+   remote/local counts and sizes, available NAS capacity, reserve, active
+   transfers, and recorded failures. Use the header search for titles/categories
+   or the **Entities** table's filter to inspect every state.
+2. On a `remote only` card select **Download**. The card supplies the validated
+   catalog identity; no copied ID or shell command is required.
+3. Follow the running execution and output/history. A running state is meaningful
+   even when an exact transfer percentage is unavailable. `local` means the
+   backend completed manifest verification and atomic publication.
+4. If the operation fails, read its failure/output and fix the reported capacity,
+   connectivity, permission, or integrity problem before selecting **Retry**.
+   If a previously verified local copy is now damaged, the valid action can be
+   **Remove local copy** first, followed by a fresh **Download**. Preserve
+   staging for a transfer retry. Closing a browser is not a cancellation
+   mechanism; inspect execution status before starting another action.
+5. On a `local` item select **Remove local copy** and confirm the message that
+   the canonical remote copy remains. After success, refresh to `remote only`.
+
+Catalog data refreshes every 60 seconds while idle, about every 30 seconds
+during a pull, on demand, and after each action. Return to **Catalog** from the
+execution view; reload the browser if that already-open view retains an earlier
+snapshot. **Logs** shows the initiator, confirmation arguments, status and
+output. A refresh failure displays the last snapshot as stale and disables
+mutation actions until refresh succeeds.
+
+The current finite action timeout is 30 days. Metadata refresh is separately
+bounded at 120 seconds; its timeout terminates the entire metadata process
+group. Browser closure leaves the action running. Container shutdown or action
+timeout stops the action's process group, and any interrupted item must pass
+the usual safe retry path before becoming local.
+
+The same backend is available from `usenet-infra/` on the workstation when the
+dashboard is unavailable or for automation:
 
 ```sh
 just catalog-list
@@ -69,8 +210,30 @@ just catalog-evict "item-id"
 Pull requires enough free bytes for the item plus the configured reserve. It
 copies to hidden staging, validates every local SHA-256, then performs a
 same-filesystem rename into the cache. A failed or interrupted item never appears
-as a complete cached object. Retry the same command safely; complete matching
-files are skipped, though one interrupted file restarts from byte zero.
+as a complete cached object. Retry the same command safely; hash-verified staged
+files are kept, and damaged or unlisted staging remnants are removed before
+continuing. One interrupted large file restarts from byte zero.
+
+Pulls and evictions share a persistent operating-system lock. A simultaneous
+mutation refuses with an operation-already-running error instead of competing
+for staging or capacity. Refresh status, let the active operation finish, then
+retry. Read-only status remains available. An abandoned transfer without its
+lock becomes `failed`/stalled; it does not stay falsely `downloading` forever.
+Rclone emits transfer output every 10 seconds and times out after five minutes
+without I/O. Phase messages distinguish copying, verification, and publication.
+
+`catalogctl.py status --json` is the structured summary/item snapshot used by
+the dashboard. Its internal states are `remote_only`, `downloading`, `local`,
+and `failed`. A normal refresh consults the prior verification record and file
+metadata; it does not rehash every cached byte. Every successful pull still
+requires full manifest SHA-256 verification before publication.
+
+`RCLONE_BWLIMIT` configures a per-process transfer cap for pulls and promotion;
+the default `off` imposes none. A scalar such as `20M` caps bytes per second
+using rclone's size suffixes. Adjust `qnap_rclone_bwlimit` in the ignored Ansible
+inventory for NAS deployment, and preserve conservative transfers/checkers
+until a representative large-file test passes. Do not confuse bytes per second
+with the Internet plan's bits per second.
 
 Eviction resolves a local state record and deletes only the root-confined local
 object directory. Its implementation never calls rclone. The QNAP's server-side
@@ -91,6 +254,21 @@ pull failures. Ansible synchronizes the locally generated SABnzbd and Prowlarr
 API keys into the protected health environment after starting the applications.
 A missing application API key is a warning; a configured but unreachable service
 is a failure.
+
+The current cloud health run exits 0: Storage Box, catalog-failure checks,
+Prowlarr, and scratch capacity pass. The seven historical SABnzbd warnings were
+classified as six setup hostname blocks and one Direct Unpack autotest notice,
+with no authentication, provider, or TLS failures. The settings helper restored
+`direct_unpack=0` after the one-time autotest, and all settings read back as
+intended with no active jobs. The compatibility fix installed the
+tested catalog script atomically and updated the health helper without
+restarting applications, migrating schema-1 records, or mutating content.
+
+Provider authentication faults are surfaced through SABnzbd's recorded warning
+and error API. This is not a fresh NNTP login on every health run: after changing
+provider credentials, use SABnzbd's built-in server test and an authorized
+transfer. Likewise, a reachable dashboard readiness endpoint does not prove its
+authentication policy; exercise anonymous denial and a valid login separately.
 
 Set `STORAGE_WARN_FRACTION=0.80` in the deployed catalog environment. Do not
 rely on a compiled/default value: 80% is the approved operator warning. At a
@@ -117,25 +295,35 @@ explicit zero-downtime guarantee for ordinary tier changes. See the official
 
 Failure records live under the configured catalog state `failures/` directory.
 Inspect the corresponding service/container logs and keep the record until the
-cause is fixed and the operation has been successfully retried.
+cause is fixed and the operation has been successfully retried. Successful
+retry or eviction marks the relevant history resolved with `resolved_at`;
+resolved history is retained while health/dashboard failure counts focus on
+unresolved failures and interrupted transfers.
+
+Do not treat a container's `running` state as full health. Confirm the dashboard
+login, catalog refresh, and action execution as well as its container health
+check. Authentication/access failures and the absence of progress after an
+interrupted pull need investigation before another download is started.
 
 ## Updates
 
 Review release notes and change pinned versions in Git first. Then:
 
 ```sh
-git pull --ff-only
-terraform -chdir=terraform/cloud plan
-terraform -chdir=terraform/storage plan
-ansible-playbook -i ansible/inventory.yml ansible/site.yml
-ssh "$CLOUD_SSH_TARGET" 'cd /srv/usenet/compose/cloud && docker compose pull && docker compose up -d'
+just test
+just terraform-plan
+just configure-cloud
+just configure-qnap
 just cloud-health
 just qnap-health
 ```
 
 Never use `latest`. Preserve application config backups before upgrades and test
 the authorized fixture path after a major SABnzbd, Prowlarr, rclone, Docker, or
-catalog-tool update.
+catalog-tool or OliveTin update. The playbooks perform Compose reconciliation;
+for targeted recovery use the corresponding Compose runbook. Inspect any
+Terraform change independently before applying it, especially the protected
+Storage Box root. Do not pull a new application version through mutable tags.
 
 ## Configuration backups
 
@@ -145,26 +333,37 @@ the 20 TB target:
 - `/srv/usenet/config/sabnzbd`;
 - `/srv/usenet/config/prowlarr`;
 - `/srv/usenet/state/catalog`;
-- the QNAP catalog state directory; and
+- the QNAP catalog state directory and remote provenance manifests;
+- OliveTin authentication/runtime configuration and execution history, plus
+  the selected private access/TLS configuration; and
 - Terraform states, variable files, SSH keys, and verified host keys.
 
 Storage Box snapshots are same-box rollback aids, consume capacity, and are not
 an independent backup. Keep source in Git and put encrypted configuration
 backups somewhere outside both the VM and Storage Box.
 
+For OliveTin, preserve the protected auth JSON and
+`QNAP_DASHBOARD_STATE_DIR`, particularly `runtime/sessions.yaml` and
+`logs/results` / `logs/output`. The versioned source template is combined with
+catalog cards into `runtime/config.yaml`; generated configuration contains
+environment placeholders rather than password hashes. The runtime supervisor
+suppresses upstream startup debug output and redacts the known hash so it does
+not enter operational logs.
+
+Use `just usenet-backup-cloud` for cloud configuration and
+`just usenet-backup-qnap` for the NAS state. Both are manual and publish only
+verified encrypted archives outside the source host; the QNAP helper's first
+live 32-file capture and authenticated verification passed. Verification and fresh-directory restore
+commands, exact scopes, limits, and the passed isolated cloud startup drill
+are documented in [recovery](recovery.md). Take a new backup after changing
+credentials or configuration, and preserve the matching decryption identity
+outside the host and archive location.
+
 ## Authorized end-to-end acceptance test
 
 Use a provider's official test NZB or a small item whose redistribution license
-has been independently verified. Record that evidence in the manifest. Then
-verify all of the following before declaring production ready:
-
-1. Eweka connects over TLS with strict verification.
-2. The fill block tests successfully but remains lower-priority/optional.
-3. Both indexer built-in API tests pass.
-4. SAB downloads, verifies, and unpacks the authorized item locally.
-5. Promotion publishes bytes and a provenance manifest.
-6. QNAP lists, pulls, SHA-256 verifies, and reports the item local.
-7. Eviction removes the local copy while the writer still sees identical remote bytes.
-8. QNAP credentials fail overwrite and delete attempts against a disposable sentinel.
-9. Restarting both Compose projects preserves configuration.
-10. Repository secret scans find no credential material.
+has been independently verified. Record that evidence in the manifest. Execute
+and record the [acceptance matrix](validation.md), including the browser workflow,
+CLI parity, authentication/exposure, interrupted-transfer recovery, persistent
+history, and unchanged remote hashes after local eviction. Local unit tests and
+healthy containers alone do not satisfy that matrix.

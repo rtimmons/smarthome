@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+: "${CLOUD_SSH_TARGET:?Set CLOUD_SSH_TARGET in usenet-infra/.env}"
+: "${CLOUD_SSH_KEY:?Set CLOUD_SSH_KEY to the dedicated cloud administrator key}"
+: "${CLOUD_SSH_KNOWN_HOSTS:?Set CLOUD_SSH_KNOWN_HOSTS to the verified host-key file}"
+
+echo 'Private application tunnel: SABnzbd http://127.0.0.1:8080 ; Prowlarr http://127.0.0.1:9696'
+echo 'Keep this terminal open. Press Ctrl-C to close the tunnel.'
+exec ssh -N -T -o BatchMode=yes -o IdentitiesOnly=yes \
+  -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+  -i "${CLOUD_SSH_KEY}" -o "UserKnownHostsFile=${CLOUD_SSH_KNOWN_HOSTS}" \
+  -L 127.0.0.1:8080:127.0.0.1:8080 \
+  -L 127.0.0.1:9696:127.0.0.1:9696 \
+  "${CLOUD_SSH_TARGET}"

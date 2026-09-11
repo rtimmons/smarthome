@@ -26,15 +26,24 @@ all:
       hosts:
         usenet-qnap:
           ansible_host: 192.0.2.20
-          # Use the dedicated account that owns the application paths and has
-          # Container Station/Docker access, not the built-in admin account.
+          # QTS/QuTS generally requires administrators membership for SSH.
+          # Use a dedicated account with a nonzero UID/primary GID. Containers
+          # receive only these IDs, without the host's supplementary groups.
           ansible_user: qnapusenet
           ansible_ssh_private_key_file: "{{ playbook_dir }}/../secrets/ssh/qnap-admin"
+          ansible_ssh_common_args: >-
+            -o IdentitiesOnly=yes
+            -o UserKnownHostsFile={{ playbook_dir }}/files/secrets/qnap-known-hosts
           # Set these to the numeric owner of the QNAP media share.
           qnap_uid: 1000
           qnap_gid: 1000
           qnap_container_root: /share/Container/usenet
           qnap_data_root: /share/Usenet
+          # Deliberately choose loopback plus SSH tunnel, or the NAS RFC1918
+          # LAN IPv4 address after checking NAS/router exposure.
+          qnap_dashboard_bind_address: 127.0.0.1
+          qnap_dashboard_port: 1337
+          qnap_dashboard_auth_source: "{{ playbook_dir }}/../secrets/dashboard-auth.json"
           # Keep live values in ignored inventory.yml, never this example.
           qnap_storagebox_host: uXXXXX-subX.your-storagebox.de
           qnap_storagebox_user: uXXXXX-subX

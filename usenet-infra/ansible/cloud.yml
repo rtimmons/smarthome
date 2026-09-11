@@ -38,6 +38,11 @@
   roles:
     - role: cloud_base
     - role: cloud_apps
+    - role: cloud_backup
+    - role: cloud_vpn
+      when: cloud_lan_ui_enabled | bool
+    - role: cloud_ui_proxy
+      when: cloud_lan_ui_enabled | bool
     # Keep SSH/firewall changes last so a root bootstrap connection is not
     # needed again after PermitRootLogin is disabled.
     - role: cloud_security

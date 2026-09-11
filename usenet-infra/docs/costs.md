@@ -50,52 +50,89 @@ effect against the live account and location, so the reviewed plan and official
 Hetzner API price are the purchase checkpoint. At the currently verified BX41
 price, the eventual 20 TB Hetzner subtotal would return to $65.09/month.
 
-## Known subscription (EUR)
+## Eweka advertised offer and account confirmation (EUR)
 
 | Item | Charge | Monthly equivalent | Source |
 | --- | ---: | ---: | --- |
-| Eweka unlimited | €104.85 prepaid for 15 months | €6.99/month | [Eweka pricing](https://www.eweka.nl/en/pricing) |
+| Eweka unlimited advertised offer; account existence confirmed | €104.85 prepaid for 15 months advertised; actual charge/tier unverified | €6.99/month advertised equivalent | [Eweka 15-month checkout](https://www.eweka.nl/en/checkout?p=15mo) |
 
-EUR is intentionally not converted to USD here. Confirm the checkout total,
-applicable VAT, commitment, and renewal price before purchase; a monthly
-equivalent is not the same thing as monthly billing.
+The user has confirmed that the Eweka account exists. Its final charged tier,
+amount, applicable VAT, commitment and renewal details have not yet been
+independently verified; the public offer is not evidence of those account
+terms. EUR is intentionally not converted to USD here, and an effective monthly
+price is not monthly billing. SABnzbd's saved primary-server configuration and
+authenticated built-in connection test have now passed independent live
+verification. That operational result does not verify billing terms.
 
-## One-time and usage-dependent purchases
+## Deferred fill-provider reference
 
-| Item | Expected charge | Treatment | Source |
+| Item | Historical quote | Treatment | Source |
 | --- | ---: | --- | --- |
-| UsenetExpress 500 GB block | $20.00 one time | Not recurring until depleted; checkout price still needs confirmation | [UsenetExpress plans](https://www.usenetexpress.com/plans/) |
+| UsenetExpress 500 GB block | $20.00 on 2026-09-10 | Deferred by the user; no current purchase or required budget allocation | [UsenetExpress selected block](https://members.usenetexpress.com/signup/9Jq5Pvyj/?product_id_page-0%5B%5D=9-13&ret=deep) |
 
-Do not count the block as a fixed monthly subscription. Once real consumption
-is known, report its effective cost as `$20 / months until replacement`.
+Eweka is the sole provider for the current baseline. A fill block is optional
+only if genuine missing articles or a completion gap demonstrates a need.
+The historical checkout showed a one-time purchase, while current
+non-expiration was unverified. Recheck all terms and pricing if revisiting it.
+No block amortization is included in the current required budget.
 
-## Not yet priced
+The OliveTin dashboard and its catalog backend run on the existing QNAP; this
+design adds no hosted dashboard subscription. NAS power, disk wear, and home
+Internet are not newly priced here. HybridMount is optional: QNAP documents two
+free third-party File Cloud Gateway connections, but their availability on this
+NAS must be checked before experimenting. No extra license is approved. See the
+[QNAP HybridMount guide](https://www.qnap.com/en-us/how-to/tutorial/article/hybridmount-quick-start-guide).
+The actual WebDAV gateway wizard was inspected and the route was not adopted;
+no connection, license purchase, or cache allocation was created.
+
+## Paid indexer subscriptions
+
+| Item | Verified payment/status | Monthly equivalent | Source |
+| --- | --- | ---: | --- |
+| NZBGeek, one year | User confirmed $12 USD paid through official Stripe checkout; independent account readback active through 2027-09-13 22:01:53 UTC | $1.00 | Authenticated [GeekHub](https://geek-hub.com.au/) checkout and [NZBGeek](https://nzbgeek.info/) account readback on 2026-09-10 |
+| NZBFinder Pro | User confirmed payment; authenticated Pro badge observed. Plan advertises $30/year, but currency code and final charge are unverified; expiry/renewal unknown | $2.50 advertised equivalent, currency code unverified | Authenticated [NZBFinder](https://nzbfinder.ws/) plan/account page on 2026-09-10 |
+
+NZBGeek's annual charge is paid upfront. Automatic rebilling and the eventual
+renewal price have not been independently confirmed; the monthly equivalent
+does not establish monthly billing or automatic renewal. The account guidance
+says renewing before expiry extends the existing subscription period.
+
+NZBFinder Pro advertises 20,000 API requests and unlimited downloads, with
+counters resetting 24 hours after each request. Its $30/year display is not
+evidence of the final charge or of USD denomination. Do not add it to the USD
+subtotal until its charge currency is confirmed. No further purchase is
+pending; private API setup and the live Prowlarr test have passed, while the
+missing billing details remain unverified.
+
+## Unused alternative
 
 | Item | Current status | Budget treatment | Source |
 | --- | --- | --- | --- |
-| NZBGeek | Registration page reachable, but paid tier and renewal price still require verification after login | Unknown recurring cost | [NZBGeek registration](https://nzbgeek.info/register.php) |
-| NZBFinder | Candidate replacement indexer; paid tier and renewal price still require verification after login | Unknown recurring cost | [NZBFinder registration](https://nzbfinder.ws/register) |
-| DrunkenSlug | Registration is closed | $0; do not budget or seek an invitation workaround | [DrunkenSlug registration](https://drunkenslug.com/register) |
+| DrunkenSlug | Last signup observation was closed; latest automated refresh returned HTTP 403 | $0; do not budget or seek an invitation workaround | [DrunkenSlug registration](https://drunkenslug.com/register) |
 
 ## Budget assessment
 
-The known recurring total cannot honestly be collapsed into one currency:
+The known monthly costs and prepaid equivalents cannot honestly be collapsed
+into one currency:
 
 ```text
-USD recurring  = $23.09 initial Hetzner
-               + confirmed USD indexer charges
-               + usage-based block-account amortization
+USD equivalent = $23.09 initial Hetzner
+               + $1.00 NZBGeek (paid $12 for one year)
 
-EUR equivalent = €6.99/month Eweka
-               + any EUR-denominated indexer charges
+EUR equivalent = €6.99/month advertised Eweka offer (account charge unverified)
+
+NZBFinder      = $2.50/month advertised equivalent (currency/charge unverified)
 ```
 
-The initial Hetzner subtotal is inside the prior $75–90/month target, leaving a
-nominal $51.91–$66.91 USD margin before any currency conversion. Eventual BX41
-capacity reduces that margin to $9.91–$24.91 at the currently verified price.
+The known initial USD subtotal including NZBGeek's annual equivalent is
+$24.09/month, inside the prior $75–90/month target and leaving a nominal
+$50.91–$65.91 USD margin before currency conversion. Eventual BX41 capacity
+reduces that margin to $8.91–$23.91 at the currently verified price.
 Neither figure proves the completed service fits the target: Eweka is
-denominated in EUR, both indexer costs are unresolved, the block replacement
-interval is unknown, and taxes/FX may apply. Keep the overall budget status
-**uncertain** until the Eweka, NZBGeek, NZBFinder, and UsenetExpress checkout
-screens have been confirmed. Re-run the official price checks immediately
-before ordering or changing Storage Box tier.
+denominated in EUR, NZBFinder's charge currency is unresolved, and taxes/FX
+may apply.
+Keep the overall budget status **uncertain** until Eweka's actual account terms
+and NZBFinder's actual charge/currency are confirmed. Both paid indexers now
+pass their private Prowlarr connection tests.
+Re-run official price checks immediately before ordering or changing Storage
+Box tier.

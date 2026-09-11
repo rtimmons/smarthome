@@ -17,8 +17,8 @@ services:
       XDG_CACHE_HOME: /tmp/rclone-cache
       XDG_CONFIG_HOME: /tmp/rclone-config
 
-      # The direct remote is intentionally kept behind the client-side read-only
-      # union below. Hetzner's read-only subaccount is the authoritative control.
+      # The catalog alias uses the server-enforced read-only subaccount.
+      # An alias renames the remote; it does not enforce permissions itself.
       RCLONE_CONFIG_STORAGEBOX_TYPE: sftp
       RCLONE_CONFIG_STORAGEBOX_HOST: "${STORAGEBOX_HOST:?Set STORAGEBOX_HOST to the subaccount hostname}"
       RCLONE_CONFIG_STORAGEBOX_USER: "${STORAGEBOX_USER:?Set STORAGEBOX_USER to the read-only subaccount username}"
@@ -32,8 +32,8 @@ services:
       RCLONE_CONFIG_STORAGEBOX_CHUNK_SIZE: "${RCLONE_SFTP_CHUNK_SIZE:-32Ki}"
       RCLONE_CONFIG_STORAGEBOX_CONCURRENCY: "${RCLONE_SFTP_CONCURRENCY:-64}"
 
-      RCLONE_CONFIG_CATALOG_TYPE: union
-      RCLONE_CONFIG_CATALOG_UPSTREAMS: "storagebox::ro"
+      RCLONE_CONFIG_CATALOG_TYPE: alias
+      RCLONE_CONFIG_CATALOG_REMOTE: "storagebox:"
     volumes:
       - type: bind
         source: "${QNAP_CATALOG_CACHE_DIR:?Set QNAP_CATALOG_CACHE_DIR to an absolute path under /share}"
@@ -84,8 +84,10 @@ services:
       XDG_CONFIG_HOME: /tmp/rclone-config
       PYTHONDONTWRITEBYTECODE: "1"
 
-      # Catalog scripts must address this client-side read-only union, not the
-      # underlying storagebox remote.
+      # Catalog scripts use the server-enforced read-only Storage Box subaccount.
+      # The catalog alias itself is not a permission control.
+      QNAP_DASHBOARD_HEALTH_URL: http://dashboard:1337/readyz
+      CATALOG_DASHBOARD_STATUS_PATH: /data/dashboard/status.json
       CATALOG_ROLE: qnap
       CATALOG_REMOTE: "catalog:"
       CATALOG_LOCAL_ROOT: /data/library
@@ -96,6 +98,7 @@ services:
       RCLONE_BIN: /usr/local/bin/rclone
       RCLONE_TRANSFERS: "${RCLONE_TRANSFERS:-2}"
       RCLONE_CHECKERS: "${RCLONE_CHECKERS:-4}"
+      RCLONE_BWLIMIT: "${RCLONE_BWLIMIT:-off}"
       STORAGE_WARN_FRACTION: "${STORAGE_WARN_FRACTION:-0.80}"
 
       RCLONE_CONFIG_STORAGEBOX_TYPE: sftp
@@ -111,9 +114,13 @@ services:
       RCLONE_CONFIG_STORAGEBOX_CHUNK_SIZE: "${RCLONE_SFTP_CHUNK_SIZE:-32Ki}"
       RCLONE_CONFIG_STORAGEBOX_CONCURRENCY: "${RCLONE_SFTP_CONCURRENCY:-64}"
 
-      RCLONE_CONFIG_CATALOG_TYPE: union
-      RCLONE_CONFIG_CATALOG_UPSTREAMS: "storagebox::ro"
+      RCLONE_CONFIG_CATALOG_TYPE: alias
+      RCLONE_CONFIG_CATALOG_REMOTE: "storagebox:"
     volumes:
+      - type: bind
+        source: "${QNAP_DASHBOARD_STATE_DIR:?Set QNAP_DASHBOARD_STATE_DIR to dashboard state under /share}"
+        target: /data/dashboard
+        read_only: true
       - type: bind
         source: "${QNAP_CATALOG_SCRIPTS_DIR:?Set QNAP_CATALOG_SCRIPTS_DIR to the repository scripts directory under /share}"
         target: /opt/usenet/scripts
@@ -138,3 +145,104 @@ services:
       - ALL
     security_opt:
       - no-new-privileges:true
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    image: usenet-catalog-dashboard:olivetin-3000.19.0-rclone-1.75.1-python-3.14.7
+    user: "${QNAP_UID:?Set QNAP_UID to the dedicated NAS user's numeric UID}:${QNAP_GID:?Set QNAP_GID to the dedicated NAS user's numeric GID}"
+    working_dir: /data
+    read_only: true
+    init: true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    ports:
+      - "${QNAP_DASHBOARD_BIND_ADDRESS:-127.0.0.1}:${QNAP_DASHBOARD_PORT:-1337}:1337"
+    environment:
+      HOME: /tmp/catalog-home
+      TZ: "${TZ:-UTC}"
+      XDG_CACHE_HOME: /tmp/rclone-cache
+      XDG_CONFIG_HOME: /tmp/rclone-config
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+      CATALOG_DASHBOARD_BIND_ADDRESS: "${QNAP_DASHBOARD_BIND_ADDRESS:-127.0.0.1}"
+      CATALOG_DASHBOARD_ROOT: /data/dashboard
+      CATALOG_DASHBOARD_AUTH_FILE: /run/secrets/dashboard-auth.json
+      CATALOG_DASHBOARD_REFRESH_SECONDS: "${CATALOG_DASHBOARD_REFRESH_SECONDS:-60}"
+
+      # Catalog scripts use the server-enforced read-only Storage Box subaccount.
+      # The catalog alias itself is not a permission control.
+      CATALOG_ROLE: qnap
+      CATALOG_REMOTE: "catalog:"
+      CATALOG_LOCAL_ROOT: /data/library
+      CATALOG_STATE_ROOT: /data/state
+      # Staging shares the cache bind so the final os.replace is atomic.
+      CATALOG_STAGING_ROOT: /data/library/.staging
+      CATALOG_MIN_FREE_BYTES: "${CATALOG_MIN_FREE_BYTES:-10737418240}"
+      RCLONE_BIN: /usr/local/bin/rclone
+      RCLONE_TRANSFERS: "${RCLONE_TRANSFERS:-2}"
+      RCLONE_CHECKERS: "${RCLONE_CHECKERS:-4}"
+      RCLONE_BWLIMIT: "${RCLONE_BWLIMIT:-off}"
+      STORAGE_WARN_FRACTION: "${STORAGE_WARN_FRACTION:-0.80}"
+
+      RCLONE_CONFIG_STORAGEBOX_TYPE: sftp
+      RCLONE_CONFIG_STORAGEBOX_HOST: "${STORAGEBOX_HOST:?Set STORAGEBOX_HOST to the subaccount hostname}"
+      RCLONE_CONFIG_STORAGEBOX_USER: "${STORAGEBOX_USER:?Set STORAGEBOX_USER to the read-only subaccount username}"
+      RCLONE_CONFIG_STORAGEBOX_PORT: "${STORAGEBOX_PORT:-23}"
+      RCLONE_CONFIG_STORAGEBOX_KEY_FILE: /run/secrets/storagebox_key
+      RCLONE_CONFIG_STORAGEBOX_KNOWN_HOSTS_FILE: /run/secrets/storagebox_known_hosts
+      RCLONE_CONFIG_STORAGEBOX_SHELL_TYPE: "${STORAGEBOX_SHELL_TYPE:-unix}"
+      RCLONE_CONFIG_STORAGEBOX_HASHES: "${STORAGEBOX_HASHES:-sha256}"
+      RCLONE_CONFIG_STORAGEBOX_SHA256SUM_COMMAND: "${STORAGEBOX_SHA256SUM_COMMAND:-sha256sum}"
+      RCLONE_CONFIG_STORAGEBOX_SKIP_LINKS: "true"
+      RCLONE_CONFIG_STORAGEBOX_CHUNK_SIZE: "${RCLONE_SFTP_CHUNK_SIZE:-32Ki}"
+      RCLONE_CONFIG_STORAGEBOX_CONCURRENCY: "${RCLONE_SFTP_CONCURRENCY:-64}"
+
+      RCLONE_CONFIG_CATALOG_TYPE: alias
+      RCLONE_CONFIG_CATALOG_REMOTE: "storagebox:"
+    volumes:
+      - type: bind
+        source: "${QNAP_DASHBOARD_STATE_DIR:?Set QNAP_DASHBOARD_STATE_DIR to dashboard state under /share}/runtime"
+        target: /config
+      - type: bind
+        source: "${QNAP_DASHBOARD_CONFIG_DIR:?Set QNAP_DASHBOARD_CONFIG_DIR to the versioned olivetin directory}/config.yaml"
+        target: /opt/usenet/olivetin/config.yaml
+        read_only: true
+      - type: bind
+        source: "${QNAP_DASHBOARD_STATE_DIR:?Set QNAP_DASHBOARD_STATE_DIR to dashboard state under /share}"
+        target: /data/dashboard
+      - type: bind
+        source: "${QNAP_DASHBOARD_AUTH_FILE:?Set QNAP_DASHBOARD_AUTH_FILE to private dashboard-auth.json}"
+        target: /run/secrets/dashboard-auth.json
+        read_only: true
+      - type: bind
+        source: "${QNAP_CATALOG_SCRIPTS_DIR:?Set QNAP_CATALOG_SCRIPTS_DIR to the repository scripts directory under /share}"
+        target: /opt/usenet/scripts
+        read_only: true
+      - type: bind
+        source: "${QNAP_CATALOG_CACHE_DIR:?Set QNAP_CATALOG_CACHE_DIR to an absolute path under /share}"
+        target: /data/library
+      - type: bind
+        source: "${QNAP_CATALOG_STATE_DIR:?Set QNAP_CATALOG_STATE_DIR to an absolute path under /share}"
+        target: /data/state
+      - type: bind
+        source: "${QNAP_STORAGEBOX_KEY_FILE:?Set QNAP_STORAGEBOX_KEY_FILE to the dedicated private key's absolute path}"
+        target: /run/secrets/storagebox_key
+        read_only: true
+      - type: bind
+        source: "${QNAP_STORAGEBOX_KNOWN_HOSTS_FILE:?Set QNAP_STORAGEBOX_KNOWN_HOSTS_FILE to the verified known_hosts file's absolute path}"
+        target: /run/secrets/storagebox_known_hosts
+        read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "python3", "/opt/usenet/scripts/catalog-dashboard.py", "healthcheck"]
+      interval: 1m
+      timeout: 15s
+      retries: 3
+      start_period: 5m

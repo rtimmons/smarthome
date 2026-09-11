@@ -446,15 +446,127 @@ usenet-terraform-plan:
 usenet-configure-cloud:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cloud
 
+# Configure the private UniFi-to-cloud UI connection.
+[group: 'usenet']
+usenet-configure-cloud-lan-ui:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cloud-lan-ui
+
 # Reconnoiter, configure, and converge the QNAP after its dedicated SSH account is ready
 [group: 'usenet']
 usenet-configure-qnap:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-qnap
 
+# Verify the NAS reader cannot alter a disposable remote test file.
+[group: 'usenet']
+usenet-verify-reader-access:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra verify-reader-access
+
 # Check cloud applications, Storage Box access, failures, and scratch space
 [group: 'usenet']
 usenet-cloud-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
+
+# Read NAS versions, resource headroom, and share metadata through dedicated SSH.
+[group: 'usenet']
+usenet-qnap-recon:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra qnap-recon
+
+# Open private SABnzbd and Prowlarr access through the dedicated SSH identity.
+[group: 'usenet']
+usenet-cloud-ui:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-ui
+
+# Inspect, prepare, enable, or test NZBGeek without returning its saved API key.
+[group: 'usenet']
+[positional-arguments]
+usenet-prowlarr-indexer command='inspect' indexer='nzbgeek':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra prowlarr-indexer "$1" "$2"
+
+# Inspect, configure, or test Prowlarr's internal SABnzbd connection.
+[group: 'usenet']
+[positional-arguments]
+usenet-prowlarr-download-client command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra prowlarr-download-client "$1"
+
+# Inspect, configure, or test Eweka using only saved credentials on the cloud host.
+[group: 'usenet']
+[positional-arguments]
+usenet-sab-provider command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-provider "$1"
+
+# Inspect or apply conservative SAB storage and processing settings while idle.
+[group: 'usenet']
+[positional-arguments]
+usenet-sab-settings command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-settings "$1"
+
+# Start once, or inspect, the official authorized 100 MB SAB download test.
+[group: 'usenet']
+[positional-arguments]
+usenet-sab-smoke-test command='status':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-smoke-test "$1"
+
+# Encrypt cloud application configuration and verify its off-VM backup.
+[group: 'usenet']
+usenet-backup-cloud:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-cloud
+
+# Back up the root-owned VPN and private cloud UI settings.
+[group: 'usenet']
+usenet-backup-vpn:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-vpn
+
+[group: 'usenet']
+[positional-arguments]
+usenet-backup-vpn-verify archive:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-vpn-verify "$1"
+
+# Encrypt the NAS dashboard, catalog state, and private configuration.
+[group: 'usenet']
+usenet-backup-qnap:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-qnap
+
+[group: 'usenet']
+[positional-arguments]
+usenet-backup-qnap-verify archive:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-qnap-verify "$1"
+
+[group: 'usenet']
+[positional-arguments]
+usenet-backup-qnap-restore archive destination:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-qnap-restore "$1" "$2"
+
+# Decrypt and validate a backup without retaining plaintext.
+[group: 'usenet']
+[positional-arguments]
+usenet-backup-verify archive:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-verify "$1"
+
+# Restore verified configuration into a new private directory for recovery.
+[group: 'usenet']
+[positional-arguments]
+usenet-backup-restore archive destination:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-restore "$1" "$2"
 
 # Check Storage Box access, transfer failures, and QNAP cache capacity
 [group: 'usenet']

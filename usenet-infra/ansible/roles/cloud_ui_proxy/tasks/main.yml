@@ -1,0 +1,198 @@
+---
+- name: Require the reviewed private proxy address and service identity
+  ansible.builtin.assert:
+    that:
+      - cloud_vpn_service_ip == '10.77.0.1'
+      - usenet_uid | int > 0
+      - usenet_gid | int > 0
+      - cloud_ui_auth_source | default('') | length > 0
+    fail_msg: "The private proxy requires its reviewed service address, non-root identity, and existing dashboard credential source."
+
+- name: Inspect the existing dashboard credential source privately
+  ansible.builtin.stat:
+    path: "{{ cloud_ui_auth_source }}"
+    follow: false
+  delegate_to: localhost
+  become: false
+  register: cloud_ui_auth_stat
+  no_log: true
+
+- name: Require a private regular dashboard credential file
+  ansible.builtin.assert:
+    that:
+      - cloud_ui_auth_stat.stat.isreg | default(false)
+      - cloud_ui_auth_stat.stat.mode == '0600'
+      - cloud_ui_auth_stat.stat.size | int <= 4096
+    fail_msg: "The dashboard credential source must be a mode-0600 regular file."
+  no_log: true
+
+- name: Read the existing dashboard credential privately
+  ansible.builtin.set_fact:
+    cloud_ui_auth: "{{ lookup('ansible.builtin.file', cloud_ui_auth_source) | from_json }}"
+  no_log: true
+
+- name: Require safe Argon2id credential tokens before template rendering
+  ansible.builtin.assert:
+    that:
+      - cloud_ui_auth is mapping
+      - cloud_ui_auth.username is string
+      - cloud_ui_auth.password_hash is string
+      - cloud_ui_auth.username is match('^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z')
+      - cloud_ui_auth.password_hash is match('^\$argon2id\$v=19\$m=[0-9]+,t=[0-9]+,p=[0-9]+\$[A-Za-z0-9+/]+\$[A-Za-z0-9+/]+\Z')
+    fail_msg: "The dashboard credential source must contain a safe username and an Argon2id PHC hash."
+  no_log: true
+
+- name: Create protected private proxy directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: usenet
+    mode: "0750"
+  loop:
+    - "/etc/usenet-cloud-ui"
+
+- name: Install the pinned image definition and secret-excluding build context
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/usenet-cloud-ui/{{ item }}"
+    owner: root
+    group: usenet
+    mode: "0640"
+  loop: [Dockerfile, .dockerignore]
+  register: cloud_ui_image_definition
+
+- name: Render the isolated private proxy Compose project
+  ansible.builtin.template:
+    src: compose.yaml.j2
+    dest: "/etc/usenet-cloud-ui/compose.yaml"
+    owner: root
+    group: usenet
+    mode: "0640"
+  register: cloud_ui_compose
+
+- name: Check whether the private proxy image is already present
+  ansible.builtin.command:
+    argv: [docker, image, inspect, "usenet-cloud-ui:caddy-2.11.4-nonroot"]
+  register: cloud_ui_image
+  changed_when: false
+  failed_when: false
+
+- name: Build the reviewed private proxy image when necessary
+  ansible.builtin.command:
+    argv: [docker, compose, --ansi, never, build, proxy]
+    chdir: "/etc/usenet-cloud-ui"
+  environment:
+    BUILDKIT_PROGRESS: plain
+    COMPOSE_ANSI: never
+  when: cloud_ui_image.rc != 0 or cloud_ui_image_definition.changed
+  register: cloud_ui_build
+  changed_when: true
+
+- name: Verify the exact Caddy version under the intended process restrictions
+  ansible.builtin.command:
+    argv:
+      - docker
+      - run
+      - --rm
+      - --network=none
+      - "--user={{ usenet_uid }}:{{ usenet_gid }}"
+      - --read-only
+      - --cap-drop=ALL
+      - --security-opt=no-new-privileges
+      - usenet-cloud-ui:caddy-2.11.4-nonroot
+      - caddy
+      - version
+  register: cloud_ui_version
+  changed_when: false
+  failed_when: cloud_ui_version.rc != 0 or not cloud_ui_version.stdout.startswith('v2.11.4 ')
+
+- name: Validate the new authentication configuration before publishing it
+  block:
+    - name: Render a private candidate configuration
+      ansible.builtin.template:
+        src: Caddyfile.j2
+        dest: "/etc/usenet-cloud-ui/Caddyfile.candidate"
+        owner: root
+        group: usenet
+        mode: "0640"
+      no_log: true
+      changed_when: false
+
+    - name: Validate the candidate with the pinned restricted runtime
+      ansible.builtin.command:
+        argv:
+          - docker
+          - run
+          - --rm
+          - --network=none
+          - "--user={{ usenet_uid }}:{{ usenet_gid }}"
+          - --read-only
+          - --cap-drop=ALL
+          - --security-opt=no-new-privileges
+          - "--mount=type=bind,src=/etc/usenet-cloud-ui/Caddyfile.candidate,dst=/etc/caddy/Caddyfile,readonly"
+          - "--tmpfs=/data:rw,noexec,nosuid,nodev,size=16m,mode=1777"
+          - "--tmpfs=/config:rw,noexec,nosuid,nodev,size=4m,mode=1777"
+          - usenet-cloud-ui:caddy-2.11.4-nonroot
+          - caddy
+          - validate
+          - --config
+          - /etc/caddy/Caddyfile
+          - --adapter
+          - caddyfile
+      changed_when: false
+      no_log: true
+
+    - name: Publish only the validated private configuration
+      ansible.builtin.copy:
+        src: "/etc/usenet-cloud-ui/Caddyfile.candidate"
+        dest: "/etc/usenet-cloud-ui/Caddyfile"
+        remote_src: true
+        owner: root
+        group: usenet
+        mode: "0640"
+      register: cloud_ui_config
+      no_log: true
+  always:
+    - name: Remove the temporary credential-bearing configuration
+      ansible.builtin.file:
+        path: "/etc/usenet-cloud-ui/Caddyfile.candidate"
+        state: absent
+      no_log: true
+      changed_when: false
+
+- name: Forget the temporary in-memory credential fact
+  ansible.builtin.set_fact:
+    cloud_ui_auth: {}
+  no_log: true
+
+- name: Install the proxy service with VPN dependency ordering
+  ansible.builtin.template:
+    src: usenet-cloud-ui.service.j2
+    dest: /etc/systemd/system/usenet-cloud-ui.service
+    owner: root
+    group: root
+    mode: "0644"
+  register: cloud_ui_unit
+
+- name: Start or update only the private proxy service
+  ansible.builtin.systemd_service:
+    name: usenet-cloud-ui.service
+    daemon_reload: true
+    enabled: true
+    state: "{{ 'restarted' if (cloud_ui_config.changed or cloud_ui_compose.changed or cloud_ui_unit.changed or cloud_ui_build.changed | default(false)) else 'started' }}"
+
+- name: Require authentication at both actual private listeners
+  ansible.builtin.uri:
+    url: "http://{{ cloud_vpn_service_ip }}:{{ item }}/"
+    method: GET
+    status_code: 401
+    return_content: false
+    use_proxy: false
+    follow_redirects: none
+    timeout: 5
+  loop: [18080, 19696]
+  register: cloud_ui_auth_probe
+  until: cloud_ui_auth_probe.status | default(0) == 401
+  retries: 12
+  delay: 5

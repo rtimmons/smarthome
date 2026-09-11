@@ -1,0 +1,47 @@
+name: usenet-cloud-ui
+services:
+  proxy:
+    image: usenet-cloud-ui:caddy-2.11.4-nonroot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # systemd supervises this project after the VPN address and firewall.
+    restart: "no"
+    network_mode: host
+    user: "{{ usenet_uid }}:{{ usenet_gid }}"
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 1.0
+    command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    environment:
+      XDG_DATA_HOME: /data
+      XDG_CONFIG_HOME: /config
+    volumes:
+      - type: bind
+        source: "/etc/usenet-cloud-ui/Caddyfile"
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=4m,mode=1777
+      - /data:rw,noexec,nosuid,nodev,size=16m,mode=1777
+      - /config:rw,noexec,nosuid,nodev,size=4m,mode=1777
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          wget -S -O /dev/null -T 3 http://{{ cloud_vpn_service_ip }}:18080/ 2>&1 | grep -q 'HTTP/1.1 401' &&
+          wget -S -O /dev/null -T 3 http://{{ cloud_vpn_service_ip }}:19696/ 2>&1 | grep -q 'HTTP/1.1 401'
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: local
+      options:
+        max-size: 1m
+        max-file: "2"

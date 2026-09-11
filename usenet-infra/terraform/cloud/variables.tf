@@ -67,3 +67,13 @@ variable "additional_labels" {
   type        = map(string)
   default     = {}
 }
+
+variable "vpn_peer_ipv4" {
+  description = "Optional verified home WAN IPv4 for the private UI IPsec peer; empty disables VPN ingress."
+  type        = string
+  default     = ""
+  validation {
+    condition     = var.vpn_peer_ipv4 == "" || (can(cidrhost("${var.vpn_peer_ipv4}/32", 0)) && can(regex("^[0-9.]+$", var.vpn_peer_ipv4)))
+    error_message = "vpn_peer_ipv4 must be empty or one IPv4 address without a CIDR suffix."
+  }
+}

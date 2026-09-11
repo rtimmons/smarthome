@@ -1,0 +1,16 @@
+---
+- name: Configure private LAN access to the cloud interfaces
+  hosts: cloud
+  become: true
+  gather_facts: true
+  serial: 1
+  pre_tasks:
+    - name: Require explicitly enabled and supported cloud LAN access
+      ansible.builtin.assert:
+        that:
+          - cloud_lan_ui_enabled | bool
+          - ansible_facts.distribution == 'Ubuntu'
+          - ansible_facts.distribution_release in cloud_supported_ubuntu_codenames
+  roles:
+    - role: cloud_vpn
+    - role: cloud_ui_proxy

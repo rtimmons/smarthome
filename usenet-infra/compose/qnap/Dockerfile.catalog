@@ -5,9 +5,12 @@ FROM rclone/rclone:1.75.1 AS rclone
 FROM python:3.14.7-alpine3.24
 
 COPY --from=rclone /usr/local/bin/rclone /usr/local/bin/rclone
-COPY catalog-run /usr/local/bin/catalog-run
+COPY catalog-run /tmp/catalog-run.source
 
-RUN chmod 0555 /usr/local/bin/catalog-run \
+# QNAP build contexts carry POSIX ACL xattrs through COPY. Writing only the
+# bytes to a fresh inode avoids retaining NAS ACLs that can deny our runtime UID
+# even when the copied file's ordinary mode is 0555.
+RUN python3 -c 'from pathlib import Path; source=Path("/tmp/catalog-run.source"); target=Path("/usr/local/bin/catalog-run"); target.write_bytes(source.read_bytes()); target.chmod(0o555); source.unlink()' \
     && test "$(rclone version | sed -n '1s/^rclone v//p')" = "1.75.1" \
     && python3 --version
 

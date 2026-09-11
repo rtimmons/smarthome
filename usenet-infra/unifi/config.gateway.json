@@ -1,0 +1,41 @@
+{
+  "vpn": {
+    "ipsec": {
+      "ike-group": {
+        "USENET_UI_IKE": {
+          "key-exchange": "ikev2",
+          "lifetime": "28800",
+          "proposal": {
+            "1": { "dh-group": "14", "encryption": "aes256", "hash": "sha1" }
+          }
+        }
+      },
+      "esp-group": {
+        "USENET_UI_ESP": {
+          "compression": "disable",
+          "lifetime": "3600",
+          "mode": "tunnel",
+          "pfs": "dh-group14",
+          "proposal": {
+            "1": { "encryption": "aes256", "hash": "sha1" }
+          }
+        }
+      },
+      "site-to-site": {
+        "peer": {
+          "89.167.18.138": {
+            "ike-group": "USENET_UI_IKE",
+            "tunnel": {
+              "0": {
+                "esp-group": "USENET_UI_ESP",
+                "local": { "prefix": "192.168.1.0/24" },
+                "remote": { "prefix": "10.77.0.0/30" }
+              },
+              "1": { "disable": "''" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

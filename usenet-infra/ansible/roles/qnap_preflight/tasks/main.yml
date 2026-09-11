@@ -1,4 +1,50 @@
 ---
+- name: Require an explicitly selected private dashboard address
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - |
+        import ipaddress, sys
+        address = ipaddress.ip_address(sys.argv[1])
+        networks = ('127.0.0.0/8', '10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16')
+        assert address.version == 4 and any(address in ipaddress.ip_network(n) for n in networks), 'Use a loopback or RFC1918 LAN IPv4 address'
+        assert 1024 <= int(sys.argv[2]) <= 65535, 'Choose an unprivileged dashboard port'
+      - "{{ qnap_dashboard_bind_address }}"
+      - "{{ qnap_dashboard_port | string }}"
+  delegate_to: localhost
+  changed_when: false
+
+- name: Confine configured deployment paths to the selected shared folders
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - -c
+      - |
+        from pathlib import PurePosixPath as Path
+        import sys
+        paths = [Path(value) for value in sys.argv[1:]]
+        assert all(p.is_absolute() and '..' not in p.parts and p.parts[1] == 'share' for p in paths), 'Use absolute /share paths without traversal'
+        project, library, cache, *managed = paths
+        assert len(project.parts) >= 4 and len(library.parts) >= 3, 'Use a dedicated application subdirectory and a selected data share'
+        assert not project.is_relative_to(library) and not library.is_relative_to(project), 'Application and data roots must be distinct'
+        assert cache != library and cache.is_relative_to(library), 'Cache must be a child of the selected data root'
+        assert all(p != project and p.is_relative_to(project) for p in managed), 'Configuration, state and keys must stay inside the project root'
+        assert len(set(paths)) == len(paths), 'Managed paths may not alias one another'
+      - "{{ qnap_container_root }}"
+      - "{{ qnap_data_root }}"
+      - "{{ qnap_catalog_cache_dir }}"
+      - "{{ qnap_deploy_dir }}"
+      - "{{ qnap_catalog_scripts_dir }}"
+      - "{{ qnap_catalog_state_dir }}"
+      - "{{ qnap_dashboard_config_dir }}"
+      - "{{ qnap_dashboard_state_dir }}"
+      - "{{ qnap_dashboard_auth_file }}"
+      - "{{ qnap_storagebox_key_file }}"
+      - "{{ qnap_storagebox_known_hosts_file }}"
+  delegate_to: localhost
+  changed_when: false
+
 - name: Read the QNAP kernel and architecture
   ansible.builtin.raw: uname -srm
   register: qnap_uname
@@ -8,24 +54,64 @@
   ansible.builtin.raw: >-
     command -v base64 && command -v sha256sum && command -v sed &&
     command -v mkdir && command -v chmod && command -v mv &&
+    command -v stat && stat -c '%a' /tmp &&
     test "$(printf 'cW5hcC1iYXNlNjQ=' | base64 -d)" = qnap-base64
   register: qnap_transfer_tools
   changed_when: false
   failed_when: false
 
 - name: Read the dedicated QNAP account identity
-  ansible.builtin.raw: id -u && id -g
+  ansible.builtin.raw: id -u && id -g && id
   register: qnap_account_identity
   changed_when: false
 
+- name: Discover the existing Docker executable without changing QNAP PATH
+  ansible.builtin.raw: |
+    if qnap_docker=$(command -v docker 2>/dev/null); then
+      case "$qnap_docker" in
+        /*) if test -x "$qnap_docker"; then printf '%s\n' "$qnap_docker"; exit 0; fi ;;
+      esac
+    fi
+    test -x /sbin/getcfg || exit 1
+    qnap_package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf 2>/dev/null)
+    case "$qnap_package" in /share/*) ;; *) exit 1 ;; esac
+    for qnap_docker in "$qnap_package/bin/docker" "$qnap_package/usr/bin/docker"; do
+      if test -x "$qnap_docker"; then printf '%s\n' "$qnap_docker"; exit 0; fi
+    done
+    exit 1
+  register: qnap_docker_discovery
+  changed_when: false
+  failed_when: false
+
+- name: Require a discovered absolute Docker executable
+  ansible.builtin.assert:
+    that:
+      - qnap_docker_discovery.rc == 0
+      - qnap_docker_discovery.stdout_lines | length == 1
+      - qnap_docker_discovery.stdout | trim is match('^/')
+    fail_msg: Existing Docker was not found in PATH or the configured Container Station installation.
+
+- name: Retain the discovered Docker path for every deployment command
+  ansible.builtin.set_fact:
+    qnap_docker_executable: "{{ qnap_docker_discovery.stdout | trim }}"
+    qnap_docker_config_dir: "{{ qnap_container_root }}/state/docker-client"
+
+- name: Scope Docker and Buildx client state to this application
+  ansible.builtin.set_fact:
+    qnap_docker_command: >-
+      DOCKER_CONFIG={{ qnap_docker_config_dir | quote }}
+      BUILDX_CONFIG={{ (qnap_docker_config_dir ~ '/buildx') | quote }}
+      COMPOSE_ANSI=never BUILDKIT_PROGRESS=plain
+      {{ qnap_docker_executable | quote }} --config {{ qnap_docker_config_dir | quote }}
+
 - name: Check the existing Docker Engine
-  ansible.builtin.raw: docker version
+  ansible.builtin.raw: "{{ qnap_docker_executable | quote }} version"
   register: qnap_docker_version
   changed_when: false
   failed_when: false
 
 - name: Check the existing Docker Compose plugin
-  ansible.builtin.raw: docker compose version
+  ansible.builtin.raw: "{{ qnap_docker_executable | quote }} compose version"
   register: qnap_compose_version
   changed_when: false
   failed_when: false
@@ -69,6 +155,24 @@
   register: qnap_os_release
   changed_when: false
 
+- name: Read HybridMount version if installed
+  ansible.builtin.raw: >-
+    if test -x /sbin/getcfg && test -r /etc/config/qpkg.conf; then
+      for section in $(sed -n 's/^\[\([^]]*[Hh]ybrid[Mm]ount[^]]*\)\]$/\1/p' /etc/config/qpkg.conf); do
+        printf '%s: ' "$section";
+        /sbin/getcfg "$section" Version -f /etc/config/qpkg.conf;
+      done;
+    fi
+  register: qnap_hybridmount_version
+  changed_when: false
+
+- name: Inventory existing containers without changing their state
+  ansible.builtin.raw: >-
+    {{ qnap_docker_executable | quote }} ps -a --format '{{ "{{.Names}}\\t{{.Image}}\\t{{.Status}}\\t{{.Ports}}" }}'
+  register: qnap_existing_containers
+  changed_when: false
+  failed_when: false
+
 - name: Read QNAP memory page size
   ansible.builtin.raw: getconf PAGESIZE
   register: qnap_page_size
@@ -103,6 +207,7 @@
   ansible.builtin.assert:
     that:
       - "'Linux' in qnap_uname.stdout"
+      - "qnap_uname.stdout is search('x86_64|aarch64')"
       - qnap_transfer_tools.rc == 0
       - qnap_docker_version.rc == 0
       - qnap_compose_version.rc == 0
@@ -144,7 +249,10 @@
       operating_system: "{{ qnap_os_release.stdout_lines }}"
       page_size: "{{ qnap_page_size.stdout | trim | default('not reported', true) }}"
       container_station: "{{ qnap_container_station_version.stdout | trim | default('not reported', true) }}"
+      hybridmount: "{{ qnap_hybridmount_version.stdout | trim | default('not installed or not reported; inspect UI before optional experiment', true) }}"
+      existing_containers: "{{ qnap_existing_containers.stdout_lines }}"
       docker_compose: "{{ qnap_compose_version.stdout | trim }}"
+      docker_executable: "{{ qnap_docker_executable }}"
       account_identity: "{{ qnap_account_identity.stdout_lines }}"
       transfer_tools: "{{ qnap_transfer_tools.stdout_lines }}"
       shares: "{{ qnap_share_names.stdout_lines }}"

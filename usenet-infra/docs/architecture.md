@@ -1,6 +1,11 @@
 # Architecture
 
-Status: scaffolded, not yet provisioned. Last reviewed 2026-09-10.
+Status as of 2026-09-10: the protected CX43/BX11 infrastructure and hardened
+cloud applications are live. The read-only Storage Box identity has passed a
+writer/reader sentinel test. Provider/indexer setup, QNAP deployment, dashboard
+runtime validation, and end-to-end acceptance remain pending. See
+[validation.md](validation.md) for the distinction between source checks and
+live evidence.
 
 This system intentionally separates a replaceable acquisition host, a canonical
 remote catalog, and a disposable local cache:
@@ -18,7 +23,7 @@ Hetzner Storage Box (canonical catalog)
   ^
   | direct SFTP/rclone, read-only subaccount
   |
-QNAP (selective pull-only cache)
+QNAP (OliveTin dashboard + manifest-aware selective cache)
 ```
 
 The Storage Box is the canonical copy. It starts at 1 TB on BX11 and is upgraded
@@ -36,12 +41,13 @@ while it is offline.
 | Cloud VM -> providers/indexers | The VM holds the service credentials. | NNTP over TLS and HTTPS only. |
 | Cloud VM -> Storage Box | Trusted write path. Only this path receives the main Storage Box credential. | SFTP/rclone uploads, checks, and final promotion. |
 | QNAP -> Storage Box | Untrusted for canonical mutation. The QNAP receives only a subaccount rooted at `catalog` with server-enforced `readonly = true`. | Direct read-only SFTP/rclone pulls. |
+| Operator -> QNAP dashboard | An authenticated private interface, reached over the selected LAN/private access path. | Predefined browse, refresh, download, retry, and local-eviction actions only. |
 | Git -> runtime | Git is the source of truth for non-secret configuration. | Secrets, private keys, Terraform state, plans, and live app config remain outside Git. |
 
 The QNAP rclone remote also wraps the SFTP remote with `:ro:`. That is useful
 defense in depth, but the Hetzner subaccount restriction is the security
 boundary. Hetzner documents subaccount home-directory and read-only controls in
-[Additional users/subaccounts](https://docs.hetzner.com/storage/storage-box/additional-users/),
+[Storage Box overview](https://docs.hetzner.com/storage/storage-box/general/),
 and the provider exposes those controls on
 [`hcloud_storage_box_subaccount`](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/storage_box_subaccount).
 
@@ -64,12 +70,34 @@ and the provider exposes those controls on
    with `--delete-local`, and only after the verified data move and manifest
    publication succeed. Failures leave recoverable local/remote staging and a
    failure record for inspection.
-6. On demand, the QNAP uses `catalog-list`, `catalog-status`, and
-   `catalog-pull <item>`. A pull copies directly from the Storage Box into a
+6. The authenticated OliveTin dashboard selects a manifest-backed item and
+   invokes the same catalog backend as `catalog-pull <item>`. A pull copies
+   directly from the Storage Box into a
    local `.partial` staging directory, verifies sizes and SHA-256 hashes, and
    atomically renames the directory into the cache.
 7. `catalog-evict <item>` removes only the QNAP copy and its local state record.
    It does not issue an rclone delete operation.
+
+## Dashboard boundary
+
+The dashboard is declarative OliveTin configuration, not an alternative transfer
+engine. Catalog metadata supplies item cards and action arguments; backend
+validation remains mandatory even after UI validation. There is no free-form
+shell, general rclone command field, Docker socket, or remote writer credential.
+The runtime receives only the numeric QNAP UID/GID, required cache/state paths,
+read-only source/configuration mounts, and the read-only Storage Box identity.
+Capabilities are dropped and the container root filesystem is read-only.
+
+The dedicated NAS SSH deployment account may require QNAP administrator-group
+membership. That host authority is separate from what the dashboard container
+receives: it gets no NAS supplementary groups or host-control socket. Closing
+the browser must not cancel a running pull; runtime acceptance verifies that
+behavior and persistence of execution history. See [QNAP bootstrap](qnap-bootstrap.md)
+for the private access and authentication setup.
+
+HybridMount remains an optional experiment. Its caching model must not replace
+manifest validation, deliberate selection, or verified local publication. A
+failed read-only WebDAV mount is not grounds to grant write access.
 
 The catalog manifest schema records a stable ID, category, canonical remote
 path, provenance, authorization basis, acquisition time, byte count, and a
@@ -97,7 +125,7 @@ Changing initial Storage Box SSH keys is also deliberately excluded from
 Terraform reconciliation: the provider documents that the API cannot update
 them and a change would force replacement. Key rotation is performed through
 `authorized_keys`, with the server fingerprint checked against
-[Hetzner's published host keys](https://docs.hetzner.com/storage/storage-box/backup-space-ssh-keys/).
+[Hetzner's published host keys](https://docs.hetzner.com/storage/storage-box/general/).
 See the [Terraform runbook](../terraform/README.md) for the break-glass rules.
 
 ## Capacity growth
