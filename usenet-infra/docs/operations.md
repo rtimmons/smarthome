@@ -89,17 +89,17 @@ command without restarting the app. The old key returns HTTP 401, the new key
 HTTP 200, and the protected dependent environment is synchronized with its
 mode `0640` and owner preserved. Other XML settings were unchanged.
 Saved-client and NZBGeek tests also passed after rotation.
-Do not add Sonarr/Radarr-style
-automatic acquisition, RSS grabs, broad automatic search, or another path that
-can silently make an arbitrary result permanent. A human intentionally chooses
-each acquisition and later supplies its provenance when promoting it.
+The user subsequently enabled Radarr/Sonarr automatic search and RSS globally.
+Monitoring selects the titles/episodes eligible for acquisition; quality profiles
+select matching releases. Successful completed SAB jobs are now automatically
+published, verified and removed from cloud scratch by the transitional publisher.
 
 ## Deliberate acquisition and promotion
 
 For curated movie browsing and TV lookup/calendar, use the deployed
 [Radarr/Sonarr interfaces](discovery.md). Both connect to the existing indexers
-and SAB through manual-only settings; completed downloads still need deliberate
-catalog promotion. The new pages use the existing catalog login at
+and SAB with automatic search and 15-minute RSS checks enabled. Completed jobs
+are automatically published to the Storage Box. The pages use the catalog login at
 `http://10.77.0.1:19696/radarr/` and `http://10.77.0.1:19696/sonarr/`.
 
 To search interactively, keep `just usenet-cloud-ui` running from the repository
@@ -107,8 +107,8 @@ root, open Prowlarr at `http://127.0.0.1:9696`, and select **Search**. Enter a
 query, select NZBGeek and NZBFinder (or all Usenet indexers), optionally select
 a category, and press **Search**. The download icon at the right of a result
 sends it to the configured SABnzbd client. Follow its queue and completed
-history at `http://127.0.0.1:8080`. This downloads to the cloud VM; catalog
-promotion and the subsequent QNAP pull remain separate deliberate steps.
+history at `http://127.0.0.1:8080`. This downloads to the cloud VM; publication
+is automatic, while the subsequent NAS copy remains a deliberate selection.
 See the [official search guide](https://wiki.servarr.com/prowlarr/search).
 
 The official diagnostic fixture has already passed NNTP downloading,
@@ -117,6 +117,10 @@ verification, unpacking, and promotion. Inspect it from the repository root with
 silently creating another job. Canonical item `sabnzbd-official-100mb-2026-09-10`
 has passed the NAS dashboard download/reconnection/eviction checks; remaining
 acceptance is tracked in the validation ledger.
+
+The following manual promotion procedure remains available for exceptional
+imports. Do not manually promote a SAB job already owned by the automatic
+publisher; its deterministic job ID avoids duplicate remote objects.
 
 1. Confirm that the material is authorized and record the basis.
 2. Deliberately send the selected NZB to SABnzbd.
@@ -172,7 +176,7 @@ with `just usenet-qnap-recon`. The runtime setup and pinned configuration are in
 
 The normal workflow is:
 
-1. Refresh catalog data, then browse/filter by title and category. Inspect the
+1. Browse/filter the automatically refreshed catalog by title and category. Inspect the
    remote/local counts and sizes, available NAS capacity, reserve, active
    transfers, and recorded failures. Use the header search for titles/categories
    or the **Entities** table's filter to inspect every state.
@@ -191,11 +195,18 @@ The normal workflow is:
    the canonical remote copy remains. After success, refresh to `remote only`.
 
 Catalog data refreshes every 60 seconds while idle, about every 30 seconds
-during a pull, on demand, and after each action. Return to **Catalog** from the
-execution view; reload the browser if that already-open view retains an earlier
-snapshot. **Logs** shows the initiator, confirmation arguments, status and
+during a pull, on demand, and after each action. The supported custom-JS
+extension refreshes an idle visible Catalog page when configuration/entity
+events arrive; it avoids active forms and dialogs. Return to **Catalog** from
+the execution view. **Logs** shows the initiator, confirmation arguments, status and
 output. A refresh failure displays the last snapshot as stale and disables
 mutation actions until refresh succeeds.
+
+The deployed movie cache now lives beside the existing private library on
+the large data volume. Verified movie pulls appear under Plex's `Movies (NAS)`
+source, with Plex-native filesystem watching and an hourly scan fallback.
+Use the restricted `Movies & TV` profile. See [NAS/Plex layout](nas-plex-layout.md)
+for paths, permissions, client setup, and rollback records.
 
 The current finite action timeout is 30 days. Metadata refresh is separately
 bounded at 120 seconds; its timeout terminates the entire metadata process

@@ -8,16 +8,26 @@ pass. A request portal and automatic list subscriptions are deferred.
 
 - Movies: `http://10.77.0.1:19696/radarr/` provides Radarr's movie lookup and
   Discover view (30 trending/popular results verified). Add a chosen title
-  without searching and leave it unmonitored.
+  with monitoring set to Movie Only and "Start search for missing movie"
+  selected to choose and download a matching release immediately. The Discover
+  address is `http://10.77.0.1:19696/radarr/add/discover`.
 - TV: `http://10.77.0.1:19696/sonarr/` provides series lookup and a calendar for
   titles you add. Sonarr is not a general recommendation feed. Add a chosen
-  series without searching, with monitoring set to None.
+  series with monitoring limited to the episodes/seasons you want; select the
+  search-for-missing option to download existing matching episodes.
 - Choose `/library` when adding metadata. This empty local root satisfies the
   applications' library model; it is not the canonical library or NAS cache.
-- Use Interactive Search, inspect the release, and deliberately choose its
-  download action. The existing SAB category is `prowlarr`.
-- Inspect completion in the existing Downloads UI. Deliberate catalog promotion
-  and NAS download/removal continue through the existing manifest workflow.
+- Automatic Search chooses a release according to your quality profile. RSS
+  checks newly posted releases every 15 minutes for monitored movies/episodes.
+  Previously added unmonitored titles stay unmonitored; enabling these features
+  does not run a backlog search. Interactive Search remains available when you
+  want to choose a particular release. The existing SAB category is `prowlarr`.
+- Inspect queue/history at `http://10.77.0.1:18080/`. Automatic importing remains
+  disabled, so an item may still appear missing in Radarr/Sonarr after completion.
+  Repeat searches can submit another copy while the app has no imported file.
+  Successful jobs are now automatically published and verified on the Storage
+  Box before cloud scratch is reclaimed. NAS download/removal remains selective;
+  copied movies feed the separate [NAS Plex library](nas-plex-layout.md).
 
 The same catalog credentials protect both new paths. They share the existing
 private listener and VPN selectors; no new public port or gateway change is
@@ -32,7 +42,7 @@ Reviewed September 11 against official documentation and exact release source:
 | --- | --- |
 | Radarr | `lscr.io/linuxserver/radarr:6.3.0.10514-ls315` |
 | Sonarr | `lscr.io/linuxserver/sonarr:4.0.19.2979-ls323` |
-| Prowlarr | Existing `2.5.2.5491-ls158`; a dedicated profile enables interactive search and disables RSS/automatic search, with full sync to both applications. |
+| Prowlarr | Existing `2.5.2.5491-ls158`; the shared profile enables interactive search, automatic search and RSS, with full sync to both applications. Its legacy name `Manual discovery only` is retained to preserve existing IDs/bindings. |
 | SABnzbd | Existing client/category; no category or provider changes, completed/failed download removal disabled in both new clients. |
 
 The container publishers document configuration persistence, ports and runtime
@@ -45,7 +55,8 @@ documents independent RSS, automatic and interactive flags and warns that its
 download clients do not sync to applications. This implementation creates the
 two separate SAB clients server-side. It restricts sync to movie/TV categories.
 
-Both applications set RSS interval to zero and disable completed download
+On September 11, the user explicitly enabled automatic search and RSS globally.
+Both applications set RSS interval to 15 minutes and disable completed download
 handling plus automatic retry, including retries after interactive searches.
 These fields were verified in the pinned
 [Radarr](https://github.com/Radarr/Radarr/blob/v6.3.0.10514/src/Radarr.Api.V3/Config/DownloadClientConfigResource.cs)
@@ -56,9 +67,9 @@ source. See also [Radarr settings](https://wiki.servarr.com/radarr/settings) and
 The new containers mount configuration and empty local metadata library roots.
 They cannot see SAB download files, canonical catalog storage, writer keys or
 the NAS cache. No import list is installed implicitly. The policy health check
-fails if an enabled acquisition flag or automatic list addition is introduced.
+verifies the authorized search/RSS settings and rejects automatic list addition.
 Administrative users can change settings; this configuration is not a substitute
-for keeping the existing per-item approval workflow.
+for choosing which titles and episodes to monitor.
 
 ## Operation and recovery
 
@@ -81,8 +92,11 @@ The cloud backup allowlist now captures `config/radarr`, `config/sonarr` and
 `compose/discovery`, verifies SQLite snapshots, and rejects an incomplete
 deployed discovery configuration. Cover images, logs, caches and downloaded
 media are excluded. Restore configuration with the deployment UID/GID and
-run `discovery-config.py inspect` before exposing restored UIs. Keep RSS,
-automatic retries and completed download handling disabled throughout recovery.
+run `discovery-config.py configure` and then `inspect` before exposing restored
+UIs. Older snapshots predate RSS/search authorization; configuration reconciles
+them to the saved policy. Keep restored services isolated during recovery checks
+to avoid acquisition before deliberately resuming normal operation. Automatic
+retries and completed download handling remain disabled.
 
 The September 11 clean-clone snapshot predates discovery. Do not describe it as
 a backup of the new application state. Preserve its exact vault/inventory;
@@ -113,15 +127,19 @@ captures use unique directories; ciphertext is retained on the cloud, workstatio
 and NAS with no automatic deletion. Source-controlled code and public receipts
 must be published before relying on a fresh Git clone to recover this increment.
 
+The authorized automatic-search/RSS update is captured in supplemental snapshot
+`20260911T210232Z-ae56b33b7f0488c7`, with encrypted NAS upload, fetch, byte comparison
+and decryption verified. See its [public receipt](../recovery/application-backups/20260911T210232Z-ae56b33b7f0488c7.json).
+
 ## Acceptance and expected notices
 
-The policy check verifies both exact application versions, two interactive-only
-indexers per app, one SAB client each, zero RSS interval, disabled automatic
-retry/import/removal, and absence of automatic list subscriptions. It accepts
-only the three expected health-check sources: `IndexerRssCheck`,
-`IndexerSearchCheck` and `ImportMechanismCheck`. Their red/yellow UI notices
-describe deliberate manual-mode choices. Other application warnings/errors fail
-the check; do not enable automation just to clear those badges.
+The policy check verifies both exact application versions, two indexers per app
+with interactive search, automatic search and RSS enabled, one SAB client each,
+a 15-minute RSS interval, disabled automatic retry/import/removal, and absence
+of automatic list subscriptions. It accepts
+only `ImportMechanismCheck`, reflecting deliberately disabled imports.
+RSS/search health warnings now fail the check. Configuration waits for indexer
+sync and fresh application health checks before verifying policy.
 
 The 397-case Usenet suite passed 389 cases with eight opt-in runtime skips; all
 13 isolated proxy tests passed separately, including the eight runtime cases.
@@ -136,3 +154,7 @@ To stop this layer, stop only `radarr` and `sonarr` in the
 `/srv/usenet/compose/discovery` project. Existing Prowlarr search, SAB downloads,
 catalog operations and VPN service continue independently. Preserve the two
 configuration directories and backups. Do not use a volume-pruning command.
+
+The subsequent automatic-search/RSS change passed 398 Usenet tests (390 passed,
+eight opt-in skips), current-source secret scanning, and live policy readback:
+two search/RSS indexers per app, RSS interval 15, one SAB client, imports disabled.

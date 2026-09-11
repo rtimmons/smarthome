@@ -4,18 +4,48 @@ Last updated: 2026-09-11. This is an evidence ledger, not a claim that the syste
 is complete. A local test result does not prove NAS compatibility, authenticated
 browser behavior, provider acquisition, or end-to-end recovery.
 
+## September 11 automatic publication and Plex update
+
+- Ran 406 local cases: 398 passed and eight opt-in integration cases skipped.
+  ShellCheck, JSON/YAML checks and deployment syntax checks passed, including
+  the new publisher and catalog-refresh playbooks. Source/index secret scanning
+  passed. The full recipe remains nonzero because history scanning detects the
+  already documented 2017–2018 RSA keys; this is not a clean whole-history audit.
+- All four successful SAB jobs were published, remotely verified and cleaned.
+  The publisher then reported idle with four already-published receipts and no
+  failures. Cloud free space measured 132,828,790,784 bytes (123.7 GiB).
+- The existing NAS browser tab refreshed without manual navigation and showed
+  all five remote catalog items (four movies and the official test fixture).
+- NAS relocation preserved the cache inode/device and private directory inode/
+  modification time; the operation copied zero media bytes. Both cache services
+  restarted against `/share/FromDrobo/Movies`.
+- Plex retained the existing 5,258 entries. New movie/TV libraries are separate.
+  The managed profile's actual server token listed only the two new libraries;
+  direct access to the private library returned HTTP 403.
+- The first real movie NAS pull completed and passed SHA-256 verification.
+  A read-only Plex check found `Colony (2026)` with its media file in library 2;
+  no manual scan was triggered. Actual Apple TV/Roku playback and startup-profile
+  behavior remain unverified. Remote streaming and native Arr import mounts
+  are not deployed.
+- A supplemental backup attempt was blocked by the existing requirement for
+  an empty SAB queue; three paused jobs remain. The previous verified encrypted
+  backup is retained. No jobs were removed or resumed to satisfy the backup.
+
+See [NAS/Plex layout](nas-plex-layout.md) and [workflow review](media-workflow-review.md).
+
 ## September 11 discovery and recovery acceptance
 
 The master-key clean-clone secrets/state milestone passed; see the
 [drill report](../recovery/drills/20260911T194408Z.json). The selected Radarr and
-Sonarr releases are deployed with two interactive-only indexers and one SAB
-client each. RSS, automatic retry/search, completed import and download removal
-are disabled. Read-only lookup returned movie/series results; Radarr's
+Sonarr releases initially deployed with two interactive-only indexers and one
+SAB client each. The user subsequently authorized automatic search and RSS for
+both apps (15-minute interval). Automatic retry, completed import and download
+removal remain disabled. Read-only lookup returned movie/series results; Radarr's
 trending/popular Discover feed returned 30 movies. No titles, subscriptions or
 downloads were added. Both real private paths deny anonymous requests with 401.
 The in-app browser blocked the VPN URL; user-browser visual login remains
-unverified. Three expected application notices concern deliberately disabled
-RSS/search/importing; other health warnings/errors fail the policy check.
+unverified. The original three notices concerned disabled RSS/search/importing. The current
+policy accepts only the disabled-import notice; RSS/search problems fail checks.
 
 The final Usenet suite passed 389 of 397 cases, with eight opt-in runtime skips;
 all 13 isolated proxy tests passed separately, including those eight runtime
@@ -361,3 +391,9 @@ The following operating details remain explicit:
 - The authorized fixture demonstrated the workflow and preserved hashes.
   Representative large-file throughput, sustained NAS load, and tuning limits
   have not been benchmarked. The observed fixture timings are not a benchmark.
+
+The user-authorized global automatic-search/RSS update passed all 398 Usenet
+tests (390 passed, eight opt-in skips). Live policy readback verified both apps
+with two enabled search/RSS indexers and a 15-minute interval. Supplemental
+snapshot `20260911T210232Z-ae56b33b7f0488c7` passed encrypted NAS round-trip
+verification. Automatic importing remains disabled.

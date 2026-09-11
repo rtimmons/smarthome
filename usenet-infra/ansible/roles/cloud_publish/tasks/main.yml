@@ -1,0 +1,35 @@
+---
+- name: Install automatic publication implementations
+  ansible.builtin.copy:
+    src: "{{ usenet_project_root }}/scripts/{{ item }}"
+    dest: "{{ cloud_data_root }}/libexec/{{ item }}"
+    owner: root
+    group: usenet
+    mode: "0550"
+  loop: [catalog-autopublish.py, catalogctl.py, sab-settings.py]
+
+- name: Install automatic publication service and timer
+  ansible.builtin.template:
+    src: "{{ item }}.j2"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop: [usenet-publish.service, usenet-publish.timer]
+
+- name: Configure SAB disk-space recovery without resuming manual pauses
+  ansible.builtin.command:
+    argv:
+      - /bin/sh
+      - -c
+      - 'set -a; . {{ cloud_data_root }}/config/catalog.env; exec /usr/bin/python3 {{ cloud_data_root }}/libexec/catalog-autopublish.py configure'
+  become_user: usenet
+  changed_when: false
+
+- name: Enable automatic publication of completed downloads
+  tags: [publisher-start]
+  ansible.builtin.systemd_service:
+    name: usenet-publish.timer
+    daemon_reload: true
+    enabled: true
+    state: started

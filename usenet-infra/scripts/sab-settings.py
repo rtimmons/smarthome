@@ -19,13 +19,13 @@ import urllib.request
 VERSION = '5.1.3'
 API_URL = 'http://127.0.0.1:8080/api'
 # pp=3 is SAB's normal repair + unpack + archive cleanup. Publication to the
-# remote catalog remains a separate, deliberate catalog-promote operation.
+# remote catalog is handled separately by the verified completion publisher.
 DESIRED_MISC = {
     'download_dir': '/data/incomplete',
     'complete_dir': '/data/complete',
     'download_free': '30G',
     'complete_free': '30G',
-    'fulldisk_autoresume': 0,
+    'fulldisk_autoresume': 1,
     'safe_postproc': 1,
     'enable_unrar': 1,
     'enable_7zip': 1,

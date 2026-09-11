@@ -685,3 +685,7 @@ alias k := kill
 
 # Aliases for information
 alias ls := addons
+
+[group: 'usenet']
+usenet-configure-publishing:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-publishing

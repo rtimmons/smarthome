@@ -1,5 +1,5 @@
 ---
-- name: Configure the explicitly selected manual discovery applications
+- name: Configure the explicitly selected discovery applications
   hosts: cloud
   become: true
   gather_facts: true

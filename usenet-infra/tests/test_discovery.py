@@ -27,8 +27,8 @@ class ReadAPI:
         self.data['prowlarr', 'indexer'] = [{'appProfileId': 8}, {'appProfileId': 8}]
         for app in ('radarr', 'sonarr'):
             self.data[app, 'importlist'] = []
-            self.data[app, 'health'] = [{'type': 'error', 'source': 'IndexerRssCheck'}]
-            self.data[app, 'config/indexer'] = {'rssSyncInterval': 0}
+            self.data[app, 'health'] = [{'type': 'error', 'source': 'ImportMechanismCheck'}]
+            self.data[app, 'config/indexer'] = {'rssSyncInterval': discovery.RSS_INTERVAL}
             self.data[app, 'config/downloadclient'] = dict(discovery.DOWNLOAD_POLICY)
             self.data[app, 'indexer'] = [dict(discovery.PROFILE_POLICY), dict(discovery.PROFILE_POLICY)]
             self.data[app, 'downloadclient'] = [{'name': discovery.CLIENT, 'enable': True,
@@ -41,11 +41,14 @@ class ReadAPI:
 
 
 class DiscoveryTests(unittest.TestCase):
-    def test_inspection_is_read_only_and_rejects_every_automatic_acquisition_path(self):
+    def test_inspection_is_read_only_and_checks_authorized_acquisition_policy(self):
         api = ReadAPI()
-        self.assertEqual(discovery.inspect(api)['status'], 'verified')
+        result = discovery.inspect(api)
+        self.assertEqual(result['status'], 'verified')
+        self.assertTrue(result['automatic_acquisition'])
+        self.assertFalse(result['automatic_import'])
         changes = [
-            ('config/indexer', 'rssSyncInterval', 15),
+            ('config/indexer', 'rssSyncInterval', 0),
             *[('config/downloadclient', key, True) for key in discovery.DOWNLOAD_POLICY],
         ]
         for app in ('radarr', 'sonarr'):
@@ -57,7 +60,7 @@ class DiscoveryTests(unittest.TestCase):
                         discovery.inspect(broken)
             for key in ('enableRss', 'enableAutomaticSearch'):
                 broken = ReadAPI()
-                broken.data[app, 'indexer'][0][key] = True
+                broken.data[app, 'indexer'][0][key] = False
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(broken)
             for key in ('removeCompletedDownloads', 'removeFailedDownloads'):
@@ -65,6 +68,21 @@ class DiscoveryTests(unittest.TestCase):
                 broken.data[app, 'downloadclient'][0][key] = True
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(broken)
+
+    def test_configuration_commands_wait_for_completion_and_refuse_searches(self):
+        from unittest.mock import Mock
+        api = Mock()
+        api.call.side_effect = [{'id': 9}, {'status': 'started'}, {'status': 'completed'}]
+        with patch.object(discovery.time, 'sleep'):
+            discovery.run_configuration_command(api, 'prowlarr', 'ApplicationIndexerSync')
+        self.assertEqual(api.call.call_count, 3)
+        api = Mock()
+        with self.assertRaises(discovery.DiscoveryError):
+            discovery.run_configuration_command(api, 'radarr', 'MoviesSearch')
+        api.call.assert_not_called()
+        api.call.side_effect = [{'id': 10}, {'status': 'failed'}]
+        with self.assertRaises(discovery.DiscoveryError):
+            discovery.run_configuration_command(api, 'radarr', 'CheckHealth')
 
     def test_missing_controls_and_upgraded_versions_fail_closed(self):
         api = ReadAPI()
@@ -93,10 +111,13 @@ class DiscoveryTests(unittest.TestCase):
 
     def test_manual_mode_notices_do_not_hide_unrelated_health_failures(self):
         api = ReadAPI()
-        self.assertEqual(discovery.inspect(api)['apps']['radarr']['expected_manual_mode_notices'], 1)
-        api.data['radarr', 'health'].append({'type': 'error', 'source': 'DownloadClientCheck'})
-        with self.assertRaises(discovery.DiscoveryError):
-            discovery.inspect(api)
+        self.assertEqual(discovery.inspect(api)['apps']['radarr']['expected_policy_notices'], 1)
+        for source in ('DownloadClientCheck', 'IndexerRssCheck', 'IndexerSearchCheck'):
+            with self.subTest(source=source):
+                api = ReadAPI()
+                api.data['radarr', 'health'].append({'type': 'error', 'source': source})
+                with self.assertRaises(discovery.DiscoveryError):
+                    discovery.inspect(api)
 
     def test_identity_bootstrap_is_private_and_preserves_existing_keys(self):
         with tempfile.TemporaryDirectory() as directory:

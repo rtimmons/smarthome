@@ -1,0 +1,26 @@
+---
+- name: Update existing NAS catalog live refresh without restarting transfers
+  hosts: qnap
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Install catalog presentation updates
+      ansible.builtin.raw: |
+        set -eu
+        mkdir -p {{ (item.dest | dirname) | quote }}
+        printf '%s' {{ (lookup('ansible.builtin.file', item.src, rstrip=false) | b64encode) | quote }} | base64 -d > {{ (item.dest ~ '.update') | quote }}
+        chmod {{ item.mode }} {{ (item.dest ~ '.update') | quote }}
+        mv -f {{ (item.dest ~ '.update') | quote }} {{ item.dest | quote }}
+      loop:
+        - src: "{{ usenet_project_root }}/scripts/catalog-dashboard.py"
+          dest: "{{ qnap_catalog_scripts_dir }}/catalog-dashboard.py"
+          mode: "0750"
+        - src: "{{ usenet_project_root }}/scripts/catalog-refresh.js"
+          dest: "{{ qnap_catalog_scripts_dir }}/catalog-refresh.js"
+          mode: "0640"
+        - src: "{{ usenet_project_root }}/scripts/catalog-refresh.js"
+          dest: "{{ qnap_dashboard_state_dir }}/runtime/custom-webui/custom.js"
+          mode: "0640"
+        - src: "{{ qnap_compose_source_dir }}/olivetin/config.yaml"
+          dest: "{{ qnap_dashboard_config_dir }}/config.yaml"
+          mode: "0640"

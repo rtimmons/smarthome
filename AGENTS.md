@@ -46,6 +46,7 @@ Guidance for humans and agents working in this repository.
 - Z-Wave nodes 23 (`guestbathroom_overhead`) and 28 (`living_sillleftpower`) are temporarily excluded from every generated scene through `sceneStatus: "temporarily_excluded"`. Node 23 remains usable as a Central Scene trigger and changes its local load, but repeatedly times out during command acknowledgement. Node 11 (`kitchen_dining_nook`, also called the living nook) returned on 2026-09-01 and is active in scenes again; preserve the remaining exclusions until node 28 is repaired and node 23 is excluded/re-included or replaced.
 
 ## Docs map
+- Usenet, QNAP storage, Plex and their recovery workflow: read `usenet-infra/AGENTS.md` and the current handoff at the top of `plan.md` before operating them.
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
 - Container runtime details: `docs/addon-development/container-runtime.md`.
 - UniFi access and Apple TV/Bonjour troubleshooting: `docs/operations/unifi-ssh-access.md`, `docs/operations/unifi-apple-tv-remote.md`.
