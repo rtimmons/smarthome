@@ -7,6 +7,11 @@ recovered by Git. Cloud/VPN/UniFi backups require the existing cloud administrat
 private key; QNAP backups require the existing QNAP administrator private key.
 Both identities need independent, verified escrow before any key replacement.
 
+Start with the [recovery inventory and current gaps](secrets-recovery.md) for
+checkout-loss recovery. `just --no-dotenv secrets-check` at repository root
+inspects local metadata only. The application recovery procedures below do not
+establish master-key recovery or checkout deletion safety.
+
 The recovery model is simple: Git recreates non-secret configuration, the
 Storage Box holds the canonical catalog, and encrypted backups restore stateful
 application configuration and Terraform state. The VM scratch area and QNAP
@@ -489,5 +494,6 @@ A drill is complete only when:
 - CLI listing/pull/status/eviction continue to work while the dashboard is down.
 - Git and logs contain no credentials.
 
-Record each drill in [validation.md](validation.md). No completed QNAP or
-application-configuration recovery drill is currently recorded.
+Record each drill in [validation.md](validation.md). The cloud and QNAP
+application startup drills above are recorded; full machine replacement and
+clean-clone master-key recovery remain pending.

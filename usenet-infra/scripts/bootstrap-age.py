@@ -27,6 +27,7 @@ INSTALL_ROOT = REPO_ROOT / 'build' / 'tools' / ('age-' + VERSION)
 MAX_ARCHIVE_BYTES = 64 * 1024 * 1024
 MAX_BINARY_BYTES = 64 * 1024 * 1024
 # Official GitHub release asset digests for FiloSottile/age v1.3.2.
+PROGRAMS = ('age', 'age-keygen')
 RELEASES = {
     'darwin-arm64': {
         'url': 'https://github.com/FiloSottile/age/releases/download/v1.3.2/age-v1.3.2-darwin-arm64.tar.gz',
@@ -79,7 +80,7 @@ def download(url: str) -> bytes:
         raise BootstrapError('Could not download the pinned official age release.') from None
 
 
-def binary_from_archive(payload: bytes, expected_sha256: str) -> bytes:
+def binaries_from_archive(payload: bytes, expected_sha256: str) -> dict[str, bytes]:
     if len(payload) > MAX_ARCHIVE_BYTES or sha256(payload) != expected_sha256:
         raise BootstrapError('Age archive SHA-256 verification failed; no executable was replaced.')
     try:
@@ -89,23 +90,31 @@ def binary_from_archive(payload: bytes, expected_sha256: str) -> bytes:
                 name = PurePosixPath(member.name)
                 if name.is_absolute() or '..' in name.parts:
                     raise BootstrapError('Unsafe path in age release archive.')
-            matches = [member for member in members if member.name == 'age/age']
-            if len(matches) != 1 or not matches[0].isfile():
-                raise BootstrapError('Age archive must contain exactly one regular age/age file.')
-            member = matches[0]
-            if member.size < 1 or member.size > MAX_BINARY_BYTES:
-                raise BootstrapError('Age binary size is outside the accepted bounds.')
-            stream = archive.extractfile(member)
-            if stream is None:
-                raise BootstrapError('Age binary could not be read from the verified archive.')
-            binary = stream.read(MAX_BINARY_BYTES + 1)
-            if len(binary) != member.size:
-                raise BootstrapError('Age binary length does not match its verified archive.')
-            return binary
+            binaries = {}
+            for program in PROGRAMS:
+                matches = [member for member in members if member.name == 'age/' + program]
+                if len(matches) != 1 or not matches[0].isfile():
+                    raise BootstrapError('Age archive must contain exactly one regular age/' + program + ' file.')
+                member = matches[0]
+                if member.size < 1 or member.size > MAX_BINARY_BYTES:
+                    raise BootstrapError('Age binary size is outside the accepted bounds.')
+                stream = archive.extractfile(member)
+                if stream is None:
+                    raise BootstrapError('Age binary could not be read from the verified archive.')
+                binary = stream.read(MAX_BINARY_BYTES + 1)
+                if len(binary) != member.size:
+                    raise BootstrapError('Age binary length does not match its verified archive.')
+                binaries[program] = binary
+            return binaries
     except BootstrapError:
         raise
     except (tarfile.TarError, OSError, EOFError, ValueError):
         raise BootstrapError('Malformed age release archive; no executable was replaced.') from None
+
+
+def binary_from_archive(payload: bytes, expected_sha256: str) -> bytes:
+    """Compatibility helper for age-only consumers and focused tests."""
+    return binaries_from_archive(payload, expected_sha256)['age']
 
 
 def atomic_write(path: Path, payload: bytes, mode: int) -> None:
@@ -144,18 +153,26 @@ def install(platform: str, release: dict, root: Path, *, offline: bool = False, 
     else:
         payload = fetch(release['url'])
     # Validate both digest and archive layout before replacing either artifact.
-    binary = binary_from_archive(payload, release['sha256'])
+    binaries = binaries_from_archive(payload, release['sha256'])
     if not cache_valid:
         atomic_write(archive_path, payload, 0o600)
-    expected_binary_hash = sha256(binary)
-    changed = not binary_path.is_file() or sha256(binary_path.read_bytes()) != expected_binary_hash
-    if changed:
-        atomic_write(binary_path, binary, 0o755)
-    elif stat.S_IMODE(binary_path.stat().st_mode) != 0o755:
-        binary_path.chmod(0o755)
-        changed = True
+    hashes, changed = {}, False
+    for program, binary in binaries.items():
+        program_path = destination / program
+        if program_path.is_symlink():
+            raise BootstrapError('Refused a symlinked age executable.')
+        expected_binary_hash = sha256(binary)
+        hashes[program] = expected_binary_hash
+        program_changed = not program_path.is_file() or sha256(program_path.read_bytes()) != expected_binary_hash
+        if program_changed:
+            atomic_write(program_path, binary, 0o755)
+        elif stat.S_IMODE(program_path.stat().st_mode) != 0o755:
+            program_path.chmod(0o755)
+            program_changed = True
+        changed = changed or program_changed
     return {'platform': platform, 'version': VERSION, 'path': str(binary_path),
-            'archive_sha256': release['sha256'], 'binary_sha256': expected_binary_hash, 'changed': changed}
+            'archive_sha256': release['sha256'], 'binary_sha256': hashes['age'],
+            'age_keygen_sha256': hashes['age-keygen'], 'changed': changed}
 
 
 def bootstrap(root: Path = INSTALL_ROOT, *, offline: bool = False, releases=None, fetch=download) -> list[dict]:

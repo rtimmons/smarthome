@@ -392,6 +392,43 @@ deploy-force *args="":
 # USENET CATALOG
 # ============================================================================
 
+# Check repository-wide recovery inventory metadata without reading secrets.
+[group: 'backup']
+[positional-arguments]
+secrets-check *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 usenet-infra/scripts/secrets-check.py "$@"
+
+# Cache reviewed recovery tools; does not create a recovery identity or vault.
+[group: 'backup']
+usenet-crypto-bootstrap:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra crypto-bootstrap
+
+# Generate the operator-held native-age master only after arranging its second copy.
+[group: 'backup']
+[positional-arguments]
+usenet-recovery-master-init identity confirmation:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra recovery-master-init "$1" "$2"
+
+# Restore ignored local secrets from the committed SOPS vault and a one-process identity.
+[group: 'backup']
+[positional-arguments]
+setup-secrets *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra setup-secrets "$@"
+
+# Encrypt the current allowlisted local inputs into the committed SOPS vault.
+[group: 'backup']
+[positional-arguments]
+secrets-encrypt *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra secrets-encrypt "$@"
+
 # List canonical items and whether each is cached on the QNAP
 [group: 'usenet']
 catalog-list:

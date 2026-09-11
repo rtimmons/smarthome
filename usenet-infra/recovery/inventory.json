@@ -1,0 +1,1391 @@
+{
+  "schema_version": 1,
+  "scope": "smarthome",
+  "deletion_safe": false,
+  "files": [
+    {
+      "id": "usenet-connections",
+      "path": "usenet-infra/.env",
+      "restore_path": "usenet-infra/.env",
+      "owner": "Usenet deployment",
+      "sensitivity": "private-metadata",
+      "mode": "0600",
+      "format": "dotenv",
+      "consumers": [
+        "scripts/cloud-command",
+        "scripts/qnap-command",
+        "scripts/cloud-ui"
+      ],
+      "backup_dependency": [
+        "local-only; master escrow pending"
+      ],
+      "rotation": "Update targets and verified host pins together; re-render local identity and known-host paths for new checkout.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "hetzner-token",
+      "path": "usenet-infra/secrets/hetzner.env",
+      "restore_path": "usenet-infra/secrets/hetzner.env",
+      "owner": "Hetzner project",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "dotenv",
+      "consumers": [
+        "scripts/terraform-with-token"
+      ],
+      "backup_dependency": [
+        "local-only; password-manager recovery unverified"
+      ],
+      "rotation": "Create replacement project API token privately, update consumer, verify read-only access, then revoke old token.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "ansible-inventory",
+      "path": "usenet-infra/ansible/inventory.yml",
+      "restore_path": "usenet-infra/ansible/inventory.yml",
+      "owner": "Cloud and QNAP deployment",
+      "sensitivity": "private-metadata",
+      "mode": "0600",
+      "format": "Ansible YAML",
+      "consumers": [
+        "ansible/site.yml",
+        "ansible/cloud-lan-ui.yml"
+      ],
+      "backup_dependency": [
+        "local-only; resource IDs also in two Terraform states"
+      ],
+      "rotation": "Preserve topology, UID/GID and approved host pins; update token/key references only with coordinated consumer change.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "catalog-environment",
+      "path": "usenet-infra/ansible/files/catalog.env",
+      "restore_path": "usenet-infra/ansible/files/catalog.env",
+      "owner": "Cloud catalog writer",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "controller-side dotenv defaults; live API-key environment is rendered separately",
+      "consumers": [
+        "ansible/roles/cloud_apps/tasks/main.yml"
+      ],
+      "backup_dependency": [
+        "cloud-admin; cloud application archive",
+        "local source not independently escrowed"
+      ],
+      "rotation": "Coordinate Storage Box writer key and application API-key rotation with their consumers; regenerate rendered live catalog.env using saved SABnzbd/Prowlarr keys. Rebase only workstation paths, preserving remote paths.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "plan.md",
+        "usenet-infra/config/examples/catalog.env.example"
+      ]
+    },
+    {
+      "id": "writer-rclone",
+      "path": "usenet-infra/ansible/files/rclone.conf",
+      "restore_path": "usenet-infra/ansible/files/rclone.conf",
+      "owner": "Cloud catalog writer",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "rclone INI",
+      "consumers": [
+        "ansible/roles/cloud_apps/tasks/main.yml"
+      ],
+      "backup_dependency": [
+        "cloud-admin; cloud application archive",
+        "local source not independently escrowed"
+      ],
+      "rotation": "Rotate Storage Box writer key with consumer verification; inspect and rebase only workstation paths, preserving remote paths.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-admin",
+      "path": "usenet-infra/secrets/ssh/cloud-admin",
+      "restore_path": "usenet-infra/secrets/ssh/cloud-admin",
+      "owner": "Cloud administration",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "OpenSSH private key",
+      "consumers": [
+        "scripts/cloud-command"
+      ],
+      "backup_dependency": [
+        "REQUIRED to decrypt all retained cloud, VPN, UniFi and USG archives"
+      ],
+      "rotation": "Install new public key alongside old key, update dedicated consumer, verify login and intended permissions, then retire old login key. Escrow old private bytes until every retained archive has a tested decryption path.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-admin-public",
+      "path": "usenet-infra/secrets/ssh/cloud-admin.pub",
+      "restore_path": "usenet-infra/secrets/ssh/cloud-admin.pub",
+      "owner": "Cloud administration",
+      "sensitivity": "public-key",
+      "mode": "0644",
+      "format": "OpenSSH public key",
+      "consumers": [
+        "scripts/prepare-terraform-vars",
+        "ansible/roles/cloud_base/tasks/main.yml",
+        "ansible/roles/cloud_backup/tasks/main.yml (public age encryption recipient)"
+      ],
+      "backup_dependency": [
+        "cloud-admin; can derive from matching private key"
+      ],
+      "rotation": "Regenerate from the verified private identity and verify the pair before changing authorized keys.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-ui",
+      "path": "usenet-infra/secrets/ssh/cloud-ui",
+      "restore_path": "usenet-infra/secrets/ssh/cloud-ui",
+      "owner": "Cloud UI tunnel",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "OpenSSH private key",
+      "consumers": [
+        "scripts/cloud-ui"
+      ],
+      "backup_dependency": [
+        "local-only; no documented archive decryption dependency"
+      ],
+      "rotation": "Install new public key alongside old key, update dedicated consumer, verify login and intended permissions, then retire old login key. Escrow old private bytes until every retained archive has a tested decryption path.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-ui-public",
+      "path": "usenet-infra/secrets/ssh/cloud-ui.pub",
+      "restore_path": "usenet-infra/secrets/ssh/cloud-ui.pub",
+      "owner": "Cloud UI tunnel",
+      "sensitivity": "public-key",
+      "mode": "0644",
+      "format": "OpenSSH public key",
+      "consumers": [
+        "scripts/generate-ssh-keys (public-key validation)",
+        "cloud SSH authorized_keys if separate UI identity enabled; live installation not reverified"
+      ],
+      "backup_dependency": [
+        "cloud-ui; can derive from matching private key"
+      ],
+      "rotation": "Regenerate from the verified private identity and verify the pair before changing authorized keys.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "qnap-admin",
+      "path": "usenet-infra/secrets/ssh/qnap-admin",
+      "restore_path": "usenet-infra/secrets/ssh/qnap-admin",
+      "owner": "QNAP administration",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "OpenSSH private key",
+      "consumers": [
+        "scripts/qnap-command"
+      ],
+      "backup_dependency": [
+        "REQUIRED to decrypt retained QNAP archives"
+      ],
+      "rotation": "Install new public key alongside old key, update dedicated consumer, verify login and intended permissions, then retire old login key. Escrow old private bytes until every retained archive has a tested decryption path.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "qnap-admin-public",
+      "path": "usenet-infra/secrets/ssh/qnap-admin.pub",
+      "restore_path": "usenet-infra/secrets/ssh/qnap-admin.pub",
+      "owner": "QNAP administration",
+      "sensitivity": "public-key",
+      "mode": "0644",
+      "format": "OpenSSH public key",
+      "consumers": [
+        "scripts/backup-qnap.py (public encryption recipient)",
+        "QNAP user SSH Keys bootstrap"
+      ],
+      "backup_dependency": [
+        "qnap-admin; can derive from matching private key"
+      ],
+      "rotation": "Regenerate from the verified private identity and verify the pair before changing authorized keys.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "qnap-reader",
+      "path": "usenet-infra/secrets/ssh/qnap-reader",
+      "restore_path": "usenet-infra/secrets/ssh/qnap-reader",
+      "owner": "Storage Box read-only subaccount",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "OpenSSH private key",
+      "consumers": [
+        "ansible/qnap.yml"
+      ],
+      "backup_dependency": [
+        "qnap-admin; QNAP archive"
+      ],
+      "rotation": "Install new public key alongside old key, update dedicated consumer, verify login and intended permissions, then retire old login key. Escrow old private bytes until every retained archive has a tested decryption path.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "qnap-reader-public",
+      "path": "usenet-infra/secrets/ssh/qnap-reader.pub",
+      "restore_path": "usenet-infra/secrets/ssh/qnap-reader.pub",
+      "owner": "Storage Box read-only subaccount",
+      "sensitivity": "public-key",
+      "mode": "0644",
+      "format": "OpenSSH public key",
+      "consumers": [
+        "scripts/generate-ssh-keys (public-key validation)",
+        "Storage Box read-only subaccount authorized_keys"
+      ],
+      "backup_dependency": [
+        "qnap-reader; can derive from matching private key"
+      ],
+      "rotation": "Regenerate from the verified private identity and verify the pair before changing authorized keys.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "storage-writer",
+      "path": "usenet-infra/secrets/ssh/storage-writer",
+      "restore_path": "usenet-infra/secrets/ssh/storage-writer",
+      "owner": "Storage Box writer",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "OpenSSH private key",
+      "consumers": [
+        "ansible/cloud.yml"
+      ],
+      "backup_dependency": [
+        "cloud-admin; cloud archive"
+      ],
+      "rotation": "Install new public key alongside old key, update dedicated consumer, verify login and intended permissions, then retire old login key. Escrow old private bytes until every retained archive has a tested decryption path.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "storage-writer-public",
+      "path": "usenet-infra/secrets/ssh/storage-writer.pub",
+      "restore_path": "usenet-infra/secrets/ssh/storage-writer.pub",
+      "owner": "Storage Box writer",
+      "sensitivity": "public-key",
+      "mode": "0644",
+      "format": "OpenSSH public key",
+      "consumers": [
+        "scripts/prepare-terraform-vars",
+        "Storage Box authorized_keys"
+      ],
+      "backup_dependency": [
+        "storage-writer; can derive from matching private key"
+      ],
+      "rotation": "Regenerate from the verified private identity and verify the pair before changing authorized keys.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "dashboard-auth",
+      "path": "usenet-infra/secrets/dashboard-auth.json",
+      "restore_path": "usenet-infra/secrets/dashboard-auth.json",
+      "owner": "QNAP and cloud UI authentication",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "JSON with password hash",
+      "consumers": [
+        "ansible/qnap.yml",
+        "ansible/cloud-lan-ui.yml"
+      ],
+      "backup_dependency": [
+        "qnap-admin; QNAP archive",
+        "cloud-admin; VPN archive"
+      ],
+      "rotation": "Create replacement through private dashboard credential setup, deploy to consumers, invalidate sessions as appropriate. Hash does not recover the human password.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "unifi-vpn-psk",
+      "path": "usenet-infra/secrets/unifi-cloud-vpn.psk",
+      "restore_path": "usenet-infra/secrets/unifi-cloud-vpn.psk",
+      "owner": "UniFi and strongSwan",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "opaque PSK",
+      "consumers": [
+        "ansible/cloud-lan-ui.yml"
+      ],
+      "backup_dependency": [
+        "cloud-admin; VPN and USG archives"
+      ],
+      "rotation": "Coordinate new random PSK on both UniFi and cloud, verify rekey/reconnection, preserve rollback backup.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-host-pin",
+      "path": "usenet-infra/ansible/files/secrets/cloud-known-hosts",
+      "restore_path": "usenet-infra/ansible/files/secrets/cloud-known-hosts",
+      "owner": "SSH server trust",
+      "sensitivity": "private-metadata",
+      "mode": "0600",
+      "format": "OpenSSH known_hosts",
+      "consumers": [
+        "scripts/cloud-command",
+        "scripts/qnap-command",
+        "ansible/site.yml"
+      ],
+      "backup_dependency": [
+        "local-only cloud/QNAP pin copies; Storage Box pins also in application archives"
+      ],
+      "rotation": "Verify changed fingerprint through trusted independent channel before replacing pin; never accept a new scan implicitly.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "qnap-host-pin",
+      "path": "usenet-infra/ansible/files/secrets/qnap-known-hosts",
+      "restore_path": "usenet-infra/ansible/files/secrets/qnap-known-hosts",
+      "owner": "SSH server trust",
+      "sensitivity": "private-metadata",
+      "mode": "0600",
+      "format": "OpenSSH known_hosts",
+      "consumers": [
+        "scripts/cloud-command",
+        "scripts/qnap-command",
+        "ansible/site.yml"
+      ],
+      "backup_dependency": [
+        "local-only cloud/QNAP pin copies; Storage Box pins also in application archives"
+      ],
+      "rotation": "Verify changed fingerprint through trusted independent channel before replacing pin; never accept a new scan implicitly.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "storage-host-pin",
+      "path": "usenet-infra/ansible/files/secrets/storagebox/known_hosts",
+      "restore_path": "usenet-infra/ansible/files/secrets/storagebox/known_hosts",
+      "owner": "SSH server trust",
+      "sensitivity": "private-metadata",
+      "mode": "0600",
+      "format": "OpenSSH known_hosts",
+      "consumers": [
+        "scripts/cloud-command",
+        "scripts/qnap-command",
+        "ansible/site.yml"
+      ],
+      "backup_dependency": [
+        "local-only cloud/QNAP pin copies; Storage Box pins also in application archives"
+      ],
+      "rotation": "Verify changed fingerprint through trusted independent channel before replacing pin; never accept a new scan implicitly.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-tfvars",
+      "path": "usenet-infra/terraform/cloud/terraform.tfvars",
+      "restore_path": "usenet-infra/terraform/cloud/terraform.tfvars",
+      "owner": "Hetzner cloud",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "Terraform HCL",
+      "consumers": [
+        "terraform/cloud"
+      ],
+      "backup_dependency": [
+        "local-only; no independent capture verified"
+      ],
+      "rotation": "Rotate actual referenced service secrets with consumers; preserve resource configuration, protection flags and intended tier.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-tfstate",
+      "path": "usenet-infra/terraform/cloud/terraform.tfstate",
+      "restore_path": "usenet-infra/terraform/cloud/terraform.tfstate",
+      "owner": "Hetzner cloud",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "Terraform state JSON",
+      "consumers": [
+        "terraform/cloud"
+      ],
+      "backup_dependency": [
+        "local-only; consistent encrypted snapshot pending"
+      ],
+      "rotation": "Never edit state credentials or lineage to simulate rotation. Rotate resources through supported workflows, then capture state with no concurrent apply.",
+      "category": "state",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "storage-tfvars",
+      "path": "usenet-infra/terraform/storage/terraform.tfvars",
+      "restore_path": "usenet-infra/terraform/storage/terraform.tfvars",
+      "owner": "Hetzner storage",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "Terraform HCL",
+      "consumers": [
+        "terraform/storage"
+      ],
+      "backup_dependency": [
+        "local-only; no independent capture verified"
+      ],
+      "rotation": "Rotate actual referenced service secrets with consumers; preserve resource configuration, protection flags and intended tier.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "storage-tfstate",
+      "path": "usenet-infra/terraform/storage/terraform.tfstate",
+      "restore_path": "usenet-infra/terraform/storage/terraform.tfstate",
+      "owner": "Hetzner storage",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "Terraform state JSON",
+      "consumers": [
+        "terraform/storage"
+      ],
+      "backup_dependency": [
+        "local-only; consistent encrypted snapshot pending"
+      ],
+      "rotation": "Never edit state credentials or lineage to simulate rotation. Rotate resources through supported workflows, then capture state with no concurrent apply.",
+      "category": "state",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "cloud-prior-tfstate",
+      "path": "usenet-infra/terraform/cloud/terraform.tfstate.backup",
+      "restore_path": "usenet-infra/terraform/cloud/terraform.tfstate.backup",
+      "owner": "Hetzner cloud",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "Terraform state JSON",
+      "consumers": [
+        "manual recovery only"
+      ],
+      "backup_dependency": [
+        "local-only historical state"
+      ],
+      "rotation": "Keep until current-state recovery is proven; never install automatically over a newer state.",
+      "category": "state",
+      "required": false,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-cloud-20260910t214707z-nck4sdjo",
+      "path": "usenet-infra/backups/cloud-20260910T214707Z-NCk4sDjo.tar.age",
+      "restore_path": "usenet-infra/backups/cloud-20260910T214707Z-NCk4sDjo.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "scripts/config-backup.py"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-cloud-20260910t223402z-zgjaggvx",
+      "path": "usenet-infra/backups/cloud-20260910T223402Z-ZgJAGgVx.tar.age",
+      "restore_path": "usenet-infra/backups/cloud-20260910T223402Z-ZgJAGgVx.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "scripts/config-backup.py"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-cloud-20260910t224543z-ru5710kx",
+      "path": "usenet-infra/backups/cloud-20260910T224543Z-ru5710KX.tar.age",
+      "restore_path": "usenet-infra/backups/cloud-20260910T224543Z-ru5710KX.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "scripts/config-backup.py"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-cloud-20260910t225152z-sifvfdwc",
+      "path": "usenet-infra/backups/cloud-20260910T225152Z-SIfVfDwC.tar.age",
+      "restore_path": "usenet-infra/backups/cloud-20260910T225152Z-SIfVfDwC.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "scripts/config-backup.py"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-cloud-20260911t001750z-ucxzkhoy",
+      "path": "usenet-infra/backups/cloud-20260911T001750Z-UCxzKhOY.tar.age",
+      "restore_path": "usenet-infra/backups/cloud-20260911T001750Z-UCxzKhOY.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "scripts/config-backup.py"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-cloud-vpn-20260911t005548",
+      "path": "usenet-infra/backups/cloud-vpn-20260911T005548.069572Z.tar.age",
+      "restore_path": "usenet-infra/backups/cloud-vpn-20260911T005548.069572Z.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "manual recovery or matching backup helper"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-qnap-20260910t234609z-gr0zzbi0",
+      "path": "usenet-infra/backups/qnap-20260910T234609Z-gr0zzbi0.tar.age",
+      "restore_path": "usenet-infra/backups/qnap-20260910T234609Z-gr0zzbi0.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "manual recovery or matching backup helper"
+      ],
+      "backup_dependency": [
+        "qnap-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-unifi-network-20260911t004042z",
+      "path": "usenet-infra/backups/unifi-network-20260911T004042Z.unf.age",
+      "restore_path": "usenet-infra/backups/unifi-network-20260911T004042Z.unf.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "manual recovery or matching backup helper"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-unifi-system-20260911t004201z",
+      "path": "usenet-infra/backups/unifi-system-20260911T004201Z.unifi.age",
+      "restore_path": "usenet-infra/backups/unifi-system-20260911T004201Z.unifi.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "manual recovery or matching backup helper"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-usg-unifi-vpn-post-fix-20260911t173623",
+      "path": "usenet-infra/backups/usg-unifi-vpn-post-fix-20260911T173623.167151Z.tar.age",
+      "restore_path": "usenet-infra/backups/usg-unifi-vpn-post-fix-20260911T173623.167151Z.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "manual recovery or matching backup helper"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "archive-usg-unifi-vpn-pre-fix-20260911t171125",
+      "path": "usenet-infra/backups/usg-unifi-vpn-pre-fix-20260911T171125.028168Z.tar.age",
+      "restore_path": "usenet-infra/backups/usg-unifi-vpn-pre-fix-20260911T171125.028168Z.tar.age",
+      "owner": "Usenet retained backups",
+      "sensitivity": "ciphertext",
+      "mode": "0600",
+      "format": "age ciphertext archive",
+      "consumers": [
+        "manual recovery or matching backup helper"
+      ],
+      "backup_dependency": [
+        "cloud-admin exact existing private bytes",
+        "local workstation only; independent destination not selected"
+      ],
+      "rotation": "Keep existing decryption identity; capture new archives to dedicated age recipient after escrow and recovery verification. Do not remove retained archives in this phase.",
+      "category": "archive",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "ha-admin",
+      "path": ".ssh/id_ed25519_codex_smarthome",
+      "restore_path": ".ssh/id_ed25519_codex_smarthome",
+      "owner": "Home Assistant administration",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "OpenSSH private key",
+      "consumers": [
+        "Justfile",
+        "talos",
+        "new-hass-configs/config-generator/src/cli/home-assistant-client.ts"
+      ],
+      "backup_dependency": [
+        "local-only; independent key recovery unverified"
+      ],
+      "rotation": "Create replacement dedicated identity, have operator run human-only just ha-ssh-key-copy, verify access, then retire old public authorization. Do not use alternate credentials after auth failure.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "AGENTS.md",
+        "Justfile"
+      ]
+    },
+    {
+      "id": "ha-admin-public",
+      "path": ".ssh/id_ed25519_codex_smarthome.pub",
+      "restore_path": ".ssh/id_ed25519_codex_smarthome.pub",
+      "owner": "Home Assistant administration",
+      "sensitivity": "public-key",
+      "mode": "0644",
+      "format": "OpenSSH public key",
+      "consumers": [
+        "Justfile"
+      ],
+      "backup_dependency": [
+        "ha-admin; can derive from matching private key"
+      ],
+      "rotation": "Regenerate from verified private identity; operator installs through human-only recipe.",
+      "category": "vault",
+      "required": true,
+      "path_policy": "exact-bytes",
+      "evidence": [
+        "AGENTS.md",
+        "Justfile"
+      ]
+    },
+    {
+      "id": "snapshot-local-env",
+      "path": "snapshot-service/.env",
+      "restore_path": "snapshot-service/.env",
+      "owner": "Snapshot service",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "dotenv",
+      "consumers": [
+        "snapshot-service"
+      ],
+      "backup_dependency": [
+        "not present during initial inventory; capture only if later customized"
+      ],
+      "rotation": "Identify enabled upstream credentials, rotate through provider, update consumer and verify. Never source/evaluate recovered configuration in recovery tooling.",
+      "category": "vault",
+      "required": false,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "snapshot-service/.gitignore"
+      ]
+    },
+    {
+      "id": "tinyurl-local-env",
+      "path": "tinyurl-service/.env",
+      "restore_path": "tinyurl-service/.env",
+      "owner": "TinyURL service",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "dotenv",
+      "consumers": [
+        "tinyurl-service"
+      ],
+      "backup_dependency": [
+        "not present during initial inventory; capture only if later customized"
+      ],
+      "rotation": "Identify enabled upstream credentials, rotate through provider, update consumer and verify. Never source/evaluate recovered configuration in recovery tooling.",
+      "category": "vault",
+      "required": false,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "tinyurl-service/.gitignore"
+      ]
+    },
+    {
+      "id": "grid-local-secret",
+      "path": "grid-dashboard/ExpressServer/secret.js",
+      "restore_path": "grid-dashboard/ExpressServer/secret.js",
+      "owner": "Grid dashboard",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "JavaScript configuration",
+      "consumers": [
+        "grid-dashboard"
+      ],
+      "backup_dependency": [
+        "not present during initial inventory; capture only if later customized"
+      ],
+      "rotation": "Identify enabled upstream credentials, rotate through provider, update consumer and verify. Never source/evaluate recovered configuration in recovery tooling.",
+      "category": "vault",
+      "required": false,
+      "path_policy": "rebase-checkout-paths",
+      "evidence": [
+        "grid-dashboard/ExpressServer/.gitignore"
+      ]
+    },
+    {
+      "id": "zwave-historical-nvm",
+      "path": "new-hass-configs/backups/zwave-js/zwave_js_backup_2026-08-21_before-removing-nodes-2-16.bin",
+      "restore_path": "new-hass-configs/backups/zwave-js/zwave_js_backup_2026-08-21_before-removing-nodes-2-16.bin",
+      "owner": "Home Assistant Z-Wave",
+      "sensitivity": "secret",
+      "mode": "0600",
+      "format": "controller NVM binary",
+      "consumers": [
+        "manual controller recovery"
+      ],
+      "backup_dependency": [
+        "local-only historical pre-removal snapshot; not current baseline"
+      ],
+      "rotation": "Obtain fresh supported controller backup. Network security-key rotation may require coordinated device re-inclusion; never restore stale NVM automatically.",
+      "category": "state",
+      "required": true,
+      "path_policy": "offline-inspection",
+      "evidence": [
+        "AGENTS.md",
+        "docs/operations/zwave-scene-ops.md"
+      ]
+    }
+  ],
+  "scan_roots": [
+    ".ssh",
+    "usenet-infra/secrets",
+    "usenet-infra/ansible/files",
+    "usenet-infra/terraform/cloud",
+    "usenet-infra/terraform/storage",
+    "usenet-infra/backups"
+  ],
+  "exclusions": [
+    {
+      "path": "usenet-infra/terraform/cloud/.terraform",
+      "kind": "tree",
+      "reason": "Regenerate provider cache from committed provider lock; never vault cached binaries."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/.terraform",
+      "kind": "tree",
+      "reason": "Regenerate provider cache from committed provider lock; never vault cached binaries."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/cloud.tfplan",
+      "kind": "file",
+      "reason": "Saved plan may contain secrets and becomes stale; regenerate a fresh reviewed plan, never restore it."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/lan-ui.tfplan",
+      "kind": "file",
+      "reason": "Saved plan may contain secrets and becomes stale; regenerate a fresh reviewed plan, never restore it."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/storage.tfplan",
+      "kind": "file",
+      "reason": "Saved plan may contain secrets and becomes stale; regenerate a fresh reviewed plan, never restore it."
+    },
+    {
+      "path": "usenet-infra/ansible/files/secrets/qnap-known-hosts.candidate",
+      "kind": "file",
+      "reason": "Untrusted candidate is not a restore source; only approved host pin is allowlisted."
+    },
+    {
+      "path": "usenet-infra/backups/cloud-20260910T214707Z-NCk4sDjo.tar.age.verified.json",
+      "kind": "file",
+      "reason": "Historical local verification receipt is supplemental, not proof of authenticated recovery; rerun verification."
+    },
+    {
+      "path": "usenet-infra/backups/cloud-20260910T223402Z-ZgJAGgVx.tar.age.verified.json",
+      "kind": "file",
+      "reason": "Historical local verification receipt is supplemental, not proof of authenticated recovery; rerun verification."
+    },
+    {
+      "path": "usenet-infra/backups/cloud-20260910T224543Z-ru5710KX.tar.age.verified.json",
+      "kind": "file",
+      "reason": "Historical local verification receipt is supplemental, not proof of authenticated recovery; rerun verification."
+    },
+    {
+      "path": "usenet-infra/backups/cloud-20260910T225152Z-SIfVfDwC.tar.age.verified.json",
+      "kind": "file",
+      "reason": "Historical local verification receipt is supplemental, not proof of authenticated recovery; rerun verification."
+    },
+    {
+      "path": "usenet-infra/backups/cloud-20260911T001750Z-UCxzKhOY.tar.age.verified.json",
+      "kind": "file",
+      "reason": "Historical local verification receipt is supplemental, not proof of authenticated recovery; rerun verification."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/.terraform.lock.hcl",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/main.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/outputs.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/providers.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/terraform.tfvars.example",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/variables.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/cloud/versions.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/.terraform.lock.hcl",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/main.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/outputs.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/providers.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/terraform.tfvars.example",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/variables.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    },
+    {
+      "path": "usenet-infra/terraform/storage/versions.tf",
+      "kind": "file",
+      "reason": "Reviewed tracked source/example/provider lock; recover from Git, not the secrets vault."
+    }
+  ],
+  "external_dependencies": [
+    {
+      "id": "ha-core",
+      "owner": "Home Assistant",
+      "source": "Live Home Assistant Core and configuration",
+      "restore_destinations": [
+        "/config/secrets.yaml",
+        "/config/.storage/auth",
+        "/config/.storage/core.config_entries",
+        "/config/.storage/core.entity_registry",
+        "/config/.storage/core.device_registry"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "consistent full Core/configuration backup",
+      "consumers": [
+        "Home Assistant",
+        "repository SSH API client"
+      ],
+      "backup_dependency": [
+        "no independent full Core archive identified; add-on-only backup excludes Core"
+      ],
+      "rotation": "Use supported HA recovery; rotate integration tokens and owner sessions with their consumers. Capture the whole supported backup, not partial storage files.",
+      "status": "unverified",
+      "evidence": [
+        "new-hass-configs/Justfile",
+        "docs/operations/addon-state-backups.md"
+      ]
+    },
+    {
+      "id": "ha-local-secrets-review",
+      "owner": "Home Assistant",
+      "source": "new-hass-configs/secrets.yaml (tracked, nonempty; authority/sensitivity unresolved)",
+      "restore_destinations": [
+        "Review only; do not overwrite live /config/secrets.yaml from this file"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "YAML",
+      "consumers": [
+        "not authoritative for deployment; sync excludes it"
+      ],
+      "backup_dependency": [
+        "tracked file is not evidence of live secret recovery"
+      ],
+      "rotation": "Privately establish whether value is an active credential. If exposed, rotate the underlying credential and assess Git history separately; never print values.",
+      "status": "unverified",
+      "evidence": [
+        "new-hass-configs/.gitignore",
+        "new-hass-configs/Justfile"
+      ]
+    },
+    {
+      "id": "ha-esphome",
+      "owner": "Home Assistant ESPHome",
+      "source": "Live /config/esphome/",
+      "restore_destinations": [
+        "/config/esphome/"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "device YAML and encryption keys",
+      "consumers": [
+        "ESPHome devices"
+      ],
+      "backup_dependency": [
+        "not captured by normal config sync; full HA capture required"
+      ],
+      "rotation": "Coordinate Wi-Fi/API-key changes with firmware and device access.",
+      "status": "unverified",
+      "evidence": [
+        "new-hass-configs/Justfile"
+      ]
+    },
+    {
+      "id": "ha-addon-state",
+      "owner": "Home Assistant add-ons",
+      "source": "Supervisor options, seven repository add-ons and shared data",
+      "restore_destinations": [
+        "Supervisor-supported restore for matching add-ons",
+        "/share"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "consistent Supervisor backup",
+      "consumers": [
+        "MongoDB",
+        "Printer",
+        "TinyURL",
+        "Sonos APIs",
+        "Snapshot service",
+        "Grid dashboard"
+      ],
+      "backup_dependency": [
+        "existing documented export is unencrypted and excludes Core",
+        "historical backup 1f8546aa; exact retained archive location unverified"
+      ],
+      "rotation": "Recover options and databases consistently; rotate any MongoDB/provider credentials through enabled consumers.",
+      "status": "unverified",
+      "evidence": [
+        "docs/operations/addon-state-backups.md"
+      ]
+    },
+    {
+      "id": "sonos-custom-config",
+      "owner": "Sonos",
+      "source": "Live Sonos settings and presets, if customized",
+      "restore_destinations": [
+        "/config/node-sonos-http-api/settings.json",
+        "/config/node-sonos-http-api/presets.json",
+        "/config/node-sonos-http-api/presets/",
+        "/data/node-sonos-http-api/settings.json",
+        "/data/node-sonos-http-api/presets.json",
+        "/data/node-sonos-http-api/presets/"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "JSON / preset directory",
+      "consumers": [
+        "node-sonos-http-api"
+      ],
+      "backup_dependency": [
+        "covered only after verifying supported add-on/config backup contents"
+      ],
+      "rotation": "Identify actual enabled providers before rotating credentials; preserve customized presets.",
+      "status": "unverified",
+      "evidence": [
+        "node-sonos-http-api/README.md"
+      ]
+    },
+    {
+      "id": "ha-historical-configs",
+      "owner": "Home Assistant",
+      "source": "new-hass-configs/backups/ dated historical configuration trees",
+      "restore_destinations": [
+        "Review only; no automatic restore destination"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "historical plaintext YAML / ESPHome configuration",
+      "consumers": [
+        "manual recovery review"
+      ],
+      "backup_dependency": [
+        "local-only dated copies; not proof of current secrets"
+      ],
+      "rotation": "Review exact useful files before allowlisting; encrypt any retained sensitive archives. Do not recursively ingest old backups or delete them.",
+      "status": "unverified",
+      "evidence": [
+        "new-hass-configs/.gitignore"
+      ]
+    },
+    {
+      "id": "cloud-application-state",
+      "owner": "SABnzbd, Prowlarr and catalog",
+      "source": "Live /srv/usenet/config and catalog state",
+      "restore_destinations": [
+        "/srv/usenet/config/sabnzbd",
+        "/srv/usenet/config/prowlarr",
+        "/srv/usenet/state/catalog"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "consistent app/SQLite backup",
+      "consumers": [
+        "SABnzbd",
+        "Prowlarr",
+        "catalog writer"
+      ],
+      "backup_dependency": [
+        "cloud-admin; retained cloud archives in files list"
+      ],
+      "rotation": "Rotate restored pre-rotation application keys before live use; update saved provider/indexer/client consumers. Static vault cannot replace database backup.",
+      "status": "local-backup-only",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "qnap-application-state",
+      "owner": "OliveTin and catalog",
+      "source": "Live /share/Container/usenet configuration and state",
+      "restore_destinations": [
+        "/share/Container/usenet"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "consistent app state and session backup",
+      "consumers": [
+        "OliveTin",
+        "catalog backend"
+      ],
+      "backup_dependency": [
+        "qnap-admin; retained QNAP archive in files list"
+      ],
+      "rotation": "Restore UID/GID and modes; coordinate reader credentials and invalidate compromised sessions.",
+      "status": "local-backup-only",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "network-configuration",
+      "owner": "UniFi and cloud VPN",
+      "source": "Cloud VPN, UniFi Network/System, actual USG config and override",
+      "restore_destinations": [
+        "/etc/usenet-vpn",
+        "/etc/usenet-cloud-ui",
+        "UniFi supported Network/System import",
+        "USG supported configuration restore",
+        "/data/unifi/data/sites/default/config.gateway.json"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "version-specific encrypted configuration archives",
+      "consumers": [
+        "strongSwan",
+        "UniFi Network",
+        "USG"
+      ],
+      "backup_dependency": [
+        "cloud-admin; retained VPN/UniFi/USG archives in files list"
+      ],
+      "rotation": "Coordinate PSK/trust changes and verify selectors, firewall and recovery. No gateway/NAS reboot authorized.",
+      "status": "local-backup-only",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "operator-accounts",
+      "owner": "Operator",
+      "source": "Independent password-manager/account recovery",
+      "restore_destinations": [
+        "External password-manager accounts; never repository plaintext"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "account credentials, MFA/recovery codes and UniFi RSA SSH identity",
+      "consumers": [
+        "Git access",
+        "1Password",
+        "UniFi",
+        "Hetzner",
+        "QNAP",
+        "provider/indexer accounts"
+      ],
+      "backup_dependency": [
+        "independent password-manager recovery must be demonstrated; do not export UniFi private identity implicitly"
+      ],
+      "rotation": "Use account-specific supported recovery; reauthorize consumers after account/key rotation.",
+      "status": "human-held",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "recovery-master",
+      "owner": "Operator",
+      "source": "Dedicated native age recovery identity (not generated)",
+      "restore_destinations": [
+        "Independently held private file; second retrievable copy outside recovery systems"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "native age X25519 identity",
+      "consumers": [
+        "future SOPS restore process only"
+      ],
+      "backup_dependency": [
+        "not installed; must not depend on checkout, recovered hosts, or vault it decrypts"
+      ],
+      "rotation": "Add recipient, prove recovery, update recipients and rotate data keys; old Git/archive copies remain decryptable by old keys.",
+      "status": "planned",
+      "evidence": [
+        "plan.md"
+      ]
+    },
+    {
+      "id": "independent-ciphertext-store",
+      "owner": "Operator",
+      "source": "Versioned backup destination (not selected)",
+      "restore_destinations": [
+        "Independent retrievable encrypted archives; destination outside workstation, cloud VM, QNAP and canonical Storage Box"
+      ],
+      "sensitivity": "secret or recovery-critical state",
+      "format": "encrypted snapshots and retrieval manifest",
+      "consumers": [
+        "future recovery bootstrap"
+      ],
+      "backup_dependency": [
+        "retrieval credentials must be in master-encrypted vault, never solely inside fetched archive"
+      ],
+      "rotation": "Rotate storage access credentials with verified retrieval; schedule retention only after drill passes.",
+      "status": "planned",
+      "evidence": [
+        "plan.md"
+      ]
+    }
+  ]
+}

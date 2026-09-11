@@ -15,7 +15,8 @@ age = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(age)
 
 
-def archive(binary=b'fixture binary', *, name='age/age', kind=tarfile.REGTYPE, duplicate=False):
+def archive(binary=b'fixture binary', *, name='age/age', kind=tarfile.REGTYPE, duplicate=False,
+            include_keygen=True):
     buffer = io.BytesIO()
     with tarfile.open(fileobj=buffer, mode='w:gz') as tar:
         member = tarfile.TarInfo(name)
@@ -28,6 +29,12 @@ def archive(binary=b'fixture binary', *, name='age/age', kind=tarfile.REGTYPE, d
             tar.addfile(member)
         if duplicate:
             tar.addfile(member, io.BytesIO(binary))
+        if include_keygen:
+            keygen = tarfile.TarInfo('age/age-keygen')
+            keygen.type = tarfile.REGTYPE
+            keygen_bytes = b'keygen-' + binary
+            keygen.size = len(keygen_bytes)
+            tar.addfile(keygen, io.BytesIO(keygen_bytes))
     return buffer.getvalue()
 
 
@@ -52,6 +59,10 @@ class BootstrapAgeTests(unittest.TestCase):
             self.assertEqual(binary.read_bytes(), item['platform'].encode())
             self.assertEqual(binary.stat().st_mode & 0o777, 0o755)
             self.assertEqual(age.sha256(binary.read_bytes()), item['binary_sha256'])
+            keygen = binary.with_name('age-keygen')
+            self.assertEqual(keygen.read_bytes(), b'keygen-' + item['platform'].encode())
+            self.assertEqual(keygen.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(age.sha256(keygen.read_bytes()), item['age_keygen_sha256'])
             self.assertTrue(item['changed'])
 
     def test_offline_repeat_is_idempotent_without_downloading(self):
@@ -70,6 +81,14 @@ class BootstrapAgeTests(unittest.TestCase):
         results = self.run_bootstrap(offline=True)
         self.assertTrue(next(item for item in results if item['platform'] == 'linux-amd64')['changed'])
         self.assertEqual(binary.read_bytes(), b'linux-amd64')
+
+    def test_existing_keygen_is_rehashed_and_repaired_from_verified_cache(self):
+        self.run_bootstrap()
+        keygen = self.root / 'linux-amd64/age-keygen'
+        keygen.write_bytes(b'corrupted or replaced binary')
+        results = self.run_bootstrap(offline=True)
+        self.assertTrue(next(item for item in results if item['platform'] == 'linux-amd64')['changed'])
+        self.assertEqual(keygen.read_bytes(), b'keygen-linux-amd64')
 
     def test_correct_binary_permissions_are_repaired(self):
         self.run_bootstrap()
@@ -108,7 +127,8 @@ class BootstrapAgeTests(unittest.TestCase):
 
     def test_archive_traversal_symlink_hardlink_and_duplicate_binary_are_rejected(self):
         for payload in (archive(name='../outside'), archive(kind=tarfile.SYMTYPE),
-                        archive(kind=tarfile.LNKTYPE), archive(duplicate=True)):
+                        archive(kind=tarfile.LNKTYPE), archive(duplicate=True),
+                        archive(include_keygen=False)):
             with self.assertRaises(age.BootstrapError):
                 age.binary_from_archive(payload, age.sha256(payload))
 

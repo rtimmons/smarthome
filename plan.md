@@ -7,8 +7,11 @@ Keep this document updated as agents make progress.
 ## Resume here — current handoff, September 11, 2026
 
 This section is authoritative over the chronological notes below. A new session
-should read this document and the repository's `AGENTS.md`, then begin the
-secrets-recovery work below. The infrastructure setup and LAN-access work are
+should read this document and the repository's `AGENTS.md`, then continue the
+secrets-recovery work below. The inventory and pinned crypto bootstrap are
+implemented; use `just --no-dotenv secrets-check` and read
+`usenet-infra/docs/secrets-recovery.md`, then proceed to independent master
+storage. The infrastructure setup and LAN-access work are
 complete; do not repeat account creation, purchases, credential setup, diagnostic
 downloads, NAS bootstrap, or VPN provisioning. Use parallel agents for independent
 implementation, review, and validation. No previous chat or browser session is
@@ -84,9 +87,9 @@ restart persistence; isolated cloud/QNAP application restore drills; LAN login
 to both cloud UIs; anonymous denial; blocked backend/public ports; exact IKEv2
 selectors; explicit PFS14 rekey; automatic reconnection after cloud-only
 strongSwan restart; unchanged default route/old site VPN configuration; cloud
-Ansible repeat convergence with zero changes. The current Usenet suite has
-231 cases: 224 pass, seven opt-in skips; those seven proxy runtime cases also
-passed separately during implementation. Fresh closeout `just test` also passed:
+Ansible repeat convergence with zero changes. After the clean-clone vault increment,
+the Usenet suite has 294 cases: 287 pass, seven opt-in skips; those seven proxy runtime cases
+previously passed separately during LAN implementation. Prior checkpoint `just test` also passed:
 Talos 118 tests (11 slow deselected), grid dashboard 102, printer 225 including
 browser tests, snapshot 7, tinyurl 16, Sonos tests/builds, and all seven add-on
 container checks. Fresh `just usenet-test` passed all compilation, ShellCheck,
@@ -135,6 +138,77 @@ independently held recovery master can restore the required secrets and retrieve
 state backups. Implement this next; do not claim the existing `.age` archives
 already meet that contract. Include the whole smarthome repository in the
 inventory, even if Usenet is the first migrated component.
+
+### Inventory increment — September 11, 2026
+
+Implemented the public, versioned exact-path inventory at
+`usenet-infra/recovery/inventory.json` and the repository-root/infrastructure
+`just secrets-check` recipes. The initial review covers 42 local file entries
+(39 present, three optional configurations absent), eleven retained Usenet
+archives, both independent Terraform states and their live inputs, all five
+Usenet keypairs, and Home Assistant's dedicated keypair. Each file records its
+restore destination, owner, mode, format, consumers, current backup/key dependency,
+rotation procedure and path-rebasing policy. Twelve external dependency groups
+record live state and unresolved recovery prerequisites across smarthome.
+
+The read-only checker inspects metadata, committed repository ignore coverage and
+bounded discovery roots without reading secret/archive bytes. It rejects unsafe
+paths, special/hard-linked files, excess permissions and unclassified files.
+`--manifest-only` works without any ignored inputs; `--json` produces a sanitized
+metadata report. Use Just's `--no-dotenv` flag to bypass its global environment
+file loading before the checker starts. Passing means inventory checks passed, never deletion safety.
+The current local metadata check passes. Two local host-pin files and the
+historical Z-Wave NVM backup were tightened from 0644 to 0600, without content
+changes. No keys were generated/rotated, no master was stored, and no live
+service or account was changed.
+
+Validation passed: 40 new isolated fixture tests; full `just usenet-test` with
+271 cases (264 passed, seven existing opt-in skips), compilation, ShellCheck,
+JSON/YAML, all three Ansible syntax checks and the existing source/history
+secret scan. The actual metadata check and root/infrastructure recipes also
+passed. Independent coverage and implementation review informed the manifest
+and safety tests. These new source changes are not yet committed or published;
+the remote checkpoints above precede this increment.
+
+Independent coverage review identified additional prerequisites: authoritative
+Home Assistant `/config/secrets.yaml`, Core `.storage` state and ESPHome files
+need supported consistent encrypted capture; the documented native add-on export
+is unencrypted and excludes Core, and its retained archive location is unverified.
+`new-hass-configs/secrets.yaml` is tracked and contains a nonempty value not
+certified as a placeholder. Privately establish its sensitivity and authority;
+do not emit its value or use it to overwrite live HA secrets. Historical plaintext
+HA backup trees also need exact-file classification, and the August 21 NVM
+snapshot predates intentional node removals. See the new recovery runbook for
+the full findings and source references.
+
+Next increment: complete the operator-held master creation and second-copy
+retrieval using the implemented pinned, verified SOPS/native-age bootstrap,
+then escrow both old archive-decryption identities. The source-only bootstrap
+adds native `age-keygen` alongside the existing age binary; SOPS 3.13.3 is
+pinned for Darwin/arm64 and Linux/amd64. The checked binaries are now cached
+locally, with the Darwin SOPS version check passing. It has fixture coverage for verified
+offline cache reuse, tampering, redirects, symlinks, stale executables, version
+checks and master-target safety. It has not created an identity, added
+`.sops.yaml`, added a vault, or touched an archive. This
+requires the operator to choose an external mode-0700 identity location and a
+second independently retrievable private-copy path. Full inventory closure still requires the live/external reviews
+above. Independent ciphertext retrieval, safe restore/run/capture/verify recipes,
+fresh state snapshots, clean-clone/failure drills and operator-led second-copy
+retrieval remain pending. **Deleting this checkout remains unsafe.**
+
+The next source increment implements the clean-clone command boundary without
+creating any real ciphertext: `just --no-dotenv setup-secrets` decrypts the
+future single committed SOPS bundle using exactly one injected identity
+(`SOPS_AGE_KEY_FILE` preferred, or one-process `SOPS_AGE_KEY`); `just --no-dotenv
+secrets-encrypt` creates and immediately authenticated-decrypts that bundle.
+The bundle includes only inventory `vault` entries as exact-byte base64 payloads
+inside SOPS encryption. Restore validates the whole bundle before touching
+files, uses the inventory as its only destination allowlist, rebases only exact
+checkout path boundaries, refuses unsafe files/symlinks and preflights all
+conflicts before publication. The public `.sops.yaml` recipient must first be
+created by the operator-master step; until then both vault commands correctly
+refuse to run. No actual master, encrypted vault, archive identity, Terraform
+state or live service has been changed by this source implementation.
 
 1. **Inventory before migration.** Build an explicit, reviewed allowlist from
    ignored-file metadata and deployment references, never dump secret values.

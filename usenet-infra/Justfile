@@ -7,6 +7,7 @@ default:
 [group: 'validation']
 test: ansible-setup
 	python3 -m unittest discover -s tests -v
+	python3 scripts/secrets-check.py --manifest-only
 	python3 -m compileall -q scripts
 	shellcheck scripts/backup-qnap
 	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
@@ -21,6 +22,14 @@ test: ansible-setup
 [group: 'validation']
 secret-scan:
 	@./scripts/secret-scan
+
+# Metadata-only inventory across smarthome; does not establish recovery readiness.
+[group: 'validation']
+[positional-arguments]
+secrets-check *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/secrets-check.py "$@"
 
 # Prompt without echo and save the Hetzner token to an ignored mode-0600 file.
 [group: 'setup']
@@ -169,10 +178,47 @@ configure-cloud: age-bootstrap ansible-setup
 configure-cloud-lan-ui: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud-lan-ui.yml
 
-# Cache the exact verified encryption binaries for this workstation and cloud VM.
+# Cache the exact verified age binaries for this workstation and cloud VM.
 [group: 'setup']
 age-bootstrap:
 	@python3 scripts/bootstrap-age.py
+
+# Cache the reviewed native-age and SOPS recovery tools without creating a key.
+[group: 'setup']
+crypto-bootstrap: age-bootstrap
+	@python3 scripts/bootstrap-sops.py
+
+# Create an external native age master after arranging a second operator-held copy.
+# The confirmation literal makes the irreversible key-generation boundary explicit.
+[group: 'recovery']
+[positional-arguments]
+recovery-master-init identity confirmation: crypto-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	if [[ "$2" != "second-copy-planned" ]]; then
+	  echo "confirmation must be the literal: second-copy-planned" >&2
+	  exit 2
+	fi
+	exec python3 scripts/recovery-master-init.py "$1" --confirm-second-copy
+
+# Restore all allowlisted local inputs from the committed SOPS ciphertext.
+# Supply exactly one of SOPS_AGE_KEY_FILE (preferred) or SOPS_AGE_KEY in the
+# calling environment; neither is accepted as a recipe argument.
+[group: 'recovery']
+[positional-arguments]
+setup-secrets *args: crypto-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/secrets-vault.py restore "$@"
+
+# Replace the committed ciphertext from the current allowlisted local inputs.
+# The same one-process SOPS identity input is required to verify the result.
+[group: 'recovery']
+[positional-arguments]
+secrets-encrypt *args: crypto-bootstrap
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/secrets-vault.py encrypt "$@"
 
 # Install only backup support; does not restart or reconfigure applications.
 [group: 'ansible']
