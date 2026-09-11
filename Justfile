@@ -405,13 +405,13 @@ secrets-check *args:
 usenet-crypto-bootstrap:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra crypto-bootstrap
 
-# Generate the operator-held native-age master only after arranging its second copy.
+# Record the public SOPS recipient from the one-process SOPS_AGE_KEY environment value.
 [group: 'backup']
 [positional-arguments]
-usenet-recovery-master-init identity confirmation:
+usenet-recovery-master-init confirmation:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra recovery-master-init "$1" "$2"
+	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra recovery-master-init "$1"
 
 # Restore ignored local secrets from the committed SOPS vault and a one-process identity.
 [group: 'backup']

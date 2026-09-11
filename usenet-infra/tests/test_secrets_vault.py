@@ -41,9 +41,6 @@ class SecretsVaultTests(unittest.TestCase):
         (source / 'key.pub').write_bytes(b'synthetic public key\n')
         for path, mode in ((source / 'rebase.env', 0o600), (source / 'exact.key', 0o600), (source / 'key.pub', 0o644)):
             path.chmod(mode)
-        self.key = self.base / 'identity.txt'
-        self.key.write_text('AGE-SECRET-KEY-1synthetic')
-        self.key.chmod(0o600)
         self.vault_path = self.old / 'usenet-infra/vault/secrets.sops.json'
         self.bundle = None
 
@@ -54,9 +51,8 @@ class SecretsVaultTests(unittest.TestCase):
         return mock.Mock(load_manifest=mock.Mock(return_value=self.manifest))
 
     def fake_sops(self, args, *, env):
-        self.assertNotIn('SOPS_AGE_KEY', env)
+        self.assertEqual(env['SOPS_AGE_KEY'], 'AGE-SECRET-KEY-1synthetic')
         self.assertNotIn('SOPS_CONFIG', env)
-        self.assertEqual(env['SOPS_AGE_KEY_FILE'], str(self.key))
         output = Path(args[args.index('--output') + 1])
         if '--encrypt' in args:
             self.assertEqual(args[args.index('--filename-override') + 1], 'usenet-infra/vault/secrets.sops.json')
@@ -69,7 +65,7 @@ class SecretsVaultTests(unittest.TestCase):
         with mock.patch.object(vault, '_load_checker', return_value=self.checker()), \
                 mock.patch.object(vault, '_run_sops', side_effect=self.fake_sops):
             return vault.encrypt(self.old, self.old / 'manifest.json', self.vault_path, sops=Path('/synthetic/sops'),
-                                 environ={'SOPS_AGE_KEY_FILE': str(self.key), 'SOPS_CONFIG': '/attacker/config'})
+                                 environ={'SOPS_AGE_KEY': 'AGE-SECRET-KEY-1synthetic', 'SOPS_CONFIG': '/attacker/config'})
 
     def restore(self, **kwargs):
         vault_path = self.new / 'usenet-infra/vault/secrets.sops.json'
@@ -78,7 +74,7 @@ class SecretsVaultTests(unittest.TestCase):
         with mock.patch.object(vault, '_load_checker', return_value=self.checker()), \
                 mock.patch.object(vault, '_run_sops', side_effect=self.fake_sops):
             return vault.restore(self.new, self.new / 'manifest.json', vault_path, sops=Path('/synthetic/sops'),
-                                 environ={'SOPS_AGE_KEY_FILE': str(self.key)}, **kwargs)
+                                 environ={'SOPS_AGE_KEY': 'AGE-SECRET-KEY-1synthetic'}, **kwargs)
 
     def test_encrypted_bundle_is_inventory_bound_and_rebases_only_path_boundaries(self):
         self.assertEqual(self.encrypt(), 3)
@@ -121,15 +117,13 @@ class SecretsVaultTests(unittest.TestCase):
         with self.assertRaisesRegex(vault.VaultError, 'unsafe parent'):
             self.restore()
 
-    def test_key_file_requires_private_regular_file_and_env_value_is_supported(self):
-        self.key.chmod(0o644)
-        with self.assertRaisesRegex(vault.VaultError, 'mode-0600'):
-            vault._identity_env({'SOPS_AGE_KEY_FILE': str(self.key)})
-        self.key.chmod(0o600)
+    def test_only_valid_environment_value_is_supported(self):
         environment = vault._identity_env({'SOPS_AGE_KEY': 'AGE-SECRET-KEY-1synthetic'})
         self.assertEqual(environment, {'SOPS_AGE_KEY': 'AGE-SECRET-KEY-1synthetic'})
-        with self.assertRaisesRegex(vault.VaultError, 'only one'):
-            vault._identity_env({'SOPS_AGE_KEY_FILE': str(self.key), 'SOPS_AGE_KEY': 'AGE-SECRET-KEY-1synthetic'})
+        for environment in ({}, {'SOPS_AGE_KEY': 'not-an-age-identity'}):
+            with self.subTest(environment=environment):
+                with self.assertRaises(vault.VaultError):
+                    vault._identity_env(environment)
 
     def test_rebase_does_not_rewrite_a_longer_path_prefix(self):
         content = b'/a/old/path /a/old/path/x /a/old/path-extra'

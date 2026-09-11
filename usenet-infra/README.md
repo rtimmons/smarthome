@@ -55,11 +55,10 @@ and run `just --no-dotenv secrets-check` from the repository root. This checks m
 the pinned crypto bootstrap is ready, but master creation, vault escrow and the
 clean-clone deletion-safety drill remain pending.
 
-After the operator-held age identity and public SOPS recipient are established,
-use `SOPS_AGE_KEY_FILE=/physical/path/to/recovery.agekey just --no-dotenv
-setup-secrets` to restore the encrypted local-input vault in a fresh clone.
-See [secrets recovery](docs/secrets-recovery.md) for the key-injection and
-initial-capture boundaries.
+After the public SOPS recipient is established, inject `SOPS_AGE_KEY` with your
+password manager and run `just --no-dotenv setup-secrets` to restore the
+encrypted local-input vault in a fresh clone. See [secrets recovery](docs/secrets-recovery.md)
+for the key-injection and initial-capture boundaries.
 
 Capacity is reviewed at an 80% warning and upgraded before 90%; expansion is a
 deliberate, reviewed Terraform change, not an automatic purchase. See

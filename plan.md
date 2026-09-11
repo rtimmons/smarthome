@@ -88,7 +88,7 @@ to both cloud UIs; anonymous denial; blocked backend/public ports; exact IKEv2
 selectors; explicit PFS14 rekey; automatic reconnection after cloud-only
 strongSwan restart; unchanged default route/old site VPN configuration; cloud
 Ansible repeat convergence with zero changes. After the clean-clone vault increment,
-the Usenet suite has 294 cases: 287 pass, seven opt-in skips; those seven proxy runtime cases
+the Usenet suite has 291 cases: 284 pass, seven opt-in skips; those seven proxy runtime cases
 previously passed separately during LAN implementation. Prior checkpoint `just test` also passed:
 Talos 118 tests (11 slow deselected), grid dashboard 102, printer 225 including
 browser tests, snapshot 7, tinyurl 16, Sonos tests/builds, and all seven add-on
@@ -198,9 +198,8 @@ retrieval remain pending. **Deleting this checkout remains unsafe.**
 
 The next source increment implements the clean-clone command boundary without
 creating any real ciphertext: `just --no-dotenv setup-secrets` decrypts the
-future single committed SOPS bundle using exactly one injected identity
-(`SOPS_AGE_KEY_FILE` preferred, or one-process `SOPS_AGE_KEY`); `just --no-dotenv
-secrets-encrypt` creates and immediately authenticated-decrypts that bundle.
+future single committed SOPS bundle using exactly one injected `SOPS_AGE_KEY`;
+`just --no-dotenv secrets-encrypt` creates and immediately authenticated-decrypts that bundle.
 The bundle includes only inventory `vault` entries as exact-byte base64 payloads
 inside SOPS encryption. Restore validates the whole bundle before touching
 files, uses the inventory as its only destination allowlist, rebases only exact
@@ -209,6 +208,14 @@ conflicts before publication. The public `.sops.yaml` recipient must first be
 created by the operator-master step; until then both vault commands correctly
 refuse to run. No actual master, encrypted vault, archive identity, Terraform
 state or live service has been changed by this source implementation.
+
+The master initializer is password-manager-first: `SOPS_AGE_KEY` is placed in a
+private temporary file only long enough for reviewed native `age-keygen` to
+derive the public recipient. `just --no-dotenv usenet-recovery-master-init
+second-copy-planned` then writes only the public recipient and narrow
+`.sops.yaml`; the private value is neither persisted in the checkout nor
+emitted. This remains contingent on a real independent second copy and does
+not itself create or validate that copy.
 
 1. **Inventory before migration.** Build an explicit, reviewed allowlist from
    ignored-file metadata and deployment references, never dump secret values.
@@ -234,9 +241,9 @@ state or live service has been changed by this source implementation.
    systems being recovered, with a second independently retrievable copy. Commit
    only the public recipient and narrow `.sops.yaml` rules. A random age private
    identity is the proposed master key, not an ordinary memorable password.
-   Pin and verify SOPS/age binaries in the bootstrap recipe. Prefer
-   `SOPS_AGE_KEY_FILE` pointing to the independently stored private file; support
-   the requested `SOPS_AGE_KEY` environment input for one process when needed.
+   Pin and verify SOPS/age binaries in the bootstrap recipe. Use the requested
+   `SOPS_AGE_KEY` environment input for one process; never persist a master-key
+   file in the checkout or recovered systems.
    Never store the master in repository `.env`, shell history, logs, CI artifacts,
    or a vault decryptable only by that same master. Clear it from child
    environments after the decryption step. A private prompt or password-manager

@@ -188,22 +188,21 @@ age-bootstrap:
 crypto-bootstrap: age-bootstrap
 	@python3 scripts/bootstrap-sops.py
 
-# Create an external native age master after arranging a second operator-held copy.
-# The confirmation literal makes the irreversible key-generation boundary explicit.
+# Record the public recipient from the one-process SOPS_AGE_KEY value. The key
+# is written only to a private temporary file while age-keygen derives `age1…`.
 [group: 'recovery']
 [positional-arguments]
-recovery-master-init identity confirmation: crypto-bootstrap
+recovery-master-init confirmation: crypto-bootstrap
 	#!/usr/bin/env bash
 	set -euo pipefail
-	if [[ "$2" != "second-copy-planned" ]]; then
+	if [[ "$1" != "second-copy-planned" ]]; then
 	  echo "confirmation must be the literal: second-copy-planned" >&2
 	  exit 2
 	fi
-	exec python3 scripts/recovery-master-init.py "$1" --confirm-second-copy
+	exec python3 scripts/recovery-master-init.py --confirm-second-copy
 
 # Restore all allowlisted local inputs from the committed SOPS ciphertext.
-# Supply exactly one of SOPS_AGE_KEY_FILE (preferred) or SOPS_AGE_KEY in the
-# calling environment; neither is accepted as a recipe argument.
+# Supply SOPS_AGE_KEY in the calling environment; it is never a recipe argument.
 [group: 'recovery']
 [positional-arguments]
 setup-secrets *args: crypto-bootstrap

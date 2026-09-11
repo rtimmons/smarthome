@@ -116,38 +116,36 @@ is also version-checked; both platform caches are usable offline after the
 first verified fetch.
 
 The next human action is necessary because the private recovery identity needs
-two independently retrievable, operator-held copies. First create a new,
-operator-owned physical directory at mode `0700` outside this checkout, the
-cloud VM, QNAP, and Storage Box. Choose and prepare the second independent
-retrieval location before generating anything. Do not use an SSH key, a
-repository path, a shell-history command, or a password that merely resembles a
-key.
+two independently retrievable, operator-held copies. Store the generated
+`SOPS_AGE_KEY` as a 1Password secret and arrange a separately retrievable copy
+outside this checkout, the cloud VM, QNAP, and Storage Box. Do not use an SSH
+key, a repository path, a shell-history command, or a password that merely
+resembles a key.
 
-Then, from the repository root, use the physical path (not macOS's `/tmp`
-symlink) and explicitly acknowledge that plan:
+With `SOPS_AGE_KEY` injected by the password manager, explicitly acknowledge
+that plan from the repository root:
 
 ```sh
 just --no-dotenv usenet-crypto-bootstrap
-just --no-dotenv usenet-recovery-master-init /physical/operator-held/recovery.agekey second-copy-planned
+just --no-dotenv usenet-recovery-master-init second-copy-planned
 ```
 
-The second command invokes the reviewed native `age-keygen` executable without
-printing private bytes. It refuses an existing target, symlinked path, a
-repository-local target, and any parent that is not owned by the operator at
-exactly `0700`. It prints only the public `age1...` recipient. Immediately make
-and independently retrieve the second private copy, then compare its derived
-public recipient with that result. Do not put either private copy in `.env`,
-the password manager item that contains only the recovery instructions, logs,
-chat, CI, or a host being recovered.
+It writes the identity only to an owner-only temporary file while reviewed
+`age-keygen` derives the public recipient, then removes that temporary file.
+It never writes the private identity to the checkout, command line, `.env`, or
+output. Do this only after you have arranged the required independent second
+copy of the same master.
+
+The second command invokes reviewed native `age-keygen` without printing private
+bytes. It prints only the public `age1...` recipient. Do not put the private
+value in `.env`, logs, chat, CI, or a host being recovered.
 
 On success the command creates two public, reviewable files: the recipient at
 `usenet-infra/recovery/age-recipient.txt` and a root `.sops.yaml` whose sole
 creation rule is for `usenet-infra/vault/*.sops.{yaml,yml,json,env,ini,bin}`.
 Review and commit those public files separately; no vault payload is generated
-by this step. A subsequent vault tool will prefer `SOPS_AGE_KEY_FILE` pointing
-to the external identity and may accept `SOPS_AGE_KEY` only for one tightly
-scoped process. Neither form belongs in command arguments or persisted shell
-configuration.
+by this step. The vault tool accepts only `SOPS_AGE_KEY` for one tightly scoped
+process; it never belongs in command arguments or persisted shell configuration.
 
 ## Clean-clone secret setup
 
@@ -155,28 +153,25 @@ Once the public recipient/configuration and encrypted vault have been committed,
 a clone restores its local inputs with one command:
 
 ```sh
-SOPS_AGE_KEY_FILE=/physical/operator-held/recovery.agekey just --no-dotenv setup-secrets
+just --no-dotenv setup-secrets
 ```
 
-`setup-secrets` reads exactly one SOPS identity input from its environment:
-`SOPS_AGE_KEY_FILE` is preferred and must be an absolute, owner-owned, regular
-mode-`0600` file. For a password-manager launcher that can inject an
-environment value for one child process, it also accepts `SOPS_AGE_KEY`:
+`setup-secrets` accepts only `SOPS_AGE_KEY`, injected by the password-manager
+launcher for one child process:
 
 ```sh
 # Have the password manager inject SOPS_AGE_KEY; never paste an actual key here.
 SOPS_AGE_KEY="$PASSWORD_MANAGER_INJECTED_VALUE" just --no-dotenv setup-secrets
 ```
 
-It rejects both variables together, neither variable, symlinks, unsafe key
-files and all unrelated `SOPS_*` settings. The identity is never taken as a
-Just argument, stored in `.env`, printed, parsed or forwarded beyond the SOPS
-child process.
+It rejects a missing or malformed identity and all unrelated `SOPS_*` settings.
+The identity is never taken as a Just argument, stored in `.env`, printed,
+parsed or forwarded beyond the SOPS child process.
 
 The first operator vault capture uses the same identity input:
 
 ```sh
-SOPS_AGE_KEY_FILE=/physical/operator-held/recovery.agekey just --no-dotenv secrets-encrypt
+just --no-dotenv secrets-encrypt
 ```
 
 It captures only the `vault` category in the public inventory into the single

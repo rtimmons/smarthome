@@ -130,31 +130,17 @@ def _read_source(root_fd: int, relative: str, expected_mode: str) -> bytes:
 
 def _identity_env(environ: dict[str, str] | None = None) -> dict[str, str]:
     environ = os.environ if environ is None else environ
-    key_file = environ.get('SOPS_AGE_KEY_FILE')
     key_text = environ.get('SOPS_AGE_KEY')
-    if key_file and key_text:
-        raise VaultError('Set only one SOPS age identity mechanism, not both.')
     # A caller's other SOPS_* settings could select a different config or
-    # identity provider.  Keep the normal process environment (PATH, locale,
-    # proxy settings) but pass SOPS only the one explicitly selected identity.
+    # identity provider. Keep the normal process environment (PATH, locale,
+    # proxy settings) but pass SOPS only the injected one-process identity.
     result = {key: value for key, value in environ.items() if not key.startswith('SOPS_')}
-    if key_file:
-        path = Path(key_file)
-        try:
-            item = path.lstat()
-        except OSError:
-            raise VaultError('SOPS_AGE_KEY_FILE is unavailable.') from None
-        if (not path.is_absolute() or stat.S_ISLNK(item.st_mode) or not stat.S_ISREG(item.st_mode)
-                or item.st_uid != os.getuid() or item.st_nlink != 1 or stat.S_IMODE(item.st_mode) != 0o600):
-            raise VaultError('SOPS_AGE_KEY_FILE must name an owner-only mode-0600 regular file.')
-        result['SOPS_AGE_KEY_FILE'] = str(path)
-        return result
-    if key_text:
-        # Do not print, store, or parse the identity.  SOPS receives it only in
-        # the child environment for this one invocation.
-        result['SOPS_AGE_KEY'] = key_text
-        return result
-    raise VaultError('Set SOPS_AGE_KEY_FILE (preferred) or SOPS_AGE_KEY for this command.')
+    if not key_text or '\x00' in key_text or not key_text.startswith('AGE-SECRET-KEY-1'):
+        raise VaultError('Set a valid SOPS_AGE_KEY for this command.')
+    # Do not print, store, or parse the identity. SOPS receives it only in this
+    # child environment for one invocation.
+    result['SOPS_AGE_KEY'] = key_text
+    return result
 
 
 def _default_sops(root: Path) -> Path:
