@@ -17,19 +17,38 @@ the six current inventoried dedicated identities (five Usenet plus Home
 Assistant). This comparison does **not** establish that old authorized-key
 entries have been removed everywhere.
 
-Treat these keys as exposed. Determine whether the historical hosts/accounts
-still exist and remove any remaining authorization through a separately reviewed
-access change; verify a working replacement before removing access. Do not try
-the exposed private keys against live systems to test them. Revocation status
-must be recorded before closing the finding. Removing files from the current
+Treat these keys as exposed. On September 11, 2026, the user confirmed both
+known Raspberry Pi consumers were retired or wiped. This closes remediation
+for those known consumers; it does not prove absence of reuse on unknown hosts.
+If another consumer is discovered, remove its authorization using a separate
+current identity after verifying replacement access. Do not try
+the exposed private keys against live systems to test them. Do not reuse the exposed identities. Removing files from the current
 tree or rewriting Git alone does not revoke a key already obtained by others.
 
 The scanner has no exception hiding these findings. `scripts/secret-scan` fails
 on full history; `scripts/secret-scan --no-history` explicitly labels a narrower
-current source/index check. Until the historical finding is dispositioned, the
+current source/index check. Even with the known consumers retired, the
 final secret-scan step of `just usenet-test` therefore fails even when functional
 tests, compilation and configuration checks pass.
 
-The separate nonempty tracked Home Assistant secrets-file finding and
-repository dependency alerts remain recorded in `plan.md`. Neither this scan
-nor the DR tests certify all service credentials, historical files or dependencies.
+## Home Assistant configuration
+
+The tracked `new-hass-configs/secrets.yaml` had one nonempty `some_password`
+entry. A remote-side whole-file comparison showed it matches the live file;
+no matching secret reference was found in checked local configuration or the
+live root YAML files. The value is not copied into these notes. The file is now removed
+from Git tracking while its ignored local copy is preserved for encrypted backup;
+use the empty `secrets.example.yaml` as the public template. Do not overwrite live
+HA secrets during deployment. Deleting the tracked file does not erase history
+or revoke an unknown external consumer; any future identified reuse requires
+rotation through that service.
+
+## Dependency updates
+
+Compatible lockfile updates for snapshot-service, tinyurl-service, sonos-api,
+grid-dashboard/ExpressServer and the HA config generator address all 53 alerts
+returned by GitHub on September 11. Each updated lockfile reports zero npm audit
+vulnerabilities. Service tests and builds pass. These are source changes; live
+add-ons require deployment, and GitHub default-branch alerts will remain open
+until the updates reach that branch. No blanket upgrade or scanner exemption
+was applied.

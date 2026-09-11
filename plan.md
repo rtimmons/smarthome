@@ -6,6 +6,38 @@ Keep this document updated as agents make progress.
 
 ## Resume here — current handoff, September 11, 2026
 
+### Active scope update
+
+The user requested scheduled backups, checkout deletion readiness, security
+remediation and completion of the native media workflow. NAS-loss protection is
+explicitly deferred. Checkout deletion readiness means preserving all unique
+local files and proving retrieval/restoration from published code and independently
+recoverable keys; it does not require replacing the live NAS, HA or UniFi machines.
+Those broader disaster-recovery drills remain separate and must not be silently
+marked passed. Do not actually delete the checkout.
+
+Current changes:
+
+- Cloud and NAS daily encrypted backup schedules are enabled with hourly retry.
+  Cloud, QNAP and Plex archives were retrieved from the NAS and verified with
+  identities restored in the clean-clone drill. See `usenet-infra/docs/scheduled-backups.md`.
+- Native Radarr/Sonarr imports and cleanup are enabled with a real synchronous
+  Storage Box library. The old publisher timer is disabled. Five catalog movies
+  were adopted using verified server-side hard links: zero media bytes copied.
+- QNAP has a read-only remote mount and Plex libraries `Movies (Remote)` (4) and
+  `TV Shows (Remote)` (5). The everyday profile sees exactly IDs 2/3/4/5 and is
+  denied private library 1. Remote streaming validation is in progress; real TV
+  playback/startup and a convenient NAS-copy action for new native titles remain.
+- The historical Raspberry Pi key consumers were confirmed retired or wiped.
+  The tracked HA secrets file is removed from Git while its ignored/live copies
+  are preserved. Five compatible lockfile updates address the 53 reported alerts;
+  service tests/builds and root container checks passed. Affected add-on deployment
+  is in progress. Full history scanning still reports the two exposed old keys.
+- Checkout-local preservation is implemented and being verified. Do not mark
+  checkout deletion ready until encrypted NAS retrieval and published-source
+  checks have completed. Original full-machine `deletion_safe: false` evidence is
+  immutable and does not override the user's narrower checkout-deletion scope.
+
 This section is authoritative over chronological notes below. The Usenet
 secrets/state milestone is closed; Radarr/Sonarr discovery, automatic publication
 and the NAS/Plex layout are deployed. Continue with native import/storage and
@@ -57,10 +89,10 @@ bootstraps public pinned tools, restores the vault, fetches NAS ciphertext using
 restored credentials, verifies/restores state and archives twice, and records
 `build/recovery-drill.json`. It reads no original ignored files.
 
-**Deletion safety: not ready.** Whole-HA recovery, native UniFi restore,
-application startup from this new clone and unrelated local user work remain
-separate deletion prerequisites. The successful drill explicitly reports
-`deletion_safe: false`. The user approved staging, committing and publishing
+**Historical full-machine drill:** its original `deletion_safe: false` is retained.
+Whole-HA and UniFi replacement drills are separate deferred work, not prerequisites
+for the user's newly scoped checkout deletion. Current checkout readiness is
+recorded above and in the additive checkout recovery receipt. The user approved staging, committing and publishing
 this recovery checkpoint and its handoff updates; do not ask again for those
 actions. Implementation commit `ea73226` and the tested handoff revision above
 are published on `origin/usenet`.
@@ -68,8 +100,8 @@ are published on `origin/usenet`.
 **Security audit finding:** expanded whole-main-repository source/index scanning
 passes, but reachable history contains two distinct RSA private keys committed
 in 2017–2018 and deleted from working files in 2018. Neither matches the six
-current dedicated identities. Live revocation of the historical Raspberry Pi
-consumers is unverified. See `usenet-infra/docs/security-findings.md` for public
+current dedicated identities. The user confirmed the known Raspberry Pi consumers were retired or wiped;
+unknown historical reuse is not proven absent. See `usenet-infra/docs/security-findings.md` for public
 fingerprints, commits and consumer evidence. No keys were used, no history was
 rewritten, and no scanner exception was added. Full `secret-scan` intentionally
 fails on those findings; do not claim the repository's history is credential-free.

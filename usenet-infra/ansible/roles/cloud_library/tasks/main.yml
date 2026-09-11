@@ -1,0 +1,46 @@
+---
+- name: Install distribution-maintained SSHFS support
+  ansible.builtin.apt:
+    name: sshfs
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+- name: Require existing reviewed application UID
+  ansible.builtin.assert:
+    that: [usenet_uid | int == 1991, usenet_gid | int == 1991]
+- name: Create fail-closed local mountpoint before first mount only
+  ansible.builtin.shell: |
+    set -eu
+    if ! mountpoint -q /srv/usenet/library; then
+      mkdir -p /srv/usenet/library
+      test -z "$(ls -A /srv/usenet/library)"
+      chown root:root /srv/usenet/library
+      chmod 0000 /srv/usenet/library
+    fi
+  changed_when: false
+- name: Create canonical library directories without relocating existing catalog files
+  ansible.builtin.command:
+    argv: [rclone, --config, /srv/usenet/config/rclone/rclone.conf, mkdir, "storagebox:catalog/library/{{ item }}"]
+  become_user: usenet
+  loop: [Movies, TV]
+  changed_when: false
+- name: Install mount helper
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/scripts/library-mount.py'
+    dest: /srv/usenet/libexec/library-mount.py
+    owner: root
+    group: root
+    mode: '0500'
+- name: Install native mount service
+  ansible.builtin.template:
+    src: usenet-library.service.j2
+    dest: /etc/systemd/system/usenet-library.service
+    owner: root
+    group: root
+    mode: '0644'
+- name: Enable persistent library mount
+  ansible.builtin.systemd_service:
+    name: usenet-library.service
+    daemon_reload: true
+    enabled: true
+    state: started

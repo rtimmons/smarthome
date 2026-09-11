@@ -1,0 +1,48 @@
+name: usenet-backups
+services:
+  backups:
+    image: usenet-catalog-tools:rclone-1.75.1-python-3.14.7
+    user: '0:100'
+    entrypoint: /bin/sh
+    command:
+      - -c
+      - mkdir -p /run/crontabs && cp /etc/backup-crontabs/root /run/crontabs/root && exec /usr/sbin/crond -f -c /run/crontabs -l 8
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    # Read private configuration through read-only binds and run cron as root.
+    cap_add: [DAC_OVERRIDE, SETUID, SETGID]
+    security_opt: [no-new-privileges:true]
+    environment:
+      TZ: UTC
+      BACKUP_OUTPUT: /backups
+      BACKUP_AGE: /opt/usenet/bin/age
+      PYTHONDONTWRITEBYTECODE: '1'
+      RCLONE_CONFIG_STORAGEBOX_TYPE: sftp
+      RCLONE_CONFIG_STORAGEBOX_HOST: '${STORAGEBOX_HOST}'
+      RCLONE_CONFIG_STORAGEBOX_USER: '${STORAGEBOX_USER}'
+      RCLONE_CONFIG_STORAGEBOX_PORT: '${STORAGEBOX_PORT:-23}'
+      RCLONE_CONFIG_STORAGEBOX_KEY_FILE: /source/usenet/secrets/storagebox/id_ed25519
+      RCLONE_CONFIG_STORAGEBOX_KNOWN_HOSTS_FILE: /source/usenet/secrets/storagebox/known_hosts
+      RCLONE_CONFIG_STORAGEBOX_SHELL_TYPE: unix
+      RCLONE_CONFIG_STORAGEBOX_SKIP_LINKS: 'true'
+      RCLONE_CONFIG_CATALOG_TYPE: alias
+      RCLONE_CONFIG_CATALOG_REMOTE: 'storagebox:'
+    volumes:
+      - '${QNAP_BACKUP_ROOT:?Configure NAS backup root}:/backups'
+      - '${QNAP_PLEX_ROOT:?Configure actual Plex application support path}:/source/plex:ro'
+      - /share/Container/usenet:/source/usenet:ro
+      - /share/Container/usenet/scripts:/opt/usenet/scripts:ro
+      - /share/Container/usenet/bin:/opt/usenet/bin:ro
+      - /share/Container/usenet/config/backup/recipient.pub:/run/backup-recipient.pub:ro
+      - /share/Container/usenet/config/backup/crontabs:/etc/backup-crontabs:ro
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=256m,mode=1777
+      - /run:rw,noexec,nosuid,nodev,size=1m
+      - /root/.cache:rw,noexec,nosuid,nodev,size=16m
+    healthcheck:
+      test: [CMD, python3, /opt/usenet/scripts/scheduled-backup.py, nas, --check]
+      interval: 30m
+      timeout: 15s
+      retries: 1
+      start_period: 10m

@@ -1,7 +1,7 @@
 # Usenet, NAS and Plex agent guide
 
 Read the current handoff at the top of `../plan.md`, then `docs/operations.md`,
-`docs/nas-plex-layout.md` and `docs/media-workflow-review.md`. Chronological
+`docs/nas-plex-layout.md`, `docs/native-media.md` and `docs/scheduled-backups.md`. Chronological
 notes describe earlier policies; they do not override the current handoff.
 
 ## Access and validation
@@ -22,14 +22,13 @@ notes describe earlier policies; they do not override the current handoff.
 
 ## File ownership and recovery
 
-- Radarr/Sonarr automatic search and monitored RSS are enabled. Native completed
-  imports remain disabled: `/library` is still metadata-only, with no real media
-  mount. Preserve that distinction when reporting an item as downloaded/imported.
-- The cloud `usenet-publish.timer` owns successful SAB completed directories.
-  Its worker uses stable job IDs, remote checksums/manifests and durable receipts
-  before local cleanup. Never run another mover against those directories.
-  Disable the timer and let any active publisher finish before transitioning to
-  native Arr imports. Remote Path Mappings do not transfer files.
+- Radarr/Sonarr automatic search, RSS and native completed imports are enabled.
+  `/library` is a real Storage Box SSHFS library, with completed scratch mounted
+  at `/data/complete`. Preserve mount-dependent systemd startup and mode-0000
+  unmounted directory protection. Never enable the retired publisher timer.
+- Five legacy movies have server-side hard links into native movie directories;
+  original catalog objects/manifests remain intact. Do not edit shared file bytes
+  in place. Native upgrades replace files normally.
 - The Storage Box is canonical; the NAS reader credential is server-enforced
   read-only. NAS copies remain selective. Prefer native Arr/Plex features for
   import and scanning; OliveTin is only the transitional copy/removal interface.
@@ -43,8 +42,9 @@ notes describe earlier policies; they do not override the current handoff.
   names must stay consistent with their verification records.
 - The original SOPS-bound snapshot/inventory is immutable and its clean-clone
   secrets/state milestone passed. Do not regenerate keys or repeat purchases/setup.
-  Whole-machine deletion safety remains unproven. Supplemental backups currently
-  require an empty SAB queue; do not delete/resume jobs just to satisfy that check.
+  Whole-machine replacement drills remain separate. Scheduled backups allow an
+  idle or fully paused SAB queue but reject post-processing. Never delete/resume
+  jobs just to satisfy backup checks. NAS-loss protection is explicitly deferred.
 
 ## Plex privacy and playback
 
@@ -52,11 +52,11 @@ notes describe earlier policies; they do not override the current handoff.
   files, library ID and root. Do not browse or emit its thumbnails/content while
   inspecting settings. General libraries must never include the share root.
 - `Movies (NAS)` and `TV Shows (NAS)` are granted to managed profile `Movies & TV`
-  only. Preserve `loljk` exclusion from home/global search and verify actual
+  and the two Remote libraries (IDs 2/3/4/5). Preserve `loljk` exclusion from home/global search and verify actual
   profile grants, not only presentation settings. Owner PIN/client startup
   configuration requires private user/device setup; do not invent a PIN.
 - Plex watches local changes, performs partial scans and scans hourly; automatic
   trash emptying is disabled. Do not empty trash to resolve an unavailable mount.
-- TV sorting/native Arr imports, a remote playback mount, and actual Apple TV/Roku
-  playback are separate pending work. Do not claim file indexing proves playback
+- Native TV sorting and the read-only remote mount are deployed. Actual Apple TV/Roku
+  playback and a convenient NAS copy action for new native-library titles remain. Do not claim file indexing proves playback
   or that a configured profile proves safe startup on every client.

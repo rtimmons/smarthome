@@ -12,7 +12,9 @@ FromDrobo/
 │   ├── video/<item-id>/  completed movie files visible to Plex
 │   ├── .staging/        incomplete transfers; excluded from Plex's root
 │   └── other/           diagnostic/nonvideo catalog entries
-└── TV Shows/            separate TV library root
+├── TV Shows/            separate TV library root
+├── Remote/files/        read-only Storage Box mount
+└── .remote-cache/       bounded disposable streaming cache
 ```
 
 Only the former `/share/Usenet/usenet-cache` directory was relocated, using an
@@ -38,12 +40,14 @@ and verification records refer to those relative paths.
 | `loljk` | 1 | `/share/CACHEDEV2_DATA/FromDrobo/loljk` |
 | `Movies (NAS)` | 2 | `/share/CACHEDEV2_DATA/FromDrobo/Movies/video` |
 | `TV Shows (NAS)` | 3 | `/share/CACHEDEV2_DATA/FromDrobo/TV Shows` |
+| `Movies (Remote)` | 4 | `Remote/files/library/Movies` and legacy `Remote/files/objects/video`, beneath the same physical share |
+| `TV Shows (Remote)` | 5 | `Remote/files/library/TV`, beneath the same physical share |
 
 New libraries use Plex Movie and Plex TV Series agents. Video preview thumbnail
 generation is disabled for these libraries to avoid unnecessary NAS processing.
 Do not point either general library at the share root.
 
-The `Movies & TV` managed Home profile is explicitly granted only IDs 2 and 3;
+The `Movies & TV` managed Home profile is explicitly granted only IDs 2, 3, 4 and 5;
 verification using that profile's server token returned only those libraries,
 and direct access to ID 1 returned HTTP 403. `loljk` visibility is set to **Exclude from home screen and
 global search**. The owner can still deliberately open that library.
@@ -85,8 +89,7 @@ must be updated before scanning that reversed layout. Do not copy a directory
 over an existing collection, remove the share, or empty Plex trash as part of
 this operation.
 
-The current catalog groups these completed movies under `video`. TV files are
-not automatically sorted into the TV root yet. Native Radarr/Sonarr imports
-and a read-only remote playback mount remain a separate migration; stop the
-transitional cloud publisher before another importer owns the same files.
-See [the workflow review](media-workflow-review.md).
+Native Radarr/Sonarr imports now sort new movies and TV into separate canonical
+library folders. The old publisher timer is disabled. See [native media](native-media.md)
+for mount dependencies and remaining client tests, and [scheduled backups](scheduled-backups.md)
+for encrypted Plex/database protection.

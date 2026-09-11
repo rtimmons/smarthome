@@ -3,6 +3,17 @@
   hosts: cloud
   become: true
   gather_facts: true
+  pre_tasks:
+    - name: Stop the publisher timer before transferring import ownership
+      ansible.builtin.systemd_service:
+        name: usenet-publish.timer
+        enabled: false
+        state: stopped
+    - name: Require any active publisher to finish without interrupting it
+      ansible.builtin.command: systemctl is-active usenet-publish.service
+      register: publisher_activity
+      changed_when: false
+      failed_when: publisher_activity.rc not in [3]
   roles:
     - role: cloud_discovery
     - role: cloud_backup

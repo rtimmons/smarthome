@@ -1,0 +1,12 @@
+[Unit]
+Description=Daily encrypted backup with hourly retry while applications are busy
+
+[Timer]
+OnBootSec=2min
+OnCalendar=hourly
+RandomizedDelaySec=5min
+Persistent=true
+Unit=usenet-backup.service
+
+[Install]
+WantedBy=timers.target

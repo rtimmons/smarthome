@@ -1,0 +1,6 @@
+---
+- name: Provide the canonical library filesystem before enabling native imports
+  hosts: cloud
+  become: true
+  gather_facts: true
+  roles: [cloud_library]

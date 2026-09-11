@@ -1,0 +1,18 @@
+[Unit]
+Description=Radarr and Sonarr with a mounted canonical library
+Requires=docker.service usenet-library.service
+BindsTo=usenet-library.service
+After=docker.service usenet-library.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/srv/usenet/compose/discovery
+ExecStartPre=/usr/bin/mountpoint -q /srv/usenet/library
+ExecStart=/usr/bin/docker compose up -d --wait --wait-timeout 180
+ExecStop=/usr/bin/docker compose stop
+TimeoutStartSec=240
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target usenet-library.service

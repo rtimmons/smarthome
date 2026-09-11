@@ -1,3 +1,10 @@
+# Current workflow update — September 11, 2026
+
+Native Arr imports now own completion, and the old publisher timer is disabled.
+Read [native media](native-media.md) and [scheduled backups](scheduled-backups.md)
+for the current mount, backup and playback configuration. Older manual-backup
+and metadata-only discovery descriptions below are historical.
+
 # Operations
 
 ## Administrative access
