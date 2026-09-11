@@ -37,6 +37,35 @@ http://:19696 {
 	bind {{ cloud_vpn_service_ip }}
 	route {
 		import private_auth
+		redir /radarr /radarr/ 308
+		redir /sonarr /sonarr/ 308
+		handle /radarr/* {
+			reverse_proxy 127.0.0.1:7878 {
+				header_up -Authorization
+				header_up -Proxy-Authorization
+				header_up -Forwarded
+				header_up -X-Forwarded-*
+				header_up -X-Real-IP
+				header_up -Remote-User
+				header_up -X-Remote-User
+				header_up -X-Auth-*
+				header_up Host {{ cloud_vpn_service_ip }}:19696
+			}
+		}
+		handle /sonarr/* {
+			reverse_proxy 127.0.0.1:8989 {
+				header_up -Authorization
+				header_up -Proxy-Authorization
+				header_up -Forwarded
+				header_up -X-Forwarded-*
+				header_up -X-Real-IP
+				header_up -Remote-User
+				header_up -X-Remote-User
+				header_up -X-Auth-*
+				header_up Host {{ cloud_vpn_service_ip }}:19696
+			}
+		}
+		handle {
 		reverse_proxy 127.0.0.1:9696 {
 			header_up -Authorization
 			header_up -Proxy-Authorization
@@ -47,6 +76,7 @@ http://:19696 {
 			header_up -X-Remote-User
 			header_up -X-Auth-*
 			header_up Host {{ cloud_vpn_service_ip }}:19696
+		}
 		}
 	}
 }

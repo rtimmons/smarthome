@@ -6,8 +6,9 @@ Keep this document updated as agents make progress.
 
 ## Resume here — current handoff, September 11, 2026
 
-This section is authoritative over chronological notes below. Continue with
-`usenet-infra/docs/secrets-recovery.md`. The small SOPS vault, locked Terraform
+This section is authoritative over chronological notes below. The Usenet
+secrets/state milestone is closed; resume curated discovery with Radarr/Sonarr,
+explicitly selected by the user on September 11. The small SOPS vault, locked Terraform
 state/archive capture, immutable QNAP ciphertext store, offline content checks,
 and full-clone drill tooling are implemented. Do not repeat account setup,
 purchases, credential generation, NAS bootstrap, diagnostic downloads or VPN
@@ -93,9 +94,46 @@ provider; **UsenetExpress is explicitly deferred until actual completion gaps
 justify it**. NZBGeek and NZBFinder Pro are paid, enabled and tested. Provider,
 indexer and application credentials stay in private forms/files, never chat.
 
-The optional curated-discovery phase is planned but not deployed. It may add
-Radarr/Sonarr and, if a request-oriented interface is useful, exactly one of
-Jellyseerr or Overseerr.
+**Curated discovery is live.** The user selected Radarr and Sonarr on September
+11. Movies are at `http://10.77.0.1:19696/radarr/`; TV is at
+`http://10.77.0.1:19696/sonarr/`, using the existing catalog login. Prowlarr syncs
+both existing indexers with interactive search enabled and RSS/automatic search
+disabled. Both apps have a tested SAB client; completed imports, automatic
+retries and download removal are disabled. They have no download or canonical
+storage mounts. No titles or list subscriptions were added and no content was
+downloaded. A request portal remains deferred. See `usenet-infra/docs/discovery.md`.
+
+Live acceptance: Radarr Discover returned 30 movies; movie/series metadata
+lookups returned results; both private routes return 401 anonymously. The two
+application configurations repeat without writes after accounting for the API's
+masked credential responses. Their three health notices concern intentionally
+disabled RSS, automatic search and importing; the dedicated policy health check
+passes and rejects unrelated warnings/errors. Existing cloud/catalog health
+passes, with the same seven historical SAB warnings. The in-app browser blocked
+the private VPN URL, so visual login acceptance remains for the user's browser.
+
+**New app-state backup is verified on the NAS.** Supplemental snapshot
+`20260911T201003Z-bcb62179eb783aef` contains 601 files and four SQLite databases;
+13,315,460 ciphertext bytes, SHA-256
+`84ece70d8f020b48fbe353e174f7e2755f469d500aa484a11f0e702b5432bd98`.
+Capture, decryption, NAS upload/download and repeat decryption all passed.
+The downloaded copy also decrypted with the cloud-admin key restored by the
+earlier clean-clone drill. This supplemental cloud-config archive uses that
+escrowed key; restore it with `usenet-backup-verify` / `usenet-backup-restore`,
+not the master-bundle verifier. Preserve the original SOPS-bound inventory and
+full-clone baseline. Public evidence lives in
+`usenet-infra/recovery/application-backups/20260911T201003Z-bcb62179eb783aef.json`.
+`just usenet-discovery-backup` repeats this operation without needing the master
+or changing the bound inventory; retention remains manual.
+
+Discovery validation: the final Usenet run executed 397 cases (389 passed,
+eight optional runtime skips); all 13 isolated proxy tests passed separately,
+including the eight runtime cases. Compilation, ShellCheck, JSON/YAML and four
+Ansible syntax checks passed. Current source/index secret scanning passes; the
+whole-history step still fails only on the two documented old RSA keys.
+The final `just test` also passed all repository tests and all seven add-on
+container checks. The user explicitly approved staging, committing and pushing
+the discovery checkpoint and its public recovery evidence to `origin/usenet`.
 
 From repository root use `just usenet-test`, `just usenet-cloud-health`, and
 `just usenet-qnap-health`. Catalog reads use `just --justfile usenet-infra/Justfile
@@ -179,13 +217,13 @@ inspect actual affected packages, reachable paths and available fixes rather
 than doing blind major-version upgrades. This handoff does not certify the
 whole smarthome repository free of vulnerabilities.
 
-## Next phase — master-key secrets and clean-clone recovery
+## Completed milestone — master-key secrets and clean-clone recovery
 
 Requested outcome: delete this checkout only after a fresh clone plus one
 independently held recovery master can restore the required secrets and retrieve
-state backups. Implement this next; do not claim the existing `.age` archives
-already meet that contract. Include the whole smarthome repository in the
-inventory, even if Usenet is the first migrated component.
+state backups. The Usenet secrets/state portion passed the clean-clone drill
+recorded above. Whole-checkout deletion has separate unresolved prerequisites.
+The following notes retain the implementation history and original constraints.
 
 ### Inventory increment — September 11, 2026
 
@@ -1094,13 +1132,12 @@ For each indexer record:
 
 Secrets must go into the chosen secret-management mechanism, not documentation or Git.
 
-### Curated discovery (optional future phase)
+### Curated discovery (selected September 11, 2026)
 
 Prowlarr is the indexer/search broker, not a recommendation or editorial-browse
 application. Retain the indexers' own authenticated web UIs (for example,
 NZBFinder's browse and Spotweb experiences) for direct browsing. Add this
-private discovery layer only when its additional value justifies the operational
-complexity:
+private discovery layer using the user's selected Radarr and Sonarr:
 
 - **Radarr** for curated movie discovery and **Sonarr** for curated TV discovery.
 - **Jellyseerr** or **Overseerr** as an optional authenticated request/discovery
@@ -1136,6 +1173,10 @@ Before implementing this optional phase, research the current official
 documentation, supported Prowlarr sync behavior, container image versions,
 and the manual-only controls for each selected tool. Record the outcome and
 obtain an explicit decision on which tools to deploy.
+
+This gate was completed September 11: the user explicitly chose Radarr/Sonarr,
+the official-source review is recorded in `usenet-infra/docs/discovery.md`, and
+the current deployment/acceptance evidence is in the authoritative handoff above.
 
 ## 5. Content policy
 

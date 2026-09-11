@@ -10,6 +10,14 @@ outside 1Password on September 11, 2026. No private master is installed on the N
 is still unsafe.** Published revision `6fa9174` restored 24 vault entries and 15
 NAS bundle entries, verified six keypairs, and restored zero new files on repeat.
 See the [saved report](../recovery/drills/20260911T194408Z.json).
+The Usenet prerequisite is complete; active work has returned to
+[curated discovery](discovery.md). The original inventory's external-dependency
+statuses are an inventory-time snapshot: its `planned` master/store and
+`local-backup-only` archive labels predate the verified NAS retrieval and clone
+drill. The vault cryptographically binds the entire inventory. Preserve that
+exact manifest with this vault; updating those labels alone would invalidate
+restoration. This paragraph and the saved drill report record current evidence
+without changing the bound recovery policy.
 Whole-Home-Assistant recovery has
 separate unresolved gaps below. A NAS copy protects against Mac/cloud loss but
 cannot survive loss of the NAS disks as well. This is the user's selected

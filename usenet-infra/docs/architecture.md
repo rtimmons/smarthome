@@ -54,9 +54,10 @@ and the provider exposes those controls on
 ## Deliberate data flow
 
 1. A person searches and selects material they are authorized to obtain.
-   Prowlarr provides search/indexer management; this design has no Sonarr,
-   Radarr, watch-folder automation, RSS auto-grab, or other unattended
-   acquisition path.
+   Prowlarr provides search/indexer management. The private Radarr/Sonarr
+   [discovery layer](discovery.md) provides movie discovery and TV tracking,
+   with interactive-only indexer sync. Watch-folder automation, RSS grabs,
+   automatic search/retry and automatic imports are disabled.
 2. The operator intentionally submits the chosen job to SABnzbd. SABnzbd
    downloads to the VM's local NVMe scratch, verifies, repairs, and unpacks it
    there. It never downloads into an SFTP mount.

@@ -1,8 +1,37 @@
 # Validation and remaining acceptance
 
-Last updated: 2026-09-10. This is an evidence ledger, not a claim that the system
+Last updated: 2026-09-11. This is an evidence ledger, not a claim that the system
 is complete. A local test result does not prove NAS compatibility, authenticated
 browser behavior, provider acquisition, or end-to-end recovery.
+
+## September 11 discovery and recovery acceptance
+
+The master-key clean-clone secrets/state milestone passed; see the
+[drill report](../recovery/drills/20260911T194408Z.json). The selected Radarr and
+Sonarr releases are deployed with two interactive-only indexers and one SAB
+client each. RSS, automatic retry/search, completed import and download removal
+are disabled. Read-only lookup returned movie/series results; Radarr's
+trending/popular Discover feed returned 30 movies. No titles, subscriptions or
+downloads were added. Both real private paths deny anonymous requests with 401.
+The in-app browser blocked the VPN URL; user-browser visual login remains
+unverified. Three expected application notices concern deliberately disabled
+RSS/search/importing; other health warnings/errors fail the policy check.
+
+The final Usenet suite passed 389 of 397 cases, with eight opt-in runtime skips;
+all 13 isolated proxy tests passed separately, including those eight runtime
+cases. Compilation, ShellCheck, configuration parsing and all four Ansible
+syntax checks passed. Current source/index scanning passes. The full history
+scan still fails for the [two historical RSA keys](security-findings.md).
+The final root `just test` passed all repository tests and all seven add-on
+container checks before preparing this checkpoint.
+
+The [new supplemental NAS backup](../recovery/application-backups/20260911T201003Z-bcb62179eb783aef.json)
+contains 601 files and four integrity-checked SQLite databases. Its upload and
+download matched byte-for-byte, authenticated decryption passed twice, and
+verification also passed with the key restored by the prior clean-clone drill.
+It does not establish a new application-startup or machine-replacement drill.
+See [discovery operations](discovery.md) for versions, expected notices and the
+supplemental restore format. Older sections below preserve earlier acceptance.
 
 ## Verified live
 
@@ -326,8 +355,9 @@ The following operating details remain explicit:
   equivalent from its paid $12 annual term; see [costs](costs.md) for quotes
   and the unconfirmed portions of the total.
 - Backups are manual. Both live captures and isolated startup drills passed;
-  rerun capture after configuration changes. An independent recoverable copy
-  of the required decryption identity has not been verified.
+  rerun capture after configuration changes. The September 11 clean-clone drill
+  subsequently verified recovery of both legacy backup identities from the
+  master-encrypted vault; the operator holds the master in 1Password and on paper.
 - The authorized fixture demonstrated the workflow and preserved hashes.
   Representative large-file throughput, sustained NAS load, and tuning limits
   have not been benchmarked. The observed fixture timings are not a benchmark.

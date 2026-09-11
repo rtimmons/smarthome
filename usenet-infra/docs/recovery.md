@@ -14,6 +14,16 @@ confirmed the master is in 1Password and on paper. This protects Mac/cloud loss;
 the NAS is not an independent backup of its own disks. Whole-Home-Assistant
 recovery and native UniFi restore remain separately unproven.
 
+The subsequently deployed Radarr/Sonarr state is covered by supplemental NAS
+snapshot `20260911T201003Z-bcb62179eb783aef`: 601 files and four verified SQLite
+databases. Upload, download, decryption and decryption using the clean-clone's
+restored cloud-admin identity all passed. Follow the separate
+[discovery backup restore procedure](discovery.md#operation-and-recovery).
+This archive uses the existing escrowed cloud-admin recipient and the cloud
+backup format; the original master-bundle snapshot and SOPS-bound inventory
+remain unchanged. Use a published revision containing the discovery source and
+public receipt when reproducing this increment from a fresh clone.
+
 The recovery model is simple: Git recreates non-secret configuration, the
 Storage Box holds the canonical catalog, and encrypted backups restore stateful
 application configuration and Terraform state. The VM scratch area and QNAP

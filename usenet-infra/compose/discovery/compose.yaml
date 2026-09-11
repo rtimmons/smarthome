@@ -1,0 +1,55 @@
+name: usenet-discovery
+
+services:
+  radarr:
+    image: lscr.io/linuxserver/radarr:6.3.0.10514-ls315
+    environment:
+      PUID: "${PUID:?Set PUID}"
+      PGID: "${PGID:?Set PGID}"
+      TZ: "${TZ:?Set TZ}"
+      UMASK: "0077"
+    volumes:
+      - /srv/usenet/config/radarr:/config
+      - /srv/usenet/discovery/movies:/library
+    ports:
+      - "127.0.0.1:7878:7878"
+    networks: [cloud]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, curl, -fsS, "http://127.0.0.1:7878/radarr/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:4.0.19.2979-ls323
+    environment:
+      PUID: "${PUID:?Set PUID}"
+      PGID: "${PGID:?Set PGID}"
+      TZ: "${TZ:?Set TZ}"
+      UMASK: "0077"
+    volumes:
+      - /srv/usenet/config/sonarr:/config
+      - /srv/usenet/discovery/series:/library
+    ports:
+      - "127.0.0.1:8989:8989"
+    networks: [cloud]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, curl, -fsS, "http://127.0.0.1:8989/sonarr/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}
+
+networks:
+  cloud:
+    external: true
+    name: usenet-cloud_default

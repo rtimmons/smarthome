@@ -1,0 +1,9 @@
+---
+- name: Configure the explicitly selected manual discovery applications
+  hosts: cloud
+  become: true
+  gather_facts: true
+  roles:
+    - role: cloud_discovery
+    - role: cloud_backup
+    - role: cloud_ui_proxy

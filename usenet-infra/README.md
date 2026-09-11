@@ -59,6 +59,12 @@ passed: 24 vault entries, 15 bundle entries and six keypairs; repeat restoration
 added zero files. HA/UniFi and full machine recovery remain unproven, and checkout
 deletion is still unsafe. `just --no-dotenv secrets-check` alone checks metadata.
 
+[Radarr and Sonarr discovery](docs/discovery.md) is now deployed behind the
+existing private catalog login at `http://10.77.0.1:19696/radarr/` and
+`http://10.77.0.1:19696/sonarr/`. Interactive searches use the existing indexers
+and SAB; automatic acquisition/imports remain disabled. The new state has a
+separately verified encrypted NAS backup using the escrowed cloud-admin key.
+
 Capacity is reviewed at an 80% warning and upgraded before 90%; expansion is a
 deliberate, reviewed Terraform change, not an automatic purchase. See
 [costs](docs/costs.md) and [operations](docs/operations.md).

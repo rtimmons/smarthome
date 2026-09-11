@@ -96,6 +96,12 @@ each acquisition and later supplies its provenance when promoting it.
 
 ## Deliberate acquisition and promotion
 
+For curated movie browsing and TV lookup/calendar, use the deployed
+[Radarr/Sonarr interfaces](discovery.md). Both connect to the existing indexers
+and SAB through manual-only settings; completed downloads still need deliberate
+catalog promotion. The new pages use the existing catalog login at
+`http://10.77.0.1:19696/radarr/` and `http://10.77.0.1:19696/sonarr/`.
+
 To search interactively, keep `just usenet-cloud-ui` running from the repository
 root, open Prowlarr at `http://127.0.0.1:9696`, and select **Search**. Enter a
 query, select NZBGeek and NZBFinder (or all Usenet indexers), optionally select

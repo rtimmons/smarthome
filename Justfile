@@ -498,6 +498,18 @@ catalog-evict item:
 usenet-test:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra test
 
+[group: 'usenet']
+usenet-configure-discovery:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-discovery
+
+[group: 'usenet']
+usenet-discovery-health:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra discovery-health
+
+[group: 'usenet']
+usenet-discovery-backup:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra discovery-backup
+
 # Securely store a Hetzner API token without putting it in chat or shell history
 [group: 'usenet']
 usenet-store-hcloud-token:

@@ -135,7 +135,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
   self.send_response(200); self.send_header('Content-Type','application/json'); self.send_header('Content-Length',str(len(body))); self.end_headers()
   self.wfile.write(body)
  def log_message(self,*args): pass
-for port in (8080,9696):
+for port in (8080,9696,7878,8989):
  threading.Thread(target=http.server.ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever,daemon=True).start()
 while True: time.sleep(60)
 '''
@@ -201,6 +201,25 @@ else: raise SystemExit(1)
             self.assertEqual(response['status'], 302)
             self.assertEqual(response['headers']['Location'], f'http://127.0.0.1:{port}/login')
             self.assertEqual(response['headers']['Set-Cookie'], 'fixture=value; Path=/; HttpOnly')
+
+    def test_discovery_subpaths_require_auth_and_preserve_their_url_base(self):
+        for app in ('radarr', 'sonarr'):
+            for suffix in ('', '/', '/api/v3/system/status', '/signalr'):
+                path = '/' + app + suffix
+                self.assertEqual(self.request(19696, path=path)['status'], 401)
+            response = self.request(19696, password='synthetic-proxy-test', path='/' + app)
+            self.assertEqual(response['status'], 308)
+            self.assertEqual(response['headers']['Location'], '/' + app + '/')
+            path = '/' + app + '/api/v3/system/status'
+            response = self.request(19696, password='synthetic-proxy-test', path=path,
+                                    extra={'Remote-User': 'spoofed', 'X-Auth-Request-User': 'spoofed'})
+            self.assertEqual(response['status'], 200)
+            body = json.loads(response['body'])
+            self.assertEqual(body['path'], path)
+            headers = {key.lower(): value for key, value in body['headers'].items()}
+            self.assertNotIn('authorization', headers)
+            self.assertNotIn('remote-user', headers)
+            self.assertNotIn('x-auth-request-user', headers)
 
     def test_request_urls_and_hashes_never_reach_container_logs(self):
         self.request(18080, password='synthetic-proxy-test', path='/test?apikey=synthetic-log-marker')

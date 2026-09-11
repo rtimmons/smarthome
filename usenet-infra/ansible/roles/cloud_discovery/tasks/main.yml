@@ -1,0 +1,71 @@
+---
+- name: Require the existing private access path
+  ansible.builtin.assert:
+    that:
+      - cloud_lan_ui_enabled | bool
+      - cloud_vpn_service_ip == '10.77.0.1'
+
+- name: Create discovery configuration and empty metadata library roots
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: usenet
+    group: usenet
+    mode: "0750"
+  loop:
+    - /srv/usenet/config/radarr
+    - /srv/usenet/config/sonarr
+    - /srv/usenet/discovery/movies
+    - /srv/usenet/discovery/series
+    - /srv/usenet/compose/discovery
+
+- name: Install discovery helpers
+  tags: [discovery-config]
+  ansible.builtin.copy:
+    src: "{{ usenet_project_root }}/scripts/{{ item }}"
+    dest: "/srv/usenet/libexec/{{ item }}"
+    owner: root
+    group: usenet
+    mode: "0550"
+  loop: [discovery-init.py, discovery-config.py]
+
+- name: Initialize only missing application identity files
+  ansible.builtin.command:
+    argv: [python3, /srv/usenet/libexec/discovery-init.py]
+  become_user: usenet
+  changed_when: false
+  no_log: true
+
+- name: Install the pinned discovery Compose project
+  ansible.builtin.copy:
+    src: "{{ usenet_project_root }}/compose/discovery/compose.yaml"
+    dest: /srv/usenet/compose/discovery/compose.yaml
+    owner: usenet
+    group: usenet
+    mode: "0640"
+
+- name: Render discovery runtime identity
+  ansible.builtin.copy:
+    content: |
+      PUID={{ usenet_uid }}
+      PGID={{ usenet_gid }}
+      TZ={{ usenet_timezone }}
+    dest: /srv/usenet/compose/discovery/.env
+    owner: usenet
+    group: usenet
+    mode: "0600"
+
+- name: Start only the discovery Compose project
+  community.docker.docker_compose_v2:
+    project_src: /srv/usenet/compose/discovery
+    state: present
+    wait: true
+    wait_timeout: 180
+
+- name: Apply and read back manual discovery controls before exposing the UI
+  tags: [discovery-config]
+  ansible.builtin.command:
+    argv: [python3, /srv/usenet/libexec/discovery-config.py, configure]
+  become_user: usenet
+  register: discovery_configuration
+  changed_when: "'\"changed\": true' in discovery_configuration.stdout"

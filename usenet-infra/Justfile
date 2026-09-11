@@ -17,6 +17,7 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml site.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml backup.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-lan-ui.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml discovery.yml --syntax-check
 	./scripts/secret-scan
 
 # Check tracked content and repository history for high-confidence credential forms.
@@ -77,6 +78,21 @@ catalog-evict item:
 [group: 'health']
 cloud-health:
 	@./scripts/cloud-command /srv/usenet/scripts/healthcheck
+
+# Install and verify the selected manual-only Radarr/Sonarr integration.
+[group: 'setup']
+configure-discovery: age-bootstrap ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook discovery.yml
+
+# Read back all manual acquisition controls without searching or downloading.
+[group: 'health']
+discovery-health:
+	@./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/discovery-config.py inspect
+
+# Capture, authenticate, and round-trip current cloud app state through the NAS.
+[group: 'backup']
+discovery-backup:
+	@python3 scripts/discovery-backup.py
 
 # Read NAS versions, resource headroom, and share metadata through dedicated SSH.
 [group: 'setup']

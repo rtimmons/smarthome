@@ -86,6 +86,24 @@ class ConfigBackupTests(unittest.TestCase):
         self.assertFalse(any('cloud-admin' in path for path in paths))
         self.assertNotIn('PRIVATE-', json.dumps(manifest))
 
+    def test_discovery_backup_requires_both_apps_and_verifies_their_databases(self):
+        self.write('compose/discovery/compose.yaml', b'services: {}')
+        with self.assertRaises(backup.BackupError):
+            backup.inventory(self.root)
+        for app in ('radarr', 'sonarr'):
+            self.write(f'config/{app}/config.xml', b'PRIVATE-FIXTURE')
+            path = self.root / f'config/{app}/{app}.db'
+            with closing(sqlite3.connect(path)) as connection:
+                connection.execute('CREATE TABLE settings (value TEXT)')
+                connection.execute('INSERT INTO settings VALUES (?)', ('PRIVATE-FIXTURE',))
+                connection.commit()
+            self.write(f'config/{app}/MediaCover/test.jpg', b'BULK')
+        manifest = self.snapshot()
+        databases = {entry['path'] for entry in manifest['entries'] if entry['sqlite']}
+        self.assertIn('config/radarr/radarr.db', databases)
+        self.assertIn('config/sonarr/sonarr.db', databases)
+        self.assertFalse(any('MediaCover' in entry['path'] for entry in manifest['entries']))
+
     def test_sqlite_backup_includes_committed_wal_without_copying_wal(self):
         connection = sqlite3.connect(self.db)
         self.addCleanup(connection.close)
