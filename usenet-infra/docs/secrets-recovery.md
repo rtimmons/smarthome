@@ -8,8 +8,8 @@ outside 1Password on September 11, 2026. No private master is installed on the N
 
 **Deleting the original checkout is still unsafe.** The vault-only clone drill
 passed; the NAS round trip and real-master content verification passed for all 15
-entries and six keypairs; publication and the fresh-clone restoration drill
-remain to be completed. Whole-Home-Assistant recovery has
+entries and six keypairs. Implementation commit `ea73226` is published on
+`origin/usenet`; the fresh-clone restoration drill remains to be completed. Whole-Home-Assistant recovery has
 separate unresolved gaps below. A NAS copy protects against Mac/cloud loss but
 cannot survive loss of the NAS disks as well. This is the user's selected
 failure scope, replacing the original requirement for an off-NAS backup store.
@@ -291,8 +291,8 @@ inspection; no application or Terraform process is started automatically.
 
 ## Full clone drill and remaining acceptance
 
-After these source changes are committed and pushed, inject the master into one
-process and run:
+The recovery implementation is published on `origin/usenet`. Inject the master
+into one process and run:
 
 ```sh
 just --no-dotenv recovery-drill --snapshot SNAPSHOT_ID --destination /absolute/new/clone

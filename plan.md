@@ -31,11 +31,13 @@ is in 1Password (`SOPS_AGE_KEY`) and written on paper outside 1Password. Count
 that independent-copy requirement as done; do not ask again or generate a key.
 The private master remains absent from repository files, NAS and agent context.
 
-**Deletion safety: not ready.** The new implementation must be committed and
-published before running its full fresh-GitHub-clone drill. The user explicitly
-approved staging, committing and pushing this recovery checkpoint to
-`origin/usenet`; do not ask again for those actions. After publication, have the operator inject the existing
-master and run from this repository:
+**Deletion safety: not ready.** Recovery implementation commit
+`ea732260669ff7f313e123ff8b8f6306fd6adfc5` was published to `origin/usenet`;
+GitHub's branch revision was independently checked and matched. The user
+explicitly approved staging, committing and publishing this recovery checkpoint
+and its handoff updates; do not ask again for those actions. The full
+fresh-GitHub-clone restoration drill remains the immediate next step. Have the
+operator inject the existing master and run from this repository:
 
 ```sh
 just --no-dotenv recovery-drill --snapshot 20260911T191749Z-5150bea3423e3707 --destination /absolute/new/clone
@@ -133,7 +135,7 @@ JSON/YAML, three Ansible syntax checks and secret scans. Independent security
 review found no concrete commit blocker; this is not a guarantee against all
 vulnerabilities. Historical counts later in this file reflect earlier stages.
 
-Remaining independent work: publish this recovery increment and complete its
+Remaining independent work: complete the published recovery increment's
 fresh-clone drill; historical-key authorization review; manual-backup
 scheduling/retention after recovery is proven; optional LAN HTTPS
 and Home Assistant navigation/status; full machine replacement drills. The
