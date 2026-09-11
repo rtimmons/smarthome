@@ -108,6 +108,15 @@ preserve it separately before deleting the checkout. Do not silently commit or
 remove it. Ignored evidence is supplemental; the verified outcomes and backup
 paths/checksums necessary for recovery are recorded in this document.
 
+Checkpoint: implementation and handoff commit `1c359f6`. Both required test
+recipes and the staged-content secret scan passed before commit. Automatic
+approval review blocked `git push --set-upstream origin usenet` because the user
+had explicitly approved committing but not publication of the 84 files to that
+remote. Explicit push approval has been requested. Until that is granted and a
+matching remote revision is verified, this checkpoint is local only; a fresh
+clone will not contain it. Preserve the checkout. Do not bypass the rejection
+with another Git transport, tool or destination.
+
 ## Next phase — master-key secrets and clean-clone recovery
 
 Requested outcome: delete this checkout only after a fresh clone plus one
