@@ -40,6 +40,7 @@
     - role: cloud_apps
     - role: cloud_publish
     - role: cloud_backup
+    - role: scheduled_backups
     - role: cloud_vpn
       when: cloud_lan_ui_enabled | bool
     - role: cloud_ui_proxy

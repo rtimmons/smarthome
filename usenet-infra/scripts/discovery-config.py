@@ -22,13 +22,13 @@ APPS = {'radarr': (7878, '6.3.0.10514'), 'sonarr': (8989, '4.0.19.2979'),
 # Keep the existing resource name so upgrades preserve its ID and bindings.
 PROFILE = 'Manual discovery only'
 CLIENT = 'SABnzbd manual discovery'
-DOWNLOAD_POLICY = {'enableCompletedDownloadHandling': False,
+DOWNLOAD_POLICY = {'enableCompletedDownloadHandling': True,
                    'autoRedownloadFailed': False,
                    'autoRedownloadFailedFromInteractiveSearch': False}
 RSS_INTERVAL = 15
 PROFILE_POLICY = {'enableRss': True, 'enableAutomaticSearch': True,
                   'enableInteractiveSearch': True}
-EXPECTED_HEALTH = {'ImportMechanismCheck'}
+EXPECTED_HEALTH = set()
 
 
 class DiscoveryError(RuntimeError):
@@ -230,7 +230,7 @@ def configure(api):
         fields.update({prefix[0].lower() + prefix[1:] + 'Category': 'prowlarr',
                        'recent' + prefix + 'Priority': -100, 'older' + prefix + 'Priority': -100})
         _, update = upsert(api, app, 'downloadclient', CLIENT,
-            {'enable': True, 'priority': 1, 'removeCompletedDownloads': False,
+            {'enable': True, 'priority': 1, 'removeCompletedDownloads': True,
              'removeFailedDownloads': False}, fields, 'Sabnzbd')
         changed |= update
 
@@ -279,7 +279,7 @@ def inspect(api):
     source_indexers = api.call('prowlarr', 'indexer')
     if len(source_indexers) != 2 or any(item.get('appProfileId') != owned[0]['id'] for item in source_indexers):
         raise DiscoveryError('source_indexer_policy_not_verified')
-    result = {'status': 'verified', 'automatic_acquisition': True, 'automatic_import': False, 'apps': {}}
+    result = {'status': 'verified', 'automatic_acquisition': True, 'automatic_import': True, 'apps': {}}
     for app in ('radarr', 'sonarr'):
         check_lists(api, app)
         if not require_policy(api.call(app, 'config/indexer'), {'rssSyncInterval': RSS_INTERVAL}):
@@ -291,7 +291,7 @@ def inspect(api):
             raise DiscoveryError('synced_indexer_policy_not_verified')
         clients = api.call(app, 'downloadclient')
         if len(clients) != 1 or clients[0].get('name') != CLIENT or not require_policy(clients[0],
-                {'enable': True, 'removeCompletedDownloads': False, 'removeFailedDownloads': False}):
+                {'enable': True, 'removeCompletedDownloads': True, 'removeFailedDownloads': False}):
             raise DiscoveryError('client_policy_not_verified')
         health = api.call(app, 'health')
         if any(item.get('type') in ('warning', 'error') and item.get('source') not in EXPECTED_HEALTH

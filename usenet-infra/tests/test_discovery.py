@@ -27,12 +27,12 @@ class ReadAPI:
         self.data['prowlarr', 'indexer'] = [{'appProfileId': 8}, {'appProfileId': 8}]
         for app in ('radarr', 'sonarr'):
             self.data[app, 'importlist'] = []
-            self.data[app, 'health'] = [{'type': 'error', 'source': 'ImportMechanismCheck'}]
+            self.data[app, 'health'] = []
             self.data[app, 'config/indexer'] = {'rssSyncInterval': discovery.RSS_INTERVAL}
             self.data[app, 'config/downloadclient'] = dict(discovery.DOWNLOAD_POLICY)
             self.data[app, 'indexer'] = [dict(discovery.PROFILE_POLICY), dict(discovery.PROFILE_POLICY)]
             self.data[app, 'downloadclient'] = [{'name': discovery.CLIENT, 'enable': True,
-                'removeCompletedDownloads': False, 'removeFailedDownloads': False}]
+                'removeCompletedDownloads': True, 'removeFailedDownloads': False}]
 
     def call(self, app, endpoint, method='GET', body=None):
         if method != 'GET':
@@ -46,10 +46,10 @@ class DiscoveryTests(unittest.TestCase):
         result = discovery.inspect(api)
         self.assertEqual(result['status'], 'verified')
         self.assertTrue(result['automatic_acquisition'])
-        self.assertFalse(result['automatic_import'])
+        self.assertTrue(result['automatic_import'])
         changes = [
             ('config/indexer', 'rssSyncInterval', 0),
-            *[('config/downloadclient', key, True) for key in discovery.DOWNLOAD_POLICY],
+            *[('config/downloadclient', key, not value) for key, value in discovery.DOWNLOAD_POLICY.items()],
         ]
         for app in ('radarr', 'sonarr'):
             for endpoint, key, value in changes:
@@ -65,7 +65,7 @@ class DiscoveryTests(unittest.TestCase):
                     discovery.inspect(broken)
             for key in ('removeCompletedDownloads', 'removeFailedDownloads'):
                 broken = ReadAPI()
-                broken.data[app, 'downloadclient'][0][key] = True
+                broken.data[app, 'downloadclient'][0][key] = not broken.data[app, 'downloadclient'][0][key]
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(broken)
 
@@ -109,10 +109,10 @@ class DiscoveryTests(unittest.TestCase):
         with self.assertRaises(discovery.DiscoveryError):
             discovery.NoRedirects().redirect_request(None, None, 302, '', {}, 'https://outside.invalid')
 
-    def test_manual_mode_notices_do_not_hide_unrelated_health_failures(self):
+    def test_native_import_and_indexer_health_failures_are_not_hidden(self):
         api = ReadAPI()
-        self.assertEqual(discovery.inspect(api)['apps']['radarr']['expected_policy_notices'], 1)
-        for source in ('DownloadClientCheck', 'IndexerRssCheck', 'IndexerSearchCheck'):
+        self.assertEqual(discovery.inspect(api)['apps']['radarr']['expected_policy_notices'], 0)
+        for source in ('ImportMechanismCheck', 'DownloadClientCheck', 'IndexerRssCheck', 'IndexerSearchCheck'):
             with self.subTest(source=source):
                 api = ReadAPI()
                 api.data['radarr', 'health'].append({'type': 'error', 'source': source})
@@ -136,10 +136,14 @@ class DiscoveryTests(unittest.TestCase):
                 self.assertEqual(xml.findtext('UrlBase'), '/' + app)
                 self.assertEqual(len(xml.findtext('ApiKey')), 32)
 
-    def test_discovery_has_no_download_storage_or_remote_writer_mounts(self):
+    def test_native_import_mounts_do_not_expose_credentials_or_incomplete_jobs(self):
         compose = (Path(__file__).parents[1] / 'compose/discovery/compose.yaml').read_text()
-        for forbidden in ('/downloads', '/secrets', 'storagebox', 'docker.sock', ':latest', '0.0.0.0:'):
+        for forbidden in ('/downloads/incomplete', '/secrets', 'storagebox', 'docker.sock', ':latest', '0.0.0.0:'):
             self.assertNotIn(forbidden, compose)
+        self.assertIn('/srv/usenet/library/Movies:/library', compose)
+        self.assertIn('/srv/usenet/library/TV:/library', compose)
+        self.assertIn('/srv/usenet/downloads/complete:/data/complete', compose)
+        self.assertIn('restart: "no"', compose)
         self.assertIn('127.0.0.1:7878:7878', compose)
         self.assertIn('127.0.0.1:8989:8989', compose)
 

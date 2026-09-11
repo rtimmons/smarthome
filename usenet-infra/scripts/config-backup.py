@@ -144,6 +144,7 @@ class NoRedirects(urllib.request.HTTPRedirectHandler):
 def require_idle(key: str) -> None:
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirects())
     counts = []
+    paused = False
     for mode, section, field, parameters in (
             ('queue', 'queue', 'noofslots_total', {}),
             ('history', 'history', 'ppslots', {'archive': 0, 'last_history_update': -1})):
@@ -155,8 +156,13 @@ def require_idle(key: str) -> None:
         if isinstance(value, bool) or not str(value).isdigit():
             raise BackupError('Application job counts could not be verified.')
         counts.append(int(value))
-    if any(counts):
-        raise BackupError('Backup refused while SAB has queued or post-processing jobs.')
+        if section == 'queue':
+            paused = result[section].get('paused') is True
+    # Configuration backups omit download payloads. A fully paused queue is a
+    # valid quiet interval; preserve it rather than requiring users to delete jobs.
+    # Post-processing still mutates history/files independently of the queue pause.
+    if counts[1] or (counts[0] and not paused):
+        raise BackupError('Backup requires SAB to be idle or fully paused with no post-processing jobs.')
 
 
 def capture_manifests(root: Path, remote: str) -> dict[str, bytes]:

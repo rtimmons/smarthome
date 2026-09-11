@@ -1,0 +1,29 @@
+---
+- name: Present canonical remote media read-only to the existing NAS Plex server
+  hosts: qnap
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create separate remote mount and bounded cache directories
+      ansible.builtin.raw: |
+        set -eu
+        mkdir -p /share/FromDrobo/Remote/files /share/FromDrobo/.remote-cache
+        chmod 0755 /share/FromDrobo/Remote
+        chmod 0700 /share/FromDrobo/.remote-cache
+        test -c /dev/fuse
+      changed_when: true
+    - name: Install reviewed read-only remote mount configuration
+      ansible.builtin.raw: |
+        set -eu
+        printf '%s' {{ (lookup('ansible.builtin.file', usenet_project_root ~ '/compose/qnap/remote.compose.yaml', rstrip=false) | b64encode) | quote }} | base64 -d > /share/Container/usenet/compose/qnap/remote.compose.yaml.new
+        chmod 0640 /share/Container/usenet/compose/qnap/remote.compose.yaml.new
+        mv -f /share/Container/usenet/compose/qnap/remote.compose.yaml.new /share/Container/usenet/compose/qnap/remote.compose.yaml
+      changed_when: true
+    - name: Start only the remote media mount
+      ansible.builtin.raw: |
+        set -eu
+        qnap_package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
+        export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
+        cd /share/Container/usenet/compose/qnap
+        "$qnap_package/bin/docker" compose --env-file .env -f remote.compose.yaml up -d
+      changed_when: true

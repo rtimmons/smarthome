@@ -1,5 +1,9 @@
 # Media workflow review — September 11, 2026
 
+Current deployment supersedes the proposal below: see [native media](native-media.md)
+and [scheduled backups](scheduled-backups.md). The old publisher is disabled;
+Arr has real library mounts and native imports enabled.
+
 ## Recommendation
 
 Keep the existing Plex Media Server on the QNAP and the existing Plex Pass.

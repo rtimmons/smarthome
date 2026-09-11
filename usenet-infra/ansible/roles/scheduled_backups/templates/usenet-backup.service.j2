@@ -1,0 +1,21 @@
+[Unit]
+Description=Encrypt and verify daily Usenet configuration backup
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=usenet
+Group=usenet
+EnvironmentFile={{ cloud_data_root }}/config/catalog.env
+Environment=BACKUP_AGE={{ cloud_data_root }}/libexec/age
+Environment=BACKUP_OUTPUT={{ cloud_data_root }}/backups/scheduled
+ExecStart=/usr/bin/python3 {{ cloud_data_root }}/libexec/scheduled-backup.py cloud
+UMask=0077
+TimeoutStartSec=30min
+Nice=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ cloud_data_root }}/backups {{ cloud_data_root }}/state/catalog

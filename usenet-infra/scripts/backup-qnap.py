@@ -32,7 +32,7 @@ IMAGE = 'usenet-catalog-tools:rclone-1.75.1-python-3.14.7'
 MAX_BYTES = 128 * 1024**2
 MAX_FILES = 25_000
 MAX_TAR_BYTES = MAX_BYTES + 32 * 1024**2
-TREES = ('compose/qnap', 'scripts', 'config/catalog', 'state/items',
+TREES = ('compose/qnap', 'scripts', 'config/catalog', 'config/backup', 'state/items',
          'state/failures', 'state/operations', 'state/dashboard')
 SINGLES = ('secrets/dashboard-auth.json', 'secrets/storagebox/id_ed25519',
            'secrets/storagebox/known_hosts')

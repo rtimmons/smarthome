@@ -1,0 +1,8 @@
+---
+- name: Configure independent cloud backup schedule
+  hosts: cloud
+  become: true
+  gather_facts: true
+  roles:
+    - cloud_backup
+    - scheduled_backups

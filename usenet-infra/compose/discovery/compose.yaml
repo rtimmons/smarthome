@@ -10,11 +10,12 @@ services:
       UMASK: "0077"
     volumes:
       - /srv/usenet/config/radarr:/config
-      - /srv/usenet/discovery/movies:/library
+      - /srv/usenet/library/Movies:/library
+      - /srv/usenet/downloads/complete:/data/complete
     ports:
       - "127.0.0.1:7878:7878"
     networks: [cloud]
-    restart: unless-stopped
+    restart: "no"
     healthcheck:
       test: [CMD, curl, -fsS, "http://127.0.0.1:7878/radarr/ping"]
       interval: 30s
@@ -34,11 +35,12 @@ services:
       UMASK: "0077"
     volumes:
       - /srv/usenet/config/sonarr:/config
-      - /srv/usenet/discovery/series:/library
+      - /srv/usenet/library/TV:/library
+      - /srv/usenet/downloads/complete:/data/complete
     ports:
       - "127.0.0.1:8989:8989"
     networks: [cloud]
-    restart: unless-stopped
+    restart: "no"
     healthcheck:
       test: [CMD, curl, -fsS, "http://127.0.0.1:8989/sonarr/ping"]
       interval: 30s

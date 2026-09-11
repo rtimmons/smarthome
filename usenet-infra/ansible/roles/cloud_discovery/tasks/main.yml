@@ -1,11 +1,15 @@
 ---
+- name: Provide the native library mount first
+  ansible.builtin.include_role:
+    name: cloud_library
+
 - name: Require the existing private access path
   ansible.builtin.assert:
     that:
       - cloud_lan_ui_enabled | bool
       - cloud_vpn_service_ip == '10.77.0.1'
 
-- name: Create discovery configuration and empty metadata library roots
+- name: Create discovery configuration directories
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -15,8 +19,6 @@
   loop:
     - /srv/usenet/config/radarr
     - /srv/usenet/config/sonarr
-    - /srv/usenet/discovery/movies
-    - /srv/usenet/discovery/series
     - /srv/usenet/compose/discovery
 
 - name: Install discovery helpers
@@ -55,12 +57,20 @@
     group: usenet
     mode: "0600"
 
-- name: Start only the discovery Compose project
-  community.docker.docker_compose_v2:
-    project_src: /srv/usenet/compose/discovery
-    state: present
-    wait: true
-    wait_timeout: 180
+- name: Install mount-dependent discovery service
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/config/usenet-discovery.service'
+    dest: /etc/systemd/system/usenet-discovery.service
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Start mount-dependent discovery applications
+  ansible.builtin.systemd_service:
+    name: usenet-discovery.service
+    daemon_reload: true
+    enabled: true
+    state: restarted
 
 - name: Apply and read back discovery controls before exposing the UI
   tags: [discovery-config]

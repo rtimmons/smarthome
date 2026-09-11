@@ -22,6 +22,23 @@ REAL_AGE = Path(os.environ.get('CONFIG_BACKUP_TEST_AGE', str(
 
 
 class ConfigBackupTests(unittest.TestCase):
+    def test_paused_queue_is_accepted_without_changing_jobs(self):
+        for queued, paused, processing, allowed in [(3, True, 0, True), (0, False, 0, True),
+                                                   (3, False, 0, False), (3, True, 1, False),
+                                                   (3, 'true', 0, False)]:
+            with self.subTest(queued=queued, paused=paused, processing=processing):
+                opener = mock.Mock()
+                opener.open.side_effect = [
+                    io.BytesIO(json.dumps({'queue': {'noofslots_total': queued, 'paused': paused}}).encode()),
+                    io.BytesIO(json.dumps({'history': {'ppslots': processing}}).encode())]
+                with mock.patch.object(backup.urllib.request, 'build_opener', return_value=opener):
+                    if allowed:
+                        backup.require_idle('fixture')
+                    else:
+                        with self.assertRaises(backup.BackupError):
+                            backup.require_idle('fixture')
+                self.assertEqual(opener.open.call_count, 2)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

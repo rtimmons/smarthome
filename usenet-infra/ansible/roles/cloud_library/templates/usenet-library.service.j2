@@ -1,0 +1,17 @@
+[Unit]
+Description=Canonical media library on Storage Box over synchronous SSHFS
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /srv/usenet/libexec/library-mount.py
+ExecStartPost=/bin/sh -c 'for i in $(seq 1 30); do mountpoint -q /srv/usenet/library && test -d /srv/usenet/library/Movies && exit 0; sleep 1; done; exit 1'
+ExecStop=/usr/bin/fusermount3 -u /srv/usenet/library
+Restart=on-failure
+RestartSec=15
+TimeoutStartSec=45
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,68 @@
+---
+- name: Configure host-owned NAS backups without restarting Plex or media services
+  hosts: qnap
+  become: false
+  gather_facts: false
+  tasks:
+    - name: Create backup support directories
+      ansible.builtin.raw: |
+        set -eu
+        mkdir -p /share/Container/usenet/bin /share/Container/usenet/config/backup/crontabs {{ qnap_backup_root | quote }}
+        chmod 0700 /share/Container/usenet/config/backup {{ qnap_backup_root | quote }}
+      changed_when: true
+    - name: Copy backup scripts and configuration
+      ansible.builtin.raw: |
+        set -eu
+        backup_stage=$(mktemp {{ ((item.dest | dirname) ~ '/.backup-deploy.XXXXXX') | quote }})
+        trap 'rm -f "$backup_stage"' EXIT
+        printf '%s' {{ (lookup('ansible.builtin.file', item.src, rstrip=false) | b64encode) | quote }} | base64 -d > "$backup_stage"
+        chmod {{ item.mode }} "$backup_stage"
+        mv -f "$backup_stage" {{ item.dest | quote }}
+        rm -f {{ (item.dest ~ '.new') | quote }}
+      loop:
+        - src: "{{ usenet_project_root }}/scripts/scheduled-backup.py"
+          dest: /share/Container/usenet/scripts/scheduled-backup.py
+          mode: '0550'
+        - src: "{{ usenet_project_root }}/scripts/backup-qnap.py"
+          dest: /share/Container/usenet/scripts/backup-qnap.py
+          mode: '0550'
+        - src: "{{ usenet_project_root }}/compose/qnap/backup.compose.yaml"
+          dest: /share/Container/usenet/compose/qnap/backup.compose.yaml
+          mode: '0640'
+        - src: "{{ usenet_project_root }}/secrets/ssh/qnap-admin.pub"
+          dest: /share/Container/usenet/config/backup/recipient.pub
+          mode: '0640'
+    - name: Hash the reviewed local encryption binary
+      ansible.builtin.stat:
+        path: "{{ usenet_project_root }}/../build/tools/age-1.3.2/linux-amd64/age"
+        checksum_algorithm: sha256
+      delegate_to: localhost
+      register: age_binary
+    - name: Install age using existing SFTP transport
+      ansible.builtin.command:
+        argv:
+          - scp
+          - -i
+          - "{{ ansible_ssh_private_key_file }}"
+          - -o
+          - IdentitiesOnly=yes
+          - -o
+          - "UserKnownHostsFile={{ playbook_dir }}/files/secrets/qnap-known-hosts"
+          - "{{ usenet_project_root }}/../build/tools/age-1.3.2/linux-amd64/age"
+          - "{{ ansible_user }}@{{ ansible_host }}:/share/Container/usenet/bin/age.new"
+      delegate_to: localhost
+    - name: Install scheduler and start only backup service
+      ansible.builtin.raw: |
+        set -eu
+        test "$(sha256sum /share/Container/usenet/bin/age.new | cut -d ' ' -f 1)" = {{ age_binary.stat.checksum | quote }}
+        chmod 0555 /share/Container/usenet/bin/age.new
+        mv -f /share/Container/usenet/bin/age.new /share/Container/usenet/bin/age
+        test "$(/share/Container/usenet/bin/age --version)" = 'v1.3.2'
+        printf '%s\n' '7 * * * * /usr/local/bin/python3 /opt/usenet/scripts/scheduled-backup.py nas' > /share/Container/usenet/config/backup/crontabs/root
+        chmod 0600 /share/Container/usenet/config/backup/crontabs/root
+        printf 'QNAP_BACKUP_ROOT=%s\nQNAP_PLEX_ROOT=%s\n' {{ qnap_backup_root | quote }} {{ qnap_plex_root | quote }} > /share/Container/usenet/config/backup/paths.env
+        qnap_package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
+        export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
+        cd /share/Container/usenet/compose/qnap
+        "$qnap_package/bin/docker" compose --env-file .env --env-file /share/Container/usenet/config/backup/paths.env -f backup.compose.yaml up -d
+      changed_when: true

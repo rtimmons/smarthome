@@ -1,0 +1,54 @@
+name: usenet-remote-media
+services:
+  remote-media:
+    image: rclone/rclone:1.75.1
+    restart: unless-stopped
+    read_only: true
+    devices: [/dev/fuse:/dev/fuse]
+    cap_drop: [ALL]
+    cap_add: [SYS_ADMIN, DAC_OVERRIDE]
+    security_opt: [no-new-privileges:true]
+    command:
+      - mount
+      - 'storagebox:'
+      - /mounts/files
+      - --read-only
+      - --allow-other
+      - --dir-perms=0555
+      - --file-perms=0444
+      - --vfs-cache-mode=full
+      - --cache-dir=/cache
+      - --vfs-cache-max-size=20G
+      - --vfs-cache-min-free-space=100G
+      - --vfs-cache-max-age=24h
+      - --vfs-read-ahead=64M
+      - --buffer-size=16M
+      - --dir-cache-time=1m
+      - --poll-interval=0
+      - --vfs-fast-fingerprint
+      - --sftp-disable-hashcheck
+      - --vfs-read-chunk-size=16M
+      - --vfs-read-chunk-size-limit=64M
+      - --log-level=ERROR
+    environment:
+      RCLONE_CONFIG_STORAGEBOX_TYPE: sftp
+      RCLONE_CONFIG_STORAGEBOX_HOST: '${STORAGEBOX_HOST}'
+      RCLONE_CONFIG_STORAGEBOX_USER: '${STORAGEBOX_USER}'
+      RCLONE_CONFIG_STORAGEBOX_PORT: '${STORAGEBOX_PORT:-23}'
+      RCLONE_CONFIG_STORAGEBOX_KEY_FILE: /credentials/id_ed25519
+      RCLONE_CONFIG_STORAGEBOX_KNOWN_HOSTS_FILE: /credentials/known_hosts
+      RCLONE_CONFIG_STORAGEBOX_SHELL_TYPE: unix
+      RCLONE_CONFIG_STORAGEBOX_SKIP_LINKS: 'true'
+    volumes:
+      - /share/FromDrobo/Remote:/mounts:rshared
+      - /share/FromDrobo/.remote-cache:/cache
+      - /share/Container/usenet/secrets/storagebox:/credentials:ro
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=16m
+      - /config:rw,nosuid,nodev,size=1m
+    healthcheck:
+      test: [CMD-SHELL, 'mountpoint -q /mounts/files && test -d /mounts/files/objects/video']
+      interval: 1m
+      timeout: 15s
+      retries: 3
+      start_period: 1m
