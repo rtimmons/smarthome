@@ -1,0 +1,19 @@
+{
+  "application_startup_repeated": false,
+  "bundle_entries_verified": 15,
+  "completed_at": "2026-09-11T19:44:08.705775+00:00",
+  "deletion_safe": false,
+  "first_pass_new_files": 15,
+  "fresh_clone": true,
+  "inventory_ok": true,
+  "keypairs_verified": 6,
+  "master_decryption_verified": true,
+  "official_pinned_tools_bootstrapped": true,
+  "schema_version": 1,
+  "second_pass_new_files": 0,
+  "snapshot_id": "20260911T191749Z-5150bea3423e3707",
+  "source_revision": "6fa9174bb27b482033c32f0c642e89134894ce29",
+  "status": "verified",
+  "unifi_native_restore_supported": false,
+  "vault_entries_restored": 24
+}

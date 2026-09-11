@@ -6,10 +6,11 @@ archives. The user selected the QNAP as the off-checkout ciphertext store and
 confirmed the same recovery master is in 1Password (`SOPS_AGE_KEY`) and on paper
 outside 1Password on September 11, 2026. No private master is installed on the NAS.
 
-**Deleting the original checkout is still unsafe.** The vault-only clone drill
-passed; the NAS round trip and real-master content verification passed for all 15
-entries and six keypairs. Implementation commit `ea73226` is published on
-`origin/usenet`; the fresh-clone restoration drill remains to be completed. Whole-Home-Assistant recovery has
+**The full clean-clone secrets/state drill passed; deleting the original checkout
+is still unsafe.** Published revision `6fa9174` restored 24 vault entries and 15
+NAS bundle entries, verified six keypairs, and restored zero new files on repeat.
+See the [saved report](../recovery/drills/20260911T194408Z.json).
+Whole-Home-Assistant recovery has
 separate unresolved gaps below. A NAS copy protects against Mac/cloud loss but
 cannot survive loss of the NAS disks as well. This is the user's selected
 failure scope, replacing the original requirement for an off-NAS backup store.
@@ -307,9 +308,17 @@ sanitized `build/recovery-drill.json` in the fresh clone. It does not repeat the
 previous isolated application-startup drills or perform a full NAS/UniFi/HA
 machine replacement. Failure preserves the clone for diagnosis.
 
-Before deleting the original checkout, complete that drill, preserve unrelated
-user work and all other inventoried/external prerequisites, and review the HA
-findings above. Record actual results in `plan.md`; inventory success alone must
+The September 11, 2026 drill completed at 19:44 UTC from published revision
+`6fa9174bb27b482033c32f0c642e89134894ce29`, using snapshot
+`20260911T191749Z-5150bea3423e3707`. The fresh clone restored 24 vault entries,
+verified 15 bundle entries and six keypairs, restored 15 files on the first pass
+and zero on repeat, and passed the inventory check. The operator's saved report
+was inspected and copied as [public evidence](../recovery/drills/20260911T194408Z.json).
+Application startup was not repeated; deletion safety remains false.
+
+Before deleting the original checkout, preserve unrelated user work and all
+other inventoried/external prerequisites, and resolve the HA and remaining
+application/machine recovery gaps. Record actual results in `plan.md`; inventory success alone must
 never be treated as deletion approval. Capture freshness, new archive inventory,
 future native-recipient migration and manual scheduling/retention remain explicit
 maintenance work. New files in bounded discovery roots require inventory review;

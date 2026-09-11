@@ -31,13 +31,19 @@ is in 1Password (`SOPS_AGE_KEY`) and written on paper outside 1Password. Count
 that independent-copy requirement as done; do not ask again or generate a key.
 The private master remains absent from repository files, NAS and agent context.
 
-**Deletion safety: not ready.** Recovery implementation commit
-`ea732260669ff7f313e123ff8b8f6306fd6adfc5` was published to `origin/usenet`;
-GitHub's branch revision was independently checked and matched. The user
-explicitly approved staging, committing and publishing this recovery checkpoint
-and its handoff updates; do not ask again for those actions. The full
-fresh-GitHub-clone restoration drill remains the immediate next step. Have the
-operator inject the existing master and run from this repository:
+**Full clean-clone secrets/state drill: passed.** On September 11 at 19:44 UTC,
+the operator ran the drill from published revision
+`6fa9174bb27b482033c32f0c642e89134894ce29`. The fresh GitHub clone bootstrapped
+pinned public tools, restored 24 vault entries, fetched the NAS snapshot using
+restored credentials, verified all 15 bundle entries and six keypairs, and
+passed the inventory check. The first pass restored 15 state/archive files;
+the repeat restored zero new files. The saved report and clean clone were
+inspected. Public evidence is committed at
+`usenet-infra/recovery/drills/20260911T194408Z.json`; the original report is
+`/Users/rtimmons/scratch/2026-09-11/smarthome-full-dr/build/recovery-drill.json`.
+This closes the planned clean-clone Usenet secrets/state milestone.
+
+To repeat with a new destination, inject the existing master and run:
 
 ```sh
 just --no-dotenv recovery-drill --snapshot 20260911T191749Z-5150bea3423e3707 --destination /absolute/new/clone
@@ -47,11 +53,15 @@ The destination must have an existing operator-owned non-writable parent. The
 drill clones `origin/usenet`, requires the exact published current revision,
 bootstraps public pinned tools, restores the vault, fetches NAS ciphertext using
 restored credentials, verifies/restores state and archives twice, and records
-`build/recovery-drill.json`. It reads no original ignored files. Whole-HA
-recovery, native UniFi restore, application startup from this new clone and
-unrelated local user work remain separate deletion prerequisites. Do not claim
-that `secrets-check`, the earlier vault-only drill, or this successful NAS/master
-verification alone makes deleting the checkout safe.
+`build/recovery-drill.json`. It reads no original ignored files.
+
+**Deletion safety: not ready.** Whole-HA recovery, native UniFi restore,
+application startup from this new clone and unrelated local user work remain
+separate deletion prerequisites. The successful drill explicitly reports
+`deletion_safe: false`. The user approved staging, committing and publishing
+this recovery checkpoint and its handoff updates; do not ask again for those
+actions. Implementation commit `ea73226` and the tested handoff revision above
+are published on `origin/usenet`.
 
 **Security audit finding:** expanded whole-main-repository source/index scanning
 passes, but reachable history contains two distinct RSA private keys committed
@@ -135,9 +145,8 @@ JSON/YAML, three Ansible syntax checks and secret scans. Independent security
 review found no concrete commit blocker; this is not a guarantee against all
 vulnerabilities. Historical counts later in this file reflect earlier stages.
 
-Remaining independent work: complete the published recovery increment's
-fresh-clone drill; historical-key authorization review; manual-backup
-scheduling/retention after recovery is proven; optional LAN HTTPS
+Remaining independent work: historical-key authorization review; backup
+freshness, scheduling and retention; optional LAN HTTPS
 and Home Assistant navigation/status; full machine replacement drills. The
 external public-IP test of NAS port 1337 was rejected by automatic approval
 review and still needs explicit approval; do not retry it under VPN authorization.

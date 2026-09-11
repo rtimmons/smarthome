@@ -1,9 +1,9 @@
 # Recovery
 
-The small master-encrypted SOPS vault is committed and its first clean-clone
-restore passed. State/archive capture and immutable NAS storage are now
-implemented; the real NAS round trip/master verification passed, while the full
-published-source clone restoration drill is still pending.
+The full published-source clean-clone secrets/state drill passed: 24 vault
+entries restored, 15 NAS bundle entries and six keypairs verified, and zero new
+files restored on repeat. See the [September 11 report](../recovery/drills/20260911T194408Z.json).
+Application startup was not repeated; deletion safety remains false.
 Start with [secrets and state recovery](secrets-recovery.md) and the current
 [`plan.md`](../../plan.md) handoff. Do not delete the checkout based only on a
 metadata check or a successful ciphertext transfer.
@@ -497,5 +497,6 @@ A drill is complete only when:
 - Git and logs contain no credentials.
 
 Record each drill in [validation.md](validation.md). The cloud and QNAP
-application startup drills above are recorded; full machine replacement and
-clean-clone master-key recovery remain pending.
+application startup drills above are recorded, and clean-clone master-key
+recovery passed in the September 11 report linked above. Full machine
+replacement and application startup from that clone remain unproven.

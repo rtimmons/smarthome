@@ -54,8 +54,10 @@ For checkout-loss recovery, follow [secrets and state recovery](docs/secrets-rec
 The Git-hosted SOPS vault holds the small inputs; versioned master-encrypted
 state/archive packages live on the QNAP outside the app/cache directories.
 Inject the existing `SOPS_AGE_KEY` to restore. The operator keeps the same master
-in 1Password and on paper. The full published-source recovery drill is pending;
-`just --no-dotenv secrets-check` alone checks metadata, not deletion safety.
+in 1Password and on paper. The [full published-source secrets/state drill](recovery/drills/20260911T194408Z.json)
+passed: 24 vault entries, 15 bundle entries and six keypairs; repeat restoration
+added zero files. HA/UniFi and full machine recovery remain unproven, and checkout
+deletion is still unsafe. `just --no-dotenv secrets-check` alone checks metadata.
 
 Capacity is reviewed at an 80% warning and upgraded before 90%; expansion is a
 deliberate, reviewed Terraform change, not an automatic purchase. See
