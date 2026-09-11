@@ -42,6 +42,10 @@ provider; **UsenetExpress is explicitly deferred until actual completion gaps
 justify it**. NZBGeek and NZBFinder Pro are paid, enabled and tested. Provider,
 indexer and application credentials stay in private forms/files, never chat.
 
+The optional curated-discovery phase is planned but not deployed. It may add
+Radarr/Sonarr and, if a request-oriented interface is useful, exactly one of
+Jellyseerr or Overseerr.
+
 From repository root use `just usenet-test`, `just usenet-cloud-health`, and
 `just usenet-qnap-health`. Catalog reads use `just --justfile usenet-infra/Justfile
 --working-directory usenet-infra catalog-list` (or `catalog-status`). On this workstation `just` is
@@ -713,6 +717,18 @@ Build this architecture:
 ```text
                          INTERNET
 
+             Discovery metadata and curated lists
+        (TMDb / TVDB / Trakt; optional request UI)
+                           │
+                           ▼
+          Radarr / Sonarr; Jellyseerr or Overseerr
+                           │
+              deliberate interactive selection
+                           │
+                           ▼
+                  Prowlarr + Usenet indexers
+                           │
+                           ▼
                      Usenet Provider
                            │
                        NNTP/TLS
@@ -763,6 +779,7 @@ Expected operating pattern:
 - Normal cloud-to-NAS transfers should go directly Storage Box → QNAP rather than Storage Box → VM → QNAP.
 - Day-to-day remote-versus-local decisions should be point-and-click; copying item
   IDs between terminal commands is a supported fallback, not the primary workflow.
+- Discovery may provide a richer curated browsing experience.
 
 This is a private system for content I am authorized to obtain and store.
 
@@ -897,6 +914,49 @@ For each indexer record:
 - renewal behavior.
 
 Secrets must go into the chosen secret-management mechanism, not documentation or Git.
+
+### Curated discovery (optional future phase)
+
+Prowlarr is the indexer/search broker, not a recommendation or editorial-browse
+application. Retain the indexers' own authenticated web UIs (for example,
+NZBFinder's browse and Spotweb experiences) for direct browsing. Add this
+private discovery layer only when its additional value justifies the operational
+complexity:
+
+- **Radarr** for curated movie discovery and **Sonarr** for curated TV discovery.
+- **Jellyseerr** or **Overseerr** as an optional authenticated request/discovery
+  front end. Select exactly one if a request-oriented UI is wanted; do not run
+  both by default.
+- TMDb, TVDB, and/or deliberately selected Trakt lists and calendars provide
+  the curation metadata. These sources suggest titles; they are not acquisition
+  authorities and do not replace the per-item authorization record.
+- Prowlarr remains the single manager for NZBGeek and NZBFinder. It may sync
+  those indexer definitions to Radarr/Sonarr after a deliberate compatibility
+  check, while direct interactive Prowlarr search remains available.
+
+The required flow is:
+
+```text
+curated list / calendar -> choose a title -> interactive indexer search
+-> explicitly submit one result to SABnzbd -> inspect completed output
+-> explicit manifest-backed catalog promotion
+```
+
+Configure the discovery tools with these non-negotiable safeguards:
+
+- Give each service only the credentials it needs. Keep indexer and SAB API keys
+  on the cloud host; never embed Prowlarr/SAB credentials in browser-side code
+  or an external bookmarklet.
+- Bind every new service to loopback or the approved private LAN/VPN path,
+  authenticate it, and add it to encrypted configuration backups, health checks,
+  version pinning, update testing, and recovery documentation.
+- Do not expose a public request portal, invite arbitrary users, or infer that a
+  metadata-list entry is authorized material.
+
+Before implementing this optional phase, research the current official
+documentation, supported Prowlarr sync behavior, container image versions,
+and the manual-only controls for each selected tool. Record the outcome and
+obtain an explicit decision on which tools to deploy.
 
 ## 5. Content policy
 
