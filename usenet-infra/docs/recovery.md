@@ -1,16 +1,18 @@
 # Recovery
 
-**Clean-clone master-key recovery is not implemented yet.** Follow the current
-handoff and detailed SOPS/age next steps in [`plan.md`](../../plan.md). Do not
-delete the checkout: ignored secrets, Terraform states and archives are not
-recovered by Git. Cloud/VPN/UniFi backups require the existing cloud administrator
-private key; QNAP backups require the existing QNAP administrator private key.
-Both identities need independent, verified escrow before any key replacement.
+The small master-encrypted SOPS vault is committed and its first clean-clone
+restore passed. State/archive capture and immutable NAS storage are now
+implemented; the real NAS round trip/master verification passed, while the full
+published-source clone restoration drill is still pending.
+Start with [secrets and state recovery](secrets-recovery.md) and the current
+[`plan.md`](../../plan.md) handoff. Do not delete the checkout based only on a
+metadata check or a successful ciphertext transfer.
 
-Start with the [recovery inventory and current gaps](secrets-recovery.md) for
-checkout-loss recovery. `just --no-dotenv secrets-check` at repository root
-inspects local metadata only. The application recovery procedures below do not
-establish master-key recovery or checkout deletion safety.
+Both legacy backup decryption keys are escrowed in the small vault. The operator
+selected QNAP storage for the outer master-encrypted recovery package and
+confirmed the master is in 1Password and on paper. This protects Mac/cloud loss;
+the NAS is not an independent backup of its own disks. Whole-Home-Assistant
+recovery and native UniFi restore remain separately unproven.
 
 The recovery model is simple: Git recreates non-secret configuration, the
 Storage Box holds the canonical catalog, and encrypted backups restore stateful

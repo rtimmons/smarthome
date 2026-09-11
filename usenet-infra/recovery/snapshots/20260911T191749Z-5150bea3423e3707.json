@@ -1,0 +1,29 @@
+{
+  "ciphertext_bytes": 61250344,
+  "ciphertext_sha256": "8f6d2835f08fb7466db0a0dfebe5f143dc5b0bb1f76817833840a791a6e83eaa",
+  "created_at": "2026-09-11T19:17:49.463422+00:00",
+  "deletion_safe": false,
+  "entry_ids": [
+    "archive-cloud-20260910t214707z-nck4sdjo",
+    "archive-cloud-20260910t223402z-zgjaggvx",
+    "archive-cloud-20260910t224543z-ru5710kx",
+    "archive-cloud-20260910t225152z-sifvfdwc",
+    "archive-cloud-20260911t001750z-ucxzkhoy",
+    "archive-cloud-vpn-20260911t005548",
+    "archive-qnap-20260910t234609z-gr0zzbi0",
+    "archive-unifi-network-20260911t004042z",
+    "archive-unifi-system-20260911t004201z",
+    "archive-usg-unifi-vpn-post-fix-20260911t173623",
+    "archive-usg-unifi-vpn-pre-fix-20260911t171125",
+    "cloud-prior-tfstate",
+    "cloud-tfstate",
+    "storage-tfstate",
+    "zwave-historical-nvm"
+  ],
+  "inventory_sha256": "ad225bea68ab65de4306a8f348abc951acda82248eab72e06e71944e6a952c67",
+  "recipient": "age1r9taqg3sxggtssay4sr8ma4mwqvmyejqy8z9ej20jt9x9h42lyssdzjfhv",
+  "schema_version": 1,
+  "snapshot_id": "20260911T191749Z-5150bea3423e3707",
+  "source_revision": "0b910b316c5627e50e0003c8f78e3b6b7de2b55d",
+  "vault_sha256": "0859faf6ed88d00db705d6a013d35956671e031b01e33b0e3e163e7e0fd74c1b"
+}

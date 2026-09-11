@@ -54,6 +54,7 @@ def check_keygen(binary: Path, runner=subprocess.run) -> None:
     try:
         result = runner([str(binary), '--version'], stdin=subprocess.DEVNULL,
                         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                        env={'PATH': os.defpath, 'LANG': 'C', 'LC_ALL': 'C'},
                         check=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
         raise RecoveryError('The reviewed native age-keygen binary is unavailable.') from None
@@ -65,6 +66,7 @@ def recipient_from_identity(binary: Path, identity: Path, runner=subprocess.run)
     try:
         result = runner([str(binary), '-y', str(identity)], stdin=subprocess.DEVNULL,
                         stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+                        env={'PATH': os.defpath, 'LANG': 'C', 'LC_ALL': 'C'},
                         check=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
         raise RecoveryError('Could not derive the public recovery recipient.') from None

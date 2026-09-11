@@ -429,6 +429,46 @@ secrets-encrypt *args:
 	set -euo pipefail
 	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra secrets-encrypt "$@"
 
+# Capture allowlisted states/archives into a new encrypted recovery package.
+[group: 'backup']
+[positional-arguments]
+recovery-capture *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./usenet-infra/scripts/recovery-run bundle capture "$@"
+
+# Authenticate all recovery content offline using the master and restored vault.
+[group: 'backup']
+[positional-arguments]
+recovery-verify *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./usenet-infra/scripts/recovery-run bundle verify "$@"
+
+# Restore authenticated state/archive files; existing different files are refused.
+[group: 'backup']
+[positional-arguments]
+recovery-restore *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./usenet-infra/scripts/recovery-run bundle restore "$@"
+
+# Store or retrieve ciphertext through the dedicated, pinned NAS connection.
+[group: 'backup']
+[positional-arguments]
+recovery-store *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./usenet-infra/scripts/recovery-run store "$@"
+
+# Clone published source, restore the vault, retrieve NAS ciphertext and verify recovery.
+[group: 'backup']
+[positional-arguments]
+recovery-drill *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./usenet-infra/scripts/recovery-run drill "$@"
+
 # List canonical items and whether each is cached on the QNAP
 [group: 'usenet']
 catalog-list:

@@ -1,9 +1,18 @@
-# Secrets recovery inventory
+# Secrets and state recovery
 
-The first recovery increment inventories the whole smarthome repository before
-any vault migration. **Deleting the original checkout is still unsafe.** No new
-master key, SOPS vault, independent archive destination, or clean-clone restore
-has been implemented by this increment.
+The committed SOPS vault restores the small secrets/configuration inputs. The
+native-age recovery package preserves both Terraform states and all retained
+archives. The user selected the QNAP as the off-checkout ciphertext store and
+confirmed the same recovery master is in 1Password (`SOPS_AGE_KEY`) and on paper
+outside 1Password on September 11, 2026. No private master is installed on the NAS.
+
+**Deleting the original checkout is still unsafe.** The vault-only clone drill
+passed; the NAS round trip and real-master content verification passed for all 15
+entries and six keypairs; publication and the fresh-clone restoration drill
+remain to be completed. Whole-Home-Assistant recovery has
+separate unresolved gaps below. A NAS copy protects against Mac/cloud loss but
+cannot survive loss of the NAS disks as well. This is the user's selected
+failure scope, replacing the original requirement for an off-NAS backup store.
 
 Run from the repository root:
 
@@ -31,9 +40,9 @@ path-rebasing policy. It contains **path metadata only**, never secret values.
 
 | Category | Intended handling in the later recovery implementation |
 | --- | --- |
-| `vault` | Small configuration/key inputs; migrate only explicitly listed files to master-encrypted exact-byte SOPS payloads. |
-| `state` | Consistent encrypted state captures or historical recovery material; offline inspection before installation. |
-| `archive` | Preserve the individually enumerated retained ciphertext; publish to the independent versioned destination with authenticated content checks. |
+| `vault` | Small configuration/key inputs in the committed master-encrypted exact-byte SOPS vault. |
+| `state` | Both local Terraform states captured under POSIX locks; historical material retained separately by exact inventory ID. |
+| `archive` | All eleven retained archives validated and included in the master-encrypted package stored on the NAS. |
 | External dependencies | Live HA/application state, account recovery and unresolved sources; never silently treat local metadata as verified recovery. |
 | Exclusions | Exact named source files, provider caches, obsolete plans, candidate host pin and supplemental receipts; these are excluded from discovery/capture, not authorized for deletion. |
 
@@ -98,8 +107,10 @@ or credential values to the public manifest.
 5. **External recovery is a prerequisite.** UniFi's existing 1Password-managed
    identity, human passwords/MFA, private Git access and the password manager
    need independently tested recovery. No such keys were exported. The new
-   master must have two independent copies; encrypted archives need a versioned
-   destination outside the workstation, cloud VM, QNAP and canonical Storage Box.
+   master has two copies confirmed by the operator: 1Password and paper. The
+   operator selected versioned QNAP ciphertext storage, accepting its shared
+   NAS-disk failure domain. Git and password-manager account recovery remain
+   external prerequisites.
 
 During this increment, two local public host-pin files and the historical NVM
 backup were tightened from `0644` to `0600`. Their content was unchanged. No live
@@ -107,23 +118,21 @@ configuration, accounts, keys or archive contents were changed.
 
 ## Native-age/SOPS bootstrap
 
-The first master-key tooling increment is implemented, but **has not created a
-master or vault yet**. It pins age 1.3.2 (including `age-keygen`) and SOPS
+The public recipient, SOPS configuration and encrypted vault are committed.
+The bootstrap pins age 1.3.2 (including `age-keygen`) and SOPS
 3.13.3 for Darwin/arm64 and Linux/amd64. Each binary is downloaded only from
 the allowlisted official release hosts, SHA-256 verified, cached privately under
 ignored `build/tools/`, and rehashed on every run. The compatible local binary
 is also version-checked; both platform caches are usable offline after the
 first verified fetch.
 
-The next human action is necessary because the private recovery identity needs
-two independently retrievable, operator-held copies. Store the generated
-`SOPS_AGE_KEY` as a 1Password secret and arrange a separately retrievable copy
-outside this checkout, the cloud VM, QNAP, and Storage Box. Do not use an SSH
-key, a repository path, a shell-history command, or a password that merely
-resembles a key.
+The existing private recovery identity is a random native-age key stored in
+1Password's `SOPS_AGE_KEY` field; the operator also keeps the same key on paper.
+Do not generate a replacement during an ordinary recovery. An SSH key or a
+memorable password cannot substitute for this identity.
 
-With `SOPS_AGE_KEY` injected by the password manager, explicitly acknowledge
-that plan from the repository root:
+For a new installation only, initialize public metadata after arranging the
+second copy. Ordinary recovery only needs the first bootstrap command:
 
 ```sh
 just --no-dotenv usenet-crypto-bootstrap
@@ -186,24 +195,122 @@ owner-only temporary directory before any destination is written. It accepts
 only inventory IDs and paths, validates checksums and required entries, safely
 rebases only an exact checkout-path boundary where inventory policy permits it,
 creates private directories, and installs files atomically with the inventory
-mode. Existing destinations fail closed unless `--replace` is explicitly
-provided; review conflicts before using that migration-only option. Neither
-operation sources or evaluates restored content.
+mode. Identical destinations are accepted without rewriting and their modes are
+repaired. Divergent destinations fail unless `--replace` is explicitly provided;
+that option first preserves prior bytes privately beneath
+`build/recovery-prior/<unique-id>/<original-path>`. Keep those prior copies until
+replacement is verified. Ciphertext replacement is authenticated before atomic
+publication. Neither operation sources or evaluates restored content. SOPS runs
+with a private empty home directory and only the injected identity; ambient key
+files, SSH agents and other providers cannot satisfy a wrong-key test.
 
-The complete intended sequence is therefore: clone → retrieve the independently
-held master → inject it for `setup-secrets` → run `secrets-check` → perform
-offline archive/state verification. This is not deletion-safe until the
-separate escrow, independent-ciphertext retrieval and clean-clone drills pass.
+## State and archive package
 
-Before encrypting, review path rebasing for `.env`, inventory, rclone and
-Terraform inputs; preserve remote paths and resource IDs. The inventory is not
-a restore executor or permission to evaluate recovered configuration.
-Future restore must authenticate all ciphertext before any install, use strict
-schema/path allowlists, avoid `source`/`eval`, and handle conflicting existing
-files with recoverable prior versions.
+Run from the repository root, using a new absolute output directory each time:
 
-Then escrow the existing archive identities, capture both independent Terraform
-states without concurrent apply, select an independently retrievable ciphertext
-destination, and implement the clean-clone and failure drills from plan.md.
-Do not schedule retention, delete this checkout, or claim master-only recovery
-until those acceptance gates and the second operator-led master retrieval pass.
+```sh
+just --no-dotenv usenet-crypto-bootstrap
+just --no-dotenv recovery-capture --bundle /absolute/new/package-directory
+just --no-dotenv recovery-store push --bundle /absolute/new/package-directory
+```
+
+Capture also creates the public receipt under `usenet-infra/recovery/snapshots/`.
+Review and commit/publish that receipt before the fresh-clone drill. Verification
+requires an exact match to this Git-carried receipt before it decrypts the NAS
+package. A receipt fetched beside the ciphertext is not an independent integrity
+anchor: anyone with a public age recipient can encrypt new data to that recipient.
+
+Capture uses the committed public age recipient, never the private master. It
+captures 15 present non-vault entries: two current Terraform states, the optional
+prior cloud state, eleven retained archives, and the historical NVM image. Both
+current state files are held under Terraform-compatible POSIX shared locks
+throughout capture; active lock records, concurrent writers, changed files and
+inode replacement are refused. This assumes the configured local state backends
+and cooperating Terraform clients; never run Terraform with locking disabled.
+No plan, apply, destroy, refresh or live service operation occurs.
+
+Every retained archive is first authenticated using the exact escrowed SSH key.
+Cloud archives validate the file allowlist, checksums and SQLite integrity;
+QNAP, VPN and USG archives validate their respective exact formats. Native UniFi
+exports must match recorded source hashes, but this is not a native UniFi
+application-restore test. The historical NVM image remains stale, opaque material
+for manual review, never an automatic controller restore.
+
+The outer package is native-age ciphertext addressed directly to the dedicated
+master. Old archive key bytes remain inside the SOPS vault and must be retained
+while those inner archives exist. Future cloud/QNAP capture helpers currently
+still encrypt their inner archives to SSH recipients; the outer recovery package
+adds the dedicated age boundary without rotating or discarding those keys.
+
+`receipt.json` records the snapshot ID, UTC capture timestamp, Git source
+revision, inventory and vault fingerprints, native recipient, ciphertext size
+and SHA-256, and expected entry IDs. Plaintext state hashes, lineage and resource
+IDs are inside the authenticated package. The downloaded receipt is checked
+against its Git-carried copy and then against the authenticated package. A
+modified NAS receipt cannot redefine the expected checksum or make a substituted
+package pass. Capture alone reports `master_decryption_verified=false`.
+The receipt's source revision identifies the source checkpoint at capture, not a
+claim that an uncommitted implementation has been published.
+
+## NAS storage and retrieval
+
+The dedicated directory is `/share/Container/usenet-recovery/<snapshot-id>/`.
+It is outside the Usenet app and cache roots and contains only
+`recovery.tar.age` and `receipt.json`. Directories are mode `0700`, files `0600`,
+owned by the dedicated NAS deployment account. No private master is stored there.
+Uploads use a unique staging directory and verify size and SHA-256 before
+publication. Existing versions are immutable: an identical retry succeeds;
+different content fails. No automated pruning or retention is enabled.
+
+Transport uses the strict literal `.env` parser and the inventoried dedicated NAS
+key and host pin. It never sources the file, uses an ambient SSH agent, scans new
+host keys or falls back to other credentials. These retrieval credentials are
+already in the small Git-hosted SOPS vault, so fetching does not depend on secrets
+inside the package being fetched. Git/account access and a reachable surviving
+NAS are external prerequisites. If the NAS configuration has also been lost,
+restore the dedicated account/authorized key and independently confirm the host
+pin before retrieval; the tool will not bypass those checks.
+
+```sh
+just --no-dotenv recovery-store probe
+just --no-dotenv recovery-store fetch --snapshot SNAPSHOT_ID --destination /absolute/new/download-directory
+just --no-dotenv recovery-verify --bundle /absolute/new/download-directory
+just --no-dotenv recovery-restore --bundle /absolute/new/download-directory
+```
+
+Inject the existing `SOPS_AGE_KEY` for verify/restore only, through 1Password as
+before. The master is passed privately to native age, never through a command
+argument or durable key file. `--prompt-master` optionally reads it without echo
+from an interactive terminal. All subprocess environments after decryption are
+scrubbed. Restoring requires the matching small vault already restored in that
+checkout, then authenticates all package content and verifies all six SSH
+keypairs before installing state/archive files. All destinations are preflighted;
+divergent existing files are refused. Identical files are left alone. Interrupted
+restores can be repeated. State is installed at its inventoried path for offline
+inspection; no application or Terraform process is started automatically.
+
+## Full clone drill and remaining acceptance
+
+After these source changes are committed and pushed, inject the master into one
+process and run:
+
+```sh
+just --no-dotenv recovery-drill --snapshot SNAPSHOT_ID --destination /absolute/new/clone
+```
+
+The drill requires a clean published source revision. It clones from GitHub,
+bootstraps pinned public crypto tools, restores only the Git vault, retrieves the
+NAS package with restored credentials, verifies all entries/keypairs, restores
+state/archive paths, repeats restoration to prove idempotence, and runs the
+metadata inventory check. It reads no original ignored inputs and produces a
+sanitized `build/recovery-drill.json` in the fresh clone. It does not repeat the
+previous isolated application-startup drills or perform a full NAS/UniFi/HA
+machine replacement. Failure preserves the clone for diagnosis.
+
+Before deleting the original checkout, complete that drill, preserve unrelated
+user work and all other inventoried/external prerequisites, and review the HA
+findings above. Record actual results in `plan.md`; inventory success alone must
+never be treated as deletion approval. Capture freshness, new archive inventory,
+future native-recipient migration and manual scheduling/retention remain explicit
+maintenance work. New files in bounded discovery roots require inventory review;
+changing inventory policy also requires re-encrypting the small vault.

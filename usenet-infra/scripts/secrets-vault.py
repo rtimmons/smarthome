@@ -9,6 +9,7 @@ is performed by SOPS into an owner-only temporary directory.
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
 import hashlib
 import importlib.util
 import json
@@ -16,6 +17,7 @@ import os
 from pathlib import Path, PurePosixPath
 import platform
 import re
+import signal
 import stat
 import subprocess
 import sys
@@ -108,7 +110,7 @@ def _read_source(root_fd: int, relative: str, expected_mode: str) -> bytes:
     parent, leaf = _open_parent(root_fd, relative)
     try:
         fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
-    except FileNotFoundError:
+    except OSError:
         os.close(parent)
         raise
     try:
@@ -131,15 +133,23 @@ def _read_source(root_fd: int, relative: str, expected_mode: str) -> bytes:
 def _identity_env(environ: dict[str, str] | None = None) -> dict[str, str]:
     environ = os.environ if environ is None else environ
     key_text = environ.get('SOPS_AGE_KEY')
-    # A caller's other SOPS_* settings could select a different config or
-    # identity provider. Keep the normal process environment (PATH, locale,
-    # proxy settings) but pass SOPS only the injected one-process identity.
-    result = {key: value for key, value in environ.items() if not key.startswith('SOPS_')}
+    # A caller's home, agents, cloud credentials, plugins and SOPS settings must
+    # never supply an alternate identity. The private home is added per run.
+    result = {'PATH': os.defpath, 'LANG': 'C', 'LC_ALL': 'C'}
     if not key_text or '\x00' in key_text or not key_text.startswith('AGE-SECRET-KEY-1'):
         raise VaultError('Set a valid SOPS_AGE_KEY for this command.')
     # Do not print, store, or parse the identity. SOPS receives it only in this
     # child environment for one invocation.
     result['SOPS_AGE_KEY'] = key_text
+    return result
+
+
+def _isolated_env(env: dict[str, str], temporary: Path) -> dict[str, str]:
+    result = dict(env)
+    for name, relative in (('HOME', 'home'), ('XDG_CONFIG_HOME', 'config'), ('XDG_DATA_HOME', 'data')):
+        path = temporary / relative
+        path.mkdir(mode=0o700)
+        result[name] = str(path)
     return result
 
 
@@ -165,16 +175,47 @@ def _default_sops(root: Path) -> Path:
     return path
 
 
-def _sops_config(root: Path) -> Path:
+def _sops_config(root: Path) -> str:
     path = root / '.sops.yaml'
     try:
         item = path.lstat()
     except OSError:
         raise VaultError('Public SOPS configuration is unavailable; initialize the recovery master first.') from None
     if (stat.S_ISLNK(item.st_mode) or not stat.S_ISREG(item.st_mode)
-            or item.st_uid != os.getuid() or stat.S_IMODE(item.st_mode) & 0o022):
+            or item.st_uid != os.getuid() or stat.S_IMODE(item.st_mode) & 0o022 or item.st_size > 4096):
         raise VaultError('Public SOPS configuration is unsafe.')
-    return path
+    content = path.read_text()
+    match = re.search(r'^    age: (age1[ac-hj-np-z02-9]{58})$', content, re.MULTILINE)
+    spec = importlib.util.spec_from_file_location('recovery_master_init', Path(__file__).with_name('recovery-master-init.py'))
+    initializer = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(initializer)
+    if match is None or content != initializer.sops_config(match[1]):
+        raise VaultError('Public SOPS configuration must use the generated native-age-only recovery rule.')
+    return content
+
+
+def _validate_ciphertext(content: bytes) -> None:
+    """Reject every backend except one native age recipient before SOPS runs."""
+    try:
+        if not 2 <= len(content) <= MAX_BUNDLE_BYTES * 2:
+            raise ValueError
+        document = json.loads(content, object_pairs_hook=_no_duplicates)
+        metadata = document['sops']
+        if (not isinstance(document, dict) or not isinstance(metadata, dict)
+                or set(metadata) != {'age', 'lastmodified', 'mac', 'unencrypted_suffix', 'version'}
+                or metadata['unencrypted_suffix'] != '_unencrypted'
+                or not isinstance(metadata['age'], list) or len(metadata['age']) != 1):
+            raise ValueError
+        recipient = metadata['age'][0]
+        if (not isinstance(recipient, dict) or set(recipient) != {'recipient', 'enc'}
+                or not isinstance(recipient['recipient'], str)
+                or not re.fullmatch(r'age1[ac-hj-np-z02-9]{58}', recipient['recipient'])
+                or not isinstance(recipient['enc'], str)
+                or not recipient['enc'].startswith('-----BEGIN AGE ENCRYPTED FILE-----\n')
+                or not recipient['enc'].rstrip().endswith('-----END AGE ENCRYPTED FILE-----')):
+            raise ValueError
+    except (ValueError, TypeError, KeyError, UnicodeError):
+        raise VaultError('Encrypted vault must contain exactly one native age recipient and no other identity providers.') from None
 
 
 def _run_sops(args: list[str], *, env: dict[str, str], phase: str) -> None:
@@ -204,25 +245,55 @@ def _vault_relative(root: Path, vault_path: Path) -> str:
     return _safe_relative(relative)
 
 
-def _preflight_destination(root_fd: int, relative: str, *, replace: bool) -> None:
+def _existing_destination(parent: int, leaf: str) -> tuple[os.stat_result, bytes] | None:
+    try:
+        fd = os.open(leaf, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=parent)
+    except FileNotFoundError:
+        return None
+    except OSError:
+        raise VaultError('Refusing an unsafe existing restore destination.') from None
+    try:
+        item = os.fstat(fd)
+        if (not stat.S_ISREG(item.st_mode) or item.st_uid != os.getuid() or item.st_nlink != 1
+                or item.st_size > MAX_BUNDLE_BYTES * 2):
+            raise VaultError('Refusing an unsafe existing restore destination.')
+        with os.fdopen(fd, 'rb', closefd=False) as stream:
+            content = stream.read(MAX_BUNDLE_BYTES * 2 + 1)
+        after = os.fstat(fd)
+        if len(content) != item.st_size or (item.st_mtime_ns, item.st_ctime_ns) != (after.st_mtime_ns, after.st_ctime_ns):
+            raise VaultError('Restore destination changed while it was being read.')
+        return item, content
+    finally:
+        os.close(fd)
+
+
+def _preflight_destination(root_fd: int, relative: str, *, replace: bool, content: bytes | None = None) -> None:
     """Create only safe empty parents and reject every conflicting leaf first."""
     parent, leaf = _open_parent(root_fd, relative, create=True)
     try:
-        try:
-            existing = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
-        except FileNotFoundError:
+        existing = _existing_destination(parent, leaf)
+        if existing is None:
             return
-        if (stat.S_ISLNK(existing.st_mode) or not stat.S_ISREG(existing.st_mode)
-                or existing.st_uid != os.getuid() or existing.st_nlink != 1):
-            raise VaultError('Refusing an unsafe existing restore destination.')
-        if not replace:
+        if not replace and existing[1] != content:
             raise VaultError('Restore destination already exists; use --replace only after review.')
     finally:
         os.close(parent)
 
 
-def _private_directory() -> tempfile.TemporaryDirectory:
-    return tempfile.TemporaryDirectory(prefix='smarthome-secrets-', ignore_cleanup_errors=True)
+@contextmanager
+def _private_directory():
+    def interrupted(signum, frame):
+        raise VaultError('Recovery operation interrupted; temporary files were cleaned up.')
+
+    handlers = {}
+    try:
+        for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            handlers[signum] = signal.signal(signum, interrupted)
+        with tempfile.TemporaryDirectory(prefix='smarthome-secrets-') as directory:
+            yield directory
+    finally:
+        for signum, handler in handlers.items():
+            signal.signal(signum, handler)
 
 
 def _read_bundle(path: Path, manifest: dict) -> dict:
@@ -293,17 +364,16 @@ def _install(root_fd: int, relative: str, content: bytes, mode: int, *, replace:
     temporary = '.' + leaf + '.restore-' + next(tempfile._get_candidate_names())
     fd = None
     try:
-        try:
-            existing = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
-        except FileNotFoundError:
-            existing = None
+        existing = _existing_destination(parent, leaf)
         if existing is not None:
-            if stat.S_ISLNK(existing.st_mode) or not stat.S_ISREG(existing.st_mode) or existing.st_uid != os.getuid() or existing.st_nlink != 1:
-                raise VaultError('Refusing an unsafe existing restore destination.')
+            if existing[1] == content:
+                os.chmod(leaf, mode, dir_fd=parent, follow_symlinks=False)
+                os.fsync(parent)
+                return
             if not replace:
                 raise VaultError('Restore destination already exists; use --replace only after review.')
         fd = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600, dir_fd=parent)
-        os.fchmod(fd, 0o600)
+        os.fchmod(fd, mode)
         with os.fdopen(fd, 'wb', closefd=False) as stream:
             stream.write(content)
             stream.flush()
@@ -315,8 +385,16 @@ def _install(root_fd: int, relative: str, content: bytes, mode: int, *, replace:
             os.link(temporary, leaf, src_dir_fd=parent, dst_dir_fd=parent, follow_symlinks=False)
             os.unlink(temporary, dir_fd=parent)
         else:
+            # Preserve prior bytes outside inventory discovery roots. The
+            # archive is always private, even for a formerly public file.
+            prior = 'build/recovery-prior/' + next(tempfile._get_candidate_names()) + '/' + relative
+            _install(root_fd, prior, existing[1], 0o600, replace=False)
+            current = os.stat(leaf, dir_fd=parent, follow_symlinks=False)
+            before = existing[0]
+            if (current.st_dev, current.st_ino, current.st_mtime_ns, current.st_ctime_ns) != (
+                    before.st_dev, before.st_ino, before.st_mtime_ns, before.st_ctime_ns):
+                raise VaultError('Restore destination changed concurrently; prior version preserved and nothing overwritten.')
             os.replace(temporary, leaf, src_dir_fd=parent, dst_dir_fd=parent)
-        os.chmod(leaf, mode, dir_fd=parent, follow_symlinks=False)
         os.fsync(parent)
     except FileExistsError:
         raise VaultError('Restore destination appeared concurrently; nothing was overwritten.') from None
@@ -369,21 +447,37 @@ def encrypt(root: Path, manifest_path: Path, vault_path: Path, *, replace: bool 
               'source_checkout': str(root), 'entries': entries}
     env = _identity_env(environ)
     binary = _default_sops(root) if sops is None else Path(sops)
-    config = _sops_config(root)
+    config_text = _sops_config(root)
     with _private_directory() as temporary:
+        env = _isolated_env(env, Path(temporary))
+        config = Path(temporary) / '.sops.yaml'
+        config.write_text(config_text)
         plaintext = Path(temporary) / 'bundle.json'
         verified = Path(temporary) / 'verified.json'
+        ciphertext = Path(temporary) / 'secrets.sops.json'
         plaintext.write_bytes(_canonical_json(bundle))
         plaintext.chmod(0o600)
         _run_sops([str(binary), '--config', str(config), '--filename-override', vault_relative,
                    '--encrypt', '--input-type', 'json',
-                   '--output', str(vault_path), str(plaintext)], env=env, phase='encrypt')
+                   '--output', str(ciphertext), str(plaintext)],
+                  env={key: value for key, value in env.items() if key != 'SOPS_AGE_KEY'}, phase='encrypt')
+        _validate_ciphertext(ciphertext.read_bytes())
         # Encryption needs only the public recipient, so authenticate the
         # resulting ciphertext with the supplied identity before publishing a
         # success result.  The verified plaintext stays in the private tempdir.
-        _run_sops([str(binary), '--decrypt', '--output', str(verified), str(vault_path)], env=env, phase='verify')
+        _run_sops([str(binary), '--decrypt', '--output', str(verified), str(ciphertext)], env=env, phase='verify')
         verified.chmod(0o600)
         _read_bundle(verified, manifest)
+        if json.loads(verified.read_bytes()) != bundle:
+            raise VaultError('Verified ciphertext does not exactly match the captured recovery bundle.')
+        item = ciphertext.lstat()
+        if not stat.S_ISREG(item.st_mode) or not (2 <= item.st_size <= MAX_BUNDLE_BYTES * 2):
+            raise VaultError('SOPS produced an unsafe encrypted vault.')
+        root_fd = _root_fd(root)
+        try:
+            _install(root_fd, vault_relative, ciphertext.read_bytes(), 0o644, replace=replace)
+        finally:
+            os.close(root_fd)
     return len(entries)
 
 
@@ -396,9 +490,11 @@ def restore(root: Path, manifest_path: Path, vault_path: Path, *, replace: bool 
     try:
         vault_parent, vault_leaf = _open_parent(root_fd, _vault_relative(root, vault_path))
         try:
-            item = os.stat(vault_leaf, dir_fd=vault_parent, follow_symlinks=False)
-            if stat.S_ISLNK(item.st_mode) or not stat.S_ISREG(item.st_mode) or item.st_size < 2:
+            existing = _existing_destination(vault_parent, vault_leaf)
+            if existing is None:
                 raise VaultError('Encrypted vault must be a regular non-symlinked file.')
+            ciphertext = existing[1]
+            _validate_ciphertext(ciphertext)
         finally:
             os.close(vault_parent)
     finally:
@@ -406,8 +502,12 @@ def restore(root: Path, manifest_path: Path, vault_path: Path, *, replace: bool 
     env = _identity_env(environ)
     binary = _default_sops(root) if sops is None else Path(sops)
     with _private_directory() as temporary:
+        env = _isolated_env(env, Path(temporary))
         plaintext = Path(temporary) / 'bundle.json'
-        _run_sops([str(binary), '--decrypt', '--output', str(plaintext), str(vault_path)], env=env, phase='restore')
+        encrypted = Path(temporary) / 'secrets.sops.json'
+        encrypted.write_bytes(ciphertext)
+        encrypted.chmod(0o600)
+        _run_sops([str(binary), '--decrypt', '--output', str(plaintext), str(encrypted)], env=env, phase='restore')
         plaintext.chmod(0o600)
         bundle = _read_bundle(plaintext, manifest)
         root_fd = _root_fd(root)
@@ -415,11 +515,13 @@ def restore(root: Path, manifest_path: Path, vault_path: Path, *, replace: bool 
             # Refuse every known conflict before publishing the first byte.  This
             # avoids a partly restored checkout simply because a later file was
             # already present.
-            for restored in bundle['entries'].values():
-                _preflight_destination(root_fd, restored['metadata']['restore_path'], replace=replace)
+            installations = []
             for restored in bundle['entries'].values():
                 entry = restored['metadata']
                 content = _rebase(restored['content'], bundle['source_checkout'], root, entry['path_policy'])
+                _preflight_destination(root_fd, entry['restore_path'], replace=replace, content=content)
+                installations.append((entry, content))
+            for entry, content in installations:
                 _install(root_fd, entry['restore_path'], content, int(entry['mode'], 8), replace=replace)
         finally:
             os.close(root_fd)
@@ -432,7 +534,7 @@ def main(argv=None) -> int:
     parser.add_argument('--root', type=Path, default=REPO_ROOT)
     parser.add_argument('--manifest', type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument('--vault', type=Path, default=DEFAULT_VAULT)
-    parser.add_argument('--replace', action='store_true', help='Deliberately replace an existing ciphertext or local recovery file.')
+    parser.add_argument('--replace', action='store_true', help='Replace divergent files, preserving prior bytes privately under build/recovery-prior/.')
     args = parser.parse_args(argv)
     try:
         operation = encrypt if args.operation == 'encrypt' else restore

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Hold the one-process key out of runtime bootstrap child environments.
+recovery_master="${SOPS_AGE_KEY-}"
+unset SOPS_AGE_KEY
+recovery_infra="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+recovery_tool="${1-}"
+shift || true
+case "$recovery_tool" in bundle|store|drill) ;; *) exit 2 ;; esac
+# This is repository source, never decrypted configuration.
+# shellcheck disable=SC1091
+source "$recovery_infra/../talos/scripts/python_use.sh"
+if [[ -n "$recovery_master" && "$recovery_tool" != store && "${1-}" != capture ]]; then
+  export SOPS_AGE_KEY="$recovery_master"
+fi
+exec "$TALOS_PYTHON_BIN" "$recovery_infra/scripts/recovery-$recovery_tool.py" "$@"

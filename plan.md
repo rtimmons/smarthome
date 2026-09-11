@@ -6,26 +6,59 @@ Keep this document updated as agents make progress.
 
 ## Resume here — current handoff, September 11, 2026
 
-This section is authoritative over the chronological notes below. A new session
-should read this document and the repository's `AGENTS.md`, then continue the
-secrets-recovery work below. The inventory, pinned crypto bootstrap, public
-SOPS recipient, encrypted small vault, and one clean-clone vault restoration
-drill are implemented; use `just --no-dotenv secrets-check` and read
-`usenet-infra/docs/secrets-recovery.md`, then proceed to state/archive recovery
-and independent-master retrieval. The infrastructure setup and LAN-access work are
-complete; do not repeat account creation, purchases, credential setup, diagnostic
-downloads, NAS bootstrap, or VPN provisioning. Use parallel agents for independent
-implementation, review, and validation. No previous chat or browser session is
-required to understand the next task.
+This section is authoritative over chronological notes below. Continue with
+`usenet-infra/docs/secrets-recovery.md`. The small SOPS vault, locked Terraform
+state/archive capture, immutable QNAP ciphertext store, offline content checks,
+and full-clone drill tooling are implemented. Do not repeat account setup,
+purchases, credential generation, NAS bootstrap, diagnostic downloads or VPN
+provisioning. Use parallel agents for independent implementation and review.
 
-**Deletion safety: not ready.** The source checkpoint for this handoff is titled
-`feat(usenet): complete private LAN access and recovery handoff` on branch `usenet`.
-Live secrets, Terraform states, and verified encrypted backups remain in
-ignored local paths. The existing backup decryption identity is also local.
-Do not delete this checkout until the independent master-key retrieval and the
-full state/archive clean-clone drill below pass. The SOPS vault restores only
-the inventory's small `vault` category; it does not recover Terraform state,
-retained archives, or external services.
+**Current recovery milestone:** NAS snapshot
+`20260911T191749Z-5150bea3423e3707` contains all 15 present non-vault entries,
+including both current Terraform states and all eleven retained archives. Its
+61,250,344-byte ciphertext was uploaded, downloaded into a separate directory,
+and verified byte-identical. The user then ran `recovery-verify` with the actual
+master: all 15 entries authenticated/validated, all six SSH keypairs matched,
+and `master_decryption_verified` was true. Cloud backups each passed two SQLite
+integrity checks. No live application or Terraform state was restored or changed.
+
+The user explicitly selected **QNAP NAS storage**, replacing the proposed
+requirement for a store independent of the NAS. The immutable directory is
+`/share/Container/usenet-recovery/20260911T191749Z-5150bea3423e3707/`, outside
+application/cache roots. This protects Mac/cloud loss; it cannot survive loss
+of the NAS disks as well. On September 11 the user confirmed the same master
+is in 1Password (`SOPS_AGE_KEY`) and written on paper outside 1Password. Count
+that independent-copy requirement as done; do not ask again or generate a key.
+The private master remains absent from repository files, NAS and agent context.
+
+**Deletion safety: not ready.** The new implementation must be committed and
+published before running its full fresh-GitHub-clone drill. The user explicitly
+approved staging, committing and pushing this recovery checkpoint to
+`origin/usenet`; do not ask again for those actions. After publication, have the operator inject the existing
+master and run from this repository:
+
+```sh
+just --no-dotenv recovery-drill --snapshot 20260911T191749Z-5150bea3423e3707 --destination /absolute/new/clone
+```
+
+The destination must have an existing operator-owned non-writable parent. The
+drill clones `origin/usenet`, requires the exact published current revision,
+bootstraps public pinned tools, restores the vault, fetches NAS ciphertext using
+restored credentials, verifies/restores state and archives twice, and records
+`build/recovery-drill.json`. It reads no original ignored files. Whole-HA
+recovery, native UniFi restore, application startup from this new clone and
+unrelated local user work remain separate deletion prerequisites. Do not claim
+that `secrets-check`, the earlier vault-only drill, or this successful NAS/master
+verification alone makes deleting the checkout safe.
+
+**Security audit finding:** expanded whole-main-repository source/index scanning
+passes, but reachable history contains two distinct RSA private keys committed
+in 2017–2018 and deleted from working files in 2018. Neither matches the six
+current dedicated identities. Live revocation of the historical Raspberry Pi
+consumers is unverified. See `usenet-infra/docs/security-findings.md` for public
+fingerprints, commits and consumer evidence. No keys were used, no history was
+rewritten, and no scanner exception was added. Full `secret-scan` intentionally
+fails on those findings; do not claim the repository's history is credential-free.
 
 ### Live system and operating entry points
 
@@ -90,18 +123,19 @@ restart persistence; isolated cloud/QNAP application restore drills; LAN login
 to both cloud UIs; anonymous denial; blocked backend/public ports; exact IKEv2
 selectors; explicit PFS14 rekey; automatic reconnection after cloud-only
 strongSwan restart; unchanged default route/old site VPN configuration; cloud
-Ansible repeat convergence with zero changes. After the clean-clone vault increment,
-the Usenet suite has 292 cases: 285 pass, seven opt-in skips; those seven proxy runtime cases
+Ansible repeat convergence with zero changes. Before this state/archive increment,
+the Usenet suite had 292 cases: 285 pass, seven opt-in skips; those seven proxy runtime cases
 previously passed separately during LAN implementation. Prior checkpoint `just test` also passed:
 Talos 118 tests (11 slow deselected), grid dashboard 102, printer 225 including
 browser tests, snapshot 7, tinyurl 16, Sonos tests/builds, and all seven add-on
-container checks. Fresh `just usenet-test` passed all compilation, ShellCheck,
+container checks. That earlier `just usenet-test` run passed compilation, ShellCheck,
 JSON/YAML, three Ansible syntax checks and secret scans. Independent security
 review found no concrete commit blocker; this is not a guarantee against all
 vulnerabilities. Historical counts later in this file reflect earlier stages.
 
-Remaining independent work: encrypted off-checkout recovery (highest priority);
-manual-backup scheduling/retention after recovery is proven; optional LAN HTTPS
+Remaining independent work: publish this recovery increment and complete its
+fresh-clone drill; historical-key authorization review; manual-backup
+scheduling/retention after recovery is proven; optional LAN HTTPS
 and Home Assistant navigation/status; full machine replacement drills. The
 external public-IP test of NAS port 1337 was rejected by automatic approval
 review and still needs explicit approval; do not retry it under VPN authorization.
@@ -204,6 +238,66 @@ independent second copy, restore Terraform state, or authenticate/decrypt the
 14 required non-vault state/archive entries; twelve external dependencies also
 remain. **Deleting this checkout remains unsafe.**
 
+### State/archive and NAS increment — September 11, 2026
+
+Implemented `recovery-capture`, `recovery-store`, `recovery-verify`,
+`recovery-restore`, and `recovery-drill` in both Justfiles. Capture holds both
+current Terraform files under Terraform-compatible POSIX locks, detects source
+changes/replacements, preserves lineage/serial and resource IDs byte-for-byte,
+and excludes plans. Verification authenticates the entire outer age package,
+binds it to the exact inventory/vault/recipient and the Git-carried snapshot
+receipt (not just NAS-supplied metadata), verifies all six SSH keypairs,
+then validates every entry before any state/archive installation. Restore
+preflights all existing destinations, refuses divergent files and safely resumes
+with identical files. Failures use private temporary directories, scrub child
+environments and avoid plaintext diagnostics. New recovery commands use the
+repository-pinned Python wrapper without exposing the master to bootstrap children.
+
+The first snapshot receipt is tracked at
+`usenet-infra/recovery/snapshots/20260911T191749Z-5150bea3423e3707.json`.
+Ciphertext SHA-256:
+`8f6d2835f08fb7466db0a0dfebe5f143dc5b0bb1f76817833840a791a6e83eaa`.
+Local capture: `build/recovery-20260911`; independently downloaded NAS copy:
+`build/recovery-nas-retrieved-20260911`. Receipt source checkpoint is
+`0b910b316c5627e50e0003c8f78e3b6b7de2b55d` (the pre-increment Git revision).
+The actual user-run verification reported 15 entries, six keypairs,
+`new_files_restored: 0`, `master_decryption_verified: true`, and
+`deletion_safe: false`. This was an authentication/content drill, not a state
+installation into a fresh clone. Both original and retrieved ciphertext remain.
+
+Vault hardening fixes two concrete recovery hazards: replacing ciphertext now
+stages and authenticates the new bundle before atomic publication, and explicit
+replacement of local files retains private prior versions beneath
+`build/recovery-prior/`. Identical restores are idempotent and repair modes.
+SOPS now rejects non-age provider metadata, uses an empty private HOME/XDG config,
+and receives only the supplied key. A real native-SOPS regression demonstrated
+that the previous ambient-key fallback could accept a wrong injected key; the
+hardened implementation refuses it. Native age/SOPS fixture tests also exercise
+wrong keys, truncation, tampering, unsafe paths, lock contention, interruptions,
+existing-file conflicts and cleanup.
+
+The inventory JSON remains the exact policy snapshot bound into the existing
+SOPS vault and recovery package. Its external-dependency status text describes
+the earlier inventory; the current facts above supersede those statuses. Any
+future inventory modification requires deliberate vault re-encryption and a new
+state/archive capture. No credentials or inventory policies were silently changed.
+Legacy inner archive encryption still uses the escrowed SSH identities; future
+native-recipient migration and retention remain pending. Keep both old keys.
+
+Validation for this increment: the final full `just usenet-test` run executed
+386 cases (379 passed, seven existing opt-in skips), followed by successful
+compilation, ShellCheck, JSON/YAML validation, inventory schema and all three
+Ansible syntax checks. The final whole-repository history scan intentionally
+returned failure for the two historical RSA keys above. `just test` also passed
+all repository tests and all seven add-on container checks before publication.
+Current source/index scans, the actual local inventory check, and diff whitespace
+checks pass. Real native age/SOPS negative tests run with fresh synthetic keys,
+not skipped mocks. The retrieved real NAS package also passed the exact
+Git-receipt binding check without changing ciphertext or requiring the user to
+repeat decryption. A final clone-mode regression confirms public Git metadata
+can use private mode 0600 without weakening exact secret-file permissions.
+The Usenet recipe is not entirely green: its security audit failure is preserved.
+
 1. **Inventory before migration.** Build an explicit, reviewed allowlist from
    ignored-file metadata and deployment references, never dump secret values.
    Each entry needs an owner/service, exact restore destination, sensitivity,
@@ -256,9 +350,10 @@ remain. **Deleting this checkout remains unsafe.**
    decryption keys until all retained archives have a tested alternative path.
 
 5. **Make ciphertext independently retrievable.** Local ignored `backups/` is
-   insufficient. Select a versioned backup destination outside the workstation,
-   cloud VM, QNAP and canonical Storage Box; do not purchase a new service
-   without approval. Store retrieval credentials in the master-encrypted vault
+   insufficient. The user selected a versioned QNAP directory on September 11, overriding
+   the originally proposed off-NAS destination. It is outside this checkout,
+   the cloud VM and canonical Storage Box, but shares the NAS disk failure
+   domain. Do not purchase a new service without approval. Store retrieval credentials in the master-encrypted vault
    and record archive location, revision, timestamp, recipient fingerprint,
    ciphertext SHA-256 and expected content in a recovery manifest. Bootstrap
    must not need credentials that exist only inside the archive it is fetching.
@@ -272,8 +367,9 @@ remain. **Deleting this checkout remains unsafe.**
 
 6. **Implement safe, idempotent recipes.** `just secrets-check`,
    `just setup-secrets`, and `just secrets-encrypt` are implemented for the
-   small vault. `just recovery-capture` and `just recovery-verify` remain
-   pending for state/archive material. Authenticate all ciphertext
+   small vault. `just recovery-capture`, `just recovery-verify`, `just recovery-restore`,
+   `just recovery-store`, and `just recovery-drill` are now implemented for
+   state/archive material (see current increment above). Authenticate all ciphertext
    before installation, validate schema/path allowlists, reject symlinks and
    traversal, use private temporary directories, atomic writes, 0700 directories
    and 0600 secret files. Refuse divergent existing files unless an explicit
@@ -298,8 +394,8 @@ remain. **Deleting this checkout remains unsafe.**
    and wrong keys, tampering/truncation, missing archive, unsafe path, interrupted
    restore, existing-file conflicts and cleanup. Use fixtures for failure cases;
    never corrupt actual recovery material. Record sanitized hashes/counts and
-   the exact Git revision. Perform a second operator-led retrieval of the master
-   from its independent copy. Only then mark deleting the original checkout safe.
+   the exact Git revision. The operator has confirmed the same master is held on paper outside
+   1Password; count the independent-copy requirement as satisfied. Only then mark deleting the original checkout safe.
 
 8. **Add rotation and ongoing maintenance.** Add a new recipient, verify recovery,
    update encrypted data-key recipients, then rotate SOPS data keys as appropriate.

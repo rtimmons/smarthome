@@ -9,6 +9,7 @@ test: ansible-setup
 	python3 -m unittest discover -s tests -v
 	python3 scripts/secrets-check.py --manifest-only
 	python3 -m compileall -q scripts
+	shellcheck scripts/recovery-run
 	shellcheck scripts/backup-qnap
 	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
 	shellcheck scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/catalog-promote scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
@@ -218,6 +219,42 @@ secrets-encrypt *args: crypto-bootstrap
 	#!/usr/bin/env bash
 	set -euo pipefail
 	exec python3 scripts/secrets-vault.py encrypt "$@"
+
+# Offline state/archive recovery; use --no-dotenv when invoking these recipes.
+[group: 'recovery']
+[positional-arguments]
+recovery-capture *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/recovery-run bundle capture "$@"
+
+[group: 'recovery']
+[positional-arguments]
+recovery-verify *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/recovery-run bundle verify "$@"
+
+[group: 'recovery']
+[positional-arguments]
+recovery-restore *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/recovery-run bundle restore "$@"
+
+[group: 'recovery']
+[positional-arguments]
+recovery-store *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/recovery-run store "$@"
+
+[group: 'recovery']
+[positional-arguments]
+recovery-drill *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/recovery-run drill "$@"
 
 # Install only backup support; does not restart or reconfigure applications.
 [group: 'ansible']

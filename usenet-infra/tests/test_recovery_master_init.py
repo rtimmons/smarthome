@@ -32,6 +32,7 @@ class RecoveryMasterInitTests(unittest.TestCase):
         self.temp.cleanup()
 
     def runner(self, command, **kwargs):
+        self.assertEqual(set(kwargs['env']), {'PATH', 'LANG', 'LC_ALL'})
         if command[1] == '--version':
             return subprocess.CompletedProcess(command, 0, stdout=b'v1.3.2\n')
         if command[1] == '-y':

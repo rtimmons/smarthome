@@ -363,7 +363,7 @@ def main(argv=None):
             for issue in result['issues']:
                 print(f"{issue['code']}: {issue['path']}")
             print(f"External dependencies: {len(result['external_dependencies'])}; see recovery/inventory.json.")
-            print('Metadata only. Checkout deletion remains NOT SAFE; no recovery drill has run.')
+            print('Metadata only. Checkout deletion remains NOT SAFE; this check does not run a recovery drill.')
         return 0 if result['inventory_ok'] else 1
     except (InventoryError, OSError):
         # Never render raw exception text or parser input; it may contain values.
