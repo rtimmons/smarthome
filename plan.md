@@ -109,13 +109,20 @@ remove it. Ignored evidence is supplemental; the verified outcomes and backup
 paths/checksums necessary for recovery are recorded in this document.
 
 Checkpoint: implementation and handoff commit `1c359f6`. Both required test
-recipes and the staged-content secret scan passed before commit. Automatic
-approval review blocked `git push --set-upstream origin usenet` because the user
-had explicitly approved committing but not publication of the 84 files to that
-remote. Explicit push approval has been requested. Until that is granted and a
-matching remote revision is verified, this checkpoint is local only; a fresh
-clone will not contain it. Preserve the checkout. Do not bypass the rejection
-with another Git transport, tool or destination.
+recipes and the staged-content secret scan passed before commit. The user
+explicitly approved publication to `origin/usenet`; the branch was pushed
+successfully, including checkpoint notes commit `61f50be`. Clone with
+`git clone --branch usenet git@github.com:rtimmons/smarthome.git`, then read this
+file first. This is a published feature branch, not a merge into the default
+branch. It preserves source, not the ignored recovery material described above.
+
+GitHub's push response reported 53 dependency alerts on the repository's default
+branch (30 high, 23 moderate). Their applicability to this branch/Usenet was not
+established by the functional tests or this focused code review. Add a separate
+dependency-alert triage before claiming repository-wide security readiness;
+inspect actual affected packages, reachable paths and available fixes rather
+than doing blind major-version upgrades. This handoff does not certify the
+whole smarthome repository free of vulnerabilities.
 
 ## Next phase — master-key secrets and clean-clone recovery
 
