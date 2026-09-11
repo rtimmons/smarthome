@@ -54,7 +54,7 @@ class RecoveryMasterInitTests(unittest.TestCase):
         self.assertEqual(self.recipient_path.read_text(), RECIPIENT + '\n')
         config = self.sops_path.read_text()
         self.assertIn(RECIPIENT, config)
-        self.assertIn('^usenet-infra/vault/', config)
+        self.assertIn('(^|.*/)usenet-infra/vault/', config)
         self.assertNotIn('AGE-SECRET', config)
 
     def test_environment_identity_rejects_missing_or_bad_input(self):

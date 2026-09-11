@@ -177,12 +177,21 @@ def _sops_config(root: Path) -> Path:
     return path
 
 
-def _run_sops(args: list[str], *, env: dict[str, str]) -> None:
+def _run_sops(args: list[str], *, env: dict[str, str], phase: str) -> None:
     try:
         subprocess.run(args, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                        env=env, check=True, timeout=60)
+    except subprocess.CalledProcessError as exc:
+        # SOPS stderr can contain system-specific identity-provider details.
+        # Classify only known fixed phrases and never echo the original output.
+        detail = (exc.stderr or b'').decode('ascii', errors='ignore').lower()
+        if 'no matching creation rules found' in detail:
+            raise VaultError('Public SOPS configuration does not cover the encrypted vault path; rerun recovery master initialization.') from None
+        if phase in ('verify', 'restore') and ('failed to get the data key' in detail or 'identity did not match' in detail):
+            raise VaultError('The injected SOPS_AGE_KEY does not match the vault recipient.') from None
+        raise VaultError('SOPS ' + phase + ' operation failed.') from None
     except (OSError, subprocess.SubprocessError) as exc:
-        raise VaultError('SOPS could not complete the vault operation.') from exc
+        raise VaultError('SOPS ' + phase + ' operation could not complete.') from exc
 
 
 def _vault_relative(root: Path, vault_path: Path) -> str:
@@ -368,11 +377,11 @@ def encrypt(root: Path, manifest_path: Path, vault_path: Path, *, replace: bool 
         plaintext.chmod(0o600)
         _run_sops([str(binary), '--config', str(config), '--filename-override', vault_relative,
                    '--encrypt', '--input-type', 'json',
-                   '--output', str(vault_path), str(plaintext)], env=env)
+                   '--output', str(vault_path), str(plaintext)], env=env, phase='encrypt')
         # Encryption needs only the public recipient, so authenticate the
         # resulting ciphertext with the supplied identity before publishing a
         # success result.  The verified plaintext stays in the private tempdir.
-        _run_sops([str(binary), '--decrypt', '--output', str(verified), str(vault_path)], env=env)
+        _run_sops([str(binary), '--decrypt', '--output', str(verified), str(vault_path)], env=env, phase='verify')
         verified.chmod(0o600)
         _read_bundle(verified, manifest)
     return len(entries)
@@ -398,7 +407,7 @@ def restore(root: Path, manifest_path: Path, vault_path: Path, *, replace: bool 
     binary = _default_sops(root) if sops is None else Path(sops)
     with _private_directory() as temporary:
         plaintext = Path(temporary) / 'bundle.json'
-        _run_sops([str(binary), '--decrypt', '--output', str(plaintext), str(vault_path)], env=env)
+        _run_sops([str(binary), '--decrypt', '--output', str(plaintext), str(vault_path)], env=env, phase='restore')
         plaintext.chmod(0o600)
         bundle = _read_bundle(plaintext, manifest)
         root_fd = _root_fd(root)

@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import subprocess
 import tempfile
 import unittest
 from unittest import mock
@@ -50,15 +51,17 @@ class SecretsVaultTests(unittest.TestCase):
     def checker(self):
         return mock.Mock(load_manifest=mock.Mock(return_value=self.manifest))
 
-    def fake_sops(self, args, *, env):
+    def fake_sops(self, args, *, env, phase):
         self.assertEqual(env['SOPS_AGE_KEY'], 'AGE-SECRET-KEY-1synthetic')
         self.assertNotIn('SOPS_CONFIG', env)
         output = Path(args[args.index('--output') + 1])
         if '--encrypt' in args:
+            self.assertEqual(phase, 'encrypt')
             self.assertEqual(args[args.index('--filename-override') + 1], 'usenet-infra/vault/secrets.sops.json')
             self.bundle = Path(args[-1]).read_bytes()
             output.write_bytes(b'encrypted synthetic ciphertext')
         else:
+            self.assertIn(phase, ('verify', 'restore'))
             output.write_bytes(self.bundle)
 
     def encrypt(self):
@@ -124,6 +127,13 @@ class SecretsVaultTests(unittest.TestCase):
             with self.subTest(environment=environment):
                 with self.assertRaises(vault.VaultError):
                     vault._identity_env(environment)
+
+    def test_sops_rule_failure_has_a_safe_specific_diagnostic(self):
+        failure = subprocess.CalledProcessError(
+            1, ['sops'], stderr=b'error loading config: no matching creation rules found')
+        with mock.patch.object(vault.subprocess, 'run', side_effect=failure), \
+                self.assertRaisesRegex(vault.VaultError, 'does not cover'):
+            vault._run_sops(['sops'], env={}, phase='encrypt')
 
     def test_rebase_does_not_rewrite_a_longer_path_prefix(self):
         content = b'/a/old/path /a/old/path/x /a/old/path-extra'

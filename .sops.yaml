@@ -1,0 +1,4 @@
+# Public recipient only; private recovery identities never belong in this checkout.
+creation_rules:
+  - path_regex: (^|.*/)usenet-infra/vault/[A-Za-z0-9][A-Za-z0-9._/-]*\.sops\.(yaml|yml|json|env|ini|bin)$
+    age: age1r9taqg3sxggtssay4sr8ma4mwqvmyejqy8z9ej20jt9x9h42lyssdzjfhv

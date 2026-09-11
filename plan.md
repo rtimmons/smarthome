@@ -88,7 +88,7 @@ to both cloud UIs; anonymous denial; blocked backend/public ports; exact IKEv2
 selectors; explicit PFS14 rekey; automatic reconnection after cloud-only
 strongSwan restart; unchanged default route/old site VPN configuration; cloud
 Ansible repeat convergence with zero changes. After the clean-clone vault increment,
-the Usenet suite has 291 cases: 284 pass, seven opt-in skips; those seven proxy runtime cases
+the Usenet suite has 292 cases: 285 pass, seven opt-in skips; those seven proxy runtime cases
 previously passed separately during LAN implementation. Prior checkpoint `just test` also passed:
 Talos 118 tests (11 slow deselected), grid dashboard 102, printer 225 including
 browser tests, snapshot 7, tinyurl 16, Sonos tests/builds, and all seven add-on

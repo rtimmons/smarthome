@@ -96,7 +96,7 @@ def atomic_public_write(path: Path, value: str) -> None:
 def sops_config(recipient: str) -> str:
     return ('# Public recipient only; private recovery identities never belong in this checkout.\n'
             'creation_rules:\n'
-            '  - path_regex: ^usenet-infra/vault/[A-Za-z0-9][A-Za-z0-9._/-]*\\.sops\\.(yaml|yml|json|env|ini|bin)$\n'
+            '  - path_regex: (^|.*/)usenet-infra/vault/[A-Za-z0-9][A-Za-z0-9._/-]*\\.sops\\.(yaml|yml|json|env|ini|bin)$\n'
             '    age: ' + recipient + '\n')
 
 
