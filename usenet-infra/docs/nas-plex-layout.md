@@ -69,8 +69,9 @@ The first real movie copy, `Colony (2026)` (13.5 GiB), completed and passed
 SHA-256 verification. Plex indexed it automatically in `Movies (NAS)`; a
 read-only API check confirmed the title, year and media-file entry. This tests
 copy/publication/indexing, not Apple TV/Roku decoding or client startup. The
-transfer took about 30 minutes with variable throughput; remote-read performance
-still needs validation before promising reliable remote streaming.
+transfer took about 30 minutes with variable throughput; remote playback later passed a 1 MiB HTTP 206 range read, as recorded in
+[native media](native-media.md). Sustained playback on each real TV client remains
+unverified.
 
 ## Recovery and boundaries
 
