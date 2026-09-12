@@ -1,0 +1,39 @@
+[
+  {
+    "file": "qnap-20260912T000105Z.tar.age",
+    "identity_from_clean_clone": true,
+    "scope": "qnap-config",
+    "sha256": "82363bf87f7e6ee61a91b8015d589ac6b1a5975666d2d08abd7eb112ed40f9ec",
+    "verification": {
+      "archive_sha256": "82363bf87f7e6ee61a91b8015d589ac6b1a5975666d2d08abd7eb112ed40f9ec",
+      "cache_content_included": false,
+      "files": 47,
+      "scope": "qnap-config",
+      "status": "verified"
+    }
+  },
+  {
+    "file": "plex-20260912T000105Z.tar.age",
+    "identity_from_clean_clone": true,
+    "scope": "plex-config",
+    "sha256": "be370ac228639971da3736cbb833bed5598ec24fec9a766ad7a4e3fb8e4c9576",
+    "verification": {
+      "files": 3,
+      "full_plex_startup_test": false,
+      "sqlite_snapshots_opened": 2,
+      "status": "verified"
+    }
+  },
+  {
+    "file": "cloud-20260911T235543Z.tar.age",
+    "identity_from_clean_clone": true,
+    "scope": "cloud-config",
+    "sha256": "877095e9d775a9ad5be13d4062275560c1030fa7c94dfec391f451707b2511e0",
+    "verification": {
+      "archive_sha256": "877095e9d775a9ad5be13d4062275560c1030fa7c94dfec391f451707b2511e0",
+      "files": 619,
+      "sqlite_databases": 4,
+      "status": "verified"
+    }
+  }
+]

@@ -26,7 +26,9 @@ restarting Plex. Artwork can be regenerated; this is not a full Plex package cop
 NAS/local retention keeps at least seven generations and removes only this
 scheduler's checksum-matching archives older than 90 days. Original master
 snapshots are never pruned. Storage Box cloud ciphertext is currently retained
-indefinitely; monitor its small daily growth. The NAS status health check fails
+indefinitely; monitor its small daily growth. NAS snapshot capture retries short catalog refresh conflicts for up to one minute
+without interrupting transfers; longer activity defers until the next hour.
+The NAS status health check fails
 on a failed run or when its last success is older than 36 hours. Status receipts
 are on disk; no external notification service has been configured.
 

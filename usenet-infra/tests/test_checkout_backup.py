@@ -60,3 +60,21 @@ class CheckoutBackupTests(unittest.TestCase):
         for name in ('build/tools/age', 'printer/.venv/lib', 'snapshot-service/node_modules/foo',
                      'build/checkout-backups/receipt', 'usenet-infra/terraform/cloud/cloud.tfplan'):
             self.assertTrue(backup.excluded(name), name)
+
+    def test_install_rebases_only_reviewed_paths_and_refuses_collisions(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source, target = root / 'restored', root / 'clone'
+            (source / 'usenet-infra').mkdir(parents=True)
+            (target / '.git').mkdir(parents=True)
+            value = b'KEY=/old/checkout/usenet-infra/key\nREMOTE=/srv/usenet/key\nOTHER=/old/checkout-extra/key\n'
+            (source / 'usenet-infra/.env').write_bytes(value)
+            backup.install(source, target, '/old/checkout')
+            changed = (target / 'usenet-infra/.env').read_text()
+            self.assertIn(str(target) + '/usenet-infra/key', changed)
+            self.assertIn('/srv/usenet/key', changed)
+            self.assertIn('/old/checkout-extra/key', changed)
+            (source / 'usenet-infra/.env').write_bytes(b'new')
+            with self.assertRaisesRegex(RuntimeError, 'overwrite'):
+                backup.install(source, target, '/old/checkout')
+            self.assertEqual((target / 'usenet-infra/.env').read_text(), changed)

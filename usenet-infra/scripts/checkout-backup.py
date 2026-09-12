@@ -24,6 +24,7 @@ CACHE_PARTS = {'.git', 'node_modules', '.venv', '__pycache__', '.pytest_cache',
 CACHE_ROOTS = ('build/nvm', 'build/tools', 'build/home-assistant-addon',
                'build/checkout-backups', 'talos/build', 'snapshot-service/dist',
                'tinyurl-service/dist', 'sonos-api/dist', 'new-hass-configs/config-generator/dist')
+VERIFIED_DUPLICATES = {'build/recovery-nas-retrieved-20260911': 'build/recovery-20260911'}
 MAX_TOTAL = 2 * 1024**3
 
 
@@ -61,13 +62,25 @@ def inventory(root):
                 if run(['git', 'status', '--porcelain', '--untracked-files=all'], cwd=root / name):
                     raise RuntimeError('dirty submodule must be preserved separately')
                 submodules.append(name)
+    duplicates = set()
+    for copy_name, original_name in VERIFIED_DUPLICATES.items():
+        copy_root, original_root = root / copy_name, root / original_name
+        if not copy_root.exists():
+            continue
+        copy_files = {str(p.relative_to(copy_root)): p for p in copy_root.rglob('*') if p.is_file()}
+        original_files = {str(p.relative_to(original_root)): p for p in original_root.rglob('*') if p.is_file()}
+        if (copy_files.keys() != original_files.keys() or
+                any(p.is_symlink() or original_files[k].is_symlink() or digest(p) != digest(original_files[k])
+                    for k, p in copy_files.items())):
+            raise RuntimeError('derived backup replica differs; preserve separately')
+        duplicates.add(copy_name)
     entries, skipped = [], 0
     for directory, folders, files in os.walk(root, followlinks=False):
         relative = Path(directory).relative_to(root)
         keep = []
         for folder in folders:
             name = (relative / folder).as_posix()
-            if excluded(name) or name in submodules:
+            if excluded(name) or name in submodules or name in duplicates:
                 continue
             if (root / name).is_symlink():
                 raise RuntimeError('unclassified directory symlink')
@@ -148,6 +161,45 @@ def verify(archive, identity, age, destination=None):
                 raise
 
 
+def install(source, destination, original_checkout):
+    """Install verified isolated files into a fresh clone, refusing every collision."""
+    if (not source or not source.is_absolute() or source.is_symlink()
+            or not destination or not destination.is_absolute() or destination.is_symlink()
+            or not (destination / '.git').exists() or not original_checkout):
+        raise RuntimeError('install requires an isolated source, fresh clone and original checkout prefix')
+    paths = list(source.rglob('*'))
+    if any(p.is_symlink() or not (p.is_file() or p.is_dir()) for p in paths):
+        raise RuntimeError('restore tree contains a link or special file')
+    files = [p for p in paths if p.is_file()]
+    for path in files:
+        target = destination / path.relative_to(source)
+        if target.exists() or target.is_symlink():
+            raise RuntimeError('restore would overwrite an existing clone file')
+        for parent in target.parents:
+            if parent == destination:
+                break
+            if parent.is_symlink():
+                raise RuntimeError('restore destination contains a directory link')
+    inventory_policy = json.loads((ROOT / 'usenet-infra/recovery/inventory.json').read_text())
+    rebase = {entry['path'] for entry in inventory_policy['files']
+              if entry.get('path_policy') == 'rebase-checkout-paths'}
+    spec = importlib.util.spec_from_file_location('vault', ROOT / 'usenet-infra/scripts/secrets-vault.py')
+    vault = importlib.util.module_from_spec(spec); spec.loader.exec_module(vault)
+    changed = 0
+    for path in files:
+        name = path.relative_to(source).as_posix()
+        target = destination / name
+        target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        if name in rebase:
+            before = path.read_bytes()
+            after = vault._rebase(before, original_checkout, destination, 'rebase-checkout-paths')
+            if before != after:
+                path.write_bytes(after)
+                changed += 1
+        os.rename(path, target)
+    print(json.dumps({'status': 'installed', 'files': len(files), 'rebased_configuration_files': changed}))
+
+
 def age_binary():
     import platform
     machine = (platform.system(), platform.machine())
@@ -172,8 +224,10 @@ def capture(identity):
     archive = folder / 'recovery.tar.age'
     manifest = {'schema_version': 1, 'scope': 'checkout-local-files', 'entries': entries,
                 'source_revision': run(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip(),
+                'source_checkout': str(ROOT),
                 'mongodb_consistency': 'mongod absent; repeated whole-file checks',
                 'rebuildable_exclusions': sorted(CACHE_PARTS) + list(CACHE_ROOTS),
+                'byte_verified_duplicate_directories': VERIFIED_DUPLICATES,
                 'created_at': stamp}
     import io
     with subprocess.Popen([str(age), '-R', str(identity) + '.pub', '-o', str(archive)],
@@ -221,16 +275,32 @@ def capture(identity):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=['inventory', 'capture', 'verify', 'restore'])
+    parser.add_argument('action', choices=['inventory', 'capture', 'verify', 'restore', 'install', 'check'])
     parser.add_argument('--identity', type=Path)
     parser.add_argument('--archive', type=Path)
     parser.add_argument('--destination', type=Path)
+    parser.add_argument('--source-directory', type=Path)
+    parser.add_argument('--source-checkout')
     args = parser.parse_args()
     if args.action == 'inventory':
         items = inventory(ROOT)
         print(json.dumps({'files': len(items), 'bytes': sum(v['size'] for v in items), 'paths': [v['path'] for v in items]}, indent=2))
+    elif args.action == 'install':
+        install(args.source_directory, args.destination, args.source_checkout)
     elif args.action == 'capture':
         capture(args.identity)
     else:
         value = verify(args.archive, args.identity, age_binary(), args.destination if args.action == 'restore' else None)
-        print(json.dumps({'status': 'verified', 'files': len(value['entries']), 'source_revision': value['source_revision']}))
+        if args.action == 'check':
+            if inventory(ROOT) != value['entries']:
+                raise RuntimeError('unique local files changed since the verified snapshot')
+            if run(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT):
+                raise RuntimeError('tracked changes remain unpublished')
+            head = run(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip()
+            remote = run(['git', 'ls-remote', 'https://github.com/rtimmons/smarthome.git', 'refs/heads/usenet'], cwd=ROOT).decode().split()[0]
+            if head != remote:
+                raise RuntimeError('current source revision is not published')
+            print(json.dumps({'status': 'verified', 'local_files_match': True,
+                              'published_revision_matches': True, 'files': len(value['entries']), 'revision': head}))
+        else:
+            print(json.dumps({'status': 'verified', 'files': len(value['entries']), 'source_revision': value['source_revision']}))

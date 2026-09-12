@@ -173,7 +173,15 @@ def nas(stamp):
     recipient = Path('/run/backup-recipient.pub').read_text().strip()
     if not recipient.startswith('ssh-ed25519 '):
         raise RuntimeError('unexpected NAS public backup recipient')
-    manifest, contents = qnap.snapshot(Path('/source/usenet'), '/share/Container/usenet')
+    for attempt in range(13):
+        try:
+            manifest, contents = qnap.snapshot(Path('/source/usenet'), '/share/Container/usenet')
+            break
+        except qnap.BackupError as error:
+            if str(error) != 'A catalog operation or refresh is active; retry when idle.' or attempt == 12:
+                raise
+            time.sleep(5)
+
     receipts = [encrypt_contents('qnap-' + stamp + '.tar.age', manifest, contents, recipient)]
     manifest, contents = plex_snapshot(Path('/source/plex'))
     receipts.append(encrypt_contents('plex-' + stamp + '.tar.age', manifest, contents, recipient))

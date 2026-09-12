@@ -48,7 +48,7 @@ rotation through that service.
 Compatible lockfile updates for snapshot-service, tinyurl-service, sonos-api,
 grid-dashboard/ExpressServer and the HA config generator address all 53 alerts
 returned by GitHub on September 11. Each updated lockfile reports zero npm audit
-vulnerabilities. Service tests and builds pass. These are source changes; live
-add-ons require deployment, and GitHub default-branch alerts will remain open
-until the updates reach that branch. No blanket upgrade or scanner exemption
+vulnerabilities. Service tests and builds pass. The four affected live add-ons were rebuilt/deployed and passed readiness
+checks. The config generator is a local build tool. GitHub default-branch alerts
+remain open until the branch updates reach that branch. No blanket upgrade or scanner exemption
 was applied.

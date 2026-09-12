@@ -51,7 +51,8 @@ are available through remote Plex; a convenient selective NAS-copy action for
 native-library titles remains to be added. Native Plex hourly scanning is the
 fallback for remote mounts, whose filesystem events are not reliable.
 
-Choose a NAS or Remote library explicitly on the TV. Client cold-start privacy,
+Plex indexed all five remote movies, and a 1 MiB HTTP range stream passed after
+the fingerprint/connection corrections. Choose a NAS or Remote library explicitly on the TV. Client cold-start privacy,
 codec/transcode behavior and sustained Apple TV/Roku playback still require a
 real device test. A successful filesystem or short range read alone does not
 prove those capabilities. Plex PIN setup remains private user/device work.
