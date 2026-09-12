@@ -34,7 +34,9 @@ Current changes:
   service tests/builds and root container checks passed. All four affected live add-ons were rebuilt, deployed and passed readiness checks. Full history scanning still reports the two exposed old keys.
 - Checkout-local snapshot `20260911T235253Z-9d6bbacf00ac982a` preserves 1,319 files
   and passed independent NAS fetch, exact restore, MongoDB validation, checkout-path
-  rebasing and live authentication from a fresh clone. See
+  rebasing and live authentication from a fresh clone. Companion Git snapshot
+  `20260912T000901Z-36009465898f2df0` preserves all 78 refs/reflog history and five
+  stashes; independent mirror restoration passed. See
   `usenet-infra/docs/checkout-recovery.md` and the separate checkout drill receipt.
   Recheck current local files and published HEAD before deletion. Original full-machine
   `deletion_safe: false` evidence stays immutable. No checkout has been deleted.

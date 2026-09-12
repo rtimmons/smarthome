@@ -39,6 +39,34 @@ in `recovery/drills/checkout-20260911.json` and checked against current local wo
 and published source. New ignored files or uncommitted/unpublished changes make
 that check fail and require a new snapshot or publication.
 
+## Git history and stashes
+
+A second immutable NAS snapshot, `20260912T000901Z-36009465898f2df0`, preserves
+Git history and local settings. Its 4,283,094-byte ciphertext has SHA-256
+`c1f318a64786f07a2bb2d11d32671db40d014284f0cd6258e7560507b2b37dbd`.
+It contains a native `git bundle create --all --reflog` bundle plus encrypted
+metadata for all 78 refs, five stashes in order, reflogs, repository configuration,
+local exclusions and worktree registrations. The listed secondary worktrees were
+already absent/prunable; none was deleted. The nested upstream Sonos checkout
+has no unique local commits, and its modified/untracked files are in the file
+snapshot.
+
+This second snapshot was independently fetched with recovered credentials,
+decrypted, validated with `git bundle verify`, and cloned into an isolated mirror.
+Every stash commit was present in that restored mirror. Decrypt it with the same
+`checkout-backup.py restore` command into a different empty directory. Use
+`git clone --mirror /absolute/repository.bundle /absolute/new-mirror.git` to
+recover all named refs and objects. The encrypted `metadata.json` records stash
+order/messages; rebuild a working clone's stash reflog with native `git stash
+store` from oldest to newest after fetching the objects. Review repository config
+before restoring it because local paths/signing settings may need adjustment.
+Do not restore stale worktree registrations blindly.
+
+For a future checkpoint, create a new native Git bundle including `--reflog`,
+record refs/stashes/configuration, encrypt it to the existing recovered public
+recipient, and round-trip it through the same immutable NAS store. Never treat a
+published current branch as proof that local stashes and other branches survived.
+
 ## Recovery sequence
 
 1. Clone the published `usenet` branch using the HTTPS GitHub URL and bootstrap
@@ -63,9 +91,10 @@ that check fail and require a new snapshot or publication.
    choosing whether any live restore or redeployment is necessary.
 
 To verify that the current checkout still matches this backup, run
-`checkout-backup.py check --archive /absolute/recovery.tar.age --identity
-/absolute/cloud-admin`. It checks every preserved local file, rejects tracked
-changes, and requires HEAD to match published `usenet`. This command never deletes
+`checkout-backup.py check --archive /absolute/files/recovery.tar.age --git-archive
+/absolute/git/recovery.tar.age --identity /absolute/cloud-admin`. It checks every preserved local file, Git refs/stashes/configuration and extra
+reflog history, refuses existing dependent worktrees/custom unpreserved hooks,
+rejects tracked changes, and requires HEAD to match published `usenet`. This command never deletes
 anything. Host-owned backup schedules continue when the checkout is absent.
 
 Loss of the NAS disks remains out of scope. Actual HA/UniFi replacement drills,

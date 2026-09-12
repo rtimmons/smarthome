@@ -119,7 +119,7 @@ def verify(archive, identity, age, destination=None):
                     if first is None or first.name != 'MANIFEST.json' or not first.isfile() or first.size > 16 * 1024**2:
                         raise RuntimeError('invalid checkout manifest')
                     manifest = json.load(tar.extractfile(first))
-                    if manifest['scope'] != 'checkout-local-files' or manifest['schema_version'] != 1:
+                    if manifest['scope'] not in {'checkout-local-files', 'checkout-git-history'} or manifest['schema_version'] != 1:
                         raise RuntimeError('unsupported checkout backup')
                     entries = {v['path']: v for v in manifest['entries']}
                     if len(entries) != len(manifest['entries']) or sum(v['size'] for v in entries.values()) > MAX_TOTAL:
@@ -278,6 +278,7 @@ if __name__ == '__main__':
     parser.add_argument('action', choices=['inventory', 'capture', 'verify', 'restore', 'install', 'check'])
     parser.add_argument('--identity', type=Path)
     parser.add_argument('--archive', type=Path)
+    parser.add_argument('--git-archive', type=Path)
     parser.add_argument('--destination', type=Path)
     parser.add_argument('--source-directory', type=Path)
     parser.add_argument('--source-checkout')
@@ -292,6 +293,36 @@ if __name__ == '__main__':
     else:
         value = verify(args.archive, args.identity, age_binary(), args.destination if args.action == 'restore' else None)
         if args.action == 'check':
+            if args.git_archive is None:
+                raise RuntimeError('checkout check also requires the verified Git history archive')
+            with tempfile.TemporaryDirectory(prefix='checkout-git-check-') as scratch:
+                restored = Path(scratch) / 'restored'
+                git_manifest = verify(args.git_archive, args.identity, age_binary(), restored)
+                if git_manifest['scope'] != 'checkout-git-history':
+                    raise RuntimeError('expected a Git history archive')
+                metadata = json.loads((restored / 'metadata.json').read_text())
+            saved_refs = dict(line.split(' ', 1)[::-1] for line in metadata['refs'])
+            published = dict(line.split('\t', 1)[::-1] for line in run(['git', 'ls-remote', 'https://github.com/rtimmons/smarthome.git'], cwd=ROOT).decode().splitlines())
+            for line in run(['git', 'show-ref'], cwd=ROOT).decode().splitlines():
+                oid, ref = line.split(' ', 1)
+                if not ref.startswith('refs/remotes/'):
+                    if ref not in saved_refs or oid not in (saved_refs[ref], published.get(ref)):
+                        raise RuntimeError('local Git reference is neither preserved nor published')
+            preserved_commits = sorted({line.split('\t')[0] for line in metadata['reflogs']})
+            if run(['git', 'rev-list', '--reflog', '--not', 'HEAD', *preserved_commits], cwd=ROOT):
+                raise RuntimeError('additional reflog history is not preserved')
+            if any(p.is_file() and not p.name.endswith('.sample') for p in (ROOT / '.git/hooks').glob('*')):
+                raise RuntimeError('custom Git hooks require preservation')
+            if run(['git', 'stash', 'list', '--format=%H%x09%gd%x09%gs'], cwd=ROOT).decode().splitlines() != metadata['stashes']:
+                raise RuntimeError('Git stash state changed since the verified snapshot')
+            for relative, key in (('.git/config', 'config'), ('.git/info/exclude', 'info_exclude')):
+                if (ROOT / relative).read_text() != metadata[key]:
+                    raise RuntimeError('local Git configuration changed since preservation')
+            for line in run(['git', 'worktree', 'list', '--porcelain'], cwd=ROOT).decode().splitlines():
+                if line.startswith('worktree '):
+                    path = Path(line.removeprefix('worktree '))
+                    if path != ROOT and path.exists():
+                        raise RuntimeError('another existing worktree depends on this repository')
             if inventory(ROOT) != value['entries']:
                 raise RuntimeError('unique local files changed since the verified snapshot')
             if run(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT):
@@ -301,6 +332,6 @@ if __name__ == '__main__':
             if head != remote:
                 raise RuntimeError('current source revision is not published')
             print(json.dumps({'status': 'verified', 'local_files_match': True,
-                              'published_revision_matches': True, 'files': len(value['entries']), 'revision': head}))
+                              'published_revision_matches': True, 'git_history_preserved': True, 'files': len(value['entries']), 'revision': head}))
         else:
             print(json.dumps({'status': 'verified', 'files': len(value['entries']), 'source_revision': value['source_revision']}))
