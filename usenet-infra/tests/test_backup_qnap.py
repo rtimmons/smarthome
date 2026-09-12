@@ -117,6 +117,32 @@ class BackupQnapTests(unittest.TestCase):
             with self.assertRaisesRegex(backup.BackupError, 'active'):
                 self.snapshot()
 
+    def test_native_copy_receipt_survives_backup_and_isolated_restore_without_media(self):
+        item_id = 'native-' + 'a' * 64
+        receipt_name = 'state/native-items/' + item_id + '.json'
+        receipt = {
+            'id': item_id, 'source': 'native', 'status': 'published',
+            'local_path': '/data/library/video/' + item_id + '/Selected Movie (2026)',
+            'directory_identity': [123, 456],
+            'verified_files': [{'path': 'movie.mkv', 'size_bytes': 13, 'sha256': 'b' * 64}],
+            'local_verified_at': '2026-09-12T00:00:00Z',
+        }
+        payload = json.dumps(receipt, sort_keys=True).encode()
+        self.write(receipt_name, payload)
+        self.write('media/native/movie.mkv', b'EXCLUDED-MEDIA')
+        self.write('state/native-items/.temporary', b'EXCLUDED-TEMPORARY')
+        destination = self.work / 'restore'
+        manifest = backup.verify_tar(self.tar(), destination)
+        restored = destination / receipt_name
+        self.assertEqual(restored.read_bytes(), payload)
+        self.assertEqual(json.loads(restored.read_text())['directory_identity'], [123, 456])
+        self.assertEqual(stat.S_IMODE(restored.stat().st_mode), 0o600)
+        paths = {entry['path'] for entry in manifest['entries']}
+        self.assertIn(receipt_name, paths)
+        self.assertNotIn('media/native/movie.mkv', paths)
+        self.assertNotIn('state/native-items/.temporary', paths)
+        self.assertFalse(manifest['cache_content_included'])
+
     def test_active_refresh_and_newly_created_catalog_lock_refuse_capture(self):
         lock = self.write('state/dashboard/refresh.lock', b'')
         with lock.open('rb') as writer:

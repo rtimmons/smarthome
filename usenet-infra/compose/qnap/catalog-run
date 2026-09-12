@@ -10,10 +10,15 @@ if [ "$tool" = --self-test ]; then
         /bin/sh -n "/opt/usenet/scripts/$name"
     done
     [ -r /opt/usenet/scripts/catalogctl.py ] || exit 66
+    [ -r /opt/usenet/scripts/native_library.py ] || exit 66
     printf '%s\n' 'Non-root catalog entrypoint and mounted scripts ready'
     exit 0
 fi
 case "$tool" in
+    native-list|native-status|native-pull|native-evict)
+        shift
+        exec python3 /opt/usenet/scripts/native_library.py "${tool#native-}" "$@"
+        ;;
     catalog-list|catalog-status|catalog-pull|catalog-evict|healthcheck)
         ;;
     *)

@@ -12,7 +12,7 @@ services:
     cap_drop: [ALL]
     # Read private configuration through read-only binds and run cron as root.
     cap_add: [DAC_OVERRIDE, SETUID, SETGID]
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     environment:
       TZ: UTC
       BACKUP_OUTPUT: /backups

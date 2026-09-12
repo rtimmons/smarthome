@@ -79,11 +79,15 @@ notes describe earlier policies; they do not override the current handoff.
   account creation or deploy recipes merely to inspect the system. Restore missing
   private inputs through the documented vault/snapshot chain; temporary helpers,
   browser handles and SSH sockets from old sessions are not prerequisites.
-- Next implementation: an explicit selective NAS-copy action for native
-  `catalog/library` titles using existing transfer tools. New native imports do
-  not produce the legacy manifests OliveTin needs. Preserve capacity checks,
-  staging, verification, atomic publication, collision safety and canonical bytes;
-  do not run another mover against Arr scratch or copy the whole collection.
+- Native selective-copy source is implemented but not yet deployed/live-accepted.
+  Read the current increment at the top of `plan.md`. TV copies default disabled;
+  before enabling `qnap_native_tv_copy_enabled`, narrow
+  Plex library ID 3 to `TV Shows/library` after confirming no existing series
+  outside that child. TV staging is `TV Shows/.staging` within the same bind;
+  movie staging remains outside `Movies/video`. Preserve collision/verification
+  checks and the shared cache lock; do not copy the whole collection or touch
+  Arr scratch. Automatic review rejected the prior combined private cloud
+  metadata collection; do not replay it without resolving that approval boundary.
 - Record a fresh user-selected movie/TV completion through native import, cleanup
   and Plex discovery. Existing-file adoption is not proof of a fresh completion.
 - Then verify real Apple TV/Roku playback, seeking and cold-start privacy with the

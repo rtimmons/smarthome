@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OliveTin presentation adapter. All storage operations belong to catalogctl.
+"""OliveTin presentation adapter. Storage operations belong to the catalog and native-library backends.
 
 Generated YAML is JSON (a YAML subset), never concatenated untrusted YAML. Action
 IDs contain the immutable catalog ID, not an entity array index. A stale browser
@@ -27,6 +27,7 @@ import catalogctl
 
 SCRIPT = Path(__file__).resolve()
 BACKEND = SCRIPT.with_name('catalogctl.py')
+NATIVE_BACKEND = SCRIPT.with_name('native_library.py')
 STATES = {'remote_only': 'remote only', 'downloading': 'downloading', 'local': 'local', 'failed': 'failed'}
 ALLOWED_ACTIONS = {'remote_only': {'download', None}, 'local': {'evict', None}, 'failed': {'retry', 'evict', None}, 'downloading': {None}}
 
@@ -56,11 +57,11 @@ def bytes_label(value: object) -> str:
     return catalogctl.human_bytes(int(value or 0))
 
 
-def snapshot() -> dict:
+def backend_snapshot(backend: Path) -> dict:
     timeout = int(os.environ.get('CATALOG_DASHBOARD_SNAPSHOT_TIMEOUT', '120'))
     if timeout < 1:
         raise ValueError('Catalog snapshot timeout must be positive.')
-    process = subprocess.Popen([sys.executable, str(BACKEND), 'status', '--json'],
+    process = subprocess.Popen([sys.executable, str(backend), 'status', '--json'],
                                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
                                start_new_session=True)
     try:
@@ -79,6 +80,31 @@ def snapshot() -> dict:
     return json.loads(stdout)
 
 
+def snapshot() -> dict:
+    legacy = backend_snapshot(BACKEND)
+    native = backend_snapshot(NATIVE_BACKEND)
+    merged = dict(legacy)
+    merged['items'] = [dict(item, source='legacy') for item in legacy.get('items', [])] + [
+        dict(item, source='native') for item in native.get('items', [])]
+    for key in ('remote_items', 'remote_bytes', 'local_items', 'local_bytes',
+                'transfers_in_progress', 'stalled_transfers', 'failed_transfers'):
+        merged[key] = int(legacy.get(key, 0)) + int(native.get(key, 0))
+    # The legacy snapshot already counts the shared failure journal.
+    # Both sources share a volume and reserve; these values must not be added.
+    merged['local_free_bytes'] = min(int(legacy.get('local_free_bytes', 0)),
+                                     int(native.get('local_free_bytes', 0)))
+    merged['local_reserve_bytes'] = max(int(legacy.get('local_reserve_bytes', 0)),
+                                        int(native.get('local_reserve_bytes', 0)))
+    return merged
+
+
+def item_source(item: dict) -> str:
+    source = item.get('source', 'legacy')
+    if source not in ('legacy', 'native'):
+        raise ValueError('Unknown catalog source')
+    return source
+
+
 def command_args(*args: str) -> list[str]:
     return [sys.executable, str(SCRIPT), *args]
 
@@ -91,13 +117,14 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
         'popupOnStart': 'execution-dialog',
     }]
     summary = (
-        f'<strong>Remote:</strong> {int(data.get("remote_items", 0))} items · {bytes_label(data.get("remote_bytes"))}<br>'
+        f'<strong>Listed remote titles:</strong> {int(data.get("remote_items", 0))} items · {bytes_label(data.get("remote_bytes"))}<br>'
         f'<strong>Local:</strong> {int(data.get("local_items", 0))} items · {bytes_label(data.get("local_bytes"))}<br>'
         f'<strong>Available NAS space:</strong> {bytes_label(data.get("local_free_bytes"))}'
         f' · <strong>Reserve:</strong> {bytes_label(data.get("local_reserve_bytes"))}<br>'
         f'<strong>Running:</strong> {int(data.get("transfers_in_progress", 0))}'
         f' · <strong>Stalled:</strong> {int(data.get("stalled_transfers", 0))}'
         f' · <strong>Recorded failures:</strong> {int(data.get("recorded_failures", 0))}<br>'
+        f'<small>Native and legacy entries can refer to the same canonical bytes.</small><br>'
         f'<small>Updated: {escaped(data.get("generated_at", "Awaiting first refresh"))}</small>'
     )
     if refresh_error:
@@ -109,15 +136,18 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
     seen = set()
     for item in sorted(data.get('items', []), key=lambda i: (i['title'].casefold(), i['id'])):
         item_id = catalogctl.safe_id(item['id'])
-        if item_id in seen:
+        source = item_source(item)
+        identity = (source, item_id)
+        if identity in seen:
             raise ValueError('duplicate catalog ID')
-        seen.add(item_id)
+        seen.add(identity)
         state = item['state']
         if item['valid_action'] not in ALLOWED_ACTIONS[state]:
             raise ValueError('catalog state/action mismatch')
         title = escaped(item['title'])
         category = escaped(item['category'])
-        details = f'<strong>{category}</strong> · {bytes_label(item["size_bytes"])} · <strong>{STATES[state]}</strong>'
+        source_label = 'Native library' if source == 'native' else 'Legacy catalog'
+        details = f'<strong>{category}</strong> · {source_label} · {bytes_label(item["size_bytes"])} · <strong>{STATES[state]}</strong>'
         if item.get('error'):
             details += f'<p>{escaped(item["error"])}</p>'
         card = {'type': 'fieldset', 'title': title, 'contents': [{'type': 'display', 'title': details}]}
@@ -126,14 +156,16 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
             label = {'download': 'Download', 'retry': 'Retry', 'evict': 'Remove local copy'}[verb]
             # A unique title is required by OliveTin dashboard linking. Include
             # category for native search, and the ID for unambiguous audit logs.
-            action_title = f'{label} · {title} · {category} [{item_id}]'
+            action_title = f'{label} · {title} · {category} · {source_label} [{item_id}]'
             action = {
-                'id': f'catalog-{verb}-{item_id}', 'title': action_title,
+                'id': f'{"native" if source == "native" else "catalog"}-{verb}-{item_id}', 'title': action_title,
                 'exec': command_args('action', verb, item_id),
                 'timeout': 2592000,  # 30 days: finite but sufficient for large pulls.
                 'maxConcurrent': 1, 'popupOnStart': 'execution-dialog',
                 'icon': '⬇' if verb != 'evict' else '⊖',
             }
+            if source == 'native':
+                action['exec'] += ['--source', 'native']
             if verb == 'evict':
                 action['arguments'] = [{
                     'name': 'confirm', 'type': 'confirmation',
@@ -144,7 +176,7 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
             card['contents'].append({'title': action_title})
         contents.append(card)
     if not data.get('items'):
-        contents.append({'type': 'display', 'title': 'No catalog items are available yet. Refresh after promoting an authorized item.'})
+        contents.append({'type': 'display', 'title': 'No catalog items are available yet. Refresh after a native library import or legacy publication.'})
     return {'actions': actions, 'dashboards': [{'title': 'Catalog', 'acls': ['catalog-operators'], 'contents': contents}]}
 
 
@@ -154,9 +186,9 @@ def publish(data: dict, error: str | None = None) -> None:
     if refresh_script.is_file():
         atomic_write(root() / 'runtime/custom-webui/custom.js', refresh_script.read_text())
     entities = [{
-        'id': i['id'], 'title': f'{i["title"]} · {i["category"]}', 'item_title': i['title'], 'category': i['category'],
+        'id': f'{item_source(i)}-{i["id"]}', 'title': f'{i["title"]} · {i["category"]}', 'item_title': i['title'], 'category': i['category'],
         'size': bytes_label(i['size_bytes']), 'state': STATES[i['state']],
-        'error': i.get('error') or '',
+        'error': i.get('error') or '', 'source': item_source(i),
     } for i in data.get('items', [])]
     atomic_write(root() / 'catalog.json', ''.join(json.dumps(i) + '\n' for i in entities))
     atomic_write(root() / 'generated' / 'catalog.yaml', json.dumps(config, indent=2) + '\n')
@@ -189,23 +221,25 @@ def refresh() -> bool:
             return False
 
 
-def perform_action(verb: str, item_id: str, confirm: str | None) -> int:
+def perform_action(verb: str, item_id: str, confirm: str | None, source: str = 'legacy') -> int:
     catalogctl.safe_id(item_id)
+    item_source({'source': source})
     if verb == 'evict' and confirm != '1':
         raise ValueError('Confirm that only the QNAP copy is removed; the remote copy remains.')
-    # Re-resolve from the canonical manifest, and validate state again. This
+    # Re-resolve the canonical listing, and validate source and state again. This
     # deliberately refuses a stale tab's Download/Retry/Remove operation.
     data = snapshot()
-    matches = [i for i in data['items'] if i['id'] == item_id]
+    matches = [i for i in data['items'] if i['id'] == item_id and item_source(i) == source]
     if len(matches) != 1 or matches[0]['valid_action'] != verb:
         raise ValueError('The item state changed. Refresh the catalog and select its current action.')
-    print(f'{verb}: {item_id}. Manifest verification and catalog safeguards are active.', flush=True)
+    print(f'{verb}: {item_id}. Verification and catalog safeguards are active.', flush=True)
     if verb == 'evict':
         print('Removing the QNAP copy only. The canonical remote copy will remain.', flush=True)
     # OliveTin owns this process group. A browser disconnect does not stop it;
     # timeout/container shutdown kills the group, and catalog locks expose any
     # interrupted pull as retryable rather than leaving an orphaned transfer.
-    process = subprocess.Popen([sys.executable, '-u', str(BACKEND), 'evict' if verb == 'evict' else 'pull', item_id])
+    backend = NATIVE_BACKEND if source == 'native' else BACKEND
+    process = subprocess.Popen([sys.executable, '-u', str(backend), 'evict' if verb == 'evict' else 'pull', item_id])
     # Refresh once the backend has created its operation record, then at a
     # bounded interval while streaming rclone output to OliveTin execution logs.
     while True:
@@ -322,6 +356,7 @@ def main() -> int:
     action.add_argument('verb', choices=['download', 'retry', 'evict'])
     action.add_argument('item_id')
     action.add_argument('--confirm', choices=['0', '1'])
+    action.add_argument('--source', choices=['legacy', 'native'], default='legacy')
     args = parser.parse_args()
     try:
         if args.command == 'serve':
@@ -330,7 +365,7 @@ def main() -> int:
             return 0 if refresh() else 1
         if args.command == 'healthcheck':
             return healthcheck()
-        return perform_action(args.verb, args.item_id, args.confirm)
+        return perform_action(args.verb, args.item_id, args.confirm, args.source)
     except (catalogctl.CatalogError, OSError, ValueError, KeyError) as exc:
         print(f'dashboard: {exc}', file=sys.stderr)
         return 1

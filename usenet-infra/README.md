@@ -10,9 +10,9 @@ only selected, locally cached items.
 Start with the [current plan/handoff](../plan.md) and [agent guide](AGENTS.md).
 Radarr/Sonarr provide discovery, acquisition and native imports; Plex on the QNAP
 provides NAS and remote playback with separate general/private libraries.
-OliveTin is the transitional selective-copy/removal interface for legacy catalog
-objects. New native titles still need a convenient NAS-copy action; real TV-client
-playback/privacy acceptance also remains. See [native media](docs/native-media.md).
+OliveTin is the transitional selective-copy/removal interface. Native-title copy
+support is prepared in source; deployment and live-copy acceptance remain pending.
+Real TV-client playback/privacy acceptance is deferred. See [native media](docs/native-media.md).
 
 The cloud infrastructure is live. Eweka's saved settings, authenticated
 connection test, and official 100 MB download/processing pass. The resulting

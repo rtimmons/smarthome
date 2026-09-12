@@ -185,6 +185,14 @@ safe metadata discovery from the repository root
 with `just usenet-qnap-recon`. The runtime setup and pinned configuration are in
 [QNAP Compose](../compose/qnap/README.md).
 
+The prepared native-copy update (not yet deployed) also lists canonical titles
+by Movies or TV. These
+use a distinct native copy action and do not need legacy catalog manifests.
+Choose only the title wanted on the NAS. Copying a TV series selects its current
+folder contents; it does not subscribe the NAS to later episodes or upgrades.
+See [native copy details](native-media.md#selective-native-library-nas-copies)
+for collision handling and verification boundaries.
+
 The normal workflow is:
 
 1. Browse/filter the automatically refreshed catalog by title and category. Inspect the
@@ -195,7 +203,7 @@ The normal workflow is:
    catalog identity; no copied ID or shell command is required.
 3. Follow the running execution and output/history. A running state is meaningful
    even when an exact transfer percentage is unavailable. `local` means the
-   backend completed manifest verification and atomic publication.
+   backend completed SHA-256 verification and atomic publication.
 4. If the operation fails, read its failure/output and fix the reported capacity,
    connectivity, permission, or integrity problem before selecting **Retry**.
    If a previously verified local copy is now damaged, the valid action can be
@@ -234,6 +242,15 @@ just catalog-status
 just catalog-pull "item-id"
 just catalog-evict "item-id"
 ```
+
+For a native-library title, use `just native-list` or `just native-status`, then
+`just native-pull "native-<id>"` or `just native-evict "native-<id>"`. Root recipes
+have the `usenet-` prefix. Native actions resolve a single exact title; they never
+accept a directory to synchronize or access Arr scratch. A changed canonical
+version is not silently merged into a prior NAS copy. Native eviction requires
+the ownership receipt and unchanged verified bytes; modified or unrelated local
+directories remain for manual review. These native commands require the deployment
+and TV Plex-source prerequisite described in [native media](native-media.md).
 
 Pull requires enough free bytes for the item plus the configured reserve. It
 copies to hidden staging, validates every local SHA-256, then performs a

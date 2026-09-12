@@ -24,7 +24,7 @@ case "${tool}" in
   list|status|pull|evict)
     set -- "catalog-${tool}" "$@"
     ;;
-  healthcheck)
+  native-list|native-status|native-pull|native-evict|healthcheck)
     set -- "${tool}" "$@"
     ;;
   *)

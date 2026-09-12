@@ -124,6 +124,26 @@
     - path: "{{ qnap_storagebox_key_file | dirname }}"
       mode: "0700"
 
+# Plex's TV NAS source must be TV Shows/library before enabling native copies.
+# Keep staging outside that source and inside the same container bind mount.
+- name: Ensure native TV publication and staging directories exist
+  ansible.builtin.raw: |
+    set -eu
+    test ! -L {{ qnap_native_tv_dir | quote }}
+    test ! -L {{ item | quote }}
+    if test ! -d {{ item | quote }}; then
+      mkdir -m 0750 {{ item | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+    test -w {{ item | quote }}
+    test "$(stat -c '%d' {{ item | quote }})" = "$(stat -c '%d' {{ qnap_native_tv_dir | quote }})"
+  register: qnap_native_tv_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_native_tv_result.stdout"
+  loop:
+    - "{{ qnap_native_tv_dir }}"
+    - "{{ qnap_native_tv_dir }}/library"
+    - "{{ qnap_native_tv_dir }}/.staging"
+
 - name: Transfer QNAP Compose, build, script, and schema files
   ansible.builtin.raw: |
     set -eu
@@ -185,6 +205,9 @@
     - src: "{{ usenet_project_root }}/scripts/catalog-status"
       dest: "{{ qnap_catalog_scripts_dir }}/catalog-status"
       mode: "0750"
+    - src: "{{ usenet_project_root }}/scripts/native_library.py"
+      dest: "{{ qnap_catalog_scripts_dir }}/native_library.py"
+      mode: "0640"
     - src: "{{ usenet_project_root }}/scripts/catalogctl.py"
       dest: "{{ qnap_catalog_scripts_dir }}/catalogctl.py"
       mode: "0750"

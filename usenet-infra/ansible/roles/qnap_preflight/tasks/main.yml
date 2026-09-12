@@ -25,15 +25,18 @@
         import sys
         paths = [Path(value) for value in sys.argv[1:]]
         assert all(p.is_absolute() and '..' not in p.parts and p.parts[1] == 'share' for p in paths), 'Use absolute /share paths without traversal'
-        project, library, cache, *managed = paths
+        project, library, cache, tv, *managed = paths
         assert len(project.parts) >= 4 and len(library.parts) >= 3, 'Use a dedicated application subdirectory and a selected data share'
         assert not project.is_relative_to(library) and not library.is_relative_to(project), 'Application and data roots must be distinct'
         assert cache != library and cache.is_relative_to(library), 'Cache must be a child of the selected data root'
+        assert tv != library and tv.is_relative_to(library), 'TV must be a child of the selected data root'
+        assert not tv.is_relative_to(cache) and not cache.is_relative_to(tv), 'Movie cache and TV library must be separate peers'
         assert all(p != project and p.is_relative_to(project) for p in managed), 'Configuration, state and keys must stay inside the project root'
         assert len(set(paths)) == len(paths), 'Managed paths may not alias one another'
       - "{{ qnap_container_root }}"
       - "{{ qnap_data_root }}"
       - "{{ qnap_catalog_cache_dir }}"
+      - "{{ qnap_native_tv_dir }}"
       - "{{ qnap_deploy_dir }}"
       - "{{ qnap_catalog_scripts_dir }}"
       - "{{ qnap_catalog_state_dir }}"

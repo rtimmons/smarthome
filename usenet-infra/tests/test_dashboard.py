@@ -85,6 +85,47 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(dash.perform_action('download', 'sample-id', None), 0)
             self.assertEqual(start.call_args.args[0][-3:], [str(dash.BACKEND), 'pull', 'sample-id'])
 
+    def test_native_and_legacy_actions_keep_source_and_backend_separate(self):
+        rows = [item('same-id'), item('same-id', source='native')]
+        config = dash.dashboard_config({'items': rows})
+        native = next(a for a in config['actions'] if a['id'] == 'native-download-same-id')
+        self.assertEqual(native['exec'][-2:], ['--source', 'native'])
+        with mock.patch.object(dash, 'snapshot', return_value={'items': rows}), \
+                mock.patch.object(dash, 'refresh'), mock.patch.object(dash.subprocess, 'Popen') as start:
+            start.return_value.wait.return_value = 0
+            self.assertEqual(dash.perform_action('download', 'same-id', None, 'native'), 0)
+            self.assertEqual(start.call_args.args[0][-3:], [str(dash.NATIVE_BACKEND), 'pull', 'same-id'])
+
+    def test_stale_native_action_cannot_match_legacy_id(self):
+        with mock.patch.object(dash, 'snapshot', return_value={'items': [item('same-id')]}), \
+                mock.patch.object(dash.subprocess, 'Popen') as start:
+            with self.assertRaises(ValueError):
+                dash.perform_action('download', 'same-id', None, 'native')
+            start.assert_not_called()
+
+    def test_native_refresh_failure_disables_both_sources(self):
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, {'CATALOG_DASHBOARD_ROOT': directory}):
+            dash.publish({'items': [item(), item('native-id', source='native')]})
+            with mock.patch.object(dash, 'backend_snapshot', side_effect=[{'items': [item()]},
+                                   dash.catalogctl.CatalogError('Native unavailable')]):
+                self.assertFalse(dash.refresh())
+            config = json.loads((Path(directory) / 'generated/catalog.yaml').read_text())
+            self.assertEqual([a['id'] for a in config['actions']], ['catalog-refresh'])
+
+    def test_combined_snapshot_sums_items_but_not_shared_capacity(self):
+        snapshots = [dict(items=[item()], remote_items=1, remote_bytes=10, local_free_bytes=100,
+                          local_reserve_bytes=20, recorded_failures=3),
+                     dict(items=[item('native-id')], remote_items=1, remote_bytes=30,
+                          local_free_bytes=90, local_reserve_bytes=20, recorded_failures=2)]
+        with mock.patch.object(dash, 'backend_snapshot', side_effect=snapshots):
+            result = dash.snapshot()
+        self.assertEqual(result['recorded_failures'], 3)
+        self.assertEqual(result['remote_items'], 2)
+        self.assertEqual(result['remote_bytes'], 40)
+        self.assertEqual(result['local_free_bytes'], 90)
+        self.assertEqual(result['local_reserve_bytes'], 20)
+        self.assertEqual([i['source'] for i in result['items']], ['legacy', 'native'])
+
     def test_auth_file_refuses_plaintext_and_group_readable_files(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'auth.json'

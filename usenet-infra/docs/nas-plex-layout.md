@@ -94,3 +94,19 @@ Native Radarr/Sonarr imports now sort new movies and TV into separate canonical
 library folders. The old publisher timer is disabled. See [native media](native-media.md)
 for mount dependencies and remaining client tests, and [scheduled backups](scheduled-backups.md)
 for encrypted Plex/database protection.
+
+## Prepared native-copy layout (not yet deployed)
+
+TV copy actions default disabled until `qnap_native_tv_copy_enabled` is explicitly
+enabled after the source migration. Native movie copies publish under `Movies/video/native-<id>/<title>`, preserving
+Plex source ID 2. TV publication requires narrowing Plex source ID 3 to
+`TV Shows/library`; TV staging then lives at `TV Shows/.staging`, outside that
+source but within the same container bind. Distinct bind mounts cannot perform
+an atomic rename between them, even when their device numbers match.
+
+The current deployed source table above has not been changed by this source-only
+increment. Before migration, inspect only the general TV root and ID 3; require
+no existing series outside `library`, record its current source, and preserve
+all IDs/profile grants. Follow [native media](native-media.md#selective-native-library-nas-copies)
+and the current [handoff](../../plan.md). No collection move or whole-library
+hash is required. Live native-copy and Plex indexing acceptance remain pending.

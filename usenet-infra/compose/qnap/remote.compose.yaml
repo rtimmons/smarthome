@@ -4,10 +4,10 @@ services:
     image: rclone/rclone:1.75.1
     restart: unless-stopped
     read_only: true
-    devices: [/dev/fuse:/dev/fuse]
+    devices: ["/dev/fuse:/dev/fuse"]
     cap_drop: [ALL]
     cap_add: [SYS_ADMIN, DAC_OVERRIDE]
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     command:
       - mount
       - 'storagebox:'

@@ -56,3 +56,61 @@ the fingerprint/connection corrections. Choose a NAS or Remote library explicitl
 codec/transcode behavior and sustained Apple TV/Roku playback still require a
 real device test. A successful filesystem or short range read alone does not
 prove those capabilities. Plex PIN setup remains private user/device work.
+
+## Selective native-library NAS copies
+
+This section describes prepared source; the new workflow is not deployed yet.
+
+The native-copy backend discovers titles under canonical `library/Movies` and
+`library/TV`; it does not require legacy publication manifests. OliveTin combines
+these titles with the legacy catalog and supplies an explicit per-title action.
+Stable IDs include the library kind and exact title directory, so a stale card
+cannot select another title by list position. Movie and TV destinations remain
+separate, and staging stays outside Plex sources.
+
+Transfers use the NAS's existing server-enforced read-only Storage Box account
+and the same cache lock as legacy operations. Capacity admission reserves the
+configured free-space floor. Only a selected title receives SHA-256 verification;
+background listing reads metadata without hashing the collection. Verification
+checks the selected source before and after copying, then publishes by an atomic
+no-overwrite rename. Existing unrelated destinations and changed source files
+must be investigated rather than overwritten. A repeat checks the prior verified
+copy; retries may reuse safe staged files. New imports and later TV episodes are
+not automatically copied to the NAS.
+
+The prepared TV layout uses `/share/FromDrobo/TV Shows/library/<series>` for
+published titles and `/share/FromDrobo/TV Shows/.staging` for transfers. Both
+are within one container bind mount, allowing atomic renames. Movie staging
+remains `Movies/.staging`, beside the existing `Movies/video` Plex source.
+Matching filesystem device numbers alone are insufficient across distinct
+container bind mounts.
+
+TV copies default to disabled (`qnap_native_tv_copy_enabled: false`); movie copies
+can be deployed independently. Before enabling TV copies, inspect Plex library ID 3
+and the existing TV root, then
+change **only** that library's source from `TV Shows` to `TV Shows/library`.
+Require the old root to have no existing series outside the new `library`
+subdirectory; otherwise stop for a preservation/migration review. Retain the
+before-change source path for rollback, preserve IDs/profile grants, and leave
+automatic trash emptying disabled. After verifying the narrowed Plex source, explicitly set
+`qnap_native_tv_copy_enabled: true` in private inventory and redeploy. The backend
+refuses TV downloads while disabled. Do not enable transfers with Plex still
+scanning the parent containing staging. This path migration and live
+native-copy acceptance have not yet been performed.
+
+These controls wrap native [rclone copy](https://rclone.org/commands/rclone_copy/)
+and [structured listing](https://rclone.org/commands/rclone_lsjson/).
+`--checksum` alone can fall back to size when a hash is unavailable; the native
+backend requires usable SHA-256 evidence before publication.
+[SFTP hash support](https://rclone.org/sftp/#hashes).
+
+Plex continues to own discovery through local watches/partial scans and the hourly
+fallback. Copy verification and indexing do not establish TV playback or profile
+startup privacy; those device tests remain deferred at the user's request.
+
+The NAS backup allowlist now includes `state/native-items` ownership and integrity
+receipts. Deploy the updated `backup-qnap.py` through `ansible/qnap-backups.yml`
+as well as the full QNAP application migration; presentation-only refresh does
+not install the backend or mounts. Restoring a receipt does not authorize adopting
+unrelated NAS files: ownership checks still require the recorded directory identity
+and verified bytes. A different/rebuilt volume requires deliberate recovery review.

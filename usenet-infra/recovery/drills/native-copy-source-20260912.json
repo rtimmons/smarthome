@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-12T03:52:18.890754+00:00",
+  "scope": "Local generated-fixture validation of native selective NAS-copy source code. No live NAS, Storage Box, Arr, or Plex operations were performed by these checks.",
+  "result": "passed",
+  "runtime": {
+    "container_image": "localhost/usenet-dashboard-test:3000.19.0",
+    "rclone": "1.75.1",
+    "python": "3.14.7",
+    "os": "Alpine 3.24.1",
+    "kernel": "6.16.10-200.fc42.aarch64",
+    "architecture": "aarch64",
+    "network": "none",
+    "image_pull": "never",
+    "uid": 1000,
+    "gid": 1000,
+    "root_filesystem": "read-only",
+    "source_mounts": "read-only",
+    "capabilities": "all dropped",
+    "no_new_privileges": true,
+    "fixture_storage": "ephemeral 64 MiB /tmp tmpfs"
+  },
+  "linux_unit_tests": {
+    "command_summary": "Run python3 -m unittest discover -s /work/tests -p test_native_library.py -q in the existing local Podman image with repository scripts/tests mounted read-only.",
+    "tests": 28,
+    "failures": 0,
+    "errors": 0,
+    "atomic_publication": "Exercised the real Linux libc renameat2 RENAME_NOREPLACE implementation, including refusal to overwrite an existing empty destination."
+  },
+  "real_rclone_smoke": {
+    "command_summary": "Run generated local fixture driver with the actual rclone 1.75.1 binary and an alias remote backed by an ephemeral local directory; use no network and no credentials.",
+    "fixtures": [
+      {
+        "kind": "Movies",
+        "title": "Smoke Movie (2026)",
+        "files": 1,
+        "bytes": 6168
+      },
+      {
+        "kind": "TV",
+        "title": "Smoke Series (2026)",
+        "files": 1,
+        "relative_file": "Season 01/Smoke Series S01E01.mkv",
+        "bytes": 6168
+      }
+    ],
+    "total_source_bytes": 12336,
+    "behaviors_verified": [
+      "Real rclone lsjson discovers exactly the selected generated movie and TV titles.",
+      "Real rclone hashsum sha256 and copy feed independent local verification.",
+      "Movie and TV copies publish through Linux exclusive rename into their respective final roots.",
+      "Repeating both pulls succeeds after verifying the existing local copies.",
+      "Snapshot reports two verified local titles.",
+      "Explicit local eviction removes each owned final title.",
+      "Canonical fixture files remain present and their SHA-256 values remain unchanged after all operations."
+    ],
+    "tv_copy_gate": "Enabled only in this isolated fixture environment."
+  },
+  "acceptance_limits": [
+    "Synthetic bytes are not playable media; this is source/runtime validation only.",
+    "The rclone remote was local, so this does not establish live SFTP server-side checksum support or NAS network throughput.",
+    "No native title was copied to the real NAS by this validation.",
+    "No Plex library root was changed, title indexed, or device playback tested.",
+    "Real NAS/Plex acceptance and TV-library migration remain separate unfinished work."
+  ]
+}

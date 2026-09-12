@@ -1,35 +1,33 @@
 # Architecture
 
-Status as of 2026-09-10: the protected CX43/BX11 infrastructure and hardened
-cloud applications are live. The read-only Storage Box identity has passed a
-writer/reader sentinel test. Provider/indexer setup, QNAP deployment, dashboard
-runtime validation, and end-to-end acceptance remain pending. See
-[validation.md](validation.md) for the distinction between source checks and
-live evidence.
+Current workflow: native Radarr/Sonarr imports, QNAP Plex NAS/remote libraries,
+and scheduled encrypted configuration backups are deployed. Read the
+[current handoff](../../plan.md) and [native media](native-media.md) for live
+acceptance evidence and remaining client checks.
 
 This system intentionally separates a replaceable acquisition host, a canonical
 remote catalog, and a disposable local cache:
 
 ```text
 operator workstation
-  | SSH + loopback-only UI tunnels
+  | UniFi private LAN route (SSH tunnels remain available)
   v
 Hetzner Cloud VM (trusted writer)
   |-- TLS --> Usenet provider and indexers
-  |-- SFTP/rclone --> Storage Box main account
+  |-- synchronous SSHFS native library --> Storage Box writer account
   v
 Hetzner Storage Box (canonical catalog)
   BX11 now -> BX21 -> BX31 -> BX41 target
   ^
   | direct SFTP/rclone, read-only subaccount
   |
-QNAP (OliveTin dashboard + manifest-aware selective cache)
+QNAP (Plex + OliveTin selective copies + read-only remote playback)
 ```
 
 The Storage Box is the canonical copy. It starts at 1 TB on BX11 and is upgraded
 in place as measured use grows; BX41 remains the eventual 20 TB target. The VM
 scratch space and QNAP cache may be rebuilt without changing the catalog. The
-QNAP is not in the acquisition path, so acquisition and promotion can continue
+QNAP is not in the acquisition path, so acquisition and native imports can continue
 while it is offline.
 
 ## Trust boundaries
@@ -37,51 +35,42 @@ while it is offline.
 | Boundary | Trust and credential rule | Permitted traffic |
 | --- | --- | --- |
 | Public Internet -> cloud VM | Untrusted. The Hetzner firewall admits only SSH from `admin_ssh_cidrs`, plus ICMP/ICMPv6. | SSH; no public SABnzbd or Prowlarr ports. |
-| Operator -> cloud applications | Administrative access. Use SSH tunnels to the services bound to `127.0.0.1`. | SABnzbd on 8080 and Prowlarr on 9696 through SSH only. |
+| Operator -> cloud applications | Authenticated access over the UniFi private LAN route; SSH tunnels remain available. | Private listener `10.77.0.1:19696` for Prowlarr/Radarr/Sonarr and `10.77.0.1:18080` for SAB. |
 | Cloud VM -> providers/indexers | The VM holds the service credentials. | NNTP over TLS and HTTPS only. |
-| Cloud VM -> Storage Box | Trusted write path. Only this path receives the main Storage Box credential. | SFTP/rclone uploads, checks, and final promotion. |
+| Cloud VM -> Storage Box | Trusted write path. Only this path receives the main Storage Box credential. | Synchronous SSHFS native imports; legacy objects retained. |
 | QNAP -> Storage Box | Untrusted for canonical mutation. The QNAP receives only a subaccount rooted at `catalog` with server-enforced `readonly = true`. | Direct read-only SFTP/rclone pulls. |
 | Operator -> QNAP dashboard | An authenticated private interface, reached over the selected LAN/private access path. | Predefined browse, refresh, download, retry, and local-eviction actions only. |
 | Git -> runtime | Git is the source of truth for non-secret configuration. | Secrets, private keys, Terraform state, plans, and live app config remain outside Git. |
 
-The QNAP rclone remote also wraps the SFTP remote with `:ro:`. That is useful
-defense in depth, but the Hetzner subaccount restriction is the security
-boundary. Hetzner documents subaccount home-directory and read-only controls in
+The QNAP catalog alias does not enforce permissions. The Hetzner subaccount
+restriction is the remote security boundary; the playback mount is also read-only. Hetzner documents subaccount home-directory and read-only controls in
 [Storage Box overview](https://docs.hetzner.com/storage/storage-box/general/),
 and the provider exposes those controls on
 [`hcloud_storage_box_subaccount`](https://registry.terraform.io/providers/hetznercloud/hcloud/latest/docs/resources/storage_box_subaccount).
 
 ## Deliberate data flow
 
-1. A person searches and selects material they are authorized to obtain.
-   Prowlarr provides search/indexer management. The private Radarr/Sonarr
-   [discovery layer](discovery.md) provides movie discovery and TV tracking,
-   with interactive/automatic search and 15-minute RSS checks for monitored
-   titles. Automatic retries and imports remain disabled.
-2. An interactive selection, automatic search, or monitored RSS match submits
-   the chosen job to SABnzbd. SABnzbd
-   downloads to the VM's local NVMe scratch, verifies, repairs, and unpacks it
-   there. It never downloads into an SFTP mount.
-3. The automatic publisher reads successful completed SAB history entries,
-   derives a stable catalog ID from the job ID, and invokes the existing
-   promotion implementation with the source and user's authorization basis.
-   Exceptional manual imports can still use `catalog-promote`.
-4. Promotion inventories every file and computes SHA-256 hashes. It uploads to
-   a unique `.incoming` path, runs a remote verification check, moves the data
-   to `objects/<category>/<id>`, and publishes the immutable manifest last.
-   Only an item with a manifest is visible as a complete catalog entry.
-5. The automatic publisher verifies the published manifest and local bytes,
-   records a durable receipt, then renames the completed directory into a
-   cleanup area and reclaims it. Retries use the same ID and verify existing
-   remote objects. Failures retain recoverable local/remote staging. The manual
-   command still requires `--delete-local` to remove its source.
-6. The authenticated OliveTin dashboard selects a manifest-backed item and
-   invokes the same catalog backend as `catalog-pull <item>`. A pull copies
-   directly from the Storage Box into a
-   local `.partial` staging directory, verifies sizes and SHA-256 hashes, and
-   atomically renames the directory into the cache.
-7. `catalog-evict <item>` removes only the QNAP copy and its local state record.
-   It does not issue an rclone delete operation.
+1. A person selects movies or monitored TV through Radarr/Sonarr. Existing
+   interactive/automatic searches and 15-minute RSS checks remain enabled.
+2. SAB downloads, verifies, repairs and unpacks on cloud scratch. Both Arr apps
+   see that same completed scratch at `/data/complete`.
+3. Arr Completed Download Handling imports to the real Storage Box library,
+   separately mapped to `catalog/library/Movies` or `catalog/library/TV`.
+   Systemd requires the synchronous SSHFS mount before starting these apps;
+   the unmounted directory remains mode 0000. Successful imports allow native
+   client cleanup. Failed jobs remain; automatic redownload is disabled.
+4. The retired publisher timer stays disabled. The five legacy objects/manifests
+   and their hard-linked native adoptions remain intact. New native imports do
+   not produce legacy manifests, and no second mover touches Arr scratch.
+5. Plex on the NAS reads canonical media through a read-only rclone mount with
+   a bounded streaming cache. Native watch/partial scans and hourly scanning
+   discover media; the copy interface does not own scanning.
+6. OliveTin offers deliberate selective NAS copies. Its legacy manifest backend
+   remains available; native-library copying is described in
+   [native media](native-media.md). Both preserve staging, verification,
+   capacity reserves and atomic publication. No whole-library sync runs.
+7. Local removal acts only on a managed NAS copy. Neither backend receives
+   remote writer credentials or invokes remote deletion.
 
 ## Dashboard boundary
 
