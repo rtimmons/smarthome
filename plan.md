@@ -26,17 +26,18 @@ Current changes:
   were adopted using verified server-side hard links: zero media bytes copied.
 - QNAP has a read-only remote mount and Plex libraries `Movies (Remote)` (4) and
   `TV Shows (Remote)` (5). The everyday profile sees exactly IDs 2/3/4/5 and is
-  denied private library 1. Remote streaming validation is in progress; real TV
+  denied private library 1. Plex indexed all five remote movies and passed a 1 MiB range stream; real TV
   playback/startup and a convenient NAS-copy action for new native titles remain.
 - The historical Raspberry Pi key consumers were confirmed retired or wiped.
   The tracked HA secrets file is removed from Git while its ignored/live copies
   are preserved. Five compatible lockfile updates address the 53 reported alerts;
-  service tests/builds and root container checks passed. Affected add-on deployment
-  is in progress. Full history scanning still reports the two exposed old keys.
-- Checkout-local preservation is implemented and being verified. Do not mark
-  checkout deletion ready until encrypted NAS retrieval and published-source
-  checks have completed. Original full-machine `deletion_safe: false` evidence is
-  immutable and does not override the user's narrower checkout-deletion scope.
+  service tests/builds and root container checks passed. All four affected live add-ons were rebuilt, deployed and passed readiness checks. Full history scanning still reports the two exposed old keys.
+- Checkout-local snapshot `20260911T235253Z-9d6bbacf00ac982a` preserves 1,319 files
+  and passed independent NAS fetch, exact restore, MongoDB validation, checkout-path
+  rebasing and live authentication from a fresh clone. See
+  `usenet-infra/docs/checkout-recovery.md` and the separate checkout drill receipt.
+  Recheck current local files and published HEAD before deletion. Original full-machine
+  `deletion_safe: false` evidence stays immutable. No checkout has been deleted.
 
 This section is authoritative over chronological notes below. The Usenet
 secrets/state milestone is closed; Radarr/Sonarr discovery, automatic publication

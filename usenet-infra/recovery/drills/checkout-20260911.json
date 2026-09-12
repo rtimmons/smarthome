@@ -1,0 +1,22 @@
+{
+  "ciphertext_bytes": 525627393,
+  "ciphertext_sha256": "4a7c871f62fa61c1a82f5329fad1e9dbc4bc9b7e0cb2513f74b1222015e90759",
+  "configuration_paths_rebased": 2,
+  "current_checkout_gate": "Run checkout-backup.py check; all unique local files and published HEAD must still match.",
+  "exact_isolated_restore_verified": true,
+  "fresh_public_tool_bootstrap": true,
+  "full_machine_replacement_verified": false,
+  "local_files_verified": 1319,
+  "mongodb_collections_validated": 5,
+  "mongodb_databases_validated": 5,
+  "mongodb_isolated_startup": true,
+  "nas_fetch_with_independently_restored_credentials": true,
+  "nas_loss_protection": "explicitly deferred",
+  "original_checkout_deleted": false,
+  "restored_clone_live_authentication_verified": true,
+  "schema_version": 1,
+  "scope": "checkout-deletion-readiness",
+  "snapshot_id": "20260911T235253Z-9d6bbacf00ac982a",
+  "source_cloned_from_published_revision": "185e420610347b6f8e660f06a93e48fd2268f297",
+  "temporary_mongodb_stopped": true
+}

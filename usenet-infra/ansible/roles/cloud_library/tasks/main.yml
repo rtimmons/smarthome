@@ -29,8 +29,8 @@
     src: '{{ usenet_project_root }}/scripts/library-mount.py'
     dest: /srv/usenet/libexec/library-mount.py
     owner: root
-    group: root
-    mode: '0500'
+    group: usenet
+    mode: '0550'
 - name: Install native mount service
   ansible.builtin.template:
     src: usenet-library.service.j2

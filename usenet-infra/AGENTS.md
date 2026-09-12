@@ -46,6 +46,11 @@ notes describe earlier policies; they do not override the current handoff.
   idle or fully paused SAB queue but reject post-processing. Never delete/resume
   jobs just to satisfy backup checks. NAS-loss protection is explicitly deferred.
 
+- Checkout-local preservation and independent restore passed for snapshot
+  `20260911T235253Z-9d6bbacf00ac982a`. See `docs/checkout-recovery.md`; rerun the
+  current-files/published-source check before declaring a later checkout safe.
+  This does not authorize deleting the checkout or imply NAS-loss protection.
+
 ## Plex privacy and playback
 
 - Plex runs on the QNAP. `loljk` is the existing private library; preserve its
