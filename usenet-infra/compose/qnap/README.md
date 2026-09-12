@@ -1,7 +1,7 @@
 # QNAP catalog dashboard
 
 This stack provides the authenticated OliveTin catalog dashboard, with the same
-manifest-aware Python/rclone backend used by the recovery commands. It never runs
+legacy manifest and native-library Python/rclone backends used by the recovery commands. It never runs
 SABnzbd or Prowlarr on the NAS.
 
 Ansible installs this directory at `/share/Container/usenet/compose/qnap` by default;
@@ -18,7 +18,7 @@ binding, use the dedicated NAS SSH key to forward local port 1337 to NAS
 `127.0.0.1:1337`, then open `http://127.0.0.1:1337`. Authentication remains required.
 Do not configure router forwarding or expose the dashboard publicly. Deployment
 preflight rejects a public/wildcard bind. The process also refuses public/wildcard
-bind configuration. No actual NAS endpoint has been verified yet.
+bind configuration. See the current NAS/Plex layout runbook for deployed acceptance evidence.
 
 | Service | Purpose | Exposure |
 |---|---|---|
@@ -31,7 +31,7 @@ Versions are pinned to OliveTin **3000.19.0**, rclone **1.75.1**, and Python
 from the official `ghcr.io/olivetin/olivetin:3000.19.0` image; it does not bring the
 upstream Docker CLI or broad Fedora tooling into the runtime. The official image
 manifest supports Linux **amd64 and arm64**. The combined image has been built and
-run locally on arm64; the actual NAS architecture/kernel still requires preflight.
+run locally on arm64 and deployed on the NAS; rerun preflight for replacement hosts.
 OliveTin's `-version` command deliberately exits 1 after printing its version.
 
 The containers run with the chosen nonzero numeric UID/GID, no supplementary groups,
@@ -44,7 +44,13 @@ the alias itself adds no permission boundary. The pinned rclone version does
 not support a single-upstream union.
 
 `CATALOG_STAGING_ROOT=/data/library/.staging` is inside the cache bind so final
-publication is an atomic rename on one filesystem. `RCLONE_TRANSFERS`,
+movie publication is an atomic rename within that bind mount. Native TV has a
+separate `QNAP_NATIVE_TV_DIR` bind at `/data/tv`: publication is beneath
+`/data/tv/library` and staging beneath `/data/tv/.staging`. **Before enabling
+native TV actions, Plex library ID 3 must use `TV Shows/library`, not `TV Shows`.**
+See [the migration instructions](../../docs/nas-plex-layout.md). Never expose staging
+to Plex or rely on matching device IDs to rename across separate Docker binds.
+The default free-space reserve is 100 GiB. `RCLONE_TRANSFERS`,
 `RCLONE_CHECKERS`, `RCLONE_BWLIMIT`, and the free-space reserve remain configurable.
 The dashboard never uses the rclone daemon to bypass the catalog implementation.
 
@@ -52,7 +58,7 @@ The dashboard never uses the rclone daemon to bypass the catalog implementation.
 
 Open **Catalog** for remote/local counts and sizes, free NAS space, reserve,
 running/stalled counts, failures, and item cards. Each card includes title,
-category, size, and state. Use the header search for titles/categories, or the
+category, source (native library or legacy catalog), size, and state. Use the header search for titles/categories, or the
 **Entities** table's filter to inspect title, category, state, and failure text.
 
 - **Download** appears for remote-only items; **Retry** for retryable failures.
@@ -68,7 +74,7 @@ category, size, and state. Use the header search for titles/categories, or the
 
 Actions use immutable item-specific IDs and literal argument arrays. Free-form
 item IDs, commands, paths, and shell inputs are never exposed in the dashboard.
-Each action re-resolves the canonical manifest and validates its current state;
+Each action re-resolves its canonical listing and validates its source and current state;
 a stale tab cannot act on a different item. Presentation text is escaped for both
 HTML and Go-template syntax. The read-only Entities list is for browsing only:
 OliveTin entity positions are not used to identify destructive operations.
@@ -94,7 +100,7 @@ The supervisor drops upstream startup debug messages (which otherwise include
 interpolated authentication hashes) and redacts the known hash from other logs.
 
 `status.json` contains `updated_at` (Unix time), `error`, and the catalog snapshot.
-Metadata refresh runs in a separate process group with a 120-second default bound;
+Each source refresh runs in a separate process group with a 120-second default bound;
 timeout kills the whole metadata process group. An authenticated stale/loading
 page starts immediately even if Storage Box is unavailable. Refresh failures
 retain the last snapshot, display the error, and remove all mutation actions.
@@ -109,9 +115,21 @@ docker compose run --rm catalog catalog-list
 docker compose run --rm catalog catalog-status
 docker compose run --rm catalog catalog-pull <item-id>
 docker compose run --rm catalog catalog-evict <item-id>
+docker compose run --rm catalog native-list
+docker compose run --rm catalog native-status
+docker compose run --rm catalog native-pull <native-id>
+docker compose run --rm catalog native-evict <native-id>
 ```
 
-Prefer the repository's corresponding `just catalog-*` wrappers for routine
+The first native-copy migration requires the full `just configure-qnap` deployment.
+TV copy actions default to disabled (`qnap_native_tv_copy_enabled: false`, rendered
+as `QNAP_NATIVE_TV_COPY_ENABLED=false`). Enable that setting only after verifying
+Plex library ID 3 uses `TV Shows/library`; movie copies can deploy first.
+The `dashboard-refresh.yml` playbook only changes
+presentation files; it refuses to update an older running dashboard without the
+native backend and both native TV path settings.
+
+Prefer the repository's corresponding `just catalog-*` and `just native-*` wrappers for routine
 recovery. To update, let Ansible copy scripts/template and rebuild the images,
 then inspect health and perform the generated-content test before normal use.
 Do not infer NAS compatibility from the successful local image test.

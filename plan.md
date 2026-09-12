@@ -4,12 +4,66 @@ Keep this document current as work progresses. Perform authorized work using the
 repository tools; involve the user only where private input or device interaction
 is necessary. Account creation and infrastructure bootstrap are complete.
 
-## Resume here — authoritative handoff, September 11, 2026
+## Resume here — authoritative handoff, September 12, 2026
 
 Read [the Usenet agent guide](usenet-infra/AGENTS.md), then this section. Everything
 below **Historical implementation record** records earlier stages or the original
 proposal; it is not a second set of current deployment instructions. Current
 runbooks linked here take precedence over those historical policies.
+
+### Current increment — native selective-copy implementation, September 12, 2026
+
+Parallel agents prepared the native-library backend, OliveTin/CLI/deployment
+integration, and a read-only operational audit. **This increment is source-only;
+the new copy workflow has not been deployed or accepted live.** Existing deployed
+state below remains authoritative. Apple TV/Roku testing is deferred at the user's
+request for this session.
+
+The implementation lists canonical Movies/TV title directories, uses stable
+per-title identities and the existing NAS reader, and shares the legacy cache
+lock. Selected copies require capacity admission, private staging, SHA-256
+verification, source-change detection and exclusive atomic publication. A prior
+owned/verified copy is safe to repeat; unrelated destinations and modified local
+copies are preserved. The dashboard includes source-specific actions and the
+fallback recipes are `native-list`, `native-status`, `native-pull`, `native-evict`.
+Deploy the updated NAS backup helper (`ansible/qnap-backups.yml`) too, so scheduled
+backups include `state/native-items` ownership/verification receipts.
+
+TV transfers default to disabled. Before enabling them, inspect and narrow
+**only Plex library ID 3** from
+`/share/CACHEDEV2_DATA/FromDrobo/TV Shows` to its `library` child. Require no existing
+series outside that child; otherwise stop for a preservation review. The new TV
+bind contains `library/<series>` and `.staging` so atomic renames remain within one
+container mount while staging stays outside Plex. After confirming the migration,
+enable `qnap_native_tv_copy_enabled` in private inventory and redeploy. Existing movie source, private library and profile grants
+stay intact. See the migration steps in
+[native media](usenet-infra/docs/native-media.md#selective-native-library-nas-copies).
+
+Automatic approval review rejected a combined cloud read of queue/history,
+library metadata and backup state, judging the specific collection outside this
+request's authorization. The rejected payload was not retried. Documented health
+commands and local implementation continued. The source increment is committed
+locally, but an attempted push to `https://github.com/rtimmons/smarthome.git`
+(`usenet` branch) was also rejected: automatic review requires explicit payload
+and destination authorization and did not accept the historical handoff's claim.
+No alternative push was attempted; this increment is not published. Do not treat the blocked collection
+as completed evidence; precise approval is needed before resuming it when no
+safer authorized alternative suffices. No diagnostic acquisition, queue changes,
+NAS/Plex restart, native transfer or checkout deletion occurred in this increment.
+
+Read-only follow-through: [operational receipt](usenet-infra/recovery/drills/operational-health-20260912.json)
+records passing discovery/cloud/NAS health, no Arr notices, no active/failed NAS
+transfers, and about 1.36 TB free. Cloud/NAS backups are healthy, with last successes
+at September 11 23:55:50 UTC and September 12 00:01:40 UTC. SAB has nine warnings
+whose detail remains uninspected. No fresh native completion was established.
+Validation: root `just test` passed functional tests and all seven add-on
+container checks. The Usenet suite ran 448 cases (440 passed, eight opt-in skips),
+and compilation, shell/YAML and all deployment syntax checks passed. The full
+recipe fails only on the two documented historical RSA keys; current-source/index
+secret scanning passes. Native tests also passed in Linux, and a real rclone
+1.75.1 local-fixture smoke verified movie/TV copy, repeat, removal and unchanged
+canonical bytes. [Source validation receipt](usenet-infra/recovery/drills/native-copy-source-20260912.json)
+is local-fixture evidence, not live NAS copying or Plex acceptance.
 
 ### Scope and completed work
 
@@ -117,16 +171,15 @@ qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media S
 
 ### Next work, in order
 
-1. **Convenient selective NAS copies for native-library titles.** This is the next
-   implementation task. Research primary manuals where needed and use existing
-   rclone/native ecosystem capabilities. OliveTin currently understands legacy
-   manifests, so future Arr imports will not appear there automatically. Add an
-   explicit per-title copy action from canonical `catalog/library`, with capacity
-   checks, staging, verification, atomic publication, collision handling and
-   safe repeat behavior. Keep movie/TV roots separate and Plex refresh native.
-   Acceptance: one selected native title copies, verifies and appears in the
-   correct NAS library; repeating is safe, failures preserve canonical bytes and
-   existing NAS files, and no whole-library copy or second scratch mover runs.
+1. **Deploy and accept native selective copies.** The implementation and source
+   validation are ready as described above. Resolve the blocked private metadata
+   read authorization, inspect current runtime activity, deploy the full QNAP
+   application update and NAS backup helper, then explicitly copy one selected
+   native movie. Confirm SHA-256 verification, correct NAS Plex indexing and a
+   safe repeat. TV copies stay disabled until ID 3's narrowed source is verified
+   and the enable flag is deliberately set. Preserve the read-only remote,
+   100 GiB reserve, independent roots and collision behavior; no whole-library
+   copy or second scratch mover. Do not confuse fixture checks with live acceptance.
 2. **Validate a fresh native completion.** Mount protection and five existing-file
    adoptions passed; a newly completed movie and TV import have not yet been
    recorded end to end. Observe the next user-selected job, confirm Arr import,

@@ -78,6 +78,10 @@
           "title": "Category"
         },
         {
+          "name": "source",
+          "title": "Source"
+        },
+        {
           "name": "size",
           "title": "Size"
         },

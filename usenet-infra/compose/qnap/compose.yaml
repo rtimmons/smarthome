@@ -91,10 +91,13 @@ services:
       CATALOG_ROLE: qnap
       CATALOG_REMOTE: "catalog:"
       CATALOG_LOCAL_ROOT: /data/library
+      NATIVE_TV_COPY_ENABLED: "${QNAP_NATIVE_TV_COPY_ENABLED:-false}"
+      NATIVE_TV_ROOT: /data/tv/library
+      NATIVE_TV_STAGING_ROOT: /data/tv/.staging
       CATALOG_STATE_ROOT: /data/state
       # Staging shares the cache bind so the final os.replace is atomic.
       CATALOG_STAGING_ROOT: /data/library/.staging
-      CATALOG_MIN_FREE_BYTES: "${CATALOG_MIN_FREE_BYTES:-10737418240}"
+      CATALOG_MIN_FREE_BYTES: "${CATALOG_MIN_FREE_BYTES:-107374182400}"
       RCLONE_BIN: /usr/local/bin/rclone
       RCLONE_TRANSFERS: "${RCLONE_TRANSFERS:-2}"
       RCLONE_CHECKERS: "${RCLONE_CHECKERS:-4}"
@@ -128,6 +131,9 @@ services:
       - type: bind
         source: "${QNAP_CATALOG_CACHE_DIR:?Set QNAP_CATALOG_CACHE_DIR to an absolute path under /share}"
         target: /data/library
+      - type: bind
+        source: "${QNAP_NATIVE_TV_DIR:?Set QNAP_NATIVE_TV_DIR to the separate TV library under /share}"
+        target: /data/tv
       - type: bind
         source: "${QNAP_CATALOG_STATE_DIR:?Set QNAP_CATALOG_STATE_DIR to an absolute path under /share}"
         target: /data/state
@@ -176,10 +182,13 @@ services:
       CATALOG_ROLE: qnap
       CATALOG_REMOTE: "catalog:"
       CATALOG_LOCAL_ROOT: /data/library
+      NATIVE_TV_COPY_ENABLED: "${QNAP_NATIVE_TV_COPY_ENABLED:-false}"
+      NATIVE_TV_ROOT: /data/tv/library
+      NATIVE_TV_STAGING_ROOT: /data/tv/.staging
       CATALOG_STATE_ROOT: /data/state
       # Staging shares the cache bind so the final os.replace is atomic.
       CATALOG_STAGING_ROOT: /data/library/.staging
-      CATALOG_MIN_FREE_BYTES: "${CATALOG_MIN_FREE_BYTES:-10737418240}"
+      CATALOG_MIN_FREE_BYTES: "${CATALOG_MIN_FREE_BYTES:-107374182400}"
       RCLONE_BIN: /usr/local/bin/rclone
       RCLONE_TRANSFERS: "${RCLONE_TRANSFERS:-2}"
       RCLONE_CHECKERS: "${RCLONE_CHECKERS:-4}"
@@ -223,6 +232,9 @@ services:
       - type: bind
         source: "${QNAP_CATALOG_CACHE_DIR:?Set QNAP_CATALOG_CACHE_DIR to an absolute path under /share}"
         target: /data/library
+      - type: bind
+        source: "${QNAP_NATIVE_TV_DIR:?Set QNAP_NATIVE_TV_DIR to the separate TV library under /share}"
+        target: /data/tv
       - type: bind
         source: "${QNAP_CATALOG_STATE_DIR:?Set QNAP_CATALOG_STATE_DIR to an absolute path under /share}"
         target: /data/state

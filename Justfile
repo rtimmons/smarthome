@@ -493,6 +493,29 @@ catalog-evict item:
 	set -euo pipefail
 	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-evict "$1"
 
+# List or inspect native Movies/TV titles available for selective NAS copying
+[group: 'usenet']
+native-list:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-list
+
+[group: 'usenet']
+native-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-status
+
+[group: 'usenet']
+[positional-arguments]
+native-pull item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra native-pull "$1"
+
+[group: 'usenet']
+[positional-arguments]
+native-evict item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra native-evict "$1"
+
 # Run local validation for the Usenet infrastructure project
 [group: 'usenet']
 usenet-test:

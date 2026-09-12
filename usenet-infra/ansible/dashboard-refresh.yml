@@ -4,6 +4,38 @@
   become: false
   gather_facts: false
   tasks:
+    - name: Require the running native-copy deployment before presentation-only updates
+      ansible.builtin.raw: |
+        set -eu
+        test -r {{ (qnap_catalog_scripts_dir ~ '/native_library.py') | quote }} || {
+          echo 'First complete configure-qnap and the Plex TV source migration.' >&2
+          exit 1
+        }
+        qnap_docker=$(command -v docker 2>/dev/null || true)
+        case "$qnap_docker" in /*) ;; *) qnap_docker= ;; esac
+        if test ! -x "$qnap_docker" && test -x /sbin/getcfg; then
+          qnap_package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf 2>/dev/null)
+          case "$qnap_package" in
+            /share/*)
+              for qnap_candidate in "$qnap_package/bin/docker" "$qnap_package/usr/bin/docker"; do
+                if test -x "$qnap_candidate"; then qnap_docker=$qnap_candidate; break; fi
+              done
+              ;;
+          esac
+        fi
+        test -x "$qnap_docker"
+        export DOCKER_CONFIG={{ (qnap_docker_config_dir | default(qnap_container_root ~ "/state/docker-client")) | quote }}
+        export BUILDX_CONFIG={{ ((qnap_docker_config_dir | default(qnap_container_root ~ "/state/docker-client")) ~ "/buildx") | quote }}
+        export COMPOSE_ANSI=never BUILDKIT_PROGRESS=plain
+        cd {{ qnap_deploy_dir | quote }}
+        qnap_dashboard=$("$qnap_docker" --config "$DOCKER_CONFIG" compose --ansi never --progress plain ps -q dashboard)
+        test -n "$qnap_dashboard" || {
+          echo 'Start the complete native-copy deployment before dashboard-refresh.' >&2
+          exit 1
+        }
+        "$qnap_docker" --config "$DOCKER_CONFIG" exec "$qnap_dashboard" python3 -c 'import os; from pathlib import Path; assert Path("/opt/usenet/scripts/native_library.py").is_file(), "Native backend missing; first run configure-qnap"; assert os.environ.get("NATIVE_TV_ROOT") == "/data/tv/library" and os.environ.get("NATIVE_TV_STAGING_ROOT") == "/data/tv/.staging", "Native TV mounts need full configure-qnap deployment before dashboard-refresh"'
+      changed_when: false
+
     - name: Install catalog presentation updates
       ansible.builtin.raw: |
         set -eu

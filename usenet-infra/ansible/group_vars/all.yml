@@ -73,6 +73,8 @@ qnap_start_compose: true
 qnap_uid: null
 qnap_gid: null
 qnap_catalog_cache_dir: "{{ qnap_data_root }}/usenet-cache"
+qnap_native_tv_copy_enabled: false
+qnap_native_tv_dir: "{{ qnap_data_root }}/TV Shows"
 qnap_catalog_state_dir: "{{ qnap_container_root }}/state"
 qnap_catalog_scripts_dir: "{{ qnap_container_root }}/scripts"
 qnap_storagebox_key_file: "{{ qnap_container_root }}/secrets/storagebox/id_ed25519"
@@ -95,7 +97,7 @@ qnap_dashboard_config_dir: "{{ qnap_deploy_dir }}/olivetin"
 qnap_dashboard_state_dir: "{{ qnap_catalog_state_dir }}/dashboard"
 qnap_dashboard_auth_file: "{{ qnap_container_root }}/secrets/dashboard-auth.json"
 qnap_dashboard_auth_source: ""
-qnap_catalog_min_free_bytes: 10737418240
+qnap_catalog_min_free_bytes: 107374182400
 qnap_rclone_transfers: 2
 qnap_rclone_checkers: 4
 qnap_rclone_bwlimit: ""

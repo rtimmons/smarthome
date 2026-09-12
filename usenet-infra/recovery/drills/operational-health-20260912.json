@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-12T03:46:28Z",
+  "scope": "Read-only health and scheduled-backup freshness; no media transfer, queue mutation, restart, deployment or restore performed.",
+  "discovery": {
+    "status": "verified",
+    "automatic_acquisition": true,
+    "automatic_import": true,
+    "radarr_health_notices": 0,
+    "sonarr_health_notices": 0,
+    "interactive_indexers_per_application": 2,
+    "rss_interval_minutes": 15
+  },
+  "cloud": {
+    "health_exit_code": 0,
+    "storage_box_reachable": true,
+    "storage_box_used_bytes": 95225905152,
+    "storage_box_total_bytes": 1099511627776,
+    "catalog_failures": 0,
+    "prowlarr_health_notices": 0,
+    "sab_warning_count": 9,
+    "sab_warning_detail_inspected": false,
+    "scratch_free_bytes": 86520684544,
+    "scratch_minimum_bytes": 32212254720
+  },
+  "nas": {
+    "health_exit_code": 0,
+    "active_pulls": 0,
+    "failed_or_interrupted_pulls": 0,
+    "dashboard_readiness_reachable": true,
+    "dashboard_catalog_age_seconds_at_check": 6,
+    "dashboard_authentication_retested": false,
+    "cache_free_bytes": 1356864675840,
+    "cache_minimum_bytes": 107374182400
+  },
+  "scheduled_backups": {
+    "cloud_timer_enabled": true,
+    "cloud_timer_active": true,
+    "cloud_health_check": true,
+    "cloud_last_success": "2026-09-11T23:55:50Z",
+    "nas_container_running": true,
+    "nas_container_healthy": true,
+    "nas_health_check": true,
+    "nas_last_success": "2026-09-12T00:01:40Z",
+    "freshness_limit_hours": 36,
+    "new_capture_or_restore_verification_performed": false
+  },
+  "remaining_acceptance": [
+    "Nine SAB warnings require private inspection; no warnings were cleared.",
+    "Fresh user-selected movie/TV completion, Arr cleanup, scratch reclamation and Plex discovery remain unverified by this audit.",
+    "Native selective-copy acceptance is being handled separately.",
+    "Real Apple TV/Roku playback and restricted-profile cold-start privacy remain device-level work.",
+    "This receipt does not extend the prior checkout deletion-readiness result or claim NAS-loss protection."
+  ],
+  "inspection_limit": "Automatic approval review rejected a combined custom cloud queue/history, general-library metadata and backup-state inspection; the payload was not retried. Existing health wrappers and narrower documented backup health checks succeeded."
+}

@@ -70,3 +70,9 @@ runs `scheduled-backup.py nas --check`, which emits only health/freshness fields
 Do not dump private environments or Plex preferences to inspect status. Scheduled
 retries are automatic; a failed/freshness check is a reason to diagnose the
 recorded run, not to resume queued downloads or interrupt a transfer.
+
+The prepared native-copy update adds `state/native-items` to the NAS configuration
+allowlist. Its receipt bytes, SHA-256 records and ownership fields pass isolated
+snapshot/restore coverage. This helper update is not live yet: deploy
+`ansible/qnap-backups.yml` with the copy rollout before claiming native receipts
+are protected by the schedule. Media bytes remain excluded.

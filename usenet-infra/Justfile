@@ -12,7 +12,7 @@ test: ansible-setup
 	shellcheck scripts/recovery-run
 	shellcheck scripts/backup-qnap
 	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
-	shellcheck scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/catalog-promote scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
+	shellcheck compose/qnap/catalog-run scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/catalog-promote scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
 	@ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_file(f) }' $(find ansible compose -path 'ansible/.collections' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print)
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml site.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml backup.yml --syntax-check
@@ -79,6 +79,29 @@ catalog-evict item:
 	#!/usr/bin/env bash
 	set -euo pipefail
 	exec ./scripts/qnap-command evict "$1"
+
+# Selective copies from native Arr libraries; use the stable ID shown by native-list.
+[group: 'catalog']
+native-list:
+	@./scripts/qnap-command native-list
+
+[group: 'catalog']
+native-status:
+	@./scripts/qnap-command native-status
+
+[group: 'catalog']
+[positional-arguments]
+native-pull item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/qnap-command native-pull "$1"
+
+[group: 'catalog']
+[positional-arguments]
+native-evict item:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/qnap-command native-evict "$1"
 
 # Check cloud applications, Storage Box, promotion failures, and scratch space.
 [group: 'health']

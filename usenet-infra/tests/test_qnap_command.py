@@ -48,6 +48,16 @@ print(json.dumps({'argv': sys.argv[1:], 'config': os.environ.get('DOCKER_CONFIG'
             self.assertEqual(report['argv'], ['--config', str(client), 'compose', '--ansi', 'never',
                                              '--progress', 'plain', 'run', '--rm', 'catalog', 'catalog-status'])
 
+    def test_native_commands_preserve_exact_item_argument(self):
+        with tempfile.TemporaryDirectory() as directory:
+            environment, _ = self.fixture(directory)
+            for command in ('native-list', 'native-status', 'native-pull', 'native-evict'):
+                with self.subTest(command=command):
+                    result = subprocess.run(['/bin/bash', str(COMMAND), command, "native-title;$(false)'quoted"],
+                                            env=environment, text=True, capture_output=True, check=True)
+                    report = json.loads(result.stdout)
+                    self.assertEqual(report['argv'][-2:], [command, "native-title;$(false)'quoted"])
+
     def test_missing_application_client_directory_refuses_without_creating_it(self):
         with tempfile.TemporaryDirectory() as directory:
             environment, client = self.fixture(directory)
