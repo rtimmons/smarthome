@@ -2,9 +2,11 @@
 
 Current deployment supersedes the proposal below: see [native media](native-media.md)
 and [scheduled backups](scheduled-backups.md). The old publisher is disabled;
-Arr has real library mounts and native imports enabled.
+Arr has real library mounts and native imports enabled. All sections below retain
+the original design review, including then-pending deployment actions; use the
+[current handoff](../../plan.md) for unfinished work, not this proposal.
 
-## Recommendation
+## Historical design recommendation
 
 Keep the existing Plex Media Server on the QNAP and the existing Plex Pass.
 Use Radarr/Sonarr for library management, SABnzbd for acquisition, and rclone

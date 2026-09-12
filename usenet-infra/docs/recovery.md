@@ -1,3 +1,10 @@
+> Current recovery entry points: [checkout recovery](checkout-recovery.md) for
+> local files and Git history/stashes; [scheduled backups](scheduled-backups.md)
+> for deployed cloud/QNAP/Plex schedules and verified archives;
+> [current handoff](../../plan.md) for scope and remaining work. The manual formats
+> and earlier isolated drills below remain references. NAS-loss protection is
+> deferred, and full-machine replacement is separate from checkout readiness.
+
 # Recovery
 
 The full published-source clean-clone secrets/state drill passed: 24 vault

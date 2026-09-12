@@ -1,299 +1,198 @@
-You are my implementation agent. Starting from a cold state, guide me interactively through creating the required accounts and then build, configure, test, and document a reproducible Usenet acquisition and storage system.
+# Usenet, NAS and recovery plan
 
-Do not merely give me instructions. Perform everything you reasonably can using the tools available to you. Stop for me only when human interaction is actually necessary, such as payment, CAPTCHA, 2FA, entering a secret that you should not see, or making an irreversible purchasing decision.
+Keep this document current as work progresses. Perform authorized work using the
+repository tools; involve the user only where private input or device interaction
+is necessary. Account creation and infrastructure bootstrap are complete.
 
-Keep this document updated as agents make progress.
+## Resume here — authoritative handoff, September 11, 2026
 
-## Resume here — current handoff, September 11, 2026
+Read [the Usenet agent guide](usenet-infra/AGENTS.md), then this section. Everything
+below **Historical implementation record** records earlier stages or the original
+proposal; it is not a second set of current deployment instructions. Current
+runbooks linked here take precedence over those historical policies.
 
-### Active scope update
+### Scope and completed work
 
-The user requested scheduled backups, checkout deletion readiness, security
-remediation and completion of the native media workflow. NAS-loss protection is
-explicitly deferred. Checkout deletion readiness means preserving all unique
-local files and proving retrieval/restoration from published code and independently
-recoverable keys; it does not require replacing the live NAS, HA or UniFi machines.
-Those broader disaster-recovery drills remain separate and must not be silently
-marked passed. Do not actually delete the checkout.
+The user authorized scheduled backups, checkout deletion readiness, security
+remediation, and a seamless media workflow using existing ecosystem tools. They
+use Plex Pass with Plex on the QNAP, want Apple TV/Roku playback from either NAS
+or remote storage, and require everyday browsing to exclude the existing private
+`loljk` library. Manual source selection is acceptable. Preserve data and avoid
+large unnecessary I/O. NAS-loss protection is explicitly deferred.
 
-Current changes:
+- **Secrets/state DR is complete.** The published clean-clone drill restored 24
+  vault entries, 15 state/archive entries and six SSH keypairs. The existing
+  master is confirmed in 1Password (`SOPS_AGE_KEY`) and on paper. Do not regenerate
+  credentials, repeat purchases/setup, or ask for that confirmation again.
+- **Checkout recovery passed.** Additive file and Git snapshots preserve 1,319
+  local files, all 78 refs/reflog history and five stashes. Independent NAS fetch,
+  restore, MongoDB validation, path rebasing and recovered-key live authentication
+  passed. The final readiness check passed at published revision `cf13edb`.
+  This is a point-in-time result: rerun the check before a later deletion. No
+  checkout has been deleted; this handoff update does not request deletion.
+- **Daily encrypted backups are enabled on the hosts**, with hourly retry.
+  Cloud, QNAP and Plex archives were fetched from the NAS and verified using
+  independently recovered keys. These schedules do not depend on the Mac.
+- **Native media imports are deployed.** Radarr/Sonarr own completion and cleanup
+  against the real Storage Box library. `usenet-publish.timer` is disabled.
+  Five legacy movies were adopted using verified server-side hard links, with
+  no media bytes recopied; originals/manifests remain intact.
+- **NAS/Plex layout and remote playback access are deployed.** Peer directories
+  use the existing share; only the old cache was renamed on the same volume.
+  The restricted profile sees exactly the four general libraries. Plex indexed
+  all five remote movies and served a 1 MiB HTTP 206 range request. Actual TV
+  playback, startup privacy and a convenient NAS-copy action for new titles remain.
+- **Security fixes are committed and deployed.** Compatible lockfile updates in
+  five projects address the 53 reported dependency alerts; all four affected HA
+  add-ons passed deployed readiness checks. The tracked HA secrets file was
+  removed while ignored/live copies were preserved. The user confirmed known
+  consumers of the two historical Raspberry Pi keys were retired or wiped.
+  Full history scanning still reports those keys; history was not rewritten.
 
-- Cloud and NAS daily encrypted backup schedules are enabled with hourly retry.
-  Cloud, QNAP and Plex archives were retrieved from the NAS and verified with
-  identities restored in the clean-clone drill. See `usenet-infra/docs/scheduled-backups.md`.
-- Native Radarr/Sonarr imports and cleanup are enabled with a real synchronous
-  Storage Box library. The old publisher timer is disabled. Five catalog movies
-  were adopted using verified server-side hard links: zero media bytes copied.
-- QNAP has a read-only remote mount and Plex libraries `Movies (Remote)` (4) and
-  `TV Shows (Remote)` (5). The everyday profile sees exactly IDs 2/3/4/5 and is
-  denied private library 1. Plex indexed all five remote movies and passed a 1 MiB range stream; real TV
-  playback/startup and a convenient NAS-copy action for new native titles remain.
-- The historical Raspberry Pi key consumers were confirmed retired or wiped.
-  The tracked HA secrets file is removed from Git while its ignored/live copies
-  are preserved. Five compatible lockfile updates address the 53 reported alerts;
-  service tests/builds and root container checks passed. All four affected live add-ons were rebuilt, deployed and passed readiness checks. Full history scanning still reports the two exposed old keys.
-- Checkout-local snapshot `20260911T235253Z-9d6bbacf00ac982a` preserves 1,319 files
-  and passed independent NAS fetch, exact restore, MongoDB validation, checkout-path
-  rebasing and live authentication from a fresh clone. Companion Git snapshot
-  `20260912T000901Z-36009465898f2df0` preserves all 78 refs/reflog history and five
-  stashes; independent mirror restoration passed. See
-  `usenet-infra/docs/checkout-recovery.md` and the separate checkout drill receipt.
-  Recheck current local files and published HEAD before deletion. Original full-machine
-  `deletion_safe: false` evidence stays immutable. No checkout has been deleted.
+### Cold-start procedure
 
-This section is authoritative over chronological notes below. The Usenet
-secrets/state milestone is closed; Radarr/Sonarr discovery, automatic publication
-and the NAS/Plex layout are deployed. Continue with native import/storage and
-playback validation as described below. The small SOPS vault, locked Terraform
-state/archive capture, immutable QNAP ciphertext store, offline content checks,
-and full-clone drill tooling are implemented. Do not repeat account setup,
-purchases, credential generation, NAS bootstrap, diagnostic downloads or VPN
-provisioning. Read `usenet-infra/AGENTS.md` before operating this stack.
+1. Inspect `git status --short --branch` and the current branch tip. Work is on
+   `usenet`, published to `https://github.com/rtimmons/smarthome.git`. Preserve
+   user changes and the untracked `msg`; do not stage or delete that file.
+2. Read [native media](usenet-infra/docs/native-media.md) and
+   [NAS/Plex layout](usenet-infra/docs/nas-plex-layout.md). For recovery or backup
+   work, also read [checkout recovery](usenet-infra/docs/checkout-recovery.md),
+   [scheduled backups](usenet-infra/docs/scheduled-backups.md), and
+   [security findings](usenet-infra/docs/security-findings.md).
+3. Use the ignored `usenet-infra/.env` and `ansible/inventory.yml`, which select
+   dedicated cloud/NAS identities and host pins. If this is a replacement clone,
+   restore inputs through the recovery runbook first. Never print secrets or
+   replace those identities with an arbitrary SSH-agent key. Do not depend on
+   `/private/tmp`, old browser handles, SSH sockets, or uncommitted inspection
+   scripts from the previous session.
+4. Read live state before making changes; the recorded observations below are
+   not a promise that the queue or service state is unchanged:
 
-**Current recovery milestone:** NAS snapshot
-`20260911T191749Z-5150bea3423e3707` contains all 15 present non-vault entries,
-including both current Terraform states and all eleven retained archives. Its
-61,250,344-byte ciphertext was uploaded, downloaded into a separate directory,
-and verified byte-identical. The user then ran `recovery-verify` with the actual
-master: all 15 entries authenticated/validated, all six SSH keypairs matched,
-and `master_decryption_verified` was true. Cloud backups each passed two SQLite
-integrity checks. No live application or Terraform state was restored or changed.
+   ```sh
+   just usenet-discovery-health
+   just usenet-cloud-health
+   just usenet-qnap-health
+   just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-status
+   ```
 
-The user explicitly selected **QNAP NAS storage**, replacing the proposed
-requirement for a store independent of the NAS. The immutable directory is
-`/share/Container/usenet-recovery/20260911T191749Z-5150bea3423e3707/`, outside
-application/cache roots. This protects Mac/cloud loss; it cannot survive loss
-of the NAS disks as well. On September 11 the user confirmed the same master
-is in 1Password (`SOPS_AGE_KEY`) and written on paper outside 1Password. Count
-that independent-copy requirement as done; do not ask again or generate a key.
-The private master remains absent from repository files, NAS and agent context.
+   These recipes already exist. On this workstation `just` is
+   `/opt/homebrew/bin/just`. For a reviewed additional cloud read, use
+   `just --justfile usenet-infra/Justfile --working-directory usenet-infra --command ./scripts/cloud-command <arguments>`.
+   NAS catalog commands use `scripts/qnap-command`; other NAS reads must use the
+   same dedicated identity and pin from the private inputs. Do not run configure
+   or restore commands merely to inspect the system.
+5. Continue with the ordered work below. Keep evidence, instructions and this
+   handoff updated in the same commit as behavioral changes. Existing permission
+   covers committing/publishing these changes; it does not request merging the
+   branch into the default branch. Git signing/SSH push previously failed through
+   the agent; an explicitly unsigned commit and HTTPS push using existing GH CLI
+   authentication worked. Keep any fallback per-command; do not change global
+   signing settings or expose a token.
 
-**Full clean-clone secrets/state drill: passed.** On September 11 at 19:44 UTC,
-the operator ran the drill from published revision
-`6fa9174bb27b482033c32f0c642e89134894ce29`. The fresh GitHub clone bootstrapped
-pinned public tools, restored 24 vault entries, fetched the NAS snapshot using
-restored credentials, verified all 15 bundle entries and six keypairs, and
-passed the inventory check. The first pass restored 15 state/archive files;
-the repeat restored zero new files. The saved report and clean clone were
-inspected. Public evidence is committed at
-`usenet-infra/recovery/drills/20260911T194408Z.json`; the original report is
-`/Users/rtimmons/scratch/2026-09-11/smarthome-full-dr/build/recovery-drill.json`.
-This closes the planned clean-clone Usenet secrets/state milestone.
+### Current operating state and invariants
 
-To repeat with a new destination, inject the existing master and run:
+| Area | Deployed state / boundary |
+| --- | --- |
+| Cloud | Hetzner `89.167.18.138`, private `10.77.0.1`; Ubuntu 26.04. UniFi supplies the private LAN route; no Mac tunnel needed. |
+| Browse/download | Radarr `http://10.77.0.1:19696/radarr/`, Sonarr `/sonarr/`, Prowlarr at that listener's root; SAB `http://10.77.0.1:18080/`. Existing catalog login; Prowlarr also has Forms login. Radarr Discover is `/radarr/add/discover`. |
+| Acquisition | Eweka only; NZBGeek/NZBFinder enabled. Automatic search/RSS enabled, RSS every 15 minutes, existing monitoring preserved. Completed Download Handling and completed-client removal enabled; failed jobs retained and automatic redownload disabled. Legacy client/profile names containing “manual” retain their IDs. |
+| Canonical library | Storage Box `catalog/library`, synchronously mounted at `/srv/usenet/library`. Arr `/library` maps separately to `Movies` or `TV`; both see actual SAB scratch at `/data/complete`. `usenet-discovery.service` depends on `usenet-library.service`; mode-0000 unmounted protection and systemd-owned startup must remain. |
+| Completion ownership | Never re-enable the retired publisher or move Arr-owned scratch with a second mover. Five adopted movies have shared hard-linked bytes: never edit bytes in place. Old immutable `catalog/objects` and manifests remain for legacy NAS copies. New native imports do not create legacy catalog manifests. |
+| NAS | `usenet-deploy@rynapqnap.local` / `192.168.1.66`, UID:GID `1004:100`; app state `/share/Container/usenet`. Existing `FromDrobo` share contains peers `loljk`, `Movies`, `TV Shows`, `Remote`, and `.remote-cache`. No whole-collection copy, hash or permission rewrite. |
+| Selective copies | Legacy OliveTin dashboard `http://192.168.1.66:1337/` refreshes automatically. Verified copies go beneath `/share/FromDrobo/Movies/video`; `.staging` stays outside Plex sources. `media-003` (13.5 GiB) copied and indexed successfully. Keep 100 GiB NAS reserve. |
+| Remote playback | NAS container `usenet-remote-media` mounts Storage Box catalog read-only at `/share/FromDrobo/Remote/files`; existing server-enforced reader account, no listener. 20 GiB cache target / 100 GiB reserve / 24-hour age; open files may exceed the target. Preserve fast fingerprints and disabled SFTP hashcheck on this playback mount to avoid full-movie hashing. |
+| Plex | `http://192.168.1.66:32400/web`. Private `loljk` ID 1 unchanged; `Movies & TV` granted exactly IDs 2/3/4/5: Movies/TV Shows (NAS/Remote). Profile token denied ID 1 with HTTP 403. General roots must never include the share root. Exact source paths are in the layout guide. |
+| Plex refresh/privacy | Local watch, partial scans and hourly fallback enabled; automatic trash emptying disabled. Private library excluded from home/global search. Owner PIN and TV startup/profile selection need private user/device validation. Do not browse or emit private content. |
+| Backups | Cloud encrypts config to Storage Box `catalog/.backups/cloud`; NAS pulls ciphertext via read-only account. NAS encrypts its own config and Plex preferences/two SQLite DBs locally at `/share/Usenet/Backups/automatic`. Plex/NAS state is not uploaded. Backup permits idle or fully paused SAB but no post-processing; never resume/delete jobs to force capture. |
 
-```sh
-just --no-dotenv recovery-drill --snapshot 20260911T191749Z-5150bea3423e3707 --destination /absolute/new/clone
+After restoring older private inventory, preserve these current overrides before
+any deployment:
+
+```yaml
+qnap_data_root: /share/FromDrobo
+qnap_catalog_cache_dir: /share/FromDrobo/Movies
+qnap_backup_root: /share/Usenet/Backups/automatic
+qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media Server
 ```
 
-The destination must have an existing operator-owned non-writable parent. The
-drill clones `origin/usenet`, requires the exact published current revision,
-bootstraps public pinned tools, restores the vault, fetches NAS ciphertext using
-restored credentials, verifies/restores state and archives twice, and records
-`build/recovery-drill.json`. It reads no original ignored files.
+### Next work, in order
 
-**Historical full-machine drill:** its original `deletion_safe: false` is retained.
-Whole-HA and UniFi replacement drills are separate deferred work, not prerequisites
-for the user's newly scoped checkout deletion. Current checkout readiness is
-recorded above and in the additive checkout recovery receipt. The user approved staging, committing and publishing
-this recovery checkpoint and its handoff updates; do not ask again for those
-actions. Implementation commit `ea73226` and the tested handoff revision above
-are published on `origin/usenet`.
+1. **Convenient selective NAS copies for native-library titles.** This is the next
+   implementation task. Research primary manuals where needed and use existing
+   rclone/native ecosystem capabilities. OliveTin currently understands legacy
+   manifests, so future Arr imports will not appear there automatically. Add an
+   explicit per-title copy action from canonical `catalog/library`, with capacity
+   checks, staging, verification, atomic publication, collision handling and
+   safe repeat behavior. Keep movie/TV roots separate and Plex refresh native.
+   Acceptance: one selected native title copies, verifies and appears in the
+   correct NAS library; repeating is safe, failures preserve canonical bytes and
+   existing NAS files, and no whole-library copy or second scratch mover runs.
+2. **Validate a fresh native completion.** Mount protection and five existing-file
+   adoptions passed; a newly completed movie and TV import have not yet been
+   recorded end to end. Observe the next user-selected job, confirm Arr import,
+   client cleanup, scratch reclamation, persistent library presence and Plex
+   discovery. Do not enqueue diagnostic movies or broaden monitoring just to test.
+3. **Apple TV and Roku acceptance.** Use `Movies & TV`; have the user set the owner
+   PIN privately where necessary. Test cold launch, home/search/continue-watching
+   privacy, then NAS and Remote playback, seeking and sustained playback on each
+   device. Record relevant codec/audio/subtitle behavior. A short server range
+   read proves neither device decoding nor NAS transcoding capacity. Manual source
+   selection is acceptable; another Plex/Jellyfin server is not needed by default.
+4. **Operational follow-through.** Inspect the next scheduled backup results and
+   freshness when working on the stack. Cloud timer and NAS cron retry hourly;
+   NAS status fails after 36 hours without success or on a failed run. No external
+   notifications are configured and no continuous monitoring is promised. Retain
+   at least seven local/NAS generations, pruning only matching scheduler archives
+   older than 90 days; remote cloud ciphertext currently remains indefinitely.
 
-**Security audit finding:** expanded whole-main-repository source/index scanning
-passes, but reachable history contains two distinct RSA private keys committed
-in 2017–2018 and deleted from working files in 2018. Neither matches the six
-current dedicated identities. The user confirmed the known Raspberry Pi consumers were retired or wiped;
-unknown historical reuse is not proven absent. See `usenet-infra/docs/security-findings.md` for public
-fingerprints, commits and consumer evidence. No keys were used, no history was
-rewritten, and no scanner exception was added. Full `secret-scan` intentionally
-fails on those findings; do not claim the repository's history is credential-free.
+Deferred/separate: NAS-loss protection; whole HA/UniFi/NAS replacement and Plex
+package-startup restore drills; optional LAN HTTPS/navigation, request portal and
+fill provider. Full cloud reboot recovery has not been exercised. The external
+public-IP NAS dashboard probe previously failed automatic approval review; do not
+retry under unrelated VPN authorization. A default-branch merge has not been
+requested; GitHub dependency alerts there remain until fixes reach that branch.
 
-### Live system and operating entry points
+### Durable evidence and deletion gate
 
-| Component | Current verified state |
+All recovery snapshots below live under `/share/Container/usenet-recovery/<id>/`.
+The original SOPS-bound inventory and its full-machine `deletion_safe: false`
+remain immutable; additive checkout evidence has the narrower scope.
+
+| Evidence | Snapshot / committed record |
 | --- | --- |
-| Cloud | Hetzner `usenet-acquisition`, IPv4 `89.167.18.138`; Ubuntu 26.04; SABnzbd, Prowlarr, writer/catalog, private proxy and strongSwan |
-| Storage | BX11 canonical Storage Box; QNAP subaccount is server-enforced read-only; VM scratch and NAS cache are disposable |
-| NAS | `usenet-deploy@rynapqnap.local`, LAN `192.168.1.66`; QNAP TS-451D2/QTS 5.2.10.3577; UID:GID `1004:100` |
-| QNAP data | Application root `/share/Container/usenet`; cache `/share/FromDrobo/Movies`; 100 GiB minimum free space |
-| UniFi | Cloud Key `192.168.1.180`, UniFi OS 5.1.31/Network 10.6.101; USG 3P `192.168.1.1`, firmware 4.4.57.5578372 |
-| Search | `http://10.77.0.1:19696/`: catalog credentials in browser popup, then existing Prowlarr Forms credentials |
-| Downloads | `http://10.77.0.1:18080/`: catalog credentials in browser popup |
-| Catalog/cache | `http://192.168.1.66:1337/`: existing dashboard login; explicit Download/Remove actions |
+| Original secrets/state | `20260911T191749Z-5150bea3423e3707`; [clean-clone receipt](usenet-infra/recovery/drills/20260911T194408Z.json) |
+| Checkout files | `20260911T235253Z-9d6bbacf00ac982a`; 1,319 files; [checkout receipt](usenet-infra/recovery/drills/checkout-20260911.json) |
+| Git history/stashes | `20260912T000901Z-36009465898f2df0`; 78 refs, five stashes; same checkout receipt and [restore instructions/checksums](usenet-infra/docs/checkout-recovery.md) |
+| Scheduled cloud/QNAP/Plex | [verified archive receipts](usenet-infra/recovery/drills/scheduled-backups-20260911.json); [scope and retention](usenet-infra/docs/scheduled-backups.md) |
+| Native adoption | Cloud `/srv/usenet/state/catalog/native-library-adoption-20260911.json`, included in the new cloud backup |
 
-The user confirmed both cloud UIs and the QNAP dashboard work. UniFi maintains
-the private route automatically; no workstation tunnel is needed. IPsec protects
-gateway-to-cloud traffic; these URLs still use HTTP within the trusted LAN.
-Home Assistant can link to them but does not carry the tunnel. Eweka is the only
-provider; **UsenetExpress is explicitly deferred until actual completion gaps
-justify it**. NZBGeek and NZBFinder Pro are paid, enabled and tested. Provider,
-indexer and application credentials stay in private forms/files, never chat.
+After fetching both additive archives with recovered credentials, this read-only
+check validates current local files, Git history/stashes/settings, tracked-tree
+cleanliness and publication of HEAD. Use actual freshly fetched paths:
 
-**Curated discovery is live.** The user selected Radarr and Sonarr on September
-11. Movies are at `http://10.77.0.1:19696/radarr/`; TV is at
-`http://10.77.0.1:19696/sonarr/`, using the existing catalog login. Prowlarr syncs
-both existing indexers with interactive/automatic search and RSS enabled, as
-explicitly authorized on September 11. RSS runs every 15 minutes for monitored
-titles; existing monitoring selections are preserved. Both apps have a tested SAB client; completed imports, automatic
-retries and download removal are disabled. They have no download or canonical
-storage mounts. Initial setup added no titles or list subscriptions; the user
-subsequently downloaded four movies. A request portal remains deferred.
-See `usenet-infra/docs/discovery.md`.
+```sh
+python3 usenet-infra/scripts/checkout-backup.py check \
+  --archive /absolute/files/recovery.tar.age \
+  --git-archive /absolute/git/recovery.tar.age \
+  --identity /absolute/recovered/cloud-admin
+```
 
-Live acceptance: Radarr Discover returned 30 movies; movie/series metadata
-lookups returned results; both private routes return 401 anonymously. The two
-application configurations repeat without writes after accounting for the API's
-masked credential responses. The current policy permits only the disabled-import
-health notice; RSS/search problems now fail the check. Existing cloud/catalog health
-passes, with the same seven historical SAB warnings. The in-app browser blocked
-the private VPN URL, so visual login acceptance remains for the user's browser.
+A failure requires preserving new work or publishing source, not bypassing the
+check. Restore instructions do not rely on the old checkout or temporary tools.
 
-**Automatic search and RSS update verified.** Both apps report automatic search
-and RSS enabled at 15-minute intervals, with imports still disabled. The 398-case
-Usenet suite passed with eight opt-in skips. Encrypted supplemental snapshot
-`20260911T210232Z-ae56b33b7f0488c7` was uploaded, fetched and decrypted successfully.
-The source changes and receipt are included in the September 11 automation and
-NAS/Plex checkpoint; no newer complete secrets/state drill has been performed.
+Validation at the implementation checkpoint: root `just test` passed functional
+and seven container checks; all five affected npm audits reported zero known
+vulnerabilities. The Usenet suite ran 414 cases with eight opt-in skips; its full
+recipe still fails at the known historical-key scan. Current-source/index scan
+passes. Report those separately and do not add scanner exemptions. Live Arr health
+had zero notices; last SAB observation was empty/unpaused. Re-read before acting.
 
-**Automatic publication and NAS/Plex layout deployed.** The publisher processed
-all four completed movies, verified remote bytes/manifests and reclaimed cloud
-scratch; free space rose from 55.1 to 123.7 GiB. The NAS catalog's existing tab
-now refreshes automatically. Its cache was renamed on the same volume from
-`/share/Usenet/usenet-cache` to `/share/FromDrobo/Movies`, alongside `loljk` and
-the new `TV Shows` directory; zero media bytes were copied by that move. Private
-inventory and live Compose bindings agree. Plex libraries `Movies (NAS)` and
-`TV Shows (NAS)` use separate roots. The `Movies & TV` managed profile sees
-only those libraries; direct private-library access returned 403. The original
-5,258 entries, media path and directory inode were preserved. Plex home/search
-visibility excludes the private library, partial scans and hourly fallback are
-enabled, and automatic trash emptying is disabled. The owner's PIN and TV-client
-profile selection still require the user's private/client-side setup.
+## Historical implementation record
 
-The first real movie NAS pull completed and passed SHA-256 verification;
-Plex automatically indexed `media-003` in `Movies (NAS)`. The 13.5 GiB copy
-took approximately 30 minutes with variable throughput. Actual TV-client
-playback remains untested. Native Arr imports and remote Plex mounts are not
-deployed; do not run another file mover against
-the automatic publisher's sources. See `usenet-infra/docs/nas-plex-layout.md`
-and `usenet-infra/docs/media-workflow-review.md`. Latest local validation ran
-406 cases (398 passed, eight opt-in skips); source/index secret scanning passes,
-while the full test recipe still fails on the known historical RSA-key findings
-described above. A new supplemental backup was refused by the existing
-empty-SAB-queue requirement (three jobs remain paused); the previous verified
-snapshot remains available. Do not empty or resume that queue just for a backup.
-
-Next: pilot a real mounted library with native Arr completed imports, coordinating
-file ownership with the publisher; validate remote-read performance before
-exposing a remote Plex library. Keep NAS copying selective. Test Apple TV/Roku
-playback and startup using the restricted profile. Repeat supplemental cloud/NAS
-backups when their existing idle checks permit; preserve the original bound
-recovery snapshot. Do not claim the new Plex state is covered by the old backup.
-
-**New app-state backup is verified on the NAS.** Supplemental snapshot
-`20260911T201003Z-bcb62179eb783aef` contains 601 files and four SQLite databases;
-13,315,460 ciphertext bytes, SHA-256
-`84ece70d8f020b48fbe353e174f7e2755f469d500aa484a11f0e702b5432bd98`.
-Capture, decryption, NAS upload/download and repeat decryption all passed.
-The downloaded copy also decrypted with the cloud-admin key restored by the
-earlier clean-clone drill. This supplemental cloud-config archive uses that
-escrowed key; restore it with `usenet-backup-verify` / `usenet-backup-restore`,
-not the master-bundle verifier. Preserve the original SOPS-bound inventory and
-full-clone baseline. Public evidence lives in
-`usenet-infra/recovery/application-backups/20260911T201003Z-bcb62179eb783aef.json`.
-`just usenet-discovery-backup` repeats this operation without needing the master
-or changing the bound inventory; retention remains manual.
-
-Discovery validation: the final Usenet run executed 397 cases (389 passed,
-eight optional runtime skips); all 13 isolated proxy tests passed separately,
-including the eight runtime cases. Compilation, ShellCheck, JSON/YAML and four
-Ansible syntax checks passed. Current source/index secret scanning passes; the
-whole-history step still fails only on the two documented old RSA keys.
-The final `just test` also passed all repository tests and all seven add-on
-container checks. The user explicitly approved staging, committing and pushing
-the discovery checkpoint and its public recovery evidence to `origin/usenet`.
-
-From repository root use `just usenet-test`, `just usenet-cloud-health`, and
-`just usenet-qnap-health`. Catalog reads use `just --justfile usenet-infra/Justfile
---working-directory usenet-infra catalog-list` (or `catalog-status`). On this workstation `just` is
-`/opt/homebrew/bin/just`; use the repository runtime wrappers. The ignored
-`usenet-infra/.env` supplies exact SSH targets, dedicated identities and host pins.
-For a reviewed cloud command use `just --justfile usenet-infra/Justfile
---working-directory usenet-infra --command ./scripts/cloud-command <arguments>`.
-Never fall back to arbitrary SSH-agent identities for cloud/NAS access.
-Ansible's actual deployment values are in ignored `usenet-infra/ansible/inventory.yml`.
-
-The legacy USG needs the checked-in `usenet-infra/unifi/config.gateway.json`
-installed on Cloud Key at `/data/unifi/data/sites/default/config.gateway.json`
-(`unifi:unifi`, 0644). The UI alone incorrectly generated IKEv1 and a printer
-tunnel. The override creates dedicated crypto groups, uses only main LAN
-`192.168.1.0/24` ↔ `10.77.0.0/30`, and disables the printer tunnel. Only cloud
-`10.77.0.1:18080/19696` is permitted. WAN is currently `100.1.188.109`; WAN or
-LAN/VLAN changes require selector/peer/firewall revalidation. See
-`usenet-infra/docs/lan-ui.md` for rebuild/rollback. Do not reboot the gateway or NAS.
-
-Cloud Key SSH uses the existing 1Password agent; do not export that private key.
-USG public-key login still fails; the existing UniFi-managed device login was
-used in memory for read-only inspection, with the preexisting pinned host key.
-Do not assume old browser handles, temporary SSH sockets, or ignored `build/`
-inspection scripts survive a fresh session. Cloud Key pin:
-`SHA256:mokbmi/Llxd7MGWd+/XUzBf4xHW8MNofYHkSrfUVfJI`; USG ED25519 pin:
-`SHA256:kMYrptArIjGa62CAcE/5RSvxwgZXXRqffFRkIdTnIMQ`. NAS approved first-use RSA
-pin: `SHA256:jXVysXlhzn80Tk2BYg8CGNkfMCqjCEpyu0PyyHJX5RA`. Preserve actual
-known-host files and reject unexpected changes. Home Assistant has its separate
-repository identity and mandatory failure procedure in `AGENTS.md`.
-
-### Acceptance and remaining limits
-
-Verified: official 100 MB Eweka diagnostic through canonical promotion and NAS
-download/hash/removal; QNAP read-only enforcement; dashboard authentication and
-restart persistence; isolated cloud/QNAP application restore drills; LAN login
-to both cloud UIs; anonymous denial; blocked backend/public ports; exact IKEv2
-selectors; explicit PFS14 rekey; automatic reconnection after cloud-only
-strongSwan restart; unchanged default route/old site VPN configuration; cloud
-Ansible repeat convergence with zero changes. Before this state/archive increment,
-the Usenet suite had 292 cases: 285 pass, seven opt-in skips; those seven proxy runtime cases
-previously passed separately during LAN implementation. Prior checkpoint `just test` also passed:
-Talos 118 tests (11 slow deselected), grid dashboard 102, printer 225 including
-browser tests, snapshot 7, tinyurl 16, Sonos tests/builds, and all seven add-on
-container checks. That earlier `just usenet-test` run passed compilation, ShellCheck,
-JSON/YAML, three Ansible syntax checks and secret scans. Independent security
-review found no concrete commit blocker; this is not a guarantee against all
-vulnerabilities. Historical counts later in this file reflect earlier stages.
-
-Remaining independent work: historical-key authorization review; backup
-freshness, scheduling and retention; optional LAN HTTPS
-and Home Assistant navigation/status; full machine replacement drills. The
-external public-IP test of NAS port 1337 was rejected by automatic approval
-review and still needs explicit approval; do not retry it under VPN authorization.
-SAB has seven historical setup/Direct Unpack warnings, with current storage,
-Prowlarr and catalog health passing. Legacy USG uses AES-256/HMAC-SHA1/DH14/PFS;
-replace with modern cryptography when hardware supports it. No secrets were reset
-to resolve the two-stage Prowlarr login.
-
-The work is on branch `usenet`, remote `origin` is
-`git@github.com:rtimmons/smarthome.git`. Only this task's `Justfile`, `plan.md`, and
-`usenet-infra/` changes belong in its commits. The unrelated untracked
-`grid-dashboard/ExpressServer/src/public/mobile-layout-mockups.html` is user work;
-preserve it separately before deleting the checkout. Do not silently commit or
-remove it. Ignored evidence is supplemental; the verified outcomes and backup
-paths/checksums necessary for recovery are recorded in this document.
-
-Checkpoint: implementation and handoff commit `1c359f6`. Both required test
-recipes and the staged-content secret scan passed before commit. The user
-explicitly approved publication to `origin/usenet`; the branch was pushed
-successfully, including checkpoint notes commit `61f50be`. Clone with
-`git clone --branch usenet git@github.com:rtimmons/smarthome.git`, then read this
-file first. This is a published feature branch, not a merge into the default
-branch. It preserves source, not the ignored recovery material described above.
-
-GitHub's push response reported 53 dependency alerts on the repository's default
-branch (30 high, 23 moderate). Their applicability to this branch/Usenet was not
-established by the functional tests or this focused code review. Add a separate
-dependency-alert triage before claiming repository-wide security readiness;
-inspect actual affected packages, reachable paths and available fixes rather
-than doing blind major-version upgrades. This handoff does not certify the
-whole smarthome repository free of vulnerabilities.
+Everything below is retained for provenance, including the original proposal.
+Its old “next”, “current”, disabled-import, publisher, manual-backup and deletion
+blocker statements describe their historical checkpoints. Use the handoff above
+and linked current runbooks for decisions; do not replay completed setup.
 
 ## Completed milestone — master-key secrets and clean-clone recovery
 
@@ -800,7 +699,7 @@ Storage Box access, catalog failure state, SABnzbd, and VM scratch. NZBGeek is
 now enabled; a fresh complete health report is being verified after updating
 credential-safe error handling.
 
-### Cold-agent resume checkpoint
+### Historical cold-agent checkpoint (superseded)
 
 Do not recreate, replace, or destroy the live Hetzner resources, and do not ask
 the user to restate the already-stored Hetzner token or any generated key. Start

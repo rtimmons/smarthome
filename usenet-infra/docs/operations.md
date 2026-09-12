@@ -2,15 +2,18 @@
 
 Native Arr imports now own completion, and the old publisher timer is disabled.
 Read [native media](native-media.md) and [scheduled backups](scheduled-backups.md)
-for the current mount, backup and playback configuration. Older manual-backup
-and metadata-only discovery descriptions below are historical.
+for the current mount, backup and playback configuration, and the
+[current handoff](../../plan.md) for next tasks. The manual catalog commands below
+serve legacy independent objects; they must not move Arr-owned completed files.
 
 # Operations
 
 ## Administrative access
 
-SABnzbd and Prowlarr listen on cloud loopback only. From `usenet-infra/`, open
-the dedicated-key tunnel using the ignored workstation connection settings:
+Normally use SAB at `http://10.77.0.1:18080/` and Prowlarr/Arr at
+`http://10.77.0.1:19696/` through the existing LAN VPN route and proxy. Backend
+listeners remain loopback-only. For the optional administrative tunnel, from
+`usenet-infra/` use the ignored workstation connection settings:
 
 ```sh
 just cloud-ui
@@ -34,7 +37,7 @@ just usenet-sab-provider test
 The settings helper selects `/data/incomplete` and `/data/complete`, sets a
 30 GiB free-space floor for both download and completion, and enables normal
 repair/unpack processing. Watched folders and automatic scripts remain disabled;
-catalog promotion is separate. It refuses to change settings while downloads or
+Arr owns movie/TV imports; legacy catalog promotion is separate. It refuses to change settings while downloads or
 post-processing jobs exist, or when custom category workflows/RSS feeds need
 review. Every change is read back. The provider helper reconciles only the
 existing Eweka server. A fill provider is deferred until actual completion gaps
@@ -98,15 +101,16 @@ mode `0640` and owner preserved. Other XML settings were unchanged.
 Saved-client and NZBGeek tests also passed after rotation.
 The user subsequently enabled Radarr/Sonarr automatic search and RSS globally.
 Monitoring selects the titles/episodes eligible for acquisition; quality profiles
-select matching releases. Successful completed SAB jobs are now automatically
-published, verified and removed from cloud scratch by the transitional publisher.
+select matching releases. Arr imports its successful completed SAB jobs into
+the canonical library and enables completed-client cleanup. The transitional
+publisher timer is disabled; keep it disabled.
 
-## Deliberate acquisition and promotion
+## Native acquisition and legacy manual promotion
 
 For curated movie browsing and TV lookup/calendar, use the deployed
 [Radarr/Sonarr interfaces](discovery.md). Both connect to the existing indexers
 and SAB with automatic search and 15-minute RSS checks enabled. Completed jobs
-are automatically published to the Storage Box. The pages use the catalog login at
+are imported by Arr into the mounted Storage Box library. The pages use the catalog login at
 `http://10.77.0.1:19696/radarr/` and `http://10.77.0.1:19696/sonarr/`.
 
 To search interactively, keep `just usenet-cloud-ui` running from the repository
@@ -114,8 +118,10 @@ root, open Prowlarr at `http://127.0.0.1:9696`, and select **Search**. Enter a
 query, select NZBGeek and NZBFinder (or all Usenet indexers), optionally select
 a category, and press **Search**. The download icon at the right of a result
 sends it to the configured SABnzbd client. Follow its queue and completed
-history at `http://127.0.0.1:8080`. This downloads to the cloud VM; publication
-is automatic, while the subsequent NAS copy remains a deliberate selection.
+history at `http://127.0.0.1:8080`. This downloads to the cloud VM. A direct
+Prowlarr grab does not establish Arr ownership, so do not assume it will be
+automatically imported. Prefer Arr for managed movies/TV; review independent
+jobs for manual promotion. Subsequent NAS copies remain deliberate selections.
 See the [official search guide](https://wiki.servarr.com/prowlarr/search).
 
 The official diagnostic fixture has already passed NNTP downloading,
@@ -126,8 +132,8 @@ has passed the NAS dashboard download/reconnection/eviction checks; remaining
 acceptance is tracked in the validation ledger.
 
 The following manual promotion procedure remains available for exceptional
-imports. Do not manually promote a SAB job already owned by the automatic
-publisher; its deterministic job ID avoids duplicate remote objects.
+imports outside Arr ownership. Do not manually promote an Arr-owned SAB job
+or turn the retired publisher back on. Establish ownership before touching scratch.
 
 1. Confirm that the material is authorized and record the basis.
 2. Deliberately send the selected NZB to SABnzbd.
@@ -156,19 +162,17 @@ Remote layout:
 catalog/
 ├── .incoming/
 ├── manifests/<item-id>.json
-└── objects/<category>/<item-id>/...
+├── objects/<category>/<item-id>/...
+└── library/{Movies,TV}/...     native Arr imports; no legacy manifests
 ```
 
-After changing provider/indexer credentials or important configuration, run
-`just usenet-backup-cloud` from the repository root while SAB is idle. It
-encrypts on the VM and publishes an off-VM archive only after local decryption,
-checksum, and database verification. This is a manual operation; no recurring
-backup schedule is installed yet. See [recovery](recovery.md) for restoring into
-a fresh directory and retaining the separate decryption identity.
-The latest verified archive includes both indexers, the rotated Prowlarr
-application key, login/client configuration, cloud catalog/health updates, and
-the restored Direct Unpack setting.
-Repeat the capture after subsequent settings changes.
+After important configuration changes, ensure a fresh verified archive exists.
+[Scheduled backups](scheduled-backups.md) run on the cloud and NAS, daily with
+hourly retry. The separate `just usenet-backup-cloud` manual capture remains
+available when its own idle checks permit; it verifies an archive without
+changing the original master-bound recovery inventory. See [recovery](recovery.md)
+for that manual format and [scheduled backups](scheduled-backups.md) for current
+schedule scope, retention and status. Never alter the SAB queue to force capture.
 
 ## Selective QNAP cache
 
@@ -351,20 +355,23 @@ Storage Box root. Do not pull a new application version through mutable tags.
 
 ## Configuration backups
 
-Back up and encrypt, separately from the canonical library as it grows toward
-the 20 TB target:
+Current schedules and verified archive receipts are in [scheduled backups](scheduled-backups.md).
+The protected configuration includes:
 
 - `/srv/usenet/config/sabnzbd`;
-- `/srv/usenet/config/prowlarr`;
+- `/srv/usenet/config/prowlarr`, `radarr` and `sonarr`;
 - `/srv/usenet/state/catalog`;
 - the QNAP catalog state directory and remote provenance manifests;
 - OliveTin authentication/runtime configuration and execution history, plus
   the selected private access/TLS configuration; and
-- Terraform states, variable files, SSH keys, and verified host keys.
+- Plex preferences and its two SQLite databases in the NAS-local schedule; and
+- Terraform states, variable files, SSH keys and verified host keys through the
+  separate immutable master/checkout snapshots, not the daily application job.
 
-Storage Box snapshots are same-box rollback aids, consume capacity, and are not
-an independent backup. Keep source in Git and put encrypted configuration
-backups somewhere outside both the VM and Storage Box.
+Storage Box snapshots are same-box rollback aids. Cloud configuration ciphertext
+is replicated to the NAS; Plex/QNAP configuration stays encrypted on the NAS.
+Source is published in Git and recovery keys have the confirmed independent
+master chain. NAS-loss protection is explicitly deferred.
 
 For OliveTin, preserve the protected auth JSON and
 `QNAP_DASHBOARD_STATE_DIR`, particularly `runtime/sessions.yaml` and
@@ -374,14 +381,12 @@ environment placeholders rather than password hashes. The runtime supervisor
 suppresses upstream startup debug output and redacts the known hash so it does
 not enter operational logs.
 
-Use `just usenet-backup-cloud` for cloud configuration and
-`just usenet-backup-qnap` for the NAS state. Both are manual and publish only
-verified encrypted archives outside the source host; the QNAP helper's first
-live 32-file capture and authenticated verification passed. Verification and fresh-directory restore
-commands, exact scopes, limits, and the passed isolated cloud startup drill
-are documented in [recovery](recovery.md). Take a new backup after changing
-credentials or configuration, and preserve the matching decryption identity
-outside the host and archive location.
+Manual `just usenet-backup-cloud` and `just usenet-backup-qnap` captures remain
+available alongside the host-owned schedules. Their format, verification and
+fresh-directory restore commands are in [recovery](recovery.md). The initial
+cloud/QNAP isolated startup drills predate the native media changes; current
+scheduled cloud/QNAP/Plex archive verification does not claim full machine or
+Plex package-startup restoration. Preserve the matching recoverable identities.
 
 ## Authorized end-to-end acceptance test
 

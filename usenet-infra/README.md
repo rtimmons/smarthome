@@ -7,9 +7,12 @@ BX11 and grows in place through BX21 and BX31 to the eventual 20 TB BX41 target.
 The QNAP has a separate server-enforced read-only Storage Box identity and holds
 only selected, locally cached items.
 
-OliveTin is the primary catalog interface: browse items, download a verified
-local copy, or confirm removal of only the NAS copy. Its predefined actions use
-the same manifest-aware backend as the recovery commands below.
+Start with the [current plan/handoff](../plan.md) and [agent guide](AGENTS.md).
+Radarr/Sonarr provide discovery, acquisition and native imports; Plex on the QNAP
+provides NAS and remote playback with separate general/private libraries.
+OliveTin is the transitional selective-copy/removal interface for legacy catalog
+objects. New native titles still need a convenient NAS-copy action; real TV-client
+playback/privacy acceptance also remains. See [native media](docs/native-media.md).
 
 The cloud infrastructure is live. Eweka's saved settings, authenticated
 connection test, and official 100 MB download/processing pass. The resulting
@@ -40,15 +43,16 @@ private LAN listener alone does not prove Internet isolation. Follow
 [QNAP bootstrap](docs/qnap-bootstrap.md) for actual paths, trust, and access,
 and [validation](docs/validation.md) for evidence and remaining limits.
 
-Administrative web interfaces bind to cloud loopback only. Acquisition does not
-depend on the QNAP, and no unattended search-to-permanent-catalog automation is
-enabled. Promotion is a deliberate command that hashes locally, uploads beneath
-`.incoming`, verifies the remote bytes, publishes the object, then publishes its
-provenance manifest last.
+Backend web interfaces bind to cloud loopback; the authenticated proxy exposes
+the existing private VPN listener. Acquisition does not depend on the QNAP.
+Native Arr imports move completed scratch into the synchronous Storage Box
+library; completed-client cleanup is enabled. The old publisher timer is disabled.
+Legacy manual catalog promotion remains available only for independent items,
+never for scratch owned by Arr.
 
-Start with [account setup](docs/account-setup.md), then follow the
-[QNAP bootstrap](docs/qnap-bootstrap.md). Architecture, routine operation, and
-recovery are documented under `docs/`.
+Account setup and QNAP bootstrap are complete. Their runbooks are rebuild
+references, not cold-agent starting tasks. Routine operation and recovery are
+documented under `docs/`; the current handoff lists the next work.
 
 For checkout-loss recovery, follow [secrets and state recovery](docs/secrets-recovery.md).
 The Git-hosted SOPS vault holds the small inputs; versioned master-encrypted
@@ -56,15 +60,19 @@ state/archive packages live on the QNAP outside the app/cache directories.
 Inject the existing `SOPS_AGE_KEY` to restore. The operator keeps the same master
 in 1Password and on paper. The [full published-source secrets/state drill](recovery/drills/20260911T194408Z.json)
 passed: 24 vault entries, 15 bundle entries and six keypairs; repeat restoration
-added zero files. HA/UniFi and full machine recovery remain unproven, and checkout
-deletion is still unsafe. `just --no-dotenv secrets-check` alone checks metadata.
+added zero files. Separate [checkout recovery](docs/checkout-recovery.md) preserves
+1,319 local files, Git history and five stashes; independent restoration and the
+readiness check passed. Rerun that check against current local work and published
+HEAD before deletion. HA/UniFi/full-machine recovery remains separate and NAS-loss
+protection is deferred. `just --no-dotenv secrets-check` alone checks metadata.
 
 [Radarr and Sonarr discovery](docs/discovery.md) is now deployed behind the
 existing private catalog login at `http://10.77.0.1:19696/radarr/` and
 `http://10.77.0.1:19696/sonarr/`. Interactive searches use the existing indexers
 and SAB; automatic search and 15-minute RSS checks are enabled for monitored
-titles. Automatic imports remain disabled. The new state has a
-separately verified encrypted NAS backup using the escrowed cloud-admin key.
+titles. Native imports and completed-client cleanup are enabled.
+[Scheduled backups](docs/scheduled-backups.md) protect current cloud/QNAP/Plex
+configuration using existing recoverable identities.
 
 Capacity is reviewed at an 80% warning and upgraded before 90%; expansion is a
 deliberate, reviewed Terraform change, not an automatic purchase. See
@@ -88,10 +96,11 @@ just qnap-health
 checks. It discovers Container Station's Docker path without changing the host
 environment.
 
-Copy `.env.example` to `.env` for non-secret SSH targets. Secrets, private keys,
+Existing private connection inputs are in `.env`; recover them through the
+vault/snapshot runbook in a new clone rather than overwriting them from an example. Secrets, private keys,
 Terraform state, live inventory, runtime configuration, and backups are ignored
-by Git. Open the cloud applications with `just cloud-ui` (from the repository
-root: `just usenet-cloud-ui`), then use `http://127.0.0.1:8080` for SABnzbd and
+by Git. The normal LAN route uses `10.77.0.1` as documented in the handoff. An optional
+administrative tunnel is `just cloud-ui` (root: `just usenet-cloud-ui`); then use `http://127.0.0.1:8080` for SABnzbd and
 `http://127.0.0.1:9696` for Prowlarr while the tunnel is open. Run `just test`
 before applying changes.
 
@@ -126,10 +135,10 @@ dashboard download, reconnect-during-transfer, verified local state, and
 confirmed eviction back to remote-only passed. The remaining acceptance
 checks are tracked in [validation](docs/validation.md).
 
-The latest encrypted cloud configuration backup includes both indexer keys,
-the rotated Prowlarr application key, login/client settings, restored Direct
-Unpack setting, and current cloud catalog/health scripts. It verified 589 files
-and two SQLite databases locally. From the repository root:
+An earlier cloud configuration backup verified 589 files and two SQLite
+databases. Current scheduled archives also cover Radarr/Sonarr and are documented
+in [scheduled backups](docs/scheduled-backups.md). Manual recovery commands from
+the repository root remain available:
 
 ```sh
 just usenet-backup-cloud
@@ -137,8 +146,8 @@ just usenet-backup-verify /absolute/path/to/archive.tar.age
 just usenet-backup-restore /absolute/path/to/archive.tar.age /absolute/path/to/new-recovery-directory
 ```
 
-The latest verified cloud and QNAP archives are identified in
-[recovery](docs/recovery.md);
+The verified scheduled cloud, QNAP and Plex archives are identified in
+[the committed receipt](recovery/drills/scheduled-backups-20260911.json);
 the previous archives are preserved as historical recovery material.
 
 These capture, verify, or restore into a fresh private directory without
@@ -147,5 +156,6 @@ for scope and key retention. An isolated offline restore-startup drill passed
 for both pinned cloud applications, preserving configuration and database rows;
 test containers and plaintext copies were removed. First live QNAP capture,
 verification, and isolated startup restore also passed, preserving
-authentication/session/history. Backups are manual; rerun them after
-configuration changes. These isolated drills did not replace the VM or NAS.
+authentication/session/history. Host-owned daily backups now run with hourly
+retry; an intentional manual capture can protect a new configuration checkpoint.
+These isolated drills did not replace the VM or NAS.

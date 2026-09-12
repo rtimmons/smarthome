@@ -1,7 +1,8 @@
 # Usenet, NAS and Plex agent guide
 
-Read the current handoff at the top of `../plan.md`, then `docs/operations.md`,
-`docs/nas-plex-layout.md`, `docs/native-media.md` and `docs/scheduled-backups.md`. Chronological
+Read the [current handoff](../plan.md), then [native media](docs/native-media.md),
+[NAS/Plex layout](docs/nas-plex-layout.md) and [scheduled backups](docs/scheduled-backups.md).
+Use [operations](docs/operations.md) for additional commands. Chronological
 notes describe earlier policies; they do not override the current handoff.
 
 ## Access and validation
@@ -46,22 +47,47 @@ notes describe earlier policies; they do not override the current handoff.
   idle or fully paused SAB queue but reject post-processing. Never delete/resume
   jobs just to satisfy backup checks. NAS-loss protection is explicitly deferred.
 
-- Checkout-local preservation and independent restore passed for snapshot
-  `20260911T235253Z-9d6bbacf00ac982a`. See `docs/checkout-recovery.md`; rerun the
-  current-files/published-source check before declaring a later checkout safe.
-  This does not authorize deleting the checkout or imply NAS-loss protection.
+- Checkout-local preservation and independent restore passed: snapshot
+  `20260911T235253Z-9d6bbacf00ac982a` contains 1,319 local files; companion
+  `20260912T000901Z-36009465898f2df0` preserves 78 Git refs/reflog history and five
+  stashes. The readiness check passed at published `cf13edb`. Follow
+  [checkout recovery](docs/checkout-recovery.md) and recheck current files, Git
+  history/settings and published source before declaring a later checkout safe.
+  Preserve the untracked `msg`. Do not delete the checkout as part of a handoff
+  update or imply NAS-loss protection. Original bound evidence stays immutable.
 
 ## Plex privacy and playback
 
 - Plex runs on the QNAP. `loljk` is the existing private library; preserve its
   files, library ID and root. Do not browse or emit its thumbnails/content while
   inspecting settings. General libraries must never include the share root.
-- `Movies (NAS)` and `TV Shows (NAS)` are granted to managed profile `Movies & TV`
-  and the two Remote libraries (IDs 2/3/4/5). Preserve `loljk` exclusion from home/global search and verify actual
-  profile grants, not only presentation settings. Owner PIN/client startup
+- Managed profile `Movies & TV` is granted exactly `Movies (NAS)`, `TV Shows (NAS)`,
+  `Movies (Remote)` and `TV Shows (Remote)` (IDs 2/3/4/5); private `loljk` is ID 1.
+  Preserve its exclusion from home/global search and verify actual profile grants,
+  not only presentation settings. Owner PIN/client startup
   configuration requires private user/device setup; do not invent a PIN.
 - Plex watches local changes, performs partial scans and scans hourly; automatic
   trash emptying is disabled. Do not empty trash to resolve an unavailable mount.
 - Native TV sorting and the read-only remote mount are deployed. Actual Apple TV/Roku
   playback and a convenient NAS copy action for new native-library titles remain. Do not claim file indexing proves playback
   or that a configured profile proves safe startup on every client.
+
+## Resuming unfinished work
+
+- Start with read-only `just usenet-discovery-health`, `just usenet-cloud-health`
+  and `just usenet-qnap-health` from the repository root. Do not replay setup,
+  account creation or deploy recipes merely to inspect the system. Restore missing
+  private inputs through the documented vault/snapshot chain; temporary helpers,
+  browser handles and SSH sockets from old sessions are not prerequisites.
+- Next implementation: an explicit selective NAS-copy action for native
+  `catalog/library` titles using existing transfer tools. New native imports do
+  not produce the legacy manifests OliveTin needs. Preserve capacity checks,
+  staging, verification, atomic publication, collision safety and canonical bytes;
+  do not run another mover against Arr scratch or copy the whole collection.
+- Record a fresh user-selected movie/TV completion through native import, cleanup
+  and Plex discovery. Existing-file adoption is not proof of a fresh completion.
+- Then verify real Apple TV/Roku playback, seeking and cold-start privacy with the
+  restricted profile; request private user/device interaction only as needed.
+- Follow the ordered acceptance criteria in `../plan.md`. NAS-loss protection,
+  broader machine replacement, optional portals/providers and default-branch merge
+  remain separate. Update this guide, the plan and affected runbooks together.

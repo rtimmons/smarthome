@@ -51,3 +51,22 @@ qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media S
 
 After recovery, restore these current overrides before deploying older inventory.
 Original SOPS-bound inventory and original recovery receipts remain immutable.
+
+## Read-only follow-up
+
+Use the committed [verified archive receipt](../recovery/drills/scheduled-backups-20260911.json)
+as the initial evidence, then inspect current freshness. On the cloud, the status
+receipt is `/srv/usenet/backups/scheduled/cloud-status.json`; inspect the timer
+with the repository's dedicated connection wrapper:
+
+```sh
+just --justfile usenet-infra/Justfile --working-directory usenet-infra --command ./scripts/cloud-command systemctl status usenet-backup.timer --no-pager
+```
+
+On the NAS, inspect `usenet-backups` container health and
+`/share/Usenet/Backups/automatic/nas-status.json` using the dedicated NAS identity
+and pinned host from the private inputs. The container's existing healthcheck
+runs `scheduled-backup.py nas --check`, which emits only health/freshness fields.
+Do not dump private environments or Plex preferences to inspect status. Scheduled
+retries are automatic; a failed/freshness check is a reason to diagnose the
+recorded run, not to resume queued downloads or interrupt a transfer.
