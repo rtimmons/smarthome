@@ -1,0 +1,710 @@
+{
+  "schema_version": 1,
+  "status": "accepted",
+  "scope": "Explicitly approved coordinated full native QNAP rollout, backup helper, TV Plex-source migration and one selected movie copy.",
+  "source_commits": [
+    "a4ec62c",
+    "dfef005"
+  ],
+  "published_handoff_before_rollout": "58c1eec",
+  "dashboard_url": "http://192.168.1.66:1337/",
+  "deployment": {
+    "initial_apply": {
+      "ok": 45,
+      "changed": 5,
+      "failed": 0
+    },
+    "tv_enable_apply": {
+      "ok": 44,
+      "changed": 2,
+      "skipped": 1,
+      "failed": 0
+    },
+    "backup_helper_apply": {
+      "ok": 5,
+      "changed": 4,
+      "failed": 0
+    },
+    "deployed_sha256": {
+      "native_library.py": "3462420f8a4af5855a0480dd1c64153b52f1fd96ccce21e24c7c2789d1cca3e1",
+      "catalogctl.py": "91146eb95f667571ac3200a68063dbddd41f45faa25f4d24437d98bdef2f664b",
+      "catalog-dashboard.py": "c38da8fbec0dc73b7fe1af5c2d8dc19ee245c594c0655028c0452e1928ffcedb",
+      "catalog-refresh.js": "4554181271c3f165c90943ebf7f46225744c79b194712cbccdc9b7fbb6304104",
+      "backup-qnap.py": "dcb1ec400bc17bd0c8cba8800f5e5ea6638e11771a8938103e1bbe3e950ef204"
+    },
+    "source_hashes_match": true,
+    "cache_services_recreated": [
+      "rclone",
+      "dashboard"
+    ],
+    "backup_service_reconciled": true,
+    "plex_restarted": false,
+    "nas_restarted": false,
+    "maintenance_helper_released": true,
+    "rollback_directory": "/share/Container/usenet/state/native-rollout-backups/usenet-native-rollout-20260913T033600Z"
+  },
+  "tv_layout": {
+    "library_id": 3,
+    "old_source": "/share/CACHEDEV2_DATA/FromDrobo/TV Shows",
+    "new_source": "/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library",
+    "source_changed": true,
+    "other_library_settings_unchanged": true,
+    "private_library_not_browsed": true,
+    "root_had_no_existing_series": true,
+    "live_copy_enabled": true,
+    "container_publication_root": "/data/tv/library",
+    "container_staging_root": "/data/tv/.staging",
+    "real_tv_transfer_tested": false
+  },
+  "selected_copy": {
+    "id": "media-native-001",
+    "title": "media-002",
+    "bytes": 14878405826,
+    "started_via_authenticated_ui_at": "2026-09-13T03:43:06Z",
+    "execution_id": "1789270985845",
+    "adopted_movie_not_fresh_import": true,
+    "operation": {
+      "error": null,
+      "finished_at": "2026-09-13T03:56:01+00:00",
+      "id": "2820298b1b8f4a018ba6fe5b6b403b70",
+      "item": "media-native-001",
+      "operation": "native-pull",
+      "phase": "publishing verified native NAS copy",
+      "progress": {
+        "at": 1789271696.7870476,
+        "bytes": 14878405826,
+        "eta": 0,
+        "speed": 23013084.068567924,
+        "total_bytes": 14878405826
+      },
+      "speed_history": [
+        {
+          "at": 1789271112.3187902,
+          "bytes": 744751104,
+          "eta": 551,
+          "speed": 25643786.226730935,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271122.0707796,
+          "bytes": 953286656,
+          "eta": 585,
+          "speed": 23764762.30831116,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271132.0440726,
+          "bytes": 1198915584,
+          "eta": 567,
+          "speed": 24085692.718865536,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271142.043117,
+          "bytes": 1448345600,
+          "eta": 545,
+          "speed": 24634195.0328101,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271152.0453742,
+          "bytes": 1732771840,
+          "eta": 484,
+          "speed": 27120083.243034154,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271162.043756,
+          "bytes": 2025586688,
+          "eta": 449,
+          "speed": 28581630.87816605,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271172.0436935,
+          "bytes": 2308571136,
+          "eta": 444,
+          "speed": 28268567.278712817,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271182.0434153,
+          "bytes": 2535063552,
+          "eta": 479,
+          "speed": 25722140.20616403,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271192.0447183,
+          "bytes": 2755002368,
+          "eta": 507,
+          "speed": 23893580.015614193,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271202.0433986,
+          "bytes": 3002335232,
+          "eta": 485,
+          "speed": 24476104.02131914,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271212.0439477,
+          "bytes": 3215065088,
+          "eta": 500,
+          "speed": 23304057.369919967,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271222.0470679,
+          "bytes": 3483631616,
+          "eta": 456,
+          "speed": 24935530.939889375,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271232.043599,
+          "bytes": 3775791104,
+          "eta": 415,
+          "speed": 26713248.09471258,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271242.0513508,
+          "bytes": 3981180928,
+          "eta": 456,
+          "speed": 23871321.760938052,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271252.0438485,
+          "bytes": 4193779712,
+          "eta": 468,
+          "speed": 22828978.96350629,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271262.0437212,
+          "bytes": 4507435008,
+          "eta": 381,
+          "speed": 27197808.208909858,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271272.0435216,
+          "bytes": 4730912768,
+          "eta": 406,
+          "speed": 24953602.92236355,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271282.0432098,
+          "bytes": 4881907712,
+          "eta": 501,
+          "speed": 19952035.307170734,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271292.0440586,
+          "bytes": 5098045440,
+          "eta": 479,
+          "speed": 20391363.704292823,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271302.0441778,
+          "bytes": 5342494720,
+          "eta": 425,
+          "speed": 22387495.34623491,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271312.044087,
+          "bytes": 5585633280,
+          "eta": 401,
+          "speed": 23135132.36379999,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271322.0482295,
+          "bytes": 5893259264,
+          "eta": 337,
+          "speed": 26661875.36550703,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271332.0431774,
+          "bytes": 6176899072,
+          "eta": 318,
+          "speed": 27287392.451944586,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271342.0432322,
+          "bytes": 6394085376,
+          "eta": 343,
+          "speed": 24663851.069181737,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271352.0431695,
+          "bytes": 6712983552,
+          "eta": 287,
+          "speed": 28389533.87129263,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271362.0434368,
+          "bytes": 6938558464,
+          "eta": 312,
+          "speed": 25425374.80645167,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271372.0515103,
+          "bytes": 7150895104,
+          "eta": 332,
+          "speed": 23252653.46579615,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271382.0431025,
+          "bytes": 7410941952,
+          "eta": 304,
+          "speed": 24557411.805188548,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271392.0438445,
+          "bytes": 7723024384,
+          "eta": 258,
+          "speed": 27687361.48755087,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271402.0439188,
+          "bytes": 7981367296,
+          "eta": 256,
+          "speed": 26902225.718641415,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271412.0434396,
+          "bytes": 8201043968,
+          "eta": 272,
+          "speed": 24506411.16768097,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271422.0458164,
+          "bytes": 8465022976,
+          "eta": 252,
+          "speed": 25408006.709772244,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271432.0432568,
+          "bytes": 8704884736,
+          "eta": 249,
+          "speed": 24760461.53115726,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271442.0437617,
+          "bytes": 8895594496,
+          "eta": 273,
+          "speed": 21852527.324363574,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271452.0454295,
+          "bytes": 9091547136,
+          "eta": 280,
+          "speed": 20627768.272677153,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271462.0431225,
+          "bytes": 9271377920,
+          "eta": 290,
+          "speed": 19322030.318730094,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271472.043558,
+          "bytes": 9511108608,
+          "eta": 245,
+          "speed": 21893499.201300945,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271482.044139,
+          "bytes": 9759621120,
+          "eta": 220,
+          "speed": 23173225.357854117,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271492.0472553,
+          "bytes": 9994895360,
+          "eta": 210,
+          "speed": 23235239.482672967,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271502.0433242,
+          "bytes": 10282467328,
+          "eta": 178,
+          "speed": 25774351.965885557,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271512.0440254,
+          "bytes": 10523770880,
+          "eta": 174,
+          "speed": 24899687.95527161,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271522.0437238,
+          "bytes": 10670309376,
+          "eta": 208,
+          "speed": 20180924.946695123,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271532.0430706,
+          "bytes": 10750394368,
+          "eta": 286,
+          "speed": 14423203.47975813,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271542.043448,
+          "bytes": 10860101632,
+          "eta": 313,
+          "speed": 12808640.341241922,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271552.0440748,
+          "bytes": 11062083584,
+          "eta": 231,
+          "speed": 16501343.619980024,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271562.0438306,
+          "bytes": 11252662272,
+          "eta": 205,
+          "speed": 17662262.91518277,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271572.0432873,
+          "bytes": 11429085184,
+          "eta": 196,
+          "speed": 17569579.783399895,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271582.0434804,
+          "bytes": 11679170560,
+          "eta": 151,
+          "speed": 21081628.113924704,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271592.0431309,
+          "bytes": 11925979136,
+          "eta": 130,
+          "speed": 22622307.45110333,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271602.043533,
+          "bytes": 12184715264,
+          "eta": 111,
+          "speed": 24109350.627999716,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271612.0436406,
+          "bytes": 12502171648,
+          "eta": 85,
+          "speed": 27856568.423948422,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271622.0465355,
+          "bytes": 12914262016,
+          "eta": 56,
+          "speed": 34777909.50936118,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271632.0433831,
+          "bytes": 13228965888,
+          "eta": 50,
+          "speed": 32774536.025728352,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271642.0466719,
+          "bytes": 13501857792,
+          "eta": 46,
+          "speed": 29465431.16940488,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271652.0435553,
+          "bytes": 13820362752,
+          "eta": 34,
+          "speed": 30454871.466602605,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271662.0431972,
+          "bytes": 14034010112,
+          "eta": 32,
+          "speed": 25764496.145154867,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271672.043091,
+          "bytes": 14259978240,
+          "eta": 25,
+          "speed": 24026234.97351721,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271682.0438218,
+          "bytes": 14559739904,
+          "eta": 11,
+          "speed": 27166265.615517303,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271692.0458791,
+          "bytes": 14833680384,
+          "eta": 1,
+          "speed": 27767635.965459034,
+          "total_bytes": 14878405826
+        },
+        {
+          "at": 1789271696.7870476,
+          "bytes": 14878405826,
+          "eta": 0,
+          "speed": 23013084.068567924,
+          "total_bytes": 14878405826
+        }
+      ],
+      "started_at": "2026-09-13T03:43:44+00:00",
+      "status": "succeeded",
+      "updated_at": "2026-09-13T03:56:01+00:00"
+    },
+    "ownership_receipt": {
+      "category": "Movies",
+      "directory_identity": [
+        64525,
+        108920881
+      ],
+      "files": [
+        {
+          "modtime": "2026-09-11T17:08:24-04:00",
+          "path": "media-002.mkv",
+          "size_bytes": 14878405826
+        }
+      ],
+      "id": "media-native-001",
+      "library_kind": "Movies",
+      "local_path": "/data/library/video/media-native-001/media-002",
+      "local_signature": [
+        {
+          "mtime_ns": 1789160904000000000,
+          "path": "media-002.mkv",
+          "size_bytes": 14878405826
+        }
+      ],
+      "local_verified_at": "2026-09-13T03:56:01+00:00",
+      "relative_path": "library/Movies/media-002",
+      "size_bytes": 14878405826,
+      "source": "native",
+      "status": "published",
+      "title": "media-002",
+      "verified_files": [
+        {
+          "modtime": "2026-09-11T17:08:24-04:00",
+          "path": "media-002.mkv",
+          "sha256": "8b657fbbd49f9e412805f65d55b124bb70429c6ce4b233afe2a93a9f44825bef",
+          "size_bytes": 14878405826
+        }
+      ]
+    },
+    "sha256_verified": true,
+    "source_unchanged": true,
+    "exclusive_publication_succeeded": true
+  },
+  "dashboard_acceptance": {
+    "authenticated": true,
+    "native_action_started_selected_title": true,
+    "active_phase_visible": true,
+    "changing_bytes_speed_eta_graph_observed": true,
+    "full_width_graph_visually_verified": true,
+    "observations": [
+      {
+        "percent": 5.0,
+        "mib_per_second": 24.5,
+        "samples": 3
+      },
+      {
+        "percent": 11.6,
+        "mib_per_second": 25.9,
+        "samples": 7,
+        "history_seconds": 60
+      },
+      {
+        "after_close_and_reopen": true,
+        "percent": 31.8,
+        "mib_per_second": 23.8,
+        "history_seconds": 180
+      }
+    ],
+    "browser_closure_did_not_interrupt_transfer": true,
+    "history_survived_reopen": true,
+    "verification_phase_observed": true,
+    "completed_state_observed": true,
+    "verification_hides_live_rate": true,
+    "completed_hides_live_rate": true,
+    "completed_history_retained": true
+  },
+  "limits": [
+    "Apple TV/Roku playback, seeking and startup privacy deferred by user.",
+    "No real TV transfer or fresh native Arr completion/cleanup established.",
+    "Backup helper is deployed; new native ownership receipt capture in a subsequent archive is not yet established.",
+    "No diagnostic acquisition or scratch cleanup performed."
+  ],
+  "restricted_profile_check": {
+    "checked_at": "2026-09-13T03:47:18Z",
+    "name": "Movies & TV",
+    "library_ids": [
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "private_library_status": 403,
+    "exact_general_grants": true,
+    "private_library_denied": true
+  },
+  "plex": {
+    "accepted": true,
+    "automatic_trash_emptying_disabled": true,
+    "checked_at": "2026-09-13T03:57:17.711945+00:00",
+    "general_libraries": [
+      {
+        "id": "2",
+        "roots": [
+          "/share/CACHEDEV2_DATA/FromDrobo/Movies/video"
+        ],
+        "title": "Movies (NAS)"
+      },
+      {
+        "id": "4",
+        "roots": [
+          "/share/CACHEDEV2_DATA/FromDrobo/Remote/files/library/Movies",
+          "/share/CACHEDEV2_DATA/FromDrobo/Remote/files/objects/video"
+        ],
+        "title": "Movies (Remote)"
+      },
+      {
+        "id": "3",
+        "roots": [
+          "/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library"
+        ],
+        "title": "TV Shows (NAS)"
+      },
+      {
+        "id": "5",
+        "roots": [
+          "/share/CACHEDEV2_DATA/FromDrobo/Remote/files/library/TV"
+        ],
+        "title": "TV Shows (Remote)"
+      }
+    ],
+    "general_roots_match_expected": true,
+    "managed_profile": {
+      "exact_general_grants": true,
+      "library_ids": [
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "name": "Movies & TV",
+      "private_library_denied": true,
+      "private_library_status": 403
+    },
+    "private_excluded_from_home_and_global_search": true,
+    "private_settings": {
+      "after_sha256": "bcb8669a2231b50363e2b070d554f765ac1af7be7e734cb421eca015024367d5",
+      "before_sha256": "bcb8669a2231b50363e2b070d554f765ac1af7be7e734cb421eca015024367d5",
+      "unchanged_during_check": true
+    },
+    "scope": "General Plex library roots, selected native NAS movie, managed-profile access and private-setting preservation.",
+    "selected_movie": {
+      "indexed_expected_bytes": true,
+      "matches": [
+        {
+          "bytes": 14878405826,
+          "library_id": "2",
+          "native_path_match": true,
+          "part_count": 1,
+          "rating_key": "5633"
+        }
+      ],
+      "native_id": "media-native-001"
+    },
+    "indexing_was_automatic": true,
+    "manual_scan_requested": false
+  },
+  "repeat": {
+    "recipe": "just native-pull <selected-id>",
+    "operation": {
+      "error": null,
+      "finished_at": "2026-09-13T03:58:59+00:00",
+      "id": "c6422a61694743f19c86ad84edbdd5db",
+      "item": "media-native-001",
+      "operation": "native-pull",
+      "phase": "verifying existing native NAS copy",
+      "started_at": "2026-09-13T03:58:04+00:00",
+      "status": "succeeded",
+      "updated_at": "2026-09-13T03:58:59+00:00"
+    },
+    "exit_code": 0,
+    "result": "already local and verified",
+    "directory_identity_unchanged": true,
+    "verified_hashes_unchanged": true,
+    "local_signature_unchanged": true,
+    "remote_media_recopied": false
+  },
+  "validation": {
+    "usenet_cases": 466,
+    "passed": 457,
+    "opt_in_skips": 9,
+    "deployment_syntax_shell_yaml_compile_checks_passed": true,
+    "current_source_index_secret_scan_passed": true,
+    "full_history_scan": "Two documented historical RSA keys remain; full recipe is not green."
+  },
+  "accepted_at": "2026-09-13T04:02:16.404303+00:00",
+  "final_nas_health": {
+    "exit_code": 0,
+    "active_pulls": 0,
+    "failed_or_interrupted_pulls": 0,
+    "catalog_failures": 0,
+    "dashboard_ready": true,
+    "catalog_age_seconds": 59,
+    "free_bytes": 1317753409536,
+    "reserve_bytes": 107374182400
+  }
+}

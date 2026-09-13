@@ -1,6 +1,6 @@
 # Deployed NAS and Plex layout
 
-September 11, 2026. The existing `FromDrobo` SMB share is retained to preserve
+The existing `FromDrobo` SMB share is retained to preserve
 network shortcuts and permissions. Its physical root is
 `/share/CACHEDEV2_DATA/FromDrobo`, on the 4 TiB data volume, not the roughly
 99 GiB system volume containing the default `Multimedia` share.
@@ -12,12 +12,15 @@ FromDrobo/
 │   ├── video/<item-id>/  completed movie files visible to Plex
 │   ├── .staging/        incomplete transfers; excluded from Plex's root
 │   └── other/           diagnostic/nonvideo catalog entries
-├── TV Shows/            separate TV library root
+├── TV Shows/            separate TV bind
+│   ├── library/<series>/ published TV files visible to Plex
+│   └── .staging/        incomplete transfers; outside the Plex source
 ├── Remote/files/        read-only Storage Box mount
 └── .remote-cache/       bounded disposable streaming cache
 ```
 
-Only the former `/share/Usenet/usenet-cache` directory was relocated, using an
+The September 11 layout change relocated only the former
+`/share/Usenet/usenet-cache` directory, using an
 atomic same-filesystem rename to `/share/FromDrobo/Movies`. The inode and device
 were verified unchanged. Zero media bytes were copied by this layout operation.
 The `loljk` inode, modification time, library path and 5,258-entry count were
@@ -39,7 +42,7 @@ and verification records refer to those relative paths.
 | --- | --- | --- |
 | `loljk` | 1 | `/share/CACHEDEV2_DATA/FromDrobo/loljk` |
 | `Movies (NAS)` | 2 | `/share/CACHEDEV2_DATA/FromDrobo/Movies/video` |
-| `TV Shows (NAS)` | 3 | `/share/CACHEDEV2_DATA/FromDrobo/TV Shows` |
+| `TV Shows (NAS)` | 3 | `/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library` |
 | `Movies (Remote)` | 4 | `Remote/files/library/Movies` and legacy `Remote/files/objects/video`, beneath the same physical share |
 | `TV Shows (Remote)` | 5 | `Remote/files/library/TV`, beneath the same physical share |
 
@@ -95,18 +98,33 @@ library folders. The old publisher timer is disabled. See [native media](native-
 for mount dependencies and remaining client tests, and [scheduled backups](scheduled-backups.md)
 for encrypted Plex/database protection.
 
-## Prepared native-copy layout (not yet deployed)
+## Deployed native-copy layout
 
-TV copy actions default disabled until `qnap_native_tv_copy_enabled` is explicitly
-enabled after the source migration. Native movie copies publish under `Movies/video/native-<id>/<title>`, preserving
-Plex source ID 2. TV publication requires narrowing Plex source ID 3 to
-`TV Shows/library`; TV staging then lives at `TV Shows/.staging`, outside that
-source but within the same container bind. Distinct bind mounts cannot perform
-an atomic rename between them, even when their device numbers match.
+The full QNAP application deployment installed the native backend and separate
+TV bind. Native movie copies publish under `Movies/video/native-<id>/<title>`,
+preserving Plex source ID 2. Plex source ID 3 was narrowed from
+`/share/CACHEDEV2_DATA/FromDrobo/TV Shows` to
+`/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library`, after confirming there were no
+existing series to preserve outside the child. All other stable library fields
+and roots were verified unchanged. No collection move was required.
 
-The current deployed source table above has not been changed by this source-only
-increment. Before migration, inspect only the general TV root and ID 3; require
-no existing series outside `library`, record its current source, and preserve
-all IDs/profile grants. Follow [native media](native-media.md#selective-native-library-nas-copies)
-and the current [handoff](../../plan.md). No collection move or whole-library
-hash is required. Live native-copy and Plex indexing acceptance remain pending.
+TV staging lives at `TV Shows/.staging`, outside the new Plex source but inside
+the same container bind as publication. Distinct bind mounts cannot perform an
+atomic rename between them, even when their device numbers match. New/restored
+configurations default the TV copy gate to disabled; private inventory now enables
+it following migration. The final application deployment passed, and the running
+dashboard confirms the enabled gate and the separate publication/staging paths.
+A real TV-series transfer has not been tested.
+
+The [live receipt](../recovery/drills/native-copy-live-20260913.json) records the
+selected media-002 copy: 14,878,405,826 bytes, SHA-256 verified and published at
+`2026-09-13T03:56:01Z`, then automatically indexed in ID 2 by `03:57:17Z`. The safe
+repeat preserved directory identity and verified bytes without recopying. The
+Downloads graph, browser reconnection and verification/completed phases passed.
+Restricted profile grants remain exactly 2/3/4/5, with ID 1 denied; private
+home/search exclusion and disabled automatic trash emptying were rechecked.
+Fresh Arr completion/cleanup, TV copying and deferred Apple TV/Roku playback/privacy
+remain separate. Follow [native media](native-media.md#selective-native-library-nas-copies)
+and the current [handoff](../../plan.md).
+Before restoring the old TV Plex source for rollback, disable TV copying so Plex
+cannot scan in-progress staging.
