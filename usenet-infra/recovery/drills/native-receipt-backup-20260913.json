@@ -1,0 +1,47 @@
+{
+  "recorded_date_utc": "2026-09-13",
+  "purpose": "Verify recoverable native-copy ownership state after the accepted movie copy and safe repeat",
+  "source_revision": "6683719afecb90be924e4e92428d5fa42556446b",
+  "capture": {
+    "method": "Existing NAS scheduled-backup container, nas --force; existing shared lock and retention policy preserved",
+    "started_epoch": 1789272659,
+    "last_success_epoch": 1789272678,
+    "status": "ok",
+    "health_check": "healthy",
+    "archives": [
+      {
+        "file": "qnap-20260913T041100Z.tar.age",
+        "scope": "qnap-config",
+        "bytes": 512324,
+        "files": 56,
+        "sha256": "f089c947dd922d9b30476accabea23eecdf7d291083650bfebe6af0fd82e3cef"
+      },
+      {
+        "file": "plex-20260913T041100Z.tar.age",
+        "scope": "plex-config",
+        "bytes": 32120676,
+        "files": 3,
+        "sha256": "fd14c7bc853510fbce7665580a0c910f2c514ff69245cbc614b07e2bc720e471"
+      }
+    ]
+  },
+  "independent_verification": {
+    "status": "verified",
+    "scope": "qnap-config",
+    "method": "Fetch the encrypted archive using the pinned dedicated NAS connection; verify ciphertext SHA-256; authenticate/decrypt with existing age identity and backup-qnap.decrypt_verify; validate manifest and every member; compare the native receipt against its live hash",
+    "files": 56,
+    "native_receipt": {
+      "path": "state/native-items/native-77055af7e21cae2a5c68493e7fb17bf0d01b9709c6a96fe0380774c3c455527a.json",
+      "size": 1357,
+      "sha256": "50f8cd3e5fb3a5b4c444770fe6ee9845e900e534ab62409e53f5677da064aa61"
+    },
+    "cache_content_included": false,
+    "plaintext_extracted": false
+  },
+  "limits": [
+    "The new Plex archive was created successfully but not independently decrypted during this check; earlier Plex archive verification remains separate evidence.",
+    "No destination restore, Plex startup, device playback, whole-machine replacement or NAS-loss drill was performed.",
+    "No service was restarted, no media was acquired or copied, and queue state was not changed.",
+    "Restoring this receipt does not authorize adopting an unrelated destination directory."
+  ]
+}

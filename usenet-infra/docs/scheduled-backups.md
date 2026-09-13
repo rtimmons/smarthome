@@ -71,10 +71,11 @@ Do not dump private environments or Plex preferences to inspect status. Schedule
 retries are automatic; a failed/freshness check is a reason to diagnose the
 recorded run, not to resume queued downloads or interrupt a transfer.
 
-The native-copy source adds `state/native-items` to the NAS configuration
-allowlist. Its receipt bytes, SHA-256 records and ownership fields pass isolated
-snapshot/restore coverage. The full native application deployment and separate backup-helper playbook
-`ansible/qnap-backups.yml` have passed. The deployed `backup-qnap.py` SHA-256 matches
-source. No new archive has yet been inspected for a native ownership receipt;
-verify a subsequent scheduled archive includes those receipts before claiming
-they have been captured by the schedule. Media bytes remain excluded.
+The deployed backup helper includes `state/native-items` ownership and integrity
+receipts. Independent verification of `qnap-20260913T041100Z.tar.age` passed with
+scope `qnap-config`, 56 files and no media. The 1,357-byte native receipt matched
+SHA-256 `50f8cd3e5fb3a5b4c444770fe6ee9845e900e534ab62409e53f5677da064aa61`.
+See the [capture and archive verification receipt](../recovery/drills/native-receipt-backup-20260913.json).
+This closes capture of the new receipt; it does not prove restoration onto a
+replacement destination or whole-NAS recovery. Original bound snapshots remain
+immutable, and ordinary freshness checks still apply.

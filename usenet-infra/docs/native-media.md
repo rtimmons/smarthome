@@ -118,9 +118,12 @@ startup privacy; those device tests remain deferred at the user's request.
 
 The NAS backup allowlist now includes `state/native-items` ownership and integrity
 receipts. The separate backup-helper deployment through `ansible/qnap-backups.yml`
-has passed, and the deployed helper SHA-256 matches source. No new archive has yet
-been checked for a native ownership receipt; presentation-only refresh does
-not install the backend or mounts. Restoring a receipt does not authorize adopting
+has passed, and the deployed helper SHA-256 matches source. Independent verification
+of `qnap-20260913T041100Z.tar.age` confirmed 56 configuration files, no media, and
+the exact native ownership receipt; see the
+[archive receipt](../recovery/drills/native-receipt-backup-20260913.json). This does
+not establish restoration onto another destination. Presentation-only refresh
+does not install the backend or mounts. Restoring a receipt does not authorize adopting
 unrelated NAS files: ownership checks still require the recorded directory identity
 and verified bytes. A different/rebuilt volume requires deliberate recovery review.
 
