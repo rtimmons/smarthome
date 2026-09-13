@@ -74,6 +74,19 @@ notes describe earlier policies; they do not override the current handoff.
 
 ## Resuming unfinished work
 
+- The Downloads status panel is deployed on the existing legacy dashboard.
+  `just configure-download-status` inside `usenet-infra` installs its telemetry
+  and presentation scripts, holds the shared cache lock through a dashboard-only
+  restart, and refuses active transfers. It does not install an absent native
+  backend or migrate Plex roots. Keep old-cache provenance-object compatibility
+  in `item_source`; otherwise dashboard startup can fail before the first refresh.
+  Graph history starts with transfers launched after this update. Read
+  [download status](docs/download-status.md) for reproducible coverage and limits:
+  the live graph on a new transfer is still unaccepted, deployment is not
+  transactional and has no automatic rollback, and the maintenance lease expires
+  after 600 seconds. Do not infer native or Plex acceptance from telemetry tests.
+  See `plan.md` for current task ownership and release state.
+
 - Start with read-only `just usenet-discovery-health`, `just usenet-cloud-health`
   and `just usenet-qnap-health` from the repository root. Do not replay setup,
   account creation or deploy recipes merely to inspect the system. Restore missing

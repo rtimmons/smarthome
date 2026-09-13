@@ -188,6 +188,11 @@ dashboard-credentials:
 qnap-health:
 	@./scripts/qnap-command healthcheck
 
+# Install transfer status on the existing NAS; refuse active cache operations.
+[group: 'ansible']
+configure-download-status mode='all':
+	@python3 scripts/dashboard-status-deploy.py {{quote(mode)}}
+
 # Deliberately publish a completed SAB directory to the canonical catalog.
 [group: 'catalog']
 [positional-arguments]

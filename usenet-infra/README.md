@@ -12,6 +12,8 @@ Radarr/Sonarr provide discovery, acquisition and native imports; Plex on the QNA
 provides NAS and remote playback with separate general/private libraries.
 OliveTin is the transitional selective-copy/removal interface. Native-title copy
 support is prepared in source; deployment and live-copy acceptance remain pending.
+The prominent [Downloads status panel](docs/download-status.md) is live for legacy
+copies; its runbook records telemetry behavior, reproducible tests and limitations.
 Real TV-client playback/privacy acceptance is deferred. See [native media](docs/native-media.md).
 
 The cloud infrastructure is live. Eweka's saved settings, authenticated

@@ -25,7 +25,7 @@ class FakeRclone:
         self.after_hash = None
         self.fail_copy = False
 
-    def run(self, *args, capture=False):
+    def run(self, *args, capture=False, progress=None):
         self.calls.append(args)
         path = self.remote / args[1].split(":", 1)[1] if args[0] != "hashsum" else self.remote / args[2].split(":", 1)[1]
         if args[0] == "lsjson":

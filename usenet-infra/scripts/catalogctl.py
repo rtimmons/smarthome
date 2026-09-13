@@ -12,12 +12,14 @@ import datetime as dt
 import fcntl
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
 import subprocess
 import sys
 import tempfile
+import time
 import uuid
 from collections import deque
 from contextlib import contextmanager
@@ -137,7 +139,7 @@ class Rclone:
         self.settings = settings
         self.lock_fds: tuple[int, ...] = ()
 
-    def run(self, *args: str, capture: bool = False) -> str:
+    def run(self, *args: str, capture: bool = False, progress=None) -> str:
         command = [self.settings.rclone, *args]
         try:
             if not capture:
@@ -151,6 +153,13 @@ class Rclone:
                         for line in process.stdout:
                             print(line, end="", file=sys.stderr, flush=True)
                             tail.append(line)
+                            if progress:
+                                try:
+                                    stats = json.loads(line).get("stats")
+                                except (ValueError, AttributeError):
+                                    stats = None
+                                if isinstance(stats, dict):
+                                    progress(stats)
                         code = process.wait()
                     except BaseException:
                         process.terminate()
@@ -459,11 +468,19 @@ def cache_operation(settings: Settings, operation: str, item_id: str, lock):
     json.dump({"id": payload["id"], "item": item_id}, lock)
     lock.flush()
 
-    def update(phase: str) -> None:
-        payload["phase"] = phase
+    def update(phase: str | None, stats: dict | None = None) -> None:
+        if phase is not None:
+            payload["phase"] = phase
+        if stats is not None:
+            sample = transfer_sample(stats)
+            if sample is None:
+                return
+            payload["progress"] = sample
+            payload["speed_history"] = (payload.get("speed_history", []) + [sample])[-60:]
         payload["updated_at"] = utc_now()
         atomic_json(destination, payload)
-        print(f"{operation} {item_id}: {phase}", flush=True)
+        if phase is not None:
+            print(f"{operation} {item_id}: {phase}", flush=True)
 
     update("preparing")
     try:
@@ -480,6 +497,19 @@ def cache_operation(settings: Settings, operation: str, item_id: str, lock):
         if payload["status"] != "running":
             payload["finished_at"] = payload["updated_at"]
         atomic_json(destination, payload)
+
+
+def transfer_sample(stats: dict) -> dict | None:
+    """Keep bounded numeric telemetry only, never filenames or raw log objects."""
+    sample = {"at": time.time()}
+    for source, key in (("bytes", "bytes"), ("totalBytes", "total_bytes"), ("speed", "speed")):
+        value = stats.get(source)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            return None
+        sample[key] = value
+    eta = stats.get("eta")
+    sample["eta"] = eta if isinstance(eta, (int, float)) and not isinstance(eta, bool) and math.isfinite(eta) and eta >= 0 else None
+    return sample
 
 
 def active_operation_id(settings: Settings) -> str | None:
@@ -668,8 +698,9 @@ def cmd_pull(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> No
                 "--checkers", str(settings.checkers),
                 "--bwlimit", settings.bwlimit,
                 "--partial-suffix", ".rclone-partial",
-                "--stats", "10s", "--stats-one-line", "--stats-log-level", "NOTICE",
+                "--stats", "10s", "--use-json-log", "--stats-log-level", "NOTICE",
                 "--contimeout", "30s", "--timeout", "5m",
+                progress=lambda stats: update(None, stats),
             )
             update("verifying SHA-256")
             verify_local(staging, manifest)

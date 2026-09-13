@@ -23,6 +23,31 @@ SPEC.loader.exec_module(catalogctl)
 
 
 class RemotePathTests(unittest.TestCase):
+    def test_stats_parser_rejects_invalid_numbers_and_omits_private_fields(self):
+        stats = dict(bytes=10, totalBytes=20, speed=5, eta=2, transferring=[{'name': 'private'}])
+        sample = catalogctl.transfer_sample(stats)
+        self.assertEqual(sample['speed'], 5)
+        self.assertNotIn('transferring', sample)
+        for value in (-1, float('nan'), float('inf'), '10', True, None):
+            self.assertIsNone(catalogctl.transfer_sample(dict(stats, speed=value)))
+
+    def test_stats_history_is_bounded_and_new_attempt_resets_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            settings = SimpleNamespace(state_root=Path(directory))
+            for attempt in range(2):
+                with (Path(directory) / 'lock').open('w+') as lock:
+                    with catalogctl.cache_operation(settings, 'pull', 'sample-id', lock) as update:
+                        if attempt == 0:
+                            for value in range(65):
+                                update(None, dict(bytes=value, totalBytes=100, speed=value))
+                            payload = json.loads((Path(directory) / 'operations/sample-id.json').read_text())
+                            self.assertEqual(len(payload['speed_history']), 60)
+                            self.assertEqual(payload['speed_history'][0]['bytes'], 5)
+                            update('verifying SHA-256')
+                        else:
+                            payload = json.loads((Path(directory) / 'operations/sample-id.json').read_text())
+                            self.assertNotIn('progress', payload)
+
     def test_sftp_home_relative_root_does_not_become_absolute(self):
         self.assertEqual(catalogctl.remote_join('catalog:', 'manifests'), 'catalog:manifests')
         self.assertEqual(catalogctl.remote_join('catalog:', 'objects', 'other/test'),
@@ -72,7 +97,7 @@ class FakeRclone:
         _, path = value.split(":", 1)
         return self.remote_root / path
 
-    def run(self, *args: str, capture: bool = False) -> str:
+    def run(self, *args: str, capture: bool = False, progress=None) -> str:
         self.calls.append(args)
         if args[0] == "lsf":
             path = self._remote(args[1])
