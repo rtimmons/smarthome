@@ -1,10 +1,60 @@
 # Usenet status and closure plan
 
-Updated September 13, 2026. Implementation is deployed and the native movie-copy
-workflow is accepted. `usenet` remains open for review into `master`; deployment
-success does not mean all media/client acceptance or merge gates are complete.
-The deployed implementation is closed; review and operational follow-ups remain.
-Review: [draft PR #117](https://github.com/rtimmons/smarthome/pull/117).
+Session closed September 13, 2026. Implementation is deployed and the native
+movie-copy workflow is accepted. The remaining work is operational acceptance;
+source integration into `master` is conditional on a later merge request.
+User direction: **no PRs**. [PR #117](https://github.com/rtimmons/smarthome/pull/117)
+was closed without merging on September 13. Do not reopen it or create a replacement.
+The branch and local work remain preserved; no default-branch merge was requested.
+
+September 13 continuation (16:26 UTC): the nine SAB warnings are reconciled as
+historical notices (six hostname blocks, one unpack notice, two disk-space
+warnings). The four retained scratch files match two archived completed SAB jobs:
+the old diagnostic fixture and an earlier media download. Preserve them; this
+matching does not verify a canonical copy or establish deletion readiness.
+The five old Radarr entries have canonical files but remain `importPending`;
+their original SAB completed paths are absent. No fresh completion occurred.
+[Audit and validation receipt](usenet-infra/recovery/drills/queue-reconciliation-20260913.json).
+Root tests and seven add-on container checks passed in the existing checkout;
+Usenet functional/syntax checks and current-source/index scanning passed. The
+full Usenet recipe still fails only on the two documented historical keys.
+At the audit, remote `master` was `58318cf`, an ancestor of the implementation and
+documentation checkpoint `1113982`. This session's handoff commit follows that
+checkpoint on `usenet`; it is local only, with no push or merge performed.
+Whole-diff review and final approval are required only if a merge is later requested.
+
+## Cold session start
+
+1. Read this plan, [the Usenet agent guide](usenet-infra/AGENTS.md), and the
+   [validation ledger](usenet-infra/docs/validation.md). Inspect `git status`,
+   the current branch and recent commits before editing. The expected branch is
+   `usenet`; the handoff is committed, but unrelated lighting edits and `msg`
+   remain deliberately uncommitted. Do not stage them with Usenet work.
+2. For resumed operations, refresh read-only state with
+   `just usenet-discovery-health`, `just usenet-cloud-health`,
+   `just usenet-qnap-health`, and `just native-status`. The last audit found SAB
+   idle, zero active/failed NAS pulls, five native movies and no native TV title.
+   These are dated observations, not assurances about a later session.
+3. Check whether a new user-selected movie, TV or cart job is available. If so,
+   follow the acceptance rows below through import, cleanup and Plex discovery;
+   a TV NAS copy requires an actually available selected title. Do not submit
+   diagnostic media, replay the accepted movie copy, or release held cart items
+   to manufacture evidence. Default-category cart jobs need deliberate import.
+4. Independent follow-ups are the external NAS exposure check and deliberate
+   disposition of the five stale Radarr entries and two archived scratch groups.
+   Refresh evidence before proposing a correction. Preserve files, pauses and
+   retained history; identifying ownership did not establish deletion readiness.
+   Client playback/startup checks remain user-deferred until device interaction
+   is available. No PR or merge task is scheduled by this handoff.
+
+This session leaves no agent-started transfer, deployment or test running.
+Scheduled backups and existing acquisition/feed schedules continue on their
+hosts. No recurring agent automation was created. The durable
+[reconciliation receipt](usenet-infra/recovery/drills/queue-reconciliation-20260913.json)
+records sanitized findings and checks; its earlier `pr_draft` observation predates
+the user's closure instruction. Ignored `build/` logs and one-off read helpers are
+supplemental evidence, not prerequisites for resuming. Use the committed recipes
+and recovery runbooks if private inputs must be restored.
 
 ## Current system
 
@@ -69,7 +119,7 @@ These are explicit follow-ups, not a reason to replay setup or broaden the branc
 | Fresh Arr movie and TV completion | Agent observes the next user-selected jobs: import, client cleanup, scratch reclamation, persistent canonical files and Plex discovery. Five old importPending entries and four retained scratch files are not this evidence. | Required for full media-workflow acceptance; tracked follow-up may remain after source merge. |
 | Real TV selective copy | Agent copies an actually available user-selected TV title; verify staging isolation, hashes, publication and Plex indexing. | Required for TV-copy acceptance; not proved by layout or movie copying. |
 | Phone-cart completion/import | User selects a new cart job; agent verifies acquisition and the deliberate library-import path. Do not promise automatic Arr handling of Default-category jobs. | Separate operational follow-up; feed configuration alone passed. |
-| Existing queue warnings | Agent reconciles SAB's nine reported warnings and the old Arr/scratch entries privately, preserving user pauses and unknown files until ownership is established. | Operational follow-up; no blanket healthy-queue claim or automatic cleanup. |
+| Existing queue/scratch disposition | Warning classification and scratch-to-archived-job ownership are recorded in the September 13 audit. Five old Radarr entries still await disposition; preserve the archived media and fixture until any proposed cleanup has independent canonical/recovery evidence. | Reconciliation passed; corrective cleanup remains separate. No blanket healthy-queue claim or automatic cleanup. |
 | Apple TV/Roku playback and startup privacy | Ryan supplies device interaction: restricted-profile cold start, NAS/Remote playback, seeking and relevant audio/subtitles. Owner PIN remains private. | Explicitly deferred by user; not a source-merge blocker and not marked passed. |
 | External NAS exposure check | A permitted external probe or independent firewall/NAT audit must confirm the private dashboard is unreachable publicly. LAN binding/authentication are verified; the external probe is not. | Security acceptance remains qualified until verified. |
 
@@ -84,9 +134,10 @@ the new native receipt is captured in a verified backup, operational follow-ups
 remain explicit, and no authorized transfer/deployment or shared-agent edit is
 left running. It does not mean client tests or a fresh import were observed.
 
-**Merge readiness** requires all of the following on the final reviewed PR head:
+If a merge is later requested, **merge readiness** requires all of the following
+on the final reviewed branch head. Use no PR workflow.
 
-1. One reviewable `usenet` → `master` PR describes Usenet infrastructure, Plex/NAS
+1. One reviewable `usenet` → `master` change set describes Usenet infrastructure, Plex/NAS
    copies, recovery/backups, and the five lockfile/security changes. No unrelated
    lighting work, private inputs, media, `msg`, or scratch helpers are included.
 2. Review the whole diff and current base. `master` was an ancestor of the branch
@@ -99,11 +150,11 @@ left running. It does not mean client tests or a fresh import were observed.
    that existing exposure explicitly. Do not hide it, waive new findings, rewrite
    history, or call the full scan green.
 4. Record fresh affected-service health and preserve rollback/recovery instructions.
-   Deferred media/device/security acceptance must remain visible in the PR and
+   Deferred media/device/security acceptance must remain visible in the plan and
    validation ledger; merge is not a claim that those tests passed.
-5. Obtain final review/approval and satisfy any repository-required checks. Keep
-   the PR draft while review or required validation remains outstanding. This
-   wrap-up defines the gate; it does not execute the default-branch merge.
+5. Obtain final review/approval and satisfy any repository-required checks before
+   a requested merge. Do not create or reopen a PR. This wrap-up defines the gate;
+   it does not execute the default-branch merge.
 
 **Branch closure after merge:** use a merge that preserves the evidence-referenced
 commit history; confirm `master` contains the reviewed head and the remote merge
@@ -120,7 +171,7 @@ for already missing worktrees were pruned; no existing worktree was removed.
 
 | Retained branch | Disposition |
 | --- | --- |
-| `usenet` | Deployed implementation closed; draft PR #117 open, then apply the gates above. |
+| `usenet` | Deployed implementation closed; PR #117 closed at user request. No PR workflow. Branch preserved; merge not requested. |
 | `ml/blinds-only` | Three unique commits; retain for its own scope/review, do not bulk merge. |
 | `mobile` | Five unique commits, including unfinished responsive/editor work; retain. |
 | `nuheat-integration` | Eight unique commits; retain its integration/recovery context. |

@@ -29,7 +29,7 @@ operating instructions. Recovery receipts and bound snapshots remain unchanged.
 | --- | --- |
 | Pending: fresh movie import | Observe the next user-selected Arr-owned completion: import event, persistent canonical file, completed-client removal, scratch reclamation and Plex discovery. Do not acquire a diagnostic title merely to fill this row. |
 | Pending: fresh TV import and copy | Observe a user-selected series/episode through native import and cleanup, then verify one selective NAS copy, correct TV-library indexing and safe repeat. No canonical TV titles were present at the recorded preflight. |
-| Pending: old completion reconciliation | Five old Radarr `importPending` entries and four scratch files totaling 17,253,186,699 bytes were preserved at preflight. Determine ownership/state before any corrective cleanup; their continued presence is not evidence of a successful fresh import. |
+| Reconciled; disposition pending: old completions | The [September 13 audit](../recovery/drills/queue-reconciliation-20260913.json) matched all four scratch files (17,253,186,699 bytes) to two archived completed SAB jobs: the official fixture and an earlier media download. The five old Radarr `importPending` entries each have a canonical file, but their original SAB completed paths are absent. Preserve both scratch groups and history; path ownership alone does not verify a canonical copy or authorize deletion. No fresh import was observed. |
 | Pending: cart acquisition | Verify a future user-selected cart job and its intended library-import route. The setup's held initial entry is not a completed download; avoid queueing all held entries inadvertently. |
 | User-deferred: Apple TV/Roku | NAS and Remote playback, seeking, sustained playback, codec/audio/subtitle behavior, and cold-start/home/search privacy with the restricted profile. Do not invent or request publication of the owner's PIN. |
 | Pending: external NAS exposure | A permitted external probe or independent firewall/NAT audit must verify the dashboard is unreachable publicly. LAN binding and authentication passed; external exposure acceptance remains qualified. |
@@ -45,8 +45,31 @@ already accepted NAS movie transfer are not default next tasks.
 Wrap-up health on September 13 verified discovery/import configuration, provider
 connectivity, scratch and NAS reserve, fresh dashboard data, and zero active or
 failed NAS pulls. The accepted movie remains local. SAB reported nine warnings;
-their private reconciliation remains open alongside the old Arr/scratch entries.
+their private reconciliation was pending at that checkpoint alongside the old Arr/scratch entries.
 No queue was cleared or resumed to change that result.
+
+The 16:26 UTC continuation reconciled all nine SAB notices: six hostname blocks
+and one unpack notice dated September 10, plus two disk-space warnings dated
+September 11. All are warning severity; SAB is idle with an empty queue and
+86,470,455,296 scratch bytes free against the 32,212,254,720-byte reserve. The
+warnings remain in history. Sonarr's normal queue and history are empty; requesting
+unknown shared-client items exposes old SAB movie records and must not be treated
+as Sonarr ownership. NAS health reports zero active/failed pulls and the accepted
+native movie is still local. See the [reconciliation receipt](../recovery/drills/queue-reconciliation-20260913.json).
+
+Fresh root `just test` completed successfully, including 118 Talos tests and all
+seven add-on container build checks. The run used the existing checkout with
+unrelated lighting edits preserved; it is not isolated clean-head validation of
+those dirty generator files. The Usenet rerun again passed 457 cases with nine
+opt-in skips and all syntax checks, then failed only on the two historical keys.
+Current-source/index scanning passed. At the audit, remote `master` was `58318cf`,
+an ancestor of checkpoint `1113982`; whole-diff review and final approval remain
+required if a merge is later requested.
+The user subsequently directed no PRs: PR #117 was closed without merging, and
+the current plan supersedes the receipt's earlier draft-PR status.
+Session closure commits the handoff and sanitized reconciliation receipt locally.
+No push, merge, deployment or cleanup accompanies that documentation commit.
+Resume through the plan's [cold session start](../../plan.md#cold-session-start).
 
 The latest `just usenet-test` run recorded **466 Usenet cases: 457 passed and
 nine opt-in skips**. Compilation, shell/YAML checks, generated deployment-shell

@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-13T16:26:09.208869+00:00",
+  "scope": "Read-only warning and retained-download reconciliation, source validation, and affected-service health. No deployment, acquisition, cleanup, restart, or merge.",
+  "reviewed_branch_head": "1113982ce5b5eb2e84bf55a0ac38330a535273f1",
+  "remote_master": "58318cf3f2502ba0e09d2147506bc5e3b8f0c057",
+  "remote_pr_head_matches": true,
+  "master_is_ancestor": true,
+  "full_diff_review_complete": false,
+  "pr_draft": true,
+  "sab": {
+    "status": "Idle",
+    "paused": false,
+    "queue_count": 0,
+    "retained_completed_history": 5,
+    "retained_failed_history": 2,
+    "archived_records_read": 2,
+    "warning_count": 9,
+    "warning_categories": [
+      {
+        "category": "direct_unpack_notice",
+        "count": 1,
+        "first_utc": "2026-09-10T21:39:40+00:00",
+        "last_utc": "2026-09-10T21:39:40+00:00"
+      },
+      {
+        "category": "disk_space",
+        "count": 2,
+        "first_utc": "2026-09-11T21:11:14+00:00",
+        "last_utc": "2026-09-11T22:53:34+00:00"
+      },
+      {
+        "category": "hostname_connection_refused",
+        "count": 6,
+        "first_utc": "2026-09-10T22:29:12+00:00",
+        "last_utc": "2026-09-10T22:30:56+00:00"
+      }
+    ],
+    "severity": "All nine notices are WARNING; no ERROR, CRITICAL, or FATAL entries. Historical notices remain recorded.",
+    "warnings_cleared": false
+  },
+  "native_import": {
+    "radarr_queue_count": 5,
+    "all_five_completed_importPending": true,
+    "all_five_have_canonical_files": true,
+    "canonical_total_bytes": 95166179367,
+    "all_five_original_sab_completed_paths_absent": true,
+    "radarr_history_event_counts": {
+      "downloadFailed": 2,
+      "grabbed": 7
+    },
+    "sonarr_queue_count": 0,
+    "sonarr_history_count": 0,
+    "fresh_completion_established": false,
+    "queue_query": "Normal app queue view; unknown shared-client items excluded. Including unknown items exposes SAB records in Sonarr and does not establish Sonarr ownership."
+  },
+  "retained_scratch": {
+    "files": 4,
+    "bytes": 17253186699,
+    "groups": [
+      {
+        "directory_ref": "29669eacaa3acbeb",
+        "classification": "official_diagnostic_fixture",
+        "file_count": 2,
+        "bytes": 100000019,
+        "archived_job_ref": "a86616a675ca7a4f",
+        "exact_sab_storage_path_match": true,
+        "current_arr_queue_owner": null,
+        "files_removed": false
+      },
+      {
+        "directory_ref": "60ff8c9b01839fa5",
+        "classification": "archived_completed_media_download",
+        "file_count": 2,
+        "bytes": 17153186680,
+        "archived_job_ref": "525d1ee8062aae8f",
+        "exact_sab_storage_path_match": true,
+        "current_arr_queue_owner": null,
+        "files_removed": false
+      }
+    ],
+    "disposition": "All file paths match two archived completed SAB records. Preserve both groups. Neither ownership matching nor archive completion verifies an independent canonical copy or authorizes deletion. No payload content or media hashes were read."
+  },
+  "health": {
+    "discovery": "verified; native acquisition/import enabled",
+    "cloud_exit_code": 0,
+    "nas_exit_code": 0,
+    "storage_box_used_bytes": 95244517376,
+    "storage_box_total_bytes": 1099511627776,
+    "scratch_free_bytes": 86470455296,
+    "scratch_reserve_bytes": 32212254720,
+    "nas_free_bytes": 1317720764416,
+    "nas_reserve_bytes": 107374182400,
+    "nas_active_pulls": 0,
+    "nas_failed_or_interrupted_pulls": 0,
+    "dashboard_catalog_age_seconds": 47,
+    "native_movie_count": 5,
+    "native_tv_title_count": 0,
+    "selected_native_movie_still_local": true
+  },
+  "validation": {
+    "root_just_test": {
+      "exit_code": 0,
+      "talos_passed": 118,
+      "talos_deselected": 11,
+      "grid_dashboard_passed": 102,
+      "printer_passed": 225,
+      "snapshot_service_passed": 7,
+      "tinyurl_service_passed": 16,
+      "sonos_api": "Recipe passed, including configuration, graceful shutdown, and Home Assistant backend checks.",
+      "mongodb": "No tests configured.",
+      "container_build_checks_passed": 7,
+      "scope_limit": "Run in the existing checkout with the preserved unrelated lighting edits. This is not isolated clean-head validation of those dirty generator files. No dirty lighting files are part of the PR."
+    },
+    "usenet_test": {
+      "exit_code": 1,
+      "cases": 466,
+      "passed": 457,
+      "opt_in_skips": 9,
+      "functional_shell_yaml_compile_ansible_syntax": "passed",
+      "only_failure": "Two documented historical RSA private keys already present in master; no exemptions or history rewrite."
+    },
+    "current_source_and_index_secret_scan": "Passed after the documentation and receipt were added: 710 source files and 707 index blobs; history explicitly omitted.",
+    "branch_diff_whitespace_check": "passed"
+  },
+  "local_evidence": {
+    "queue_audit": {
+      "path": "usenet-infra/build/queue-reconcile-20260913.json",
+      "sha256": "5a3b183204aa0e4d27c5e428efb4af7cf939e65593eb54831a82f580f6b64264",
+      "bytes": 9256,
+      "ignored": true
+    },
+    "queue_audit_helper": {
+      "path": "usenet-infra/build/queue-reconcile-read.py",
+      "sha256": "e5826f7ecb5640da62fd63149056cc21a0269a8520026feb605c914f0bcec2d4",
+      "bytes": 6264,
+      "ignored": true
+    },
+    "root_tests": {
+      "path": "build/root-continuation-20260913-tests.log",
+      "sha256": "5ea299b4f95832144a2403df98dadfe4855c0380a13606b79919086fac30482c",
+      "bytes": 45027,
+      "ignored": true
+    },
+    "usenet_tests": {
+      "path": "build/usenet-continuation-20260913-tests.log",
+      "sha256": "4e40c101c6aaa6769765fc1e4e552885df9947b632677a9a985ac7a16d2b80a8",
+      "bytes": 98462,
+      "ignored": true
+    }
+  },
+  "limits": [
+    "Full source review and final approval remain pending; PR stays draft and no merge was performed.",
+    "Fresh Arr movie/TV completion, selective TV copying, and cart completion/import remain pending user-selected jobs.",
+    "Apple TV/Roku playback and startup privacy remain user-deferred.",
+    "External NAS exposure has not been verified.",
+    "Existing history and scratch remain preserved; no cleanup or canonical integrity verification was performed.",
+    "Unrelated lighting edits, msg, branches, worktrees, and stashes were not changed."
+  ]
+}

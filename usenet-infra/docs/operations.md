@@ -342,14 +342,28 @@ API keys into the protected health environment after starting the applications.
 A missing application API key is a warning; a configured but unreachable service
 is a failure.
 
-The current cloud health run exits 0: Storage Box, catalog-failure checks,
-Prowlarr, and scratch capacity pass. The seven historical SABnzbd warnings were
-classified as six setup hostname blocks and one Direct Unpack autotest notice,
-with no authentication, provider, or TLS failures. The settings helper restored
+The September 13 cloud health run exits 0: Storage Box, catalog-failure checks,
+Prowlarr, and scratch capacity pass. The nine historical SABnzbd warnings are
+six setup hostname blocks, one Direct Unpack autotest notice, and two disk-space
+warnings. All have warning severity and date from September 10–11. The queue is
+idle and current scratch capacity exceeds its reserve. No warnings were cleared.
+See the [reconciliation receipt](../recovery/drills/queue-reconciliation-20260913.json).
+The settings helper previously restored
 `direct_unpack=0` after the one-time autotest, and all settings read back as
 intended with no active jobs. The compatibility fix installed the
 tested catalog script atomically and updated the health helper without
 restarting applications, migrating schema-1 records, or mutating content.
+
+The four retained completed-scratch files match two archived completed SAB jobs:
+the 100 MB diagnostic fixture (two files, 100,000,019 bytes) and an earlier media
+download (two files, 17,153,186,680 bytes). Neither is in a current Arr queue.
+The five old Radarr `importPending` entries instead refer to completed paths that
+no longer exist; each adopted movie still has its canonical file. Preserve the
+archived scratch and retained failed history. Ownership matching is not proof
+of a verified independent copy or permission to delete, and removing old queue
+rows would not establish a fresh native import. Use the normal Arr queue view:
+including unknown shared-client items can show movie jobs in Sonarr without
+Sonarr having acquired or owned them.
 
 Provider authentication faults are surfaced through SABnzbd's recorded warning
 and error API. This is not a fresh NNTP login on every health run: after changing

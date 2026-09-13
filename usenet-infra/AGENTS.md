@@ -111,12 +111,24 @@ Use [operations](docs/operations.md) for additional commands and
   Arr scratch. Do not repeat setup or an already completed selected transfer.
 - Record a fresh user-selected movie/TV completion through native import, cleanup
   and Plex discovery. Existing-file adoption is not proof of a fresh completion.
+- The September 13 [queue reconciliation](recovery/drills/queue-reconciliation-20260913.json)
+  classified all nine SAB warnings as historical and matched the four scratch
+  files to two archived completed jobs (the fixture and an earlier media download).
+  Preserve both groups and retained history; ownership alone does not establish
+  canonical integrity or deletion readiness. The five adopted Radarr movies
+  still report `importPending` against absent old completed paths. Use normal
+  Arr queue views; unknown shared-client records do not prove app ownership.
 - Apple TV/Roku playback, seeking and cold-start privacy are explicitly deferred
   by the user. Resume those checks when device interaction is available.
-- Follow the [merge gates](../plan.md#closure-and-merge-criteria): review the full
+- Only if a merge is requested, follow the [merge gates](../plan.md#closure-and-merge-criteria): review the full
   branch, validate the reviewed source, acknowledge the two existing historical
   secret findings, and retain the operational deferrals. Delete Usenet refs only
   after the reviewed head is merged and local work is protected. Other feature
   branches with unique commits, dirty worktrees and stashes are separate work.
   NAS-loss protection, broader replacement and optional portals/providers remain
   separate. Update this guide, the plan and affected runbooks together.
+- The user directed **no PRs** on September 13. PR #117 was closed without merging.
+  Do not reopen it or create a replacement; preserve the branch and local work.
+  The [cold session start](../plan.md#cold-session-start) is the next-session entry
+  point. The handoff is committed locally; unrelated lighting edits and `msg`
+  remain uncommitted. No push or merge was requested for session closure.
