@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-13T02:57:00Z",
+  "scope": "Read-only operational, import and selected-copy preflight after explicit user approval of private download/library metadata inspection.",
+  "mutations_performed": false,
+  "discovery": {
+    "status": "verified",
+    "automatic_import": true,
+    "automatic_acquisition": true,
+    "rss_interval_minutes": 15,
+    "radarr_health_notices": 0,
+    "sonarr_health_notices": 0,
+    "library_service_active": true,
+    "discovery_service_active": true,
+    "retired_publisher_active": false
+  },
+  "sab": {
+    "status": "Idle",
+    "paused": false,
+    "queue_count": 0,
+    "retained_history_completed": 5,
+    "retained_history_failed": 2,
+    "latest_history_record_finished": "2026-09-11T23:00:05Z",
+    "warning_count": 9,
+    "warning_classes": [
+      {"class": "direct unpack and repair", "count": 1, "date_utc": "2026-09-10"},
+      {"class": "refused hostname connections", "count": 6, "date_utc": "2026-09-10"},
+      {"class": "disk space", "count": 2, "date_utc": "2026-09-11"}
+    ],
+    "warnings_cleared": false
+  },
+  "native_import_evidence": {
+    "fresh_movie_completion_established": false,
+    "fresh_tv_completion_established": false,
+    "radarr_history_counts": {"grabbed": 7, "downloadFailed": 2, "downloadFolderImported": 0},
+    "radarr_queue_count": 5,
+    "radarr_queue_summary": "The five adopted movies remain completed/importPending with warnings indicating no eligible import files.",
+    "adopted_movies_have_files": 5,
+    "movie_file_added_range_utc": ["2026-09-11T23:38:52Z", "2026-09-11T23:38:56Z"],
+    "sonarr_queue_count": 0,
+    "sonarr_history_count": 0,
+    "native_tv_title_count": 0,
+    "completed_scratch_files": 4,
+    "completed_scratch_bytes": 17253186699,
+    "completed_scratch_top_level_directories": 3,
+    "scratch_cleanup_performed": false
+  },
+  "native_movies": [
+    {"title": "Backrooms (2026)", "files": 1, "bytes": 22375732708, "legacy_nas_copy": true},
+    {"title": "Batman - Knightfall Part 1 - Knightfall (2026)", "files": 1, "bytes": 14878405826, "legacy_nas_copy": false},
+    {"title": "Colony (2026)", "files": 1, "bytes": 14491290731, "legacy_nas_copy": true},
+    {"title": "Obsession (2026)", "files": 1, "bytes": 21880635400, "legacy_nas_copy": false},
+    {"title": "Toy Story 5 (2026)", "files": 1, "bytes": 21540114702, "legacy_nas_copy": false}
+  ],
+  "selected_candidate": {
+    "title": "Batman - Knightfall Part 1 - Knightfall (2026)",
+    "id": "native-77055af7e21cae2a5c68493e7fb17bf0d01b9709c6a96fe0380774c3c455527a",
+    "bytes": 14878405826,
+    "reason": "Smallest canonical native movie not already copied through the legacy NAS catalog.",
+    "copied_in_this_audit": false
+  },
+  "nas": {
+    "health_exit_code": 0,
+    "active_pulls": 0,
+    "failed_or_interrupted_pulls": 0,
+    "legacy_local_items": 2,
+    "free_bytes": 1335147544576,
+    "reserve_bytes": 107374182400,
+    "dashboard_readiness_reachable": true,
+    "dashboard_catalog_age_seconds_at_check": 35
+  },
+  "cloud": {
+    "health_exit_code": 0,
+    "storage_box_used_bytes": 95244517376,
+    "storage_box_total_bytes": 1099511627776,
+    "scratch_free_bytes": 86471135232,
+    "scratch_reserve_bytes": 32212254720
+  },
+  "scheduled_backups": {
+    "cloud_status": "ok",
+    "cloud_timer_active": true,
+    "cloud_last_success": "2026-09-12T23:00:44Z",
+    "nas_container_running": true,
+    "nas_container_healthy": true,
+    "nas_health_check": true,
+    "nas_last_success": "2026-09-12T23:07:23Z",
+    "new_capture_or_restore_performed": false
+  },
+  "limits": [
+    "No Plex content or private library was inspected.",
+    "A fresh native movie/TV completion and cleanup remain unverified.",
+    "This audit did not deploy, enqueue, delete, resume, restart or copy anything.",
+    "Native NAS copy, Plex indexing and device playback acceptance remain separate."
+  ]
+}
