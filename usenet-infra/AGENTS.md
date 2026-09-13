@@ -1,14 +1,16 @@
 # Usenet, NAS and Plex agent guide
 
-Read the [current handoff](../plan.md), then [native media](docs/native-media.md),
+Read the [current plan and closure criteria](../plan.md), then [native media](docs/native-media.md),
 [NAS/Plex layout](docs/nas-plex-layout.md) and [scheduled backups](docs/scheduled-backups.md).
-Use [operations](docs/operations.md) for additional commands. Chronological
-notes describe earlier policies; they do not override the current handoff.
+Use [operations](docs/operations.md) for additional commands and
+[validation](docs/validation.md) for accepted behavior and remaining evidence.
 
 ## Access and validation
 
 - Use root `just usenet-*` recipes or `just --justfile usenet-infra/Justfile
-  --working-directory usenet-infra ...`. The private `.env` and ignored Ansible
+  --working-directory usenet-infra ...`. Native/catalog recipes retain their
+  unprefixed names at the root (`just native-status`, `just native-pull`).
+  The private `.env` and ignored Ansible
   inventory select dedicated cloud/NAS identities and verified host keys.
   Do not substitute SSH-agent credentials or print tokens/configuration secrets.
 - Run the infrastructure `just test` recipe for implementation changes. It
@@ -47,10 +49,8 @@ notes describe earlier policies; they do not override the current handoff.
   idle or fully paused SAB queue but reject post-processing. Never delete/resume
   jobs just to satisfy backup checks. NAS-loss protection is explicitly deferred.
 
-- Checkout-local preservation and independent restore passed: snapshot
-  `20260911T235253Z-9d6bbacf00ac982a` contains 1,319 local files; companion
-  `20260912T000901Z-36009465898f2df0` preserves 78 Git refs/reflog history and five
-  stashes. The readiness check passed at published `cf13edb`. Follow
+- Checkout-local preservation and independent restore passed at the checkpoint
+  recorded in the recovery ledger. Follow
   [checkout recovery](docs/checkout-recovery.md) and recheck current files, Git
   history/settings and published source before declaring a later checkout safe.
   Preserve the untracked `msg`. Do not delete the checkout as part of a handoff
@@ -72,7 +72,7 @@ notes describe earlier policies; they do not override the current handoff.
   are deployed. Actual Apple TV/Roku playback remains deferred. Do not claim file indexing proves playback
   or that a configured profile proves safe startup on every client.
 
-## Resuming unfinished work
+## Current operations and closure
 
 - Cloud SAB's **NZBGeek Cart** feed is enabled with 15-minute polling. Preserve
   this user-authorized cart-only workflow and its Default category; see
@@ -92,26 +92,31 @@ notes describe earlier policies; they do not override the current handoff.
   indexing, graph/reconnect and completed-state acceptance. Deployment is not
   transactional and has no automatic rollback, and the maintenance lease expires
   after 600 seconds. Do not infer native or Plex acceptance from telemetry tests.
-  See `plan.md` for current task ownership and release state.
+  Implementation and shared-agent edits are complete; the plan defines source
+  review and remaining operational acceptance.
 
 - Start with read-only `just usenet-discovery-health`, `just usenet-cloud-health`
   and `just usenet-qnap-health` from the repository root. Do not replay setup,
   account creation or deploy recipes merely to inspect the system. Restore missing
   private inputs through the documented vault/snapshot chain; temporary helpers,
   browser handles and SSH sockets from old sessions are not prerequisites.
-- Native selective-copy source and the updated NAS backup helper are deployed.
+- Native selective-copy source and the updated NAS backup helper are deployed;
+  a fresh encrypted archive independently verified the published ownership receipt.
   Read the current acceptance state at the top of `plan.md`. Plex library ID 3
   was narrowed to `TV Shows/library` after confirming the old TV root was empty.
   Private inventory and the live runtime enable `qnap_native_tv_copy_enabled`;
   preserve that override after recovery. TV staging is `TV Shows/.staging` within the same bind;
   movie staging remains outside `Movies/video`. Preserve collision/verification
   checks and the shared cache lock; do not copy the whole collection or touch
-  Arr scratch. The specific rollout/private metadata/publication approvals are
-  resolved; do not repeat setup or an already completed selected transfer.
+  Arr scratch. Do not repeat setup or an already completed selected transfer.
 - Record a fresh user-selected movie/TV completion through native import, cleanup
   and Plex discovery. Existing-file adoption is not proof of a fresh completion.
-- Then verify real Apple TV/Roku playback, seeking and cold-start privacy with the
-  restricted profile; request private user/device interaction only as needed.
-- Follow the ordered acceptance criteria in `../plan.md`. NAS-loss protection,
-  broader machine replacement, optional portals/providers and default-branch merge
-  remain separate. Update this guide, the plan and affected runbooks together.
+- Apple TV/Roku playback, seeking and cold-start privacy are explicitly deferred
+  by the user. Resume those checks when device interaction is available.
+- Follow the [merge gates](../plan.md#closure-and-merge-criteria): review the full
+  branch, validate the reviewed source, acknowledge the two existing historical
+  secret findings, and retain the operational deferrals. Delete Usenet refs only
+  after the reviewed head is merged and local work is protected. Other feature
+  branches with unique commits, dirty worktrees and stashes are separate work.
+  NAS-loss protection, broader replacement and optional portals/providers remain
+  separate. Update this guide, the plan and affected runbooks together.

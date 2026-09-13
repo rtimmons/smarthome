@@ -10,7 +10,11 @@
 The full published-source clean-clone secrets/state drill passed: 24 vault
 entries restored, 15 NAS bundle entries and six keypairs verified, and zero new
 files restored on repeat. See the [September 11 report](../recovery/drills/20260911T194408Z.json).
-Application startup was not repeated; deletion safety remains false.
+That drill did not repeat application startup; the original bound inventory’s
+full-machine `deletion_safe: false` remains unchanged. The later
+[checkout recovery drill](checkout-recovery.md) passed its narrower preservation
+and readiness check. Recheck current files, Git state and publication before a
+later checkout deletion; neither result proves whole-machine replacement.
 Start with [secrets and state recovery](secrets-recovery.md) and the current
 [`plan.md`](../../plan.md) handoff. Do not delete the checkout based only on a
 metadata check or a successful ciphertext transfer.
@@ -42,7 +46,9 @@ the Storage Box from mutation.
 
 ## Recovery material to maintain
 
-Keep the following outside the machines they recover:
+Preserve these materials through the documented vault/archive chain. Replica
+locations and loss boundaries are in [scheduled backups](scheduled-backups.md);
+NAS-local archives do not provide NAS-loss protection:
 
 - This repository and a reviewed revision identifier.
 - Encrypted, access-controlled backups of the independent Terraform `cloud`
@@ -51,11 +57,11 @@ Keep the following outside the machines they recover:
 - The Hetzner project/API-token recovery procedure and the IDs of the server,
   firewall, SSH key, Primary IPs, Storage Box, and Storage Box subaccount. Do
   not put tokens or passwords in this document.
-- Encrypted backups of `/srv/usenet/config/sabnzbd` and
-  `/srv/usenet/config/prowlarr`. These contain application state and
-  provider/indexer secrets. The manual cloud backup below is implemented;
-  rerun it after account settings change and before upgrades. An isolated
-  application-startup restore drill passed. Backups are manual.
+- Encrypted cloud configuration backups including SAB, Prowlarr, Radarr and
+  Sonarr state, provider/indexer credentials, and the private NZBGeek Cart feed
+  and processed-entry history. Host-owned daily backups run with hourly retry;
+  a manual checkpoint can preserve later settings before an upgrade. See
+  [scheduled backup scope](scheduled-backups.md).
 - Offline copies of the operator, Storage Box writer, and QNAP public keys.
   Private keys belong in the secret store, not Git or Terraform state.
 - The QNAP-specific rclone environment/configuration, private key, pinned `known_hosts`, and actual
@@ -64,7 +70,8 @@ Keep the following outside the machines they recover:
   persistent execution history, plus the private access/TLS settings. Keep the
   declarative dashboard configuration and catalog scripts at the same reviewed
   repository revision. Runtime-generated catalog snapshots are disposable;
-  remote manifests and relevant local verification/failure state are not.
+  remote manifests and local verification/failure state are not. Preserve
+  `state/native-items` ownership receipts alongside the NAS files they describe.
 
 For the dashboard, the concrete backup is its protected auth JSON plus
 `QNAP_DASHBOARD_STATE_DIR`: `runtime/sessions.yaml` preserves sessions and
@@ -73,17 +80,18 @@ For the dashboard, the concrete backup is its protected auth JSON plus
 the adapter. Do not edit the generated file as configuration source.
 
 The implemented cloud capture uses SQLite's backup API and integrity checks,
-requires an idle SABnzbd queue/post-processor, and rejects files, databases, or
-remote manifests that change during capture. It does not stop application
+permits an idle or fully paused SAB queue with no post-processing, and rejects
+files, databases, or remote manifests that change during capture. It does not stop application
 containers. The separate QNAP capture helper is also implemented and locally
 tested; its first live capture and isolated application-startup restore passed. It
 uses the existing cache/refresh locks and rejects state that changes during
 capture instead of stopping unrelated services.
 
-Keep the primary encrypted application-config backup outside both the VM and
-Storage Box. An additional convenience copy may live outside the `catalog`
-directory on the Storage Box, where the catalog-rooted QNAP subaccount cannot
-read it, but that copy is not independent recovery coverage.
+Scheduled cloud ciphertext is stored at Storage Box `catalog/.backups/cloud`
+and fetched to the NAS with the read-only account. NAS/Plex ciphertext stays
+local to the NAS; it is not uploaded. These deployed copies protect the stated
+cloud/checkout-loss scope, not NAS loss. Preserve the original bound snapshots
+and separately retained archives; do not substitute an unverified newer file.
 
 ## Manual cloud configuration backup
 
@@ -95,7 +103,8 @@ just usenet-backup-verify /absolute/path/to/archive.tar.age
 just usenet-backup-restore /absolute/path/to/archive.tar.age /absolute/path/to/new-recovery-directory
 ```
 
-`backup-cloud` installs only backup support, captures the idle cloud state,
+`backup-cloud` installs only backup support, captures idle or fully paused cloud
+state with no post-processing,
 encrypts on the VM, transfers ciphertext to ignored `usenet-infra/backups/`,
 then decrypts and checks the allowlisted inventory, every SHA-256, and SQLite
 integrity locally. It publishes the verified ciphertext exclusively and removes
@@ -119,8 +128,9 @@ The newer pre-VPN capture is
 `cloud-20260911T001750Z-UCxzKhOY.tar.age`, ciphertext SHA-256
 `c7871385ec9de9d82530accd87b0384016298855b6bb5e64f143529bc0a8309d`;
 it also verified 589 files and two databases. The separate VPN/UniFi/USG archives
-and checksums are listed in `plan.md`; those root/controller settings are outside
-the application backup scope.
+are enumerated in the [recovery inventory](../recovery/inventory.json) and
+[secrets/state recovery](secrets-recovery.md); those root/controller settings are
+outside the application backup scope.
 If restoring either pre-rotation archive, rotate the restored
 Prowlarr application API key before use and synchronize its protected local
 dependants; do not reuse the old key. Keep older encrypted archives for
@@ -132,9 +142,9 @@ Capture paths are relative to `/srv/usenet`:
 
 | Included | Scope |
 | --- | --- |
-| Application configuration | `config/sabnzbd`, `config/prowlarr`, `config/rclone`, `config/catalog`, `config/catalog.env`, and its defaults |
+| Application configuration | `config/sabnzbd`, `config/prowlarr`, `config/radarr`, `config/sonarr`, `config/rclone`, `config/catalog`, `config/catalog.env`, and its defaults |
 | Operational state | `state/catalog` and the single-submission `state/sab-smoke-test.json` receipt |
-| Recovery implementation | `scripts`, `libexec`, and `compose/cloud` |
+| Recovery implementation | `scripts`, `libexec`, `compose/cloud`, and `compose/discovery` |
 | Storage identity | Writer private key, verified Storage Box `known_hosts`, and the backup's public recipient |
 | Remote metadata | Catalog manifests only, copied under `metadata/manifests` |
 
@@ -147,8 +157,9 @@ archive's scope and require separate recovery material.
 Encryption uses checksum-pinned age 1.3.2 binaries. The existing dedicated
 cloud SSH private key remains on the workstation; only its public recipient
 is installed on the VM. Keep a recoverable copy of that exact private key
-separately, including after SSH-key rotation. An independent key copy has not
-yet been verified. Offline verification/restoration needs the archive, that
+separately, including after SSH-key rotation. Independent recovery of these
+identities passed the clean-clone and scheduled-archive checks. Offline
+verification/restoration needs the archive, that
 private key, the cached verified age binary, Python, and the repository helper;
 no cloud access is required once those materials are available.
 
@@ -162,8 +173,9 @@ appropriate application ownership and executable modes before using the files.
 The separate offline cloud and QNAP application-startup drills below passed.
 Neither replaced a live VM or NAS.
 
-Backup remains manual, with no schedule or QNAP snapshot automation installed.
-Take a new backup after fill-provider or indexer credentials/settings change.
+The commands above are manual checkpoints alongside the deployed host-owned
+[schedules](scheduled-backups.md). Verify a new checkpoint after material
+configuration changes; never resume or remove SAB jobs to satisfy backup admission.
 
 ## Verified offline cloud application restore drill
 
@@ -232,7 +244,8 @@ included and no hidden runtime files are missing from the allowlist.
 Capture includes the stack's Compose/environment files, scripts/schema,
 protected dashboard authentication, generated runtime configuration and
 sessions, full action results/output history, catalog item/failure/operation
-state, and the reader key and pinned host key. Media objects, staged downloads,
+state, native ownership/integrity receipts under `state/native-items`, and the
+reader key and pinned host key. Media objects, staged downloads,
 and Docker client/build caches are excluded. Preserve the selected deployment
 paths and numeric ownership in the recovery material.
 
@@ -250,7 +263,9 @@ modes; reviewed deployment must reapply appropriate owners and executable bits
 before using the restored stack. The helper rejects unexpected SQLite files,
 unsupported custom layouts, more than 25,000 files, or more than 128 MiB. These
 bounds and stable-capture checks are deliberate failure conditions, not a
-reason to omit changed configuration silently. No scheduler is installed.
+reason to omit changed configuration silently. The separate deployed NAS
+scheduler uses the current helper; see [scheduled backups](scheduled-backups.md)
+for archive-capture evidence and freshness.
 
 ## Verified offline QNAP application restore drill
 
@@ -295,20 +310,28 @@ evicted while the dashboard is stopped, with remote files/manifests unchanged.
    [Lost Terraform state](#lost-terraform-state) before applying.
 3. Recreate or repair only the cloud resources. The explicit protected Primary
    IPs should remain stable across a planned server replacement.
-4. Run the host provisioning playbook, then restore
-   `/srv/usenet/config/sabnzbd` and `/srv/usenet/config/prowlarr` with the
-   configured PUID/PGID ownership and restrictive permissions.
-5. Restore the writer's Storage Box SSH key and a `known_hosts` entry verified
-   against [Hetzner's published fingerprints](https://docs.hetzner.com/storage/storage-box/general/).
-6. Start the [cloud Compose stack](../compose/cloud/compose.yaml). Reach the UIs
-   only through SSH tunnels; confirm no service listens publicly.
-7. Test Eweka over TLS, any configured fill provider, and each indexer without
-   enabling an unattended acquisition rule.
-8. Run `catalog-status`, inspect local failure records, and inspect remote
-   `.incoming` content. Do not publish or delete an incomplete item until its
-   source, hashes, and manifest state are understood.
-9. Promote a small authorized test item, verify it from the read-only endpoint,
-   and leave the canonical library untouched otherwise.
+4. Restore SAB, Prowlarr, Radarr and Sonarr configuration and the relevant
+   service definitions from the reviewed source/backup, preserving dedicated
+   identities, ownership and private permissions. Preserve SAB pauses, Cart RSS
+   state and Arr monitoring; inspect jobs before allowing resumed acquisition.
+5. Restore the writer key and verified host pin, then establish the synchronous
+   Storage Box mount. Verify `usenet-library.service` and its real Movies/TV
+   directories before starting Arr through `usenet-discovery.service`. Preserve
+   `Requires`/`BindsTo` mount dependencies and mode-0000 unmounted protection;
+   never replace a failed mount with an ordinary writable directory.
+6. Restore the existing private LAN route/proxy and loopback backend bindings.
+   Use the LAN application URLs; the documented SSH tunnel is an optional
+   recovery access path. Confirm there are no public application UI listeners.
+7. Check provider/indexer connectivity and the saved Cart feed without submitting
+   a job. Its Default-category jobs bypass Arr ownership. Restore acquisition
+   only after reviewing actual queue/history and the intended import route.
+8. Keep the retired publisher disabled. Inspect canonical native-library and
+   local operation metadata without moving unknown scratch or republishing Arr
+   content. Reconcile lost or completed jobs using Arr’s supported workflow.
+9. Validate any user-selected fresh completion through import, cleanup and Plex
+   discovery under the [current acceptance scope](../../plan.md#closure-and-merge-criteria).
+   Do not enqueue a diagnostic job or manually promote Arr-owned scratch merely
+   to finish a recovery checklist.
 
 Outcome: jobs that existed only on VM scratch may be lost, but the published
 catalog remains available.
@@ -318,28 +341,34 @@ catalog remains available.
 1. Stop the old Container Station application if any fragments still run. Do
    not manage the same stack simultaneously from the GUI and command line.
 2. Recreate the dedicated shared folders and the absolute `/share/...` paths
-   documented for this NAS. Restore the QNAP Compose files from Git.
+   documented for this NAS, preserving the separate movie/TV sources and
+   staging paths. Restore the QNAP Compose files from Git. Verify Plex ID 3
+   still scans `TV Shows/library` before enabling the native TV copy gate.
 3. Restore only the QNAP subaccount's key, rclone configuration, verified
-   Storage Box host key, and dashboard authentication/runtime state. Restore
-   correct numeric ownership and restrictive permissions. Never copy the main
+   Storage Box host key, dashboard authentication/runtime state, and native
+   ownership receipts. Restore correct numeric ownership and restrictive
+   permissions. Never copy the main
    writer credential to the NAS.
 4. Confirm in Hetzner Console/Terraform that the subaccount is rooted at
    `catalog`, externally reachable, SSH-enabled, and read-only.
 5. Start the [QNAP Compose stack](../compose/qnap/compose.yaml) through the
    [QNAP runbook](../compose/qnap/README.md). Confirm private binding and
-   authentication before using the dashboard. Run `catalog-list` and
-   `catalog-status` before requesting any large pull, and confirm that execution
-   history from the backup is readable.
+   authentication before using the dashboard. Run `catalog-list`/`catalog-status`
+   and `native-list`/`native-status` before requesting any large pull; confirm
+   that execution history from the backup is readable.
 6. Prove the safety boundary during acceptance testing: reading a known item
    must work, while an attempted write to a disposable test name through the
    QNAP credential must be rejected. Do not target an existing catalog object.
-7. Refresh the dashboard and deliberately download wanted items, or run
-   `catalog-pull` if the dashboard is unavailable. Local item-state records are
-   regenerated after each verified pull. Do not infer that a surviving cache
-   directory is verified merely from its presence.
+7. Refresh the dashboard and select only wanted titles, or use `native-pull`
+   (`catalog-pull` for legacy items). Existing native files require their
+   matching ownership receipt and verified directory identity/bytes; listing
+   does not regenerate that authority. Preserve unmatched files for recovery
+   review rather than adopting, overwriting or deleting them.
 
-The catalog manifests are remote, so loss of QNAP local state does not erase
-catalog identity or hashes.
+Legacy manifests remain remote. Native ownership receipts are NAS state and must
+be restored and validated; their presence alone does not authorize a changed
+directory or replacement volume. A new copy into an absent destination produces
+a new verified receipt.
 
 ## Dashboard unavailable
 
@@ -351,10 +380,14 @@ just catalog-list
 just catalog-status
 just catalog-pull "item-id"
 just catalog-evict "item-id"
+just native-list
+just native-status
+just native-pull "native-<id>"
+just native-evict "native-<id>"
 just qnap-health
 ```
 
-These use the same manifest-aware catalog container/backend as the dashboard.
+These use the same guarded legacy/native backends as the dashboard.
 An eviction still removes only the NAS copy; it never invokes remote deletion.
 Do not introduce direct rclone copy/delete actions to bypass an unavailable UI.
 
@@ -375,11 +408,13 @@ window closing does not establish that a server-side transfer stopped.
 
 1. Replace or repair the affected NAS storage using the QNAP-supported process.
 2. Recreate the cache and staging shared folders with enough free space and the
-   expected container UID/GID permissions.
+   expected container UID/GID permissions. Preserve the Plex source/staging
+   separation and 100 GiB reserve.
 3. Restore the QNAP configuration as above.
-4. Run `catalog-list`; select only the content wanted locally and pull it again.
-   Each pull stages under `.partial`, verifies byte counts and SHA-256 hashes,
-   then atomically installs the cache directory.
+4. Run `native-list` and `catalog-list`; select only wanted titles for new copies.
+   Restored native receipts refer to the former volume’s directory identity,
+   so preserve them for review and do not use them to adopt replacement files.
+   The guarded pull verifies bytes and publishes into an absent destination.
 5. If a failed pull left staging data, retry without `--inplace`. rclone can
    avoid retransferring completed files, but an interrupted partial file may
    restart from zero.
@@ -485,35 +520,44 @@ and the provider's
 1. Stop the affected Compose services to avoid writes during restore.
 2. Preserve the failed configuration directory for forensics; do not overwrite
    the only copy of it.
-3. Restore the latest encrypted SABnzbd/Prowlarr config backup, permissions, and
-   ownership. Start the services and inspect logs.
-4. Confirm provider hosts, TLS ports, fill-server priority, indexer endpoints,
-   categories, incomplete/complete paths, and API connectivity. Re-enter a
-   credential from the secret manager if the backup predates a rotation.
-5. Confirm the services still bind only to `127.0.0.1`; use SSH tunnels for UI
-   checks.
-6. Reconcile any jobs completed after the backup manually. Do not automatically
-   promote an unknown directory: generate and review its provenance and hashes
-   first.
+3. Restore the affected SAB/Prowlarr/Radarr/Sonarr configuration, permissions and
+   ownership. Verify the real library mount and systemd mount dependencies before
+   starting Arr; use the [native media](native-media.md) recovery invariants.
+4. Confirm provider/indexer endpoints, strict TLS, categories, scratch/library
+   paths and API connectivity. Preserve the enabled Cart RSS feed and its
+   processed-entry history, pauses and Arr monitoring. Cart jobs do not become
+   Arr-owned simply because their files are on completed scratch.
+5. Verify loopback backend bindings and the authenticated private LAN proxy;
+   the SSH tunnel remains an optional access path.
+6. Reconcile jobs completed after the backup through the owning application.
+   Keep the retired publisher disabled, and preserve unknown scratch for review.
+   Do not reset feed history, enqueue tests or run a second mover to force success.
 
 ## Recovery acceptance
 
-A drill is complete only when:
+Choose the drill’s scope through the
+[closure and merge criteria](../../plan.md#closure-and-merge-criteria). Record only
+what that drill actually establishes:
 
-- Terraform plans show no unintended destruction or replacement.
-- SABnzbd and Prowlarr are unreachable directly from the public Internet.
-- A small authorized job completes locally and is deliberately promoted.
-- The published manifest and remote bytes verify.
-- The QNAP credential reads and pulls the item but cannot create, overwrite, or
-  delete a disposable remote test name.
-- `catalog-evict` removes only the QNAP cache copy.
-- The remote catalog object still verifies after eviction.
-- Dashboard login, private exposure, state display and point-and-click actions
-  pass again; restored execution history remains readable.
-- CLI listing/pull/status/eviction continue to work while the dashboard is down.
-- Git and logs contain no credentials.
+- A source/state restore verifies archive integrity, identities, required files,
+  ownership and application configuration without changing canonical media.
+- A cloud startup check verifies mount-before-Arr dependencies, private proxy
+  access, saved acquisition/Cart state and the disabled publisher. Restored
+  queue/history must be reviewed before acquisition resumes.
+- A NAS restore verifies native ownership receipts, separate source/staging roots,
+  read-only canonical access, authentication and retained action history. General
+  Plex roots/profile grants must remain separate from the private library.
+- A fresh media acceptance, when authorized, follows a user-selected Arr-owned
+  completion through import/cleanup, selective NAS copying and Plex discovery.
+  A Cart download needs its intended import route verified separately. Legacy
+  promotion tests are limited to independent items, never Arr-owned scratch.
+- Any destructive-state or machine-replacement drill requires reviewed scope;
+  Terraform must not propose unintended Storage Box replacement or deletion.
+  NAS-loss protection remains deferred.
 
-Record each drill in [validation.md](validation.md). The cloud and QNAP
-application startup drills above are recorded, and clean-clone master-key
-recovery passed in the September 11 report linked above. Full machine
-replacement and application startup from that clone remain unproven.
+Use [validation](validation.md) for accepted and pending outcomes, and retain a
+sanitized dated receipt. The existing clean-clone, checkout and isolated startup
+drills prove their recorded scopes; they do not establish a later checkout’s
+readiness, full machine replacement or device playback. Preserve immutable
+snapshots and historical decryption keys. Do not include credentials or private
+library contents in Git or logs.

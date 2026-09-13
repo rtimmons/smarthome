@@ -26,8 +26,9 @@ pass. A request portal and automatic list subscriptions are deferred.
   in the Arr Activity view. Completed Download Handling imports successful jobs
   into the library and cleans up completed client downloads. Failed jobs remain
   for review; automatic redownload is disabled. Plex scans the canonical library
-  through the read-only NAS mount. NAS copies remain selective; the convenient
-  action for new native titles is still pending. See [native media](native-media.md).
+  through the read-only NAS mount. Selective native-copy actions are deployed
+  on the NAS dashboard; one movie copy and safe repeat passed. A real TV copy
+  remains unverified. See [native media](native-media.md).
 
 The same catalog credentials protect both new paths. They share the existing
 private listener and VPN selectors; no new public port or gateway change is
