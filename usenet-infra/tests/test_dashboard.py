@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 import os
+import re
 from pathlib import Path
 import sys
 import tempfile
@@ -23,6 +24,67 @@ def item(item_id='sample-id', state='remote_only', action='download', **extra):
 
 
 class DashboardTests(unittest.TestCase):
+    def transfer(self, **overrides):
+        operation = dict(id='attempt-one', operation='pull', active=True, status='running',
+                         phase='downloading', updated_at='2026-09-13T00:00:00Z',
+                         progress=dict(at=990, speed=2097152, bytes=50, total_bytes=100, eta=120),
+                         speed_history=[dict(at=980, speed=1048576), dict(at=990, speed=2097152)])
+        operation.update(overrides)
+        return {'items': [item(state='downloading', action=None, operation=operation)]}
+
+    def test_transfer_is_first_with_rate_progress_eta_and_timed_graph(self):
+        with mock.patch.object(dash.time, 'time', return_value=1000):
+            panel = dash.dashboard_config(self.transfer())['dashboards'][0]['contents'][0]
+        markup = json.dumps(panel)
+        self.assertEqual(panel['title'], 'Downloads')
+        for value in ('2.0 MiB/s', '50.0%', '2 min remaining', 'Download speed history', '10 seconds of history'):
+            self.assertIn(value, markup)
+
+    def test_stale_failed_completed_and_verifying_never_claim_live_speed(self):
+        cases = [self.transfer(phase='verifying SHA-256'), self.transfer(active=False, status='succeeded'),
+                 self.transfer(active=False, status='failed'), self.transfer(progress=dict(at=1, speed=2097152))]
+        with mock.patch.object(dash.time, 'time', return_value=1000):
+            def displayed_rate(data, error=None):
+                markup = dash.transfer_panel(data, error)['contents'][0]['title']
+                return re.findall(r'font-size:2em;font-weight:700">([^<]+)</div>', markup)
+            self.assertEqual(displayed_rate(self.transfer()), ['2.0 MiB/s'])
+            for data in cases:
+                self.assertEqual(len(displayed_rate(data)), 1)
+                self.assertNotEqual(displayed_rate(data), ['2.0 MiB/s'])
+            self.assertNotEqual(displayed_rate(self.transfer(), 'unreachable'), ['2.0 MiB/s'])
+            panel = dash.transfer_panel(self.transfer(), 'unreachable')
+            self.assertIn('Status unavailable', json.dumps(panel))
+            self.assertNotIn('2 min remaining', json.dumps(panel))
+
+    def test_zero_rate_unknown_total_and_future_sample_are_not_false_progress(self):
+        with mock.patch.object(dash.time, 'time', return_value=1000):
+            data = self.transfer(progress=dict(at=999, bytes=0, total_bytes=0, speed=0, eta=None), speed_history=[])
+            markup = dash.transfer_panel(data, None)['contents'][0]['title']
+            self.assertNotIn('<progress', markup)
+            self.assertNotIn('min remaining', markup)
+            self.assertNotIn('Waiting for speed data', markup)
+            data['items'][0]['operation']['progress']['at'] = 1001
+            self.assertIn('Waiting for speed data', dash.transfer_panel(data, None)['contents'][0]['title'])
+
+    def test_graph_spacing_tracks_elapsed_time_and_markup_survives_cached_js(self):
+        data = self.transfer(speed_history=[dict(at=0, speed=0), dict(at=10, speed=10), dict(at=40, speed=20)])
+        markup = dash.transfer_panel(data, None)['contents'][0]['title']
+        self.assertIn('left:24.50%', markup)
+        self.assertIn('left:98.00%', markup)
+        self.assertIn('<style>fieldset:has(.transfer-status)', markup)
+
+    def test_presentation_supports_existing_legacy_only_deployment(self):
+        with mock.patch.object(dash, 'NATIVE_BACKEND') as native, mock.patch.object(dash, 'backend_snapshot', return_value={'items': []}) as backend:
+            native.is_file.return_value = False
+            self.assertEqual(dash.snapshot(), {'items': []})
+            backend.assert_called_once_with(dash.BACKEND)
+
+    def test_startup_can_publish_pre_upgrade_legacy_provenance_objects(self):
+        with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, {'CATALOG_DASHBOARD_ROOT': directory}):
+            dash.publish({'items': [item(source={'description': 'legacy manifest provenance'})]})
+            config = json.loads((Path(directory) / 'generated/catalog.yaml').read_text())
+            self.assertEqual(config['actions'][1]['id'], 'catalog-download-sample-id')
+
     def test_only_current_state_action_is_generated(self):
         data = {'items': [item(), item('local-id', 'local', 'evict'),
                           item('failed-id', 'failed', 'retry'), item('active-id', 'downloading', None)]}

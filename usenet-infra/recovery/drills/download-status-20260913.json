@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-13T03:27:00.960243+00:00",
+  "scope": "Download visibility source/test/documentation handoff; existing legacy dashboard deployed in prior turn. No NAS mutation or new media transfer in this commit-preparation turn.",
+  "base_commit": "03163b4",
+  "validation": {
+    "usenet_recipe": "just --justfile usenet-infra/Justfile --working-directory usenet-infra test",
+    "cases": 466,
+    "passed": 457,
+    "skipped": 9,
+    "functional_result": "passed",
+    "recipe_exit": "nonzero only at full-history secret scan",
+    "history_findings": [
+      "Ansible/id_rsa",
+      "Ansible/roles/smarthome-user/files/id_rsa"
+    ],
+    "syntax_and_lint": "Python compile, shell/YAML, generated deployment shell and Ansible syntax passed",
+    "current_source_index_secret_scan": "passed; repeated after staging"
+  },
+  "deployment_tests": {
+    "cases": 6,
+    "mechanism": "Execute generated shell with a local Docker transport double and actual production lease Python using real flock",
+    "covered": [
+      "busy lock refuses script writes/restart",
+      "idle backup bytes and exact installed source",
+      "legacy-only deployment remains legacy-only",
+      "existing native backend updated without Compose changes",
+      "restart failure releases lease and retains backups",
+      "assets-only update while cache lock held, without Docker",
+      "shellcheck for both payload modes"
+    ],
+    "not_covered": [
+      "real QNAP Docker lifecycle",
+      "SSH disconnection",
+      "600-second lease expiration during an incomplete rollout",
+      "automatic rollback (not implemented)"
+    ]
+  },
+  "telemetry_tests": {
+    "ordinary_child_stream_cases": 3,
+    "real_rclone_cases": 1,
+    "real_rclone_result": "passed",
+    "rclone": "1.75.1",
+    "container": "localhost/usenet-dashboard-test:3000.19.0",
+    "network": "none",
+    "fixture_bytes": 1048576,
+    "fixture_only": true,
+    "command": "CATALOG_TEST_RCLONE=/usr/local/bin/rclone python3 -m unittest discover -s /work/tests -p test_transfer_telemetry.py -v",
+    "covered": [
+      "mixed/malformed/nonstats log lines",
+      "nonzero child exit preserved after stats",
+      "operation history survives failed verification",
+      "real rclone stats persist and generated file hashes match"
+    ],
+    "repeatability": "Committed test_transfer_telemetry.py; the opt-in binary/container is not provisioned by this receipt."
+  },
+  "prior_live_acceptance": {
+    "at_approximately": "2026-09-13T02:35:00Z",
+    "url": "http://192.168.1.66:1337/",
+    "result": "Authenticated idle Downloads panel rendered full-width; explicit refresh and healthcheck succeeded. Earlier selected legacy download had completed before rollout.",
+    "rollback_scripts": "/share/Container/usenet/state/dashboard-status-backups/20260913T023442Z",
+    "unsafe_earlier_rollback": "20260913T021208Z predates old-cache provenance compatibility fix",
+    "native_backend": "source-only; not installed by this update",
+    "active_graph": "not live-accepted; no new transfer initiated for telemetry testing"
+  },
+  "limitations": [
+    "SFTP speed, native copy/Plex discovery, device playback/seeking/privacy not proved by local fixture",
+    "60 per-attempt samples; no history for pre-upgrade transfers; retry resets history",
+    "rclone rate/ETA are approximate; UI refresh can lag samples",
+    "copy bytes complete is not checksum verification or Plex acceptance",
+    "multi-file deployment is not transactional and has no automatic rollback",
+    "root add-on test suite not rerun for this Usenet-only increment; unrelated lighting edits excluded",
+    "local commit does not itself publish source or establish checkout-deletion readiness"
+  ],
+  "coordination": {
+    "next_owner_thread": "01a093b4-9154-7af0-ab10-3f02c0b6927d",
+    "boundary": "Native rollout task will receive the commit hash and then own branch publication, private metadata review, native deployment and live copy/Plex acceptance. Its native-rollout-preflight-20260913.json is excluded from this commit."
+  }
+}

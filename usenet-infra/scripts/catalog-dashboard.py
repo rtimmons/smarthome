@@ -82,6 +82,9 @@ def backend_snapshot(backend: Path) -> dict:
 
 def snapshot() -> dict:
     legacy = backend_snapshot(BACKEND)
+    # Presentation updates may precede the separate native-library rollout.
+    if not NATIVE_BACKEND.is_file():
+        return legacy
     native = backend_snapshot(NATIVE_BACKEND)
     merged = dict(legacy)
     merged['items'] = [dict(item, source='legacy') for item in legacy.get('items', [])] + [
@@ -100,6 +103,10 @@ def snapshot() -> dict:
 
 def item_source(item: dict) -> str:
     source = item.get('source', 'legacy')
+    # Old persisted snapshots contain the manifest's provenance object here.
+    # New combined snapshots replace that field with a backend discriminator.
+    if isinstance(source, dict):
+        source = 'legacy'
     if source not in ('legacy', 'native'):
         raise ValueError('Unknown catalog source')
     return source
@@ -107,6 +114,71 @@ def item_source(item: dict) -> str:
 
 def command_args(*args: str) -> list[str]:
     return [sys.executable, str(SCRIPT), *args]
+
+
+def transfer_panel(data: dict, refresh_error: str | None) -> dict:
+    rows = [i for i in data.get('items', []) if (i.get('operation') or {}).get('operation') in ('pull', 'native-pull')]
+    active = [i for i in rows if i['operation'].get('active')]
+    recent = sorted(rows, key=lambda i: i['operation'].get('updated_at', ''), reverse=True)[:1]
+    # Ship layout with the authenticated dashboard data as well as custom JS:
+    # browsers can retain OliveTin's unversioned custom.js across an upgrade.
+    body = ('<style>fieldset:has(.transfer-status){display:block;width:auto;max-width:960px;margin-inline:auto}'
+            '.dashboard-row:has(.transfer-status) .display{width:100%;padding:24px;box-sizing:border-box}'
+            '.dashboard-row:has(.transfer-status) .display>div{width:100%;min-width:0}'
+            '.transfer-status{overflow-wrap:anywhere}</style>'
+            '<div class="transfer-status" style="text-align:left;min-width:0">')
+    if refresh_error:
+        body += '<h2>Download status unavailable · Cloud → NAS</h2>'
+        body += '<p><strong>Status unavailable — last known values below.</strong></p>'
+    else:
+        body += f'<h2>{len(active)} active download{"s" if len(active) != 1 else ""} · Cloud → NAS</h2>' if active else '<h2>No active downloads · Cloud → NAS</h2>'
+    for row in active or recent:
+        operation = row['operation']
+        live = bool(operation.get('active')) and not refresh_error
+        phase = operation.get('phase', 'Preparing')
+        copying = live and ('downloading' in phase or 'copying' in phase)
+        progress = operation.get('progress') or {}
+        fresh = copying and 0 <= time.time() - progress.get('at', 0) <= 45
+        rate = bytes_label(progress.get('speed')) + '/s' if fresh else ('Waiting for speed data' if copying else '—')
+        label = phase if live else operation.get('status', 'unknown')
+        body += f'<h3>{escaped(row["title"])}</h3><p><strong>{escaped(label)}</strong></p>'
+        stamp = f' data-speed-at="{progress["at"]}"' if fresh else ''
+        body += f'<div{stamp} style="font-size:2em;font-weight:700">{rate}</div>'
+        if progress:
+            total = progress.get('total_bytes', 0)
+            copied = progress.get('bytes', 0)
+            percentage = min(100, 100 * copied / total) if total else 0
+            body += f'<p>{bytes_label(copied)} / {bytes_label(total)} transferred this attempt'
+            if total:
+                body += f' · {percentage:.1f}%'
+            if fresh and progress.get('eta') is not None:
+                body += f' · about {max(1, round(progress["eta"] / 60))} min remaining'
+            body += '</p>'
+            if total:
+                body += f'<progress style="width:100%" max="100" value="{percentage:.1f}" aria-label="Transfer progress">{percentage:.1f}%</progress>'
+        history = operation.get('speed_history', [])[-60:]
+        if history:
+            peak = max(p['speed'] for p in history)
+            start, end = history[0]['at'], history[-1]['at']
+            span = max(10, end - start)
+            body += f'<p><strong>Download speed history</strong> · peak {bytes_label(peak)}/s</p>'
+            body += '<div role="img" aria-label="Download speed over time, oldest to newest" style="position:relative;height:80px;border-bottom:1px solid currentColor;margin:12px 0">'
+            for point in history:
+                left = 98 * (point['at'] - start) / span
+                height = max(1, round(76 * point['speed'] / peak)) if peak else 1
+                hint = f'{round(point["at"] - start)}s: {bytes_label(point["speed"])}/s'
+                body += f'<span title="{hint}" style="position:absolute;bottom:0;left:{left:.2f}%;width:1.6%;min-width:2px;height:{height}px;background:#20a5a0"></span>'
+            body += f'</div><p><small>{round(end - start)} seconds of history · oldest → newest · samples about every 10s</small></p>'
+        else:
+            body += '<p>Speed history starts with downloads launched after this update.</p>'
+        if live and not copying:
+            body += '<p>Preparation and verification can take time; network speed is shown during copying.</p>'
+        if operation.get('error'):
+            body += f'<p>{escaped(operation["error"])}</p>'
+    if not rows:
+        body += '<p>Select Download on a title below. Its speed and history will appear here.</p>'
+    body += '<p><small>Updates automatically. Transfer completion is followed by verification and Plex discovery.</small></p></div>'
+    return {'type': 'fieldset', 'title': 'Downloads', 'contents': [{'type': 'display', 'title': body}]}
 
 
 def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
@@ -129,7 +201,7 @@ def dashboard_config(data: dict, refresh_error: str | None = None) -> dict:
     )
     if refresh_error:
         summary += f'<p><strong>Catalog refresh failed. Values may be stale; actions are disabled.</strong><br>{escaped(refresh_error)}</p>'
-    contents = [{'type': 'fieldset', 'title': 'Capacity and activity', 'contents': [
+    contents = [transfer_panel(data, refresh_error), {'type': 'fieldset', 'title': 'Capacity and activity', 'contents': [
         {'type': 'display', 'title': summary}, {'title': 'Refresh catalog'},
         {'type': 'display', 'title': 'This catalog updates automatically. Use the top search box for title or category. The Entities view also provides a filterable catalog table. Execution logs retain status and output; downloads continue when this browser closes.'},
     ]}]

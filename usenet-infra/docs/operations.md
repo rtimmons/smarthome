@@ -8,6 +8,38 @@ serve legacy independent objects; they must not move Arr-owned completed files.
 
 # Operations
 
+## Download status panel
+
+See [download status](download-status.md) for implementation, reproducible tests,
+rollback procedure and unverified live behavior.
+
+The Downloads panel appears before the catalog, showing the active Cloud → NAS
+title, phase, rclone-reported rate, bytes transferred this attempt, estimated
+minutes remaining, and a bar graph of the most recent 60 samples. The graph uses
+sample timestamps; rclone emits a sample about every ten seconds. Samples live
+in the existing NAS operation receipt, so browser closure does not discard them.
+Retrying starts a fresh history. Preparing, verifying, failed, and completed
+operations do not show a live speed; a missing or older-than-45-second speed
+sample is explicitly unavailable. Catalog refresh and browser interaction can
+delay display updates; the history retains the underlying samples.
+
+The byte counter describes the current rclone attempt, including its own retry
+accounting, rather than an independent verified-library total. Byte completion
+does not mean verification or Plex discovery has finished. The panel concerns
+Storage Box → NAS transfers, not SAB's earlier Usenet download stage.
+
+The panel is deployed on the legacy dashboard. Speed history is available for
+transfers started after this update; the preceding completed transfer has none.
+Use `just configure-download-status` inside `usenet-infra` for a scoped update.
+It holds the shared cache lock using the existing catalog image, refuses busy
+operations before changing scripts, retains script backups, and restarts only
+the dashboard. It skips the native backend if absent and makes no Plex/config
+migration. Keep cached legacy provenance-object support when evolving the UI.
+Use `just configure-download-status assets` for JavaScript-only changes without
+a restart. The panel includes its layout styles in dashboard data so browsers
+with cached custom JavaScript still render it correctly. See the current handoff
+for validation, deployment scope, and rollback caveats.
+
 ## Administrative access
 
 Normally use SAB at `http://10.77.0.1:18080/` and Prowlarr/Arr at

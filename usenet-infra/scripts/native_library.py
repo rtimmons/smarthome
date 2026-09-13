@@ -328,7 +328,8 @@ class NativeLibrary:
                                 "--immutable", "--transfers", str(self.settings.transfers), "--checkers", str(self.settings.checkers),
                                 "--bwlimit", self.settings.bwlimit, "--partial-suffix", ".rclone-partial",
                                 "--max-transfer", str(item["size_bytes"] + 1), "--cutoff-mode", "HARD",
-                                "--stats", "10s", "--stats-one-line", "--stats-log-level", "NOTICE", *READ_FLAGS)
+                                "--stats", "10s", "--use-json-log", "--stats-log-level", "NOTICE", *READ_FLAGS,
+                                progress=lambda stats: update(None, stats))
                 update("verifying selected NAS bytes and unchanged canonical title")
                 local_signature(staging)
                 catalog.verify_local(staging, {"files": verified_files})

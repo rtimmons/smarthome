@@ -6,6 +6,61 @@ is necessary. Account creation and infrastructure bootstrap are complete.
 
 ## Resume here — authoritative handoff, September 12, 2026
 
+### Download visibility follow-up — deployed, September 12 evening
+
+The prominent Cloud → NAS Downloads panel is live at `http://192.168.1.66:1337/`:
+active title and phase, rclone rate, attempt byte progress, ETA, and the last 60
+speed samples plotted over their actual timestamps. The deployed legacy backend
+persists numeric JSON stats every ten seconds in its existing operation receipt.
+The native backend has matching source changes but remains part of the separate,
+unperformed native rollout. Histories reset on a new attempt and survive browser
+closure; verification/completed/failed states do not advertise a live rate.
+No endpoint, credential, Plex root, or remote media bytes were changed.
+
+The running legacy pull finished before activation; fresh NAS health showed no
+active/failed/interrupted pulls. `just configure-download-status` (inside
+`usenet-infra`) now installs only these scripts on an existing deployment, keeps
+rollback copies, and restarts only the dashboard while an existing-image helper
+holds the shared cache lock. Busy cache operations fail before script changes.
+It supports the legacy-only deployment and does not install an absent native
+backend or perform the native/Plex migration. A startup compatibility bug with
+old cached manifest provenance briefly took the dashboard down; it was fixed,
+regression-tested, redeployed, and the authenticated Downloads UI and readiness
+check now pass. Final deployment completed September 13 at about 02:35 UTC, including the
+cache-independent full-width layout verified in the live browser.
+The last deployment's script backups are at
+`/share/Container/usenet/state/dashboard-status-backups/20260913T023442Z`.
+Earlier backup `20260913T021208Z` precedes the cache compatibility fix and must
+not be blindly restored.
+
+Validation for this handoff: 466 Usenet cases (457 passed, nine opt-in skips),
+shell/YAML/compilation/deployment syntax checks, deployment shell lint, and
+current-source/index secret scanning passed. Full-history scanning still reports
+the two documented historical RSA keys. A network-disabled Linux fixture using
+real rclone 1.75.1 recorded five speed samples for a verified 1 MiB copy; the graph
+passed visual inspection. No new media download was initiated for this update:
+live speed history starts with the next user-selected transfer. The earlier
+Backrooms transfer is now verified local; Plex indexing/playback was not checked.
+The committed [download-status receipt](usenet-infra/recovery/drills/download-status-20260913.json)
+and [runbook](usenet-infra/docs/download-status.md) record reproducible coverage
+and limitations. Six generated-shell tests exercise real lock contention, backup
+bytes, restart failure cleanup, assets-only updates and legacy/native boundaries.
+All four telemetry integration tests passed with real rclone enabled in the local
+network-disabled image. No NAS mutation occurred during commit preparation.
+
+This increment is committed locally on `usenet` above native-copy commit
+`03163b4`; publication is delegated to the native-rollout task. Unrelated lighting
+edits, `msg`, and that task's `native-rollout-preflight-20260913.json` are excluded.
+The native-rollout task `01a093b4-9154-7af0-ab10-3f02c0b6927d` is waiting for this
+commit hash before taking Git/NAS mutation ownership. It reports fresh private
+preflight and authorization for publication, metadata inspection and native/Plex
+acceptance; do not replay the earlier rejected broad read or deploy concurrently.
+Its receipt and later handoff must establish actual rollout results. At this
+commit boundary native deployment/live graph/Plex acceptance remain pending.
+A cold agent should read this runbook/receipt, inspect Git status, and coordinate
+with that task before mutation. Do not rely on ignored `build/` helpers, old browser
+tabs, or the prior source-only handoff's publication assumptions.
+
 Read [the Usenet agent guide](usenet-infra/AGENTS.md), then this section. Everything
 below **Historical implementation record** records earlier stages or the original
 proposal; it is not a second set of current deployment instructions. Current
