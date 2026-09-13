@@ -4,160 +4,97 @@ Keep this document current as work progresses. Perform authorized work using the
 repository tools; involve the user only where private input or device interaction
 is necessary. Account creation and infrastructure bootstrap are complete.
 
-## Resume here — authoritative handoff, September 12, 2026
+## Resume here — authoritative handoff, September 13, 2026 UTC
 
-### Coordinated publication — September 13, 2026 UTC
+### Phone discovery — NZBGeek cart feed enabled
 
-The Downloads task released Git/NAS mutation ownership after committing
-`c87d6af`, above native-copy commit `03163b4`. Both commits are now published to
-`https://github.com/rtimmons/smarthome.git`, branch `usenet`. The user explicitly
-approved publication, private download/library metadata inspection and coordinated
-deployment. The [fresh preflight](usenet-infra/recovery/drills/native-rollout-preflight-20260913.json)
-passed: no active NAS transfers, about 1.34 TB free with a 100 GiB reserve, healthy
-backups, and no fresh native import established. The selected uncached movie is
-Batman — Knightfall (14,878,405,826 bytes); it has not been copied by this task.
-The TV NAS root was empty and Plex library ID 3 still scans its parent directory.
+Cloud SAB has one enabled **NZBGeek Cart** RSS feed, polling every 15 minutes.
+The existing saved NZBGeek key remains private on the cloud. The feed targets
+only My Cart, uses Default category and normal repair/unpack processing, and
+preserves cart entries on reads (`del=0`). SAB's native reader verified the one
+existing cart item as held initial-batch content; queue/post-processing remained
+empty and no media download was started. Future cart additions queue through SAB;
+direct cart grabs do not establish Arr import ownership. No service restart or
+NAS/Plex change occurred. See the [phone cart runbook](usenet-infra/docs/nzbgeek-cart.md)
+for the held-item action, verification and protected rollback backup. This is a
+live configuration/documentation change, not fresh end-to-end media acceptance.
+Enabled-RSS refusals in older settings/smoke helpers are now expected; preserve
+this user-authorized feed.
 
-**Native deployment remains pending.** Automatic approval review rejected the
-exact `just --justfile usenet-infra/Justfile --working-directory usenet-infra
-configure-qnap` invocation before execution, judging the broad configuration,
-mount, script and service changes outside the specificity of the coordinated
-deployment approval. Do not retry through another execution path. Obtain explicit
-approval for this reviewed rollout scope:
+### Native selective copies — deployed and accepted
 
-- Run `configure-qnap` to install the native backend and current Downloads panel,
-  render existing private settings/credentials, add the TV bind and directories,
-  build pinned images and recreate only the cache `rclone` and `dashboard` services.
-- Run `ansible/qnap-backups.yml` to install native-receipt backup support and
-  reconcile only the backup service/schedule.
-- After confirming the TV root is still empty, narrow only Plex library ID 3 to
-  `TV Shows/library`, enable `qnap_native_tv_copy_enabled` in private inventory,
-  and rerun `configure-qnap` for that setting.
-- Copy only the selected Batman title, verify its repeat behavior, Downloads
-  telemetry and NAS Plex indexing. Apple TV/Roku testing remains deferred.
+The user explicitly approved the full native QNAP rollout, backup helper, Plex
+TV-root migration and selected Batman copy verification. The Downloads task
+released Git/NAS ownership to this task. Native source `03163b4`, telemetry
+`c87d6af`, and the preflight handoff `896a7bb` are published on `usenet` at
+`https://github.com/rtimmons/smarthome.git`. Earlier automatic-review rejections
+were resolved by specific user approval; they are not current blockers.
 
-Scoped rollback files were saved at
-`/share/Container/usenet/state/native-rollout-backups/usenet-native-rollout-20260913T031500Z`.
-The temporary maintenance helper was removed and its shared cache lock released
-after rejection. No application deployment, Plex mutation or native media copy
-occurred. Recheck activity and acquire a new maintenance lock before any later
-rollout. Preserve all unrelated lighting edits and `msg`. The older publication
-and ownership statements below describe the earlier handoff boundary; this section
-supersedes them.
+The full `configure-qnap` rollout passed (45 tasks, five changed), followed by the
+TV enablement apply (44 tasks, two changed, one skipped). Only cache rclone and
+dashboard services were recreated. `ansible/qnap-backups.yml` passed (five tasks,
+four changed), installing native ownership/verification receipt backup support.
+All five deployed script hashes match source. A subsequent backup archive has
+not yet established capture of the new native receipt.
 
-### Download visibility follow-up — deployed, September 12 evening
+Plex library ID 3 now scans
+`/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library`. The prior TV root was empty;
+other library IDs, roots and stable settings were verified unchanged. Private
+inventory and live runtime enable TV copies, with one bind containing
+`/data/tv/library` and `/data/tv/.staging`. No TV titles currently exist, so a real
+TV transfer remains untested. At 03:47:18 UTC, the restricted profile again saw
+exactly IDs 2/3/4/5 and received HTTP 403 for ID 1. No Plex or NAS restart was performed.
 
-The prominent Cloud → NAS Downloads panel is live at `http://192.168.1.66:1337/`:
-active title and phase, rclone rate, attempt byte progress, ETA, and the last 60
-speed samples plotted over their actual timestamps. The deployed legacy backend
-persists numeric JSON stats every ten seconds in its existing operation receipt.
-The native backend has matching source changes but remains part of the separate,
-unperformed native rollout. Histories reset on a new attempt and survive browser
-closure; verification/completed/failed states do not advertise a live rate.
-No endpoint, credential, Plex root, or remote media bytes were changed.
+The authenticated dashboard at `http://192.168.1.66:1337/` shows both native and
+legacy title actions and the full-width Downloads panel. Batman — Knightfall,
+14,878,405,826 bytes, was started through its **Native library** action at
+03:43:06 UTC, verified with server-side/local SHA-256 and published at 03:56:01 UTC.
+Plex automatically indexed the exact native NAS file in Movies (NAS), ID 2, by
+03:57:17 UTC. A safe repeat printed `already local and verified`; directory
+identity, file signatures and hashes stayed unchanged, with no media recopy.
+The stable ID is
+`native-77055af7e21cae2a5c68493e7fb17bf0d01b9709c6a96fe0380774c3c455527a`.
 
-The running legacy pull finished before activation; fresh NAS health showed no
-active/failed/interrupted pulls. `just configure-download-status` (inside
-`usenet-infra`) now installs only these scripts on an existing deployment, keeps
-rollback copies, and restarts only the dashboard while an existing-image helper
-holds the shared cache lock. Busy cache operations fail before script changes.
-It supports the legacy-only deployment and does not install an absent native
-backend or perform the native/Plex migration. A startup compatibility bug with
-old cached manifest provenance briefly took the dashboard down; it was fixed,
-regression-tested, redeployed, and the authenticated Downloads UI and readiness
-check now pass. Final deployment completed September 13 at about 02:35 UTC, including the
-cache-independent full-width layout verified in the live browser.
-The last deployment's script backups are at
-`/share/Container/usenet/state/dashboard-status-backups/20260913T023442Z`.
-Earlier backup `20260913T021208Z` precedes the cache compatibility fix and must
-not be blindly restored.
+Live UI acceptance covered changing rate/bytes/ETA, the 60-sample graph, history
+retention after closing/reopening the browser, and verification/completed states
+without a stale live rate. The restricted profile sees exactly IDs 2/3/4/5 and is
+denied ID 1; private home/search exclusion and disabled automatic trash emptying
+were verified. Final NAS health passed with no active/failed transfers and
+1,317,753,409,536 bytes free, above the 100 GiB reserve. The
+[live acceptance receipt](usenet-infra/recovery/drills/native-copy-live-20260913.json)
+preserves the original transfer history separately from the repeat evidence.
+This adopted movie does not prove a fresh Arr import or scratch cleanup. Actual
+TV copying remains untested; Apple TV/Roku tests remain deferred.
 
-Validation for this handoff: 466 Usenet cases (457 passed, nine opt-in skips),
-shell/YAML/compilation/deployment syntax checks, deployment shell lint, and
-current-source/index secret scanning passed. Full-history scanning still reports
-the two documented historical RSA keys. A network-disabled Linux fixture using
-real rclone 1.75.1 recorded five speed samples for a verified 1 MiB copy; the graph
-passed visual inspection. No new media download was initiated for this update:
-live speed history starts with the next user-selected transfer. The earlier
-Backrooms transfer is now verified local; Plex indexing/playback was not checked.
-The committed [download-status receipt](usenet-infra/recovery/drills/download-status-20260913.json)
-and [runbook](usenet-infra/docs/download-status.md) record reproducible coverage
-and limitations. Six generated-shell tests exercise real lock contention, backup
-bytes, restart failure cleanup, assets-only updates and legacy/native boundaries.
-All four telemetry integration tests passed with real rclone enabled in the local
-network-disabled image. No NAS mutation occurred during commit preparation.
+Rollback files are retained at
+`/share/Container/usenet/state/native-rollout-backups/usenet-native-rollout-20260913T033600Z`.
+The rollout maintenance helper was explicitly removed and its lock released
+before the selected transfer. The Downloads-only rollback set
+`state/dashboard-status-backups/20260913T023442Z` predates this full rollout;
+restore settings/scripts only as a compatible set. Earlier `20260913T021208Z`
+precedes the old-cache compatibility fix and must not be blindly restored.
 
-This increment is committed locally on `usenet` above native-copy commit
-`03163b4`; publication is delegated to the native-rollout task. Unrelated lighting
-edits, `msg`, and that task's `native-rollout-preflight-20260913.json` are excluded.
-The native-rollout task `01a093b4-9154-7af0-ab10-3f02c0b6927d` is waiting for this
-commit hash before taking Git/NAS mutation ownership. It reports fresh private
-preflight and authorization for publication, metadata inspection and native/Plex
-acceptance; do not replay the earlier rejected broad read or deploy concurrently.
-Its receipt and later handoff must establish actual rollout results. At this
-commit boundary native deployment/live graph/Plex acceptance remain pending.
-A cold agent should read this runbook/receipt, inspect Git status, and coordinate
-with that task before mutation. Do not rely on ignored `build/` helpers, old browser
-tabs, or the prior source-only handoff's publication assumptions.
+The [fresh preflight](usenet-infra/recovery/drills/native-rollout-preflight-20260913.json)
+records healthy cloud/NAS services and backups, no active transfers before rollout,
+100 GiB reserve, five adopted movies, zero native TV titles, and no fresh import.
+SAB's nine warnings are historical September 10–11 connection/unpack/disk-space
+records. Five old Radarr importPending entries and four scratch files totaling
+17,253,186,699 bytes remain preserved; no acquisition or cleanup was performed.
 
-Read [the Usenet agent guide](usenet-infra/AGENTS.md), then this section. Everything
+Validation of the combined implementation: 466 Usenet cases (457 passed, nine
+opt-in skips), compilation/shell/YAML/deployment syntax checks and current-source/
+index secret scanning passed. The full recipe still reports the two documented
+historical RSA keys. Root functional tests and all seven add-on container checks
+passed for the native implementation. Linux native-copy fixtures and real pinned
+rclone telemetry tests passed; those are distinct from live acceptance. See
+[source validation](usenet-infra/recovery/drills/native-copy-source-20260912.json),
+[telemetry validation](usenet-infra/recovery/drills/download-status-20260913.json)
+and the current [download-status runbook](usenet-infra/docs/download-status.md).
+
+Read [the Usenet agent guide](usenet-infra/AGENTS.md), then this handoff. Everything
 below **Historical implementation record** records earlier stages or the original
-proposal; it is not a second set of current deployment instructions. Current
-runbooks linked here take precedence over those historical policies.
-
-### Current increment — native selective-copy implementation, September 12, 2026
-
-Parallel agents prepared the native-library backend, OliveTin/CLI/deployment
-integration, and a read-only operational audit. **This increment is source-only;
-the new copy workflow has not been deployed or accepted live.** Existing deployed
-state below remains authoritative. Apple TV/Roku testing is deferred at the user's
-request for this session.
-
-The implementation lists canonical Movies/TV title directories, uses stable
-per-title identities and the existing NAS reader, and shares the legacy cache
-lock. Selected copies require capacity admission, private staging, SHA-256
-verification, source-change detection and exclusive atomic publication. A prior
-owned/verified copy is safe to repeat; unrelated destinations and modified local
-copies are preserved. The dashboard includes source-specific actions and the
-fallback recipes are `native-list`, `native-status`, `native-pull`, `native-evict`.
-Deploy the updated NAS backup helper (`ansible/qnap-backups.yml`) too, so scheduled
-backups include `state/native-items` ownership/verification receipts.
-
-TV transfers default to disabled. Before enabling them, inspect and narrow
-**only Plex library ID 3** from
-`/share/CACHEDEV2_DATA/FromDrobo/TV Shows` to its `library` child. Require no existing
-series outside that child; otherwise stop for a preservation review. The new TV
-bind contains `library/<series>` and `.staging` so atomic renames remain within one
-container mount while staging stays outside Plex. After confirming the migration,
-enable `qnap_native_tv_copy_enabled` in private inventory and redeploy. Existing movie source, private library and profile grants
-stay intact. See the migration steps in
-[native media](usenet-infra/docs/native-media.md#selective-native-library-nas-copies).
-
-Automatic approval review rejected a combined cloud read of queue/history,
-library metadata and backup state, judging the specific collection outside this
-request's authorization. The rejected payload was not retried. Documented health
-commands and local implementation continued. The source increment is committed
-locally, but an attempted push to `https://github.com/rtimmons/smarthome.git`
-(`usenet` branch) was also rejected: automatic review requires explicit payload
-and destination authorization and did not accept the historical handoff's claim.
-No alternative push was attempted; this increment is not published. Do not treat the blocked collection
-as completed evidence; precise approval is needed before resuming it when no
-safer authorized alternative suffices. No diagnostic acquisition, queue changes,
-NAS/Plex restart, native transfer or checkout deletion occurred in this increment.
-
-Read-only follow-through: [operational receipt](usenet-infra/recovery/drills/operational-health-20260912.json)
-records passing discovery/cloud/NAS health, no Arr notices, no active/failed NAS
-transfers, and about 1.36 TB free. Cloud/NAS backups are healthy, with last successes
-at September 11 23:55:50 UTC and September 12 00:01:40 UTC. SAB has nine warnings
-whose detail remains uninspected. No fresh native completion was established.
-Validation: root `just test` passed functional tests and all seven add-on
-container checks. The Usenet suite ran 448 cases (440 passed, eight opt-in skips),
-and compilation, shell/YAML and all deployment syntax checks passed. The full
-recipe fails only on the two documented historical RSA keys; current-source/index
-secret scanning passes. Native tests also passed in Linux, and a real rclone
-1.75.1 local-fixture smoke verified movie/TV copy, repeat, removal and unchanged
-canonical bytes. [Source validation receipt](usenet-infra/recovery/drills/native-copy-source-20260912.json)
-is local-fixture evidence, not live NAS copying or Plex acceptance.
+proposal; current runbooks take precedence. Preserve unrelated lighting edits and
+`msg`. Do not rely on ignored build helpers or an old browser session to resume.
 
 ### Scope and completed work
 
@@ -189,7 +126,7 @@ large unnecessary I/O. NAS-loss protection is explicitly deferred.
   use the existing share; only the old cache was renamed on the same volume.
   The restricted profile sees exactly the four general libraries. Plex indexed
   all five remote movies and served a 1 MiB HTTP 206 range request. Actual TV
-  playback, startup privacy and a convenient NAS-copy action for new titles remain.
+  playback and startup privacy remain; native NAS-copy actions are now deployed.
 - **Security fixes are committed and deployed.** Compatible lockfile updates in
   five projects address the 53 reported dependency alerts; all four affected HA
   add-ons passed deployed readiness checks. The tracked HA secrets file was
@@ -247,7 +184,7 @@ large unnecessary I/O. NAS-loss protection is explicitly deferred.
 | Canonical library | Storage Box `catalog/library`, synchronously mounted at `/srv/usenet/library`. Arr `/library` maps separately to `Movies` or `TV`; both see actual SAB scratch at `/data/complete`. `usenet-discovery.service` depends on `usenet-library.service`; mode-0000 unmounted protection and systemd-owned startup must remain. |
 | Completion ownership | Never re-enable the retired publisher or move Arr-owned scratch with a second mover. Five adopted movies have shared hard-linked bytes: never edit bytes in place. Old immutable `catalog/objects` and manifests remain for legacy NAS copies. New native imports do not create legacy catalog manifests. |
 | NAS | `usenet-deploy@rynapqnap.local` / `192.168.1.66`, UID:GID `1004:100`; app state `/share/Container/usenet`. Existing `FromDrobo` share contains peers `loljk`, `Movies`, `TV Shows`, `Remote`, and `.remote-cache`. No whole-collection copy, hash or permission rewrite. |
-| Selective copies | Legacy OliveTin dashboard `http://192.168.1.66:1337/` refreshes automatically. Verified copies go beneath `/share/FromDrobo/Movies/video`; `.staging` stays outside Plex sources. `Colony` (13.5 GiB) copied and indexed successfully. Keep 100 GiB NAS reserve. |
+| Selective copies | Native and legacy OliveTin dashboard `http://192.168.1.66:1337/` refreshes automatically. Verified copies go beneath `/share/FromDrobo/Movies/video`; `.staging` stays outside Plex sources. `Colony` (13.5 GiB) copied and indexed successfully. Keep 100 GiB NAS reserve. |
 | Remote playback | NAS container `usenet-remote-media` mounts Storage Box catalog read-only at `/share/FromDrobo/Remote/files`; existing server-enforced reader account, no listener. 20 GiB cache target / 100 GiB reserve / 24-hour age; open files may exceed the target. Preserve fast fingerprints and disabled SFTP hashcheck on this playback mount to avoid full-movie hashing. |
 | Plex | `http://192.168.1.66:32400/web`. Private `loljk` ID 1 unchanged; `Movies & TV` granted exactly IDs 2/3/4/5: Movies/TV Shows (NAS/Remote). Profile token denied ID 1 with HTTP 403. General roots must never include the share root. Exact source paths are in the layout guide. |
 | Plex refresh/privacy | Local watch, partial scans and hourly fallback enabled; automatic trash emptying disabled. Private library excluded from home/global search. Owner PIN and TV startup/profile selection need private user/device validation. Do not browse or emit private content. |
@@ -259,35 +196,28 @@ any deployment:
 ```yaml
 qnap_data_root: /share/FromDrobo
 qnap_catalog_cache_dir: /share/FromDrobo/Movies
+qnap_native_tv_copy_enabled: true
 qnap_backup_root: /share/Usenet/Backups/automatic
 qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media Server
 ```
 
 ### Next work, in order
 
-1. **Deploy and accept native selective copies.** The implementation and source
-   validation are ready as described above. Resolve the blocked private metadata
-   read authorization, inspect current runtime activity, deploy the full QNAP
-   application update and NAS backup helper, then explicitly copy one selected
-   native movie. Confirm SHA-256 verification, correct NAS Plex indexing and a
-   safe repeat. TV copies stay disabled until ID 3's narrowed source is verified
-   and the enable flag is deliberately set. Preserve the read-only remote,
-   100 GiB reserve, independent roots and collision behavior; no whole-library
-   copy or second scratch mover. Do not confuse fixture checks with live acceptance.
-2. **Validate a fresh native completion.** Mount protection and five existing-file
-   adoptions passed; a newly completed movie and TV import have not yet been
+1. **Validate a fresh native completion and TV copy.** Mount protection and five
+   existing-file adoptions passed; a newly completed movie and TV import have not yet been
    recorded end to end. Observe the next user-selected job, confirm Arr import,
    client cleanup, scratch reclamation, persistent library presence and Plex
-   discovery. Do not enqueue diagnostic movies or broaden monitoring just to test.
-3. **Apple TV and Roku acceptance.** Use `Movies & TV`; have the user set the owner
-   PIN privately where necessary. Test cold launch, home/search/continue-watching
+   discovery. When a real TV title exists, verify its selective NAS copy too. Do
+   not enqueue diagnostic movies or broaden monitoring just to test.
+2. **Apple TV and Roku acceptance (deferred by user).** Use `Movies & TV`; have
+   the user set the owner PIN privately where necessary. Test cold launch, home/search/continue-watching
    privacy, then NAS and Remote playback, seeking and sustained playback on each
    device. Record relevant codec/audio/subtitle behavior. A short server range
    read proves neither device decoding nor NAS transcoding capacity. Manual source
    selection is acceptable; another Plex/Jellyfin server is not needed by default.
-4. **Operational follow-through.** Inspect the next scheduled backup results and
-   freshness when working on the stack. Cloud timer and NAS cron retry hourly;
-   NAS status fails after 36 hours without success or on a failed run. No external
+3. **Operational follow-through.** Inspect the next scheduled backup results and
+   freshness when working on the stack, including capture of `state/native-items`.
+   Cloud timer and NAS cron retry hourly; NAS status fails after 36 hours without success or on a failed run. No external
    notifications are configured and no continuous monitoring is promised. Retain
    at least seven local/NAS generations, pruning only matching scheduler archives
    older than 90 days; remote cloud ciphertext currently remains indefinitely.

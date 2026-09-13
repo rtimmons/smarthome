@@ -68,13 +68,19 @@ notes describe earlier policies; they do not override the current handoff.
   configuration requires private user/device setup; do not invent a PIN.
 - Plex watches local changes, performs partial scans and scans hourly; automatic
   trash emptying is disabled. Do not empty trash to resolve an unavailable mount.
-- Native TV sorting and the read-only remote mount are deployed. Actual Apple TV/Roku
-  playback and a convenient NAS copy action for new native-library titles remain. Do not claim file indexing proves playback
+- Native TV sorting, the read-only remote mount and native selective-copy actions
+  are deployed. Actual Apple TV/Roku playback remains deferred. Do not claim file indexing proves playback
   or that a configured profile proves safe startup on every client.
 
 ## Resuming unfinished work
 
-- The Downloads status panel is deployed on the existing legacy dashboard.
+- Cloud SAB's **NZBGeek Cart** feed is enabled with 15-minute polling. Preserve
+  this user-authorized cart-only workflow and its Default category; see
+  [phone cart downloads](docs/nzbgeek-cart.md). One pre-existing item was held
+  during setup; no acquisition was initiated. Existing settings/smoke helpers
+  intentionally refuse enabled RSS feeds: do not disable the feed to pass them.
+
+- The Downloads status panel is deployed for native and legacy copies.
   `just configure-download-status` inside `usenet-infra` installs its telemetry
   and presentation scripts, holds the shared cache lock through a dashboard-only
   restart, and refuses active transfers. It does not install an absent native
@@ -82,7 +88,8 @@ notes describe earlier policies; they do not override the current handoff.
   in `item_source`; otherwise dashboard startup can fail before the first refresh.
   Graph history starts with transfers launched after this update. Read
   [download status](docs/download-status.md) for reproducible coverage and limits:
-  the live graph on a new transfer is still unaccepted, deployment is not
+  the native Batman copy passed SHA-256 publication, safe repeat, automatic Plex
+  indexing, graph/reconnect and completed-state acceptance. Deployment is not
   transactional and has no automatic rollback, and the maintenance lease expires
   after 600 seconds. Do not infer native or Plex acceptance from telemetry tests.
   See `plan.md` for current task ownership and release state.
@@ -92,15 +99,15 @@ notes describe earlier policies; they do not override the current handoff.
   account creation or deploy recipes merely to inspect the system. Restore missing
   private inputs through the documented vault/snapshot chain; temporary helpers,
   browser handles and SSH sockets from old sessions are not prerequisites.
-- Native selective-copy source is implemented but not yet deployed/live-accepted.
-  Read the current increment at the top of `plan.md`. TV copies default disabled;
-  before enabling `qnap_native_tv_copy_enabled`, narrow
-  Plex library ID 3 to `TV Shows/library` after confirming no existing series
-  outside that child. TV staging is `TV Shows/.staging` within the same bind;
+- Native selective-copy source and the updated NAS backup helper are deployed.
+  Read the current acceptance state at the top of `plan.md`. Plex library ID 3
+  was narrowed to `TV Shows/library` after confirming the old TV root was empty.
+  Private inventory and the live runtime enable `qnap_native_tv_copy_enabled`;
+  preserve that override after recovery. TV staging is `TV Shows/.staging` within the same bind;
   movie staging remains outside `Movies/video`. Preserve collision/verification
   checks and the shared cache lock; do not copy the whole collection or touch
-  Arr scratch. Automatic review rejected the prior combined private cloud
-  metadata collection; do not replay it without resolving that approval boundary.
+  Arr scratch. The specific rollout/private metadata/publication approvals are
+  resolved; do not repeat setup or an already completed selected transfer.
 - Record a fresh user-selected movie/TV completion through native import, cleanup
   and Plex discovery. Existing-file adoption is not proof of a fresh completion.
 - Then verify real Apple TV/Roku playback, seeking and cold-start privacy with the

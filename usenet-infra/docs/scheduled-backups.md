@@ -71,8 +71,10 @@ Do not dump private environments or Plex preferences to inspect status. Schedule
 retries are automatic; a failed/freshness check is a reason to diagnose the
 recorded run, not to resume queued downloads or interrupt a transfer.
 
-The prepared native-copy update adds `state/native-items` to the NAS configuration
+The native-copy source adds `state/native-items` to the NAS configuration
 allowlist. Its receipt bytes, SHA-256 records and ownership fields pass isolated
-snapshot/restore coverage. This helper update is not live yet: deploy
-`ansible/qnap-backups.yml` with the copy rollout before claiming native receipts
-are protected by the schedule. Media bytes remain excluded.
+snapshot/restore coverage. The full native application deployment and separate backup-helper playbook
+`ansible/qnap-backups.yml` have passed. The deployed `backup-qnap.py` SHA-256 matches
+source. No new archive has yet been inspected for a native ownership receipt;
+verify a subsequent scheduled archive includes those receipts before claiming
+they have been captured by the schedule. Media bytes remain excluded.

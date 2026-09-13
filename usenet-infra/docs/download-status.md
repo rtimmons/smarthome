@@ -1,9 +1,12 @@
 # Download status handoff
 
 Read the current increment in [plan.md](../../plan.md) before operating the NAS.
-The Downloads panel at `http://192.168.1.66:1337/` is deployed on the existing
-legacy catalog. The native backend has the same telemetry changes in source;
-that fact does not establish native deployment, TV migration, or copy acceptance.
+The Downloads panel at `http://192.168.1.66:1337/` is deployed for both native and
+legacy copies. The full native rollout and TV source migration passed September
+13 UTC. Batman's native download was started through the authenticated action at
+03:43:06 UTC. Changing byte counts, rate, ETA and graph samples were observed in
+the rendered UI. SHA-256 publication, safe repeat and automatic NAS Plex indexing
+also passed; see the [live receipt](../recovery/drills/native-copy-live-20260913.json).
 
 ## Implementation and contract
 
@@ -93,11 +96,12 @@ use Git for the prior asset version. Browser caching can delay its effect.
 
 ## Remaining acceptance and limits
 
-- The last live acceptance verified an authenticated, correctly sized **idle**
-  panel and healthy refresh. No new NAS media transfer was started to test the
-  new graph; old completed transfers have no samples. Validate a new user-selected
-  transfer's changing rate/progress, sample history, reconnect, and transition
-  through verification/completion during the separately authorized rollout.
+- Live acceptance verified the authenticated, full-width panel during the native
+  Batman copy: 5.0% / 24.5 MiB/s / three samples, then 11.6% / 25.9 MiB/s / seven
+  samples spanning 60 seconds. The screenshot showed a readable graph and progress
+  bar. Closing and reopening the tab preserved the running copy and 180 seconds
+  of history (31.8%, 23.8 MiB/s). Verification and completion retained the graph
+  and displayed no stale live rate; completion showed succeeded and 100%.
 - This measures Storage Box → NAS copies. It does not report SAB acquisition,
   repair/unpack, remote-playback-cache traffic, or whole-NAS link utilization.
 - Rclone's reported rate is smoothed; ETA and totals belong to the current attempt
@@ -109,6 +113,7 @@ use Git for the prior asset version. Browser caching can delay its effect.
 - A numeric receipt-write failure follows the existing operation failure path;
   telemetry is not an independent best-effort service. Existing copy verification,
   publication and cache-lock protections still apply.
-- Native TV copying, backup-helper rollout, fresh native import/copy acceptance,
-  Plex indexing, device playback/seeking/privacy, and NAS-loss recovery remain
-  separate. This commit and the local fixture do not establish those outcomes.
+- The native backend, TV source migration/enablement and backup helper are deployed.
+  Actual TV copying, fresh native import,
+  new receipt backup capture, device playback/seeking/privacy, and NAS-loss
+  recovery remain separate. Follow the current handoff for live acceptance.
