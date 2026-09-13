@@ -6,6 +6,45 @@ is necessary. Account creation and infrastructure bootstrap are complete.
 
 ## Resume here — authoritative handoff, September 12, 2026
 
+### Coordinated publication — September 13, 2026 UTC
+
+The Downloads task released Git/NAS mutation ownership after committing
+`dfef005`, above native-copy commit `a4ec62c`. Both commits are now published to
+`https://github.com/rtimmons/smarthome.git`, branch `usenet`. The user explicitly
+approved publication, private download/library metadata inspection and coordinated
+deployment. The [fresh preflight](usenet-infra/recovery/drills/native-rollout-preflight-20260913.json)
+passed: no active NAS transfers, about 1.34 TB free with a 100 GiB reserve, healthy
+backups, and no fresh native import established. The selected uncached movie is
+media-002 — Knightfall (14,878,405,826 bytes); it has not been copied by this task.
+The TV NAS root was empty and Plex library ID 3 still scans its parent directory.
+
+**Native deployment remains pending.** Automatic approval review rejected the
+exact `just --justfile usenet-infra/Justfile --working-directory usenet-infra
+configure-qnap` invocation before execution, judging the broad configuration,
+mount, script and service changes outside the specificity of the coordinated
+deployment approval. Do not retry through another execution path. Obtain explicit
+approval for this reviewed rollout scope:
+
+- Run `configure-qnap` to install the native backend and current Downloads panel,
+  render existing private settings/credentials, add the TV bind and directories,
+  build pinned images and recreate only the cache `rclone` and `dashboard` services.
+- Run `ansible/qnap-backups.yml` to install native-receipt backup support and
+  reconcile only the backup service/schedule.
+- After confirming the TV root is still empty, narrow only Plex library ID 3 to
+  `TV Shows/library`, enable `qnap_native_tv_copy_enabled` in private inventory,
+  and rerun `configure-qnap` for that setting.
+- Copy only the selected media-002 title, verify its repeat behavior, Downloads
+  telemetry and NAS Plex indexing. Apple TV/Roku testing remains deferred.
+
+Scoped rollback files were saved at
+`/share/Container/usenet/state/native-rollout-backups/usenet-native-rollout-20260913T031500Z`.
+The temporary maintenance helper was removed and its shared cache lock released
+after rejection. No application deployment, Plex mutation or native media copy
+occurred. Recheck activity and acquire a new maintenance lock before any later
+rollout. Preserve all unrelated lighting edits and `msg`. The older publication
+and ownership statements below describe the earlier handoff boundary; this section
+supersedes them.
+
 ### Download visibility follow-up — deployed, September 12 evening
 
 The prominent Cloud → NAS Downloads panel is live at `http://192.168.1.66:1337/`:
