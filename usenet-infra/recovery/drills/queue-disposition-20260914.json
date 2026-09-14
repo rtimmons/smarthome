@@ -1,0 +1,252 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-14T01:00:42.595036+00:00",
+  "scope": "Read-only fresh queue, scratch, canonical metadata and legacy cleanup-receipt investigation; review of pinned Radarr ignore and rollback semantics.",
+  "mutations_performed": false,
+  "disposition": {
+    "stale_radarr_tracking": "Classified as five legacy-publisher completions subsequently adopted into native library. Retain visible stale tracking until a deliberately accepted native ignore or verified narrow rollback path is available. These warnings do not establish missing canonical media or a fresh Arr import.",
+    "scratch": "Deliberately retain both archived groups and their SAB history. Investigation and retention decision are complete; any destructive cleanup remains conditional.",
+    "correction_status": "Not executed: native ignore preserves client records/files but a supported history-preserving undo was not established, failing the task's reversible-correction guard."
+  },
+  "sab": {
+    "history_total": 7,
+    "paused": false,
+    "queue_count": 0,
+    "status": "Idle",
+    "warning_count": 9,
+    "retained_completed_history": 5,
+    "retained_failed_history": 2,
+    "archived_records_read": 2
+  },
+  "native_import": {
+    "radarr_queue_count": 5,
+    "sonarr_queue_count": 0,
+    "all_five_completed_importPending": true,
+    "all_five_original_sab_paths_absent": true,
+    "canonical_total_bytes": 95166179367,
+    "history_event_counts": {
+      "downloadFailed": 2,
+      "grabbed": 7
+    },
+    "fresh_completion_established": false,
+    "exact_job_legacy_publication_evidence": [
+      {
+        "canonical_bytes": 14878405826,
+        "canonical_exists": true,
+        "canonical_filename_matches_manifest": true,
+        "cleanup_receipt_cleaned_at": "2026-09-11T21:30:11+00:00",
+        "cleanup_receipt_exists": true,
+        "cleanup_receipt_matches_download": true,
+        "cleanup_receipt_status": "cleaned",
+        "cleanup_receipt_verified_at": "2026-09-11T21:30:10+00:00",
+        "current_sizes_match": true,
+        "download_ref": "bd40169ab3488640",
+        "legacy_object_bytes": 14878405826,
+        "legacy_object_exists": true,
+        "manifest_bytes": 14878405826,
+        "manifest_found": true,
+        "manifest_matches_cleanup_receipt": true,
+        "manifest_verified_at": "2026-09-11T21:29:45+00:00"
+      },
+      {
+        "canonical_bytes": 22375732708,
+        "canonical_exists": true,
+        "canonical_filename_matches_manifest": true,
+        "cleanup_receipt_cleaned_at": "2026-09-11T21:26:46+00:00",
+        "cleanup_receipt_exists": true,
+        "cleanup_receipt_matches_download": true,
+        "cleanup_receipt_status": "cleaned",
+        "cleanup_receipt_verified_at": "2026-09-11T21:26:46+00:00",
+        "current_sizes_match": true,
+        "download_ref": "2540bd9d2ff74419",
+        "legacy_object_bytes": 22375732708,
+        "legacy_object_exists": true,
+        "manifest_bytes": 22375732708,
+        "manifest_found": true,
+        "manifest_matches_cleanup_receipt": true,
+        "manifest_verified_at": "2026-09-11T21:26:08+00:00"
+      },
+      {
+        "canonical_bytes": 21880635400,
+        "canonical_exists": true,
+        "canonical_filename_matches_manifest": true,
+        "cleanup_receipt_cleaned_at": "2026-09-11T21:39:15+00:00",
+        "cleanup_receipt_exists": true,
+        "cleanup_receipt_matches_download": true,
+        "cleanup_receipt_status": "cleaned",
+        "cleanup_receipt_verified_at": "2026-09-11T21:39:15+00:00",
+        "current_sizes_match": true,
+        "download_ref": "b052527078c725f7",
+        "legacy_object_bytes": 21880635400,
+        "legacy_object_exists": true,
+        "manifest_bytes": 21880635400,
+        "manifest_found": true,
+        "manifest_matches_cleanup_receipt": true,
+        "manifest_verified_at": "2026-09-11T21:38:39+00:00"
+      },
+      {
+        "canonical_bytes": 14491290731,
+        "canonical_exists": true,
+        "canonical_filename_matches_manifest": true,
+        "cleanup_receipt_cleaned_at": "2026-09-11T21:33:36+00:00",
+        "cleanup_receipt_exists": true,
+        "cleanup_receipt_matches_download": true,
+        "cleanup_receipt_status": "cleaned",
+        "cleanup_receipt_verified_at": "2026-09-11T21:33:36+00:00",
+        "current_sizes_match": true,
+        "download_ref": "46c19029989f80ca",
+        "legacy_object_bytes": 14491290731,
+        "legacy_object_exists": true,
+        "manifest_bytes": 14491290731,
+        "manifest_found": true,
+        "manifest_matches_cleanup_receipt": true,
+        "manifest_verified_at": "2026-09-11T21:33:12+00:00"
+      },
+      {
+        "canonical_bytes": 21540114702,
+        "canonical_exists": true,
+        "canonical_filename_matches_manifest": true,
+        "cleanup_receipt_cleaned_at": "2026-09-11T22:57:09+00:00",
+        "cleanup_receipt_exists": true,
+        "cleanup_receipt_matches_download": true,
+        "cleanup_receipt_status": "cleaned",
+        "cleanup_receipt_verified_at": "2026-09-11T22:57:08+00:00",
+        "current_sizes_match": true,
+        "download_ref": "cdfcab46332ead54",
+        "legacy_object_bytes": 21540114702,
+        "legacy_object_exists": true,
+        "manifest_bytes": 21540114702,
+        "manifest_found": true,
+        "manifest_matches_cleanup_receipt": true,
+        "manifest_verified_at": "2026-09-11T22:56:33+00:00"
+      }
+    ]
+  },
+  "retained_scratch": {
+    "files": 4,
+    "bytes": 17253186699,
+    "groups": [
+      {
+        "archived_exact_storage_matches": 1,
+        "bytes": 17153186680,
+        "classification": "archived_completed_media_download",
+        "current_arr_queue_owner": false,
+        "directory_ref": "60ff8c9b01839fa5",
+        "exact_relative_path_and_size_manifest_matches": 0,
+        "file_count": 2,
+        "manifest_job_id_source_matches": 0,
+        "matching_manifest_evidence": []
+      },
+      {
+        "archived_exact_storage_matches": 1,
+        "bytes": 100000019,
+        "classification": "official_diagnostic_fixture",
+        "current_arr_queue_owner": false,
+        "directory_ref": "29669eacaa3acbeb",
+        "exact_relative_path_and_size_manifest_matches": 1,
+        "file_count": 2,
+        "manifest_job_id_source_matches": 0,
+        "matching_manifest_evidence": [
+          {
+            "item_ref": "669b34b2817b89cd",
+            "remote_current_paths_sizes_match": true,
+            "sha256_evidence": "Historical verified manifest only; no fresh byte-integrity check",
+            "verified_at": "2026-09-10T21:41:01+00:00"
+          }
+        ]
+      }
+    ],
+    "limits": [
+      "Archived media has no exact relative-path/size match and no archived SAB job-ID source match among the six canonical manifests; no independent intact copy of that group was established.",
+      "Fixture matches one historically verified manifest and present remote path/size metadata; no fresh scratch/canonical SHA-256 comparison was performed.",
+      "Native adopted files share legacy bytes by documented hard links; they are not independent media backups. Scheduled configuration backups exclude media and scratch.",
+      "Metadata and historic receipts establish provenance, not present byte integrity. No media payload was read or hashed."
+    ]
+  },
+  "native_ignore_proposal": {
+    "target_download_refs": [
+      "bd40169ab3488640",
+      "2540bd9d2ff74419",
+      "b052527078c725f7",
+      "46c19029989f80ca",
+      "cdfcab46332ead54"
+    ],
+    "api": "DELETE /radarr/api/v3/queue/{freshly_resolved_id}?removeFromClient=false&blocklist=false&skipRedownload=true&changeCategory=false",
+    "effect": "Records DownloadIgnored and stops tracking only that existing download. Explicit flags avoid client removal, blocklisting, redownload, and category changes.",
+    "required_guards": [
+      "Match each current full download ID to its preserved publisher receipt and recorded opaque reference.",
+      "Recheck canonical file existence/size, matching canonical manifest, and cleaned exact-job publisher receipt.",
+      "Preserve title monitoring, SAB categories, pause state, retained completed/failed/archive records and both scratch groups.",
+      "Accept persistence explicitly or establish a supported narrow inverse before using the proposed endpoint."
+    ],
+    "rollback_assessment": "No supported native inverse was established. DownloadHistoryService retains an ignored event and TrackedDownloadService recreates Ignored state from it. Restart alone does not undo it. The pinned HistoryController/API has no delete or unignore endpoint. Re-grabbing, deleting movie/history, editing databases, or restoring the complete database are not an approved narrow rollback.",
+    "executed": false,
+    "per_item_outcome": [
+      {
+        "download_ref": "bd40169ab3488640",
+        "outcome": "preserved_importPending; ignore not submitted"
+      },
+      {
+        "download_ref": "2540bd9d2ff74419",
+        "outcome": "preserved_importPending; ignore not submitted"
+      },
+      {
+        "download_ref": "b052527078c725f7",
+        "outcome": "preserved_importPending; ignore not submitted"
+      },
+      {
+        "download_ref": "46c19029989f80ca",
+        "outcome": "preserved_importPending; ignore not submitted"
+      },
+      {
+        "download_ref": "cdfcab46332ead54",
+        "outcome": "preserved_importPending; ignore not submitted"
+      }
+    ],
+    "sources": [
+      {
+        "url": "https://raw.githubusercontent.com/Radarr/Radarr/v6.3.0.10514/src/Radarr.Api.V3/Queue/QueueController.cs",
+        "supports": "Explicit false client-removal/blocklist/category flags route to IgnoreDownload and StopTracking."
+      },
+      {
+        "url": "https://raw.githubusercontent.com/Radarr/Radarr/v6.3.0.10514/src/NzbDrone.Core/Download/History/DownloadHistoryService.cs",
+        "supports": "DownloadIgnored event is inserted in persistent download history and returned as latest state."
+      },
+      {
+        "url": "https://raw.githubusercontent.com/Radarr/Radarr/v6.3.0.10514/src/NzbDrone.Core/Download/TrackedDownloads/TrackedDownloadService.cs",
+        "supports": "Latest ignored event reconstructs Ignored tracking state."
+      },
+      {
+        "url": "https://raw.githubusercontent.com/Radarr/Radarr/v6.3.0.10514/src/Radarr.Api.V3/History/HistoryController.cs",
+        "supports": "History API exposes read and mark-failed operations without delete/unignore."
+      }
+    ]
+  },
+  "preservation": {
+    "sab_history_preserved": true,
+    "scratch_preserved": true,
+    "fixture_preserved": true,
+    "no_acquisition": true,
+    "no_restart": true,
+    "no_service_or_configuration_mutation": true,
+    "no_media_hashing": true,
+    "no_database_edit": true
+  },
+  "local_evidence": [
+    {
+      "path": "usenet-infra/build/queue-disposition-20260914-live.json",
+      "sha256": "55ea93d194f6e7f104b8e34226e331de4b1e9bc8046d476163db835829df010a",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/queue-disposition-20260914-metadata.json",
+      "sha256": "0bbacfb9aab861a29403b5bc01777d78c57c39ecc3cf48ac80cb2bbc74ca8937",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/queue-disposition-metadata-read.py",
+      "sha256": "dc369596af40d2811dad79f317a9f40776857fe01dbe4adeea70a4974f1dc6ea",
+      "ignored": true
+    }
+  ]
+}

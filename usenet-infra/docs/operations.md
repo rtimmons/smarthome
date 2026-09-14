@@ -44,7 +44,8 @@ for validation, deployment scope, and rollback caveats.
 
 For NZBGeek's own discovery UX on a phone, the enabled
 [NZBGeek Cart feed](nzbgeek-cart.md) queues new cart selections in cloud SAB every
-15 minutes. Use that runbook for the initial held item and direct-import limits.
+15 minutes. Use that runbook for individual held-item actions, capacity checks
+and deliberate native imports of Default-category jobs.
 
 Normally use SAB at `http://10.77.0.1:18080/` and Prowlarr/Arr at
 `http://10.77.0.1:19696/` through the existing LAN VPN route and proxy. Backend
@@ -364,6 +365,16 @@ of a verified independent copy or permission to delete, and removing old queue
 rows would not establish a fresh native import. Use the normal Arr queue view:
 including unknown shared-client items can show movie jobs in Sonarr without
 Sonarr having acquired or owned them.
+
+The [September 14 disposition](../recovery/drills/queue-disposition-20260914.json)
+further matched all five stale Radarr jobs to exact legacy publisher receipts
+marked cleaned, their canonical manifests and present native/legacy files at
+matching sizes. Deliberately retain their visible tracking and both scratch
+groups. The archived media has no established canonical match; the fixture has
+historical verification and current metadata only. Investigation is complete;
+this is not authorization for media deletion. Radarr's native ignore action
+preserves SAB files/history but persists across restart, and no supported narrow
+undo was established. Do not apply it merely to conceal stale warnings.
 
 Provider authentication faults are surfaced through SABnzbd's recorded warning
 and error API. This is not a fresh NNTP login on every health run: after changing

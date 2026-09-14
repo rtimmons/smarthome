@@ -1,10 +1,21 @@
 # Current validation and acceptance
 
-Updated September 13, 2026 (UTC). This ledger records accepted behavior and its
+Updated September 14, 2026 (UTC). This ledger records accepted behavior and its
 limits. The [current plan](../../plan.md) owns remaining work and the
 [closure and merge criteria](../../plan.md#closure-and-merge-criteria). Historical
 implementation narratives remain in Git and dated receipts; they are not current
 operating instructions. Recovery receipts and bound snapshots remain unchanged.
+
+The [September 14 media audit](../recovery/drills/media-acceptance-20260914.json)
+refreshed discovery/cloud/NAS health and normal Arr/SAB records at local head
+`06bfff4`. Health passed with the same nine historical SAB warnings, zero active
+or failed NAS pulls, five native movies and no native TV. SAB was idle;
+Radarr's retained history contained no fresh import event, and Sonarr had no
+series, queue or history. No fresh movie, TV or cart completion can be accepted
+from those baseline records. The existing accepted native movie remained local.
+This was a live read-only audit, not a new implementation test run or playback test.
+Cloud and NAS backup status receipts were also healthy within their 36-hour
+freshness threshold; no new backup or archive-integrity drill was run.
 
 ## Accepted behavior
 
@@ -22,17 +33,21 @@ operating instructions. Recovery receipts and bound snapshots remain unchanged.
 | Scheduled configuration backups | [Archive verification receipt](../recovery/drills/scheduled-backups-20260911.json): cloud/QNAP/Plex archives fetched and verified using independently recovered identities; Plex SQLite snapshots opened successfully. Schedules run on the hosts. This is not a full Plex startup or NAS replacement drill. |
 | Native receipt backup capture | [Independent archive verification](../recovery/drills/native-receipt-backup-20260913.json): `qnap-20260913T041100Z.tar.age` passed `qnap-config` validation with 56 files and no media. Its 1,357-byte native ownership receipt matched the expected SHA-256. This verifies capture and archive integrity, not a restore onto another NAS or destination. |
 | Provider and legacy NAS baseline | [QNAP bootstrap](qnap-bootstrap.md) records the official provider fixture's verified legacy copy/removal, authenticated dashboard behavior, CLI parity, restart persistence and isolated configuration-startup restore. These earlier checks do not replace native-import or device acceptance. |
+| External dashboard direct port | [September 14 probe](../recovery/drills/nas-exposure-20260914.json): three external TCP/1337 timeouts against the independently correlated current home WAN, with a successful same-WAN NAS TCP control. No dashboard UPnP mapping or global NAS IPv6 was found. This passes dated direct-port acceptance; alternate static forwarding/proxy paths were not audited. |
+| Phone-cart acquisition | [September 14 acquisition](../recovery/drills/cart-acquisition-20260914.json): user-selected media-004 completed download and postprocessing in Default category. Normal polling queued the other selected item, media-006; it remains individually paused at 0% for capacity disposition. Global pause and feed settings were preserved. Acquisition alone does not prove native import or automatic Arr-owned cleanup. |
+| Deliberate native cart import and reclamation | [media-004 import receipt](../recovery/drills/cart-native-import-20260914.json): native manual copy import completed at 01:12:24 UTC, with a `downloadFolderImported` event and no download ID. The 15,090,939,776-byte source matched an independent Storage Box SHA-256. Only its verified scratch file and empty parent were reclaimed; older scratch and SAB history stayed intact. Radarr movie ID 13 is unmonitored, avoiding an extra acquisition. This does not prove automatic Arr-owned client cleanup. |
+| New cart movie Plex discovery | [Plex receipt](../recovery/drills/cart-plex-discovery-20260914.json): media-004, Movies (Remote) ID 4, rating key 5638, exact canonical path and size matched. One native scan targeted only this directory; discovery was verified at 01:13:57 UTC. Automatic indexing and real-device playback were not established. |
 
 ## Remaining evidence
 
 | Status | Work and completion evidence |
 | --- | --- |
-| Pending: fresh movie import | Observe the next user-selected Arr-owned completion: import event, persistent canonical file, completed-client removal, scratch reclamation and Plex discovery. Do not acquire a diagnostic title merely to fill this row. |
+| Pending: automatic Arr-owned movie completion | Observe the next user-selected Arr-owned job through import, automatic completed-client removal, scratch reclamation, canonical persistence and Plex discovery. media-004's manual cart import does not establish the automatic path. Do not acquire a diagnostic title merely to fill this row. |
 | Pending: fresh TV import and copy | Observe a user-selected series/episode through native import and cleanup, then verify one selective NAS copy, correct TV-library indexing and safe repeat. No canonical TV titles were present at the recorded preflight. |
-| Reconciled; disposition pending: old completions | The [September 13 audit](../recovery/drills/queue-reconciliation-20260913.json) matched all four scratch files (17,253,186,699 bytes) to two archived completed SAB jobs: the official fixture and an earlier media download. The five old Radarr `importPending` entries each have a canonical file, but their original SAB completed paths are absent. Preserve both scratch groups and history; path ownership alone does not verify a canonical copy or authorize deletion. No fresh import was observed. |
-| Pending: cart acquisition | Verify a future user-selected cart job and its intended library-import route. The setup's held initial entry is not a completed download; avoid queueing all held entries inadvertently. |
+| Investigated; deliberately retained: old completions | The [September 14 disposition](../recovery/drills/queue-disposition-20260914.json) matched all five stale entries to exact-job legacy cleanup receipts and present canonical files. Retain visible tracking: persistent native ignore lacks an established supported undo. Retain both archived scratch groups (four files, 17,253,186,699 bytes): the media group has no established canonical match, while fixture evidence is historical integrity plus current metadata only. Any later cleanup remains separate; no fresh import is established. |
+| Passed for media-004; second cart item pending | media-004's real acquisition, deliberate native import, integrity verification, Plex discovery and exact-job cleanup passed. Oversized media-006 remains paused at 0% pending capacity/release disposition; do not resume or silently replace its release. |
 | User-deferred: Apple TV/Roku | NAS and Remote playback, seeking, sustained playback, codec/audio/subtitle behavior, and cold-start/home/search privacy with the restricted profile. Do not invent or request publication of the owner's PIN. |
-| Pending: external NAS exposure | A permitted external probe or independent firewall/NAT audit must verify the dashboard is unreachable publicly. LAN binding and authentication passed; external exposure acceptance remains qualified. |
+| Scoped pass: external dashboard | Direct TCP/1337 acceptance passed September 14 as recorded above. A complete alternate-port static-NAT/proxy audit was not performed. Repeat the probe after relevant network changes. |
 | Separate: recovery scope | NAS-loss protection, whole-machine replacement and full cloud reboot/Plex package-startup drills remain separate. Revisit only within the scope and authorization set by the current plan. |
 
 These rows do not independently define a merge blocker or authorize a merge.
@@ -41,6 +56,21 @@ accepted deferrals. Account bootstrap, optional fill providers and repeating an
 already accepted NAS movie transfer are not default next tasks.
 
 ## Recorded implementation checks
+
+September 14 continuation: [post-import health](../recovery/drills/post-cart-health-20260914.json)
+passed for discovery, cloud and NAS, retaining the nine historical SAB notices.
+Native status showed six movies, media-004 remote-only, the accepted media-002 copy
+still local, and no TV. The native-import receipt's final check at 01:16:15 UTC
+confirmed canonical SHA-256 after cleanup, unchanged older scratch/history and
+86,417,821,696 scratch bytes free. media-006 remained individually paused at 0%.
+The seven new receipts parse, local documentation links and whitespace pass,
+and current-source/index scanning passes (717 source files, 708 index blobs;
+history explicitly omitted). This continuation changed documentation/receipts
+and performed the recorded live workflow; no implementation code was changed,
+so full test suites were not rerun. The September 13 results below remain dated
+evidence. The continuation's documentation and receipts are committed locally at
+the user's request; unrelated lighting edits and `msg` remain uncommitted. No
+push, merge or deployment occurred.
 
 Wrap-up health on September 13 verified discovery/import configuration, provider
 connectivity, scratch and NAS reserve, fresh dashboard data, and zero active or

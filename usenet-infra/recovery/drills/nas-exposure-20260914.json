@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-14T01:02:00Z",
+  "scope": "Dated direct external reachability acceptance for the private NAS dashboard on TCP/1337; read-only UPnP and NAS network corroboration.",
+  "result": "passed_for_direct_dashboard_port_at_audit",
+  "external_probe": {
+    "checked_at": "2026-09-14T01:00:38.487619+00:00",
+    "vantage": "Existing dedicated cloud host reached with repository cloud-command and pinned host identity",
+    "target": "Current home WAN IPv4; exact address omitted from durable receipt",
+    "ownership_verification": [
+      "Established cloud home-IPsec VPN remote peer matched the live home gateway GetExternalIPAddress result exactly",
+      "Gateway is the documented home LAN router at 192.168.1.1"
+    ],
+    "route": {
+      "interface": "eth0",
+      "source": "Cloud public IPv4",
+      "destination": "Home public WAN IPv4",
+      "outside_ipsec_private_selector": true,
+      "ipsec_remote_selector": "192.168.1.0/24"
+    },
+    "tcp_port": 1337,
+    "attempts": [
+      {
+        "attempt": 1,
+        "result": "timeout",
+        "timeout_seconds": 5,
+        "elapsed_seconds": 5.005
+      },
+      {
+        "attempt": 2,
+        "result": "timeout",
+        "timeout_seconds": 5,
+        "elapsed_seconds": 5.005
+      },
+      {
+        "attempt": 3,
+        "result": "timeout",
+        "timeout_seconds": 5,
+        "elapsed_seconds": 5.005
+      }
+    ],
+    "positive_control": {
+      "checked_at": "2026-09-14T01:01:49.607614+00:00",
+      "target": "Same home WAN, existing UPnP-advertised NAS Plex mapping",
+      "external_tcp_port": 22317,
+      "internal_tcp_port": 32400,
+      "result": "connected",
+      "connect_errno": 0,
+      "elapsed_seconds": 0.105,
+      "media_or_application_content_read": false
+    }
+  },
+  "gateway_upnp": {
+    "checked_at": "2026-09-14T01:01:32.601981+00:00",
+    "gateway": "192.168.1.1",
+    "method": "Unicast SSDP discovery, advertised root description, read-only GetExternalIPAddress and indexed GetGenericPortMappingEntry SOAP actions",
+    "external_address_matches_established_cloud_vpn_peer": true,
+    "total_mappings": 4,
+    "nas_mappings": [
+      {
+        "NewRemoteHost": null,
+        "NewExternalPort": "22317",
+        "NewProtocol": "TCP",
+        "NewInternalPort": "32400",
+        "NewInternalClient": "192.168.1.66",
+        "NewEnabled": "1",
+        "NewLeaseDuration": "603697"
+      }
+    ],
+    "dashboard_mapping_count": 0,
+    "enumeration_terminal_error": {
+      "faultcode": "s:Client",
+      "faultstring": "UPnPError",
+      "errorCode": "713",
+      "errorDescription": "SpecifiedArrayIndexInvalid"
+    }
+  },
+  "nas_network": {
+    "method": "Committed qnap-recon recipe with existing dedicated NAS identity and pinned known-hosts file",
+    "dashboard_listener": {
+      "checked": true,
+      "listeners": [
+        "192.168.1.66:1337"
+      ]
+    },
+    "dashboard_port_bindings": {
+      "1337/tcp": [
+        {
+          "HostIp": "192.168.1.66",
+          "HostPort": "1337"
+        }
+      ]
+    },
+    "global_ipv6_address_count": 0,
+    "dashboard_running": true,
+    "dashboard_health": "healthy"
+  },
+  "limitations": [
+    "A dated single-vantage probe establishes that the current public WAN TCP/1337 was unreachable from the cloud during this audit, not perpetual or universal isolation.",
+    "No complete static NAT/firewall or reverse-proxy audit was performed. Alternate public ports or other proxy/tunnel ingress paths were not certified absent.",
+    "The existing UniFi controller agent RSA attempt failed because the signing agent communication failed; it was not retried and no authentication setting was changed.",
+    "The documented DDNS hostname had no IPv4 answer from the cloud during the audit and was not used as the probe target.",
+    "NAS Plex has an existing public mapping; this receipt does not assert that the entire NAS or every NAS service is private.",
+    "UPnP mappings, WAN addressing and IPv6 state can change. Repeat checks after relevant networking changes."
+  ],
+  "changes": {
+    "firewall_or_nat": false,
+    "services_or_containers": false,
+    "authentication": false,
+    "transfers_or_acquisitions": false,
+    "media_read_or_modified": false
+  },
+  "reproduction": [
+    "Read plan.md, usenet-infra/AGENTS.md and docs/operations/unifi-ssh-access.md; use existing dedicated cloud/NAS identities and strict pinned host-key checking.",
+    "Use cloud-command to inspect active VPN peer metadata, and use gateway read-only UPnP discovery/GetExternalIPAddress to correlate the current owned WAN. Do not reuse a stale public address.",
+    "From cloud-command, obtain the route to the verified public WAN and confirm the source/interface are public and outside the private IPsec selector. Attempt TCP/1337 three times with five-second timeouts.",
+    "Enumerate read-only UPnP GetGenericPortMappingEntry by index until error 713. Select NAS mappings and confirm none target internal TCP/1337.",
+    "Use an already-advertised owned NAS mapping for a single TCP-handshake positive control, if available; read no media. Do not create a mapping to manufacture evidence.",
+    "Run just --justfile usenet-infra/Justfile --working-directory usenet-infra qnap-recon and retain the dashboard listener, port binding and global IPv6 count."
+  ]
+}

@@ -1,0 +1,130 @@
+{
+  "acceptance": {
+    "automatic_arr_owned_completion_cleanup": "not established by this Default-category cart download",
+    "phone_cart_acquisition": "passed for user-selected media-004 through native per-item RSS download, SAB download and postprocessing",
+    "phone_cart_deliberate_import": "handed to parallel native-import agent; separate receipt required",
+    "media-006_acquisition": "pending; normal RSS queued the user selection and agent preserved reserve by pausing only that oversized exact job before payload transfer"
+  },
+  "action": "individual_native_rss_download_requested_once",
+  "action_http_status": 303,
+  "authorization": "User identified the two current cart items as selections; parent authorized individual release of stored media-004 and pausing only oversized media-006 if automatically queued.",
+  "cart_items": [
+    {
+      "advertised_bytes": 15884251000,
+      "downloaded_at_before": null,
+      "initial_scan": true,
+      "kind": "movie",
+      "selection": "Confirmed by user selection of the current two items; prior held setup item now individually released.",
+      "stored_rss_state_before": "G",
+      "title": "media-004"
+    },
+    {
+      "advertised_bytes": 61430555000,
+      "kind": "movie",
+      "selection": "User-selected, oversized for current scratch reserve; not explicitly acquired by agent.",
+      "stored_rss_state_before": "not_yet_read",
+      "title": "media-006"
+    }
+  ],
+  "checked_at": "2026-09-14T01:04:40.712357+00:00",
+  "completed_observation": {
+    "category": "Default",
+    "checked_at": "2026-09-14T01:06:25.682024+00:00",
+    "completed_utc": "2026-09-14T01:06:10+00:00",
+    "download_ref": "a25191612fdd7973",
+    "download_seconds": 68,
+    "postprocess_seconds": 19,
+    "sab_reported_bytes": 15576442336,
+    "sab_status": "Completed",
+    "scratch_free_bytes": 71329333248,
+    "scratch_reserve_bytes": 32212254720,
+    "storage_is_completed_movie_file": true,
+    "title": "media-004"
+  },
+  "conservative_download_plus_unpack_bytes": 31768502000,
+  "feed_preserved": {
+    "category": "Default",
+    "enabled": true,
+    "force_all_used": false,
+    "rss_interval_minutes": 15,
+    "rules_changed": false
+  },
+  "final_queue_observation": {
+    "active_transfer_count": 0,
+    "checked_at": "2026-09-14T01:06:25.682024+00:00",
+    "global_paused": false,
+    "only_remaining_job": "selected media-006, paused at 0%",
+    "queue_count": 1,
+    "queue_status": "Idle",
+    "speed_kib_s": "0.00"
+  },
+  "handoff": {
+    "monitoring_stopped": true,
+    "owner": "parallel queue_disposition/native-import agent",
+    "media-006_pause_persists_in_sab": true,
+    "status": "Completed media-004 exact SAB ID and storage path supplied through ignored local progress JSON. No cleanup/removal authorization inferred."
+  },
+  "import_acceptance": "pending; separate native manual-import receipt will distinguish this from automatic Arr-owned completion",
+  "limits": [
+    "Cart jobs are Default category and do not establish automatic Arr ownership.",
+    "media-006 advertised payload exceeds current free bytes minus reserve even without unpack overhead.",
+    "No old history or retained scratch removed.",
+    "No live copy, Plex discovery or playback acceptance established by acquisition alone."
+  ],
+  "local_evidence": [
+    {
+      "bytes": 340,
+      "ignored": true,
+      "path": "usenet-infra/build/media-cart-release-media-004-20260914.json",
+      "sha256": "cba30bd6e6ac94b853f1894e137b90cc9c049a91850bd93fb88c7a2e75645a92"
+    },
+    {
+      "bytes": 1088,
+      "ignored": true,
+      "path": "usenet-infra/build/media-cart-progress-20260914.json",
+      "sha256": "a5d7c96aa4e73794f64974cee29c65459b7cd1362d0006bb2d503cafd794cb02"
+    },
+    {
+      "bytes": 385,
+      "ignored": true,
+      "path": "usenet-infra/build/media-cart-rss-final-20260914.json",
+      "sha256": "5cc5c4b65306c1670e98a45337ae1017722852e5e8d0f9bd00f3e7da40853475"
+    }
+  ],
+  "media-006_guard": {
+    "action": "paused_only_exact_new_oversized_job",
+    "disposition": "Retained paused pending adequate-capacity/smaller-release decision; not deleted or resumed.",
+    "download_ref": "a544f26d7d780d0d",
+    "feed_unchanged": true,
+    "global_pause_unchanged": true,
+    "observed_at": "2026-09-14T01:05:48.500075+00:00",
+    "pause_succeeded": true,
+    "percentage": "0",
+    "queued_by": "existing normal RSS polling",
+    "remaining_mib": "58584.74",
+    "status": "Paused",
+    "total_mib": "58584.74"
+  },
+  "reserve_bytes": 32212254720,
+  "rss_recorded_state": [
+    {
+      "downloaded_at": 1789347880,
+      "initial_scan": true,
+      "limit": "RSS D means queued successfully; completed media status comes from SAB history.",
+      "state": "D",
+      "title": "media-004"
+    },
+    {
+      "downloaded_at": 1789347926,
+      "initial_scan": false,
+      "limit": "RSS D means queued successfully; completed media status comes from SAB history.",
+      "state": "D",
+      "title": "media-006"
+    }
+  ],
+  "schema_version": 1,
+  "scope": "User-selected NZBGeek Cart acquisition through the native single-item RSS action. Deliberate library import is recorded separately.",
+  "scratch_free_bytes": 86428827648,
+  "selected_title": "media-004",
+  "status": "selected_media-004_acquisition_completed"
+}

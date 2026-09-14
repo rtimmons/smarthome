@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-14T01:13:27Z",
+  "scope": "Read-only affected-service health after native media-004 import; before independent hash verification and scratch reclamation completed.",
+  "branch_head": "06bfff4",
+  "checks": [
+    {
+      "command": "just usenet-discovery-health",
+      "result": "verified; automatic acquisition/import enabled",
+      "exit_code": 0
+    },
+    {
+      "command": "just usenet-cloud-health",
+      "result": "passed with the same nine historical SAB warnings",
+      "exit_code": 0
+    },
+    {
+      "command": "just usenet-qnap-health",
+      "result": "passed; zero active or failed NAS pulls",
+      "exit_code": 0
+    },
+    {
+      "command": "just native-status",
+      "result": "six native movies, including media-004 remote-only; accepted media-002 copy remains local; no native TV",
+      "exit_code": 0
+    }
+  ],
+  "cloud": {
+    "storage_box_used_bytes": 110349123584,
+    "storage_box_total_bytes": 1099511627776,
+    "scratch_free_bytes": 71326834688,
+    "scratch_reserve_bytes": 32212254720,
+    "historical_sab_warning_count": 9
+  },
+  "nas": {
+    "free_bytes": 1312909377536,
+    "reserve_bytes": 107374182400,
+    "active_pulls": 0,
+    "failed_pulls": 0,
+    "dashboard_catalog_age_seconds": 60,
+    "native_movie_count": 6,
+    "native_tv_count": 0,
+    "selected_media_state": "remote_only",
+    "accepted_native_movie_still_local": true
+  },
+  "limits": [
+    "Health is not evidence of payload integrity, playback or automatic Arr-owned cleanup.",
+    "Independent import/integrity/cleanup and Plex discovery receipts record those separate outcomes.",
+    "No service restart, configuration deployment or NAS media copy was performed by these checks."
+  ],
+  "post_cleanup_observation": {
+    "source_receipt": "cart-native-import-20260914.json",
+    "checked_at": "2026-09-14T01:16:15.100803+00:00",
+    "canonical_persists": true,
+    "post_cleanup_canonical_sha256": "bc83012c5f58b0536974efb28b6b5999dc8cad3e360bbd50191f47bf509fec48",
+    "old_scratch_unchanged": true,
+    "sab_history_and_queue_unchanged": true,
+    "scratch_free_bytes": 86417821696,
+    "radarr_queue_count": 5
+  },
+  "continuation_validation": {
+    "receipt_json": "passed for seven new receipts",
+    "local_documentation_links": "passed",
+    "diff_whitespace": "passed",
+    "current_source_index_secret_scan": {
+      "status": "passed",
+      "source_files": 717,
+      "index_blobs": 708,
+      "history_included": false
+    },
+    "full_test_suites_rerun": false,
+    "reason": "Only documentation and evidence files changed; live-operation acceptance is recorded separately. September 13 full-suite results remain historical evidence."
+  }
+}

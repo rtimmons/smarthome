@@ -1,0 +1,189 @@
+{
+  "acceptance": {
+    "client_playback_and_startup_privacy": "user-deferred; not tested",
+    "existing_queue_scratch_reconciliation": "reconfirmed; corrective disposition remains separate",
+    "fresh_movie_completion": "pending; no fresh import event/client cleanup/scratch reclamation/Plex discovery chain",
+    "fresh_tv_completion": "pending; Sonarr has zero configured series and zero history",
+    "phone_cart_completion_import": "pending; no fresh user-selected cart completion",
+    "real_tv_selective_copy": "pending; zero available canonical TV titles"
+  },
+  "adopted_movie_state": {
+    "all_canonical_files_present": true,
+    "all_completed_importPending": true,
+    "all_original_completed_paths_absent": true,
+    "canonical_media_bytes_hashed": false,
+    "canonical_total_bytes": 95166179367,
+    "queue_count": 5
+  },
+  "arr": {
+    "radarr": {
+      "history_event_counts": {
+        "downloadFailed": 2,
+        "grabbed": 7
+      },
+      "history_event_types": [
+        "downloadFailed",
+        "grabbed"
+      ],
+      "history_total": 9,
+      "latest_event_utc": "2026-09-11T23:00:19Z",
+      "queue_count": 5,
+      "title_count": 12,
+      "titles_with_files": 5
+    },
+    "sonarr": {
+      "history_event_counts": {},
+      "history_event_types": [],
+      "history_total": 0,
+      "latest_event_utc": null,
+      "queue_count": 0,
+      "title_count": 0,
+      "titles_with_files": 0
+    }
+  },
+  "cart": {
+    "category_is_default": true,
+    "enabled": true,
+    "enabled_feed_count": 1,
+    "feed_reader_forced": false,
+    "held_setup_entry_released": false,
+    "limit": "Configuration and retained job history were read. The personalized feed URL and remote cart content were not retrieved. No cart completion/import was established.",
+    "matching_feed_count": 1,
+    "new_download_observed": false,
+    "priority": 0,
+    "processing": "3",
+    "rss_interval_minutes": 15,
+    "script_is_none": true
+  },
+  "checked_at": "2026-09-14T00:59:54.126702+00:00",
+  "health": {
+    "accepted_native_movie_still_local": true,
+    "automatic_acquisition": true,
+    "automatic_import": true,
+    "cloud_exit_code": 0,
+    "dashboard_fresh": true,
+    "discovery_status": "verified",
+    "nas_active_pulls": 0,
+    "nas_exit_code": 0,
+    "nas_failed_or_interrupted_pulls": 0,
+    "nas_free_bytes": 1312909398016,
+    "nas_observation_source": "Parallel root-agent just usenet-qnap-health and just native-status in this session",
+    "nas_reserve_bytes": 107374182400,
+    "native_movie_count": 5,
+    "native_tv_title_count": 0,
+    "prowlarr_health_issues": 0,
+    "scratch_free_bytes": 86436954112,
+    "scratch_reserve_bytes": 32212254720,
+    "storage_box_total_bytes": 1099511627776,
+    "storage_box_used_bytes": 95263391744
+  },
+  "limits": [
+    "API history provides the current retained records, not proof against an independent operator having removed records.",
+    "The five existing canonical movie files were checked by metadata only; no fresh import or content hash was established.",
+    "No fresh Plex discovery, real TV copying, device playback, external NAS exposure or source integration acceptance is claimed.",
+    "No secret values, personalized feed URLs, media titles or private Plex-library contents are included."
+  ],
+  "local_evidence": [
+    {
+      "bytes": 9256,
+      "ignored": true,
+      "path": "usenet-infra/build/media-acceptance-queue-20260914.json",
+      "sha256": "f1c077c3549e511a660a438a4baf64da23293b46f991394d8925418c736c62cf"
+    },
+    {
+      "bytes": 688,
+      "ignored": true,
+      "path": "usenet-infra/build/media-acceptance-cart-20260914.json",
+      "sha256": "854c6fe7e85f6e18d2245cb77fd00d73beb299e1e01f9ebf821736f912f3a285"
+    },
+    {
+      "bytes": 235,
+      "ignored": true,
+      "path": "usenet-infra/build/media-acceptance-backup-20260914.json",
+      "sha256": "9e0652c02179623de294cbadeea9e62e45ac61136684cf652f05ecd0f85bc999"
+    }
+  ],
+  "mutations_performed": false,
+  "next_inputs_and_actions": [
+    "For a fresh movie or TV acceptance, identify the intended user-selected title and observe an actual Arr-owned job through import, removal from the client, scratch reclamation, canonical persistence and Plex discovery.",
+    "A real selective TV copy requires an actually available canonical user-selected TV title; verify only that title, staging isolation, publication and Plex indexing.",
+    "For cart acceptance, identify a new chosen cart entry and its deliberate library-import route; Default-category completion alone is not automatic Arr ownership.",
+    "Do not replay the accepted movie copy, release held feed entries, enqueue diagnostic media, resume queues, delete scratch or clear history to manufacture evidence."
+  ],
+  "prior_receipt": "queue-reconciliation-20260913.json",
+  "retained_scratch": {
+    "bytes": 17253186699,
+    "disposition": "Preserve both groups and history. Matching retained metadata does not establish independent canonical integrity or deletion readiness.",
+    "files": 4,
+    "groups": [
+      {
+        "bytes": 100000019,
+        "classification": "official_diagnostic_fixture",
+        "current_arr_queue_owner": null,
+        "directory_ref": "29669eacaa3acbeb",
+        "exact_archived_storage_path_match": true,
+        "files": 2,
+        "files_removed": false
+      },
+      {
+        "bytes": 17153186680,
+        "classification": "archived_completed_media_download",
+        "current_arr_queue_owner": null,
+        "directory_ref": "60ff8c9b01839fa5",
+        "exact_archived_storage_path_match": true,
+        "files": 2,
+        "files_removed": false
+      }
+    ]
+  },
+  "reviewed_branch_head": "06bfff4",
+  "sab": {
+    "archived_records_read": 2,
+    "latest_retained_completed_utc": "2026-09-11T22:51:09+00:00",
+    "latest_warning_utc": "2026-09-11T22:53:34+00:00",
+    "paused": false,
+    "queue_count": 0,
+    "retained_history_status_counts": {
+      "Completed": 5,
+      "Failed": 2
+    },
+    "retained_jobs_completed_since_prior_audit": 0,
+    "status": "Idle",
+    "warning_categories": {
+      "direct_unpack_notice": 1,
+      "disk_space": 2,
+      "hostname_connection_refused": 6
+    },
+    "warning_count": 9,
+    "warning_levels": [
+      "WARNING"
+    ],
+    "warnings_or_history_cleared": false
+  },
+  "scheduled_backup_freshness": {
+    "cloud": {
+      "age_seconds": 10509,
+      "age_seconds_source": "Measured on cloud host; host clocks were not compared.",
+      "archive_count": 1,
+      "last_success": 1789337143,
+      "last_success_utc": "2026-09-13T22:05:43+00:00",
+      "observation_source": "Parallel root-agent read of cloud-status.json via dedicated cloud wrapper",
+      "status": "ok",
+      "within_36_hour_freshness": true
+    },
+    "limit": "Read-only current status freshness; no backup was invoked and no archive retrieval, decryption or independent content verification was repeated.",
+    "nas": {
+      "age_seconds": 75005,
+      "age_seconds_source": "Measured on NAS backup container; checked_at is its clock.",
+      "archive_count": 2,
+      "checked_at": "2026-09-14T01:01:23.234786+00:00",
+      "host": "nas",
+      "last_success": 1789272678,
+      "last_success_utc": "2026-09-13T04:11:18+00:00",
+      "status": "ok",
+      "within_36_hour_freshness": true
+    }
+  },
+  "schema_version": 1,
+  "scope": "Read-only discovery/cloud health and normal Arr/SAB queue/history/cart configuration, compared with the September 13 receipt. No new acquisition, import, copy, cleanup, restart, deployment or git mutation."
+}

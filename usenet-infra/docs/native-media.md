@@ -133,5 +133,17 @@ native copy was started through the authenticated dashboard at
 automatically indexed by Plex at the `03:57:17Z` check. Repeating `just native-pull`
 verified the existing copy without recopying; directory identity and hashes stayed
 unchanged. This copy cannot establish a fresh Arr completion or scratch cleanup.
-Fresh movie/TV import and cleanup, a real TV-series NAS copy, and device
-playback/seeking/startup privacy remain unverified.
+Automatic Arr-owned movie/TV completion and cleanup, a real TV-series NAS copy,
+and device playback/seeking/startup privacy remain unverified.
+
+September 14: the user-selected Default-category cart movie media-004
+completed download/unpack and a deliberate native Radarr copy import. Its
+15,090,939,776 bytes matched independent source/Storage Box SHA-256, Plex indexed
+the exact file in Movies (Remote) after one selected-directory scan, and only the
+verified new scratch file/empty parent were reclaimed. SAB history and older
+scratch stayed intact. See the [import receipt](../recovery/drills/cart-native-import-20260914.json)
+and [Plex receipt](../recovery/drills/cart-plex-discovery-20260914.json).
+The native library now has six movies; media-004 is remote-only and unmonitored in
+Radarr. This establishes deliberate cart import, not automatic Arr-owned client
+cleanup, automatic Plex discovery, a NAS copy of media-004 or device playback.
+Automatic Arr-owned movie/TV completion and real TV copying remain outstanding.

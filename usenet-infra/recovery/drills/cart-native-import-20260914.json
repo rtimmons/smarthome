@@ -1,0 +1,277 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-14T01:16:15.100803+00:00",
+  "scope": "User-selected Default-category cart movie, native manual copy import, independent canonical verification and exact new-job scratch reclamation. Not an Arr-owned automatic download/import cleanup test.",
+  "identity": {
+    "title": "media-004",
+    "year": 1990,
+    "tmdb_id": "media-catalog-002",
+    "imdb_id": "media-catalog-001",
+    "external_identity_source": "https://example.invalid/media-redacted",
+    "download_ref": "a25191612fdd7973"
+  },
+  "metadata_add": {
+    "checked_at": "2026-09-14T01:06:39.914448+00:00",
+    "action": "added_unmonitored_without_search",
+    "movie": {
+      "id": 13,
+      "title": "media-004",
+      "year": 1990,
+      "tmdbId": "media-catalog-002",
+      "imdbId": "media-catalog-001",
+      "path": "/library/media-004",
+      "hasFile": false,
+      "movieFileId": 0,
+      "monitored": false,
+      "qualityProfileId": 5
+    },
+    "request_add_options": {
+      "searchForMovie": false,
+      "monitor": "none"
+    },
+    "payload_import_started": false
+  },
+  "import": {
+    "mode": "copy",
+    "download_id_omitted": true,
+    "candidate_count": 1,
+    "rejections": 0,
+    "explicit_mapping_reprocessed": true,
+    "source_file_count": 1,
+    "sidecar_count": 0,
+    "source_sha256": "bc83012c5f58b0536974efb28b6b5999dc8cad3e360bbd50191f47bf509fec48",
+    "command": {
+      "id": 5801,
+      "status": "completed",
+      "started": "2026-09-14T01:08:10Z",
+      "ended": "2026-09-14T01:12:24Z",
+      "duration": "00:04:14.7238143",
+      "result": "successful"
+    },
+    "history": [
+      {
+        "eventType": "downloadFolderImported",
+        "date": "2026-09-14T01:12:24Z",
+        "download_ref": null
+      }
+    ],
+    "media_info": {
+      "audioBitrate": 640000,
+      "audioChannels": 5.1,
+      "audioCodec": "EAC3",
+      "audioLanguages": "eng",
+      "audioStreamCount": 1,
+      "videoBitDepth": 10,
+      "videoBitrate": 18025807,
+      "videoCodec": "x265",
+      "videoFps": 23.976,
+      "videoDynamicRange": "HDR",
+      "videoDynamicRangeType": "DV HDR10",
+      "resolution": "3840x2076",
+      "runTime": "1:47:24",
+      "scanType": "Progressive",
+      "subtitles": "eng/eng/eng/chi/dut/fre/ger/jpn/spa"
+    }
+  },
+  "verification": {
+    "checked_at": "2026-09-14T01:13:56.244808+00:00",
+    "verified": true,
+    "command": {
+      "id": 5801,
+      "status": "completed",
+      "started": "2026-09-14T01:08:10Z",
+      "ended": "2026-09-14T01:12:24Z",
+      "duration": "00:04:14.7238143",
+      "result": "successful"
+    },
+    "movie": {
+      "id": 13,
+      "title": "media-004",
+      "year": 1990,
+      "tmdbId": "media-catalog-002",
+      "monitored": false,
+      "path": "/library/media-004",
+      "hasFile": true,
+      "movieFileId": 6
+    },
+    "canonical_path": "/srv/usenet/library/Movies/media-004/media-004.mkv",
+    "canonical_relative_path": "library/Movies/media-004/media-004.mkv",
+    "canonical_bytes": 15090939776,
+    "source_sha256": "bc83012c5f58b0536974efb28b6b5999dc8cad3e360bbd50191f47bf509fec48",
+    "independent_storage_box_sha256": "bc83012c5f58b0536974efb28b6b5999dc8cad3e360bbd50191f47bf509fec48",
+    "canonical_signature": [
+      15090939776,
+      79,
+      17,
+      "1789347950000000000"
+    ],
+    "source_signature": [
+      15090939776,
+      2049,
+      3244802,
+      "1789347950453928163"
+    ],
+    "source_unchanged": true,
+    "source_file_count": 1,
+    "sidecar_count": 0,
+    "old_scratch_files": 4,
+    "old_scratch_bytes": 17253186699,
+    "old_scratch_metadata_unchanged": true,
+    "sab_history_refs": [
+      "2540bd9d2ff74419",
+      "46c19029989f80ca",
+      "a25191612fdd7973",
+      "b052527078c725f7",
+      "bd40169ab3488640",
+      "cdfcab46332ead54",
+      "ed621de410baf09c",
+      "f85dafbccbb31cbe"
+    ],
+    "sab_archive_refs": [
+      "525d1ee8062aae8f",
+      "a86616a675ca7a4f"
+    ],
+    "sab_completed_history_count": 6,
+    "sab_failed_history_count": 2,
+    "sab_selected_category": "*",
+    "sab_queue": [
+      {
+        "ref": "a544f26d7d780d0d",
+        "status": "Paused",
+        "category": "*"
+      }
+    ],
+    "sab_paused": false,
+    "radarr_movie_history": [
+      {
+        "eventType": "downloadFolderImported",
+        "date": "2026-09-14T01:12:24Z",
+        "download_ref": null
+      }
+    ],
+    "radarr_queue_count": 5,
+    "media_info": {
+      "audioBitrate": 640000,
+      "audioChannels": 5.1,
+      "audioCodec": "EAC3",
+      "audioLanguages": "eng",
+      "audioStreamCount": 1,
+      "videoBitDepth": 10,
+      "videoBitrate": 18025807,
+      "videoCodec": "x265",
+      "videoFps": 23.976,
+      "videoDynamicRange": "HDR",
+      "videoDynamicRangeType": "DV HDR10",
+      "resolution": "3840x2076",
+      "runTime": "1:47:24",
+      "scanType": "Progressive",
+      "subtitles": "eng/eng/eng/chi/dut/fre/ger/jpn/spa"
+    },
+    "scratch_reclaimed": false
+  },
+  "plex": {
+    "receipt": "cart-plex-discovery-20260914.json",
+    "checked_at": "2026-09-14T01:13:57Z",
+    "library_id": 4,
+    "rating_key": 5638,
+    "part_id": 5676,
+    "bytes": 15090939776,
+    "exact_canonical_path_match": true,
+    "automatic_discovery": false,
+    "scan": "One authorized exact-directory native scan after item remained absent; HTTP 200 at 01:13:19 UTC."
+  },
+  "cleanup": {
+    "status": "complete",
+    "scope": "Only the verified new media-004 MKV and its empty completed-job parent; no SAB record removal.",
+    "expected_reclaimed_payload_bytes": 15090939776,
+    "sidecar_count": 0,
+    "preflight_guard_stop": "First attempt performed no deletion: JavaScript numeric serialization rounded nanosecond timestamps. Exact decimal strings restored from original Python evidence; all original identity guards retained.",
+    "removed_at": "2026-09-14T01:15:18.746517+00:00",
+    "result": {
+      "checked_at": "2026-09-14T01:16:15.100803+00:00",
+      "cleanup_complete": true,
+      "removed_file_count": 1,
+      "reclaimed_payload_bytes": 15090939776,
+      "source_absent": true,
+      "empty_parent_absent": true,
+      "sidecar_count": 0,
+      "canonical_persists": true,
+      "post_cleanup_canonical_sha256": "bc83012c5f58b0536974efb28b6b5999dc8cad3e360bbd50191f47bf509fec48",
+      "canonical_metadata_unchanged": true,
+      "old_scratch_unchanged": true,
+      "old_scratch_file_count": 4,
+      "old_scratch_bytes": 17253186699,
+      "sab_history_and_queue_unchanged": true,
+      "sab_history_refs": [
+        "2540bd9d2ff74419",
+        "46c19029989f80ca",
+        "a25191612fdd7973",
+        "b052527078c725f7",
+        "bd40169ab3488640",
+        "cdfcab46332ead54",
+        "ed621de410baf09c",
+        "f85dafbccbb31cbe"
+      ],
+      "sab_archive_refs": [
+        "525d1ee8062aae8f",
+        "a86616a675ca7a4f"
+      ],
+      "sab_queue": [
+        {
+          "ref": "a544f26d7d780d0d",
+          "status": "Paused",
+          "category": "*"
+        }
+      ],
+      "sab_paused": false,
+      "scratch_free_bytes": 86417821696,
+      "radarr_queue_count": 5
+    }
+  },
+  "preservation": {
+    "old_scratch_files": 4,
+    "old_scratch_bytes": 17253186699,
+    "old_scratch_metadata_unchanged": true,
+    "retained_completed_history": 6,
+    "retained_failed_history": 2,
+    "retained_archived_history": 2,
+    "media-006_paused": true,
+    "global_sab_paused": false,
+    "old_radarr_import_pending": 5,
+    "movie_monitored": false
+  },
+  "limits": [
+    "Manual cart import and manual exact-source cleanup do not establish automatic Arr-owned completed-client handling.",
+    "No TV import or copy, sustained playback, seeking, or client startup privacy test occurred.",
+    "Existing archived scratch groups and failed/completed SAB history remain preserved.",
+    "No NAS copy of this movie was requested or started; canonical media is on Storage Box."
+  ],
+  "local_evidence": [
+    {
+      "path": "usenet-infra/build/cart-media-004-added-20260914.json",
+      "sha256": "f51d84800b02997bbc25a95e79b5324a912bb0bb2742a65e71293d8d11587da0",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-media-004-candidates-20260914.json",
+      "sha256": "b36aff567180bdc1de183af1d89feaeadafc7c619d8bd1426eeb5ae2aebe1974",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-media-004-import-20260914.jsonl",
+      "sha256": "589887e78cb46a35c4c5ee2b086da35b320391b6d13295adc300583658a896df",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-media-004-verify-20260914.jsonl",
+      "sha256": "623a7e5cae0bb059cf2efaa4bfd7bafdb37cd87ce74023a8b35957de3bf4c2be",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-media-004-cleanup-20260914.jsonl",
+      "sha256": "a857b14db58b66c0e6441c124b8bd0cd603a5f69f0425822b47c29ca5e92d025",
+      "ignored": true
+    }
+  ],
+  "completed": true
+}

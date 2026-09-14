@@ -10,7 +10,10 @@ are present. SSH reconnaissance verifies Container Station 3.1.2.1742,
 Docker 27.1.2-qnap8, Compose 2.29.1-qnap2, and HybridMount 1.17.5691
 (QPKG `CacheMount`). The dashboard runs and authenticated login works; dashboard
 download/reconnect/local-eviction checks passed. CLI parity, restart persistence,
-and isolated configuration restoration also passed. External reachability remains unverified pending approval.
+and isolated configuration restoration also passed. External reachability was
+unverified at that checkpoint; the [September 14 probe](../recovery/drills/nas-exposure-20260914.json)
+later passed dated direct TCP/1337 acceptance, with alternate static
+forwarding/proxy paths remaining unaudited.
 
 SSH now works on port 22 through the dedicated public key; Telnet remains
 disabled. Initially five users were observed, with no dedicated deployment
@@ -54,7 +57,9 @@ privileged mode, and no Docker socket. The dashboard process has only group
 100. The listener is confined to 192.168.1.66:1337, with no global IPv6
 addresses observed. The official fixture's dashboard download, browser reconnection during transfer,
 and confirmed local eviction passed. CLI parity, restart persistence, and isolated configuration restoration also
-passed. The external reachability probe remains unverified.
+passed. The [September 14 external probe](../recovery/drills/nas-exposure-20260914.json)
+later passed direct TCP/1337 acceptance; alternate static forwarding/proxy paths
+remain unaudited.
 
 The first build failed because Docker/Buildx tried to create client state in
 Container Station's unwritable package home. Helpers now scope that state to
@@ -132,7 +137,7 @@ non-secret acceptance evidence in [validation.md](validation.md):
 | Existing containers and private port | Only `iperf3-1`, about 1.16 MiB RAM and 0% CPU at observation; `eth0` 192.168.1.66/24 is the default LAN interface, port 1337 unused before deployment. Existing `iperf3-1` has remained running since 2026-08-18 with restart count 0 |
 | Stable deployment and cache shares, free bytes | `/share/Container/usenet` created UID 1004/GID 100, mode 0750; Container volume about 42 GB free. Exact cache root `/share/Usenet/usenet-cache`; share on GPvQNAP volume resolves to `/share/CACHEDEV2_DATA/Usenet`, about 1.37 TB free and 69% used; 100 GiB cache free-space floor configured |
 | Dedicated account, numeric UID/GID, SSH port and host-trust basis | `usenet-deploy@rynapqnap.local:22` dedicated-key login passed; UID 1004, primary GID 100, NAS supplementary groups 0/100. Exact RSA host fingerprint above pinned under user-authorized first-use trust; not independently verified. Telnet disabled |
-| Dashboard private address, authentication and SSH/private access path | `http://192.168.1.66:1337`; authenticated login passed, exact private listener verified. Argon2id credential file privately created and verified mode 0600. Dashboard/CLI transfer and eviction, restart persistence, and isolated restore passed; external reachability remains unverified |
+| Dashboard private address, authentication and SSH/private access path | `http://192.168.1.66:1337`; authenticated login passed, exact private listener verified. Argon2id credential file privately created and verified mode 0600. Dashboard/CLI transfer and eviction, restart persistence, and isolated restore passed. September 14 direct external TCP/1337 acceptance passed; alternate static forwarding/proxy paths remain unaudited |
 | HybridMount version, modes, license availability and cache support | HybridMount 1.17.5691 (QPKG `CacheMount`); File Cloud Gateway and WebDAV Cloud/Server available in inspected wizard; free-license availability unverified. Password-only WebDAV form observed, closed without credentials/mount/cache creation; route not adopted |
 
 From the repository root, `just usenet-qnap-recon` reads NAS versions, resource
@@ -214,7 +219,7 @@ private address, and login-secret setup. Do not use a sample credential.
 The repository-root equivalent, `just usenet-configure-qnap`, is currently
 used against this NAS. Runtime security and authenticated login are verified;
 the acceptance matrix records completed transfer/recovery checks and the
-remaining external reachability test.
+dated direct external TCP/1337 acceptance.
 
 Create the login privately with `just dashboard-credentials`; the helper prompts
 without echo, saves an Argon2id hash in ignored `secrets/dashboard-auth.json`
@@ -226,8 +231,11 @@ an RFC1918 IPv4 address is accepted. The default unprivileged port is `1337`.
 For this deployment the user has already created the private credential file;
 inventory selects `192.168.1.66:1337` for direct LAN HTTP. No new credential
 creation step is pending. Authenticated login and anonymous dashboard/entity/
-history/action-binding denial passed. External reachability remains unverified;
-private LAN binding alone does not prove Internet isolation.
+history/action-binding denial passed. The September 14 external audit recorded
+three public TCP/1337 timeouts with a successful same-WAN NAS TCP control, no
+dashboard UPnP mapping and no global NAS IPv6. This is dated direct-port evidence;
+alternate static forwarding or proxy paths were not audited. Private LAN binding
+alone does not prove Internet isolation.
 
 Use CLI ownership for this Compose project. Container Station may inspect it,
 but do not import/recreate the same project in the GUI as well. If GUI ownership

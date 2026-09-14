@@ -77,7 +77,15 @@ Use [operations](docs/operations.md) for additional commands and
 - Cloud SAB's **NZBGeek Cart** feed is enabled with 15-minute polling. Preserve
   this user-authorized cart-only workflow and its Default category; see
   [phone cart downloads](docs/nzbgeek-cart.md). One pre-existing item was held
-  during setup; no acquisition was initiated. Existing settings/smoke helpers
+  during setup; no acquisition was initiated then. On September 14 the user
+  selected the two current cart entries: media-004 was individually released and
+  completed; media-006 was queued by normal polling and paused at 0% to preserve
+  the scratch reserve. Keep media-006 paused until a deliberate capacity/release
+  decision. media-004's deliberate native import, independent full SHA-256, Plex
+  discovery and exact new-job scratch reclamation passed. It is remote-only and
+  unmonitored in Radarr. Preserve its SAB history; do not reacquire it or count
+  this manual path as automatic Arr-owned cleanup. Follow the current plan and the
+  [acquisition receipt](recovery/drills/cart-acquisition-20260914.json). Existing settings/smoke helpers
   intentionally refuse enabled RSS feeds: do not disable the feed to pass them.
 
 - The Downloads status panel is deployed for native and legacy copies.
@@ -118,6 +126,19 @@ Use [operations](docs/operations.md) for additional commands and
   canonical integrity or deletion readiness. The five adopted Radarr movies
   still report `importPending` against absent old completed paths. Use normal
   Arr queue views; unknown shared-client records do not prove app ownership.
+- The September 14 [disposition investigation](recovery/drills/queue-disposition-20260914.json)
+  matched those five old jobs to exact legacy publication/cleanup receipts and
+  current canonical metadata. Deliberately retain their visible tracking and
+  both scratch groups. Archived media has no established canonical manifest
+  match; fixture metadata alone does not prove current integrity. Native Radarr
+  ignore persists and no supported narrow undo was established; do not silently
+  use it to make the queue look healthy. Investigation is complete; any later
+  tracking correction or destructive cleanup remains a separate decision.
+- The September 14 [external probe](recovery/drills/nas-exposure-20260914.json)
+  passed dated direct TCP/1337 acceptance with current-WAN correlation, a
+  successful same-WAN NAS TCP control, no dashboard UPnP mapping and no global
+  NAS IPv6. This does not certify alternate static forwarding or proxy paths
+  absent. Repeat after relevant networking changes.
 - Apple TV/Roku playback, seeking and cold-start privacy are explicitly deferred
   by the user. Resume those checks when device interaction is available.
 - Only if a merge is requested, follow the [merge gates](../plan.md#closure-and-merge-criteria): review the full
@@ -130,5 +151,6 @@ Use [operations](docs/operations.md) for additional commands and
 - The user directed **no PRs** on September 13. PR #117 was closed without merging.
   Do not reopen it or create a replacement; preserve the branch and local work.
   The [cold session start](../plan.md#cold-session-start) is the next-session entry
-  point. The handoff is committed locally; unrelated lighting edits and `msg`
-  remain uncommitted. No push or merge was requested for session closure.
+  point. The September 13 handoff and September 14 audit documents and receipts
+  are committed locally. Unrelated lighting edits and `msg` remain uncommitted.
+  No push or merge was requested for session closure.

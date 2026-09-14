@@ -1,0 +1,101 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-14T01:13:57.418895+00:00",
+  "scope": "Plex Movies (Remote) library ID4 discovery of user-selected media-004 after deliberate native Radarr import of a Default-category cart completion.",
+  "result": "passed_after_scoped_native_scan",
+  "selected_title": {
+    "title": "media-004",
+    "year": 1990
+  },
+  "native_import": {
+    "command_id": 5801,
+    "completed_at": "2026-09-14T01:12:24Z",
+    "expected_bytes": 15090939776,
+    "evidence_source": "Parallel native import agent and root readback; canonical byte integrity is owned by separate import receipt"
+  },
+  "baseline": {
+    "checked_at": "2026-09-14T01:07:15.750369+00:00",
+    "matching_items": 0
+  },
+  "after_import_before_scan": {
+    "checked_at": "2026-09-14T01:13:04.674885+00:00",
+    "matching_items": 0
+  },
+  "scan": {
+    "requested_at": "2026-09-14T01:13:19.206888+00:00",
+    "library_id": "4",
+    "path": "/share/CACHEDEV2_DATA/FromDrobo/Remote/files/library/Movies/media-004",
+    "http_status": 200,
+    "operation": "Plex native scan limited to selected movie directory"
+  },
+  "discovered": {
+    "title": "media-004",
+    "year": "1990",
+    "rating_key": "5638",
+    "library_section_id": "4",
+    "added_at": "1789348403",
+    "updated_at": "1789348409",
+    "parts": [
+      {
+        "id": "5676",
+        "file": "/share/CACHEDEV2_DATA/FromDrobo/Remote/files/library/Movies/media-004/media-004.mkv",
+        "size": "15090939776",
+        "exists": null,
+        "accessible": null
+      }
+    ]
+  },
+  "plex_added_at_utc": "2026-09-14T01:13:23+00:00",
+  "plex_updated_at_utc": "2026-09-14T01:13:29+00:00",
+  "indexed_path_and_size_match_import": true,
+  "limits": [
+    "A single authorized native library scan was explicitly requested for this movie directory. This does not establish automatic or hourly-fallback discovery.",
+    "Plex title, year, library ID, full file path and indexed size were verified. The independent canonical SHA256 check belongs to the import agent; metadata alone does not establish byte integrity.",
+    "No playback, media range read, seeking, codec validation, managed-profile grant test or client startup test was performed.",
+    "Only ID4 title-filtered listings and the resulting ID4 movie metadata were inspected. No private library ID1 endpoints or private content were accessed.",
+    "No new NAS media copy was requested. Plex points at the existing read-only remote mount."
+  ],
+  "operations": {
+    "title_filtered_id4_metadata_reads": 3,
+    "scoped_native_scans": 1,
+    "library_setting_changes": 0,
+    "media_copy_or_delete": false,
+    "server_token_output": false
+  },
+  "scan_api_source": {
+    "url": "https://github.com/pushingkarmaorg/python-plexapi/blob/master/plexapi/library.py",
+    "method": "LibrarySection.update(path): GET /library/sections/{key}/refresh?path=<encoded full directory>"
+  },
+  "local_evidence": [
+    {
+      "path": "usenet-infra/build/cart-plex-discovery-baseline-20260914.json",
+      "sha256": "414a6011f720899c42b373404d4fe6412a8387b1ad5af1b236e3b27a470bd848",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-plex-discovery-after-import-20260914.json",
+      "sha256": "b24ac3c637eb9a186513d1863dbfb3805224428c6050557104e9ae678b343c81",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-plex-discovery-refresh-20260914.json",
+      "sha256": "51a03129eec829e32321e0eac8213f87b35c501832f993374886a82275b97b1c",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-plex-discovery-final-20260914.json",
+      "sha256": "f81d706cf2e17902bceb0f6cca7068607d9a774b4ba6a4576cd7a55a023b5345",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-plex-discovery-read.sh",
+      "sha256": "02c88c15215d222ae626df8d3c5f8619a4009b761230ac968471832db712729f",
+      "ignored": true
+    },
+    {
+      "path": "usenet-infra/build/cart-plex-discovery-refresh.sh",
+      "sha256": "92eb8849c037a25e4431c26d69b8e62990b3487c529b4096a47b5879ff5b3748",
+      "ignored": true
+    }
+  ]
+}
