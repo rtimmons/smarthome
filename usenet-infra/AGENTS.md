@@ -5,6 +5,23 @@ Read the [current plan and closure criteria](../plan.md), then [native media](do
 Use [operations](docs/operations.md) for additional commands and
 [validation](docs/validation.md) for accepted behavior and remaining evidence.
 
+## Media privacy in commits
+
+Never commit real media titles, release names, filenames, title-derived field
+names, or identifying external catalog links/IDs from live operations. Use neutral
+aliases such as `media-001` and descriptive keys such as
+`failed_download_allocated_bytes` in receipts, documentation, tests derived from
+live data, and commit messages. Keep exact operational filenames and alias
+mappings in ignored private evidence and runtime journals. Review the entire staged
+diff for these identifiers before committing; a generic secret scan does not
+establish media privacy. Synthetic tests may use clearly invented fixture names.
+
+Redacted receipt paths are aliases, not executable paths. Resolve actual paths
+through exact native job/file IDs privately before operating on files. Historical
+operational hashes remain dated evidence about the original inputs, not hashes
+of subsequently redacted documents. Preserve private bound recovery snapshots
+unchanged. Do not commit the private replacement map used for a privacy rewrite.
+
 ## Access and validation
 
 - Use root `just usenet-*` recipes or `just --justfile usenet-infra/Justfile

@@ -1,5 +1,12 @@
 # Usenet status and closure plan
 
+September 14 privacy correction: identifying media names, release filenames,
+title-derived keys and public catalog identities were replaced with neutral
+aliases throughout the affected Usenet history. Private runtime media and bound
+recovery snapshots were not changed. Public receipt paths now denote aliases;
+resolve actual paths privately before operating on files. The Usenet agent guide
+requires the same redaction for future commits.
+
 Implementation was deployed and closed September 13, 2026; the native
 movie-copy workflow is accepted. The remaining work is operational acceptance;
 source integration into `master` is conditional on a later merge request.
