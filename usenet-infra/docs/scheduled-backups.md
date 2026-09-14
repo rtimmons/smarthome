@@ -79,3 +79,39 @@ See the [capture and archive verification receipt](../recovery/drills/native-rec
 This closes capture of the new receipt; it does not prove restoration onto a
 replacement destination or whole-NAS recovery. Original bound snapshots remain
 immutable, and ordinary freshness checks still apply.
+
+
+## Cart importer checkpoint
+
+The importer was activated September 14 at 01:38:39 UTC. Its marker, journals and
+status are under the already included `state/catalog` tree, and worker/adapters
+are under `libexec`. Coverage by an allowlist is not proof of capture. The
+02:58 UTC handoff check found the most recent scheduled cloud success at September
+13, 22:05:43 UTC, before activation. Verify a newer archive before closing recovery
+coverage for the importer extension; repeat after new accepted jobs add journals.
+
+First inspect current status and worker/SAB activity using the existing wrappers.
+A new scheduled archive may already exist. If one is needed, invoke the installed
+scheduler with its service environment; do not redeploy backup support merely to
+capture state:
+
+```sh
+just --justfile usenet-infra/Justfile --working-directory usenet-infra --command ./scripts/cloud-command sudo -n -u usenet /bin/sh -c 'set -a; . /srv/usenet/config/catalog.env; export BACKUP_AGE=/srv/usenet/libexec/age BACKUP_OUTPUT=/srv/usenet/backups/scheduled; exec python3 /srv/usenet/libexec/scheduled-backup.py cloud --force'
+```
+
+This uses the existing scheduler and catalog locks, enforces idle/fully paused
+SAB with no post-processing, and preserves pauses. A busy operation or failed
+quiet-state check is a reason to defer, never to cancel media work or disable the
+cart feed. Inspect the status after invocation: the scheduler may skip a busy
+lock without creating an archive.
+
+After successful encrypted upload/readback, retrieve the exact archive privately
+with the dedicated cloud wrapper and use `scripts/config-backup-local verify`
+with the existing administrator identity. To establish exact member coverage,
+restore into a new empty ignored directory using the same helper's `restore`
+action, inspect its manifest and compare the activation marker and installed
+worker/adapters to the captured versions. Keep decrypted state, paths containing
+media identities and raw manifests private. Record only neutral scope, timestamps,
+counts and integrity results in the public receipt. Ciphertext readback alone does
+not prove decryption or inclusion of the new files. Do not restore this inspection
+copy over running state, or replace original bound snapshots.

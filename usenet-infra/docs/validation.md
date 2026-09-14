@@ -4,7 +4,8 @@ Updated September 14, 2026 (UTC). This ledger records accepted behavior and its
 limits. The [current plan](../../plan.md) owns remaining work and the
 [closure and merge criteria](../../plan.md#closure-and-merge-criteria). Historical
 implementation narratives remain in Git and dated receipts; they are not current
-operating instructions. Recovery receipts and bound snapshots remain unchanged.
+operating instructions. Private bound snapshots remain unchanged; public receipts
+were redacted during the media-privacy rewrite and use neutral aliases.
 
 The [September 14 media audit](../recovery/drills/media-acceptance-20260914.json)
 refreshed discovery/cloud/NAS health and normal Arr/SAB records at local head
@@ -157,3 +158,26 @@ eligible cart movie/TV completion still needs native import, independent checksu
 automatic cloud cleanup and Plex indexing evidence. Actual TV NAS copying and
 user-deferred playback/privacy checks remain open. Current failed/oversized jobs
 are preserved; automatic completion cleanup does not resolve their space demand.
+
+
+## Cold handoff refresh — September 14, 02:57–02:58 UTC
+
+Read-only cloud, discovery and NAS health passed with the same historical SAB
+warnings. The importer was idle with zero completed/held/error journals. SAB had
+one individually paused job, ten history records, global pause false and no
+post-processing. Native status contained six movies (one local, five remote-only),
+no TV, and NAS health reported no active/failed transfers. No acquisition, import,
+cleanup, backup capture or service deployment was performed for this refresh.
+
+Local and remote `usenet` were verified at privacy checkpoint `204df8c`; application
+code was unchanged by the rewrite. This handoff is a later documentation update.
+The last scheduled cloud success was September 13 at 22:05:43 UTC, before importer
+activation. Its status was healthy, but a newer independently decrypted archive
+must establish capture of the new marker/journals/helpers. Follow the
+[cart importer checkpoint](scheduled-backups.md#cart-importer-checkpoint), then the
+plan's separate automatic cart, Arr-owned and TV-copy acceptance rows. Device
+playback/startup privacy remains user-deferred.
+
+For this documentation-only update, validate links, receipt JSON, whitespace and
+current-source/index scanning; historical implementation tests stay dated. Do not
+claim a full suite rerun or use historical source-scan counts as current results.

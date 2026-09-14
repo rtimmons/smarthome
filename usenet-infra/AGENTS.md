@@ -178,6 +178,19 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 - The user directed **no PRs** on September 13. PR #117 was closed without merging.
   Do not reopen it or create a replacement; preserve the branch and local work.
   The [cold session start](../plan.md#cold-session-start) is the next-session entry
-  point. The September 13 handoff and September 14 audit documents and receipts
-  are committed locally. Unrelated lighting edits and `msg` remain uncommitted.
-  No push or merge was requested for session closure.
+  point. The privacy rewrite was published and verified on local/remote `usenet`
+  at `204df8c`; use rewritten history and never merge the earlier branch back in.
+  The current plan and three aligned handoff documents follow that checkpoint.
+  The user authorized the repository-local Codex SSH key to sign this handoff;
+  command-scoped signing leaves the user's defaults unchanged. Check publication
+  separately and preserve the ignored private key.
+  Unrelated lighting edits, `msg` and packages stay
+  preserved. No merge or branch/checkout deletion is authorized.
+- At the September 14 02:57–02:58 UTC handoff check, cloud/discovery/NAS health
+  passed with historical SAB warnings; the importer was idle with no accepted
+  automatic jobs, SAB had one paused item and ten history records, and no TV
+  content was available. The latest cloud archive predates importer activation.
+  Finish the [post-activation archive checkpoint](docs/scheduled-backups.md#cart-importer-checkpoint)
+  before declaring recovery coverage for the extension. Then follow the plan's
+  ordered media acceptance rows using actual new user selections; do not infer
+  cart-worker acceptance from its idle activation or from manual import evidence.

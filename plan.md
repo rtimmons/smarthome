@@ -1,141 +1,115 @@
 # Usenet status and closure plan
 
-September 14 privacy correction: identifying media names, release filenames,
-title-derived keys and public catalog identities were replaced with neutral
-aliases throughout the affected Usenet history. Private runtime media and bound
-recovery snapshots were not changed. Public receipt paths now denote aliases;
-resolve actual paths privately before operating on files. The Usenet agent guide
-requires the same redaction for future commits.
+## Current handoff — September 14, 2026 (UTC)
 
-Implementation was deployed and closed September 13, 2026; the native
-movie-copy workflow is accepted. The remaining work is operational acceptance;
-source integration into `master` is conditional on a later merge request.
-User direction: **no PRs**. [PR #117](https://github.com/rtimmons/smarthome/pull/117)
-was closed without merging on September 13. Do not reopen it or create a replacement.
-The branch and local work remain preserved; no default-branch merge was requested.
+The requested automatic Storage Box import and verified cloud cleanup is deployed.
+The next agent should finish the recovery checkpoint and remaining real-media
+acceptance below. No implementation change or deployment is currently queued.
+A missing user selection or deferred device test is a prerequisite to record,
+not permission to manufacture content or mark that test passed.
 
-September 14 capacity follow-up: the user requested automatic movement to the
-Storage Box and cloud-disk cleanup. The new [cart completion worker](usenet-infra/docs/cart-import.md)
-uses native Radarr/Sonarr copy imports, independent full canonical SHA-256 and
-journaled exact-payload cleanup. Its first activation excludes every existing
-queued/history job and known feed entry, preserving media-006, failed downloads,
-older scratch and the accepted media-004 job. Automatic completion prevents future
-completed payload buildup; it does not make the oversized paused job fit. About
-46.4 GB is a retained failed download and 17.3 GB is older completed scratch.
-No storage purchase, queue deletion or resume was requested or performed.
-The worker was activated at 01:38:39 UTC and its first scheduled idle run passed.
-All 11 existing jobs and two feed entries were excluded; all 281 scratch files
-and the complete sanitized SAB snapshot were unchanged. Installed source hashes
-match the reviewed checkout. The 538-case infrastructure suite passed (nine
-optional skips); full history scanning still reports only the two documented
-keys, while current-source scanning passes.
-[Activation and preservation receipt](usenet-infra/recovery/drills/cart-import-activation-20260914.json).
-Fresh live automatic cart completion, actual TV import/NAS copy, and user-deferred
-playback/privacy checks remain distinct acceptance work. No PR or merge is requested.
+**Source checkpoint:** `usenet` and GitHub `origin/usenet` were verified at
+`204df8c` after the privacy rewrite. The deployed cart implementation is
+`de1f377`; earlier acceptance receipts are in `f50a916`. This handoff update follows
+that published checkpoint. At the user's direction, the handoff commit uses the
+repository-local Codex SSH key with command-scoped signing settings; the user's
+default signing configuration is unchanged. Inspect local `HEAD` and publication
+state at the next start. This handoff is an ordinary follow-up commit, not a reason
+to repeat the earlier privacy force-push.
+The rewrite replaced identifying media names, release filenames, title-derived
+keys and external catalog identities in 13 affected commits. Historical scans
+passed and only the Usenet branch was updated. Do not merge or restore the old
+Usenet history into the rewritten branch. Other branches, stashes, lighting edits,
+`msg` and untracked `new-hass-configs/packages/` were preserved. Old private backups,
+reflogs or cached GitHub pages can retain prior versions; they were not purged.
 
-September 14 continuation (UTC): parallel audits refreshed live acceptance from
-local `usenet` head `06bfff4`. Initial discovery, cloud and NAS health passed;
-SAB was idle, the native library had five movies and no TV, and no fresh movie,
-TV or cart completion was present. The accepted native movie remained local
-and NAS pulls were idle with no failures. See the dated pre-acquisition
-[media acceptance receipt](usenet-infra/recovery/drills/media-acceptance-20260914.json).
-The user then selected the two current cart items. media-004, the held setup
-item, was individually released at 01:04:40 UTC and completed download and
-postprocessing at 01:06:10 UTC. Its native manual import completed at 01:12:24;
-independent full SHA-256 matched all 15,090,939,776 bytes. Plex indexed the exact
-file in Movies (Remote), ID 4, after one selected-directory scan. Only that new
-verified scratch file and its empty parent were reclaimed; SAB history and the
-four older scratch files were preserved. This passes deliberate cart completion,
-import, verification and reclamation, not automatic Arr-owned client cleanup.
-[Acquisition](usenet-infra/recovery/drills/cart-acquisition-20260914.json),
-[native import and cleanup](usenet-infra/recovery/drills/cart-native-import-20260914.json),
-[Plex discovery](usenet-infra/recovery/drills/cart-plex-discovery-20260914.json).
-Normal feed polling queued media-006, about 61 GB; it was paused
-individually at 0% because it exceeds scratch admission while preserving the
-reserve. Keep it paused pending the user's smaller-release/defer choice. Global
-SAB pause and feed settings are unchanged. Do not force-read or release all feeds.
-Actual TV selection/copy and device playback/startup checks remain outstanding.
+**User constraints:** no PRs and no default-branch merge requested. PR #117 is
+closed and must stay closed. Commits must contain only neutral media aliases;
+exact titles, filenames, catalog identities and alias mappings stay in private
+runtime state or ignored evidence. Public receipt paths are aliases, not commands.
+Preserve original bound recovery snapshots and the private Plex library. Do not
+purchase storage, remove protected downloads or resume the paused selection to
+make acceptance checks pass.
 
-The [external dashboard probe](usenet-infra/recovery/drills/nas-exposure-20260914.json)
-passed for the current public TCP/1337 path: three external timeouts, a successful
-same-WAN NAS TCP control, no dashboard UPnP mapping, and no global NAS IPv6.
-Alternate static forwards or proxies were not audited. The
-[queue disposition investigation](usenet-infra/recovery/drills/queue-disposition-20260914.json)
-matched all five stale Radarr entries to cleaned legacy publisher receipts and
-present canonical files. Retain their visible tracking and both archived scratch
-groups: the media scratch has no established canonical match, and a supported
-undo for Radarr's persistent ignore action was not found. Investigation and the
-retention decision are complete; destructive cleanup is not required for closure.
+**Latest read-only runtime check, 02:57–02:58 UTC:** cloud, discovery and NAS health
+passed, with the same nine historical SAB warnings. The cart worker was `idle`
+with zero completed, held or failed journals. SAB had one individually paused job,
+ten history records, no post-processing and global pause false. The native library
+had six movies (one NAS-local, five remote-only), no TV, and no active/failed NAS
+pulls. These are observations to refresh, not guarantees about a later session.
+Cloud backup status was healthy; its last success was September 13 at 22:05:43 UTC,
+which predates cart-worker activation and does not establish its archive coverage.
 
-The preceding acquisition continuation's documentation and receipts are committed locally on `usenet`
-at the user's request. Existing lighting changes and `msg` remain uncommitted;
-branches and stashes remain preserved. No PR, merge,
-push or deployment accompanied that documentation commit (`f50a916`). The September 13 checks below
-remain dated implementation evidence, not tests rerun against a new branch head.
+**Deployed automation:** NZBGeek Cart polls every 15 minutes; the cart worker checks
+new completions every 30 seconds. It performs guarded native Radarr/Sonarr copy
+imports, independent full canonical SHA-256, then exact verified cloud-payload
+cleanup. It never enrolls the 11 pre-existing queued/history jobs or two known
+feed entries captured at activation (September 14, 01:38:39 UTC). Preserve that
+baseline, journal phases and existing pauses. Arr-owned completed imports remain
+separate; the retired publisher stays disabled. Plex uses its existing discovery
+and hourly fallback. NAS copies remain explicitly selected.
+[Worker runbook](usenet-infra/docs/cart-import.md),
+[activation/preservation receipt](usenet-infra/recovery/drills/cart-import-activation-20260914.json).
 
-September 13 continuation (16:26 UTC): the nine SAB warnings are reconciled as
-historical notices (six hostname blocks, one unpack notice, two disk-space
-warnings). The four retained scratch files match two archived completed SAB jobs:
-the old diagnostic fixture and an earlier media download. Preserve them; this
-matching does not verify a canonical copy or establish deletion readiness.
-The five old Radarr entries have canonical files but remain `importPending`;
-their original SAB completed paths are absent. No fresh completion occurred.
-[Audit and validation receipt](usenet-infra/recovery/drills/queue-reconciliation-20260913.json).
-Root tests and seven add-on container checks passed in the existing checkout;
-Usenet functional/syntax checks and current-source/index scanning passed. The
-full Usenet recipe still fails only on the two documented historical keys.
-At the audit, remote `master` was `58318cf`, an ancestor of the implementation and
-documentation checkpoint `1113982`. This session's handoff commit follows that
-checkpoint on `usenet`; it is local only, with no push or merge performed.
-Whole-diff review and final approval are required only if a merge is later requested.
+**Capacity:** last detailed inspection found about 86.4 GB free, 54.2 GB above the
+30 GiB reserve. Approximately 46.4 GB is a retained failed download and 17.3 GB is
+older completed scratch. The excluded paused selection advertises about 61.4 GB
+before unpacking. Automatic cleanup prevents future completed-payload buildup;
+it does not resolve that existing oversized job or authorize historical deletion.
+
+**Validation:** the deployed extension passed 538 infrastructure cases (529 passed,
+nine optional skips), compilation, shell/YAML and deployment syntax checks.
+Current-source/index secret scanning passed. Full history scanning fails only on
+the two documented historical RSA keys; do not report the full recipe as green.
+Root tests and seven add-on container builds passed at the September 13 checkpoint.
+The privacy rewrite and this handoff change documents/receipts only; application
+code and deployed file hashes are unchanged. See the [validation ledger](usenet-infra/docs/validation.md)
+for dated evidence and limits. New implementation edits require fresh appropriate tests.
 
 ## Cold session start
 
-1. Read this plan, [the Usenet agent guide](usenet-infra/AGENTS.md), and the
+1. Read this plan, [Usenet agent guide](usenet-infra/AGENTS.md),
+   [cart-worker runbook](usenet-infra/docs/cart-import.md),
+   [native media](usenet-infra/docs/native-media.md), and
    [validation ledger](usenet-infra/docs/validation.md). Inspect `git status`,
-   the current branch and recent commits before editing. The expected branch is
-   `usenet`; the September 13 handoff and September 14 audit documents/receipts
-   are committed locally; the capacity follow-up above supersedes their manual-only
-   cart handling. Unrelated lighting edits and `msg` remain uncommitted.
-   Do not stage unrelated work with Usenet work.
-2. For resumed operations, refresh read-only state with
-   `just usenet-discovery-health`, `just usenet-cloud-health`,
-   `just usenet-qnap-health`, and `just native-status`. The last audit found SAB
-   idle with only media-006 individually paused at 0%, zero active/failed NAS
-   pulls, six native movies and no native TV title. media-004 is remote-only and
-   unmonitored in Radarr; do not reacquire or replay its accepted cart import.
-   These are dated observations, not assurances about a later session.
-3. Check whether a new user-selected movie, TV or cart job is available. If so,
-   follow the acceptance rows below through import, cleanup and Plex discovery;
-   a TV NAS copy requires an actually available selected title. Do not submit
-   diagnostic media, replay the accepted movie copy, or release held cart items
-   to manufacture evidence. Eligible future Default-category cart jobs use the
-   automatic worker; inspect its journal before any manual intervention.
-4. Preserve the September 14 retention disposition for the five stale Radarr
-   entries and two archived scratch groups. Recheck evidence before any later
-   correction; identifying ownership did not establish deletion readiness.
-   Repeat the scoped external dashboard probe after relevant network changes;
-   do not expand its result into a complete static-NAT/proxy audit.
-   Client playback/startup checks remain user-deferred until device interaction
-   is available. No PR or merge task is scheduled by this handoff.
+   branch, local/remote head and uncommitted work. Stay on `usenet`; preserve
+   unrelated lighting work, `msg`, packages, other branches and stashes.
+2. Use the repository's existing private `.env`, inventory, dedicated identities
+   and host pins. Missing private inputs are recovered through
+   [secrets recovery](usenet-infra/docs/secrets-recovery.md) and
+   [checkout recovery](usenet-infra/docs/checkout-recovery.md), not new accounts,
+   keys or purchases. Do not depend on an earlier agent, browser tab, `/tmp` helper,
+   private redaction map, or ignored progress log to discover current state.
+3. Refresh read-only `just usenet-cloud-health`, `just usenet-discovery-health`,
+   `just usenet-qnap-health` and `just usenet-cart-import-status` from the root.
+   Inspect `just native-status` privately: its output includes real media names.
+   For structured native status, use the existing infra wrapper's
+   `./scripts/qnap-command native-status --json`. Save media-bearing output only
+   to an ignored private directory; record aggregate status/opaque references.
+4. Inspect `/srv/usenet/state/catalog/cart-import/{armed.json,status.json,jobs/}`
+   privately through `scripts/cloud-command`. Confirm the timer, canonical mount
+   and discovery services; distinguish an active command from a held/retryable
+   journal. Follow the worker's guarded retry procedure; never replay native
+   import or reset activation. A file already deleted by verified cleanup must
+   be reconciled from its journal and canonical evidence, not reacquired.
+5. Verify backup freshness and the post-activation recovery row below. Then
+   inspect for genuinely new user-selected jobs. Continue authorized independent
+   checks while awaiting a needed selection. If none exists, ask once for a new
+   desired movie/numbered TV episode or record that prerequisite; preserve the
+   excluded paused job and existing cart history. Do not release all feed entries.
+6. Record each completed acceptance as a dated sanitized receipt, update this
+   plan and the relevant guide/ledger, and review the entire staged diff for media
+   privacy before a scoped commit. Do not publish private logs or replacement maps.
+   Complete all available work and leave only explicit user-dependent/deferred
+   items, with no ad-hoc transfer, deployment or agent process left running.
 
-At the preceding acquisition checkpoint, no active acquisition, native import,
-NAS copy or deployment remained. media-006
-is deliberately paused pending a capacity/release decision; do not resume it
-or mark its acquisition passed. Post-cleanup canonical SHA-256 and preservation
-checks passed at 01:16:15 UTC; all agent read helpers and sub-agents have stopped.
-Affected-service health, receipt JSON, documentation links, whitespace and
-current-source/index secret scanning passed. No implementation source changed,
-so the full test suites were not rerun; their September 13 results and historical
-secret-scan limits remain recorded below.
-[Continuation checks](usenet-infra/recovery/drills/post-cart-health-20260914.json).
-Scheduled backups and existing acquisition/feed schedules continue on their
-hosts. No recurring agent automation was created. The durable
-[reconciliation receipt](usenet-infra/recovery/drills/queue-reconciliation-20260913.json)
-records sanitized findings and checks; its earlier `pr_draft` observation predates
-the user's closure instruction. Ignored `build/` logs and one-off read helpers are
-supplemental evidence, not prerequisites for resuming. Use the committed recipes
-and recovery runbooks if private inputs must be restored.
+Host-owned acquisition, import and backup schedules continue between sessions.
+No recurring Codex automation is configured. This handoff does not authorize a
+merge, PR, branch deletion or checkout removal. GitHub publication previously
+used the existing `gh` login over a command-scoped HTTPS push route after the SSH
+agent failed; saved Git settings were unchanged. If publication is requested,
+verify the actual push URL and remote head first; a new handoff commit is an
+ordinary fast-forward, not a reason to repeat the privacy force-push.
 
 ## Current system
 
@@ -156,6 +130,7 @@ inspection is not a reason to deploy or restart services.
 
 | Capability | Evidence |
 | --- | --- |
+| Automatic cart worker | Deployed at 01:38:39 UTC September 14; first scheduled idle run and unchanged historical jobs/scratch passed. [Activation receipt](usenet-infra/recovery/drills/cart-import-activation-20260914.json). Fresh automatic movie/TV completion is still unproved. |
 | Cloud acquisition and native library infrastructure | Provider/indexer checks, mount protection and five existing-file adoptions passed. Arr owns completed imports; the legacy publisher is disabled. [Native workflow](usenet-infra/docs/native-media.md). |
 | Deliberate phone-cart movie import | User-selected media-004 completed download/unpack, native manual copy import, independent SHA-256 verification, scoped-scan Plex discovery and exact new-job scratch reclamation. SAB history and older scratch remain intact. [Import receipt](usenet-infra/recovery/drills/cart-native-import-20260914.json). Automatic Arr-owned cleanup remains unproved. |
 | Selective NAS movie copy | media-002's 14,878,405,826 bytes passed server/local SHA-256, source-change checks and exclusive publication. Repeat preserved the directory identity and bytes without another download. Plex indexed it automatically. [Live receipt](usenet-infra/recovery/drills/native-copy-live-20260913.json). |
@@ -194,25 +169,35 @@ qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media S
 
 ## Outstanding acceptance
 
-These are explicit follow-ups, not a reason to replay setup or broaden the branch.
+Complete these in order when their prerequisites are available. The first row can
+progress independently of a new media selection. Keep each acquisition route's
+result separate: cart-worker cleanup does not prove Arr-owned client cleanup.
 
-| Item | Owner / completion evidence | Effect on closure |
+| Item | Next action and completion evidence | Prerequisite / closure |
 | --- | --- | --- |
-| Automatic Arr-owned movie and TV completion | Agent observes the next user-selected Arr-owned jobs through import, automatic client cleanup, scratch reclamation, canonical persistence and Plex discovery. media-004's manual Default-category cart import and five old importPending entries do not establish that automatic path. | Required for full automatic media-workflow acceptance; tracked follow-up may remain after source merge. |
-| Real TV selective copy | Agent copies an actually available user-selected TV title; verify staging isolation, hashes, publication and Plex indexing. | Required for TV-copy acceptance; not proved by layout or movie copying. |
-| Phone-cart completion/import | media-004 passed deliberate import and verification. The new automatic cart worker needs the next newly selected eligible movie/TV completion through native import, checksum, cleanup and Plex indexing. media-006 remains paused and excluded from activation. | Deliberate workflow accepted; fresh automatic cart acceptance and the oversized second selection remain pending. Automatic Arr ownership is separate. |
-| Existing queue/scratch disposition | September 14 investigation matched five stale entries to legacy cleanup receipts and current canonical metadata. Deliberately retain visible tracking and both scratch groups; archived media lacks an established canonical match, and fixture metadata alone is insufficient for deletion. [Receipt](usenet-infra/recovery/drills/queue-disposition-20260914.json). | Investigation and retention decision complete. Any later persistent ignore or destructive cleanup requires its own deliberate disposition; no blanket healthy-queue claim. |
-| Apple TV/Roku playback and startup privacy | Ryan supplies device interaction: restricted-profile cold start, NAS/Remote playback, seeking and relevant audio/subtitles. Owner PIN remains private. | Explicitly deferred by user; not a source-merge blocker and not marked passed. |
-| External NAS exposure check | September 14 direct TCP/1337 probe passed from the cloud with current-WAN correlation and a successful NAS TCP control; no dashboard UPnP mapping or global NAS IPv6. [Receipt](usenet-infra/recovery/drills/nas-exposure-20260914.json). | Dated direct-port acceptance complete. Alternate static forwarding/proxy paths remain unaudited; repeat after network changes. |
+| New importer recovery checkpoint | Verify a cloud archive created after activation contains `state/catalog/cart-import/armed.json`, current journals/status and the installed worker/adapters. Decrypt/validate in an isolated ignored directory and compare the immutable activation marker and helper hashes. Repeat after new accepted completions add journals. [Procedure](usenet-infra/docs/scheduled-backups.md#cart-importer-checkpoint). | Ready for the next agent. Latest observed scheduled success predates activation; allow shared-lock/quiet-state guards to defer rather than changing queue state. Required to close recovery coverage for this extension. |
+| Fresh automatic cart movie and TV | Observe newly selected eligible Default-category completions through native copy import, exact ownership evidence, independent SHA-256, automatic source cleanup, retained SAB history and Plex indexing. Inspect durable worker phases before intervention; distinguish automatic indexing from a scoped manual scan. | Needs new user-selected content after activation. The accepted manual movie and activation's idle run do not pass this row. One new TV selection may also supply the selective-copy row below. |
+| Automatic Arr-owned movie and TV | Observe new user-selected Arr-owned jobs through native import, automatic completed-client removal, scratch reclamation, stable canonical files and Plex discovery. | Separate evidence from the cart worker. No diagnostic acquisitions or repeat of an already accepted item. |
+| Real TV selective NAS copy | Copy one actually available user-selected canonical TV title; verify same-bind staging, hashes, exclusive publication, safe repeat and Plex TV-library indexing. | Needs available selected TV content; layout and successful movie copying are insufficient. |
+| Oversized paused selection | Privately identify the excluded paused job and review download-plus-unpack capacity with the 30 GiB reserve. Obtain a deliberate smaller-release, capacity or continued-defer decision before changing it. | Existing selection stays paused and excluded from importer activation. Completion cleanup does not reclaim the retained failed download or make this release fit. Do not purchase storage or delete historical scratch without the corresponding decision. |
+| Apple TV/Roku playback and startup privacy | With Ryan's device interaction, verify restricted-profile cold start, NAS/Remote playback, seeking and relevant audio/subtitles. Keep the owner PIN private. | Explicitly user-deferred; not a source-merge blocker. Keep pending until actual device evidence exists. |
+
+The five old Arr tracking entries and two archived scratch groups have a completed
+investigation and deliberate retention decision. Do not reopen cleanup merely to
+remove warnings. [Disposition](usenet-infra/recovery/drills/queue-disposition-20260914.json).
+The external direct TCP/1337 probe passed for its dated WAN/port scope; repeat after
+relevant network changes. Alternate static forwarding/proxy paths were not audited.
+[Exposure receipt](usenet-infra/recovery/drills/nas-exposure-20260914.json).
 
 NAS-loss protection, whole-machine replacement/reboot drills, additional providers,
-portals, LAN HTTPS and further capacity purchases are separate projects. Billing
-uncertainties stay in the cost ledger and do not reopen account setup.
+portals, LAN HTTPS and capacity purchases are separate projects. Billing unknowns
+stay in the cost ledger. Do not expand this handoff into account setup, unrelated
+Home Assistant work, or a default-branch merge.
 
 ## Closure and merge criteria
 
 **Implementation closure** means the deployed scope above has durable receipts,
-the new native receipt is captured in a verified backup, operational follow-ups
+the new native and cart-worker state is captured in verified backups, operational follow-ups
 remain explicit, and no authorized transfer/deployment or shared-agent edit is
 left running. It does not mean client tests or a fresh import were observed.
 
@@ -230,7 +215,8 @@ on the final reviewed branch head. Use no PR workflow.
    credential findings block merge. The only known full-history failures are the
    two documented keys already present in `master`; the reviewer must acknowledge
    that existing exposure explicitly. Do not hide it, waive new findings, rewrite
-   history, or call the full scan green.
+   history to hide credential findings, or call the full scan green. The completed
+   media-privacy rewrite did not remediate these historical keys.
 4. Record fresh affected-service health and preserve rollback/recovery instructions.
    Deferred media/device/security acceptance must remain visible in the plan and
    validation ledger; merge is not a claim that those tests passed.
@@ -246,7 +232,7 @@ worktree registrations. Do not delete a checkout as branch cleanup.
 
 ## Other branches and local work
 
-Remote tracking is refreshed. Three fully merged local refs were removed:
+At the September 13 cleanup checkpoint, three fully merged local refs were removed:
 `codex/docs-sonos-replacement-plan`, `codex/sonos-partial-availability`, and
 `two-line-labels`. Their commits remain in published `master`. Eight registrations
 for already missing worktrees were pruned; no existing worktree was removed.
@@ -259,11 +245,13 @@ for already missing worktrees were pruned; no existing worktree was removed.
 | `nuheat-integration` | Eight unique commits; retain its integration/recovery context. |
 | `wall-to-favicon--tetris-controller` | Four unique commits for a separate feature; retain. |
 
+Those branch counts are dated observations; recheck before any branch operation.
 The four other feature branches include unpublished commits and require their own
 review/publication before deletion. Both existing worktrees contain unrelated
 lighting changes; the main checkout also has `msg`. All five stashes remain.
 These are preserved work, not abandoned Usenet tasks or permission to deploy HA.
 
 For routine status, use `just usenet-discovery-health`, `just usenet-cloud-health`,
-`just usenet-qnap-health`, `just native-status`, and the dashboard. Current detailed
+`just usenet-qnap-health`, `just usenet-cart-import-status`, `just native-status`,
+and the dashboard. Keep media-bearing status output private. Current detailed
 procedures and evidence live in linked runbooks; superseded planning is in Git.
