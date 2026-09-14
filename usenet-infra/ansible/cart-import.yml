@@ -1,0 +1,7 @@
+---
+- name: Install future cart native import and verified cloud cleanup
+  hosts: cloud
+  become: true
+  gather_facts: true
+  roles:
+    - cloud_cart_import

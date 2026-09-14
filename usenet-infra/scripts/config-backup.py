@@ -143,25 +143,48 @@ class NoRedirects(urllib.request.HTTPRedirectHandler):
 
 def require_idle(key: str) -> None:
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirects())
-    counts = []
-    paused = False
-    for mode, section, field, parameters in (
-            ('queue', 'queue', 'noofslots_total', {}),
-            ('history', 'history', 'ppslots', {'archive': 0, 'last_history_update': -1})):
-        data = urllib.parse.urlencode(dict(parameters, mode=mode, output='json', apikey=key, start=0, limit=1)).encode()
+    def read(mode, **parameters):
+        data = urllib.parse.urlencode(dict(parameters, mode=mode, output='json', apikey=key)).encode()
         request = urllib.request.Request('http://127.0.0.1:8080/api', data=data)
         with opener.open(request, timeout=15) as response:
-            result = json.load(response)
-        value = result[section][field]
+            return json.load(response)[mode]
+    def count(value):
         if isinstance(value, bool) or not str(value).isdigit():
             raise BackupError('Application job counts could not be verified.')
-        counts.append(int(value))
-        if section == 'queue':
-            paused = result[section].get('paused') is True
-    # Configuration backups omit download payloads. A fully paused queue is a
-    # valid quiet interval; preserve it rather than requiring users to delete jobs.
-    # Post-processing still mutates history/files independently of the queue pause.
-    if counts[1] or (counts[0] and not paused):
+        return int(value)
+    seen, total, global_pause, active = set(), None, None, False
+    # A single summary cannot prove that individually paused jobs are all quiet.
+    # Enumerate bounded pages and refuse truncated, duplicate or changing views.
+    for start in range(0, MAX_FILES, 1000):
+        queue = read('queue', start=start, limit=1000)
+        # SAB noofslots_total omits individually paused jobs; noofslots is the
+        # unfiltered matching count before pagination and includes those jobs.
+        current_total = count(queue['noofslots'])
+        if current_total > MAX_FILES or type(queue.get('paused')) is not bool:
+            raise BackupError('Application queue state could not be verified.')
+        if total is None:
+            total, global_pause = current_total, queue['paused']
+        if current_total != total or queue['paused'] != global_pause:
+            raise BackupError('Application queue changed during backup admission.')
+        slots = queue.get('slots')
+        if not isinstance(slots, list) or len(slots) > 1000:
+            raise BackupError('Application queue enumeration is incomplete.')
+        for job in slots:
+            identity = job.get('nzo_id')
+            if not isinstance(identity, str) or not identity or identity in seen:
+                raise BackupError('Application queue identity could not be verified.')
+            seen.add(identity)
+            active |= not global_pause and job.get('status') != 'Paused'
+        if len(seen) == total:
+            break
+        if len(slots) < 1000 or len(seen) > total:
+            raise BackupError('Application queue enumeration is incomplete.')
+    else:
+        raise BackupError('Application queue exceeds the admission bound.')
+    processing = count(read('history', start=0, limit=1, archive=0, last_history_update=-1)['ppslots'])
+    # Global or individual pauses are preserved. Post-processing remains active
+    # independently and must be absent. The snapshot repeats admission afterward.
+    if processing or active:
         raise BackupError('Backup requires SAB to be idle or fully paused with no post-processing jobs.')
 
 

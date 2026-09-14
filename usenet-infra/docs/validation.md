@@ -128,3 +128,32 @@ Use the [agent guide](../AGENTS.md) for live access and preservation rules.
 Record new acceptance in a dated, sanitized receipt and update this ledger and
 current plan together. Do not expose tokens, personalized feed URLs, private
 library contents or recovery secrets in evidence.
+
+
+## September 14 automatic cart cleanup activation
+
+The user requested automatic canonical movement and cloud cleanup. The new
+worker, native adapters, private activation/journals, timer, focused deployment
+lock and health reporting were deployed at 01:38:39 UTC. The first scheduled run
+was idle and successful. All eleven current/history jobs and two feed entries
+were excluded. Exact scratch metadata for 281 files and the sanitized full SAB
+snapshot matched before/after; media-006 stayed individually paused, global pause
+stayed false, retained history and older payloads were untouched. Installed helper
+SHA-256 values match the reviewed source. Cloud/discovery health passed, with only
+the nine retained historical SAB warnings. The retired publisher stayed disabled.
+[Activation and preservation evidence](../recovery/drills/cart-import-activation-20260914.json).
+
+The full infrastructure run completed 538 cases: 529 passed, nine opt-in skips.
+Python compilation, shell/YAML/deployment checks and Ansible syntax passed.
+Current-source/index secret scanning passed. Full history scanning remains nonzero
+only for the two documented historical RSA keys; no exceptions were introduced.
+Independent review drove fixes for exact-file provenance, duplicate-history RSS
+provenance, asynchronous TV metadata, durable journals, uncertain submissions,
+transient retries and deployment/backup lock coordination. Tests cover verified
+cleanup and interruption recovery without production media mutations.
+
+No fresh automatic job was manufactured for acceptance. The next newly selected
+eligible cart movie/TV completion still needs native import, independent checksum,
+automatic cloud cleanup and Plex indexing evidence. Actual TV NAS copying and
+user-deferred playback/privacy checks remain open. Current failed/oversized jobs
+are preserved; automatic completion cleanup does not resolve their space demand.

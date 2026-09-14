@@ -17,7 +17,9 @@ from home. SAB's management UI still requires the existing home LAN route.
 The feed uses **Default** category, repair/unpack/cleanup (`pp=3`), no script,
 normal priority, and one enabled Accept `*` filter. The wildcard applies only to
 the authenticated cart feed. Direct cart jobs do not establish Radarr/Sonarr
-ownership; library import and Plex availability remain separate from completion.
+ownership. The [automatic cart worker](cart-import.md) now supplies native import
+and verified cloud cleanup for eligible new completions; Plex discovery remains
+a separate step.
 
 The feed URL stays private on the cloud. Its nonsecret parameters are `t=-2`,
 `limit=100`, `dl=1`, `del=0`; `r` uses the existing NZBGeek API key. `del=0`
@@ -44,7 +46,7 @@ See [acquisition](../recovery/drills/cart-acquisition-20260914.json),
 [Plex discovery](../recovery/drills/cart-plex-discovery-20260914.json).
 This is a manual Default-category path, not automatic Arr-owned client cleanup.
 
-## Capacity and deliberate native import
+## Capacity and native import
 
 Before releasing a held item, allow for download and unpacking while preserving
 the scratch reserve. The September 14 cart had approximately 16 GB and 61 GB
@@ -53,8 +55,9 @@ was admitted. Normal feed polling subsequently queued the oversized release;
 only that exact job was paused before payload downloading, preserving the feed
 and global pause state. Do not resume it without a new capacity decision.
 
-Default-category movies need a deliberate native Radarr import after the exact
-SAB job finishes repair/unpack:
+The automatic worker follows the guarded path below for eligible new jobs after
+SAB finishes repair/unpack. Historical or held jobs require separate review; do
+not manually replay an import that has an active worker journal:
 
 1. Match title, year and catalog identity. Add an absent title without search
    and with monitoring disabled, preventing an unintended second acquisition.

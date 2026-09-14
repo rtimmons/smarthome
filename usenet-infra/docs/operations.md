@@ -45,7 +45,8 @@ for validation, deployment scope, and rollback caveats.
 For NZBGeek's own discovery UX on a phone, the enabled
 [NZBGeek Cart feed](nzbgeek-cart.md) queues new cart selections in cloud SAB every
 15 minutes. Use that runbook for individual held-item actions, capacity checks
-and deliberate native imports of Default-category jobs.
+and [automatic native import and verified cleanup](cart-import.md) for eligible
+new Default-category jobs.
 
 Normally use SAB at `http://10.77.0.1:18080/` and Prowlarr/Arr at
 `http://10.77.0.1:19696/` through the existing LAN VPN route and proxy. Backend

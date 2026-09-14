@@ -11,6 +11,11 @@ mount is the existing Storage Box's `catalog/library` directory over synchronous
 SSHFS. Successful native imports enable download-client cleanup. Failed jobs
 are retained and automatic redownload remains disabled.
 
+New Default-category cart completions also have an [automatic completion
+worker](cart-import.md): native copy import, independent canonical SHA-256, then
+exact verified cloud-payload cleanup. Its activation baseline preserves historical
+jobs and existing pauses. This is separate from Arr-owned client cleanup.
+
 `usenet-library.service` mounts storage with the existing writer identity and
 host pin. `usenet-discovery.service` requires/binds to it; Docker's independent
 restart policy is disabled for these two apps so systemd owns startup ordering.

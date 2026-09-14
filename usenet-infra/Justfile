@@ -24,6 +24,7 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-backups.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-library.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-remote-media.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cart-import.yml --syntax-check
 	./scripts/secret-scan
 
 # Check tracked content and repository history for high-confidence credential forms.
@@ -107,6 +108,16 @@ native-evict item:
 [group: 'health']
 cloud-health:
 	@./scripts/cloud-command /srv/usenet/scripts/healthcheck
+
+# Install and arm only future user-cart native import and verified cleanup.
+[group: 'setup']
+configure-cart-import: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cart-import.yml
+
+# Read the host-owned cart importer status without changing acquisition or imports.
+[group: 'health']
+cart-import-status:
+	@./scripts/cloud-command sudo -n -u usenet /bin/sh -c 'set -a; . /srv/usenet/config/catalog.env; exec python3 /srv/usenet/libexec/cart-import.py status'
 
 # Install and verify the selected Radarr/Sonarr integration.
 [group: 'setup']

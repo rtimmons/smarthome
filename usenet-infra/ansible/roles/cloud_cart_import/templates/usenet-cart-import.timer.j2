@@ -1,0 +1,11 @@
+[Unit]
+Description=Observe new cart completions for native import
+
+[Timer]
+OnBootSec=30s
+OnUnitInactiveSec=30s
+AccuracySec=5s
+Unit=usenet-cart-import.service
+
+[Install]
+WantedBy=timers.target

@@ -54,6 +54,53 @@ class HealthTests(unittest.TestCase):
         self.assertEqual(healthcheck.failure_check().status, "ok")
         self.assertEqual(len(list((settings.state_root / "failures").glob("*.json"))), 1)
 
+    def test_cart_health_optional_until_armed_then_requires_fresh_status(self) -> None:
+        self.assertIsNone(healthcheck.cart_import_check())
+        root = self.base / 'state/cart-import'
+        root.mkdir(parents=True)
+        (root / 'armed.json').write_text('{}')
+        self.assertEqual(healthcheck.cart_import_check().status, 'fail')
+        payload = {'status': 'idle', 'updated_at': time.time(), 'completed': 1, 'held': 0, 'errors': 0}
+        (root / 'status.json').write_text(json.dumps(payload))
+        self.assertEqual(healthcheck.cart_import_check().status, 'ok')
+        payload['updated_at'] -= 301
+        (root / 'status.json').write_text(json.dumps(payload))
+        self.assertIn('stale', healthcheck.cart_import_check().detail)
+
+    def test_cart_health_keeps_failures_and_review_holds_visible(self) -> None:
+        root = self.base / 'state/cart-import'
+        root.mkdir(parents=True); (root / 'armed.json').write_text('{}')
+        for state, held, errors, expected in [('held', 1, 0, 'warn'), ('failed', 0, 1, 'fail'), ('idle', 0, 1, 'fail')]:
+            (root / 'status.json').write_text(json.dumps({'status': state, 'updated_at': time.time(),
+                'completed': 1, 'held': held, 'errors': errors, 'message': 'SECRET-URL'}))
+            check = healthcheck.cart_import_check()
+            self.assertEqual(check.status, expected)
+            self.assertNotIn('SECRET', check.detail)
+
+    def test_cart_long_hash_requires_live_worker_and_six_hour_limit(self) -> None:
+        root = self.base / 'state/cart-import'
+        root.mkdir(parents=True); (root / 'armed.json').write_text('{}')
+        payload = {'status': 'processing', 'updated_at': time.time() - 3600, 'pid': os.getpid(),
+                   'completed': 0, 'held': 0, 'errors': 0}
+        (root / 'status.json').write_text(json.dumps(payload))
+        self.assertEqual(healthcheck.cart_import_check().status, 'ok')
+        with mock.patch.object(healthcheck.os, 'kill', side_effect=ProcessLookupError()):
+            self.assertEqual(healthcheck.cart_import_check().status, 'fail')
+        payload['updated_at'] = time.time() - 6 * 3600 - 1
+        (root / 'status.json').write_text(json.dumps(payload))
+        self.assertIn('six-hour', healthcheck.cart_import_check().detail)
+
+    def test_cart_health_rejects_bad_clock_count_and_symlink(self) -> None:
+        root = self.base / 'state/cart-import'
+        root.mkdir(parents=True); (root / 'armed.json').write_text('{}')
+        for update in [{'updated_at': float('nan')}, {'updated_at': time.time() + 300}, {'held': True}, {'completed': -1}]:
+            payload = {'status': 'idle', 'updated_at': time.time(), 'completed': 0, 'held': 0, 'errors': 0}
+            payload.update(update)
+            (root / 'status.json').write_text(json.dumps(payload))
+            self.assertEqual(healthcheck.cart_import_check().status, 'fail')
+        (root / 'status.json').unlink(); (root / 'status.json').symlink_to(root / 'armed.json')
+        self.assertEqual(healthcheck.cart_import_check().status, 'fail')
+
     def test_abandoned_operation_fails_transfer_health(self) -> None:
         settings = catalogctl.Settings.from_env()
         catalogctl.atomic_json(settings.state_root / "operations" / "authorized-test.json", {

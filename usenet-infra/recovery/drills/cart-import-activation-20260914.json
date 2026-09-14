@@ -1,0 +1,144 @@
+{
+  "after": {
+    "disk_free_bytes": 86407577600,
+    "globally_paused": false,
+    "history_count": 10,
+    "job_ids_sha256": "5cdc810ae581715d1e2f4dffb1bf8e31f31e71a7649bdecabf2fd6270636e315",
+    "postprocessing": 0,
+    "queue_count": 1,
+    "queue_statuses": [
+      "Paused"
+    ],
+    "recorded_at": "2026-09-14T01:39:03.418600+00:00",
+    "rss_count": 2,
+    "sab_snapshot_sha256": "a663b248f9df301e4ada89b7bbcd8b65270f082bf239fd95fea3727e2570a613",
+    "scratch_files": 281,
+    "scratch_inventory_sha256": "5d09a6ca9e0899ed451c7e4f895ba9892771c19d5a88e0738977eff94519e657",
+    "scratch_logical_bytes": 65498227410
+  },
+  "before": {
+    "disk_free_bytes": 86407970816,
+    "globally_paused": false,
+    "history_count": 10,
+    "job_ids_sha256": "5cdc810ae581715d1e2f4dffb1bf8e31f31e71a7649bdecabf2fd6270636e315",
+    "postprocessing": 0,
+    "queue_count": 1,
+    "queue_statuses": [
+      "Paused"
+    ],
+    "recorded_at": "2026-09-14T01:37:02.723982+00:00",
+    "rss_count": 2,
+    "sab_snapshot_sha256": "a663b248f9df301e4ada89b7bbcd8b65270f082bf239fd95fea3727e2570a613",
+    "scratch_files": 281,
+    "scratch_inventory_sha256": "5d09a6ca9e0899ed451c7e4f895ba9892771c19d5a88e0738977eff94519e657",
+    "scratch_logical_bytes": 65498227410
+  },
+  "capacity": {
+    "cloud_disk_bytes": 160921083904,
+    "failed_download_allocated_bytes": 46369153024,
+    "paused_selection_advertised_bytes": 61430555000,
+    "paused_selection_status": "Paused at 0%; excluded at activation",
+    "purchased_storage": false,
+    "reserve_bytes": 32212254720,
+    "retained_completed_allocated_bytes": 17253220352
+  },
+  "deployment": {
+    "changed_tasks": 7,
+    "failed": 0,
+    "playbook": "cart-import.yml",
+    "scope": "Importer timer and helper files only; no acquisition, storage purchase, media deletion or resume",
+    "services_restarted": []
+  },
+  "implementation_base_commit": "f50a916",
+  "preservation_limits": "Metadata comparison did not rehash historical payloads or establish their canonical integrity; no historical media was reclaimed",
+  "purpose": "Enable future cart native import and independently verified cloud scratch reclamation",
+  "recorded_at": "2026-09-14T01:39:03.418600+00:00",
+  "remaining": [
+    "Fresh future user-selected automatic cart movie/TV completion and Plex indexing have not yet occurred",
+    "Oversized paused media-006 remains pending a separate capacity/release decision",
+    "TV NAS copy and user-deferred device playback/privacy acceptance remain pending"
+  ],
+  "runtime": {
+    "activation": {
+      "armed_at": 1789349919.90218,
+      "excluded_feed_entries": 2,
+      "excluded_ids_sha256": "5cdc810ae581715d1e2f4dffb1bf8e31f31e71a7649bdecabf2fd6270636e315",
+      "excluded_jobs": 11
+    },
+    "installed_sha256": {
+      "cart-import.py": "ccf2e8ceff4875f9c3e6c915a8faae48fc2478b6c7ad3101552f4e1f060d94ef",
+      "cart_import_arr.py": "0bc71226977ade44aeeed1ea9ce6ca4c34c9050a0c4c173e43fc7049c4a000a1",
+      "cart_import_sab.py": "8a84dc6b3ff16793eded72e3215f28ca4df566d648ff8423ee82fa957c22d481",
+      "catalogctl.py": "91146eb95f667571ac3200a68063dbddd41f45faa25f4d24437d98bdef2f664b",
+      "config-backup.py": "3f0b185dff7f934851d2ec43735728d1d9151305cb758d32bc016074d1960123",
+      "discovery-config.py": "058b70cc0819b3194ea20121a6cb12f0c8ecf5a6a69db97fcada2c2e13828cd5",
+      "healthcheck.py": "336936036297056ebb8af4349b187a80dddd39594e9b912345be40f3bc7a1c15"
+    },
+    "journals": 0,
+    "status": {
+      "completed": 0,
+      "errors": 0,
+      "held": 0,
+      "pid": 933081,
+      "schema_version": 1,
+      "started_at": 1789349921.6969395,
+      "status": "idle",
+      "updated_at": 1789349921.7279668
+    },
+    "units": {
+      "usenet-cart-import.service": {
+        "ActiveState": "inactive",
+        "ExecMainStatus": "0",
+        "Result": "success",
+        "SubState": "dead",
+        "UnitFileState": "static"
+      },
+      "usenet-cart-import.timer": {
+        "ActiveState": "active",
+        "Result": "success",
+        "SubState": "waiting",
+        "UnitFileState": "enabled"
+      },
+      "usenet-discovery.service": {
+        "ActiveState": "active",
+        "ExecMainStatus": "0",
+        "Result": "success",
+        "SubState": "exited",
+        "UnitFileState": "enabled"
+      },
+      "usenet-library.service": {
+        "ActiveState": "active",
+        "ExecMainStatus": "0",
+        "Result": "success",
+        "SubState": "running",
+        "UnitFileState": "enabled"
+      },
+      "usenet-publish.timer": {
+        "ActiveState": "inactive",
+        "Result": "success",
+        "SubState": "dead",
+        "UnitFileState": "disabled"
+      }
+    }
+  },
+  "schema_version": 1,
+  "verification": {
+    "all_existing_job_ids_excluded": true,
+    "cloud_health": "passed with nine retained historical SAB warnings",
+    "discovery_health": "verified",
+    "first_scheduled_worker_run_passed": true,
+    "historical_publisher_disabled": true,
+    "independent_review": "No remaining blockers after provenance, exact-file, metadata-readiness, recovery and deployment-lock fixes",
+    "sab_snapshot_preserved": true,
+    "scratch_metadata_preserved": true,
+    "source_and_installed_sha256_match": true,
+    "tests": {
+      "cases": 538,
+      "current_source_secret_scan": "passed",
+      "full_history_secret_scan": "failed only on two documented historical RSA keys",
+      "passed": 529,
+      "skipped": 9,
+      "syntax": "passed"
+    }
+  }
+}

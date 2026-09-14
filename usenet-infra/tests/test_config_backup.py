@@ -23,13 +23,14 @@ REAL_AGE = Path(os.environ.get('CONFIG_BACKUP_TEST_AGE', str(
 
 class ConfigBackupTests(unittest.TestCase):
     def test_paused_queue_is_accepted_without_changing_jobs(self):
-        for queued, paused, processing, allowed in [(3, True, 0, True), (0, False, 0, True),
-                                                   (3, False, 0, False), (3, True, 1, False),
-                                                   (3, 'true', 0, False)]:
-            with self.subTest(queued=queued, paused=paused, processing=processing):
+        for states, paused, processing, allowed in [(['Downloading'] * 3, True, 0, True), ([], False, 0, True),
+                (['Paused'] * 3, False, 0, True), (['Paused', 'Downloading'], False, 0, False),
+                (['Paused'], False, 1, False), (['Paused'], 'true', 0, False)]:
+            with self.subTest(states=states, paused=paused, processing=processing):
                 opener = mock.Mock()
                 opener.open.side_effect = [
-                    io.BytesIO(json.dumps({'queue': {'noofslots_total': queued, 'paused': paused}}).encode()),
+                    io.BytesIO(json.dumps({'queue': {'noofslots': len(states), 'noofslots_total': sum(s != 'Paused' for s in states), 'paused': paused,
+                        'slots': [{'nzo_id': str(i), 'status': s} for i, s in enumerate(states)]}}).encode()),
                     io.BytesIO(json.dumps({'history': {'ppslots': processing}}).encode())]
                 with mock.patch.object(backup.urllib.request, 'build_opener', return_value=opener):
                     if allowed:
@@ -37,7 +38,39 @@ class ConfigBackupTests(unittest.TestCase):
                     else:
                         with self.assertRaises(backup.BackupError):
                             backup.require_idle('fixture')
-                self.assertEqual(opener.open.call_count, 2)
+                for call in opener.open.call_args_list:
+                    request = call.args[0]
+                    form = backup.urllib.parse.parse_qs(request.data.decode())
+                    self.assertIn(form['mode'][0], ('queue', 'history'))
+                    self.assertNotIn('name', form)
+
+    def test_individual_pause_requires_complete_nonduplicate_queue(self):
+        for slots in [[], [{'nzo_id': 'one', 'status': 'Paused'}],
+                      [{'nzo_id': 'one', 'status': 'Paused'}, {'nzo_id': 'one', 'status': 'Paused'}]]:
+            with self.subTest(slots=slots):
+                opener = mock.Mock()
+                opener.open.return_value = io.BytesIO(json.dumps({'queue': {
+                    'noofslots': 2, 'paused': False, 'slots': slots}}).encode())
+                with mock.patch.object(backup.urllib.request, 'build_opener', return_value=opener):
+                    with self.assertRaises(backup.BackupError):
+                        backup.require_idle('fixture')
+
+    def test_pause_enumeration_pages_and_refuses_change_between_pages(self):
+        for second_total, allowed in [(1001, True), (1002, False)]:
+            with self.subTest(second_total=second_total):
+                opener = mock.Mock()
+                opener.open.side_effect = [
+                    io.BytesIO(json.dumps({'queue': {'noofslots': 1001, 'paused': False,
+                        'slots': [{'nzo_id': str(i), 'status': 'Paused'} for i in range(1000)]}}).encode()),
+                    io.BytesIO(json.dumps({'queue': {'noofslots': second_total, 'paused': False,
+                        'slots': [{'nzo_id': '1000', 'status': 'Paused'}]}}).encode()),
+                    io.BytesIO(json.dumps({'history': {'ppslots': 0}}).encode())]
+                with mock.patch.object(backup.urllib.request, 'build_opener', return_value=opener):
+                    if allowed:
+                        backup.require_idle('fixture')
+                    else:
+                        with self.assertRaises(backup.BackupError):
+                            backup.require_idle('fixture')
 
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()

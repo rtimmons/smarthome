@@ -1,0 +1,122 @@
+---
+- name: Discover whether the cart importer timer is installed
+  ansible.builtin.stat:
+    path: /etc/systemd/system/usenet-cart-import.timer
+  register: cart_import_timer
+
+- name: Stop only the importer timer before inspecting worker activity
+  ansible.builtin.systemd_service:
+    name: usenet-cart-import.timer
+    state: stopped
+  when: cart_import_timer.stat.exists
+
+- name: Refuse to refresh an active importer or interrupt its native Arr command
+  ansible.builtin.command:
+    argv: [systemctl, is-active, usenet-cart-import.service]
+  register: cart_import_activity
+  changed_when: false
+  failed_when: cart_import_activity.rc not in [3, 4] or cart_import_activity.stdout | trim not in ['inactive', 'failed', 'unknown']
+
+- name: Check for a previously recorded in-flight native import
+  ansible.builtin.stat:
+    path: '{{ cloud_data_root }}/state/catalog/cart-import/status.json'
+  register: cart_import_status
+
+- name: Read only the prior importer status receipt
+  ansible.builtin.slurp:
+    src: '{{ cloud_data_root }}/state/catalog/cart-import/status.json'
+  register: cart_import_prior
+  when: cart_import_status.stat.exists
+  no_log: true
+
+- name: Require prior processing to be reconciled before changing worker code
+  ansible.builtin.assert:
+    that:
+      - (cart_import_prior.content | b64decode | from_json).status != 'processing'
+    fail_msg: 'Prior cart processing needs recovery before code refresh; the timer remains stopped and no Arr command was interrupted.'
+  when: cart_import_status.stat.exists
+
+- name: Verify the mounted canonical library is available
+  ansible.builtin.command:
+    argv: [mountpoint, -q, '{{ cloud_data_root }}/library']
+  changed_when: false
+
+- name: Require the existing mount-dependent discovery applications
+  ansible.builtin.command:
+    argv: [systemctl, is-active, usenet-discovery.service]
+  changed_when: false
+
+- name: Create the private importer receipt directory
+  ansible.builtin.file:
+    path: '{{ cloud_data_root }}/state/catalog/cart-import'
+    state: directory
+    owner: usenet
+    group: usenet
+    mode: '0700'
+
+- name: Allocate a private staging directory for complete reviewed helper files
+  ansible.builtin.tempfile:
+    state: directory
+    prefix: usenet-cart-install-
+  register: cart_import_stage
+
+- name: Refresh helpers only under the shared backup and importer lock
+  block:
+    - name: Stage all helper files without changing running implementations
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/{{ item }}'
+        dest: '{{ cart_import_stage.path }}/{{ item }}'
+        owner: root
+        group: root
+        mode: '0500'
+      loop:
+        - cart-import-install.py
+        - cart-import.py
+        - cart_import_sab.py
+        - cart_import_arr.py
+        - discovery-config.py
+        - catalogctl.py
+        - config-backup.py
+        - healthcheck.py
+
+    - name: Require quiet SAB and hold the shared lock across atomic helper replacements
+      ansible.builtin.command:
+        argv:
+          - /usr/bin/python3
+          - '{{ cart_import_stage.path }}/cart-import-install.py'
+          - --stage
+          - '{{ cart_import_stage.path }}'
+          - --root
+          - '{{ cloud_data_root }}'
+      register: cart_import_install
+      changed_when: (cart_import_install.stdout | from_json).changed | default(0) | int > 0
+  always:
+    - name: Remove only this deployment's temporary staged helper files
+      ansible.builtin.file:
+        path: '{{ cart_import_stage.path }}'
+        state: absent
+
+- name: Install importer-only service and timer
+  ansible.builtin.template:
+    src: '{{ item }}.j2'
+    dest: '/etc/systemd/system/{{ item }}'
+    owner: root
+    group: root
+    mode: '0644'
+  loop: [usenet-cart-import.service, usenet-cart-import.timer]
+
+- name: Arm future cart jobs once without enrolling current jobs or resetting the baseline
+  ansible.builtin.command:
+    argv:
+      - /bin/sh
+      - -c
+      - 'set -a; . {{ cloud_data_root }}/config/catalog.env; exec /usr/bin/python3 {{ cloud_data_root }}/libexec/cart-import.py arm'
+  become_user: usenet
+  changed_when: false
+
+- name: Enable only the cart importer timer
+  ansible.builtin.systemd_service:
+    name: usenet-cart-import.timer
+    daemon_reload: true
+    enabled: true
+    state: started

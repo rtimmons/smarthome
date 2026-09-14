@@ -578,6 +578,16 @@ usenet-verify-reader-access:
 usenet-cloud-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
 
+# Arm future user-cart native imports without reconfiguring acquisition apps.
+[group: 'usenet']
+usenet-configure-cart-import:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cart-import
+
+# Read the durable cart import and cleanup status.
+[group: 'usenet']
+usenet-cart-import-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cart-import-status
+
 # Read NAS versions, resource headroom, and share metadata through dedicated SSH.
 [group: 'usenet']
 usenet-qnap-recon:

@@ -88,6 +88,16 @@ Use [operations](docs/operations.md) for additional commands and
   [acquisition receipt](recovery/drills/cart-acquisition-20260914.json). Existing settings/smoke helpers
   intentionally refuse enabled RSS feeds: do not disable the feed to pass them.
 
+- New cart completions use the [automatic importer](docs/cart-import.md), whose
+  activation baseline excludes all pre-existing queued/history jobs and feed
+  entries. Preserve `state/catalog/cart-import/armed.json` and its journals. The
+  worker uses native copy import without a download ID, independent full SHA-256
+  and exact source cleanup; historical scratch, failed jobs and paused media-006
+  remain excluded. Use `just usenet-cart-import-status` and cloud health. Stop only
+  its timer before code refresh and reconcile in-flight commands; never replay a
+  journaled import or enable the retired publisher. Actual fresh automatic
+  completion and TV/Plex acceptance still need a future selected item.
+
 - The Downloads status panel is deployed for native and legacy copies.
   `just configure-download-status` inside `usenet-infra` installs its telemetry
   and presentation scripts, holds the shared cache lock through a dashboard-only

@@ -186,6 +186,45 @@ def failure_check() -> Check:
     return Check("catalog_failures", "ok", "none")
 
 
+def cart_import_check() -> Check | None:
+    root = Path(os.environ.get('CATALOG_STATE_ROOT', '/data/state')) / 'cart-import'
+    if not any(p.exists() or p.is_symlink() for p in (root / 'armed.json', root / 'status.json')):
+        return None  # Existing installations remain optional until explicitly armed.
+    try:
+        if root.is_symlink() or (root / 'armed.json').is_symlink() or (root / 'status.json').is_symlink():
+            raise ValueError('invalid receipt')
+        if not (root / 'armed.json').is_file():
+            raise ValueError('missing activation')
+        payload = json.loads((root / 'status.json').read_text())
+        state = payload['status']
+        updated = payload['updated_at']
+        if state not in {'idle', 'processing', 'held', 'failed'} or isinstance(updated, bool):
+            raise ValueError('invalid state')
+        age = time.time() - float(updated)
+        counts = [payload[k] for k in ('completed', 'held', 'errors')]
+        if any(type(v) is not int or v < 0 for v in counts) or not math.isfinite(age) or age < -30:
+            raise ValueError('invalid counts or clock')
+        if state == 'processing':
+            pid = payload.get('pid')
+            if type(pid) is not int or pid < 1:
+                raise ValueError('invalid worker')
+            try:
+                os.kill(pid, 0)
+            except PermissionError:
+                pass  # The local process exists under another authorized identity.
+            if age > 6 * 3600:
+                return Check('cart_import', 'fail', 'cart import worker exceeded its six-hour limit')
+        elif age > 300:
+            return Check('cart_import', 'fail', 'cart import heartbeat is stale')
+        if state == 'failed' or counts[2]:
+            return Check('cart_import', 'fail', f'{counts[2]} cart import error(s); inspect cart import status')
+        if state == 'held' or counts[1]:
+            return Check('cart_import', 'warn', f'{counts[1]} cart item(s) held for review; source retained')
+        return Check('cart_import', 'ok', f'{state}; {counts[0]} completed cart import(s)')
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return Check('cart_import', 'fail', 'cart import activation or worker status could not be verified')
+
+
 def qnap_transfer_check() -> Check:
     try:
         # Only QNAP uses operation records. Cloud installations may still run
@@ -244,6 +283,9 @@ def collect_checks() -> list[Check]:
     checks = [storage_check(), failure_check()]
     if role == "cloud":
         checks.extend(app_checks())
+        cart = cart_import_check()
+        if cart is not None:
+            checks.append(cart)
         checks.append(
             disk_check(
                 "vm_scratch",

@@ -1,0 +1,23 @@
+[Unit]
+Description=Import selected new cart completions through native Arr and verify cleanup
+Requires=usenet-library.service usenet-discovery.service
+BindsTo=usenet-library.service
+After=network-online.target usenet-library.service usenet-discovery.service
+
+[Service]
+Type=oneshot
+User=usenet
+Group=usenet
+EnvironmentFile={{ cloud_data_root }}/config/catalog.env
+WorkingDirectory={{ cloud_data_root }}
+ExecStartPre=/usr/bin/mountpoint -q {{ cloud_data_root }}/library
+ExecStart=/usr/bin/python3 {{ cloud_data_root }}/libexec/cart-import.py run
+UMask=0077
+TimeoutStartSec=6h
+KillMode=control-group
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ cloud_data_root }}/downloads/complete {{ cloud_data_root }}/state/catalog

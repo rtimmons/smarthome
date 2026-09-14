@@ -7,6 +7,25 @@ User direction: **no PRs**. [PR #117](https://github.com/rtimmons/smarthome/pull
 was closed without merging on September 13. Do not reopen it or create a replacement.
 The branch and local work remain preserved; no default-branch merge was requested.
 
+September 14 capacity follow-up: the user requested automatic movement to the
+Storage Box and cloud-disk cleanup. The new [cart completion worker](usenet-infra/docs/cart-import.md)
+uses native Radarr/Sonarr copy imports, independent full canonical SHA-256 and
+journaled exact-payload cleanup. Its first activation excludes every existing
+queued/history job and known feed entry, preserving media-006, failed downloads,
+older scratch and the accepted media-004 job. Automatic completion prevents future
+completed payload buildup; it does not make the oversized paused job fit. About
+46.4 GB is a retained failed download and 17.3 GB is older completed scratch.
+No storage purchase, queue deletion or resume was requested or performed.
+The worker was activated at 01:38:39 UTC and its first scheduled idle run passed.
+All 11 existing jobs and two feed entries were excluded; all 281 scratch files
+and the complete sanitized SAB snapshot were unchanged. Installed source hashes
+match the reviewed checkout. The 538-case infrastructure suite passed (nine
+optional skips); full history scanning still reports only the two documented
+keys, while current-source scanning passes.
+[Activation and preservation receipt](usenet-infra/recovery/drills/cart-import-activation-20260914.json).
+Fresh live automatic cart completion, actual TV import/NAS copy, and user-deferred
+playback/privacy checks remain distinct acceptance work. No PR or merge is requested.
+
 September 14 continuation (UTC): parallel audits refreshed live acceptance from
 local `usenet` head `06bfff4`. Initial discovery, cloud and NAS health passed;
 SAB was idle, the native library had five movies and no TV, and no fresh movie,
@@ -41,10 +60,10 @@ groups: the media scratch has no established canonical match, and a supported
 undo for Radarr's persistent ignore action was not found. Investigation and the
 retention decision are complete; destructive cleanup is not required for closure.
 
-This continuation's documentation and receipts are committed locally on `usenet`
+The preceding acquisition continuation's documentation and receipts are committed locally on `usenet`
 at the user's request. Existing lighting changes and `msg` remain uncommitted;
 branches and stashes remain preserved. No PR, merge,
-push or deployment is part of this continuation. The September 13 checks below
+push or deployment accompanied that documentation commit (`f50a916`). The September 13 checks below
 remain dated implementation evidence, not tests rerun against a new branch head.
 
 September 13 continuation (16:26 UTC): the nine SAB warnings are reconciled as
@@ -69,7 +88,8 @@ Whole-diff review and final approval are required only if a merge is later reque
    [validation ledger](usenet-infra/docs/validation.md). Inspect `git status`,
    the current branch and recent commits before editing. The expected branch is
    `usenet`; the September 13 handoff and September 14 audit documents/receipts
-   are committed locally. Unrelated lighting edits and `msg` remain uncommitted.
+   are committed locally; the capacity follow-up above supersedes their manual-only
+   cart handling. Unrelated lighting edits and `msg` remain uncommitted.
    Do not stage unrelated work with Usenet work.
 2. For resumed operations, refresh read-only state with
    `just usenet-discovery-health`, `just usenet-cloud-health`,
@@ -82,7 +102,8 @@ Whole-diff review and final approval are required only if a merge is later reque
    follow the acceptance rows below through import, cleanup and Plex discovery;
    a TV NAS copy requires an actually available selected title. Do not submit
    diagnostic media, replay the accepted movie copy, or release held cart items
-   to manufacture evidence. Default-category cart jobs need deliberate import.
+   to manufacture evidence. Eligible future Default-category cart jobs use the
+   automatic worker; inspect its journal before any manual intervention.
 4. Preserve the September 14 retention disposition for the five stale Radarr
    entries and two archived scratch groups. Recheck evidence before any later
    correction; identifying ownership did not establish deletion readiness.
@@ -91,7 +112,8 @@ Whole-diff review and final approval are required only if a merge is later reque
    Client playback/startup checks remain user-deferred until device interaction
    is available. No PR or merge task is scheduled by this handoff.
 
-No active acquisition, native import, NAS copy or deployment remains. media-006
+At the preceding acquisition checkpoint, no active acquisition, native import,
+NAS copy or deployment remained. media-006
 is deliberately paused pending a capacity/release decision; do not resume it
 or mark its acquisition passed. Post-cleanup canonical SHA-256 and preservation
 checks passed at 01:16:15 UTC; all agent read helpers and sub-agents have stopped.
@@ -113,7 +135,7 @@ and recovery runbooks if private inputs must be restored.
 | Use | Entry point / behavior |
 | --- | --- |
 | Choose movies and TV | [Radarr](http://10.77.0.1:19696/radarr/) / [Sonarr](http://10.77.0.1:19696/sonarr/). Native search/RSS and completed imports are enabled. |
-| Phone discovery | NZBGeek **My Cart** feeds [cloud SAB](http://10.77.0.1:18080/) every 15 minutes. media-004's deliberate native import passed; oversized media-006 remains individually paused. Direct cart jobs use Default category and need separate library import; they are not automatically Arr-owned. [Playbook](usenet-infra/docs/nzbgeek-cart.md). |
+| Phone discovery | NZBGeek **My Cart** feeds [cloud SAB](http://10.77.0.1:18080/) every 15 minutes. media-004's deliberate native import passed; oversized media-006 remains individually paused. New eligible Default-category jobs use the [automatic native import/verified cleanup worker](usenet-infra/docs/cart-import.md); they are not automatically Arr-owned. [Playbook](usenet-infra/docs/nzbgeek-cart.md). |
 | Make a title local | [NAS dashboard](http://192.168.1.66:1337/). Choose the Native library action for canonical Movies/TV; transfer phase, rate, progress and history are visible. [Runbook](usenet-infra/docs/native-media.md). |
 | Watch | QNAP Plex, using **Movies & TV** and explicit NAS or Remote libraries. The profile has only IDs 2/3/4/5; private library ID 1 is denied. [Layout and client setup](usenet-infra/docs/nas-plex-layout.md). |
 | Recover | [Secrets/state](usenet-infra/docs/secrets-recovery.md), [checkout recovery](usenet-infra/docs/checkout-recovery.md), [scheduled backups](usenet-infra/docs/scheduled-backups.md). These cover configuration/state, not whole-NAS loss. |
@@ -171,7 +193,7 @@ These are explicit follow-ups, not a reason to replay setup or broaden the branc
 | --- | --- | --- |
 | Automatic Arr-owned movie and TV completion | Agent observes the next user-selected Arr-owned jobs through import, automatic client cleanup, scratch reclamation, canonical persistence and Plex discovery. media-004's manual Default-category cart import and five old importPending entries do not establish that automatic path. | Required for full automatic media-workflow acceptance; tracked follow-up may remain after source merge. |
 | Real TV selective copy | Agent copies an actually available user-selected TV title; verify staging isolation, hashes, publication and Plex indexing. | Required for TV-copy acceptance; not proved by layout or movie copying. |
-| Phone-cart completion/import | media-004 passed real acquisition, deliberate native import, independent integrity verification, Plex discovery and exact-job reclamation. Oversized media-006 remains paused at 0% pending a smaller-release/capacity decision. | Deliberate cart workflow accepted for media-004. The second selected item is pending; automatic Arr ownership is not implied. |
+| Phone-cart completion/import | media-004 passed deliberate import and verification. The new automatic cart worker needs the next newly selected eligible movie/TV completion through native import, checksum, cleanup and Plex indexing. media-006 remains paused and excluded from activation. | Deliberate workflow accepted; fresh automatic cart acceptance and the oversized second selection remain pending. Automatic Arr ownership is separate. |
 | Existing queue/scratch disposition | September 14 investigation matched five stale entries to legacy cleanup receipts and current canonical metadata. Deliberately retain visible tracking and both scratch groups; archived media lacks an established canonical match, and fixture metadata alone is insufficient for deletion. [Receipt](usenet-infra/recovery/drills/queue-disposition-20260914.json). | Investigation and retention decision complete. Any later persistent ignore or destructive cleanup requires its own deliberate disposition; no blanket healthy-queue claim. |
 | Apple TV/Roku playback and startup privacy | Ryan supplies device interaction: restricted-profile cold start, NAS/Remote playback, seeking and relevant audio/subtitles. Owner PIN remains private. | Explicitly deferred by user; not a source-merge blocker and not marked passed. |
 | External NAS exposure check | September 14 direct TCP/1337 probe passed from the cloud with current-WAN correlation and a successful NAS TCP control; no dashboard UPnP mapping or global NAS IPv6. [Receipt](usenet-infra/recovery/drills/nas-exposure-20260914.json). | Dated direct-port acceptance complete. Alternate static forwarding/proxy paths remain unaudited; repeat after network changes. |
