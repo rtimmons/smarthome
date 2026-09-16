@@ -12,7 +12,7 @@ Completed Download Handling path. The retired publisher remains disabled.
 
 ## What runs automatically
 
-SAB's existing NZBGeek Cart feed polls every 15 minutes. The new
+SAB's NZBGeek Cart and NZBFinder Cart feeds poll every 15 minutes. The new
 `usenet-cart-import.timer` checks completions every 30 seconds after each worker
 run. Only successful, unarchived Default-category jobs with unique exact native
 cart provenance and a download timestamp after activation qualify. Feed URLs and

@@ -16,6 +16,7 @@ import urllib.parse
 import urllib.request
 
 FEED = 'NZBGeek Cart'
+FEEDS = frozenset((FEED, 'NZBFinder Cart'))
 VERSION = '5.1.3'
 LIMIT = 100_000
 PAGE = 1000
@@ -145,7 +146,7 @@ class SabSource:
                 item.update(completed=epoch(row['completed']), time_added=epoch(row['time_added'] or 0),
                             archive=bool(row['archive']), provenance=None)
                 matches = by_url.get(row['url'], []) if row['url'] else []
-                cart = [r for r in matches if r['feed'] == FEED and r['state'] == 'D' and r['downloaded_at'] is not None]
+                cart = [r for r in matches if r['feed'] in FEEDS and r['state'] == 'D' and r['downloaded_at'] is not None]
                 if len(cart) == 1:
                     downloaded_at = epoch(cart[0]['downloaded_at'])
                     added = item['time_added']
@@ -153,7 +154,7 @@ class SabSource:
                     # enqueue, so allow one second of integer-clock rounding.
                     bound = (downloaded_at > 0 and added > 0 and item['completed'] >= max(added, downloaded_at)
                              and -1 <= added - downloaded_at <= MAX_RSS_JOB_DELAY)
-                    item['provenance'] = {'feed': FEED, 'url_sha256': hashlib.sha256(row['url'].encode()).hexdigest(),
+                    item['provenance'] = {'feed': cart[0]['feed'], 'url_sha256': hashlib.sha256(row['url'].encode()).hexdigest(),
                                           'downloaded_at': downloaded_at,
                                           'unique': len(matches) == 1 and len(history_by_url[row['url']]) == 1 and bound}
                 records.append(item)

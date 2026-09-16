@@ -88,6 +88,10 @@ class CartSabTests(unittest.TestCase):
         self.job(); self.rss(state='G', downloaded_at=None)
         self.assertIsNone(self.source.job('new')['provenance'])
 
+    def test_nzbfinder_cart_has_the_same_exact_provenance_rules(self):
+        self.job(); self.rss(feed='NZBFinder Cart')
+        self.assertEqual(self.source.job('new')['provenance']['feed'], 'NZBFinder Cart')
+
     def test_queue_hides_provider_url_info_and_preserves_pauses(self):
         self.queue = {'noofslots': 1, 'noofslots_total': 0, 'paused': False, 'slots': [{'nzo_id': 'pending', 'filename': 'Chosen', 'status': 'Paused', 'url': 'SECRET', 'nzo_info': {'SECRET': 'SECRET'}}]}
         self.processing = 2

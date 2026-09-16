@@ -588,6 +588,14 @@ usenet-configure-cart-import:
 usenet-cart-import-status:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cart-import-status
 
+# Inspect or enable NZBFinder Cart automatic downloads using its saved cloud key.
+[group: 'usenet']
+[positional-arguments]
+usenet-nzbfinder-cart command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra nzbfinder-cart "$1"
+
 # Read NAS versions, resource headroom, and share metadata through dedicated SSH.
 [group: 'usenet']
 usenet-qnap-recon:

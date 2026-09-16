@@ -1,4 +1,4 @@
-# NZBGeek cart downloads from a phone
+# NZBGeek and NZBFinder cart downloads from a phone
 
 Configured and verified September 13, 2026 (UTC). Browse NZBGeek's discovery
 pages and add a chosen release to **My Cart**. Cloud SAB's enabled
@@ -88,6 +88,31 @@ workflow, disable **NZBGeek Cart** in SAB RSS settings; do not overwrite later
 settings by restoring the whole original configuration. Existing settings and
 smoke-test helpers intentionally refuse enabled RSS feeds; do not disable this
 user-authorized feed merely to make their safeguards pass.
+
+## NZBFinder Cart
+
+Configured September 16, 2026 (UTC). Add a selected release to NZBFinder's
+**Cart** at <https://nzbfinder.ws/cart>. Cloud SAB's `NZBFinder Cart` feed uses
+the same Default category, repair/unpack/cleanup, normal priority, no script,
+and single Accept `*` filter as NZBGeek. It polls on the same 15-minute
+schedule. The private URL uses NZBFinder's already-saved Prowlarr API/RSS key
+at `/rss/cart` with `dl=1` and `del=0`; neither the key nor the URL is printed
+or stored in this repository.
+
+The initial SAB read was explicitly held, so entries already in the cart were
+not queued. Only later user-added entries are automatically downloaded. Use
+SAB's individual item action for an intentionally held initial entry; do not
+use **Force Download** unless every held entry has been reviewed. The installer
+is idempotent and reads the protected saved key only on the cloud host:
+
+```sh
+just usenet-nzbfinder-cart inspect
+just usenet-nzbfinder-cart configure
+```
+
+NZBFinder completions have the same automatic importer eligibility and
+provenance requirements as NZBGeek completions. They are not automatically
+Arr-owned merely because they use the Default category.
 
 References: [SAB RSS behavior](https://sabnzbd.org/wiki/configuration/5.1/rss),
 [installed reader source](https://github.com/sabnzbd/sabnzbd/blob/5.1.3/sabnzbd/rss.py).

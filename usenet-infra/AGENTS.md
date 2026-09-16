@@ -105,6 +105,13 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   [acquisition receipt](recovery/drills/cart-acquisition-20260914.json). Existing settings/smoke helpers
   intentionally refuse enabled RSS feeds: do not disable the feed to pass them.
 
+- Cloud SAB's **NZBFinder Cart** feed is also enabled with the same 15-minute
+  polling and Default category. Its initial scan deliberately held existing cart
+  entries; future user selections auto-download. Preserve its protected
+  Prowlarr database at mode 0640 or stricter and the container's `UMASK=027`.
+  Use `just usenet-nzbfinder-cart inspect` to validate it without exposing its
+  saved API/RSS key.
+
 - New cart completions use the [automatic importer](docs/cart-import.md), whose
   activation baseline excludes all pre-existing queued/history jobs and feed
   entries. Preserve `state/catalog/cart-import/armed.json` and its journals. The

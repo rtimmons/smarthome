@@ -270,7 +270,7 @@ class Coordinator:
                 job.get('status') == 'Completed' and job.get('category') in {'*', '', 'Default'} and
                 job.get('archive') in (None, 0, False) and
                 isinstance(job.get('time_added'), (int, float)) and job['time_added'] >= activation['armed_at'] and
-                provenance.get('feed') == 'NZBGeek Cart' and provenance.get('unique') is True and
+                provenance.get('feed') in {'NZBGeek Cart', 'NZBFinder Cart'} and provenance.get('unique') is True and
                 isinstance(provenance.get('downloaded_at'), (int, float)) and
                 provenance['downloaded_at'] >= activation['armed_at'] and
                 re.fullmatch('[0-9a-f]{64}', str(provenance.get('url_sha256', ''))) is not None and

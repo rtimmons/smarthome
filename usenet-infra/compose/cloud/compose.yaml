@@ -40,6 +40,7 @@ services:
       PUID: "${PUID:?Set PUID in .env}"
       PGID: "${PGID:?Set PGID in .env}"
       TZ: "${TZ:?Set TZ in .env}"
+      UMASK: "027"
     volumes:
       - type: bind
         source: /srv/usenet/config/prowlarr

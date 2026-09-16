@@ -144,6 +144,7 @@ class WorkerTests(unittest.TestCase):
         _, job = self.job()
         activation = self.coordinator.activation()
         self.assertTrue(self.coordinator.eligible(job, activation))
+        self.assertTrue(self.coordinator.eligible({**job, 'provenance': {**job['provenance'], 'feed': 'NZBFinder Cart'}}, activation))
         variants = [{'category': 'prowlarr'}, {'status': 'Failed'}, {'archive': True}, {'provenance': None}, {'time_added': 999}]
         for key, value in [('unique', False), ('feed', 'Other'), ('downloaded_at', 999), ('url_sha256', 'invalid')]:
             variants.append({'provenance': {**job['provenance'], key: value}})

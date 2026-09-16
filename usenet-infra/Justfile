@@ -119,6 +119,14 @@ configure-cart-import: ansible-setup
 cart-import-status:
 	@./scripts/cloud-command sudo -n -u usenet /bin/sh -c 'set -a; . /srv/usenet/config/catalog.env; exec python3 /srv/usenet/libexec/cart-import.py status'
 
+# Inspect or enable NZBFinder Cart automatic downloads without exposing its key.
+[group: 'setup']
+[positional-arguments]
+nzbfinder-cart command='inspect':
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec ./scripts/cloud-command sudo -n -u usenet python3 - "$1" < scripts/nzbfinder-cart.py
+
 # Install and verify the selected Radarr/Sonarr integration.
 [group: 'setup']
 configure-discovery: age-bootstrap ansible-setup
