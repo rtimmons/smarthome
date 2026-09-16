@@ -1,10 +1,31 @@
 # Usenet status and closure plan
 
-## Current handoff — September 14, 2026 (UTC)
+## Current handoff — September 16, 2026
+
+The NAS Usenet wiki is requested and planned, but not implemented or deployed.
+Follow the [wiki implementation checklist](#nas-usenet-wiki--planned) below;
+it can progress independently of the remaining media acceptance steps. This
+September 16 update changes only this plan; it does not deploy the wiki, repair
+services, stage files or authorize a commit.
+
+**Latest read-only observations, September 16:** `just usenet-cloud-health`
+reported zero bytes free on cloud scratch (30 GiB minimum), six SAB errors and
+11 other warnings, Prowlarr HTTP 500, and a stale cart-import heartbeat. Storage
+Box remained reachable and catalog failures were absent. Discovery inspection
+also failed with `private_application_request_failed`. These checks establish
+failures, not their root cause; inspect privately before proposing remediation.
+Do not delete retained scratch, release paused jobs or purchase capacity to make
+health checks pass. Repairs remain separate from wiki deployment.
+
+NAS SSH inspection confirmed x86_64 and no TCP listener on port 8090 at the time
+of the check. Recheck before deployment. This was a port/architecture inspection,
+not a fresh NAS application-health or remote-client VPN acceptance check.
+
+## Historical handoff — September 14, 2026 (UTC)
 
 The requested automatic Storage Box import and verified cloud cleanup is deployed.
-The next agent should finish the recovery checkpoint and remaining real-media
-acceptance below. No implementation change or deployment is currently queued.
+The recovery checkpoint and remaining real-media acceptance below were still
+outstanding at this checkpoint; the September 16 wiki request adds new work.
 A missing user selection or deferred device test is a prerequisite to record,
 not permission to manufacture content or mark that test passed.
 
@@ -31,7 +52,7 @@ Preserve original bound recovery snapshots and the private Plex library. Do not
 purchase storage, remove protected downloads or resume the paused selection to
 make acceptance checks pass.
 
-**Latest read-only runtime check, 02:57–02:58 UTC:** cloud, discovery and NAS health
+**Historical runtime check, September 14, 02:57–02:58 UTC:** cloud, discovery and NAS health
 passed, with the same nine historical SAB warnings. The cart worker was `idle`
 with zero completed, held or failed journals. SAB had one individually paused job,
 ten history records, no post-processing and global pause false. The native library
@@ -51,11 +72,13 @@ and hourly fallback. NAS copies remain explicitly selected.
 [Worker runbook](usenet-infra/docs/cart-import.md),
 [activation/preservation receipt](usenet-infra/recovery/drills/cart-import-activation-20260914.json).
 
-**Capacity:** last detailed inspection found about 86.4 GB free, 54.2 GB above the
+**Historical capacity, recorded September 14:** inspection found about 86.4 GB free, 54.2 GB above the
 30 GiB reserve. Approximately 46.4 GB is a retained failed download and 17.3 GB is
 older completed scratch. The excluded paused selection advertises about 61.4 GB
 before unpacking. Automatic cleanup prevents future completed-payload buildup;
 it does not resolve that existing oversized job or authorize historical deletion.
+These free-space figures are superseded by the September 16 zero-free-space
+check; the older file-size breakdown needs fresh read-only verification.
 
 **Validation:** the deployed extension passed 538 infrastructure cases (529 passed,
 nine optional skips), compilation, shell/YAML and deployment syntax checks.
@@ -82,6 +105,8 @@ for dated evidence and limits. New implementation edits require fresh appropriat
    private redaction map, or ignored progress log to discover current state.
 3. Refresh read-only `just usenet-cloud-health`, `just usenet-discovery-health`,
    `just usenet-qnap-health` and `just usenet-cart-import-status` from the root.
+   Investigate the September 16 failures before new acquisition acceptance;
+   record remediation separately from the wiki and preserve all existing pauses.
    Inspect `just native-status` privately: its output includes real media names.
    For structured native status, use the existing infra wrapper's
    `./scripts/qnap-command native-status --json`. Save media-bearing output only
@@ -167,14 +192,75 @@ qnap_backup_root: /share/Usenet/Backups/automatic
 qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media Server
 ```
 
+## NAS Usenet wiki — planned
+
+**Goal:** a simple reference site written for Ryan, with practical explanations
+of the Usenet ecosystem and this installation. Proposed address:
+`http://192.168.1.66:8090/`. This address is not yet serving the wiki.
+
+- [ ] Build a static, mobile-friendly page with a table of contents, desktop
+  sidebar, compact mobile navigation, bookmarkable sections, readable typography
+  and a small favicon. Keep it usable with browser find and keyboard navigation.
+- [ ] Explain providers, indexers, NZB files, download clients, automation,
+  storage and playback; include a glossary covering retention, completion,
+  PAR2 repair, unpacking, RSS and quality profiles. Add an ecosystem diagram
+  connecting indexers/Eweka, cloud applications, canonical Storage Box storage,
+  selective NAS copies and Plex.
+- [ ] Add prominent shortcuts to SAB, Prowlarr, Radarr, Sonarr, the NAS copy
+  dashboard, Plex, NZBGeek Cart, NZBFinder, Eweka and Hetzner. Verify destinations
+  and use ordinary browser links, never token-bearing RSS/API URLs. Include
+  official SABnzbd, Servarr, Plex and Storage Box documentation references.
+- [ ] Document everyday cart and Arr workflows separately: choosing a release
+  or requested movie/TV title, checking download/import progress, selecting a NAS
+  copy and choosing NAS versus Remote Plex libraries. Explain canonical storage,
+  temporary scratch, local copies and backup boundaries. Distinguish deployed
+  behavior from still-unproved acceptance; do not represent static text as live
+  health or publish real media identities.
+- [ ] Include troubleshooting for full scratch, paused jobs, unavailable apps,
+  delayed imports/Plex discovery and failed NAS copies, plus read-only diagnostic
+  commands. Shortcuts open existing applications; the wiki has no live-control
+  actions, embedded credentials, media listings or application API integration.
+- [ ] Store HTML/CSS/assets in `usenet-infra/wiki/`, without a frontend build
+  framework, database or browser editor. Future edits go through this repository.
+- [ ] Add a dedicated Ansible playbook and root `just usenet-wiki-deploy` recipe.
+  Run a separate Compose project under `/share/Container/usenet/wiki` using the
+  repository's pinned Caddy image and non-root pattern. Bind specifically to
+  `192.168.1.66:8090`, rechecking availability first; mount only site/config files
+  read-only, with no media, secrets or Docker-socket access.
+- [ ] Use existing home-network/VPN reachability to the NAS, with no new VPN,
+  public exposure or separate wiki login. Existing applications retain their
+  authentication. The wiki serves nonsecret reference content only.
+- [ ] Validate before deployment, retain the previous release on updates and
+  restore it if the HTTP smoke check fails. On a failed first deployment, stop
+  only the new wiki service. Scope all deployment/restarts to the wiki container
+  and preserve existing services and transfers.
+- [ ] Verify links, anchors, assets, desktop/mobile rendering, keyboard access,
+  diagram readability, HTTP delivery, exact private binding, container health
+  and rollback. Test existing VPN reachability from a connected client when
+  available; otherwise record that acceptance limitation.
+- [ ] Run infrastructure tests, deployment syntax checks and current-source
+  scanning for implementation changes. Report the two known historical
+  secret-scan findings separately, rather than declaring the full scan green.
+- [ ] Record deployment evidence, the working URL and maintenance/rollback
+  instructions in the relevant documentation. Source-controlled files make the
+  wiki reproducible; do not claim added whole-NAS disaster-recovery coverage.
+
+Wiki completion requires deployed and verified delivery, not just source files.
+Its implementation can proceed while media acceptance prerequisites are pending;
+cloud repair, acquisition, queue changes and storage purchases are separate work.
+
 ## Outstanding acceptance
 
-Complete these in order when their prerequisites are available. The first row can
-progress independently of a new media selection. Keep each acquisition route's
-result separate: cart-worker cleanup does not prove Arr-owned client cleanup.
+Complete these in order when their prerequisites are available. Read-only failure
+investigation and existing-archive verification do not require a new selection.
+Refresh health before fresh acquisition acceptance and allow failed-service or
+quiet-state guards to defer work. Keep each acquisition route's result separate:
+cart-worker cleanup does not prove Arr-owned client cleanup. The wiki checklist
+can progress independently.
 
 | Item | Next action and completion evidence | Prerequisite / closure |
 | --- | --- | --- |
+| September 16 cloud failures | Refresh read-only health and privately inspect scratch usage, SAB errors, Prowlarr HTTP 500 and the stale importer heartbeat. Record root-cause evidence and a separate remediation plan; do not infer that full scratch explains every failure. | No automatic deletion, queue release, replayed import or storage purchase. Preserve retained data and pauses. Record unresolved failures explicitly; wiki deployment is independent. |
 | New importer recovery checkpoint | Verify a cloud archive created after activation contains `state/catalog/cart-import/armed.json`, current journals/status and the installed worker/adapters. Decrypt/validate in an isolated ignored directory and compare the immutable activation marker and helper hashes. Repeat after new accepted completions add journals. [Procedure](usenet-infra/docs/scheduled-backups.md#cart-importer-checkpoint). | Ready for the next agent. Latest observed scheduled success predates activation; allow shared-lock/quiet-state guards to defer rather than changing queue state. Required to close recovery coverage for this extension. |
 | Fresh automatic cart movie and TV | Observe newly selected eligible Default-category completions through native copy import, exact ownership evidence, independent SHA-256, automatic source cleanup, retained SAB history and Plex indexing. Inspect durable worker phases before intervention; distinguish automatic indexing from a scoped manual scan. | Needs new user-selected content after activation. The accepted manual movie and activation's idle run do not pass this row. One new TV selection may also supply the selective-copy row below. |
 | Automatic Arr-owned movie and TV | Observe new user-selected Arr-owned jobs through native import, automatic completed-client removal, scratch reclamation, stable canonical files and Plex discovery. | Separate evidence from the cart worker. No diagnostic acquisitions or repeat of an already accepted item. |
@@ -189,17 +275,20 @@ The external direct TCP/1337 probe passed for its dated WAN/port scope; repeat a
 relevant network changes. Alternate static forwarding/proxy paths were not audited.
 [Exposure receipt](usenet-infra/recovery/drills/nas-exposure-20260914.json).
 
+The requested NAS wiki is now included through the checklist above. Other portals,
 NAS-loss protection, whole-machine replacement/reboot drills, additional providers,
-portals, LAN HTTPS and capacity purchases are separate projects. Billing unknowns
-stay in the cost ledger. Do not expand this handoff into account setup, unrelated
-Home Assistant work, or a default-branch merge.
+LAN HTTPS and capacity purchases remain separate projects. Billing unknowns stay
+in the cost ledger. Do not expand this handoff into account setup, unrelated Home
+Assistant work, or a default-branch merge.
 
 ## Closure and merge criteria
 
 **Implementation closure** means the deployed scope above has durable receipts,
 the new native and cart-worker state is captured in verified backups, operational follow-ups
 remain explicit, and no authorized transfer/deployment or shared-agent edit is
-left running. It does not mean client tests or a fresh import were observed.
+left running. The newly requested wiki also requires its deployment/validation
+checklist and maintenance handoff to be complete. It does not mean client tests
+or a fresh import were observed, or that unresolved cloud failures are repaired.
 
 If a merge is later requested, **merge readiness** requires all of the following
 on the final reviewed branch head. Use no PR workflow.
@@ -239,7 +328,7 @@ for already missing worktrees were pruned; no existing worktree was removed.
 
 | Retained branch | Disposition |
 | --- | --- |
-| `usenet` | Deployed implementation closed; PR #117 closed at user request. No PR workflow. Branch preserved; merge not requested. |
+| `usenet` | Prior implementation deployed; wiki implementation/deployment now planned, with operational acceptance and September 16 failures still outstanding. PR #117 closed at user request. No PR workflow. Branch preserved; merge not requested. |
 | `ml/blinds-only` | Three unique commits; retain for its own scope/review, do not bulk merge. |
 | `mobile` | Five unique commits, including unfinished responsive/editor work; retain. |
 | `nuheat-integration` | Eight unique commits; retain its integration/recovery context. |
