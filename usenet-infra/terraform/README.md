@@ -70,7 +70,7 @@ fits in the smaller tier.
 
 The Storage Box has both Hetzner API delete protection and Terraform `prevent_destroy`. The QNAP subaccount also has `prevent_destroy`. Removing either guard is a deliberate, reviewed break-glass action. Do not use `terraform destroy` as a routine cleanup command in this root.
 
-The main account is not externally reachable and is reserved for the writer on Hetzner Cloud. The QNAP subaccount is externally reachable but rooted at `catalog` and has server-enforced `readonly = true`, preventing it from uploading, modifying, or deleting canonical objects.
+The main account is not externally reachable and is reserved for the writer on Hetzner Cloud. The QNAP subaccount is externally reachable but rooted at `catalog` and has server-enforced `readonly = true`, preventing it from uploading, modifying, or deleting canonical objects. SMB is enabled only on that read-only subaccount for workstation Finder mounts; the QNAP continues to use key-only SFTP.
 
 ### State is secret
 

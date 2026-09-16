@@ -48,7 +48,9 @@ resource "hcloud_storage_box_subaccount" "qnap_reader" {
   access_settings = {
     reachable_externally = true
     readonly             = true
-    samba_enabled        = false
+    # The Mac mounts this account with Finder over SMB. Read-only access remains
+    # enforced by the Storage Box; the QNAP continues to use key-only SFTP.
+    samba_enabled        = true
     ssh_enabled          = true
     webdav_enabled       = false
   }

@@ -703,6 +703,74 @@ usenet-backup-restore archive destination:
 usenet-qnap-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra qnap-health
 
+# Open the configured Storage Box SMB share URLs as Finder volumes on macOS.
+# Copy mounts.local.env.example to mounts.local.env and set STORAGEBOX_SMB_VOLUMES.
+[group: 'storage']
+mount-storage-box:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel)"
+	CONFIG_FILE="${MOUNT_CONFIG_FILE:-${REPO_ROOT}/mounts.local.env}"
+	explicit_urls="${STORAGEBOX_SMB_VOLUMES:-}"
+	if [[ -f "${CONFIG_FILE}" ]]; then
+		# This local file contains only SMB URLs; Finder/Keychain retains passwords.
+		source "${CONFIG_FILE}"
+	fi
+	VOLUME_URLS="${explicit_urls:-${STORAGEBOX_SMB_VOLUMES:-}}"
+	if [[ "${MOUNT_DRY_RUN:-0}" != "1" && "$(uname)" != "Darwin" ]]; then
+		echo "This recipe mounts macOS Finder volumes; run it on your Mac." >&2
+		exit 1
+	fi
+	: "${VOLUME_URLS:?Set STORAGEBOX_SMB_VOLUMES in mounts.local.env (see mounts.local.env.example).}"
+	IFS=',' read -r -a urls <<< "${VOLUME_URLS}"
+	for url in "${urls[@]}"; do
+		url="${url#"${url%%[![:space:]]*}"}"
+		url="${url%"${url##*[![:space:]]}"}"
+		[[ -n "${url}" ]] || continue
+		[[ "${url}" =~ ^smb://[^/]+/.+$ ]] || { echo "Invalid SMB URL: ${url}" >&2; exit 1; }
+		authority="${url#smb://}"; authority="${authority%%/*}"
+		[[ "${authority}" != *:*@* ]] || { echo "Do not put an SMB password in mounts.local.env." >&2; exit 1; }
+		if [[ "${MOUNT_DRY_RUN:-0}" == "1" ]]; then
+			echo "Would open ${url}"
+		else
+			open "${url}"
+		fi
+	done
+
+# Open the configured Usenet NAS SMB share URLs as Finder volumes on macOS.
+# The example configuration covers the current Usenet and Container NAS shares.
+[group: 'storage']
+mount-usenet-nas:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	REPO_ROOT="$(git rev-parse --show-toplevel)"
+	CONFIG_FILE="${MOUNT_CONFIG_FILE:-${REPO_ROOT}/mounts.local.env}"
+	explicit_urls="${USENET_NAS_SMB_VOLUMES:-}"
+	if [[ -f "${CONFIG_FILE}" ]]; then
+		# This local file contains only SMB URLs; Finder/Keychain retains passwords.
+		source "${CONFIG_FILE}"
+	fi
+	VOLUME_URLS="${explicit_urls:-${USENET_NAS_SMB_VOLUMES:-}}"
+	if [[ "${MOUNT_DRY_RUN:-0}" != "1" && "$(uname)" != "Darwin" ]]; then
+		echo "This recipe mounts macOS Finder volumes; run it on your Mac." >&2
+		exit 1
+	fi
+	: "${VOLUME_URLS:?Set USENET_NAS_SMB_VOLUMES in mounts.local.env (see mounts.local.env.example).}"
+	IFS=',' read -r -a urls <<< "${VOLUME_URLS}"
+	for url in "${urls[@]}"; do
+		url="${url#"${url%%[![:space:]]*}"}"
+		url="${url%"${url##*[![:space:]]}"}"
+		[[ -n "${url}" ]] || continue
+		[[ "${url}" =~ ^smb://[^/]+/.+$ ]] || { echo "Invalid SMB URL: ${url}" >&2; exit 1; }
+		authority="${url#smb://}"; authority="${authority%%/*}"
+		[[ "${authority}" != *:*@* ]] || { echo "Do not put an SMB password in mounts.local.env." >&2; exit 1; }
+		if [[ "${MOUNT_DRY_RUN:-0}" == "1" ]]; then
+			echo "Would open ${url}"
+		else
+			open "${url}"
+		fi
+	done
+
 # ============================================================================
 # ALIASES FOR COMMON COMMANDS
 # ============================================================================

@@ -23,6 +23,7 @@ node-sonos-http-api/node-sonos-http-api/
 
 # Sensitive or local-only configuration
 /.ssh/
+/mounts.local.env
 .idea/**/gradle.xml
 .idea/**/libraries
 
