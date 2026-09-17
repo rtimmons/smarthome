@@ -18,6 +18,19 @@ This was a live read-only audit, not a new implementation test run or playback t
 Cloud and NAS backup status receipts were also healthy within their 36-hour
 freshness threshold; no new backup or archive-integrity drill was run.
 
+## September 17 queue continuation
+
+Deployed `edf223e` and `5790fcf` passed 598 cases (589 passes, nine optional skips),
+compilation, shell/YAML and deployment syntax. Current-source scanning passed;
+full history retains the two documented RSA findings. Seven queued requests ran:
+five native imports independently verified/cleaned and two identity holds.
+The latter were explicitly disposed with exact-file verification and paused
+replacement requests; they are not successful imports. The latest queue is again
+capacity-blocked with 18 paused entries. No resize or storage purchase occurred.
+The independently restored latest backup covers 671 files, four databases,
+28 journals, 22 completed records and two disposition journals.
+[Progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
+
 ## Accepted behavior
 
 | Area | Evidence and limit |

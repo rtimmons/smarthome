@@ -1,0 +1,81 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-17T14:37:41.634159+00:00",
+  "source_commits": [
+    "edf223e",
+    "5790fcf"
+  ],
+  "deployment": {
+    "capacity_guards": true,
+    "paused_rss_provenance_intake": true,
+    "helpers_match_source": true
+  },
+  "tests": {
+    "cases": 598,
+    "passed": 589,
+    "optional_skips": 9,
+    "syntax_checks_passed": true,
+    "current_secret_scan_passed": true,
+    "historical_rsa_findings": 2
+  },
+  "progress_since_prior_checkpoint": {
+    "jobs_processed": 7,
+    "native_imports_completed": 5,
+    "identity_holds": 2,
+    "automatic_payload_bytes_reclaimed": 61260245624
+  },
+  "authorized_disposition": {
+    "jobs": 2,
+    "payload_bytes_reclaimed": 21940561867,
+    "exact_files_rehashed_before_deletion": 4,
+    "original_sab_history_preserved": true,
+    "replacement_requests_queued_paused": true,
+    "replacement_identity_holds": true,
+    "original_four_held_payloads_untouched": true
+  },
+  "current_queue": {
+    "entries": 18,
+    "active_jobs": 0,
+    "postprocessing": 0,
+    "globally_paused": false,
+    "blocked_reason": "awaiting_capacity_or_known_size",
+    "available_bytes": 80315387904,
+    "reserve_bytes": 32212254720,
+    "capacity_timer_active": true,
+    "importer_timer_active": true
+  },
+  "backup": {
+    "archive": "cloud-20260917T143828Z.tar.age",
+    "sha256": "382bbdf6d9ee9584a11b9fc6e8d078759944724291ebc1b5853d388f96cad32b",
+    "files": 671,
+    "sqlite_databases": 4,
+    "journals": 28,
+    "completed_journals": 22,
+    "activation_marker_matches": true,
+    "controller_semantic_state_matches": true,
+    "helpers_match_source_and_live": {
+      "capacity-admission.py": "04fb3114a7d4c86c183dd29163800849a84ff6d48b523df855a605b4a9460607",
+      "cart_import_sab.py": "cc537cb584474639a71bacbcb35bcfcfddbcfc58c0c2d7ec385c5488465821b6",
+      "discovery-config.py": "8f42236784ccab04c38cd041f9319303ad6ad0c19fabab6da54ee34fce46ba72",
+      "cart-import.py": "86a05803368c92774533ee224ef8006e6cae7e73f2de552f81b9afa9269204c9",
+      "cart_import_arr.py": "7e604d14d13618ba7201f90d116242b59a7813488a7d37c5546053702eff609f"
+    },
+    "completed_journals_match_live": true,
+    "verified_dispositions": 2
+  },
+  "storage": {
+    "server_type": "cx43",
+    "root_disk_gb": 160,
+    "resize_applied": false,
+    "storage_purchase": false,
+    "storage_box_available_bytes_probe": 743365279744,
+    "remote_scratch_deployed": false,
+    "remote_exclusive_rename_probe_errno": 22
+  },
+  "limits": [
+    "Queue advanced seven jobs but is capacity-blocked again; backlog drain is not complete.",
+    "Largest release requires more peak local scratch than its advertised file size; no reserve reduction.",
+    "Identity holds and replacement requests remain unresolved.",
+    "TV, Arr-owned cleanup and device playback acceptance remain separate."
+  ]
+}

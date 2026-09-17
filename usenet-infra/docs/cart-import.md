@@ -1,5 +1,13 @@
 # Automatic cart imports and cloud cleanup
 
+September 17 update: corrected paused RSS intake is deployed. Seven requests ran;
+five imported and reclaimed 61,260,245,624 bytes automatically. Two identity-held
+payloads were explicitly discarded after exact rehashing, with original history
+and paused replacement requests retained. Their disposition journals are separate
+from successful-import receipts. The queue is capacity-blocked again; remote
+unpack staging and a VM resize are not deployed. Both timers remain active.
+See the [current progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
+
 Deployed September 14, 2026 at 01:38:39 UTC. The first scheduled idle run passed;
 all 11 historical/current jobs and two feed entries were excluded. The queue and
 all 281 existing scratch files were preserved. [Activation receipt](../recovery/drills/cart-import-activation-20260914.json).

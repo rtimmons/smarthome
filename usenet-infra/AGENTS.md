@@ -91,32 +91,27 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## Current operations and closure
 
-- September 17 follow-up source adds application-available inode checks, live native
-  root/mount guards, preserved global pauses and safe configuration refresh. The
-  capacity unit must run during mount outages so it can pause SAB; do not restore
-  mount prerequisites that skip the guard entirely. The 100,000-inode floor and
-  1.25x byte estimate are polling safeguards, not hard quotas or arbitrary-archive
-  expansion guarantees. Follow the current plan for deployment and backup evidence.
-  Live queue review also exposed SAB's paused arrivals reporting priority `Normal`.
-  Intake now checks exact saved paused RSS provenance, bounded time/size and the
-  immutable activation exclusions. Do not restore priority-only intake or adopt
-  arbitrary normal-priority pauses. Seven of eighteen overlooked arrivals fit
-  the unchanged reserve at the diagnostic snapshot; verify actual progress after
-  deployment instead of treating a capacity wait as proof every queued job is owned.
-
-- September 17 recovery coverage is verified for the current cart/capacity
-  extension: the guarded fresh archive independently decrypted/restored with all
-  660 entries, four databases, exact current helpers and activation marker,
-  controller state and 21 journals. Seventeen completed journals record 13 native
-  movie imports plus four existing-target reconciliations; do not count the latter
-  as fresh imports. Exact payload absence, current native ownership and SAB history
-  passed read-only review; five sidecars and four identity-held journals remain
-  protected. Two oldest canonical signatures differ only in inode; no media was
-  rehashed during this review. Follow the [current receipt](recovery/drills/cart-capacity-checkpoint-20260917.json)
-  and plan for remaining Plex/TV/Arr acceptance and later checkpoint refreshes.
-  The extended capacity tests remain incomplete, especially inode pressure and
-  application/mount outage injection. Do not close that checklist from the 27
-  passing capacity tests alone.
+- September 17 deployed source is `edf223e` plus `5790fcf`: application-available
+  inode checks, native mount/root availability, preserved manual pauses and exact
+  paused RSS intake. The capacity service must run during mount outages to pause
+  SAB; do not restore mount prerequisites that prevent the guard from running.
+  Seven requests ran after the intake correction; five imported and cleaned,
+  two hit identity holds. User-approved exact disposal of those two held payloads
+  reclaimed 21,940,561,867 bytes and preserved paused replacement requests/history.
+  Replacements still need identity resolution. Original four held payloads remain.
+- The latest queue is again capacity-blocked: 18 paused entries, no active job,
+  80,315,387,904 available bytes, both automation timers active and global SAB
+  resumed. Do not claim the backlog is draining. CX53 resizing was not applied;
+  source/private inputs are back to CX43. No storage purchase or remote scratch
+  migration occurred. Read the current plan before choosing the next capacity fix.
+- `cloud-20260917T143828Z.tar.age` independently restored 671 files, four databases,
+  28 importer journals (22 completed) and both exact disposition journals. Helpers,
+  activation and controller state matched current source/live records. Older
+  handoff counts below are historical. The full suite ran 598 cases, with 589
+  passes and nine optional skips; syntax/current scan passed and history reports
+  the two known RSA keys. Synthetic extended capacity tests are now covered,
+  while actual remaining backlog, TV, Arr-owned cleanup and playback are not.
+  See the [progress receipt](recovery/drills/cart-queue-progress-20260917.json).
 
 - Cloud SAB's **NZBGeek Cart** feed is enabled with 15-minute polling. Preserve
   this user-authorized cart-only workflow and its Default category; see

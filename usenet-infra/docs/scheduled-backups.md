@@ -83,6 +83,13 @@ immutable, and ordinary freshness checks still apply.
 
 ## Cart importer checkpoint
 
+Latest verified capture: `cloud-20260917T143828Z.tar.age` independently decrypted
+and restored all 671 entries and four databases, including 28 importer journals
+(22 completed), both user-approved held-payload disposition journals, unchanged
+activation, current helpers and matching controller state. This supersedes the
+older count below; no replacement-host restore is claimed.
+[Progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
+
 **Verified September 17, 2026:** the installed scheduler captured
 `cloud-20260917T042530Z.tar.age` under its normal locks and quiet-state guard.
 Independent local decryption and isolated restore verified all 660 manifest

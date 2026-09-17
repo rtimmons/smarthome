@@ -1,77 +1,56 @@
 # Usenet status and closure plan
 
-## Current handoff — September 17, 2026
+## Current handoff — September 17, 2026, 14:38 UTC
 
-**Implementation follow-up in progress:** capacity guards now cover application-
-available inodes, native application/mount availability, malformed sizes and
-global pauses. Refresh preserves existing ownership and admitted reservations.
-Synthetic coverage includes the bounded 40 GiB download/repair/unpack allocation
-trace and service behavior during mount loss. This source checkpoint precedes
-deployment and a refreshed encrypted archive; the prior runtime evidence below
-remains dated. Exact Plex matching now found all 17 completed journals in Movies
-(Remote), without issuing a scan. Four private holds remain justified: two source
-year mismatches and two ambiguous catalog identities. TV/Arr-owned selections
-and device playback remain prerequisites, not inferred passes.
+Capacity guards and corrected paused RSS intake are committed (`edf223e`,
+`5790fcf`) and deployed. SAB materializes paused feed arrivals with priority
+`Normal`; exact saved RSS provenance now admits those requests without adopting
+manual pauses. Seven queued requests subsequently ran: five completed native
+imports and independent verification/cleanup, reclaiming **61,260,245,624 bytes**;
+two reached catalog identity holds. Serialization stayed at one job through cleanup.
 
-Queue-progress follow-up found 18 newer paused cart arrivals outside controller
-ownership because SAB reports their materialized priority as `Normal`; seven fit
-the current budget. Exact saved paused RSS evidence now qualifies those arrivals
-without adopting unrelated manual pauses. Deploy the correction and observe real
-byte progress. The first new backup attempt was refused by a consistency guard;
-do not count that attempt as verified recovery coverage.
+At the user's direction, the exact four files belonging to those two new holds
+were rehashed and removed, reclaiming **21,940,561,867 bytes**. Their original SAB
+history remains, with one paused replacement request each. Replacements remain
+held for identity resolution to avoid repeatedly downloading the same rejected
+release. Separate durable disposition journals record that these were discarded
+recoverable payloads, not successful imports. The four older identity-held
+payloads and historical scratch remain unchanged.
 
-The post-activation recovery checkpoint is now verified. The installed scheduler
-created `cloud-20260917T042530Z.tar.age` during a guarded quiet window; isolated
-decryption/restore verified all 660 files and four SQLite databases. The archive
-contains the unchanged activation marker, exact current worker/adapters and
-capacity helper (matching deployed files and source), controller state, importer
-status and all 21 journals. All 17 completed journals matched the live snapshot.
-Original bound snapshots and production state were preserved. See the
-[checkpoint receipt](usenet-infra/recovery/drills/cart-capacity-checkpoint-20260917.json).
+**The queue is capacity-blocked again, so the repair is not closed.** The latest
+snapshot has 18 individually paused entries, no active/postprocessing job, a
+resumed global queue and **80,315,387,904 available bytes**. Both automation timers
+are active. Admission still reserves remaining archive bytes plus 1.25 times the
+release size, a 5 GiB margin and 30 GiB free. A largest roughly 80 GB request does
+not imply an 80 GB unpacking peak. A CX43→CX53 plan was inspected but **not
+applied**; its source/private input changes were reverted. No storage was bought.
+The existing Storage Box has about 743 GB free, but remote unpack staging is not
+implemented. Its SSHFS mount rejected exclusive rename with EINVAL during a
+five-byte disposable probe; preserve verified cleanup semantics if developing
+that option. Do not assume this probe deployed a storage change.
 
-Read-only completion review established 13 native import jobs and four verified
-existing-target reconciliations, with **205,244,135,641 bytes reclaimed** recorded
-by the worker. All 17 retain completed SAB history, matching current native file
-ownership and absent exact scratch/quarantine payloads. Twelve journals are fully
-cleaned; five retain one sidecar each. Four other journals remain held for identity
-ambiguity or mismatch. Source/canonical SHA-256 evidence is captured in the verified
-backup; this session did not rehash media. Two oldest canonical signatures differ
-only in inode, with size and modification time unchanged. Fresh Plex indexing
-evidence remains separate; no scan or acquisition was requested.
+A fresh guarded archive, `cloud-20260917T143828Z.tar.age`, independently decrypted
+and restored: **671 files, four SQLite databases, 28 importer journals, 22 completed
+journals and both disposition journals**. Current helpers, activation marker,
+controller state and completed journals matched source/live evidence. Of the 22
+completed records, four are existing-target reconciliations and 18 are native
+imports. Original recovery snapshots remain immutable.
 
-The cloud APIs respond; the discovery health failures observed in this session
-were update-available warnings, not HTTP/database failures. Catalog failures refer
-to guarded import holds. NAS health passed with no active/failed transfers. Both
-cart feeds remain enabled at paused priority. At the private 04:28 UTC snapshot,
-about 80.4 GB was application-visible, the global queue was resumed, and all 18
-queue entries were individually paused without exact-filename duplicates. The
-controller reported an ordinary capacity/size wait; preserve its decisions and
-the protected holds. Queue counts can change with subsequent cart polling.
-The final cloud health check reported five controller-owned queued requests, zero
-admitted and three controller holds, with 80.4 GB free. Six catalog failures and
-nine importer hold/sidecar notices remain visible. Native status has 19 movies,
-one locally copied, no TV and no active/failed NAS transfers.
+The full infrastructure suite ran 598 cases: 589 passed and nine optional skips.
+Compilation, shell/YAML and deployment syntax passed; full-history scanning still
+reports only the two documented historical RSA keys. Current-source scanning
+passed. Synthetic inode, mount/application outage, pause/restart, burst and peak
+allocation tests are complete; this is not a hard disk quota or arbitrary archive
+expansion guarantee. Read-only Plex matching found the earlier 17 completed
+records; later selected-directory scans do not yet establish indexing of all five
+new imports. TV, Arr-owned cleanup and user-deferred playback remain distinct.
 
-Nine new synthetic capacity regressions pass, including a 12-request burst with
-duplicate polls and controller restarts, unpack waits, budget boundaries, reserve
-breaches, user pauses, lock contention, failed reservation writes and lost resume
-responses. The full suite ran 578 cases: 569 passed and nine optional skips;
-compilation, shell/YAML and all deployment syntax checks passed. Full-history
-scanning still reports only the two documented RSA keys.
-Current-source/index scanning and diff whitespace checks pass. Extended capacity
-validation remains open: inode pressure, application/mount outage injection and
-realistic peak-allocation fixtures still need work. The current byte-budget check
-does not inspect free inode capacity. Do not mark that checklist complete from
-these regressions alone.
-
-Next: finish those synthetic failure cases, review exact private import holds,
-and collect Plex indexing evidence for accepted movie completions. TV, Arr-owned
-cleanup, selective TV NAS copying and user-deferred playback remain distinct.
-Refresh the verified checkpoint after later accepted completions. This checkpoint
-follows source head `2d43f4c` on `usenet`; GitHub `usenet` was read-only verified at
-`204df8c`. At the user's request, tests/docs/receipt are committed locally.
-No deployment, queue release, manual payload deletion, push or merge accompanies
-the commit. Unrelated lighting changes, `msg` and packages are preserved.
+See the [progress receipt](usenet-infra/recovery/drills/cart-queue-progress-20260917.json).
+Next work is to make the remaining backlog fit while retaining automatic cleanup,
+resolve identity holds without guessing, and verify later Plex indexing. Preserve
+the active timers, 30 GiB floors, canonical files and exact recovery journals.
+No PR, push, merge, VM resize or server restart was performed. Unrelated lighting
+edits, `msg` and packages remain untouched.
 
 ## Previous handoff — September 16, 2026
 
@@ -464,7 +443,7 @@ This checklist now records the implemented fix and remaining extended validation
 
 ### Validate and close
 
-- [ ] Test multi-cart bursts, repair/unpack peak usage, undersized free space,
+- [x] Test multi-cart bursts, repair/unpack peak usage, undersized free space,
   unknown sizes, retained failures, root/inode pressure, application/mount outages,
   manual pauses, controller restarts and duplicate polling. Assert that admission
   never overspends reservations, application state remains writable, and no
