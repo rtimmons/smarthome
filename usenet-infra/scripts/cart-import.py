@@ -27,6 +27,8 @@ from cart_import_sab import SabSource
 SCHEMA = 1
 MAX_FILES = 10000
 TERMINAL = {'cleaned', 'cleaned_with_retained_files'}
+HOLD_LOGIC_VERSION = 2
+MIGRATABLE_HOLDS = {'movie_year_missing', 'native_target_has_file'}
 
 
 class Hold(RuntimeError):
@@ -302,6 +304,7 @@ class Coordinator:
 
     def advance(self, record):
         self.guard_job(record)
+        verified_now = False
         if record['phase'] == 'admitted':
             directory = source_directory(record['job'], self.root)
             storage = self.root / PurePosixPath(record['job']['storage']).relative_to('/data/complete')
@@ -323,7 +326,21 @@ class Coordinator:
             self.source_unchanged(record)
             directory = Path(record['source_dir'])
             plan = self.arr.prepare(record['job'], directory, [directory / n for n in record['sources']])
-            record.update(plan=plan, phase='prepared')
+            if plan.get('existing_target') is True:
+                verified = []
+                for entry in plan['files']:
+                    source = confined(Path(entry['source']), directory)
+                    relative = str(source.relative_to(directory))
+                    if relative not in record['sources']:
+                        raise Hold('unowned_existing_source')
+                    expected = record['sources'][relative]
+                    proof = self.remote.verify(Path(entry['destination']), expected['signature'][0], expected['sha256'])
+                    verified.append({'source': relative, 'canonical': proof})
+                self.source_unchanged(record)
+                record.update(plan=plan, verified=verified, phase='verified', verified_at=self.clock())
+                verified_now = True
+            else:
+                record.update(plan=plan, phase='prepared')
             self.persist(record)
         if record['phase'] == 'prepared':
             self.guard_job(record)
@@ -352,7 +369,6 @@ class Coordinator:
                 self.sleep(5)
             record['phase'] = 'imported'
             self.persist(record)
-        verified_now = False
         if record['phase'] == 'imported':
             self.guard_job(record)
             self.source_unchanged(record)
@@ -468,6 +484,11 @@ class Coordinator:
                 if record['phase'] == 'cleaned_with_retained_files':
                     self.counts['held'] += 1
                 continue
+            if (record.get('hold') in MIGRATABLE_HOLDS
+                    and int(record.get('hold_logic_version', 0)) < HOLD_LOGIC_VERSION):
+                record.pop('hold', None)
+                record['hold_logic_version'] = HOLD_LOGIC_VERSION
+                self.persist(record)
             if record.get('hold'):
                 self.counts['held'] += 1
                 continue
@@ -490,6 +511,7 @@ class Coordinator:
                     self.counts['errors'] += 1
                     continue
                 record['hold'] = reason
+                record['hold_logic_version'] = HOLD_LOGIC_VERSION
                 self.persist(record)
                 self.counts['held'] += 1
                 catalog.record_failure(self.settings, 'cart-import', 'cart-' + path.stem,

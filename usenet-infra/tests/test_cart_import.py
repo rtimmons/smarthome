@@ -176,6 +176,38 @@ class WorkerTests(unittest.TestCase):
         self.assertEqual(self.make_worker().run()['completed'], 1)
         self.assertEqual(self.arr.submissions, 1)
 
+    def test_existing_exact_canonical_media_is_verified_and_reclaims_source(self):
+        self.coordinator.arm()
+        directory, _ = self.job()
+        destination = self.library / 'Movies' / directory.name / 'Movie.2026.mkv'
+        destination.parent.mkdir(parents=True)
+        shutil.copyfile(directory / 'Movie.2026.mkv', destination)
+        original = self.arr.prepare
+        self.arr.prepare = lambda job, source, files: {
+            'existing_target': True,
+            'files': [{'source': str(directory / 'Movie.2026.mkv'), 'destination': str(destination)}],
+        }
+        result = self.coordinator.run()
+        self.assertEqual(result['completed'], 1)
+        self.assertFalse(directory.exists())
+        self.assertEqual(self.arr.submissions, 0)
+        self.assertEqual(self.remote.calls, 1)
+        self.arr.prepare = original
+
+    def test_legacy_supported_hold_is_retried_once(self):
+        self.coordinator.arm()
+        self.job()
+        original = self.arr.prepare
+        self.arr.prepare = mock.Mock(side_effect=worker.CartImportHold('movie_year_missing'))
+        self.coordinator.run()
+        record = self.record()
+        record.pop('hold_logic_version', None)
+        self.coordinator.persist(record)
+        self.arr.prepare = original
+        result = self.make_worker().run()
+        self.assertEqual(result['completed'], 1)
+        self.assertNotIn('hold', self.record())
+
     def test_unimported_sidecar_retained_and_reported(self):
         self.coordinator.arm()
         directory, _ = self.job()

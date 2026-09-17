@@ -101,6 +101,24 @@ class HealthTests(unittest.TestCase):
         (root / 'status.json').unlink(); (root / 'status.json').symlink_to(root / 'armed.json')
         self.assertEqual(healthcheck.cart_import_check().status, 'fail')
 
+    def test_capacity_admission_health_distinguishes_waiting_from_failure(self) -> None:
+        root = self.base / 'state/capacity-admission'
+        root.mkdir(parents=True)
+        payload = {'schema_version': 1, 'updated_at': time.time(), 'owned': ['one'],
+                   'admitted': {'estimate_bytes': 1}, 'held': [], 'failure_retries': {}, 'blocked': None}
+        (root / 'state.json').write_text(json.dumps(payload))
+        self.assertEqual(healthcheck.capacity_admission_check().status, 'ok')
+        payload.update(admitted=None, blocked='awaiting_capacity_or_known_size')
+        (root / 'state.json').write_text(json.dumps(payload))
+        self.assertEqual(healthcheck.capacity_admission_check().status, 'warn')
+        payload['blocked'] = 'awaiting_cart_reconciliation'
+        (root / 'state.json').write_text(json.dumps(payload))
+        self.assertEqual(healthcheck.capacity_admission_check().status, 'warn')
+        payload['blocked'] = 'reserve_breached'
+        (root / 'state.json').write_text(json.dumps(payload))
+        self.assertEqual(healthcheck.capacity_admission_check().status, 'fail')
+        self.assertNotIn('reserve_breached', healthcheck.capacity_admission_check().detail)
+
     def test_abandoned_operation_fails_transfer_health(self) -> None:
         settings = catalogctl.Settings.from_env()
         catalogctl.atomic_json(settings.state_root / "operations" / "authorized-test.json", {

@@ -17,7 +17,7 @@ from pathlib import Path
 import stat
 import tempfile
 
-FILES = ('cart-import.py', 'cart_import_sab.py', 'cart_import_arr.py',
+FILES = ('capacity-admission.py', 'cart-import.py', 'cart_import_sab.py', 'cart_import_arr.py',
          'discovery-config.py', 'catalogctl.py', 'config-backup.py', 'healthcheck.py')
 
 

@@ -133,7 +133,6 @@ class NativeArr:
             require(bool(re.fullmatch(r'tt\d+', str(imdb))), 'catalog_id_invalid')
             term = 'imdb:' + imdb
         else:
-            require(not is_movie or isinstance(year, int) and year >= 1900, 'movie_year_missing')
             term = title
         values = self._call(app, ('movie' if is_movie else 'series') + '/lookup?' + urlencode({'term': term}))
         require(isinstance(values, list), 'catalog_lookup_invalid')
@@ -244,7 +243,24 @@ class NativeArr:
         if television:
             plan['baseline_file_ids'] = [f['id'] for f in self._call(app, 'episodefile?' + urlencode({'seriesId': target['id']}))]
         else:
-            require(not target.get('hasFile') and not target.get('movieFileId'), 'native_target_has_file')
+            if target.get('hasFile') or target.get('movieFileId'):
+                require(target.get('hasFile') and isinstance(target.get('movieFileId'), int)
+                        and target['movieFileId'] > 0 and len(videos) == 1, 'native_existing_file_invalid')
+                source = videos[0]
+                parsed_file = self._parse(app, source.name)
+                title = parsed_file.get('movieTitle') or parsed_file.get('primaryMovieTitle') or next(iter(parsed_file.get('movieTitles') or []), '')
+                require(normalized(title) == normalized(selected['title']) and parsed_file.get('year') == selected.get('year'),
+                        'movie_source_identity_mismatch')
+                record = target.get('movieFile') or self._call(app, 'moviefile/' + str(target['movieFileId']))
+                require(record.get('id') == target['movieFileId'] and record.get('movieId') == target['id']
+                        and isinstance(record.get('path'), str) and record.get('size') == source.stat().st_size,
+                        'native_existing_file_invalid')
+                destination = host_destination(app, record['path'])
+                require(destination.is_file() and destination.stat().st_size == source.stat().st_size,
+                        'native_existing_file_invalid')
+                plan.update(existing_target=True, files=[{'source': str(source),
+                    'destination': str(destination), 'signature': signature(source)}])
+                return plan
         candidates = self._call(app, 'manualimport?' + urlencode({'folder': api_source(directory), 'filterExistingFiles': 'true'}))
         require(isinstance(candidates, list), 'native_candidates_invalid')
         by_path = {api_source(p): p for p in videos}

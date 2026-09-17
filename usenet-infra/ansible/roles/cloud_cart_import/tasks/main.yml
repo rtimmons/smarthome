@@ -10,6 +10,17 @@
     state: stopped
   when: cart_import_timer.stat.exists
 
+- name: Discover whether the capacity admission timer is installed
+  ansible.builtin.stat:
+    path: /etc/systemd/system/usenet-capacity-admission.timer
+  register: capacity_admission_timer
+
+- name: Stop only the capacity admission timer before changing controller code
+  ansible.builtin.systemd_service:
+    name: usenet-capacity-admission.timer
+    state: stopped
+  when: capacity_admission_timer.stat.exists
+
 - name: Refuse to refresh an active importer or interrupt its native Arr command
   ansible.builtin.command:
     argv: [systemctl, is-active, usenet-cart-import.service]
@@ -70,6 +81,7 @@
         group: root
         mode: '0500'
       loop:
+        - capacity-admission.py
         - cart-import-install.py
         - cart-import.py
         - cart_import_sab.py
@@ -96,14 +108,18 @@
         path: '{{ cart_import_stage.path }}'
         state: absent
 
-- name: Install importer-only service and timer
+- name: Install importer and capacity-admission services and timers
   ansible.builtin.template:
     src: '{{ item }}.j2'
     dest: '/etc/systemd/system/{{ item }}'
     owner: root
     group: root
     mode: '0644'
-  loop: [usenet-cart-import.service, usenet-cart-import.timer]
+  loop:
+    - usenet-cart-import.service
+    - usenet-cart-import.timer
+    - usenet-capacity-admission.service
+    - usenet-capacity-admission.timer
 
 - name: Arm future cart jobs once without enrolling current jobs or resetting the baseline
   ansible.builtin.command:
@@ -114,9 +130,26 @@
   become_user: usenet
   changed_when: false
 
+- name: Configure durable paused intake and initialize capacity ownership
+  ansible.builtin.command:
+    argv:
+      - /bin/sh
+      - -c
+      - 'set -a; . {{ cloud_data_root }}/config/catalog.env; exec /usr/bin/python3 {{ cloud_data_root }}/libexec/capacity-admission.py configure'
+  become_user: usenet
+  register: capacity_admission_configure
+  changed_when: false
+
 - name: Enable only the cart importer timer
   ansible.builtin.systemd_service:
     name: usenet-cart-import.timer
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Enable the capacity admission timer
+  ansible.builtin.systemd_service:
+    name: usenet-capacity-admission.timer
     daemon_reload: true
     enabled: true
     state: started

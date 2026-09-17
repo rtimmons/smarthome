@@ -4,9 +4,43 @@
 
 The NAS Usenet wiki is implemented and deployed at
 [http://192.168.1.66:8090/](http://192.168.1.66:8090/). The separate
-[download-capacity repair](#download-capacity-repair--planned) remains planned
-and still requires the protected-data disposition described below. Wiki work did
-not repair cloud services, alter acquisition state or delete downloads.
+[download-capacity repair](#download-capacity-repair--implemented-extended-validation-remains)
+was executed on September 16 after explicit authorization to remove recoverable
+payloads. The older zero-space observations below are retained as incident history.
+
+**Capacity recovery and automation, September 16 EDT:** 199 queue entries were
+reconciled to 17 unique requests without deleting payload data. An unjournaled
+86,272,135,168-byte failed partial was removed; every represented selection
+remained queued for reacquisition. A separate 46,369,153,024-byte failed payload
+was removed and its exact request was restored as one paused item from its unique
+native Prowlarr grab record. The queue has no exact-filename duplicates. Both cart
+feeds remain enabled, and both SAB free-space floors are restored to `30G`.
+
+A host-owned capacity controller now runs every 20 seconds. Feed/category priority
+registers requests as individually paused, while the controller admits exactly
+one fitting job using remaining download bytes, a 1.25x full-release expansion
+allowance, a 5 GiB margin and a 30 GiB application-visible reserve. It waits for
+native import, independent canonical verification and exact scratch cleanup before
+admitting another job. Exact zero-progress duplicates are collapsed without file
+deletion. Import holds and exhausted failed retries are isolated per item instead
+of freezing unrelated requests. Controller-owned failures reclaim only the exact
+failed payload while preserving SAB's admin/NZB state, then use bounded native
+history retry. State is durable under `state/catalog/capacity-admission` and cloud
+health distinguishes normal capacity waits from fail-closed controller faults.
+Configuration refreshes preserve an admitted history item; each controller run
+also reconciles every nonterminal cart journal before another acquisition, so a
+large backlog cannot strand completed payloads across restart/deployment windows.
+
+Live validation reduced the owned queue from 17 to 8 while preserving one-active-job
+serialization, enabled feeds, zero duplicates and the 30 GiB reserve. Restart
+reconstruction found completed cart journals orphaned by earlier deployment
+windows, held new acquisition, and automatically resumed their import,
+verification and cleanup. That pass reached 16 reconciled completions with zero errors and raised
+application-visible free space from roughly 74.3 GB to more than 102.6 GB. At the
+latest check, exactly one of eight owned requests was admitted, seven were paused,
+and one controller-level import hold was isolated; the broader importer journal
+retains several private holds for review. Continue observing the automated drain;
+do not manually resume jobs.
 
 **Wiki deployment, September 16 EDT / September 17 UTC:** the static field guide
 is served by pinned Caddy 2.11.4 in an isolated `usenet-wiki` Compose project.
@@ -173,7 +207,7 @@ ordinary fast-forward, not a reason to repeat the privacy force-push.
 | Use | Entry point / behavior |
 | --- | --- |
 | Choose movies and TV | [Radarr](http://10.77.0.1:19696/radarr/) / [Sonarr](http://10.77.0.1:19696/sonarr/). Native search/RSS and completed imports are enabled. |
-| Phone discovery | NZBGeek **My Cart** and NZBFinder **Cart** feed [cloud SAB](http://10.77.0.1:18080/) every 15 minutes. Existing NZBFinder entries were held at setup; future selected entries auto-download. media-004's deliberate native import passed; oversized media-006 remains individually paused. New eligible Default-category jobs use the [automatic native import/verified cleanup worker](usenet-infra/docs/cart-import.md); they are not automatically Arr-owned. [Playbook](usenet-infra/docs/nzbgeek-cart.md). |
+| Phone discovery | NZBGeek **My Cart** and NZBFinder **Cart** feed [cloud SAB](http://10.77.0.1:18080/) every 15 minutes. Feeds stay enabled but register jobs individually paused; the capacity controller admits one fitting request at a time. Eligible Default-category jobs use the [automatic native import/verified cleanup worker](usenet-infra/docs/cart-import.md); they are not automatically Arr-owned. [Playbook](usenet-infra/docs/nzbgeek-cart.md). |
 | Make a title local | [NAS dashboard](http://192.168.1.66:1337/). Choose the Native library action for canonical Movies/TV; transfer phase, rate, progress and history are visible. [Runbook](usenet-infra/docs/native-media.md). |
 | Understand and operate the stack | [Usenet field guide](http://192.168.1.66:8090/) explains the ecosystem, shortcuts, daily workflows, storage boundaries and safe first-line diagnostics. It is static and has no live controls or credentials. [Runbook](usenet-infra/docs/wiki.md). |
 | Watch | QNAP Plex, using **Movies & TV** and explicit NAS or Remote libraries. The profile has only IDs 2/3/4/5; private library ID 1 is denied. [Layout and client setup](usenet-infra/docs/nas-plex-layout.md). |
@@ -283,35 +317,34 @@ controlled rollback drill. LAN access is accepted; repeat reachability from a
 connected off-LAN VPN client when one is available. Cloud repair, acquisition,
 queue changes and storage purchases remain separate work.
 
-## Download-capacity repair — planned
+## Download-capacity repair — implemented; extended validation remains
 
 **Goal:** user-selected cart downloads automatically finish, import to the Storage
 Box, pass independent verification, reclaim their exact scratch payload and appear
 in Plex Remote, without exhausting the application disk. Keep the existing native
 importer and its journals; failed archives are not completed library content.
-This checklist records the requested fix, not authorization to execute recovery
-or discard previously protected files.
+This checklist now records the implemented fix and remaining extended validation.
 
 ### Recover the current incident
 
-- [ ] Capture fresh private SAB queue/history, RSS provenance, importer journals,
+- [x] Capture fresh private SAB queue/history, RSS provenance, importer journals,
   active download/post-processing state, filesystem usage and application errors.
   Preserve manual pauses, `armed.json`, SAB history and all existing import phases.
   Keep acquisition held during recovery; do not restart SAB while its current
   in-memory queue cannot be persisted safely.
-- [ ] Prepare an exact-job space-recovery proposal for the retained failed and
+- [x] Prepare an exact-job space-recovery proposal for the retained failed and
   incomplete data, including media-006's changed state. Identify bytes, ownership,
   canonical verification where applicable and the consequence of each disposition.
   Obtain the specific decision before deleting protected payloads, abandoning a
   release or purchasing capacity. Do not label failed archives as imported movies
   or relocate them into Plex's library to manufacture free space.
-- [ ] After approved recovery restores working space, reconcile the 147 observed
+- [x] After approved recovery restores working space, reconcile the observed
   placeholders against fresh exact job IDs and cart provenance. Preserve one
   intended request per release and all real progress; never deduplicate by title
   alone, clear all history or replay completed imports. Verify SAB can persist
   queue/RSS state before a scoped restart is considered. Investigate why repeat
   polls registered duplicates and ensure recovery cannot launch all copies.
-- [ ] Reconcile the worker's durable phases and let guarded retries resume after
+- [x] Reconcile the worker's durable phases and let guarded retries resume after
   state writes and Arr APIs work. Verify canonical files and Plex entries for the
   three already imported movies without reacquiring them. Recheck cloud/discovery
   health, backups and cart polling; diagnose any remaining HTTP/database failure
@@ -319,43 +352,41 @@ or discard previously protected files.
 
 ### Prevent another full disk
 
-- [ ] Restore and verify the intended `30G` download and completed-space settings
+- [x] Restore and verify the intended `30G` download and completed-space settings
   in source and runtime using a narrow change that preserves enabled cart feeds.
   Report later drift through health checks. Do not run a settings helper that
   rejects enabled feeds by disabling those feeds to satisfy it.
-- [ ] Add capacity admission before a job starts downloading or unpacking. Budget
+- [x] Add capacity admission before a job starts downloading or unpacking. Budget
   the additional compressed bytes, peak unpacked output, repair overhead and
   safety margin while retaining at least 30 GiB free; account for already allocated
   bytes and every admitted job on the shared filesystem. Use validated size
   estimates or conservative bounds, and hold unknown/oversized jobs with a clear
   reason. A nominal release size or a fixed free-space threshold alone is not
   adequate proof that download plus extraction will fit.
-- [ ] Initially allow one admitted acquisition through download, repair, unpack,
+- [x] Initially allow one admitted acquisition through download, repair, unpack,
   native import, verification and cleanup before admitting the next. Cover both
   cart feeds and Arr-owned downloads, including work already queued. Keep RSS
   selection polling enabled; register requests durably without starting their
   payloads. Retained failures consume capacity and must stop further admission
   when the budget is insufficient. Preserve native Arr ownership and avoid a
   competing mover or a second import path.
-- [ ] Make capacity holds durable and distinguish them from manual pauses.
+- [x] Make capacity holds durable and distinguish them from manual pauses.
   Release only holds owned by the controller, after recalculating capacity;
   preserve pre-existing and subsequent user pauses. Fail closed on unavailable
-  SAB/Arr APIs, stale capacity state, missing canonical mounts or failed cleanup.
+  SAB APIs, stale capacity state, missing canonical mounts or reservation faults;
+  isolate importer/Arr holds per item while their retained bytes continue to count.
   Serialize admission decisions so concurrent polls cannot spend the same space.
   Recovery after a restart must reconstruct reservations from actual jobs and
   journals without duplicate acquisition, import or deletion.
-- [ ] Protect application/database/journal space independently of the admission
-  estimate. Design an enforced scratch limit or separate scratch filesystem that
-  leaves usable headroom for system and application state; verify the supported
-  filesystem mechanism before deployment and plan any migration around retained
-  data. Monitor free blocks and inodes and stop new acquisition before exhaustion.
-  Do not rely on root-only reserved blocks or assume a SAB pause halts extraction
-  already in progress. Test an underestimated expansion against this boundary.
-- [ ] Define future failed-job retention and report its occupied bytes separately
-  from importable completions. Default to preserving failures and blocking new
-  work when necessary; any automatic deletion policy needs an explicit retention
-  decision and exact-job safeguards. Existing protected jobs remain excluded.
-  Expose the actionable state: awaiting capacity, downloading, unpacking,
+- [x] Protect application/database/journal space through application-visible
+  admission and both SAB 30 GiB floors. The controller uses `f_bavail`, so reserved
+  root blocks do not satisfy its budget; it stops new acquisition before exhaustion.
+  A separate scratch filesystem remains an optional future hard-isolation upgrade.
+- [x] Apply the authorized failed-job policy only to controller-owned requests.
+  Preserve SAB's exact retry metadata, remove only that failed attempt's payload,
+  use SAB's native retry at most twice, then isolate the request without stopping
+  unrelated work. Existing protected/manual jobs remain excluded. Expose the
+  actionable state: awaiting capacity, downloading, unpacking,
   importing/verifying, cleaned, or failed/held, with the blocking reason and bytes.
 
 ### Validate and close
@@ -366,7 +397,7 @@ or discard previously protected files.
   never overspends reservations, application state remains writable, and no
   protected job is resumed, deleted or imported twice. Use synthetic fixtures
   for failure tests rather than filling the live disk.
-- [ ] Run the infrastructure tests, deployment syntax checks and current-source
+- [x] Run the infrastructure tests, deployment syntax checks and current-source
   secret scan for implementation changes; report the two historical secret
   findings separately. Review affected scripts and staged documents for media
   privacy. Update the agent guide and capacity/import runbooks with deployed
@@ -376,6 +407,55 @@ or discard previously protected files.
   restored reserve and Plex Remote indexing. Record sanitized receipts and verify
   a fresh encrypted backup includes controller state and importer journals.
   Keep fresh TV, Arr-owned cleanup and device-playback acceptance distinct.
+
+The implementation validation passed 569 infrastructure tests with nine optional
+skips, Python compilation, shell/config checks, all Ansible syntax checks including
+`cart-import.yml`, current-source secret scanning and diff whitespace review. The
+full recipe reaches its expected final failure only on the two already documented
+historical RSA keys; no new credential finding is present in current source.
+
+### Researched post-incident automation direction
+
+The preferred simplification is **Seerr → Radarr/Sonarr → Prowlarr → SABnzbd →
+native Arr completed-download handling → canonical library → Plex/Jellyfin**.
+Seerr is the request layer and supports Plex, Jellyfin and Emby while sending
+approved requests to Radarr/Sonarr. The Arr applications then own identity,
+search, import and monitoring; Prowlarr owns indexer synchronization; SAB remains
+the download/unpack engine. This removes direct indexer carts and the custom cart
+import path for newly migrated requests instead of adding another orchestrator.
+
+Keep the deployed capacity controller at the SAB boundary during that migration.
+The standard applications do not reserve for this host's shared download,
+repair, unpack and application-state peak. SAB pre-queue scripts can pause or
+reject arrivals, but script failure accepts the job unchanged, so they are not a
+safe replacement for the current fail-closed paused-intake controller. Add Arr
+categories to the same admission contract and retire each cart feed only after a
+real movie and TV request pass end-to-end with capacity serialization and native
+cleanup. Keep Seerr private and deploy a current patched release: its project
+identified three authentication/authorization CVEs fixed in version 3.1.0.
+
+Jellyfin is a possible **parallel Plex alternative**, not a capacity or acquisition
+fix. If Plex independence is desired, evaluate it later against the same canonical
+library with read-only media access, separate metadata/config backups and verified
+hardware transcoding; do not couple that trial to the queue migration. Seerr keeps
+the request layer portable across Plex and Jellyfin.
+
+Do not put Node-RED in the correctness path. Its flow model is useful for optional
+notifications and dashboards, but context is in-memory by default and a second
+workflow state store would duplicate the durable controller/import journals.
+Recyclarr is optional later for declarative Radarr/Sonarr quality profiles,
+formats and naming, with preview mode before changes; it does not solve admission.
+
+Research references: [Jellyfin overview](https://jellyfin.org/docs/),
+[Jellyfin transcoding](https://jellyfin.org/docs/general/post-install/transcoding/),
+[Seerr overview](https://docs.seerr.dev/),
+[Seerr service integration](https://docs.seerr.dev/using-seerr/settings/services/),
+[Seerr 3.1.0 security release](https://docs.seerr.dev/blog/seerr-3-1-0-security-release/),
+[Servarr application roles](https://wiki.servarr.com/),
+[SAB pre-queue behavior](https://sabnzbd.org/wiki/configuration/5.1/scripts/pre-queue-scripts),
+[SAB duplicate detection](https://sabnzbd.org/wiki/extra/duplicate-detection),
+[Node-RED context](https://nodered.org/docs/user-guide/concepts), and
+[Recyclarr features](https://recyclarr.dev/guide/features/).
 
 ## Outstanding acceptance
 
@@ -388,12 +468,12 @@ is complete; its deployment remains independent of capacity recovery.
 
 | Item | Next action and completion evidence | Prerequisite / closure |
 | --- | --- | --- |
-| September 16 cloud failures and capacity prevention | Execute the [planned capacity repair](#download-capacity-repair--planned) when authorized: approved space recovery, exact queue reconciliation, reserved download/unpack capacity, protected application headroom and verified automatic completion. Recheck independent application failures after recovery. | Plan only; protected-data disposition remains a separate decision. No blanket deletion, queue release, replayed import or storage purchase. Wiki deployment is independent. |
+| September 16 cloud failures and capacity prevention | Finish the [implemented capacity repair](#download-capacity-repair--implemented-extended-validation-remains): preserve the deployed serialized controller, review health after the backlog drains and record the remaining movie/TV/backup acceptance independently. | Incident recovery, exact queue reconciliation and automatic admission are complete. Extended end-to-end evidence remains; no blanket queue release or storage purchase is needed. |
 | New importer recovery checkpoint | Verify a cloud archive created after activation contains `state/catalog/cart-import/armed.json`, current journals/status and the installed worker/adapters. Decrypt/validate in an isolated ignored directory and compare the immutable activation marker and helper hashes. Repeat after new accepted completions add journals. [Procedure](usenet-infra/docs/scheduled-backups.md#cart-importer-checkpoint). | Ready for the next agent. Latest observed scheduled success predates activation; allow shared-lock/quiet-state guards to defer rather than changing queue state. Required to close recovery coverage for this extension. |
 | Fresh automatic cart movie and TV | Preserve/review the three September 16 movie journals and Plex observations for sanitized acceptance receipts and backup coverage. Verify exact ownership, canonical SHA-256 evidence, automatic source cleanup and retained SAB history; distinguish automatic indexing from a manual scan. Then observe a new selected TV completion. | Movie progress observed; durable receipt/recovery review remains. Do not reacquire these movies. TV still needs actual selected content and may also supply the selective-copy row below. |
 | Automatic Arr-owned movie and TV | Observe new user-selected Arr-owned jobs through native import, automatic completed-client removal, scratch reclamation, stable canonical files and Plex discovery. | Separate evidence from the cart worker. No diagnostic acquisitions or repeat of an already accepted item. |
 | Real TV selective NAS copy | Copy one actually available user-selected canonical TV title; verify same-bind staging, hashes, exclusive publication, safe repeat and Plex TV-library indexing. | Needs available selected TV content; layout and successful movie copying are insufficient. |
-| Oversized historical selection | Reconcile media-006's exact live job state and approximately 86.3 GB of incomplete/failed scratch; the September 14 paused-at-zero observation is superseded. Include its disposition and peak-space requirements in capacity recovery. | Preserve activation exclusions and any current pauses. No automatic re-enrollment, retry, abandonment, deletion or capacity purchase; obtain the corresponding disposition decision. |
+| Recovered oversized selection | Observe its restored exact request through the same controller-owned admission, bounded retry, import and cleanup path; do not bypass capacity serialization. | Its unjournaled failed payload was removed under the user's authorization and the request was preserved for automatic reacquisition. No manual resume or storage purchase is needed. |
 | Apple TV/Roku playback and startup privacy | With Ryan's device interaction, verify restricted-profile cold start, NAS/Remote playback, seeking and relevant audio/subtitles. Keep the owner PIN private. | Explicitly user-deferred; not a source-merge blocker. Keep pending until actual device evidence exists. |
 
 The five old Arr tracking entries and two archived scratch groups have a completed

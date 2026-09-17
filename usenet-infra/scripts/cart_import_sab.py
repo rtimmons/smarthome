@@ -104,7 +104,9 @@ class SabSource:
                     raise SabError('sab_queue_identity_invalid')
                 seen.add(identity)
                 # Deliberately exclude URLs, nzo_info, provider failures and credentials.
-                jobs.append({key: job[key] for key in ('nzo_id', 'filename', 'status', 'cat', 'mb', 'mbleft', 'percentage') if key in job})
+                jobs.append({key: job[key] for key in
+                             ('nzo_id', 'filename', 'status', 'priority', 'cat', 'mb', 'mbleft', 'percentage')
+                             if key in job})
             if len(jobs) == expected:
                 return jobs, paused
             if len(slots) < PAGE or len(jobs) > expected:
@@ -125,7 +127,7 @@ class SabSource:
                 db.row_factory = sqlite3.Row
                 db.execute('BEGIN')
                 rss = list(db.execute('SELECT feed,url,state,downloaded_at FROM rss LIMIT ?', (LIMIT + 1,)))
-                history = list(db.execute('SELECT nzo_id,name,status,category,completed,storage,archive,time_added,url FROM history LIMIT ?', (LIMIT + 1,)))
+                history = list(db.execute('SELECT nzo_id,name,status,category,completed,path,storage,archive,time_added,url FROM history LIMIT ?', (LIMIT + 1,)))
             if len(rss) > LIMIT or len(history) > LIMIT:
                 raise SabError('sab_database_exceeds_bound')
             by_url = {}
@@ -142,7 +144,7 @@ class SabSource:
                 if not isinstance(identity, str) or not identity or identity in seen:
                     raise SabError('sab_history_identity_invalid')
                 seen.add(identity)
-                item = {key: row[key] for key in ('nzo_id', 'name', 'status', 'category', 'storage')}
+                item = {key: row[key] for key in ('nzo_id', 'name', 'status', 'category', 'path', 'storage')}
                 item.update(completed=epoch(row['completed']), time_added=epoch(row['time_added'] or 0),
                             archive=bool(row['archive']), provenance=None)
                 matches = by_url.get(row['url'], []) if row['url'] else []

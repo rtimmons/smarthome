@@ -65,6 +65,8 @@ class FakeAPI:
             return copy.deepcopy(self.existing[0])
         if route in ('movie/7', 'series/7'):
             return copy.deepcopy(self.existing[0])
+        if route.startswith('moviefile/'):
+            return copy.deepcopy(self.existing[0]['movieFile'])
         if route == 'qualityprofile':
             return [{'id': 1, 'name': 'Any'}]
         if route == 'rootfolder':
@@ -188,12 +190,24 @@ class NativeArrTests(unittest.TestCase):
         with self.assertRaisesRegex(adapter.CartImportHold, 'arr_owned_download'):
             self.prepare()
 
-    def test_existing_canonical_file_is_never_upgraded(self):
+    def test_existing_exact_candidate_is_returned_without_upgrade(self):
+        destination = self.library / 'Movies/Example Movie/Example.Movie.2026.mkv'
+        destination.parent.mkdir(parents=True)
+        destination.write_bytes(self.source.read_bytes())
+        record = {'id': 9, 'movieId': 7, 'path': '/library/Example Movie/Example.Movie.2026.mkv',
+                  'size': self.source.stat().st_size}
         self.api.existing = [{'id': 7, 'title': 'Example Movie', 'tmdbId': 900, 'path': '/library/Example Movie',
-                              'monitored': False, 'hasFile': True, 'movieFileId': 9}]
-        with self.assertRaisesRegex(adapter.CartImportHold, 'native_target_has_file'):
-            self.prepare()
+                              'monitored': False, 'hasFile': True, 'movieFileId': 9, 'movieFile': record}]
+        plan = self.prepare()
+        self.assertTrue(plan['existing_target'])
+        self.assertEqual(plan['files'][0]['destination'], str(destination))
         self.assertFalse(any(call[1] == 'command' and call[2] == 'POST' for call in self.api.calls))
+
+    def test_yearless_unique_movie_identity_is_allowed(self):
+        original = self.api.parsed
+        self.api.parsed = lambda app, title: ({'parsedMovieInfo': {'movieTitle': 'Example Movie',
+            'movieTitles': ['Example Movie'], 'year': None}} if title == self.job['name'] else original(app, title))
+        self.assertEqual(self.prepare()['target_identity'], 900)
 
     def test_destination_collision_created_after_prepare_blocks_submit(self):
         plan = self.prepare()

@@ -22,7 +22,7 @@ class CartSabTests(unittest.TestCase):
         self.dbpath = self.root / 'history.db'
         self.db = sqlite3.connect(self.dbpath)
         self.addCleanup(self.db.close)
-        self.db.executescript('''CREATE TABLE history (nzo_id TEXT,name TEXT,status TEXT,category TEXT,completed INTEGER,storage TEXT,archive INTEGER,time_added INTEGER,url TEXT);
+        self.db.executescript('''CREATE TABLE history (nzo_id TEXT,name TEXT,status TEXT,category TEXT,completed INTEGER,path TEXT,storage TEXT,archive INTEGER,time_added INTEGER,url TEXT);
           CREATE TABLE rss(feed TEXT,url TEXT,state TEXT,downloaded_at INTEGER);''')
         self.queue = {'noofslots': 0, 'paused': False, 'slots': []}
         self.processing = 0
@@ -39,9 +39,10 @@ class CartSabTests(unittest.TestCase):
 
     def job(self, identity='new', url='https://indexer.invalid/nzb?apikey=SECRET', **changes):
         row = dict(nzo_id=identity, name='Selected Movie', status='Completed', category='*', completed=200,
-                   storage='/data/complete/selected/movie.mkv', archive=None, time_added=100, url=url)
+                   path='/data/incomplete/selected', storage='/data/complete/selected/movie.mkv',
+                   archive=None, time_added=100, url=url)
         row.update(changes)
-        self.db.execute('INSERT INTO history VALUES (?,?,?,?,?,?,?,?,?)', tuple(row.values()))
+        self.db.execute('INSERT INTO history VALUES (?,?,?,?,?,?,?,?,?,?)', tuple(row.values()))
         self.db.commit()
 
     def rss(self, url='https://indexer.invalid/nzb?apikey=SECRET', feed=sab.FEED, state='D', downloaded_at=100):
@@ -93,12 +94,16 @@ class CartSabTests(unittest.TestCase):
         self.assertEqual(self.source.job('new')['provenance']['feed'], 'NZBFinder Cart')
 
     def test_queue_hides_provider_url_info_and_preserves_pauses(self):
-        self.queue = {'noofslots': 1, 'noofslots_total': 0, 'paused': False, 'slots': [{'nzo_id': 'pending', 'filename': 'Chosen', 'status': 'Paused', 'url': 'SECRET', 'nzo_info': {'SECRET': 'SECRET'}}]}
+        self.queue = {'noofslots': 1, 'noofslots_total': 0, 'paused': False,
+                      'slots': [{'nzo_id': 'pending', 'filename': 'Chosen', 'status': 'Paused',
+                                 'priority': 'Paused', 'url': 'SECRET',
+                                 'nzo_info': {'SECRET': 'SECRET'}}]}
         self.processing = 2
         result = self.source.snapshot()
         self.assertEqual(result['queue'][0]['status'], 'Paused')
         self.assertFalse(result['paused'])
         self.assertEqual(result['postprocessing'], 2)
+        self.assertEqual(result['queue'][0]['priority'], 'Paused')
         self.assertNotIn('SECRET', json.dumps(result))
 
     def test_truncated_queue_refuses_baseline(self):

@@ -34,6 +34,28 @@ one exact native command or holds for review; it never blindly submits again.
 New TV episode metadata receives a bounded readiness wait and can retry later.
 Temporary connection failures preserve the journal phase for a guarded retry.
 
+The `usenet-capacity-admission.timer` runs every 20 seconds and owns acquisition
+pauses for both cart feeds and the Default/Prowlarr categories. Requests continue
+to register with SAB at paused priority. The controller admits one fitting job at
+a time and does not admit the next until the current job has left SAB and its
+native import/cleanup has reached a terminal state. Its conservative requirement
+is remaining download bytes plus 1.25 times the full advertised release size,
+plus a 5 GiB margin, while leaving at least 30 GiB application-visible free.
+Unknown or oversized requests remain paused.
+
+The controller persists ownership, admission, per-item holds and bounded failure
+retry counts under `/srv/usenet/state/catalog/capacity-admission`. It collapses
+only exact-filename, zero-progress duplicates and never deletes their payloads.
+An importer hold is isolated so unrelated queued work can continue. A failed
+controller-owned download has only its exact history-owned payload reclaimed;
+SAB's `__ADMIN__` state is retained and native history retry requeues it paused.
+After two failed retries it remains held instead of looping forever. Reserve,
+concurrency, state-integrity or API failures pause globally and fail closed.
+Configuration preserves an admitted history item, and normal runs scan all
+nonterminal cart journals before admitting more work. This reconstructs the
+import/cleanup boundary after controller restarts or deployments instead of
+orphaning completed scratch while the queue continues.
+
 After successful native import, native file/history records must establish exact
 ownership. The worker compares each admitted source SHA-256 with an independent
 Storage Box server hash and stable metadata. Only verified payload files enter a
@@ -56,14 +78,17 @@ just usenet-cart-import-status
 just usenet-cloud-health
 ```
 
-Deployment refreshes only worker/helper files and the importer timer. It requires
+Deployment refreshes only worker/helper files and the importer/capacity timers. It requires
 quiet SAB state, the canonical mount and discovery services. It refuses an active
 worker or unreconciled processing receipt; code replacement uses the shared
 catalog cache lock so backups and imports are protected. File replacement is atomic per helper, not a transaction across the entire bundle;
 an interrupted deployment leaves the timer stopped until a clean redeploy. Other
 applications and the retired publisher are not restarted. The worker shares that lock with cloud
 backups for its entire run; complete activation/journal state is already covered
-by the `state/catalog` backup tree. SAB's global and per-job pauses are preserved.
+by the `state/catalog` backup tree. Deployment initializes controller ownership,
+leaves every queue entry individually paused and resumes only SAB's global queue.
+Later manually paused normal-priority jobs are not adopted or deduplicated; only
+new category/feed arrivals carrying SAB's paused priority join controller ownership.
 
 Private state is under `/srv/usenet/state/catalog/cart-import`: `armed.json` holds
 the activation baseline, `jobs/<opaque-reference>.json` holds each import receipt,
@@ -88,14 +113,17 @@ quarantine files manually as a recovery shortcut.
 
 ## Capacity limits
 
-Completion cleanup prevents new imported payloads accumulating on the cloud.
-It cannot reclaim failed downloads or make an oversized active download/unpack
-fit. The September 14 inspection found about 86.4 GB free, of which about 54.2 GB
-remained above the 30 GiB reserve. Approximately 46.4 GB belonged to a failed
-media-008 download, and 17.3 GB to older retained completed content. Those files remain
-protected. media-006's approximately 61.4 GB release remains paused; its potential
-download-plus-unpack requirement exceeds current space. No extra storage was
-purchased, no failed job was discarded and no paused job was resumed.
+Completion cleanup and serialized admission prevent a large queue from spending
+the same free space concurrently. A request that cannot meet the conservative
+peak estimate waits; it is not force-started. Permanently held importer sources
+still consume real capacity and can eventually produce an ordinary
+`awaiting_capacity_or_known_size` warning. Resolve their private journal cause;
+do not lower the reserve or manually resume around it.
+
+The September 16 incident recovery removed an unjournaled failed partial while
+preserving its queued selections, and replaced a separate failed payload with one
+paused request from exact native provenance. No storage was purchased. The live
+controller subsequently resumed a serialized drain with both cart feeds enabled.
 
 Production idle activation and local recovery tests do not prove a fresh live
 completion. Record the next user-selected new cart movie/TV job through native

@@ -122,6 +122,17 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   journaled import or enable the retired publisher. Actual fresh automatic
   completion and TV/Plex acceptance still need a future selected item.
 
+- `usenet-capacity-admission.timer` owns paused acquisition for both cart feeds
+  and the Default/Prowlarr categories. Keep feed/category priority at `-2`, both
+  SAB free-space floors at `30G`, and the global queue resumed; the controller
+  releases exactly one fitting owned job. Its durable state is under
+  `state/catalog/capacity-admission`. Do not manually resume owned jobs, erase
+  holds, lower the reserve or delete `__ADMIN__` from a failed job. Per-item
+  importer holds do not stop unrelated backlog work; reserve, concurrency and
+  integrity failures deliberately fail closed. Deployment/restart preserves an
+  admitted history item and reconciles every nonterminal cart journal before
+  admitting more work; do not reset that state to bypass a reconciliation wait.
+
 - The Downloads status panel is deployed for native and legacy copies.
   `just configure-download-status` inside `usenet-infra` installs its telemetry
   and presentation scripts, holds the shared cache lock through a dashboard-only

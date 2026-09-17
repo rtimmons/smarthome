@@ -225,6 +225,39 @@ def cart_import_check() -> Check | None:
         return Check('cart_import', 'fail', 'cart import activation or worker status could not be verified')
 
 
+def capacity_admission_check() -> Check | None:
+    path = Path(os.environ.get('CATALOG_STATE_ROOT', '/data/state')) / 'capacity-admission/state.json'
+    if not path.exists() and not path.is_symlink():
+        return None
+    try:
+        if path.is_symlink() or not path.is_file():
+            raise ValueError('invalid state path')
+        payload = json.loads(path.read_text(encoding='utf-8'))
+        if payload.get('schema_version') != 1 or not isinstance(payload.get('owned'), list):
+            raise ValueError('invalid state')
+        held = payload.get('held', [])
+        retries = payload.get('failure_retries', {})
+        admitted = payload.get('admitted')
+        blocked = payload.get('blocked')
+        age = time.time() - float(payload['updated_at'])
+        if (not isinstance(held, list) or not isinstance(retries, dict)
+                or admitted is not None and not isinstance(admitted, dict)
+                or blocked is not None and not isinstance(blocked, str)
+                or not math.isfinite(age) or age < -30 or age > 180):
+            raise ValueError('invalid state')
+        detail = f'{len(payload["owned"])} queued, {int(bool(admitted))} admitted, {len(held)} held'
+        if blocked in {'awaiting_capacity_or_known_size', 'awaiting_cart_reconciliation'}:
+            suffix = ('awaiting safe capacity or a known size'
+                      if blocked == 'awaiting_capacity_or_known_size'
+                      else 'awaiting cart import reconciliation')
+            return Check('capacity_admission', 'warn', detail + '; ' + suffix)
+        if blocked:
+            return Check('capacity_admission', 'fail', detail + '; controller is fail-closed')
+        return Check('capacity_admission', 'ok', detail + '; serialized admission healthy')
+    except (OSError, ValueError, TypeError, KeyError, AttributeError):
+        return Check('capacity_admission', 'fail', 'capacity admission state could not be verified')
+
+
 def qnap_transfer_check() -> Check:
     try:
         # Only QNAP uses operation records. Cloud installations may still run
@@ -286,6 +319,9 @@ def collect_checks() -> list[Check]:
         cart = cart_import_check()
         if cart is not None:
             checks.append(cart)
+        capacity = capacity_admission_check()
+        if capacity is not None:
+            checks.append(capacity)
         checks.append(
             disk_check(
                 "vm_scratch",
