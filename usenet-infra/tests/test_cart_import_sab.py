@@ -23,7 +23,7 @@ class CartSabTests(unittest.TestCase):
         self.db = sqlite3.connect(self.dbpath)
         self.addCleanup(self.db.close)
         self.db.executescript('''CREATE TABLE history (nzo_id TEXT,name TEXT,status TEXT,category TEXT,completed INTEGER,path TEXT,storage TEXT,archive INTEGER,time_added INTEGER,url TEXT);
-          CREATE TABLE rss(feed TEXT,url TEXT,state TEXT,downloaded_at INTEGER);''')
+          CREATE TABLE rss(feed TEXT,url TEXT,state TEXT,downloaded_at INTEGER,title TEXT,priority INTEGER,size INTEGER,initial_scan INTEGER);''')
         self.queue = {'noofslots': 0, 'paused': False, 'slots': []}
         self.processing = 0
         self.source = sab.SabSource(self.root, api=self.api, database=self.dbpath)
@@ -45,8 +45,10 @@ class CartSabTests(unittest.TestCase):
         self.db.execute('INSERT INTO history VALUES (?,?,?,?,?,?,?,?,?,?)', tuple(row.values()))
         self.db.commit()
 
-    def rss(self, url='https://indexer.invalid/nzb?apikey=SECRET', feed=sab.FEED, state='D', downloaded_at=100):
-        self.db.execute('INSERT INTO rss VALUES (?,?,?,?)', (feed, url, state, downloaded_at))
+    def rss(self, url='https://indexer.invalid/nzb?apikey=SECRET', feed=sab.FEED, state='D', downloaded_at=100,
+            title='Fixture.Release.2026', priority=-2, size=1024**3, initial_scan=0):
+        self.db.execute('INSERT INTO rss VALUES (?,?,?,?,?,?,?,?)',
+                        (feed, url, state, downloaded_at, title, priority, size, initial_scan))
         self.db.commit()
 
     def test_exact_provenance_preserves_old_and_archived_jobs_for_baseline(self):
@@ -110,6 +112,46 @@ class CartSabTests(unittest.TestCase):
         self.queue = {'noofslots': 2, 'paused': False, 'slots': [{'nzo_id': 'one'}]}
         with self.assertRaisesRegex(sab.SabError, 'incomplete'):
             self.source.snapshot()
+
+    def paused_queue(self):
+        self.queue = {'noofslots': 1, 'paused': False, 'slots': [
+            {'nzo_id': 'arrival', 'filename': 'Fixture.Release.2026', 'status': 'Paused',
+             'priority': 'Normal', 'time_added': 101, 'mb': '1024', 'mbleft': '1024', 'percentage': '0'}]}
+
+    def test_normal_priority_paused_cart_has_exact_intake_evidence(self):
+        self.paused_queue(); self.rss(size=1024**3-8000)
+        result = self.source.snapshot()['queue'][0]
+        self.assertEqual(result['paused_intake']['feed'], sab.FEED)
+        self.assertEqual(result['paused_intake']['downloaded_at'], 100)
+        self.assertNotIn('SECRET', json.dumps(result))
+
+    def test_intake_rejects_manual_old_ambiguous_and_mismatched_jobs(self):
+        changes = ({'priority': 0}, {'state': 'G'}, {'downloaded_at': 1}, {'size': 2*1024**3},
+                   {'feed': 'Unmanaged'}, {'initial_scan': 1}, {'title': 'Different.Release.2026'})
+        for change in changes:
+            with self.subTest(change=change):
+                self.db.execute('DELETE FROM rss'); self.db.commit()
+                self.paused_queue(); self.queue['slots'][0]['time_added'] = 400
+                self.rss(**change)
+                self.assertNotIn('paused_intake', self.source.snapshot()['queue'][0])
+
+    def test_intake_refuses_duplicate_release_or_url_and_existing_history(self):
+        for duplicate in ('release', 'url', 'history', 'queue'):
+            with self.subTest(duplicate=duplicate):
+                self.db.execute('DELETE FROM rss'); self.db.execute('DELETE FROM history'); self.db.commit()
+                self.paused_queue(); self.rss()
+                if duplicate == 'release': self.rss(url='another-url')
+                if duplicate == 'url': self.rss(title='Different.Release.2026')
+                if duplicate == 'history': self.job()
+                if duplicate == 'queue':
+                    self.queue['slots'].append({**self.queue['slots'][0], 'nzo_id': 'duplicate'})
+                    self.queue['noofslots'] = 2
+                self.assertNotIn('paused_intake', self.source.snapshot()['queue'][0])
+
+    def test_intake_never_adopts_partially_downloaded_manual_pause(self):
+        self.paused_queue(); self.rss()
+        self.queue['slots'][0].update(mbleft='512', percentage='50')
+        self.assertNotIn('paused_intake', self.source.snapshot()['queue'][0])
 
     def test_duplicate_ids_and_malformed_pauses_fail_closed(self):
         for slots, paused in [([{'nzo_id': 'same'}, {'nzo_id': 'same'}], False), ([], 'false')]:

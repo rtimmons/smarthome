@@ -6,6 +6,7 @@ Default category or a matching title alone never establishes cart provenance.
 from __future__ import annotations
 
 from contextlib import closing
+from collections import Counter
 import hashlib
 import json
 import math
@@ -105,7 +106,7 @@ class SabSource:
                 seen.add(identity)
                 # Deliberately exclude URLs, nzo_info, provider failures and credentials.
                 jobs.append({key: job[key] for key in
-                             ('nzo_id', 'filename', 'status', 'priority', 'cat', 'mb', 'mbleft', 'percentage')
+                             ('nzo_id', 'filename', 'status', 'priority', 'cat', 'mb', 'mbleft', 'percentage', 'time_added')
                              if key in job})
             if len(jobs) == expected:
                 return jobs, paused
@@ -126,18 +127,47 @@ class SabSource:
             with closing(sqlite3.connect(path.as_uri() + '?mode=ro', uri=True, timeout=10)) as db:
                 db.row_factory = sqlite3.Row
                 db.execute('BEGIN')
-                rss = list(db.execute('SELECT feed,url,state,downloaded_at FROM rss LIMIT ?', (LIMIT + 1,)))
+                rss = list(db.execute('SELECT feed,url,state,downloaded_at,title,priority,size,initial_scan FROM rss LIMIT ?', (LIMIT + 1,)))
                 history = list(db.execute('SELECT nzo_id,name,status,category,completed,path,storage,archive,time_added,url FROM history LIMIT ?', (LIMIT + 1,)))
             if len(rss) > LIMIT or len(history) > LIMIT:
                 raise SabError('sab_database_exceeds_bound')
-            by_url = {}
+            by_url, by_title = {}, {}
             for row in rss:
                 if row['url']:
                     by_url.setdefault(row['url'], []).append(row)
+                by_title.setdefault(row['title'], []).append(row)
             history_by_url = {}
             for row in history:
                 if row['url']:
                     history_by_url.setdefault(row['url'], []).append(row)
+            # SAB materializes priority=-2 as status=Paused, priority=Normal.
+            # Match the full release, bounded enqueue time and advertised bytes
+            # to one saved paused cart arrival; a title alone is never sufficient.
+            queue_titles = Counter(job.get('filename') for job in queue)
+            for job in queue:
+                matches = by_title.get(job.get('filename'), [])
+                if len(matches) != 1 or queue_titles[job.get('filename')] != 1:
+                    continue
+                row = matches[0]
+                if (job.get('status') != 'Paused' or row['feed'] not in FEEDS
+                        or row['state'] != 'D' or row['priority'] != -2 or row['initial_scan']
+                        or not row['url'] or len(by_url.get(row['url'], [])) != 1
+                        or history_by_url.get(row['url'])):
+                    continue
+                try:
+                    added, downloaded = epoch(job.get('time_added')), epoch(row['downloaded_at'])
+                    size, expected = float(job.get('mb', 0)) * 1024 ** 2, float(row['size'])
+                    left = float(job.get('mbleft', 0)) * 1024 ** 2
+                    if (min(added, downloaded, size, expected) <= 0
+                            or not all(math.isfinite(v) for v in (size, expected, left))
+                            or not -1 <= added - downloaded <= MAX_RSS_JOB_DELAY
+                            or abs(size - expected) > 64 * 1024 or abs(size - left) > 64 * 1024
+                            or float(job.get('percentage', -1)) != 0):
+                        continue
+                except (SabError, TypeError, ValueError, OverflowError):
+                    continue
+                job['paused_intake'] = {'feed': row['feed'], 'downloaded_at': downloaded,
+                                        'url_sha256': hashlib.sha256(row['url'].encode()).hexdigest()}
             records, seen = [], set()
             for row in history:
                 identity = row['nzo_id']

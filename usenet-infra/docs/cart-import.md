@@ -92,8 +92,13 @@ by the `state/catalog` backup tree. Deployment initializes controller ownership,
 leaves every queue entry individually paused and preserves SAB's prior global pause.
 Later refreshes preserve ownership, holds and any admitted reservation; they never
 adopt a newly manually paused job or reset an admitted user pause into the backlog.
-Later manually paused normal-priority jobs are not adopted or deduplicated; only
-new category/feed arrivals carrying SAB's paused priority join controller ownership.
+SAB can materialize a paused cart arrival as `status=Paused, priority=Normal`.
+Intake therefore also accepts a unique saved cart RSS record with priority `-2`,
+an exact full-release-name match, enqueue time within 300 seconds, and size within
+64 KiB (the API rounds MiB). The job must have zero progress; initial-scan entries,
+duplicate release/URL matches, retained history, and activation exclusions are
+refused. Raw URLs stay private. Normal-priority manual pauses without this evidence
+are not adopted or deduplicated. Once admitted, a later manual pause remains a hold.
 
 Private state is under `/srv/usenet/state/catalog/cart-import`: `armed.json` holds
 the activation baseline, `jobs/<opaque-reference>.json` holds each import receipt,

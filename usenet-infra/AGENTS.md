@@ -97,6 +97,12 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   mount prerequisites that skip the guard entirely. The 100,000-inode floor and
   1.25x byte estimate are polling safeguards, not hard quotas or arbitrary-archive
   expansion guarantees. Follow the current plan for deployment and backup evidence.
+  Live queue review also exposed SAB's paused arrivals reporting priority `Normal`.
+  Intake now checks exact saved paused RSS provenance, bounded time/size and the
+  immutable activation exclusions. Do not restore priority-only intake or adopt
+  arbitrary normal-priority pauses. Seven of eighteen overlooked arrivals fit
+  the unchanged reserve at the diagnostic snapshot; verify actual progress after
+  deployment instead of treating a capacity wait as proof every queued job is owned.
 
 - September 17 recovery coverage is verified for the current cart/capacity
   extension: the guarded fresh archive independently decrypted/restored with all

@@ -385,6 +385,24 @@ class Controller:
             retained.append(item)
         state["held"] = retained
 
+    def intake_ids(self, snapshot: dict, held_ids: set[str]) -> set[str]:
+        candidates = [job for job in snapshot["queue"] if job.get("status") == "Paused"
+                      and job.get("cat") in CATEGORIES and job["nzo_id"] not in held_ids]
+        result = {job["nzo_id"] for job in candidates if job.get("priority") == "Paused"}
+        arrivals = [job for job in candidates if job.get("paused_intake")]
+        if arrivals:
+            armed = json.loads((self.root / "state/catalog/cart-import/armed.json").read_text())
+            if (armed.get("schema_version") != 1 or not isinstance(armed.get("excluded_ids"), list)
+                    or not isinstance(armed.get("excluded_rss_hashes"), list)):
+                raise AdmissionError("intake_activation_invalid")
+            for job in arrivals:
+                proof = job["paused_intake"]
+                if (job["nzo_id"] not in armed["excluded_ids"]
+                        and proof["url_sha256"] not in armed["excluded_rss_hashes"]
+                        and proof["downloaded_at"] > float(armed["armed_at"])):
+                    result.add(job["nzo_id"])
+        return result
+
     def run(self) -> dict:
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
         with self.lock_path.open("a+") as lock:
@@ -411,9 +429,7 @@ class Controller:
                 return {"status": "globally_paused", "active_jobs": 0,
                         "paused_jobs": len(snapshot["queue"])}
             held_ids = {item.get("nzo_id") for item in state.get("held", []) if isinstance(item, dict)}
-            intake_ids = {job["nzo_id"] for job in snapshot["queue"]
-                          if job.get("status") == "Paused" and job.get("priority") == "Paused"
-                          and job.get("cat") in CATEGORIES and job["nzo_id"] not in held_ids}
+            intake_ids = self.intake_ids(snapshot, held_ids)
             eligible_ids = set(state["owned"]) | intake_ids
             groups = {}
             for job in snapshot["queue"]:
@@ -435,10 +451,7 @@ class Controller:
             admitted_identity = (state.get("admitted") or {}).get("nzo_id")
             owned = {identity for identity in state["owned"]
                      if identity in queue or identity == admitted_identity}
-            owned.update(job["nzo_id"] for job in snapshot["queue"]
-                         if job.get("status") == "Paused" and job.get("priority") == "Paused"
-                         and job.get("cat") in CATEGORIES
-                         and job["nzo_id"] not in held_ids)
+            owned.update(self.intake_ids(snapshot, held_ids))
             state["owned"] = sorted(owned)
             admitted = state.get("admitted")
             active = [job for job in snapshot["queue"] if job.get("status") != "Paused"]

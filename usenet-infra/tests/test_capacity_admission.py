@@ -164,6 +164,34 @@ class CapacityAdmissionTests(unittest.TestCase):
         self.assertEqual(controller.run()["status"], "admitted")
         self.assertIn("new", controller.state()["owned"])
 
+    def test_materialized_normal_priority_cart_is_admitted_from_provenance(self):
+        sab = FakeSab()
+        controller = self.controller(sab)
+        controller.configure()
+        armed = self.root / 'state/catalog/cart-import/armed.json'
+        armed.write_text(json.dumps({'schema_version': 1, 'armed_at': 100,
+                                     'excluded_ids': ['protected'], 'excluded_rss_hashes': ['old']}))
+        job = self.job('new')
+        job.update(priority='Normal', paused_intake={'feed': 'NZBGeek Cart',
+                   'downloaded_at': 200, 'url_sha256': 'new'})
+        sab.state['queue'].append(job)
+        self.assertEqual(controller.run()['status'], 'admitted')
+        self.assertEqual(controller.state()['admitted']['nzo_id'], 'new')
+
+    def test_materialized_intake_preserves_activation_exclusions_and_holds(self):
+        controller = self.controller(FakeSab())
+        armed = self.root / 'state/catalog/cart-import/armed.json'
+        armed.write_text(json.dumps({'schema_version': 1, 'armed_at': 100,
+                                     'excluded_ids': ['protected'], 'excluded_rss_hashes': ['old']}))
+        jobs=[]
+        for identity, downloaded, url in [('protected',200,'new'), ('old-feed',200,'old'),
+                                         ('too-old',99,'new'), ('held',200,'new'), ('eligible',200,'new')]:
+            job=self.job(identity)
+            job.update(priority='Normal',paused_intake={'feed':'NZBGeek Cart',
+                       'downloaded_at':downloaded,'url_sha256':url})
+            jobs.append(job)
+        self.assertEqual(controller.intake_ids({'queue':jobs},{'held'}), {'eligible'})
+
     def test_orphaned_nonterminal_cart_journal_blocks_new_admission(self):
         sab = FakeSab([self.job("next")])
         controller = self.controller(sab)

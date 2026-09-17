@@ -13,6 +13,13 @@ remains dated. Exact Plex matching now found all 17 completed journals in Movies
 year mismatches and two ambiguous catalog identities. TV/Arr-owned selections
 and device playback remain prerequisites, not inferred passes.
 
+Queue-progress follow-up found 18 newer paused cart arrivals outside controller
+ownership because SAB reports their materialized priority as `Normal`; seven fit
+the current budget. Exact saved paused RSS evidence now qualifies those arrivals
+without adopting unrelated manual pauses. Deploy the correction and observe real
+byte progress. The first new backup attempt was refused by a consistency guard;
+do not count that attempt as verified recovery coverage.
+
 The post-activation recovery checkpoint is now verified. The installed scheduler
 created `cloud-20260917T042530Z.tar.age` during a guarded quiet window; isolated
 decryption/restore verified all 660 files and four SQLite databases. The archive
