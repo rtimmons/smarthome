@@ -2,10 +2,25 @@
 
 ## Current handoff — September 16, 2026
 
-The NAS Usenet wiki and [download-capacity repair](#download-capacity-repair--planned)
-are planned, but not implemented or deployed. The wiki can progress independently
-of media recovery. This September 16 update changes only this plan; it does not
-deploy the wiki, repair services or delete downloads.
+The NAS Usenet wiki is implemented and deployed at
+[http://192.168.1.66:8090/](http://192.168.1.66:8090/). The separate
+[download-capacity repair](#download-capacity-repair--planned) remains planned
+and still requires the protected-data disposition described below. Wiki work did
+not repair cloud services, alter acquisition state or delete downloads.
+
+**Wiki deployment, September 16 EDT / September 17 UTC:** the static field guide
+is served by pinned Caddy 2.11.4 in an isolated `usenet-wiki` Compose project.
+Preflight found port 8090 free; live validation confirmed the exact
+`192.168.1.66:8090` binding, non-root/read-only container, immutable release
+mount, healthy status and expected page content. Browser review confirmed the
+live page, anchors, diagram and keyboard-readable structure; automated coverage
+checks the mobile layout, shortcuts and accessibility contract. A controlled
+bad-candidate drill failed its page smoke check, restored the prior release and
+left the other NAS containers running; the following deployment was idempotent
+and did not recreate the wiki. LAN delivery passed. A connected off-LAN VPN client
+was not available, so VPN-path acceptance remains a documented network limitation,
+not a wiki deployment failure. [Runbook](usenet-infra/docs/wiki.md),
+[receipt](usenet-infra/recovery/drills/wiki-deployment-20260917.json).
 
 **Latest read-only observations, September 16, approximately 23:27 UTC:** cloud
 scratch/root had zero available bytes. SAB logged `No space left on device`
@@ -160,6 +175,7 @@ ordinary fast-forward, not a reason to repeat the privacy force-push.
 | Choose movies and TV | [Radarr](http://10.77.0.1:19696/radarr/) / [Sonarr](http://10.77.0.1:19696/sonarr/). Native search/RSS and completed imports are enabled. |
 | Phone discovery | NZBGeek **My Cart** and NZBFinder **Cart** feed [cloud SAB](http://10.77.0.1:18080/) every 15 minutes. Existing NZBFinder entries were held at setup; future selected entries auto-download. media-004's deliberate native import passed; oversized media-006 remains individually paused. New eligible Default-category jobs use the [automatic native import/verified cleanup worker](usenet-infra/docs/cart-import.md); they are not automatically Arr-owned. [Playbook](usenet-infra/docs/nzbgeek-cart.md). |
 | Make a title local | [NAS dashboard](http://192.168.1.66:1337/). Choose the Native library action for canonical Movies/TV; transfer phase, rate, progress and history are visible. [Runbook](usenet-infra/docs/native-media.md). |
+| Understand and operate the stack | [Usenet field guide](http://192.168.1.66:8090/) explains the ecosystem, shortcuts, daily workflows, storage boundaries and safe first-line diagnostics. It is static and has no live controls or credentials. [Runbook](usenet-infra/docs/wiki.md). |
 | Watch | QNAP Plex, using **Movies & TV** and explicit NAS or Remote libraries. The profile has only IDs 2/3/4/5; private library ID 1 is denied. [Layout and client setup](usenet-infra/docs/nas-plex-layout.md). |
 | Recover | [Secrets/state](usenet-infra/docs/secrets-recovery.md), [checkout recovery](usenet-infra/docs/checkout-recovery.md), [scheduled backups](usenet-infra/docs/scheduled-backups.md). These cover configuration/state, not whole-NAS loss. |
 | Costs | [Dated cost ledger](usenet-infra/docs/costs.md). Infrastructure and NZBGeek total $24.09/month equivalent; Eweka actual terms and NZBFinder charge/currency remain unverified. No purchase is pending. |
@@ -209,62 +225,63 @@ qnap_backup_root: /share/Usenet/Backups/automatic
 qnap_plex_root: /share/CACHEDEV1_DATA/.qpkg/PlexMediaServer/Library/Plex Media Server
 ```
 
-## NAS Usenet wiki — planned
+## NAS Usenet wiki — deployed
 
 **Goal:** a simple reference site written for Ryan, with practical explanations
-of the Usenet ecosystem and this installation. Proposed address:
-`http://192.168.1.66:8090/`. This address is not yet serving the wiki.
+of the Usenet ecosystem and this installation. Working address:
+`http://192.168.1.66:8090/`.
 
-- [ ] Build a static, mobile-friendly page with a table of contents, desktop
+- [x] Build a static, mobile-friendly page with a table of contents, desktop
   sidebar, compact mobile navigation, bookmarkable sections, readable typography
   and a small favicon. Keep it usable with browser find and keyboard navigation.
-- [ ] Explain providers, indexers, NZB files, download clients, automation,
+- [x] Explain providers, indexers, NZB files, download clients, automation,
   storage and playback; include a glossary covering retention, completion,
   PAR2 repair, unpacking, RSS and quality profiles. Add an ecosystem diagram
   connecting indexers/Eweka, cloud applications, canonical Storage Box storage,
   selective NAS copies and Plex.
-- [ ] Add prominent shortcuts to SAB, Prowlarr, Radarr, Sonarr, the NAS copy
+- [x] Add prominent shortcuts to SAB, Prowlarr, Radarr, Sonarr, the NAS copy
   dashboard, Plex, NZBGeek Cart, NZBFinder, Eweka and Hetzner. Verify destinations
   and use ordinary browser links, never token-bearing RSS/API URLs. Include
   official SABnzbd, Servarr, Plex and Storage Box documentation references.
-- [ ] Document everyday cart and Arr workflows separately: choosing a release
+- [x] Document everyday cart and Arr workflows separately: choosing a release
   or requested movie/TV title, checking download/import progress, selecting a NAS
   copy and choosing NAS versus Remote Plex libraries. Explain canonical storage,
   temporary scratch, local copies and backup boundaries. Distinguish deployed
   behavior from still-unproved acceptance; do not represent static text as live
   health or publish real media identities.
-- [ ] Include troubleshooting for full scratch, paused jobs, unavailable apps,
+- [x] Include troubleshooting for full scratch, paused jobs, unavailable apps,
   delayed imports/Plex discovery and failed NAS copies, plus read-only diagnostic
   commands. Shortcuts open existing applications; the wiki has no live-control
   actions, embedded credentials, media listings or application API integration.
-- [ ] Store HTML/CSS/assets in `usenet-infra/wiki/`, without a frontend build
+- [x] Store HTML/CSS/assets in `usenet-infra/wiki/`, without a frontend build
   framework, database or browser editor. Future edits go through this repository.
-- [ ] Add a dedicated Ansible playbook and root `just usenet-wiki-deploy` recipe.
+- [x] Add a dedicated Ansible playbook and root `just usenet-wiki-deploy` recipe.
   Run a separate Compose project under `/share/Container/usenet/wiki` using the
   repository's pinned Caddy image and non-root pattern. Bind specifically to
   `192.168.1.66:8090`, rechecking availability first; mount only site/config files
   read-only, with no media, secrets or Docker-socket access.
-- [ ] Use existing home-network/VPN reachability to the NAS, with no new VPN,
+- [x] Use existing home-network/VPN reachability to the NAS, with no new VPN,
   public exposure or separate wiki login. Existing applications retain their
   authentication. The wiki serves nonsecret reference content only.
-- [ ] Validate before deployment, retain the previous release on updates and
+- [x] Validate before deployment, retain the previous release on updates and
   restore it if the HTTP smoke check fails. On a failed first deployment, stop
   only the new wiki service. Scope all deployment/restarts to the wiki container
   and preserve existing services and transfers.
-- [ ] Verify links, anchors, assets, desktop/mobile rendering, keyboard access,
+- [x] Verify links, anchors, assets, desktop/mobile rendering, keyboard access,
   diagram readability, HTTP delivery, exact private binding, container health
   and rollback. Test existing VPN reachability from a connected client when
   available; otherwise record that acceptance limitation.
-- [ ] Run infrastructure tests, deployment syntax checks and current-source
+- [x] Run infrastructure tests, deployment syntax checks and current-source
   scanning for implementation changes. Report the two known historical
   secret-scan findings separately, rather than declaring the full scan green.
-- [ ] Record deployment evidence, the working URL and maintenance/rollback
+- [x] Record deployment evidence, the working URL and maintenance/rollback
   instructions in the relevant documentation. Source-controlled files make the
   wiki reproducible; do not claim added whole-NAS disaster-recovery coverage.
 
-Wiki completion requires deployed and verified delivery, not just source files.
-Its implementation can proceed while media acceptance prerequisites are pending;
-cloud repair, acquisition, queue changes and storage purchases are separate work.
+Wiki completion passed deployed delivery, browser inspection, idempotence and a
+controlled rollback drill. LAN access is accepted; repeat reachability from a
+connected off-LAN VPN client when one is available. Cloud repair, acquisition,
+queue changes and storage purchases remain separate work.
 
 ## Download-capacity repair — planned
 
@@ -367,7 +384,7 @@ investigation and existing-archive verification do not require a new selection.
 Refresh health before fresh acquisition acceptance and allow failed-service or
 quiet-state guards to defer work. Keep each acquisition route's result separate:
 cart-worker cleanup does not prove Arr-owned client cleanup. The wiki checklist
-can progress independently.
+is complete; its deployment remains independent of capacity recovery.
 
 | Item | Next action and completion evidence | Prerequisite / closure |
 | --- | --- | --- |
@@ -386,7 +403,7 @@ The external direct TCP/1337 probe passed for its dated WAN/port scope; repeat a
 relevant network changes. Alternate static forwarding/proxy paths were not audited.
 [Exposure receipt](usenet-infra/recovery/drills/nas-exposure-20260914.json).
 
-The requested NAS wiki is now included through the checklist above. Other portals,
+The requested NAS wiki is deployed and accepted through the checklist above. Other portals,
 NAS-loss protection, whole-machine replacement/reboot drills, additional providers,
 LAN HTTPS and capacity purchases remain separate projects. Billing unknowns stay
 in the cost ledger. Do not expand this handoff into account setup, unrelated Home
@@ -439,7 +456,7 @@ for already missing worktrees were pruned; no existing worktree was removed.
 
 | Retained branch | Disposition |
 | --- | --- |
-| `usenet` | Prior implementation deployed; wiki implementation/deployment now planned, with operational acceptance and September 16 failures still outstanding. PR #117 closed at user request. No PR workflow. Branch preserved; merge not requested. |
+| `usenet` | Prior implementation and the private NAS wiki are deployed; capacity repair and remaining media/device acceptance stay outstanding. PR #117 closed at user request. No PR workflow. Branch preserved; merge not requested. |
 | `ml/blinds-only` | Three unique commits; retain for its own scope/review, do not bulk merge. |
 | `mobile` | Five unique commits, including unfinished responsive/editor work; retain. |
 | `nuheat-integration` | Eight unique commits; retain its integration/recovery context. |

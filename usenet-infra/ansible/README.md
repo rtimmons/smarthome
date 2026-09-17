@@ -14,6 +14,7 @@ cp inventory.example.yml inventory.yml
 just ansible-setup
 just configure-cloud
 just configure-qnap
+just wiki-deploy
 ```
 
 `site.yml` runs both host groups. Host-key checking remains enabled; populate
@@ -22,6 +23,11 @@ The Python-free QNAP path uses raw SSH commands, which Ansible cannot usefully
 simulate in check mode; use syntax checking, review the rendered variables,
 and run it live only after preflight inputs are correct. Cloud check mode is
 useful after its initial administrator and packages have been bootstrapped.
+
+`qnap-wiki.yml` is intentionally separate from `site.yml` and `qnap.yml`. It
+deploys only the private static wiki Compose project, retains content-addressed
+releases and restores the prior release if its HTTP smoke check fails. See the
+[wiki runbook](../docs/wiki.md).
 
 ## Required local values
 

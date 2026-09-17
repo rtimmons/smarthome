@@ -46,6 +46,7 @@ Apple TV/Roku playback and startup privacy are deferred by the user.
 | Prowlarr | `http://10.77.0.1:19696/` |
 | SAB | `http://10.77.0.1:18080/` |
 | NAS copy dashboard | `http://192.168.1.66:1337/` |
+| Usenet field guide | `http://192.168.1.66:8090/` |
 | Plex | `http://192.168.1.66:32400/web` |
 
 The existing LAN route and private logins are already configured. Connection
@@ -70,6 +71,10 @@ Legacy commands are `catalog-list`, `catalog-pull`, and `catalog-evict`. These
 catalog/native recipes have the same names inside this directory and at the
 repository root. Use [operations](docs/operations.md) for deployment and recovery
 commands; preserve active transfers and manual SAB pauses.
+
+The private [Usenet field guide](docs/wiki.md) is a static, source-controlled
+reference with no application credentials, API integration, media listing or
+control actions. Its deployment is isolated from the acquisition and copy stacks.
 
 ## Privacy, recovery and acceptance
 

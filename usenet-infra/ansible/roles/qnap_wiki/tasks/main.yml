@@ -1,0 +1,303 @@
+---
+- name: Check every wiki source on the controller
+  ansible.builtin.stat:
+    path: "{{ qnap_wiki_source_dir }}/{{ item }}"
+    follow: false
+  delegate_to: localhost
+  become: false
+  register: qnap_wiki_sources
+  loop:
+    - index.html
+    - styles.css
+    - assets/favicon.svg
+    - assets/ecosystem.svg
+    - Caddyfile
+    - Dockerfile
+    - .dockerignore
+    - compose.yaml
+
+- name: Require complete regular wiki sources
+  ansible.builtin.assert:
+    that:
+      - qnap_wiki_sources.results | map(attribute='stat.exists') | select('equalto', false) | list | length == 0
+      - qnap_wiki_sources.results | map(attribute='stat.isreg') | select('equalto', false) | list | length == 0
+      - qnap_wiki_bind_address == '192.168.1.66'
+      - qnap_wiki_port | int == 8090
+      - qnap_uid | int > 0
+      - qnap_gid | int > 0
+      - qnap_wiki_root == qnap_container_root ~ '/wiki'
+    fail_msg: >-
+      The complete static wiki, the reviewed 192.168.1.66:8090 listener, a
+      non-root runtime identity, and the isolated QNAP wiki path are required.
+
+- name: Calculate the immutable wiki release identity
+  ansible.builtin.set_fact:
+    qnap_wiki_release_id: >-
+      {{ (
+        lookup('ansible.builtin.file', qnap_wiki_source_dir ~ '/index.html', rstrip=false)
+        ~ lookup('ansible.builtin.file', qnap_wiki_source_dir ~ '/styles.css', rstrip=false)
+        ~ lookup('ansible.builtin.file', qnap_wiki_source_dir ~ '/assets/favicon.svg', rstrip=false)
+        ~ lookup('ansible.builtin.file', qnap_wiki_source_dir ~ '/assets/ecosystem.svg', rstrip=false)
+      ) | hash('sha256') }}
+
+- name: Reject an absent private address or a conflicting 8090 listener
+  ansible.builtin.raw: |
+    set -eu
+    ip -4 address show | grep -F {{ (' ' ~ qnap_wiki_bind_address ~ '/') | quote }} >/dev/null
+    wiki_ids=$({{ qnap_docker_command }} ps -q \
+      --filter label=com.docker.compose.project=usenet-wiki \
+      --filter label=com.docker.compose.service=wiki)
+    port_ids=$({{ qnap_docker_command }} ps -q --filter publish={{ qnap_wiki_port | int }})
+    for port_id in $port_ids; do
+      case " $wiki_ids " in
+        *" $port_id "*) ;;
+        *) echo "TCP {{ qnap_wiki_port | int }} belongs to another container." >&2; exit 1 ;;
+      esac
+    done
+    if test -z "$port_ids" && netstat -ltn 2>/dev/null | awk '{print $4}' | grep -E '(^|:){{ qnap_wiki_port | int }}$' >/dev/null; then
+      echo "TCP {{ qnap_wiki_port | int }} is already in use outside the wiki project." >&2
+      exit 1
+    fi
+  changed_when: false
+
+- name: Create isolated release directories
+  ansible.builtin.raw: |
+    set -eu
+    qnap_changed=0
+    if test ! -d {{ item.path | quote }}; then
+      mkdir -p {{ item.path | quote }}
+      qnap_changed=1
+    fi
+    if test "$(stat -c '%a' {{ item.path | quote }})" != {{ (item.mode | regex_replace('^0+', '')) | quote }}; then
+      chmod {{ item.mode | quote }} {{ item.path | quote }}
+      qnap_changed=1
+    fi
+    if test "$qnap_changed" -eq 1; then echo ANSIBLE_CHANGED; fi
+  register: qnap_wiki_directory_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_wiki_directory_result.stdout"
+  loop:
+    - path: "{{ qnap_wiki_root }}"
+      mode: "0750"
+    - path: "{{ qnap_wiki_root }}/releases"
+      mode: "0750"
+    - path: "{{ qnap_wiki_root }}/releases/{{ qnap_wiki_release_id }}"
+      mode: "0750"
+    - path: "{{ qnap_wiki_root }}/releases/{{ qnap_wiki_release_id }}/site"
+      mode: "0755"
+    - path: "{{ qnap_wiki_root }}/releases/{{ qnap_wiki_release_id }}/site/assets"
+      mode: "0755"
+
+- name: Transfer immutable static release files
+  ansible.builtin.raw: |
+    set -eu
+    desired_hash={{ qnap_wiki_payload_sha256 | quote }}
+    current_hash=$(sha256sum {{ qnap_wiki_destination | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 022
+      printf '%s' {{ qnap_wiki_payload_b64 | quote }} | base64 -d > {{ (qnap_wiki_destination ~ '.ansible') | quote }}
+      chmod 0644 {{ (qnap_wiki_destination ~ '.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_wiki_destination ~ '.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
+      mv -f {{ (qnap_wiki_destination ~ '.ansible') | quote }} {{ qnap_wiki_destination | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_wiki_payload: "{{ lookup('ansible.builtin.file', qnap_wiki_source_dir ~ '/' ~ item, rstrip=false) }}"
+    qnap_wiki_payload_b64: "{{ qnap_wiki_payload | b64encode }}"
+    qnap_wiki_payload_sha256: "{{ qnap_wiki_payload | hash('sha256') }}"
+    qnap_wiki_destination: "{{ qnap_wiki_root }}/releases/{{ qnap_wiki_release_id }}/site/{{ item }}"
+  register: qnap_wiki_site_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_wiki_site_result.stdout"
+  loop:
+    - index.html
+    - styles.css
+    - assets/favicon.svg
+    - assets/ecosystem.svg
+
+- name: Transfer versioned runtime files
+  ansible.builtin.raw: |
+    set -eu
+    desired_hash={{ qnap_wiki_payload_sha256 | quote }}
+    current_hash=$(sha256sum {{ qnap_wiki_destination | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 027
+      printf '%s' {{ qnap_wiki_payload_b64 | quote }} | base64 -d > {{ (qnap_wiki_destination ~ '.ansible') | quote }}
+      chmod 0640 {{ (qnap_wiki_destination ~ '.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_wiki_destination ~ '.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
+      mv -f {{ (qnap_wiki_destination ~ '.ansible') | quote }} {{ qnap_wiki_destination | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_wiki_payload: "{{ lookup('ansible.builtin.file', qnap_wiki_source_dir ~ '/' ~ item, rstrip=false) }}"
+    qnap_wiki_payload_b64: "{{ qnap_wiki_payload | b64encode }}"
+    qnap_wiki_payload_sha256: "{{ qnap_wiki_payload | hash('sha256') }}"
+    qnap_wiki_destination: "{{ qnap_wiki_root }}/{{ item }}"
+  register: qnap_wiki_runtime_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_wiki_runtime_result.stdout"
+  loop:
+    - Caddyfile
+    - Dockerfile
+    - .dockerignore
+    - compose.yaml
+
+- name: Write a candidate release environment
+  ansible.builtin.raw: |
+    set -eu
+    desired_hash={{ qnap_wiki_env_sha256 | quote }}
+    current_hash=$(sha256sum {{ (qnap_wiki_root ~ '/.env.candidate') | quote }} 2>/dev/null | sed 's/[[:space:]].*$//' || true)
+    if test "$current_hash" != "$desired_hash"; then
+      umask 077
+      printf '%s' {{ qnap_wiki_env_b64 | quote }} | base64 -d > {{ (qnap_wiki_root ~ '/.env.candidate.ansible') | quote }}
+      chmod 0600 {{ (qnap_wiki_root ~ '/.env.candidate.ansible') | quote }}
+      test "$(sha256sum {{ (qnap_wiki_root ~ '/.env.candidate.ansible') | quote }} | sed 's/[[:space:]].*$//')" = "$desired_hash"
+      mv -f {{ (qnap_wiki_root ~ '/.env.candidate.ansible') | quote }} {{ (qnap_wiki_root ~ '/.env.candidate') | quote }}
+      echo ANSIBLE_CHANGED
+    fi
+  vars:
+    qnap_wiki_env_payload: |
+      WIKI_UID={{ qnap_uid }}
+      WIKI_GID={{ qnap_gid }}
+      WIKI_BIND_ADDRESS={{ qnap_wiki_bind_address }}
+      WIKI_PORT={{ qnap_wiki_port | int }}
+      WIKI_ROOT={{ qnap_wiki_root }}
+      WIKI_RELEASE_DIR={{ qnap_wiki_root }}/releases/{{ qnap_wiki_release_id }}
+    qnap_wiki_env_b64: "{{ qnap_wiki_env_payload | b64encode }}"
+    qnap_wiki_env_sha256: "{{ qnap_wiki_env_payload | hash('sha256') }}"
+  register: qnap_wiki_candidate_result
+  changed_when: "'ANSIBLE_CHANGED' in qnap_wiki_candidate_result.stdout"
+
+- name: Validate candidate Compose rendering before publication
+  ansible.builtin.raw: >-
+    cd {{ qnap_wiki_root | quote }} &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain
+    --env-file .env.candidate config --quiet
+  changed_when: false
+
+- name: Check the pinned wiki image
+  ansible.builtin.raw: >-
+    {{ qnap_docker_command }} image inspect usenet-wiki:caddy-2.11.4-nonroot >/dev/null 2>&1
+  register: qnap_wiki_image
+  changed_when: false
+  failed_when: false
+
+- name: Build the pinned non-root wiki image when required
+  ansible.builtin.raw: >-
+    cd {{ qnap_wiki_root | quote }} &&
+    {{ qnap_docker_command }} compose --ansi never --progress plain
+    --env-file .env.candidate build --pull wiki
+  register: qnap_wiki_build
+  changed_when: true
+  when:
+    - qnap_wiki_start | bool
+    - qnap_wiki_image.rc != 0 or qnap_wiki_runtime_result.changed
+
+- name: Verify Caddy and validate the candidate configuration under runtime restrictions
+  ansible.builtin.raw: |
+    set -eu
+    cd {{ qnap_wiki_root | quote }}
+    version=$({{ qnap_docker_command }} compose --ansi never --progress plain --env-file .env.candidate run --rm --no-deps --entrypoint caddy wiki version)
+    case "$version" in v2.11.4*) ;; *) echo "Unexpected Caddy version: $version" >&2; exit 1 ;; esac
+    {{ qnap_docker_command }} compose --ansi never --progress plain --env-file .env.candidate run --rm --no-deps --entrypoint caddy wiki validate --config /etc/caddy/Caddyfile --adapter caddyfile
+  changed_when: false
+  when: qnap_wiki_start | bool
+
+- name: Inspect whether the intended release is already healthy
+  ansible.builtin.raw: |
+    set -eu
+    cmp -s {{ (qnap_wiki_root ~ '/.env') | quote }} {{ (qnap_wiki_root ~ '/.env.candidate') | quote }}
+    wiki_id=$({{ qnap_docker_command }} ps -q \
+      --filter label=com.docker.compose.project=usenet-wiki \
+      --filter label=com.docker.compose.service=wiki)
+    test -n "$wiki_id"
+    test "$({{ qnap_docker_command }} inspect --format '{{ "{{.State.Health.Status}}" }}' "$wiki_id")" = healthy
+  register: qnap_wiki_current
+  changed_when: false
+  failed_when: false
+  when: qnap_wiki_start | bool
+
+- name: Publish and smoke-test the candidate with automatic rollback
+  when:
+    - qnap_wiki_start | bool
+    - qnap_wiki_current.rc != 0 or qnap_wiki_runtime_result.changed or qnap_wiki_build.changed | default(false)
+  block:
+    - name: Preserve the current release environment for rollback
+      ansible.builtin.raw: |
+        set -eu
+        rm -f {{ (qnap_wiki_root ~ '/.env.rollback') | quote }}
+        if test -f {{ (qnap_wiki_root ~ '/.env') | quote }}; then
+          cp -p {{ (qnap_wiki_root ~ '/.env') | quote }} {{ (qnap_wiki_root ~ '/.env.rollback') | quote }}
+        fi
+      changed_when: false
+
+    - name: Atomically publish the candidate environment
+      ansible.builtin.raw: >-
+        cp -p {{ (qnap_wiki_root ~ '/.env.candidate') | quote }}
+        {{ (qnap_wiki_root ~ '/.env.published') | quote }} &&
+        mv -f {{ (qnap_wiki_root ~ '/.env.published') | quote }}
+        {{ (qnap_wiki_root ~ '/.env') | quote }}
+      changed_when: true
+
+    - name: Start or recreate only the wiki service
+      ansible.builtin.raw: >-
+        cd {{ qnap_wiki_root | quote }} &&
+        {{ qnap_docker_command }} compose --ansi never --progress plain
+        --env-file .env up -d --wait --wait-timeout 90 --force-recreate wiki
+      register: qnap_wiki_apply
+      changed_when: true
+
+    - name: Require exact binding, immutable site mount, and HTTP content
+      ansible.builtin.raw: |
+        set -eu
+        wiki_id=$({{ qnap_docker_command }} ps -q \
+          --filter label=com.docker.compose.project=usenet-wiki \
+          --filter label=com.docker.compose.service=wiki)
+        test -n "$wiki_id"
+        test "$({{ qnap_docker_command }} port "$wiki_id" 8090/tcp)" = {{ (qnap_wiki_bind_address ~ ':' ~ (qnap_wiki_port | string)) | quote }}
+        {{ qnap_docker_command }} inspect "$wiki_id" | grep -F {{ ('"Source": "' ~ qnap_wiki_root ~ '/releases/' ~ qnap_wiki_release_id ~ '/site"') | quote }} >/dev/null
+        page=$({{ qnap_docker_command }} run --rm --pull never --network host \
+          --user {{ (qnap_uid ~ ':' ~ qnap_gid) | quote }} --read-only --cap-drop ALL \
+          --security-opt no-new-privileges --entrypoint wget \
+          usenet-wiki:caddy-2.11.4-nonroot -q -O - \
+          {{ ('http://' ~ qnap_wiki_bind_address ~ ':' ~ (qnap_wiki_port | string) ~ '/') | quote }})
+        printf '%s' "$page" | grep -F '<title>Usenet field guide</title>' >/dev/null
+      changed_when: false
+
+    - name: Retain the prior release pointer after success
+      ansible.builtin.raw: |
+        set -eu
+        if test -f {{ (qnap_wiki_root ~ '/.env.rollback') | quote }}; then
+          mv -f {{ (qnap_wiki_root ~ '/.env.rollback') | quote }} {{ (qnap_wiki_root ~ '/.env.previous') | quote }}
+        fi
+      changed_when: false
+  rescue:
+    - name: Restore the previous release or stop the failed first deployment
+      ansible.builtin.raw: |
+        set -eu
+        cd {{ qnap_wiki_root | quote }}
+        if test -f .env.rollback; then
+          cp -p .env.rollback .env.restored
+          mv -f .env.restored .env
+          {{ qnap_docker_command }} compose --ansi never --progress plain --env-file .env up -d --wait --wait-timeout 90 --force-recreate wiki
+        else
+          {{ qnap_docker_command }} compose --ansi never --progress plain --env-file .env down --remove-orphans || true
+          rm -f .env
+        fi
+      changed_when: true
+
+    - name: Stop after the scoped rollback
+      ansible.builtin.fail:
+        msg: >-
+          The wiki candidate failed its live smoke check. The previous wiki
+          release was restored, or the failed first-deployment service was
+          stopped. No other QNAP service was changed.
+
+- name: Verify the running wiki even when no update was needed
+  ansible.builtin.raw: |
+    set -eu
+    wiki_id=$({{ qnap_docker_command }} ps -q \
+      --filter label=com.docker.compose.project=usenet-wiki \
+      --filter label=com.docker.compose.service=wiki)
+    test -n "$wiki_id"
+    test "$({{ qnap_docker_command }} inspect --format '{{ "{{.State.Health.Status}}" }}' "$wiki_id")" = healthy
+    test "$({{ qnap_docker_command }} port "$wiki_id" 8090/tcp)" = {{ (qnap_wiki_bind_address ~ ':' ~ (qnap_wiki_port | string)) | quote }}
+  changed_when: false
+  when: qnap_wiki_start | bool

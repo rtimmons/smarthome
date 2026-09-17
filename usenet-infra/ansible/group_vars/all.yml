@@ -81,6 +81,11 @@ qnap_storagebox_key_file: "{{ qnap_container_root }}/secrets/storagebox/id_ed255
 qnap_storagebox_known_hosts_file: "{{ qnap_container_root }}/secrets/storagebox/known_hosts"
 qnap_storagebox_private_key_source: ""
 qnap_storagebox_known_hosts_source: ""
+qnap_wiki_root: "{{ qnap_container_root }}/wiki"
+qnap_wiki_source_dir: "{{ usenet_project_root }}/wiki"
+qnap_wiki_bind_address: 192.168.1.66
+qnap_wiki_port: 8090
+qnap_wiki_start: true
 qnap_storagebox_host: ""
 qnap_storagebox_user: ""
 qnap_storagebox_port: 23

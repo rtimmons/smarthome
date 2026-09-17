@@ -1,0 +1,31 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+	log {
+		output discard
+	}
+}
+
+:8090 {
+	bind 0.0.0.0
+
+	header {
+		Content-Security-Policy "default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+		Referrer-Policy "no-referrer"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+	}
+
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	@assets path /assets/* /styles.css
+	header @assets Cache-Control "public, max-age=3600"
+
+	root * /srv
+	encode zstd gzip
+	file_server
+}

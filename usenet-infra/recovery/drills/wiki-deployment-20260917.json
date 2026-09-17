@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "recorded_at": "2026-09-17T00:30:02Z",
+  "scope": "private_static_usenet_wiki",
+  "source": {
+    "baseline_head": "1ff7f21ee5a8bb6b2e9158ce2560c3128e44824f",
+    "site_directory": "usenet-infra/wiki",
+    "site_release_sha256": "6536ad584e64f1e4a8070de70b226dcd54842e4e8229aef895f3c25aa3a79fcb",
+    "working_tree_changes_reviewed_separately": true
+  },
+  "delivery": {
+    "url": "http://192.168.1.66:8090/",
+    "compose_project": "usenet-wiki",
+    "image": "usenet-wiki:caddy-2.11.4-nonroot",
+    "host_binding": "192.168.1.66:8090",
+    "release_root": "/share/Container/usenet/wiki/releases",
+    "container_health": "healthy",
+    "lan_http": "passed",
+    "connected_off_lan_vpn_client": "not_available"
+  },
+  "isolation": {
+    "numeric_non_root_user": true,
+    "read_only_root_filesystem": true,
+    "all_capabilities_dropped": true,
+    "no_new_privileges": true,
+    "docker_socket_mounted": false,
+    "media_mounted": false,
+    "secrets_mounted": false,
+    "site_and_config_mounts_read_only": true,
+    "other_nas_projects_restarted": false
+  },
+  "acceptance": {
+    "links_and_anchors": "passed",
+    "local_assets": "passed",
+    "desktop_browser_render": "passed",
+    "responsive_contract": "passed",
+    "keyboard_and_accessibility_contract": "passed",
+    "ecosystem_diagram": "passed",
+    "expected_page_marker": "passed",
+    "exact_private_binding": "passed",
+    "immutable_release_mount": "passed",
+    "repeat_deployment": "idempotent_without_service_recreation",
+    "controlled_bad_candidate": "rejected",
+    "automatic_previous_release_restore": "passed",
+    "restored_live_page": "passed"
+  },
+  "validation": {
+    "infrastructure_tests": {
+      "passed": 547,
+      "skipped_optional": 9,
+      "failed": 0
+    },
+    "ansible_syntax": "passed",
+    "current_source_and_index_secret_scan": "passed",
+    "full_history_secret_scan": {
+      "status": "expected_failure",
+      "documented_historical_rsa_keys": 2,
+      "new_findings": 0
+    }
+  },
+  "limits": [
+    "The page is static and does not establish live application health.",
+    "Off-LAN VPN reachability was not tested because no connected client was available.",
+    "Source control and configuration backups do not add media or whole-NAS disaster recovery."
+  ]
+}

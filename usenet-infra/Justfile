@@ -25,6 +25,7 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-library.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-remote-media.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cart-import.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
 
 # Check tracked content and repository history for high-confidence credential forms.
@@ -387,6 +388,11 @@ backup-restore archive destination: age-bootstrap
 [group: 'ansible']
 configure-qnap: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap.yml
+
+# Publish only the static private wiki with retained-release rollback.
+[group: 'ansible']
+wiki-deploy: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-wiki.yml
 
 # Publish completed SAB jobs automatically after canonical verification.
 [group: 'setup']

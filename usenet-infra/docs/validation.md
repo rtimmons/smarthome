@@ -1,6 +1,6 @@
 # Current validation and acceptance
 
-Updated September 14, 2026 (UTC). This ledger records accepted behavior and its
+Updated September 17, 2026 (UTC). This ledger records accepted behavior and its
 limits. The [current plan](../../plan.md) owns remaining work and the
 [closure and merge criteria](../../plan.md#closure-and-merge-criteria). Historical
 implementation narratives remain in Git and dated receipts; they are not current
@@ -22,6 +22,7 @@ freshness threshold; no new backup or archive-integrity drill was run.
 
 | Area | Evidence and limit |
 | --- | --- |
+| Private Usenet wiki | [Deployment receipt](../recovery/drills/wiki-deployment-20260917.json): the source-controlled static field guide is healthy at `http://192.168.1.66:8090/`, bound only to the NAS private IPv4. The live browser, immutable release mount, non-root/read-only container and content smoke check passed. A controlled bad-candidate drill restored the prior release; the subsequent run did not rebuild or recreate the service. LAN delivery passed; an off-LAN connected VPN client was unavailable, so repeat that path when available. |
 | Native selective movie copy | [Live receipt](../recovery/drills/native-copy-live-20260913.json): the selected media-002 native title, 14,878,405,826 bytes, passed source/local SHA-256 verification and exclusive publication at 03:56:01 UTC. A safe repeat succeeded at 03:58:59 UTC with unchanged directory identity, signatures and hashes, without recopying. This was an adopted movie, not a fresh Arr completion. |
 | Plex discovery and privacy | The same receipt records automatic discovery of the expected native NAS file in Movies (NAS), ID 2, rating key 5633. The managed profile sees exactly IDs 2/3/4/5 and receives HTTP 403 for private ID 1; home/global-search exclusion and disabled automatic trash emptying were verified. Indexing and server grants do not establish playback or safe client startup. |
 | Native backend and TV layout | Full application and backup-helper deployments passed; five installed script hashes matched source. ID 3 now scans `TV Shows/library`; TV staging is a sibling within the same bind, and the runtime gate is enabled. The previous TV root had no series. No actual TV transfer has been tested. |
@@ -57,6 +58,14 @@ accepted deferrals. Account bootstrap, optional fill providers and repeating an
 already accepted NAS movie transfer are not default next tasks.
 
 ## Recorded implementation checks
+
+September 17 wiki deployment: 547 infrastructure tests passed with nine optional
+skips, all playbook syntax checks passed, and current-source/index secret scanning
+passed. Full-history scanning reported only the two documented historical RSA
+keys. Live deployment, browser delivery, exact private binding, container health,
+idempotence and rollback passed without changing the acquisition/copy projects.
+See the [receipt](../recovery/drills/wiki-deployment-20260917.json) and
+[runbook](wiki.md).
 
 September 14 continuation: [post-import health](../recovery/drills/post-cart-health-20260914.json)
 passed for discovery, cloud and NAS, retaining the nine historical SAB notices.

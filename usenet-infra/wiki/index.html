@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A private, practical field guide to Ryan's Usenet, storage, NAS copy, and Plex setup.">
+  <meta name="theme-color" content="#10231f">
+  <title>Usenet field guide</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the guide</a>
+
+  <header class="hero">
+    <div class="hero__inner">
+      <p class="eyebrow">Ryan's home stack · private reference</p>
+      <h1>Usenet, without the fog.</h1>
+      <p class="lede">What each piece does, how a request becomes something playable, and where to look when the conveyor belt stops.</p>
+      <div class="truth-strip" aria-label="Important context">
+        <span><strong>Reference, not live health</strong></span>
+        <span>Private network only</span>
+        <span>Reviewed 16 Sep 2026</span>
+      </div>
+    </div>
+  </header>
+
+  <details class="mobile-nav">
+    <summary>Jump to a section</summary>
+    <nav aria-label="Mobile table of contents">
+      <a href="#start">Start here</a>
+      <a href="#map">System map</a>
+      <a href="#shortcuts">Shortcuts</a>
+      <a href="#workflows">Everyday workflows</a>
+      <a href="#storage">Where files live</a>
+      <a href="#truth">What is proven</a>
+      <a href="#troubleshooting">Troubleshooting</a>
+      <a href="#commands">Read-only checks</a>
+      <a href="#glossary">Glossary</a>
+      <a href="#references">References</a>
+    </nav>
+  </details>
+
+  <div class="layout">
+    <aside class="sidebar" aria-label="Table of contents">
+      <p class="sidebar__title">Field guide</p>
+      <nav>
+        <a href="#start">01 · Start here</a>
+        <a href="#map">02 · System map</a>
+        <a href="#shortcuts">03 · Shortcuts</a>
+        <a href="#workflows">04 · Everyday workflows</a>
+        <a href="#storage">05 · Where files live</a>
+        <a href="#truth">06 · What is proven</a>
+        <a href="#troubleshooting">07 · Troubleshooting</a>
+        <a href="#commands">08 · Read-only checks</a>
+        <a href="#glossary">09 · Glossary</a>
+        <a href="#references">10 · References</a>
+      </nav>
+      <p class="sidebar__note">Use browser find for a service, symptom, or term.</p>
+    </aside>
+
+    <main id="main">
+      <section id="start" aria-labelledby="start-title">
+        <p class="section-kicker">01 · The mental model</p>
+        <h2 id="start-title">Three jobs, three kinds of tool</h2>
+        <p class="section-intro">Usenet sounds complicated because several small tools each own one step. The cleanest model is: <em>find a pointer, fetch the pieces, organize the result.</em></p>
+
+        <div class="concept-grid">
+          <article class="concept concept--find">
+            <span class="concept__number">1</span>
+            <h3>Indexers find</h3>
+            <p>NZBGeek and NZBFinder catalogue posts and produce an NZB: a small instruction file that points to article pieces on Usenet.</p>
+            <p class="concept__tools">NZBGeek · NZBFinder · Prowlarr</p>
+          </article>
+          <article class="concept concept--fetch">
+            <span class="concept__number">2</span>
+            <h3>The client fetches</h3>
+            <p>SABnzbd reads the NZB, asks Eweka for the article pieces, checks them, repairs missing parts when possible, and unpacks the result.</p>
+            <p class="concept__tools">Eweka · SABnzbd · PAR2</p>
+          </article>
+          <article class="concept concept--organize">
+            <span class="concept__number">3</span>
+            <h3>Automation organizes</h3>
+            <p>Radarr, Sonarr, or the cart importer moves a verified completion into the canonical library. Plex discovers it there.</p>
+            <p class="concept__tools">Radarr · Sonarr · cart importer · Plex</p>
+          </article>
+        </div>
+
+        <aside class="callout">
+          <strong>The NZB is not the media.</strong> It is closer to a shipping manifest: useful directions to many Usenet articles. Eweka supplies the articles; SAB assembles them.
+        </aside>
+      </section>
+
+      <section id="map" aria-labelledby="map-title">
+        <p class="section-kicker">02 · The system map</p>
+        <h2 id="map-title">From a choice to two Plex libraries</h2>
+        <p class="section-intro">The Storage Box is the canonical home. Cloud scratch is temporary. A NAS copy is optional and deliberately selected.</p>
+        <figure class="diagram-card">
+          <img src="assets/ecosystem.svg" alt="Flow from indexers or Radarr and Sonarr, through SAB and Eweka on the cloud host, into the canonical Storage Box, then to Plex Remote or a selected NAS copy and Plex NAS.">
+          <figcaption>Solid arrows move requests or files. The NAS receives a server-enforced read-only view of canonical storage.</figcaption>
+        </figure>
+      </section>
+
+      <section id="shortcuts" aria-labelledby="shortcuts-title">
+        <p class="section-kicker">03 · Open the right door</p>
+        <h2 id="shortcuts-title">Shortcuts</h2>
+        <p class="section-intro">Private addresses work on the home network or its existing VPN route. Each application keeps its own login; this page does not bypass one.</p>
+
+        <h3 class="subhead">Home stack</h3>
+        <div class="link-grid">
+          <a class="service-link" href="http://10.77.0.1:18080/">
+            <span class="service-link__mark">SA</span><span><strong>SABnzbd</strong><small>Queue, speed, repair and unpack</small></span><span aria-hidden="true">↗</span>
+          </a>
+          <a class="service-link" href="http://10.77.0.1:19696/">
+            <span class="service-link__mark">PR</span><span><strong>Prowlarr</strong><small>Indexer search and status</small></span><span aria-hidden="true">↗</span>
+          </a>
+          <a class="service-link" href="http://10.77.0.1:19696/radarr/">
+            <span class="service-link__mark">RA</span><span><strong>Radarr</strong><small>Movies and their import history</small></span><span aria-hidden="true">↗</span>
+          </a>
+          <a class="service-link" href="http://10.77.0.1:19696/sonarr/">
+            <span class="service-link__mark">SO</span><span><strong>Sonarr</strong><small>TV series, episodes and calendar</small></span><span aria-hidden="true">↗</span>
+          </a>
+          <a class="service-link" href="http://192.168.1.66:1337/">
+            <span class="service-link__mark">NAS</span><span><strong>NAS copies</strong><small>Select local copies and follow transfers</small></span><span aria-hidden="true">↗</span>
+          </a>
+          <a class="service-link" href="http://192.168.1.66:32400/web">
+            <span class="service-link__mark">PX</span><span><strong>Plex</strong><small>Choose a NAS or Remote library</small></span><span aria-hidden="true">↗</span>
+          </a>
+        </div>
+
+        <h3 class="subhead">Accounts and carts</h3>
+        <div class="link-grid link-grid--compact">
+          <a class="service-link" href="https://nzbgeek.info/dashboard.php?mycart"><span class="service-link__mark">NG</span><span><strong>NZBGeek My Cart</strong><small>Choose a specific release</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://nzbfinder.ws/cart"><span class="service-link__mark">NF</span><span><strong>NZBFinder Cart</strong><small>Choose a specific release</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://www.eweka.nl/en/myeweka"><span class="service-link__mark">EW</span><span><strong>My Eweka</strong><small>Provider account</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://console.hetzner.com/"><span class="service-link__mark">HZ</span><span><strong>Hetzner Console</strong><small>Cloud and Storage Box account</small></span><span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+
+      <section id="workflows" aria-labelledby="workflows-title">
+        <p class="section-kicker">04 · Daily use</p>
+        <h2 id="workflows-title">Two ways to ask for something</h2>
+        <div class="workflow-grid">
+          <article class="workflow-card">
+            <p class="workflow-card__label">Release-first</p>
+            <h3>Use a cart</h3>
+            <ol>
+              <li>Pick a specific release in NZBGeek My Cart or NZBFinder Cart.</li>
+              <li>Allow up to 15 minutes for the feed to register it with SAB.</li>
+              <li>Follow download, repair and unpack in SAB. A capacity hold may deliberately keep it from starting.</li>
+              <li>The cart importer takes an eligible completion through native import, independent verification and exact scratch cleanup.</li>
+              <li>Look in the appropriate <strong>Remote</strong> Plex library. Select a NAS copy separately only if wanted.</li>
+            </ol>
+            <p class="workflow-card__note">Best when you care about the exact release. Cart jobs are not automatically owned by Radarr or Sonarr.</p>
+          </article>
+          <article class="workflow-card">
+            <p class="workflow-card__label">Title-first</p>
+            <h3>Use Radarr or Sonarr</h3>
+            <ol>
+              <li>Add a movie in Radarr or a series in Sonarr. Choose monitoring and a quality profile deliberately.</li>
+              <li>The Arr application searches the indexers through Prowlarr and sends a match to SAB.</li>
+              <li>Follow acquisition in SAB and import in the Arr queue/history.</li>
+              <li>Arr imports the completion into the canonical library and owns completed-client cleanup.</li>
+              <li>Look in the corresponding <strong>Remote</strong> Plex library. A local NAS copy remains an explicit choice.</li>
+            </ol>
+            <p class="workflow-card__note">Best when you care about the title and quality policy more than a particular release.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="storage" aria-labelledby="storage-title">
+        <p class="section-kicker">05 · Storage boundaries</p>
+        <h2 id="storage-title">Canonical, temporary, local, backed up</h2>
+        <div class="storage-list">
+          <article><span class="storage-list__icon">C</span><div><h3>Canonical library · Storage Box</h3><p>The authoritative Movies and TV files live here. Cloud applications can write through the controlled import path. The NAS receives read-only access.</p></div></article>
+          <article><span class="storage-list__icon">T</span><div><h3>Temporary scratch · cloud disk</h3><p>SAB downloads, repairs and unpacks here. It is working space, not a library and not a backup. Failed or retained jobs continue to consume capacity.</p></div></article>
+          <article><span class="storage-list__icon">L</span><div><h3>Local copy · NAS</h3><p>An optional selected copy for local playback. Copying verifies the selected source and destination; it does not subscribe the NAS to future episodes or upgrades.</p></div></article>
+          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. They do not duplicate the whole media library or establish whole-NAS disaster recovery.</p></div></article>
+        </div>
+        <aside class="callout callout--warning"><strong>Storage Box snapshots are not independent backups.</strong> They share the same storage system and consume its capacity. Treat the canonical library and configuration backup scopes separately.</aside>
+      </section>
+
+      <section id="truth" aria-labelledby="truth-title">
+        <p class="section-kicker">06 · Evidence, not optimism</p>
+        <h2 id="truth-title">What is deployed—and what is still open</h2>
+        <div class="truth-grid">
+          <article class="truth-card truth-card--yes">
+            <p class="truth-card__label">Deployed / observed</p>
+            <ul>
+              <li>Private cloud search and download applications</li>
+              <li>Canonical Storage Box movie and TV library paths</li>
+              <li>Automatic cart importer with durable journals</li>
+              <li>Verified selective NAS movie copying and safe repeat</li>
+              <li>Separate Plex NAS and Remote libraries</li>
+              <li>Scheduled encrypted configuration backups</li>
+            </ul>
+          </article>
+          <article class="truth-card truth-card--open">
+            <p class="truth-card__label">Still needs acceptance</p>
+            <ul>
+              <li>Durable receipt and backup review for the latest cart imports</li>
+              <li>A fresh TV completion and selective NAS TV copy</li>
+              <li>Fresh Arr-owned movie and TV cleanup evidence</li>
+              <li>Sequential capacity admission under burst and unpack pressure</li>
+              <li>Apple TV and Roku playback, seeking and cold-start privacy</li>
+            </ul>
+          </article>
+        </div>
+        <p class="fine-print">This page is deliberately static. It does not query applications, list media, or turn a documented observation into a live status claim.</p>
+      </section>
+
+      <section id="troubleshooting" aria-labelledby="troubleshooting-title">
+        <p class="section-kicker">07 · When something stalls</p>
+        <h2 id="troubleshooting-title">Start with the owner of the stuck step</h2>
+        <div class="table-wrap" role="region" aria-label="Troubleshooting table" tabindex="0">
+          <table>
+            <thead><tr><th>Symptom</th><th>Look first</th><th>Safe response</th></tr></thead>
+            <tbody>
+              <tr><td>Scratch is full or SAB reports “no space”</td><td>SAB queue/history, cloud health, importer journals and filesystem usage</td><td>Keep acquisition held. Do not delete failures, clear history, resume a large job or restart SAB until exact jobs and durable state are reconciled.</td></tr>
+              <tr><td>A job is paused</td><td>SAB’s per-job pause and current capacity notes</td><td>Assume it may be a manual or protective pause. Do not release it just to make the queue move.</td></tr>
+              <tr><td>SAB, Prowlarr, Radarr or Sonarr is unavailable</td><td>Private route first, then discovery/cloud health</td><td>Separate network reachability from an application failure. Recheck after scratch recovery; do not assume every HTTP error has one cause.</td></tr>
+              <tr><td>Download finished but import is delayed</td><td>Arr queue/history for Arr jobs; cart importer status and journal phase for cart jobs</td><td>Preserve the completion and journal. Never replay an import or reset activation blindly.</td></tr>
+              <tr><td>Imported item is not visible in Plex</td><td>Correct NAS versus Remote library and Plex scan timing</td><td>Wait for normal discovery or target only the selected directory if the runbook calls for it. Never expose private libraries or empty trash to force a result.</td></tr>
+              <tr><td>NAS copy failed</td><td>NAS Downloads panel, free-space reserve, source availability and exact failure text</td><td>Retry only the same owned item after the blocking condition is fixed. Do not overwrite an unrelated destination or grant the NAS write access upstream.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="commands" aria-labelledby="commands-title">
+        <p class="section-kicker">08 · Read-only diagnostics</p>
+        <h2 id="commands-title">Check without changing the system</h2>
+        <p>Run these from the repository root. They inspect current state and should be the first stop before a restart, retry or deployment.</p>
+        <div class="code-card" aria-label="Read-only shell commands">
+          <code>just usenet-discovery-health</code>
+          <code>just usenet-cloud-health</code>
+          <code>just usenet-qnap-health</code>
+          <code>just usenet-cart-import-status</code>
+          <code>just native-status</code>
+        </div>
+        <aside class="callout callout--privacy"><strong>Privacy note:</strong> <code>native-status</code> can print real media names. Keep its output in private ignored evidence; do not paste it into commits, tickets or chat.</aside>
+      </section>
+
+      <section id="glossary" aria-labelledby="glossary-title">
+        <p class="section-kicker">09 · Plain-English glossary</p>
+        <h2 id="glossary-title">Terms you will actually see</h2>
+        <dl class="glossary">
+          <div><dt>Provider</dt><dd>A paid service, here Eweka, that serves Usenet articles to the download client.</dd></div>
+          <div><dt>Indexer</dt><dd>A searchable catalogue that turns a desired post into an NZB pointer file.</dd></div>
+          <div><dt>NZB</dt><dd>A small XML instruction file listing the Usenet article pieces needed for a job; it is not the downloaded payload.</dd></div>
+          <div><dt>Retention</dt><dd>How far back a provider keeps articles. Older availability can improve the odds of finding every piece.</dd></div>
+          <div><dt>Completion</dt><dd>Whether the provider has enough of the required article pieces to reconstruct the post.</dd></div>
+          <div><dt>PAR2 repair</dt><dd>Recovery data that can rebuild some missing or damaged pieces. Repair consumes temporary disk space.</dd></div>
+          <div><dt>Unpacking</dt><dd>Extracting the finished files from archives after verification or repair. Peak space may include both archives and extracted output.</dd></div>
+          <div><dt>RSS</dt><dd>A periodic feed check. The two carts are polled every 15 minutes; polling a request is not the same as admitting its payload to disk.</dd></div>
+          <div><dt>Quality profile</dt><dd>Radarr or Sonarr rules describing acceptable resolution, source, upgrades and cutoffs.</dd></div>
+          <div><dt>Canonical</dt><dd>The authoritative copy. In this system that is the Storage Box library, not cloud scratch or an optional NAS copy.</dd></div>
+        </dl>
+      </section>
+
+      <section id="references" aria-labelledby="references-title">
+        <p class="section-kicker">10 · Go deeper</p>
+        <h2 id="references-title">Official references</h2>
+        <div class="reference-grid">
+          <a href="https://sabnzbd.org/wiki/introduction/quick-setup"><strong>SABnzbd guide</strong><span>Setup and core client concepts ↗</span></a>
+          <a href="https://wiki.servarr.com/"><strong>Servarr wiki</strong><span>Radarr, Sonarr and Prowlarr documentation ↗</span></a>
+          <a href="https://support.plex.tv/articles/"><strong>Plex support</strong><span>Libraries, discovery and playback ↗</span></a>
+          <a href="https://docs.hetzner.com/storage/storage-box/"><strong>Storage Box docs</strong><span>Access, snapshots and capacity ↗</span></a>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    <p>Source-controlled, static, and intentionally boring to operate.</p>
+    <p>No live controls · no credentials · no media listings · no application API access</p>
+  </footer>
+</body>
+</html>

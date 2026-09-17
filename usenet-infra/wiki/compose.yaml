@@ -1,0 +1,59 @@
+name: usenet-wiki
+
+services:
+  wiki:
+    image: usenet-wiki:caddy-2.11.4-nonroot
+    build:
+      context: .
+      dockerfile: Dockerfile
+    user: "${WIKI_UID:?Set the dedicated NAS UID}:${WIKI_GID:?Set the dedicated NAS GID}"
+    read_only: true
+    restart: unless-stopped
+    init: true
+    ports:
+      - "${WIKI_BIND_ADDRESS:?Set the private NAS IPv4 address}:${WIKI_PORT:-8090}:8090"
+    command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    environment:
+      XDG_DATA_HOME: /data
+      XDG_CONFIG_HOME: /config
+    volumes:
+      - type: bind
+        source: "${WIKI_RELEASE_DIR:?Set the immutable release directory}/site"
+        target: /srv
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${WIKI_ROOT:?Set the wiki deployment root}/Caddyfile"
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind:
+          create_host_path: false
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=4m,mode=1777
+      - /data:rw,noexec,nosuid,nodev,size=8m,mode=1777
+      - /config:rw,noexec,nosuid,nodev,size=4m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.5
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - -q
+        - -O
+        - /dev/null
+        - http://127.0.0.1:8090/healthz
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    logging:
+      driver: local
+      options:
+        max-size: 1m
+        max-file: "2"

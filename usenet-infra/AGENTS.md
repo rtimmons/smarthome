@@ -142,6 +142,12 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   account creation or deploy recipes merely to inspect the system. Restore missing
   private inputs through the documented vault/snapshot chain; temporary helpers,
   browser handles and SSH sockets from old sessions are not prerequisites.
+- The static private Usenet field guide is deployed at
+  `http://192.168.1.66:8090/`. Edit `wiki/` and use only
+  `just usenet-wiki-deploy` from the repository root; the dedicated playbook
+  validates an immutable candidate and restores the prior wiki release if its
+  smoke check fails. It must not gain live APIs, credentials, media listings,
+  Docker-socket access or public exposure. See [the wiki runbook](docs/wiki.md).
 - Native selective-copy source and the updated NAS backup helper are deployed;
   a fresh encrypted archive independently verified the published ownership receipt.
   Read the current acceptance state at the top of `plan.md`. Plex library ID 3

@@ -568,6 +568,11 @@ usenet-configure-cloud-lan-ui:
 usenet-configure-qnap:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-qnap
 
+# Deploy only the private, static NAS Usenet wiki.
+[group: 'usenet']
+usenet-wiki-deploy:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra wiki-deploy
+
 # Verify the NAS reader cannot alter a disposable remote test file.
 [group: 'usenet']
 usenet-verify-reader-access:
