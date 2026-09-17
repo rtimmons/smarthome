@@ -366,6 +366,69 @@ class WorkerTests(unittest.TestCase):
         self.assertFalse(good.exists())
 
 
+    def remote_job(self):
+        self.coordinator.arm()
+        directory, job = self.job()
+        stage = self.scratch / 'remote/complete'
+        stage.mkdir(parents=True)
+        directory.rename(stage / directory.name)
+        job['storage'] = '/data/complete/remote/complete/' + directory.name
+        self.coordinator.remote_source = mock.Mock(return_value=True)
+        return stage / directory.name
+
+    def test_remote_verified_cleanup_uses_durable_unlink_without_rename(self):
+        directory = self.remote_job()
+        with mock.patch.object(worker, 'exclusive_rename', side_effect=AssertionError('remote rename forbidden')):
+            self.assertEqual(self.coordinator.run()['completed'], 1)
+        self.assertFalse(directory.exists())
+        self.assertTrue(self.record()['verified'][0]['source_delete_intent'])
+        self.assertTrue(self.record()['verified'][0]['source_removed'])
+
+    def test_remote_cleanup_recovers_after_unlink_without_reimport(self):
+        directory = self.remote_job()
+        original = Path.unlink
+        crashed = False
+        def interrupted(path, *args, **kwargs):
+            nonlocal crashed
+            original(path, *args, **kwargs)
+            if path == directory / 'Movie.2026.mkv' and not crashed:
+                crashed = True
+                raise OSError('power loss after unlink')
+        with mock.patch.object(Path, 'unlink', interrupted):
+            self.assertEqual(self.coordinator.run()['errors'], 1)
+        self.assertEqual(self.record()['phase'], 'verified')
+        self.assertTrue(self.record()['verified'][0]['source_delete_intent'])
+        restarted = self.make_worker(); restarted.remote_source = mock.Mock(return_value=True)
+        self.assertEqual(restarted.run()['completed'], 1)
+        self.assertEqual(self.arr.submissions, 1)
+
+    def test_remote_missing_source_without_intent_is_held(self):
+        directory = self.remote_job()
+        with mock.patch.object(self.coordinator, 'cleanup', side_effect=OSError('interrupt before cleanup')):
+            self.coordinator.run()
+        (directory / 'Movie.2026.mkv').unlink()
+        self.assertGreater(self.coordinator.run()['held'], 0)
+        self.assertEqual(self.record()['hold'], 'source_missing_without_delete_intent')
+
+    def test_remote_unlink_intent_write_failure_preserves_source(self):
+        directory = self.remote_job()
+        original = self.coordinator.persist
+        def persist(record):
+            if any(v.get('source_delete_intent') for v in record.get('verified', [])):
+                raise OSError('journal unavailable')
+            original(record)
+        with mock.patch.object(self.coordinator, 'persist', persist):
+            with self.assertRaises(OSError):
+                self.coordinator.run()
+        self.assertTrue((directory / 'Movie.2026.mkv').exists())
+
+    def test_remote_staging_and_incomplete_roots_cannot_be_imported(self):
+        for path in ('/data/complete/remote', '/data/complete/remote/complete',
+                     '/data/complete/remote/incomplete/job'):
+            with self.assertRaisesRegex(worker.Hold, 'source_root_refused'):
+                worker.source_directory({'storage': path}, self.scratch)
+
+
 class RemoteVerifierTests(unittest.TestCase):
     def test_independent_remote_hash_and_metadata_are_required(self):
         with tempfile.TemporaryDirectory() as temporary:

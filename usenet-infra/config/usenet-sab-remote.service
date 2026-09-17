@@ -1,0 +1,19 @@
+[Unit]
+Description=SAB with mounted private remote staging
+Requires=docker.service srv-usenet-downloads-incomplete.mount
+BindsTo=srv-usenet-downloads-incomplete.mount
+After=docker.service srv-usenet-downloads-incomplete.mount
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/srv/usenet/compose/cloud
+ExecStartPre=/usr/bin/mountpoint -q /srv/usenet/downloads/incomplete
+ExecStartPre=/usr/bin/mountpoint -q /srv/usenet/downloads/complete/remote
+ExecStart=/usr/bin/docker compose up -d --no-deps --force-recreate --wait --wait-timeout 180 sabnzbd
+ExecStop=/usr/bin/docker compose stop -t 60 sabnzbd
+TimeoutStartSec=240
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target srv-usenet-downloads-incomplete.mount

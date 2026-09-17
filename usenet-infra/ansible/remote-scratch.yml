@@ -1,0 +1,8 @@
+---
+- name: Stage new acquisitions on the existing Storage Box
+  hosts: cloud
+  become: true
+  gather_facts: true
+  roles:
+    - cloud_cart_import
+    - cloud_remote_scratch

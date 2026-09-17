@@ -1,0 +1,15 @@
+[Unit]
+Description=Private Usenet staging on the existing Storage Box
+Requires=usenet-library.service
+BindsTo=usenet-library.service
+After=usenet-library.service
+
+[Mount]
+What=/srv/usenet/library/.acquisition-staging
+Where=/srv/usenet/downloads/complete/remote
+Type=none
+Options=bind,_netdev
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target usenet-library.service

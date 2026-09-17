@@ -80,6 +80,7 @@ class CapacityAdmissionTests(unittest.TestCase):
         value.available = lambda: 100 * 1024 ** 3
         value.require_resources = mock.Mock()
         value.require_dependencies = mock.Mock()
+        value.preflight_cart = mock.Mock()
         return value
 
     def test_configure_pauses_intake_and_owns_existing_queue(self):
@@ -470,6 +471,7 @@ class CapacityAdmissionTests(unittest.TestCase):
 
     def test_unexpected_scratch_mount_fails_closed(self):
         controller = self.controller(FakeSab())
+        controller.remote_scratch = mock.Mock(return_value=None)
         with mock.patch.object(Path, "stat", side_effect=[mock.Mock(st_dev=1), mock.Mock(st_mode=0o40700),
                 mock.Mock(st_mode=0o40700), mock.Mock(st_dev=2)]):
             with self.assertRaisesRegex(admission.AdmissionError, "scratch_filesystem_layout_changed"):
@@ -625,6 +627,94 @@ class CapacityAdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(admission.AdmissionError, "reserve_breached"):
             controller.run()
         self.assertTrue(sab.state["paused"])
+
+    def enable_remote(self, controller):
+        marker = self.root / "config/catalog/remote-scratch.json"
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(json.dumps({"schema_version": 1, "mode": "storagebox"}))
+        return controller.remote_scratch()
+
+    def test_remote_budget_can_admit_80_gib_without_spending_local_scratch(self):
+        sab = FakeSab([self.job("large", 80 * 1024), self.job("other", 81 * 1024)])
+        controller = self.controller(sab)
+        controller.configure()
+        self.enable_remote(controller)
+        controller.available = lambda: 75 * 1024**3
+        controller.budget_available = lambda: 300 * 1024**3
+        outcome = controller.run()
+        self.assertEqual(outcome["status"], "admitted")
+        self.assertEqual(outcome["estimate_bytes"], 205 * 1024**3)
+        self.assertEqual(sum(j["status"] == "Downloading" for j in sab.state["queue"]), 1)
+
+    def test_remote_budget_reserves_source_and_canonical_copy_together(self):
+        controller = self.controller(FakeSab([self.job("large", 80 * 1024)]))
+        controller.configure()
+        self.enable_remote(controller)
+        controller.available = lambda: 1000 * 1024**3
+        controller.budget_available = lambda: admission.RESERVE + 205 * 1024**3 - 1
+        self.assertEqual(controller.run()["status"], "awaiting_capacity_or_known_size")
+        self.assertIsNone(controller.state()["admitted"])
+
+    def test_remote_mount_loss_cannot_fall_back_to_empty_local_directory(self):
+        controller = self.controller(FakeSab())
+        remote = self.enable_remote(controller)
+        for relative in ("downloads/complete", "state/catalog", "downloads/incomplete"):
+            (self.root / relative).mkdir(parents=True, exist_ok=True)
+        remote.mkdir()
+        with mock.patch.object(admission.os, "statvfs", return_value=mock.Mock(
+                f_files=1000000, f_favail=500000, f_bavail=100*1024**3, f_frsize=1)):
+            with self.assertRaisesRegex(admission.AdmissionError, "remote_scratch_mount_unavailable"):
+                admission.Controller.require_resources(controller)
+
+    def test_remote_mode_still_requires_local_application_reserve(self):
+        controller = self.controller(FakeSab())
+        self.enable_remote(controller)
+        for relative in ("downloads/complete", "state/catalog"):
+            (self.root / relative).mkdir(parents=True, exist_ok=True)
+        controller.available = lambda: admission.RESERVE - 1
+        with mock.patch.object(admission.os, "statvfs", return_value=mock.Mock(f_files=1000000, f_favail=500000)):
+            with self.assertRaisesRegex(admission.AdmissionError, "reserve_breached"):
+                admission.Controller.require_resources(controller)
+
+    def test_remote_config_is_explicit_and_symlinks_are_rejected(self):
+        controller = self.controller(FakeSab())
+        self.assertIsNone(controller.remote_scratch())
+        self.enable_remote(controller)
+        marker = self.root / "config/catalog/remote-scratch.json"
+        marker.write_text('{}')
+        with self.assertRaisesRegex(admission.AdmissionError, "configuration_invalid"):
+            controller.remote_scratch()
+        marker.unlink(); marker.symlink_to(self.root / 'missing')
+        with self.assertRaisesRegex(admission.AdmissionError, "configuration_invalid"):
+            controller.remote_scratch()
+
+    def test_remote_ambiguous_identity_is_held_before_allocating_payload(self):
+        sab = FakeSab([self.job("ambiguous"), self.job("other", 2048)])
+        controller = self.controller(sab)
+        controller.configure()
+        self.enable_remote(controller)
+        controller.budget_available = lambda: 300 * 1024**3
+        controller.preflight_cart.side_effect = admission.cart_import_arr.CartImportHold("catalog_identity_ambiguous")
+        self.assertEqual(controller.run()["status"], "identity_held_before_download")
+        self.assertIsNone(controller.state()["admitted"])
+        self.assertTrue(all(j["status"] == "Paused" for j in sab.state["queue"]))
+        self.assertEqual(controller.state()["held"][0]["reason"], "preflight_catalog_identity_ambiguous")
+        controller.preflight_cart.side_effect = None
+        self.assertEqual(controller.run()["status"], "admitted")
+        self.assertEqual(controller.state()["admitted"]["nzo_id"], "other")
+
+    def test_failed_remote_job_reclaims_only_its_payload_and_keeps_admin(self):
+        controller = self.controller(FakeSab())
+        self.enable_remote(controller)
+        directory = self.root / "downloads/incomplete/Example.Failed"
+        (directory / "__ADMIN__").mkdir(parents=True)
+        (directory / "__ADMIN__/retry").write_bytes(b'request')
+        (directory / "payload.rar").write_bytes(b'payload')
+        controller.reclaim_failed({"path": "/data/incomplete/Example.Failed"})
+        self.assertEqual((directory / "__ADMIN__/retry").read_bytes(), b'request')
+        self.assertFalse((directory / "payload.rar").exists())
+        with self.assertRaisesRegex(admission.AdmissionError, "path_requires_review"):
+            controller.failed_paths({"path": "/data/complete/remote/complete"})
 
 
 if __name__ == "__main__":

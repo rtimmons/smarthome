@@ -1,0 +1,158 @@
+---
+- name: Inspect the explicit remote staging activation marker
+  ansible.builtin.stat:
+    path: /srv/usenet/config/catalog/remote-scratch.json
+  register: remote_scratch_marker
+
+- name: Configure remote staging once with original metadata preserved
+  when: not remote_scratch_marker.stat.exists
+  block:
+    - name: Stop admission and importer timers before checking activity
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        state: stopped
+      loop: [usenet-capacity-admission.timer, usenet-cart-import.timer]
+
+    - name: Require idle controllers without interrupting a running transfer
+      ansible.builtin.command:
+        argv: [systemctl, is-active, '{{ item }}']
+      register: scratch_activity
+      changed_when: false
+      failed_when: scratch_activity.rc not in [3, 4] or scratch_activity.stdout | trim not in ['inactive', 'failed', 'unknown']
+      loop: [usenet-capacity-admission.service, usenet-cart-import.service]
+
+    - name: Install the bounded metadata migration helper
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/remote-scratch-setup.py'
+        dest: /srv/usenet/libexec/remote-scratch-setup.py
+        owner: root
+        group: usenet
+        mode: '0550'
+
+    - name: Record the zero-progress queue and preserve its pause state
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/remote-scratch-setup.py, preflight]
+      changed_when: false
+
+    - name: Create staging outside every canonical media library
+      ansible.builtin.command:
+        argv: [rclone, --config, /srv/usenet/config/rclone/rclone.conf, mkdir, 'storagebox:catalog/library/.acquisition-staging/{{ item }}']
+      become_user: usenet
+      loop: [incomplete, complete]
+      changed_when: false
+
+    - name: Stop only idle native applications for their new bind mount
+      ansible.builtin.systemd_service:
+        name: usenet-discovery.service
+        state: stopped
+
+    - name: Stop SAB gracefully before preserving its metadata
+      community.docker.docker_compose_v2:
+        project_src: /srv/usenet/compose/cloud
+        services: [sabnzbd]
+        state: stopped
+        timeout: 60
+
+    - name: Copy and verify metadata and retain original local files
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/remote-scratch-setup.py, preserve-metadata]
+      changed_when: true
+
+    - name: Create an empty inaccessible fallback for remote completed files
+      ansible.builtin.file:
+        path: /srv/usenet/downloads/complete/remote
+        state: directory
+        owner: root
+        group: root
+        mode: '0000'
+
+    - name: Install explicit staging mount and SAB lifecycle units
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/{{ item }}'
+        dest: '/etc/systemd/system/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - srv-usenet-downloads-complete-remote.mount
+        - srv-usenet-downloads-incomplete.mount
+        - usenet-sab-remote.service
+
+    - name: Let systemd protect SAB from starting without staging mounts
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/compose/cloud/remote-scratch.override.yaml'
+        dest: /srv/usenet/compose/cloud/compose.override.yaml
+        owner: usenet
+        group: usenet
+        mode: '0640'
+
+    - name: Create native service dependency override directory
+      ansible.builtin.file:
+        path: /etc/systemd/system/usenet-discovery.service.d
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+
+    - name: Bind native applications to the staging mount lifecycle
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/discovery-remote-scratch.conf'
+        dest: /etc/systemd/system/usenet-discovery.service.d/remote-scratch.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Verify mount and application dependency units before starting them
+      ansible.builtin.command:
+        argv:
+          - systemd-analyze
+          - verify
+          - /etc/systemd/system/srv-usenet-downloads-complete-remote.mount
+          - /etc/systemd/system/srv-usenet-downloads-incomplete.mount
+          - /etc/systemd/system/usenet-sab-remote.service
+      changed_when: false
+
+    - name: Start persistent staging mounts and recreate only SAB
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        daemon_reload: true
+        enabled: true
+        state: started
+      loop:
+        - srv-usenet-downloads-complete-remote.mount
+        - srv-usenet-downloads-incomplete.mount
+        - usenet-sab-remote.service
+
+    - name: Recreate native apps with mounted remote completed storage
+      ansible.builtin.systemd_service:
+        name: usenet-discovery.service
+        state: started
+
+    - name: Verify exact queued requests and restore the original global pause state
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/remote-scratch-setup.py, verify]
+      changed_when: false
+
+    - name: Enable capacity accounting against remote staging explicitly
+      ansible.builtin.copy:
+        content: '{"schema_version":1,"mode":"storagebox"}'
+        dest: /srv/usenet/config/catalog/remote-scratch.json
+        owner: root
+        group: usenet
+        mode: '0640'
+
+- name: Verify both application-visible budgets and native dependencies
+  ansible.builtin.command:
+    argv:
+      - /bin/sh
+      - -c
+      - 'set -a; . /srv/usenet/config/catalog.env; exec python3 /srv/usenet/libexec/capacity-admission.py run'
+  become_user: usenet
+  changed_when: false
+
+- name: Resume automatic import and capacity admission
+  ansible.builtin.systemd_service:
+    name: '{{ item }}'
+    enabled: true
+    state: started
+  loop: [usenet-cart-import.timer, usenet-capacity-admission.timer]

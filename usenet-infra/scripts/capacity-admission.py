@@ -17,6 +17,7 @@ import urllib.request
 import xml.etree.ElementTree as ElementTree
 
 import cart_import_sab
+import cart_import_arr
 
 
 SCHEMA = 1
@@ -99,11 +100,31 @@ class Controller:
         stats = os.statvfs(self.root)
         return stats.f_bavail * stats.f_frsize
 
+    def remote_scratch(self) -> Path | None:
+        marker = self.root / "config/catalog/remote-scratch.json"
+        if not marker.exists() and not marker.is_symlink():
+            return None
+        if marker.is_symlink() or json.loads(marker.read_text()) != {
+                "schema_version": 1, "mode": "storagebox"}:
+            raise AdmissionError("remote_scratch_configuration_invalid")
+        return self.root / "downloads/complete/remote"
+
+    def budget_available(self) -> int:
+        remote = self.remote_scratch()
+        if remote is None:
+            return self.available()
+        stats = os.statvfs(remote)
+        return stats.f_bavail * stats.f_frsize
+
     def require_resources(self) -> None:
-        # All current scratch/application paths share one filesystem. Refuse a
-        # changed layout instead of budgeting an unrelated filesystem's space.
+        # Application state always remains local. Remote scratch is accepted
+        # only through the explicit marker and both verified bind mounts.
         device = self.root.stat().st_dev
-        for relative in ("downloads/incomplete", "downloads/complete", "config", "state/catalog"):
+        remote = self.remote_scratch()
+        local_paths = ["downloads/complete", "config", "state/catalog"]
+        if remote is None:
+            local_paths.append("downloads/incomplete")
+        for relative in local_paths:
             path = self.root / relative
             if path.is_symlink() or not path.is_dir() or path.stat().st_dev != device:
                 raise AdmissionError("scratch_filesystem_layout_changed")
@@ -112,6 +133,27 @@ class Controller:
             raise AdmissionError("inode_reserve_unavailable")
         if self.available() < RESERVE:
             raise AdmissionError("reserve_breached")
+        if remote is not None:
+            library = self.root / "library"
+            incomplete = self.root / "downloads/incomplete"
+            if (remote.is_symlink() or not remote.is_mount() or not library.is_mount()
+                    or remote.stat().st_dev != library.stat().st_dev
+                    or remote.stat().st_dev == device
+                    or incomplete.is_symlink() or not incomplete.is_mount()
+                    or incomplete.stat().st_dev != remote.stat().st_dev
+                    or not all((remote / name).is_dir() and not (remote / name).is_symlink()
+                               for name in ("incomplete", "complete"))):
+                raise AdmissionError("remote_scratch_mount_unavailable")
+            stats = os.statvfs(remote)
+            if stats.f_files <= 0 or stats.f_favail < INODE_RESERVE:
+                raise AdmissionError("remote_scratch_inode_reserve_unavailable")
+            if self.budget_available() < RESERVE:
+                raise AdmissionError("remote_scratch_reserve_breached")
+            misc = self.api("get_config", section="misc")["config"]["misc"]
+            expected = {"download_dir": "/data/incomplete",
+                        "complete_dir": "/data/complete/remote/complete"}
+            if any(misc.get(key) != value for key, value in expected.items()):
+                raise AdmissionError("remote_scratch_sab_path_drift")
 
     def discovery_api(self):
         spec = importlib.util.spec_from_file_location(
@@ -149,10 +191,24 @@ class Controller:
             return None
         if total <= 0 or left < 0 or left > total:
             return None
+        if self.remote_scratch() is not None:
+            # The archive/unpack peak and source/native-copy peak share the
+            # Storage Box. Reserve both full expanded copies, never just the
+            # local root's free bytes. SAB finishes unpacking before Arr copies.
+            return max(left + math.ceil(total * 1.25), math.ceil(total * 2.5)) + MARGIN
         return left + math.ceil(total * 1.25) + MARGIN
 
     def pause_global(self) -> None:
         self.api("pause")
+
+    def preflight_cart(self, job: dict) -> None:
+        if job.get("cat") not in {None, "", "*", "Default"}:
+            return
+        title = job.get("filename", "")
+        native = cart_import_arr.NativeArr(self.discovery_api())
+        app = "sonarr" if cart_import_arr.EPISODE_NUMBER.search(title) else "radarr"
+        # Lookup only: never create metadata, search, acquire or import here.
+        native._identity(app, job, native._parse(app, title))
 
     def configure(self) -> dict:
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -231,12 +287,17 @@ class Controller:
         state.update(admitted=None, owned=sorted(owned), held=held, blocked=None)
 
     def failed_paths(self, history: dict) -> list[Path]:
-        roots = (self.root / "downloads/incomplete", self.root / "downloads/complete")
+        roots = [self.root / "downloads/incomplete", self.root / "downloads/complete"]
+        remote = self.remote_scratch()
+        if remote is not None:
+            roots.extend((remote / "incomplete", remote / "complete"))
         result = []
         for value in (history.get("path"), history.get("storage")):
             if not value:
                 continue
             path = Path(str(value))
+            if path.is_relative_to("/data"):
+                path = self.root / "downloads" / path.relative_to("/data")
             matches = [root for root in roots if path.parent == root]
             if len(matches) != 1 or path.is_symlink() or not path.is_dir():
                 raise AdmissionError("failed_payload_path_requires_review")
@@ -248,7 +309,7 @@ class Controller:
 
     def reclaim_failed(self, history: dict) -> None:
         for path in self.failed_paths(history):
-            if path.parent == self.root / "downloads/incomplete":
+            if path.parent.name == "incomplete":
                 admin = path / "__ADMIN__"
                 if admin.is_symlink() or not admin.is_dir():
                     raise AdmissionError("failed_retry_admin_missing")
@@ -525,7 +586,7 @@ class Controller:
                 return {"status": state["blocked"], "active_jobs": 0,
                         "paused_jobs": len(queue), "pending_cart_jobs": pending}
             candidates = []
-            available = self.available()
+            available = self.budget_available()
             for identity in sorted(owned):
                 job = queue.get(identity)
                 estimate = self.estimate(job) if job and job.get("status") == "Paused" else None
@@ -537,6 +598,20 @@ class Controller:
                 self.save(state)
                 return {"status": state["blocked"] or "idle", "active_jobs": 0, "paused_jobs": len(queue)}
             estimate, identity = min(candidates)
+            if self.remote_scratch() is not None:
+                try:
+                    self.preflight_cart(queue[identity])
+                except cart_import_arr.CartImportHold as error:
+                    if str(error) not in {"catalog_identity_ambiguous", "catalog_identity_missing",
+                            "catalog_id_invalid", "release_parse_ambiguous", "release_identity_missing"}:
+                        state["blocked"] = "native_identity_preflight_unavailable"
+                        self.pause_global()
+                        self.save(state)
+                        raise AdmissionError("native_identity_preflight_unavailable") from None
+                    self.isolate(state, owned, {"nzo_id": identity}, "preflight_" + str(error))
+                    self.save(state)
+                    return {"status": "identity_held_before_download", "active_jobs": 0,
+                            "paused_jobs": len(queue)}
             state.update(admitted={"nzo_id": identity, "filename": queue[identity].get("filename"),
                                    "estimate_bytes": estimate, "admitted_at": self.clock()}, blocked=None)
             self.save(state)

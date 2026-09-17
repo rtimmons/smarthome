@@ -142,6 +142,10 @@ def source_directory(job, root):
         raise Hold('source_outside_completed') from None
     if not relative.parts or relative.parts[0].startswith('.'):
         raise Hold('source_root_refused')
+    if relative.parts[0] == 'remote' and (
+            len(relative.parts) < 3 or relative.parts[1] != 'complete'
+            or relative.parts[2].startswith('.')):
+        raise Hold('source_root_refused')
     path = confined(root / relative, root)
     if path.is_file():
         path = path.parent
@@ -285,6 +289,7 @@ class Coordinator:
     def guard_job(self, record):
         if not self.mounted():
             raise Hold('canonical_mount_unavailable')
+        self.remote_source(record)
         current = self.sab.job(record['job']['nzo_id'])
         if not current or current.get('status') != 'Completed' or current.get('archive') not in (None, 0, False):
             raise Hold('completed_job_changed')
@@ -294,6 +299,17 @@ class Coordinator:
         if current['nzo_id'] in self.arr.owned_download_ids():
             raise Hold('arr_owned_download')
         return current
+
+    def remote_source(self, record):
+        directory = Path(record.get('source_dir', self.root))
+        stage = self.root / 'remote'
+        if not directory.is_relative_to(stage):
+            return False
+        if (directory == stage / 'complete' or not directory.is_relative_to(stage / 'complete')
+                or stage.is_symlink() or not stage.is_mount()
+                or stage.stat().st_dev != self.library.stat().st_dev):
+            raise Hold('remote_scratch_mount_unavailable')
+        return True
 
     def source_unchanged(self, record):
         directory = confined(Path(record['source_dir']), self.root)
@@ -398,8 +414,10 @@ class Coordinator:
         self.guard_job(record)
         directory = Path(record['source_dir'])
         confined(directory, self.root, missing=True)
+        remote_source = self.remote_source(record)
         quarantine = self.root / '.cart-import-cleanup' / ref(record['job']['nzo_id'])
-        ensure_dir(quarantine, self.root)
+        if not remote_source:
+            ensure_dir(quarantine, self.root)
         # On recovery, verify every canonical destination before further deletion.
         for item in record['verified']:
             source = record['sources'][item['source']]
@@ -416,18 +434,38 @@ class Coordinator:
             expected = record['sources'][item['source']]['signature']
             pending = quarantine / (ref(item['source']) + '.pending')
             confined(pending, self.root, missing=True)
-            if pending.exists() and source.exists():
-                raise Hold('cleanup_collision')
-            if source.exists():
-                if regular(source) != expected:
-                    raise Hold('source_changed_before_cleanup')
-                exclusive_rename(source, pending)
-            if pending.exists():
-                if regular(pending) != expected:
-                    raise Hold('quarantine_identity_changed')
-                if regular(Path(item['canonical']['path'])) != item['canonical']['signature']:
-                    raise Hold('canonical_changed_before_cleanup')
-                pending.unlink()
+            if remote_source:
+                # SSHFS cannot implement RENAME_NOREPLACE. The exact file is
+                # already independently verified at its canonical destination;
+                # journal the unlink intent before deleting it in place. A
+                # missing file without our durable intent is never adopted as
+                # successful cleanup. No remote rename or overwrite is used.
+                if source.exists():
+                    if regular(source) != expected:
+                        raise Hold('source_changed_before_cleanup')
+                    item['source_delete_intent'] = True
+                    self.persist(record)
+                    self.guard_job(record)
+                    if regular(source) != expected:
+                        raise Hold('source_changed_before_cleanup')
+                    if regular(Path(item['canonical']['path'])) != item['canonical']['signature']:
+                        raise Hold('canonical_changed_before_cleanup')
+                    source.unlink()
+                elif not item.get('source_delete_intent'):
+                    raise Hold('source_missing_without_delete_intent')
+            else:
+                if pending.exists() and source.exists():
+                    raise Hold('cleanup_collision')
+                if source.exists():
+                    if regular(source) != expected:
+                        raise Hold('source_changed_before_cleanup')
+                    exclusive_rename(source, pending)
+                if pending.exists():
+                    if regular(pending) != expected:
+                        raise Hold('quarantine_identity_changed')
+                    if regular(Path(item['canonical']['path'])) != item['canonical']['signature']:
+                        raise Hold('canonical_changed_before_cleanup')
+                    pending.unlink()
             item['source_removed'] = True
             self.persist(record)
             parent = source.parent
