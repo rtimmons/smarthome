@@ -35,7 +35,10 @@ and remote staging. It admits one job through cleanup. The remote estimate is
 the larger of remaining archive plus 1.25 times release size, or two expanded
 copies at 1.25 times size each, plus 5 GiB. Both staging and canonical copies
 consume the same Storage Box budget. This remains a conservative polling estimate,
-not a hard quota or protection against arbitrary archive expansion.
+not a hard quota or protection against arbitrary archive expansion. During long
+post-processing SAB can omit the job from SQLite history; its live post-processing
+count keeps the reservation active until completion and cleanup. A prior recorded
+fault is recomputed after an explicit resume, while manual global pauses persist.
 
 Before a new cart admission, read-only native parse/catalog lookup holds ambiguous
 identities before downloading their payloads. Arr-owned requests retain native

@@ -489,6 +489,10 @@ class Controller:
                 self.save(state)
                 return {"status": "globally_paused", "active_jobs": 0,
                         "paused_jobs": len(snapshot["queue"])}
+            # Once an operator has resumed after a fail-closed pause, recompute
+            # the reason from current resources, queue and history. A stale
+            # missing-history flag must not poison a now-completed reservation.
+            state["blocked"] = None
             held_ids = {item.get("nzo_id") for item in state.get("held", []) if isinstance(item, dict)}
             intake_ids = self.intake_ids(snapshot, held_ids)
             eligible_ids = set(state["owned"]) | intake_ids
@@ -543,7 +547,14 @@ class Controller:
                             "paused_jobs": len(queue) - int(replacement.get("status") != "Paused")}
                 histories = [job for job in snapshot["history"] if job["nzo_id"] == identity]
                 if len(histories) != 1:
-                    if self.clock() - float(admitted.get("admitted_at", 0)) <= 300:
+                    # SAB does not insert its SQLite history row until post-
+                    # processing finishes. Long unpacking is expected even when
+                    # the queue is empty and the materialization grace elapsed.
+                    if not histories and snapshot.get("postprocessing", 0):
+                        self.save(state)
+                        return {"status": "awaiting_sab_completion", "active_jobs": 0,
+                                "paused_jobs": len(queue)}
+                    if not histories and self.clock() - float(admitted.get("admitted_at", 0)) <= 300:
                         self.save(state)
                         return {"status": "materializing", "active_jobs": 0, "paused_jobs": len(queue)}
                     state["blocked"] = "admitted_history_missing_or_ambiguous"

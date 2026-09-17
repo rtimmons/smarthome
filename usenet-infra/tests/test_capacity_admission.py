@@ -716,6 +716,42 @@ class CapacityAdmissionTests(unittest.TestCase):
         with self.assertRaisesRegex(admission.AdmissionError, "path_requires_review"):
             controller.failed_paths({"path": "/data/complete/remote/complete"})
 
+    def test_long_postprocessing_without_history_retains_reservation(self):
+        sab = FakeSab([self.job("first"), self.job("next", 2048)])
+        controller = self.controller(sab)
+        controller.configure(); controller.run()
+        state = controller.state(); state["admitted"]["admitted_at"] = 0; controller.save(state)
+        sab.state["queue"] = [j for j in sab.state["queue"] if j["nzo_id"] != "first"]
+        sab.state["postprocessing"] = 1
+        for _ in range(3):
+            self.assertEqual(controller.run()["status"], "awaiting_sab_completion")
+            self.assertFalse(sab.state["paused"])
+            self.assertEqual(controller.state()["admitted"]["nzo_id"], "first")
+            self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+        sab.state["postprocessing"] = 0
+        sab.state["history"].append({"nzo_id": "first", "status": "Completed", "category": "Default"})
+        path = self.root / "state/catalog/cart-import/jobs" / (hashlib.sha256(b"first").hexdigest() + ".json")
+        path.write_text(json.dumps({"phase": "cleaned", "job": {"nzo_id": "first"}}))
+        self.assertEqual(controller.run()["status"], "admitted")
+        self.assertEqual(controller.state()["admitted"]["nzo_id"], "next")
+
+    def test_explicit_resume_recomputes_old_missing_history_block(self):
+        sab = FakeSab([self.job("first"), self.job("next", 2048)])
+        controller = self.controller(sab)
+        controller.configure(); controller.run()
+        state = controller.state(); state["admitted"]["admitted_at"] = 0; controller.save(state)
+        sab.state["queue"] = [j for j in sab.state["queue"] if j["nzo_id"] != "first"]
+        with self.assertRaisesRegex(admission.AdmissionError, "admitted_history_missing_or_ambiguous"):
+            controller.run()
+        self.assertTrue(sab.state["paused"])
+        sab.state["history"].append({"nzo_id": "first", "status": "Completed", "category": "Default"})
+        path = self.root / "state/catalog/cart-import/jobs" / (hashlib.sha256(b"first").hexdigest() + ".json")
+        path.write_text(json.dumps({"phase": "cleaned", "job": {"nzo_id": "first"}}))
+        self.assertEqual(controller.run()["status"], "globally_paused")
+        sab.api("resume")
+        self.assertEqual(controller.run()["status"], "admitted")
+        self.assertIsNone(controller.state()["blocked"])
+
 
 if __name__ == "__main__":
     unittest.main()
