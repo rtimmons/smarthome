@@ -91,7 +91,36 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## Current operations and closure
 
-- September 17 deployed source is `edf223e` plus `5790fcf`: application-available
+- September 17, 19:23 UTC: `bad2274` and `45ff544` are deployed. New acquisition
+  scratch uses the existing Storage Box outside Movies/TV through guarded bind
+  mounts. The first staged job imported, independently verified and reclaimed
+  18,532,566,519 bytes. After fixing long postprocessing without a SQLite history
+  row and clearing its stale fault pause, the timer admitted the next request
+  automatically. It is postprocessing; 16 requests wait, global SAB is resumed,
+  no controller fault is set, and both automation timers are active. Root free
+  space is 80.3 GB; remote free space is 694.8 GB. No resize or purchase occurred.
+  Follow [remote staging](docs/remote-scratch.md) and its
+  [receipt](recovery/drills/remote-scratch-20260917.json). Never reset a reservation
+  merely because a processing job is temporarily absent from SQLite history.
+  A 19:35 UTC follow-up found that next item importing after postprocessing,
+  without an error/hold or controller fault; global SAB remained resumed.
+- Migration preserved all 18 requests and hash-verified 1,078 metadata files;
+  original local metadata/configuration remain. SAB startup now depends on both
+  staging mounts and recreates its container to avoid stale mount bindings.
+  Preserve mode-0000 fallback protection. Remote cleanup requires independent
+  canonical verification, durable per-file unlink intent and exact signatures;
+  local quarantine behavior remains unchanged. The shared remote budget includes
+  peak staging plus the canonical copy and a 30 GiB reserve, with local reserve
+  and available inode checks too. Permanent library growth still consumes space.
+- The latest suite ran 616 cases: 607 passed, nine optional skips. Compilation,
+  shell/YAML and deployment syntax passed; full-history scanning still finds the
+  two documented RSA keys. Installed helpers match source. The latest verified
+  archive remains `cloud-20260917T143828Z.tar.age`, before these two changes and
+  the 23rd completed journal. Fresh capture/restore verification is outstanding;
+  backup allowlist coverage is not proof of capture. Preserve running work and
+  host backup automation. TV, Arr-owned cleanup and playback remain unverified.
+
+- Earlier September 17 deployed source was `edf223e` plus `5790fcf`: application-available
   inode checks, native mount/root availability, preserved manual pauses and exact
   paused RSS intake. The capacity service must run during mount outages to pause
   SAB; do not restore mount prerequisites that prevent the guard from running.
@@ -99,15 +128,14 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   two hit identity holds. User-approved exact disposal of those two held payloads
   reclaimed 21,940,561,867 bytes and preserved paused replacement requests/history.
   Replacements still need identity resolution. Original four held payloads remain.
-- The latest queue is again capacity-blocked: 18 paused entries, no active job,
+- At the earlier 14:38 UTC checkpoint the queue was capacity-blocked: 18 paused entries, no active job,
   80,315,387,904 available bytes, both automation timers active and global SAB
-  resumed. Do not claim the backlog is draining. CX53 resizing was not applied;
-  source/private inputs are back to CX43. No storage purchase or remote scratch
-  migration occurred. Read the current plan before choosing the next capacity fix.
+  resumed. CX53 resizing was not applied; source/private inputs stayed CX43.
+  The later remote staging deployment above supersedes that capacity blockage.
 - `cloud-20260917T143828Z.tar.age` independently restored 671 files, four databases,
   28 importer journals (22 completed) and both exact disposition journals. Helpers,
-  activation and controller state matched current source/live records. Older
-  handoff counts below are historical. The full suite ran 598 cases, with 589
+  activation and controller state matched source/live records at that checkpoint.
+  Older handoff counts below are historical. That suite ran 598 cases, with 589
   passes and nine optional skips; syntax/current scan passed and history reports
   the two known RSA keys. Synthetic extended capacity tests are now covered,
   while actual remaining backlog, TV, Arr-owned cleanup and playback are not.

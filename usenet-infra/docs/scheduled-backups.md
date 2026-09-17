@@ -83,10 +83,19 @@ immutable, and ordinary freshness checks still apply.
 
 ## Cart importer checkpoint
 
+The remote-staging deployment and subsequent postprocessing correction were
+installed after the archive below. New configuration/state falls within the
+existing allowlist, but fresh independent capture/restore verification is still
+outstanding. It must verify `config/catalog/remote-scratch.json`,
+`state/catalog/remote-scratch-setup.json`, the migration/controller/importer helpers,
+the Compose override and new journals. Systemd mount/dependency units come from
+the committed repository; restore them before starting SAB against the restored
+remote marker. Preserve active media work while the host-owned backup timer runs.
+
 Latest verified capture: `cloud-20260917T143828Z.tar.age` independently decrypted
 and restored all 671 entries and four databases, including 28 importer journals
 (22 completed), both user-approved held-payload disposition journals, unchanged
-activation, current helpers and matching controller state. This supersedes the
+activation, then-current helpers and matching controller state. This supersedes the
 older count below; no replacement-host restore is claimed.
 [Progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
 

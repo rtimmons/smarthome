@@ -20,14 +20,35 @@ freshness threshold; no new backup or archive-integrity drill was run.
 
 ## September 17 queue continuation
 
+Latest deployment: `bad2274` adds remote staging on the existing Storage Box;
+`45ff544` retains admission during long SAB postprocessing without a history row.
+All 18 requests and 1,078 metadata files survived migration. The first staged
+item completed native import, independent canonical hash verification and exact
+cleanup (18,532,566,519 bytes). At 19:23 UTC the scheduled controller had admitted
+the next item, which was postprocessing; 16 requests waited, the global queue was
+resumed and there was no blocking fault. Local available space remained 80.3 GB.
+Both timers, mount-dependent services and staging mounts were active. The suite
+ran 616 cases (607 passes, nine optional skips), with compilation, shell/YAML and
+all Ansible syntax checks passing. Full-history scan failure remains limited to
+the two documented RSA keys. No VM resize or purchase occurred.
+[Remote staging receipt](../recovery/drills/remote-scratch-20260917.json).
+
+The independently restored archive below predates this deployment and the 23rd
+completed journal. New-state capture/restore, latest-item Plex indexing, TV,
+Arr-owned cleanup and deferred playback remain separate acceptance work. A
+read-only Plex review matched the 22 pre-migration completed records; some had
+earlier selected-directory scans, so it does not prove all indexing was automatic.
+
+Earlier checkpoint:
+
 Deployed `edf223e` and `5790fcf` passed 598 cases (589 passes, nine optional skips),
 compilation, shell/YAML and deployment syntax. Current-source scanning passed;
 full history retains the two documented RSA findings. Seven queued requests ran:
 five native imports independently verified/cleaned and two identity holds.
 The latter were explicitly disposed with exact-file verification and paused
-replacement requests; they are not successful imports. The latest queue is again
-capacity-blocked with 18 paused entries. No resize or storage purchase occurred.
-The independently restored latest backup covers 671 files, four databases,
+replacement requests; they are not successful imports. At that checkpoint the
+queue was capacity-blocked with 18 paused entries. No resize or storage purchase occurred.
+The independently restored backup covers 671 files, four databases,
 28 journals, 22 completed records and two disposition journals.
 [Progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
 

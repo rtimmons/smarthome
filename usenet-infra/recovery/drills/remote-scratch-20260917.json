@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-17T19:23:30.097182+00:00",
+  "source_commits": [
+    "bad2274",
+    "45ff544"
+  ],
+  "deployment": {
+    "remote_staging": "existing_storage_box",
+    "server_type": "cx43",
+    "root_disk_gb": 160,
+    "resize_applied": false,
+    "storage_purchase": false,
+    "migration_phase": "verified",
+    "queue_entries_preserved": 18,
+    "metadata_files_verified": 1078,
+    "metadata_bytes_verified": 64178064,
+    "original_local_metadata_and_configuration_retained": true,
+    "installed_helpers_match_source": {
+      "capacity-admission.py": "00438626440c3790d24942a640bf2b098779dfa01aa86bccd6612b83e74ac86a",
+      "cart_import_sab.py": "cc537cb584474639a71bacbcb35bcfcfddbcfc58c0c2d7ec385c5488465821b6",
+      "discovery-config.py": "8f42236784ccab04c38cd041f9319303ad6ad0c19fabab6da54ee34fce46ba72",
+      "cart-import.py": "87b14408a1394e88376cfd906a4a8da35cc0750638b0d897cf37bab05bc57bb0",
+      "cart_import_arr.py": "7e604d14d13618ba7201f90d116242b59a7813488a7d37c5546053702eff609f"
+    },
+    "long_postprocessing_missing_history_fixed": true,
+    "stale_fault_resume_after_verified_cleanup": true
+  },
+  "automatic_progress": {
+    "remote_staged_native_imports_completed": 1,
+    "payload_bytes_reclaimed": 18532566519,
+    "source_deletion_intents_and_removal_recorded": true,
+    "completed_journals_total": 23,
+    "native_imports_total": 19,
+    "existing_target_reconciliations_total": 4,
+    "next_request_started_by_controller": true
+  },
+  "queue": {
+    "waiting_entries": 16,
+    "downloading": 0,
+    "postprocessing": 1,
+    "globally_paused": false,
+    "blocked_reason": null,
+    "local_available_bytes": 80332103680,
+    "remote_available_bytes": 694843867136,
+    "free_space_settings": {
+      "download_free": "30G",
+      "complete_free": "30G"
+    },
+    "services": {
+      "usenet-backup.timer": "active",
+      "usenet-capacity-admission.timer": "active",
+      "usenet-cart-import.timer": "active",
+      "usenet-library.service": "active",
+      "usenet-sab-remote.service": "active",
+      "srv-usenet-downloads-incomplete.mount": "active",
+      "srv-usenet-downloads-complete-remote.mount": "active",
+      "usenet-discovery.service": "active"
+    },
+    "latest_controller_run_succeeded": true
+  },
+  "tests": {
+    "cases": 616,
+    "passed": 607,
+    "optional_skips": 9,
+    "compilation_shell_yaml_and_ansible_syntax_passed": true,
+    "current_source_secret_scan_passed": true,
+    "historical_rsa_findings": 2
+  },
+  "backup": {
+    "latest_independently_restored_archive": "cloud-20260917T143828Z.tar.age",
+    "predates_this_deployment": true,
+    "fresh_capture_and_independent_restore_verified": false,
+    "scheduled_backup_timer_active": true
+  },
+  "limits": [
+    "Identity-held requests remain isolated; original held payloads and exact disposition journals are preserved.",
+    "Permanent library growth can eventually exhaust the shared Storage Box budget; admission preserves its reserve.",
+    "New-state backup capture/restore and latest-item Plex indexing remain unverified.",
+    "TV, Arr-owned cleanup and user-deferred playback are separate acceptance work."
+  ],
+  "followup": {
+    "checked_at": "2026-09-17T19:35:55.200151+00:00",
+    "next_job_finished_postprocessing": true,
+    "next_job_importing_without_error": true,
+    "waiting_entries": 16,
+    "globally_paused": false,
+    "blocked_reason": null,
+    "local_available_bytes": 80329105408,
+    "remote_available_bytes": 682432921600
+  }
+}

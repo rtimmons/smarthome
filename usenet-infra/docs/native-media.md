@@ -1,5 +1,17 @@
 # Native media workflow
 
+September 17, 19:23 UTC: new SAB acquisition scratch now uses the existing
+Storage Box through guarded bind mounts outside Movies/TV. The VM remains CX43;
+native import and canonical library ownership are unchanged. The first staged
+job completed import, independent canonical SHA-256 and exact cleanup; the next
+was admitted by the host controller and is postprocessing. There are 23 completed
+cart journals (19 native imports, four existing-target reconciliations).
+See [remote staging](remote-scratch.md) and the
+[current receipt](../recovery/drills/remote-scratch-20260917.json). Earlier counts
+and cloud-local scratch descriptions below are historical. Read-only Plex review
+matched all 22 pre-migration completed records; indexing of the new item remains
+unverified and prior selected-directory scans do not prove automatic discovery.
+
 September 17 checkpoint: native status now lists 19 movies (one local copy) and
 no TV, with no active/failed NAS transfers. Read-only cart review verified current
 native ownership and exact scratch absence for 13 native movie imports and four

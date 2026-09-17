@@ -5,6 +5,15 @@ the existing Storage Box. The VM remains CX43 with its existing 160 GB disk;
 this change purchases no resources. The library remains canonical, and native
 Radarr/Sonarr import still owns publication.
 
+Deployed September 17: all 18 queued requests were preserved and 1,078 metadata
+files (64,178,064 bytes) independently hash-verified. The first staged job completed
+native import, independent canonical verification and cleanup, reclaiming
+18,532,566,519 bytes. The deployed follow-up fixes the false missing-history fault
+during long postprocessing. After its stale pause was cleared, the timer started
+the next request automatically. At 19:23 UTC it was postprocessing, 16 requests
+waited and no controller fault was set. Both queue timers run on the host without
+this chat or workstation. [Receipt](../recovery/drills/remote-scratch-20260917.json).
+
 The backing directory is `catalog/library/.acquisition-staging`, outside Movies,
 TV and all Plex sources. Two systemd bind mounts expose it:
 

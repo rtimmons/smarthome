@@ -1,6 +1,63 @@
 # Usenet status and closure plan
 
-## Current handoff — September 17, 2026, 14:38 UTC
+## Current handoff — September 17, 2026, 19:23 UTC
+
+**The queue is progressing under host-owned automation.** Remote staging
+(`bad2274`) and the long-postprocessing correction (`45ff544`) are deployed on the
+existing CX43 and Storage Box. No VM resize or storage purchase occurred. SAB
+downloads, repairs and unpacks outside the Movies/TV roots on the Storage Box;
+the controller admits one item through native import, independent canonical
+SHA-256 and exact scratch cleanup before admitting another.
+
+Migration preserved all 18 queued requests and independently verified 1,078
+metadata files (64,178,064 bytes), retaining the old local metadata and SAB
+configuration. The first remote-staged item completed native import and verified
+cleanup, reclaiming **18,532,566,519 bytes**. There are now 23 completed journals
+(19 native imports and four existing-target reconciliations). During validation,
+long unpacking exposed a false missing-history fault: SAB can omit a processing
+job from SQLite history until it finishes. The deployed correction retains its
+reservation while live postprocessing is active. The stale fault pause was
+cleared only after confirming the completed import and exact cleanup.
+
+The scheduled controller then started the next request itself. At 19:23 UTC,
+16 requests remained individually paused, one item was postprocessing, global
+SAB was resumed and the controller had no blocking fault. Local available space
+was **80.3 GB**, remote available space **694.8 GB**, and both SAB floors remained
+`30G`. The admission, importer and backup timers, library/staging mounts and
+mount-dependent application services were active. These services run on the
+server independently of this chat or workstation; routine queue progress does
+not require manual polling or per-item intervention.
+
+At the 19:35 UTC follow-up, that next item had finished postprocessing and its
+native import was running without an error or hold. Global SAB remained resumed,
+the controller remained unblocked and local available space remained 80.3 GB.
+
+The suite ran **616 cases: 607 passed and nine optional skips**. Compilation,
+shell/YAML and all deployment syntax checks passed. The full recipe still fails
+only on the two documented historical RSA keys; current-source scanning is
+reported separately in the receipt. Installed helpers match the committed source.
+See [remote staging and recovery](usenet-infra/docs/remote-scratch.md) and the
+[deployment receipt](usenet-infra/recovery/drills/remote-scratch-20260917.json).
+
+The latest independently restored archive is still
+`cloud-20260917T143828Z.tar.age`: 671 files, four databases and 28 journals
+(22 completed), including both user-approved held-payload dispositions. It
+predates remote staging and the postprocessing correction. The existing backup
+allowlist includes the new marker, setup receipt, helpers and Compose override,
+but **fresh capture/restore verification remains outstanding**; coverage is not
+proof of capture. Do not stop active media work just to make a backup pass.
+
+Identity-held requests remain isolated; the two discarded recoverable payloads
+have paused replacement requests, while the original four held payloads remain.
+Permanent library growth can eventually consume Storage Box capacity, at which
+point automatic admission waits for its reserve. All 22 pre-migration completed
+records matched Plex paths/sizes in a read-only review; that does not establish
+indexing of the new remote-staged item or wholly automatic discovery after earlier
+selected-directory scans. TV, Arr-owned cleanup and deferred device playback
+remain separate acceptance work. No PR, push or merge was performed; unrelated
+lighting edits, `msg` and packages remain untouched.
+
+## Earlier checkpoint — September 17, 2026, 14:38 UTC
 
 Capacity guards and corrected paused RSS intake are committed (`edf223e`,
 `5790fcf`) and deployed. SAB materializes paused feed arrivals with priority
@@ -433,7 +490,9 @@ This checklist now records the implemented fix and remaining extended validation
 - [x] Protect application/database/journal space through application-visible
   admission and both SAB 30 GiB floors. The controller uses `f_bavail`, so reserved
   root blocks do not satisfy its budget; it stops new acquisition before exhaustion.
-  A separate scratch filesystem remains an optional future hard-isolation upgrade.
+  New acquisition scratch now uses the existing Storage Box through guarded
+  bind mounts; local application/database state remains on the VM. Both local
+  and remote reserves and available inodes are checked before admission.
 - [x] Apply the authorized failed-job policy only to controller-owned requests.
   Preserve SAB's exact retry metadata, remove only that failed attempt's payload,
   use SAB's native retry at most twice, then isolate the request without stopping
@@ -460,9 +519,10 @@ This checklist now records the implemented fix and remaining extended validation
   a fresh encrypted backup includes controller state and importer journals.
   Keep fresh TV, Arr-owned cleanup and device-playback acceptance distinct.
 
-The implementation validation passed 569 infrastructure tests with nine optional
-skips, Python compilation, shell/config checks, all Ansible syntax checks including
-`cart-import.yml`, current-source secret scanning and diff whitespace review. The
+The latest implementation validation passed 607 infrastructure tests with nine
+optional skips, Python compilation, shell/config checks and all Ansible syntax
+checks including `cart-import.yml` and `remote-scratch.yml`. Current-source secret
+scanning and diff whitespace review are recorded with the deployment receipt. The
 full recipe reaches its expected final failure only on the two already documented
 historical RSA keys; no new credential finding is present in current source.
 

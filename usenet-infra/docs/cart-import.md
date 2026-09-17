@@ -1,12 +1,14 @@
 # Automatic cart imports and cloud cleanup
 
-September 17 update: corrected paused RSS intake is deployed. Seven requests ran;
-five imported and reclaimed 61,260,245,624 bytes automatically. Two identity-held
-payloads were explicitly discarded after exact rehashing, with original history
-and paused replacement requests retained. Their disposition journals are separate
-from successful-import receipts. The queue is capacity-blocked again; remote
-unpack staging and a VM resize are not deployed. Both timers remain active.
-See the [current progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
+September 17, 19:23 UTC: [remote acquisition staging](remote-scratch.md) is
+deployed on the existing Storage Box, with no VM resize or storage purchase.
+The first staged job imported, passed independent verification and reclaimed
+18,532,566,519 bytes. After correcting a false missing-history pause during long
+unpacking, the scheduled controller started the next job automatically; it is
+postprocessing with 16 requests waiting and no blocking fault. Both timers are
+active. The [current receipt](../recovery/drills/remote-scratch-20260917.json)
+supersedes the earlier [progress checkpoint](../recovery/drills/cart-queue-progress-20260917.json).
+Existing identity holds and their separate authorized-disposition journals remain.
 
 Deployed September 14, 2026 at 01:38:39 UTC. The first scheduled idle run passed;
 all 11 historical/current jobs and two feed entries were excluded. The queue and
@@ -49,10 +51,15 @@ The `usenet-capacity-admission.timer` runs every 20 seconds and owns acquisition
 pauses for both cart feeds and the Default/Prowlarr categories. Requests continue
 to register with SAB at paused priority. The controller admits one fitting job at
 a time and does not admit the next until the current job has left SAB and its
-native import/cleanup has reached a terminal state. Its conservative requirement
-is remaining download bytes plus 1.25 times the full advertised release size,
-plus a 5 GiB margin, while leaving at least 30 GiB application-visible free.
-Unknown or oversized requests remain paused.
+native import/cleanup has reached a terminal state. In local staging mode, its
+requirement is remaining download bytes plus 1.25 times the full advertised
+release size, plus a 5 GiB margin. In deployed remote mode, it also budgets two
+expanded copies on the shared staging/library filesystem: the larger of remaining
+archive plus 1.25 times release size, or 2.5 times release size, plus 5 GiB.
+Both modes preserve a 30 GiB application-visible reserve; remote mode checks
+both filesystems and available inodes. Unknown or oversized requests remain
+paused. Read-only native identity preflight isolates ambiguous cart titles
+before downloading them.
 
 The controller persists ownership, admission, per-item holds and bounded failure
 retry counts under `/srv/usenet/state/catalog/capacity-admission`. It collapses
@@ -67,11 +74,20 @@ nonterminal cart journals before admitting more work. This reconstructs the
 import/cleanup boundary after controller restarts or deployments instead of
 orphaning completed scratch while the queue continues.
 
+During long postprocessing, SAB can temporarily omit the admitted job from its
+SQLite history. The controller retains the reservation while the live processing
+count is nonzero, including after five minutes. A genuinely ambiguous history
+still fails closed. Manual global pauses are preserved; after an explicit resume,
+the controller recomputes any previous blocking reason from current evidence.
+
 After successful native import, native file/history records must establish exact
 ownership. The worker compares each admitted source SHA-256 with an independent
-Storage Box server hash and stable metadata. Only verified payload files enter a
-private same-filesystem cleanup directory before removal. Crash recovery repeats
-canonical verification before further cleanup. Source changes, missing mounts,
+Storage Box server hash and stable metadata. Local verified payloads enter a
+private same-filesystem cleanup directory before removal. Remote staging records
+a durable per-file deletion intent, rechecks exact source/canonical signatures,
+and unlinks only that source; SSHFS does not support exclusive rename. Crash
+recovery repeats canonical verification and requires that intent before accepting
+source absence. Source changes, missing mounts,
 collisions or checksum differences preserve remaining bytes and report a hold.
 SAB history is retained. Empty job directories are removed when possible.
 
