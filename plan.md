@@ -2,6 +2,17 @@
 
 ## Current handoff — September 17, 2026
 
+**Implementation follow-up in progress:** capacity guards now cover application-
+available inodes, native application/mount availability, malformed sizes and
+global pauses. Refresh preserves existing ownership and admitted reservations.
+Synthetic coverage includes the bounded 40 GiB download/repair/unpack allocation
+trace and service behavior during mount loss. This source checkpoint precedes
+deployment and a refreshed encrypted archive; the prior runtime evidence below
+remains dated. Exact Plex matching now found all 17 completed journals in Movies
+(Remote), without issuing a scan. Four private holds remain justified: two source
+year mismatches and two ambiguous catalog identities. TV/Arr-owned selections
+and device playback remain prerequisites, not inferred passes.
+
 The post-activation recovery checkpoint is now verified. The installed scheduler
 created `cloud-20260917T042530Z.tar.age` during a guarded quiet window; isolated
 decryption/restore verified all 660 files and four SQLite databases. The archive

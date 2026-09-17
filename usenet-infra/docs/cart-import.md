@@ -89,7 +89,9 @@ an interrupted deployment leaves the timer stopped until a clean redeploy. Other
 applications and the retired publisher are not restarted. The worker shares that lock with cloud
 backups for its entire run; complete activation/journal state is already covered
 by the `state/catalog` backup tree. Deployment initializes controller ownership,
-leaves every queue entry individually paused and resumes only SAB's global queue.
+leaves every queue entry individually paused and preserves SAB's prior global pause.
+Later refreshes preserve ownership, holds and any admitted reservation; they never
+adopt a newly manually paused job or reset an admitted user pause into the backlog.
 Later manually paused normal-priority jobs are not adopted or deduplicated; only
 new category/feed arrivals carrying SAB's paused priority join controller ownership.
 
@@ -143,9 +145,33 @@ or delete their source. Fresh Plex indexing evidence, TV acceptance and Arr-owne
 cleanup remain separate. Do not re-download accepted media or release oversized
 jobs to manufacture that evidence.
 
-The capacity suite now includes 27 passing synthetic tests, including repeated
-bursts/restarts, unpack serialization, reserve boundaries, user pauses, competing
-locks, failed reservation writes and lost resume responses. Full inode-pressure,
-application/mount outage and realistic peak-allocation validation remains open.
-The controller's current free-byte calculation does not inspect free inode
-capacity; byte headroom alone is not acceptance of that failure mode.
+The capacity suite now covers inode pressure, unavailable applications and mounts,
+global and individual pauses across refresh/restart, malformed sizes and a
+40 GiB synthetic archive allocation trace through download, repair and extraction,
+in addition to bursts, duplicate polls, failed writes and uncertain responses.
+These tests simulate resource exhaustion; they do not fill the production disk.
+
+The controller checks application-available inodes (`f_favail`) against a 100,000
+inode floor and verifies that scratch, configuration and journals still share the
+budgeted filesystem. It checks the canonical mount and both native root-folder
+APIs with five-second request timeouts before admission and on active polls.
+The capacity service deliberately runs during dependency outages so it can pause
+SAB; the import/Arr services retain their mount-dependent protection. A failed
+guard preserves jobs and reservations, records the reason and pauses globally.
+After fixing the cause, review the state before deliberately resuming the global
+queue. The controller does not auto-resume a manual or fail-closed global pause.
+Lock contention exits without pausing another controller's work.
+
+The 1.25x expansion allowance is a conservative media-workload estimate, not a
+validated bound for arbitrary compressed content. The inode floor is a polling
+guard, not an archive-entry reservation. Allocations between polls, an already
+running unpack, or an unavailable SAB API can defeat an immediate pause; these
+checks do not provide filesystem quotas or hard isolation. Preserve the margin,
+native free-space floors and unknown-size holds. Do not claim arbitrary archive
+expansion or inode exhaustion is impossible from the synthetic tests.
+
+Deploy these guards with `just usenet-configure-cart-import` in a quiet window.
+Before rollback, stop both timers, preserve current state and wait for in-flight
+commands. Restore the previous reviewed helpers and matching capacity unit under
+the deployment lock, then inspect before restarting timers. Never reset journals,
+ownership or pauses as rollback. The previous helper lacks these additional guards.

@@ -4,6 +4,7 @@ import copy
 import fcntl
 import hashlib
 import importlib.util
+import io
 import json
 from pathlib import Path
 import tempfile
@@ -77,6 +78,8 @@ class CapacityAdmissionTests(unittest.TestCase):
     def controller(self, sab):
         value = admission.Controller(self.root, sab=sab, clock=lambda: 1000)
         value.available = lambda: 100 * 1024 ** 3
+        value.require_resources = mock.Mock()
+        value.require_dependencies = mock.Mock()
         return value
 
     def test_configure_pauses_intake_and_owns_existing_queue(self):
@@ -405,6 +408,195 @@ class CapacityAdmissionTests(unittest.TestCase):
         with mock.patch.object(admission.os, "statvfs", return_value=mock.Mock(
                 f_bavail=100, f_bfree=10000, f_frsize=4096)):
             self.assertEqual(controller.available(), 409600)
+
+    def test_inode_pressure_preserves_jobs_and_durable_reservation(self):
+        for admitted in (False, True):
+            with self.subTest(admitted=admitted):
+                sab = FakeSab([self.job("first"), self.job("second")])
+                controller = self.controller(sab)
+                controller.configure()
+                if admitted:
+                    controller.run()
+                before = copy.deepcopy(sab.state["queue"])
+                reservation = controller.state()["admitted"]
+                controller.require_resources.side_effect = admission.AdmissionError("inode_reserve_unavailable")
+                with self.assertRaisesRegex(admission.AdmissionError, "inode_reserve_unavailable"):
+                    controller.run()
+                self.assertTrue(sab.state["paused"])
+                self.assertEqual(sab.state["queue"], before)
+                self.assertEqual(controller.state()["admitted"], reservation)
+                self.assertEqual(controller.state()["blocked"], "inode_reserve_unavailable")
+
+    def test_inode_guard_uses_application_available_inodes(self):
+        controller = self.controller(FakeSab())
+        for relative in ("downloads/incomplete", "downloads/complete", "config"):
+            (self.root / relative).mkdir(parents=True)
+        for available in (0, admission.INODE_RESERVE - 1, admission.INODE_RESERVE):
+            with self.subTest(available=available), mock.patch.object(admission.os, "statvfs",
+                    return_value=mock.Mock(f_files=1_000_000, f_ffree=500_000, f_favail=available)):
+                if available < admission.INODE_RESERVE:
+                    with self.assertRaisesRegex(admission.AdmissionError, "inode_reserve_unavailable"):
+                        admission.Controller.require_resources(controller)
+                else:
+                    admission.Controller.require_resources(controller)
+
+    def test_unexpected_scratch_mount_fails_closed(self):
+        controller = self.controller(FakeSab())
+        with mock.patch.object(Path, "stat", side_effect=[mock.Mock(st_dev=1), mock.Mock(st_mode=0o40700),
+                mock.Mock(st_mode=0o40700), mock.Mock(st_dev=2)]):
+            with self.assertRaisesRegex(admission.AdmissionError, "scratch_filesystem_layout_changed"):
+                admission.Controller.require_resources(controller)
+
+    def test_mount_outage_blocks_new_and_active_acquisitions(self):
+        for active in (False, True):
+            with self.subTest(active=active):
+                sab = FakeSab([self.job("first"), self.job("second")])
+                controller = self.controller(sab)
+                controller.configure()
+                if active:
+                    controller.run()
+                before = copy.deepcopy(sab.state)
+                controller.require_dependencies = lambda: admission.Controller.require_dependencies(controller)
+                with mock.patch.object(Path, "is_mount", return_value=False):
+                    with self.assertRaisesRegex(admission.AdmissionError, "canonical_mount_unavailable"):
+                        controller.run()
+                self.assertTrue(sab.state["paused"])
+                self.assertEqual(sab.state["queue"], before["queue"])
+                self.assertEqual(sab.state["history"], before["history"])
+
+    def test_application_outages_and_inaccessible_native_roots(self):
+        for response in (TimeoutError(), [], [{"path": "/library", "accessible": False}]):
+            with self.subTest(response=response):
+                sab = FakeSab([self.job("first")])
+                controller = self.controller(sab)
+                controller.configure()
+                api = mock.Mock()
+                if isinstance(response, Exception):
+                    api.call.side_effect = response
+                else:
+                    api.call.return_value = response
+                controller.discovery_api = lambda: api
+                controller.require_dependencies = lambda: admission.Controller.require_dependencies(controller)
+                with mock.patch.object(Path, "is_mount", return_value=True), mock.patch.object(Path, "is_dir", return_value=True):
+                    with self.assertRaises(admission.AdmissionError):
+                        controller.run()
+                self.assertTrue(sab.state["paused"])
+                self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+                self.assertIsNone(controller.state()["admitted"])
+
+    def test_both_native_roots_checked_with_bounded_timeout(self):
+        controller = self.controller(FakeSab())
+        api = mock.Mock()
+        api.call.return_value = [{"path": "/library", "accessible": True}]
+        controller.discovery_api = lambda: api
+        with mock.patch.object(Path, "is_mount", return_value=True), mock.patch.object(Path, "is_dir", return_value=True):
+            admission.Controller.require_dependencies(controller)
+        self.assertEqual(api.call.call_args_list, [mock.call("radarr", "rootfolder", timeout=5),
+                                                 mock.call("sonarr", "rootfolder", timeout=5)])
+
+    def test_global_manual_pause_does_not_reserve_or_mutate_jobs(self):
+        sab = FakeSab([self.job("first"), self.job("second")])
+        controller = self.controller(sab)
+        controller.configure()
+        sab.state["paused"] = True
+        before = copy.deepcopy(sab.state)
+        self.assertEqual(controller.run()["status"], "globally_paused")
+        self.assertIsNone(controller.state()["admitted"])
+        self.assertEqual(sab.state, before)
+
+    def test_configuration_refresh_preserves_manual_pause_and_ownership(self):
+        sab = FakeSab([self.job("owned")])
+        controller = self.controller(sab)
+        controller.configure()
+        manual = self.job("manual")
+        manual["priority"] = "Normal"
+        sab.state["queue"].append(manual)
+        sab.state["paused"] = True
+        controller.configure()
+        self.assertTrue(sab.state["paused"])
+        self.assertEqual(controller.state()["owned"], ["owned"])
+
+    def test_configuration_refresh_preserves_admitted_user_pause(self):
+        sab = FakeSab([self.job("owned")])
+        controller = self.controller(sab)
+        controller.configure()
+        controller.run()
+        reservation = controller.state()["admitted"]
+        sab.state["queue"][0]["status"] = "Paused"
+        controller.configure()
+        self.assertEqual(controller.state()["admitted"], reservation)
+        with self.assertRaisesRegex(admission.AdmissionError, "admitted_job_pause_or_concurrency_changed"):
+            controller.run()
+        self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+
+    def test_service_runs_guard_even_when_mount_service_is_down(self):
+        unit = (SCRIPTS.parent / "ansible/roles/cloud_cart_import/templates/usenet-capacity-admission.service.j2").read_text()
+        # A mount-dependent unit skips ExecStart entirely during an outage,
+        # bypassing the Python guard that pauses an already active SAB job.
+        self.assertNotIn("BindsTo=", unit)
+        self.assertNotIn("Requires=", unit)
+        self.assertNotIn("ExecStartPre=", unit)
+
+    def test_cli_lock_contention_does_not_pause_owner(self):
+        controller = mock.Mock()
+        controller.run.side_effect = admission.AdmissionBusy()
+        with mock.patch.object(admission, "Controller", return_value=controller), \
+                mock.patch.object(sys, "argv", ["capacity-admission.py", "run"]), \
+                mock.patch.object(sys, "stdout", new_callable=io.StringIO) as output:
+            self.assertEqual(admission.main(), 0)
+        self.assertEqual(json.loads(output.getvalue()), {"status": "busy"})
+        controller.pause_global.assert_not_called()
+
+    def test_sab_outage_does_not_resume_or_delete_and_attempts_pause(self):
+        sab = FakeSab([self.job("first")])
+        controller = self.controller(sab)
+        controller.configure()
+        before = copy.deepcopy(sab.state["queue"])
+        with mock.patch.object(sab, "snapshot", side_effect=TimeoutError()), \
+                mock.patch.object(admission, "Controller", return_value=controller), \
+                mock.patch.object(sys, "argv", ["capacity-admission.py", "run"]), \
+                mock.patch.object(sys, "stdout", new_callable=io.StringIO):
+            self.assertEqual(admission.main(), 1)
+        self.assertTrue(sab.state["paused"])
+        self.assertEqual(sab.state["queue"], before)
+        self.assertIsNone(controller.state()["admitted"])
+
+    def test_malformed_and_nonfinite_sizes_stay_held(self):
+        for value in (None, "bad", "NaN", "Infinity", "-Infinity", "-1"):
+            sab = FakeSab([self.job("invalid"), self.job("valid")])
+            sab.state["queue"][0]["mb"] = value
+            controller = self.controller(sab)
+            controller.state_path.unlink(missing_ok=True)
+            controller.configure()
+            self.assertEqual(controller.run()["status"], "admitted")
+            self.assertEqual(controller.state()["admitted"]["nzo_id"], "valid")
+
+    def test_peak_allocation_trace_retains_state_and_blocks_second_job(self):
+        # GiB-scale allocations are simulated; only the real journals use disk.
+        # 40 GiB archive, 10 GiB already present, 40 GiB output, 10 GiB repair
+        # workspace, and the explicit 5 GiB application margin coexist at peak.
+        gib = 1024 ** 3
+        sab = FakeSab([self.job("first", 40 * 1024), self.job("second", 60 * 1024)])
+        sab.state["queue"][0].update(mbleft=str(30 * 1024), percentage="25")
+        controller = self.controller(sab)
+        controller.configure()
+        free = admission.RESERVE + 85 * gib
+        controller.available = lambda: free
+        result = controller.run()
+        self.assertEqual(result["estimate_bytes"], 85 * gib)
+        for phase, allocation in (("download", 30), ("repair", 10), ("unpack", 40), ("state_margin", 5)):
+            with self.subTest(phase=phase):
+                free -= allocation * gib
+                controller = self.controller(sab)
+                controller.available = lambda: free
+                self.assertEqual(controller.run()["status"], "active")
+                self.assertGreaterEqual(free, admission.RESERVE)
+                self.assertEqual(sab.state["queue"][1]["status"], "Paused")
+                self.assertEqual(json.loads(controller.state_path.read_text())["admitted"]["nzo_id"], "first")
+        free -= 1  # Unknown extra allocation triggers the runtime floor.
+        with self.assertRaisesRegex(admission.AdmissionError, "reserve_breached"):
+            controller.run()
+        self.assertTrue(sab.state["paused"])
 
 
 if __name__ == "__main__":

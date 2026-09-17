@@ -70,14 +70,14 @@ class API:
             raise DiscoveryError('existing_application_key_missing')
         self.opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirects())
 
-    def call(self, app, endpoint, method='GET', body=None):
+    def call(self, app, endpoint, method='GET', body=None, *, timeout=60):
         port = APPS[app][0]
         base = '/api/v1/' if app == 'prowlarr' else '/' + app + '/api/v3/'
         request = urllib.request.Request(f'http://127.0.0.1:{port}{base}{endpoint}',
             headers={'X-Api-Key': self.keys[app], 'Content-Type': 'application/json'},
             method=method, data=json.dumps(body).encode() if body is not None else None)
         try:
-            with self.opener.open(request, timeout=60) as response:
+            with self.opener.open(request, timeout=timeout) as response:
                 raw = response.read(8 * 1024 * 1024)
             return json.loads(raw) if raw else None
         except DiscoveryError:

@@ -91,6 +91,13 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## Current operations and closure
 
+- September 17 follow-up source adds application-available inode checks, live native
+  root/mount guards, preserved global pauses and safe configuration refresh. The
+  capacity unit must run during mount outages so it can pause SAB; do not restore
+  mount prerequisites that skip the guard entirely. The 100,000-inode floor and
+  1.25x byte estimate are polling safeguards, not hard quotas or arbitrary-archive
+  expansion guarantees. Follow the current plan for deployment and backup evidence.
+
 - September 17 recovery coverage is verified for the current cart/capacity
   extension: the guarded fresh archive independently decrypted/restored with all
   660 entries, four databases, exact current helpers and activation marker,

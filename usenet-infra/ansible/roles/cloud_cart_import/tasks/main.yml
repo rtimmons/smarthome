@@ -28,6 +28,13 @@
   changed_when: false
   failed_when: cart_import_activity.rc not in [3, 4] or cart_import_activity.stdout | trim not in ['inactive', 'failed', 'unknown']
 
+- name: Refuse to replace controller code during an admission decision
+  ansible.builtin.command:
+    argv: [systemctl, is-active, usenet-capacity-admission.service]
+  register: capacity_admission_activity
+  changed_when: false
+  failed_when: capacity_admission_activity.rc not in [3, 4] or capacity_admission_activity.stdout | trim not in ['inactive', 'failed', 'unknown']
+
 - name: Check for a previously recorded in-flight native import
   ansible.builtin.stat:
     path: '{{ cloud_data_root }}/state/catalog/cart-import/status.json'

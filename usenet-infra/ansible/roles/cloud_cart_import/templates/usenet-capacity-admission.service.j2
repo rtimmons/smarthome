@@ -1,7 +1,7 @@
 [Unit]
 Description=Admit one capacity-safe Usenet acquisition at a time
-Requires=usenet-library.service usenet-discovery.service
-BindsTo=usenet-library.service
+# Run even during dependency outages so the controller can pause SAB.
+# Arr/importer services retain their own mount-dependent startup protection.
 After=network-online.target usenet-library.service usenet-discovery.service usenet-cart-import.service
 
 [Service]
@@ -10,7 +10,6 @@ User=usenet
 Group=usenet
 EnvironmentFile={{ cloud_data_root }}/config/catalog.env
 WorkingDirectory={{ cloud_data_root }}
-ExecStartPre=/usr/bin/mountpoint -q {{ cloud_data_root }}/library
 ExecStart=/usr/bin/python3 {{ cloud_data_root }}/libexec/capacity-admission.py run
 UMask=0077
 TimeoutStartSec=2m

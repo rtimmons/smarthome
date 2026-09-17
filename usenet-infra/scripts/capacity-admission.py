@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import fcntl
 import hashlib
+import importlib.util
 import json
 import math
 import os
@@ -21,6 +22,7 @@ import cart_import_sab
 SCHEMA = 1
 RESERVE = 30 * 1024 ** 3
 MARGIN = 5 * 1024 ** 3
+INODE_RESERVE = 100_000
 CATEGORIES = {"", "*", "Default", "prowlarr"}
 FEEDS = {"NZBGeek Cart", "NZBFinder Cart"}
 MAX_FAILURE_RETRIES = 2
@@ -29,6 +31,10 @@ TERMINAL_CART_PHASES = {"cleaned", "cleaned_with_retained_files"}
 
 
 class AdmissionError(RuntimeError):
+    pass
+
+
+class AdmissionBusy(BlockingIOError):
     pass
 
 
@@ -93,9 +99,54 @@ class Controller:
         stats = os.statvfs(self.root)
         return stats.f_bavail * stats.f_frsize
 
+    def require_resources(self) -> None:
+        # All current scratch/application paths share one filesystem. Refuse a
+        # changed layout instead of budgeting an unrelated filesystem's space.
+        device = self.root.stat().st_dev
+        for relative in ("downloads/incomplete", "downloads/complete", "config", "state/catalog"):
+            path = self.root / relative
+            if path.is_symlink() or not path.is_dir() or path.stat().st_dev != device:
+                raise AdmissionError("scratch_filesystem_layout_changed")
+        stats = os.statvfs(self.root)
+        if stats.f_files <= 0 or stats.f_favail < INODE_RESERVE:
+            raise AdmissionError("inode_reserve_unavailable")
+        if self.available() < RESERVE:
+            raise AdmissionError("reserve_breached")
+
+    def discovery_api(self):
+        spec = importlib.util.spec_from_file_location(
+            "capacity_discovery", Path(__file__).with_name("discovery-config.py"))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module.API(self.root / "config")
+
+    def require_dependencies(self) -> None:
+        library = self.root / "library"
+        if not library.is_mount():
+            raise AdmissionError("canonical_mount_unavailable")
+        try:
+            # Touch the mounted directories too: a stale FUSE mount is not
+            # established as usable merely by being present in the mount table.
+            if not all((library / name).is_dir() for name in ("Movies", "TV")):
+                raise AdmissionError("canonical_mount_unavailable")
+            api = self.discovery_api()
+            for app in ("radarr", "sonarr"):
+                roots = api.call(app, "rootfolder", timeout=5)
+                if not isinstance(roots, list) or len([
+                        row for row in roots if row.get("path") == "/library"
+                        and row.get("accessible") is True]) != 1:
+                    raise AdmissionError("native_library_unavailable")
+        except AdmissionError:
+            raise
+        except Exception:
+            raise AdmissionError("native_application_unavailable") from None
+
     def estimate(self, job: dict) -> int | None:
-        total = round(float(job.get("mb", 0)) * 1024 * 1024)
-        left = round(float(job.get("mbleft", 0)) * 1024 * 1024)
+        try:
+            total = math.ceil(float(job.get("mb", 0)) * 1024 * 1024)
+            left = math.ceil(float(job.get("mbleft", 0)) * 1024 * 1024)
+        except (TypeError, ValueError, OverflowError):
+            return None
         if total <= 0 or left < 0 or left > total:
             return None
         return left + math.ceil(total * 1.25) + MARGIN
@@ -105,6 +156,7 @@ class Controller:
 
     def configure(self) -> dict:
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
+        before = self.sab.snapshot()
         self.pause_global()
         snapshot = self.sab.snapshot()
         ids = [job["nzo_id"] for job in snapshot["queue"]]
@@ -127,10 +179,12 @@ class Controller:
         if any(job.get("status") != "Paused" for job in after["queue"]):
             raise AdmissionError("queue_pause_readback_failed")
         state = self.state()
+        refreshing = bool(state.get("configured_at"))
         held = {item.get("nzo_id") for item in state.get("held", []) if isinstance(item, dict)}
-        state["owned"] = sorted({job["nzo_id"] for job in after["queue"]} - held)
+        if not refreshing:
+            state["owned"] = sorted({job["nzo_id"] for job in after["queue"]} - held)
         admitted = state.get("admitted")
-        if admitted:
+        if admitted and not refreshing:
             identity = admitted.get("nzo_id") if isinstance(admitted, dict) else None
             queued = [job for job in after["queue"] if job.get("nzo_id") == identity]
             histories = [job for job in after["history"] if job.get("nzo_id") == identity]
@@ -141,11 +195,13 @@ class Controller:
             else:
                 state["owned"] = sorted(set(state["owned"]) | {identity})
         state["configured_at"] = self.clock()
-        state["blocked"] = None
+        if not refreshing:
+            state["blocked"] = None
         self.save(state)
-        self.api("resume")
+        if not before["paused"]:
+            self.api("resume")
         final = self.sab.snapshot()
-        if final["paused"] or any(job.get("status") != "Paused" for job in final["queue"]):
+        if final["paused"] != before["paused"] or any(job.get("status") != "Paused" for job in final["queue"]):
             self.pause_global()
             raise AdmissionError("serialized_queue_readback_failed")
         return {"status": "configured", "owned_jobs": len(state["owned"]), "feeds_enabled_paused": 2,
@@ -332,10 +388,28 @@ class Controller:
     def run(self) -> dict:
         self.base.mkdir(parents=True, exist_ok=True, mode=0o700)
         with self.lock_path.open("a+") as lock:
-            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            try:
+                fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except BlockingIOError:
+                raise AdmissionBusy() from None
             state = self.state()
+            try:
+                self.require_resources()
+                self.require_dependencies()
+            except Exception as error:
+                state["blocked"] = (str(error) if isinstance(error, AdmissionError)
+                                    else "capacity_resource_check_failed")
+                self.pause_global()
+                self.save(state)
+                raise
             self.reconcile_held(state)
             snapshot = self.sab.snapshot()
+            if snapshot["paused"]:
+                # Global pauses may be deliberate or a previous fail-closed
+                # response. Never change individual jobs or auto-resume them.
+                self.save(state)
+                return {"status": "globally_paused", "active_jobs": 0,
+                        "paused_jobs": len(snapshot["queue"])}
             held_ids = {item.get("nzo_id") for item in state.get("held", []) if isinstance(item, dict)}
             intake_ids = {job["nzo_id"] for job in snapshot["queue"]
                           if job.get("status") == "Paused" and job.get("priority") == "Paused"
@@ -379,6 +453,7 @@ class Controller:
                         state["blocked"] = "reserve_breached"
                         self.pause_global(); self.save(state)
                         raise AdmissionError(state["blocked"])
+                    state["blocked"] = None
                     self.save(state)
                     return {"status": "active", "active_jobs": 1, "paused_jobs": len(queue) - 1}
                 replacements = [job for job in snapshot["queue"]
@@ -480,6 +555,10 @@ def main() -> int:
         else:
             result = controller.run()
         print(json.dumps(result, sort_keys=True))
+        return 0
+    except AdmissionBusy:
+        # A second invocation must not pause the controller holding the lock.
+        print(json.dumps({"status": "busy"}))
         return 0
     except Exception as error:
         try:
