@@ -91,6 +91,20 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## Current operations and closure
 
+- September 17 recovery coverage is verified for the current cart/capacity
+  extension: the guarded fresh archive independently decrypted/restored with all
+  660 entries, four databases, exact current helpers and activation marker,
+  controller state and 21 journals. Seventeen completed journals record 13 native
+  movie imports plus four existing-target reconciliations; do not count the latter
+  as fresh imports. Exact payload absence, current native ownership and SAB history
+  passed read-only review; five sidecars and four identity-held journals remain
+  protected. Two oldest canonical signatures differ only in inode; no media was
+  rehashed during this review. Follow the [current receipt](recovery/drills/cart-capacity-checkpoint-20260917.json)
+  and plan for remaining Plex/TV/Arr acceptance and later checkpoint refreshes.
+  The extended capacity tests remain incomplete, especially inode pressure and
+  application/mount outage injection. Do not close that checklist from the 27
+  passing capacity tests alone.
+
 - Cloud SAB's **NZBGeek Cart** feed is enabled with 15-minute polling. Preserve
   this user-authorized cart-only workflow and its Default category; see
   [phone cart downloads](docs/nzbgeek-cart.md). One pre-existing item was held

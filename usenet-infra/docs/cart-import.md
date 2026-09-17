@@ -25,7 +25,10 @@ The worker matches native parsed identity against a unique catalog title/year,
 adds absent titles unmonitored without searching, and asks the native application
 to review the exact source candidates. It refuses upgrades, monitored targets,
 ambiguous titles, unsupported numbering/disc layouts, unexpected files and
-concurrent Arr ownership. Samples, extras and unimported sidecars stay on cloud
+concurrent Arr ownership. An already present matching native movie can take the
+existing-target reconciliation path: independent source/canonical verification
+permits exact duplicate-payload cleanup without another import. Count that result
+separately from a fresh native import. Samples, extras and unimported sidecars stay on cloud
 storage. A file-valued SAB receipt authorizes only that exact file.
 
 Native `ManualImport` uses copy mode and no download ID. The worker records its
@@ -125,7 +128,24 @@ preserving its queued selections, and replaced a separate failed payload with on
 paused request from exact native provenance. No storage was purchased. The live
 controller subsequently resumed a serialized drain with both cart feeds enabled.
 
-Production idle activation and local recovery tests do not prove a fresh live
-completion. Record the next user-selected new cart movie/TV job through native
-import, independent verification, automatic cleanup and Plex discovery. Do not
-re-download accepted media or release oversized jobs to manufacture that evidence.
+September 17 [checkpoint review](../recovery/drills/cart-capacity-checkpoint-20260917.json)
+captured 13 native movie import jobs and four existing-target reconciliations.
+All 17 completed jobs retained SAB history, matching current native ownership and
+absent exact payload/quarantine paths; journals record 205,244,135,641 bytes
+reclaimed. Twelve are fully cleaned and five retain one sidecar each. Their
+source/canonical SHA-256 evidence and exact completed journals are in the verified
+current backup. No media was rehashed during that review; two oldest canonical
+signatures differ only in inode, with size and modification time unchanged.
+
+Four other journals remain held for identity ambiguity/mismatch. Resolve these
+from exact private evidence before guarded retry; do not override identity checks
+or delete their source. Fresh Plex indexing evidence, TV acceptance and Arr-owned
+cleanup remain separate. Do not re-download accepted media or release oversized
+jobs to manufacture that evidence.
+
+The capacity suite now includes 27 passing synthetic tests, including repeated
+bursts/restarts, unpack serialization, reserve boundaries, user pauses, competing
+locks, failed reservation writes and lost resume responses. Full inode-pressure,
+application/mount outage and realistic peak-allocation validation remains open.
+The controller's current free-byte calculation does not inspect free inode
+capacity; byte headroom alone is not acceptance of that failure mode.

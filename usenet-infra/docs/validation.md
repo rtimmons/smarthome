@@ -59,6 +59,36 @@ already accepted NAS movie transfer are not default next tasks.
 
 ## Recorded implementation checks
 
+September 17 capacity/checkpoint continuation: 578 infrastructure cases ran
+(569 passed, nine optional skips), including 27 capacity tests with nine new
+regressions. Compilation, shell/YAML and all Ansible syntax checks passed. The
+full recipe failed only on the two documented historical RSA keys. Current-source/
+index scanning and whitespace checks passed after the edits. No deployment
+or media mutation accompanied the test changes.
+
+Before the requested local commit, root `just test` passed, including all seven
+add-on build checks. The initial sandbox run could not create test sockets/IPC;
+the permitted rerun passed. This used the existing checkout with unrelated
+lighting edits preserved, not an isolated clean-head validation of those files.
+
+The [current checkpoint receipt](../recovery/drills/cart-capacity-checkpoint-20260917.json)
+records isolated encrypted restore/verification of 660 files and four databases,
+including exact current helpers, activation marker, controller state and 21
+journals. Seventeen completed journals matched live state and account for
+205,244,135,641 reclaimed bytes: 13 native movie imports and four existing-target
+reconciliations. Current native ownership, retained SAB history and exact source/
+quarantine absence pass for all 17. Twelve are fully cleaned; five retain one
+sidecar each. SHA-256 evidence was reviewed from captured journals, not recomputed
+from media. Two oldest signatures differ only in inode; size and mtime match.
+Plex indexing, TV, Arr-owned cleanup and device acceptance remain open.
+
+Cloud/discovery APIs respond; observed application health failures are update
+notices. Catalog failures reflect identity-held cart journals. NAS health passed
+with zero active/failed transfers. Held payloads, pauses and sidecars were
+preserved. Extended pressure/outage validation is still incomplete; the controller
+does not currently inspect free inodes. These dated observations supersede older
+pre-activation/zero-space states below without erasing their incident history.
+
 September 17 wiki deployment: 547 infrastructure tests passed with nine optional
 skips, all playbook syntax checks passed, and current-source/index secret scanning
 passed. Full-history scanning reported only the two documented historical RSA

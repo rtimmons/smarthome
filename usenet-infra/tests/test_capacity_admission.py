@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import copy
+import fcntl
 import hashlib
 import importlib.util
 import json
@@ -289,6 +290,121 @@ class CapacityAdmissionTests(unittest.TestCase):
         state = controller.state()
         self.assertFalse(failed.exists())
         self.assertEqual(state["held"][0]["reason"], "download_failed_retry_limit")
+
+    def test_burst_drains_sequentially_across_restarts_and_duplicate_polls(self):
+        sab = FakeSab([self.job(f"request-{index}") for index in range(12)])
+        controller = self.controller(sab)
+        controller.configure()
+        completed = set()
+        for index in range(12):
+            # A new process reconstructs its reservation from the durable state.
+            controller = self.controller(sab)
+            self.assertEqual(controller.run()["status"], "admitted")
+            identity = controller.state()["admitted"]["nzo_id"]
+            self.assertNotIn(identity, completed)
+            self.assertEqual(sum(j["status"] != "Paused" for j in sab.state["queue"]), 1)
+            duplicate = self.job(f"poll-{index}")
+            duplicate["filename"] = identity
+            sab.state["queue"].append(duplicate)
+            self.assertEqual(self.controller(sab).run()["status"], "active")
+            self.assertNotIn(duplicate["nzo_id"], [j["nzo_id"] for j in sab.state["queue"]])
+            sab.state["queue"] = [j for j in sab.state["queue"] if j["nzo_id"] != identity]
+            sab.state["history"].append({"nzo_id": identity, "status": "Completed", "category": "Default"})
+            # Repair/import/verification have not finished; no second acquisition.
+            self.assertEqual(self.controller(sab).run()["status"], "awaiting_cart_cleanup")
+            self.assertTrue(all(j["status"] == "Paused" for j in sab.state["queue"]))
+            journal = self.root / "state/catalog/cart-import/jobs" / (hashlib.sha256(identity.encode()).hexdigest() + ".json")
+            journal.write_text(json.dumps({"phase": "cleaned", "job": {"nzo_id": identity}}))
+            completed.add(identity)
+        self.assertEqual(self.controller(sab).run()["status"], "idle")
+        self.assertEqual(len(sab.state["history"]), 12)
+
+    def test_existing_allocations_and_retained_failures_reduce_admission_budget(self):
+        sab = FakeSab([self.job("partial", size=4096)])
+        sab.state["queue"][0].update(mbleft="1024", percentage="75")
+        controller = self.controller(sab)
+        controller.configure()
+        peak = (1024 + 4096 * 1.25) * 1024 ** 2 + admission.MARGIN
+        controller.available = lambda: admission.RESERVE + peak - 1
+        self.assertEqual(controller.run()["status"], "awaiting_capacity_or_known_size")
+        self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+        controller.available = lambda: admission.RESERVE + peak
+        self.assertEqual(controller.run()["status"], "admitted")
+
+    def test_unpacking_blocks_next_job_even_when_free_bytes_are_high(self):
+        sab = FakeSab([self.job("first"), self.job("second")])
+        controller = self.controller(sab)
+        controller.configure(); controller.run()
+        identity = controller.state()["admitted"]["nzo_id"]
+        sab.state["queue"] = [j for j in sab.state["queue"] if j["nzo_id"] != identity]
+        sab.state["history"] = [{"nzo_id": identity, "status": "Running", "category": "Default"}]
+        sab.state["postprocessing"] = 1
+        controller.clock = lambda: 10_000
+        self.assertEqual(controller.run()["status"], "awaiting_sab_completion")
+        self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+
+    def test_reserve_breach_pauses_without_releasing_or_deleting_jobs(self):
+        sab = FakeSab([self.job("first"), self.job("second")])
+        controller = self.controller(sab)
+        controller.configure(); controller.run()
+        before = copy.deepcopy(sab.state["queue"])
+        controller.available = lambda: admission.RESERVE - 1
+        with self.assertRaisesRegex(admission.AdmissionError, "reserve_breached"):
+            controller.run()
+        self.assertTrue(sab.state["paused"])
+        self.assertEqual(sab.state["queue"], before)
+
+    def test_user_pausing_admitted_job_survives_controller_restart(self):
+        sab = FakeSab([self.job("first"), self.job("second")])
+        controller = self.controller(sab)
+        controller.configure(); controller.run()
+        for job in sab.state["queue"]:
+            job["status"] = "Paused"
+        with self.assertRaisesRegex(admission.AdmissionError, "admitted_job_pause_or_concurrency_changed"):
+            self.controller(sab).run()
+        self.assertTrue(all(j["status"] == "Paused" for j in sab.state["queue"]))
+
+    def test_competing_controller_cannot_spend_same_reservation(self):
+        sab = FakeSab([self.job("first")])
+        controller = self.controller(sab)
+        controller.configure()
+        with controller.lock_path.open("a+") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            with self.assertRaises(BlockingIOError):
+                self.controller(sab).run()
+        self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+
+    def test_failed_reservation_write_never_resumes_acquisition(self):
+        sab = FakeSab([self.job("first")])
+        controller = self.controller(sab)
+        controller.configure()
+        with mock.patch.object(controller, "save", side_effect=OSError("fixture disk full")):
+            with self.assertRaises(OSError):
+                controller.run()
+        self.assertEqual(sab.state["queue"][0]["status"], "Paused")
+        self.assertIsNone(controller.state()["admitted"])
+
+    def test_lost_resume_response_reconstructs_without_second_admission(self):
+        sab = FakeSab([self.job("first"), self.job("second")])
+        controller = self.controller(sab)
+        controller.configure()
+        original = sab.api
+        def lose_response(mode, **values):
+            result = original(mode, **values)
+            if mode == "queue" and values.get("name") == "resume":
+                raise TimeoutError("fixture response lost")
+            return result
+        with mock.patch.object(sab, "api", side_effect=lose_response):
+            with self.assertRaises(TimeoutError):
+                controller.run()
+        self.assertEqual(self.controller(sab).run()["status"], "active")
+        self.assertEqual(sum(j["status"] != "Paused" for j in sab.state["queue"]), 1)
+
+    def test_root_reserved_blocks_are_not_application_capacity(self):
+        controller = admission.Controller(self.root, sab=FakeSab())
+        with mock.patch.object(admission.os, "statvfs", return_value=mock.Mock(
+                f_bavail=100, f_bfree=10000, f_frsize=4096)):
+            self.assertEqual(controller.available(), 409600)
 
 
 if __name__ == "__main__":

@@ -83,12 +83,27 @@ immutable, and ordinary freshness checks still apply.
 
 ## Cart importer checkpoint
 
+**Verified September 17, 2026:** the installed scheduler captured
+`cloud-20260917T042530Z.tar.age` under its normal locks and quiet-state guard.
+Independent local decryption and isolated restore verified all 660 manifest
+entries and four SQLite snapshots. The immutable activation marker and all four
+current cart/capacity helpers matched live state and repository source. Controller
+state, importer status and all 21 journals were captured, including 17 completed
+journals that matched the live snapshot. This closes current extension capture;
+repeat after later accepted completions change state. It does not establish a
+replacement-host restore or whole-NAS recovery.
+[Receipt](../recovery/drills/cart-capacity-checkpoint-20260917.json).
+
+The earlier September 17 02:02 archive also decrypted successfully (645 files and
+four databases), but contained older helpers and only 12 journals. It was not used
+to claim current coverage. Original bound recovery snapshots remain immutable.
+
 The importer was activated September 14 at 01:38:39 UTC. Its marker, journals and
 status are under the already included `state/catalog` tree, and worker/adapters
 are under `libexec`. Coverage by an allowlist is not proof of capture. The
 02:58 UTC handoff check found the most recent scheduled cloud success at September
-13, 22:05:43 UTC, before activation. Verify a newer archive before closing recovery
-coverage for the importer extension; repeat after new accepted jobs add journals.
+13, 22:05:43 UTC, before activation. That historical coverage gap is closed by the
+September 17 verification above; repeat after new accepted jobs add journals.
 
 First inspect current status and worker/SAB activity using the existing wrappers.
 A new scheduled archive may already exist. If one is needed, invoke the installed

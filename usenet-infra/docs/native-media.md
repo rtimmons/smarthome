@@ -1,5 +1,15 @@
 # Native media workflow
 
+September 17 checkpoint: native status now lists 19 movies (one local copy) and
+no TV, with no active/failed NAS transfers. Read-only cart review verified current
+native ownership and exact scratch absence for 13 native movie imports and four
+existing-target reconciliations; completed journals and their SHA-256 evidence are
+captured in the independently verified cloud backup. Two oldest journal signatures
+differ only in inode; no media was rehashed in this review. Fresh Plex indexing,
+Arr-owned cleanup, TV and device acceptance remain separate. See the
+[checkpoint receipt](../recovery/drills/cart-capacity-checkpoint-20260917.json) and
+[current plan](../../plan.md) for present state; observations below are dated.
+
 September 11, 2026: native Radarr/Sonarr Completed Download Handling is enabled.
 Search and monitored RSS remain enabled; RSS runs every 15 minutes. The old
 publisher timer is disabled. Do not re-enable it while Arr owns completed files.

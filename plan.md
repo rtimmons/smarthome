@@ -1,6 +1,61 @@
 # Usenet status and closure plan
 
-## Current handoff — September 16, 2026
+## Current handoff — September 17, 2026
+
+The post-activation recovery checkpoint is now verified. The installed scheduler
+created `cloud-20260917T042530Z.tar.age` during a guarded quiet window; isolated
+decryption/restore verified all 660 files and four SQLite databases. The archive
+contains the unchanged activation marker, exact current worker/adapters and
+capacity helper (matching deployed files and source), controller state, importer
+status and all 21 journals. All 17 completed journals matched the live snapshot.
+Original bound snapshots and production state were preserved. See the
+[checkpoint receipt](usenet-infra/recovery/drills/cart-capacity-checkpoint-20260917.json).
+
+Read-only completion review established 13 native import jobs and four verified
+existing-target reconciliations, with **205,244,135,641 bytes reclaimed** recorded
+by the worker. All 17 retain completed SAB history, matching current native file
+ownership and absent exact scratch/quarantine payloads. Twelve journals are fully
+cleaned; five retain one sidecar each. Four other journals remain held for identity
+ambiguity or mismatch. Source/canonical SHA-256 evidence is captured in the verified
+backup; this session did not rehash media. Two oldest canonical signatures differ
+only in inode, with size and modification time unchanged. Fresh Plex indexing
+evidence remains separate; no scan or acquisition was requested.
+
+The cloud APIs respond; the discovery health failures observed in this session
+were update-available warnings, not HTTP/database failures. Catalog failures refer
+to guarded import holds. NAS health passed with no active/failed transfers. Both
+cart feeds remain enabled at paused priority. At the private 04:28 UTC snapshot,
+about 80.4 GB was application-visible, the global queue was resumed, and all 18
+queue entries were individually paused without exact-filename duplicates. The
+controller reported an ordinary capacity/size wait; preserve its decisions and
+the protected holds. Queue counts can change with subsequent cart polling.
+The final cloud health check reported five controller-owned queued requests, zero
+admitted and three controller holds, with 80.4 GB free. Six catalog failures and
+nine importer hold/sidecar notices remain visible. Native status has 19 movies,
+one locally copied, no TV and no active/failed NAS transfers.
+
+Nine new synthetic capacity regressions pass, including a 12-request burst with
+duplicate polls and controller restarts, unpack waits, budget boundaries, reserve
+breaches, user pauses, lock contention, failed reservation writes and lost resume
+responses. The full suite ran 578 cases: 569 passed and nine optional skips;
+compilation, shell/YAML and all deployment syntax checks passed. Full-history
+scanning still reports only the two documented RSA keys.
+Current-source/index scanning and diff whitespace checks pass. Extended capacity
+validation remains open: inode pressure, application/mount outage injection and
+realistic peak-allocation fixtures still need work. The current byte-budget check
+does not inspect free inode capacity. Do not mark that checklist complete from
+these regressions alone.
+
+Next: finish those synthetic failure cases, review exact private import holds,
+and collect Plex indexing evidence for accepted movie completions. TV, Arr-owned
+cleanup, selective TV NAS copying and user-deferred playback remain distinct.
+Refresh the verified checkpoint after later accepted completions. This checkpoint
+follows source head `2d43f4c` on `usenet`; GitHub `usenet` was read-only verified at
+`204df8c`. At the user's request, tests/docs/receipt are committed locally.
+No deployment, queue release, manual payload deletion, push or merge accompanies
+the commit. Unrelated lighting changes, `msg` and packages are preserved.
+
+## Previous handoff — September 16, 2026
 
 The NAS Usenet wiki is implemented and deployed at
 [http://192.168.1.66:8090/](http://192.168.1.66:8090/). The separate
@@ -222,7 +277,7 @@ inspection is not a reason to deploy or restart services.
 
 | Capability | Evidence |
 | --- | --- |
-| Automatic cart worker | Deployed at 01:38:39 UTC September 14; first scheduled idle run and unchanged historical jobs/scratch passed. [Activation receipt](usenet-infra/recovery/drills/cart-import-activation-20260914.json). Fresh automatic movie/TV completion is still unproved. |
+| Automatic cart worker | September 17 [checkpoint review](usenet-infra/recovery/drills/cart-capacity-checkpoint-20260917.json) captured 13 native movie imports and four existing-target reconciliations with recorded SHA-256 evidence, current native ownership, retained SAB history and exact payload absence. All completed journals are verified in the current backup. Fresh Plex indexing and TV acceptance remain open. |
 | Cloud acquisition and native library infrastructure | Provider/indexer checks, mount protection and five existing-file adoptions passed. Arr owns completed imports; the legacy publisher is disabled. [Native workflow](usenet-infra/docs/native-media.md). |
 | Deliberate phone-cart movie import | User-selected media-004 completed download/unpack, native manual copy import, independent SHA-256 verification, scoped-scan Plex discovery and exact new-job scratch reclamation. SAB history and older scratch remain intact. [Import receipt](usenet-infra/recovery/drills/cart-native-import-20260914.json). Automatic Arr-owned cleanup remains unproved. |
 | Selective NAS movie copy | media-002's 14,878,405,826 bytes passed server/local SHA-256, source-change checks and exclusive publication. Repeat preserved the directory identity and bytes without another download. Plex indexed it automatically. [Live receipt](usenet-infra/recovery/drills/native-copy-live-20260913.json). |
@@ -469,8 +524,8 @@ is complete; its deployment remains independent of capacity recovery.
 | Item | Next action and completion evidence | Prerequisite / closure |
 | --- | --- | --- |
 | September 16 cloud failures and capacity prevention | Finish the [implemented capacity repair](#download-capacity-repair--implemented-extended-validation-remains): preserve the deployed serialized controller, review health after the backlog drains and record the remaining movie/TV/backup acceptance independently. | Incident recovery, exact queue reconciliation and automatic admission are complete. Extended end-to-end evidence remains; no blanket queue release or storage purchase is needed. |
-| New importer recovery checkpoint | Verify a cloud archive created after activation contains `state/catalog/cart-import/armed.json`, current journals/status and the installed worker/adapters. Decrypt/validate in an isolated ignored directory and compare the immutable activation marker and helper hashes. Repeat after new accepted completions add journals. [Procedure](usenet-infra/docs/scheduled-backups.md#cart-importer-checkpoint). | Ready for the next agent. Latest observed scheduled success predates activation; allow shared-lock/quiet-state guards to defer rather than changing queue state. Required to close recovery coverage for this extension. |
-| Fresh automatic cart movie and TV | Preserve/review the three September 16 movie journals and Plex observations for sanitized acceptance receipts and backup coverage. Verify exact ownership, canonical SHA-256 evidence, automatic source cleanup and retained SAB history; distinguish automatic indexing from a manual scan. Then observe a new selected TV completion. | Movie progress observed; durable receipt/recovery review remains. Do not reacquire these movies. TV still needs actual selected content and may also supply the selective-copy row below. |
+| New importer recovery checkpoint — passed September 17 | Independently decrypted/restored the fresh guarded cloud archive: all 660 files/four databases verified, exact current helpers and activation marker matched, controller state and all 21 importer journals captured. [Receipt](usenet-infra/recovery/drills/cart-capacity-checkpoint-20260917.json). | Current extension capture verified; repeat after later accepted completions change durable state. This does not establish replacement-host or whole-NAS recovery. |
+| Fresh automatic cart movie and TV | September 17 review verified 13 native movie import jobs plus four existing-target reconciliations, recorded canonical SHA-256 evidence, exact payload absence, current native ownership and retained SAB history; all completed journals are backed up. Collect fresh Plex indexing evidence, distinguishing automatic indexing from manual scans, then observe selected TV completion. | Movie import/cleanup receipt and recovery coverage passed with recorded metadata limits. Plex indexing and TV remain pending. Do not reacquire accepted movies. |
 | Automatic Arr-owned movie and TV | Observe new user-selected Arr-owned jobs through native import, automatic completed-client removal, scratch reclamation, stable canonical files and Plex discovery. | Separate evidence from the cart worker. No diagnostic acquisitions or repeat of an already accepted item. |
 | Real TV selective NAS copy | Copy one actually available user-selected canonical TV title; verify same-bind staging, hashes, exclusive publication, safe repeat and Plex TV-library indexing. | Needs available selected TV content; layout and successful movie copying are insufficient. |
 | Recovered oversized selection | Observe its restored exact request through the same controller-owned admission, bounded retry, import and cleanup path; do not bypass capacity serialization. | Its unjournaled failed payload was removed under the user's authorization and the request was preserved for automatic reacquisition. No manual resume or storage purchase is needed. |
