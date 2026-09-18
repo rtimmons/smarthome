@@ -1,6 +1,175 @@
 # Usenet status and closure plan
 
-## Current handoff — September 17, 2026, 19:23 UTC
+## Current handoff — September 18, 2026, 16:46 UTC
+
+**The queue is stalled and the repair is not complete. Both queue timers are
+stopped after a guarded deployment failure.** The correction is committed at
+`c342318` but is **not deployed**. This handoff closes the context at the user's
+request; it does not mark queue recovery complete. No deployment or test process
+was left running locally, and the interrupted second deployment did not start.
+The September 17 checkpoints below are historical, not current status.
+
+### Verified live state
+
+| Check | September 18, 16:46 UTC observation |
+| --- | --- |
+| SAB | Six individually paused requests; global queue resumed; no postprocessing or admitted request. Both free-space settings remain `30G`. |
+| Controller | `awaiting_capacity_or_known_size`; `usenet-capacity-admission.timer` inactive; controller service inactive. |
+| Importer | 34 completed journals, 24 held records, five disposal errors; `usenet-cart-import.timer` inactive and service failed. Held records are not additional queued requests. |
+| Storage | Root available **80,249,393,152 bytes**; remote available **214,150,283,264 bytes**. Existing library and both remote staging mounts are active. |
+| Applications | `usenet-library.service`, `usenet-sab-remote.service` and `usenet-discovery.service` active. No storage migration or application restart occurred in the failed attempt. |
+| Deployed source | `cart-import.py` and `cart_import_sab.py` match `b52537f`, not `c342318`; capacity helper matches both. |
+| Storage mode | `/srv/usenet/config/catalog/remote-scratch.json` remains `{"schema_version":1,"mode":"storagebox"}`; hybrid setup receipt is absent. |
+| Cleanup | New disposal policy is installed, but all five error records still have exact saved source inventories and no new disposition. The failed attempt deleted no payload files. |
+| Backups | Backup timer active; latest captured archive is `cloud-20260918T160347Z.tar.age`, status `ok`. It predates the failed deployment and has **not** been independently restored in this session. |
+
+The latest independently restored archive remains
+`cloud-20260917T143828Z.tar.age`: 671 files, four SQLite databases, 28 importer
+journals (22 completed), and both earlier user-approved disposition journals.
+It predates remote/hybrid staging and the current 34 completed journals. A newer
+successful scheduled capture does not close this restore-verification gap.
+
+### Cause and committed repair
+
+The old layout keeps compressed input, unpacked output and a possible native
+copy on the same remote filesystem. Before this repair, canonical Movies used
+about **820.0 GB** and a rejected remote payload retained **67.3 GB**. Three
+otherwise eligible queued requests are approximately **76.4–80.2 GB** each; the
+old shared-filesystem peak budget plus reserve exceeds the remaining space even
+for the smallest. Three other queued requests have identity holds. These are
+separate from scratch capacity and must not be repeatedly redownloaded unchanged.
+
+`b52537f` implements [bounded acquisition scratch](usenet-infra/docs/hybrid-scratch.md):
+compressed input on the existing VM, unpacked output on existing remote staging,
+and native hardlink import through one shared Arr container mount. Original
+library paths and Plex roots stay in place. The controller budgets remaining
+archive bytes plus 5 GiB locally and 1.25 times release size plus 5 GiB remotely,
+with a 30 GiB reserve on **each** filesystem. It serializes one item through native
+import, independent canonical SHA-256 and exact cleanup. This is implemented and
+tested, but the live mount/hardlink migration has **not** run or passed acceptance.
+
+The same commit implements the user's approved automatic disposal of recoverable
+identity-rejected inputs. Only exact, verified, unimported source files qualify;
+durable per-file intent and receipts retain identity holds, hashes, SAB history
+and `redownload_required`. Disposal does not count as a successful import or
+trigger an immediate invalid reacquisition loop. The candidate unique payloads
+could reclaim **41,439,073,076 local bytes** and **67,290,631,018 remote bytes**;
+these are expected amounts, **not reclaimed bytes**. A separate 5.1 GB source
+shared by two journals and roughly 17.3 GB of legacy scratch remain protected.
+Permanent canonical library growth still consumes storage after scratch cleanup.
+
+The first deployment failed at **16:29 UTC**, during rejected-input cleanup,
+before preflight, mount changes or the deployment's backup step. Its new guard
+incorrectly required current RSS eligibility even when the journal retained
+valid original admission provenance. The guard preserved all bytes and recorded
+five errors. `c342318` fixes this using the saved activation proof plus the exact
+retained SAB history URL hash and immutable job identity. It also keeps timers
+stopped throughout hybrid deployment and accepts an ordinary held-worker exit
+only when there are zero errors. Live URL/key material stays private.
+
+Validation at `c342318`: **630 cases, 621 passed, nine optional skips**;
+compilation, shell/YAML and all Ansible syntax checks passed. The full recipe
+exits nonzero only for the two documented historical RSA keys. Do not change
+history or add scan exceptions. Current-source scanning and `git diff --check`
+passed again for this documentation handoff; implementation tests were not rerun
+for documentation-only changes. Live hardlink probing, metadata migration,
+renewed queue progress and independent restore of the new configuration remain
+outstanding; tests do not establish those results.
+
+### Resume in this order
+
+1. Read this checkpoint and the [hybrid runbook](usenet-infra/docs/hybrid-scratch.md).
+   Stay on `usenet`; inspect Git and fresh live state. Confirm no active worker,
+   admitted request or postprocessing, all queued requests paused at zero progress,
+   the version-1 marker, and absence of
+   `/srv/usenet/state/catalog/hybrid-scratch-setup.json`. If a receipt now exists,
+   inspect its phase and reconcile that state before any retry; the one-time
+   migration is not blindly replayable. Do not merely restart the old timers.
+2. Deploy the correction and guarded migration using the existing authorized
+   recipe, from the repository root:
+
+   ```sh
+   just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-hybrid-scratch
+   ```
+
+   Capture output privately. The recipe installs the corrected helpers, retries
+   exact disposal, validates available space, preserves and hashes bounded SAB
+   metadata, changes only the incomplete binding and Arr mounts, probes real
+   hardlinks as both application users, verifies unchanged queue identities,
+   activates the version-2 marker, restores SAB's prior global pause, captures
+   an encrypted configuration archive, and starts both timers last. A partial
+   failure needs phase-specific recovery, not manual job releases or reserve
+   reduction. In particular, verify the Compose override/init and real hardlink
+   probe on this host; these have not yet been exercised live.
+3. Confirm installed helper hashes, disposal receipts/reclaimed bytes, metadata
+   receipt, version-2 marker, both active timers and an automatic admission.
+   Expected local reclamation should make the largest current archive fit with
+   the reserve; if it does not, investigate the actual budget and cleanup result.
+   Do not delete canonical media, lower floors, buy storage or resize the VM to
+   make the check pass. No resize or purchase has occurred.
+4. Independently decrypt and restore the new deployment archive into an empty
+   private directory. Verify all manifest entries/databases, activation,
+   completed and disposal journals, migration receipt, marker, helper hashes,
+   shared-mount Compose override and startup helper. Never restore over the live
+   host or replace the immutable original recovery snapshots.
+5. Observe the first real job through native hardlink import, independent SHA-256,
+   exact source cleanup and timer-driven admission of the next eligible request.
+   Verify actual disk behavior and that a held item does not freeze unrelated
+   work. A polling capacity estimate is not a hard quota for arbitrary archive
+   expansion; do not infer acceptance from an enabled timer or a small probe.
+   Resolve remaining identity holds using evidence before reacquisition.
+6. Commit a sanitized deployment/recovery receipt and update this plan, the agent
+   guide and affected runbooks. Plex indexing of later imports, TV, Arr-owned
+   cleanup and user-deferred device playback remain separate acceptance work.
+
+### Private evidence and continuation helpers
+
+Exact operational data is in the ignored, mode-0700 directory
+`usenet-infra/build/queue-repair-20260918/`; never commit its media names, identifiers,
+history URL hashes, credentials or raw logs. The repository scripts and live
+journals remain the authoritative recovery path if these convenience files are
+unavailable.
+
+- `cold-handoff.json` and `cold-handoff-summary.json`: the 16:46 UTC read-only
+  snapshot and aggregate report, including installed hashes, timer states and
+  unchanged error inventories. `run-handoff-audit.py <unique-name>` obtains a new
+  read-only snapshot and tolerates an absent hybrid receipt.
+- `deploy-attempt-1.log`: the failed 16:29 deployment. No `deploy.log` exists at
+  handoff; the interrupted second attempt never started.
+- `inventory.json`, `disposal-diagnosis.json`: earlier detailed usage and admission
+  proof diagnosis; `tests.log`: the 630-case validation. Do not replay old private
+  disposal/requeue helpers from September 17; their operations already happened.
+- After successful migration, `run-audit.py after-deploy` writes the snapshot
+  expected by `restore-backup.py`. Both run inside `usenet-infra` via
+  `just --justfile usenet-infra/Justfile --working-directory usenet-infra --command
+  python3 build/queue-repair-20260918/<script> [argument]` from the root.
+  The restore helper is prepared but **not run**; it fetches the captured archive,
+  checks its ciphertext hash, restores into a new `restored-hybrid` directory and
+  writes `backup-verified.json`. Review it against fresh state; its output/archive
+  paths must not already exist. No helper requires an earlier agent process.
+
+Standing authorization covers all Just recipes, Hetzner/Usenet APIs and deletion
+of recoverable rejected inputs for eventual redownload. Continue without asking
+again for those permissions. Preserve canonical/legacy media, journals, pauses,
+30 GiB floors and the dedicated credentials. The user wants unattended queue
+progress and automatic cleanup, not further per-item babysitting.
+
+All implementation is committed through `c342318`. Unrelated lighting edits,
+untracked `msg` and `new-hass-configs/packages/` remain untouched. No PR, push,
+merge or branch deletion was performed; local `origin/usenet` still points at
+`204df8c` without a fresh remote check. Continue scoped commits, signing with the
+repository-local SSH key using command-scoped Git settings; leave user defaults
+unchanged:
+
+```sh
+git -c gpg.format=ssh -c gpg.ssh.program=/usr/bin/ssh-keygen \
+  -c user.signingkey=/Users/rtimmons/Projects/smarthome/.ssh/id_ed25519_codex_smarthome \
+  commit -m '<scoped message>'
+```
+
+This documentation-only handoff does not resume the stopped timers.
+
+## Earlier checkpoint — September 17, 2026, 19:23 UTC
 
 **The queue is progressing under host-owned automation.** Remote staging
 (`bad2274`) and the long-postprocessing correction (`45ff544`) are deployed on the
@@ -279,9 +448,10 @@ for dated evidence and limits. New implementation edits require fresh appropriat
    private redaction map, or ignored progress log to discover current state.
 3. Refresh read-only `just usenet-cloud-health`, `just usenet-discovery-health`,
    `just usenet-qnap-health` and `just usenet-cart-import-status` from the root.
-   Follow the planned capacity recovery for the September 16 failures before
-   new acquisition acceptance;
-   record remediation separately from the wiki and preserve all existing pauses.
+   Follow the September 18 resume sequence at the top of this plan before new
+   acquisition acceptance. Both queue timers were stopped at handoff; do not
+   treat older reports of unattended progress as current. Record remediation
+   separately from the wiki and preserve all existing pauses.
    Inspect `just native-status` privately: its output includes real media names.
    For structured native status, use the existing infra wrapper's
    `./scripts/qnap-command native-status --json`. Save media-bearing output only
@@ -292,18 +462,20 @@ for dated evidence and limits. New implementation edits require fresh appropriat
    journal. Follow the worker's guarded retry procedure; never replay native
    import or reset activation. A file already deleted by verified cleanup must
    be reconciled from its journal and canonical evidence, not reacquired.
-5. Verify backup freshness and the post-activation recovery row below. Then
-   inspect for genuinely new user-selected jobs. Continue authorized independent
-   checks while awaiting a needed selection. If none exists, ask once for a new
-   desired movie/numbered TV episode or record that prerequisite; preserve the
-   excluded paused job and existing cart history. Do not release all feed entries.
+5. Finish deployment and independent archive restoration as ordered above, then
+   validate automatic progress on the existing backlog. No new user selection
+   is needed for the current queue repair. Preserve excluded/identity-held jobs
+   and history; do not release all feed entries. A later unavailable TV selection
+   or deferred device test remains a separate acceptance prerequisite.
 6. Record each completed acceptance as a dated sanitized receipt, update this
    plan and the relevant guide/ledger, and review the entire staged diff for media
    privacy before a scoped commit. Do not publish private logs or replacement maps.
    Complete all available work and leave only explicit user-dependent/deferred
    items, with no ad-hoc transfer, deployment or agent process left running.
 
-Host-owned acquisition, import and backup schedules continue between sessions.
+Host-owned backup scheduling remains active between sessions. Acquisition and
+import scheduling are stopped at this handoff and resume only after the guarded
+repair completes; their intended steady state runs independently of this chat.
 No recurring Codex automation is configured. This handoff does not authorize a
 merge, PR, branch deletion or checkout removal. GitHub publication previously
 used the existing `gh` login over a command-scoped HTTPS push route after the SSH
@@ -331,7 +503,7 @@ inspection is not a reason to deploy or restart services.
 
 | Capability | Evidence |
 | --- | --- |
-| Automatic cart worker | September 17 [checkpoint review](usenet-infra/recovery/drills/cart-capacity-checkpoint-20260917.json) captured 13 native movie imports and four existing-target reconciliations with recorded SHA-256 evidence, current native ownership, retained SAB history and exact payload absence. All completed journals are verified in the current backup. Fresh Plex indexing and TV acceptance remain open. |
+| Automatic cart worker | September 17 [checkpoint review](usenet-infra/recovery/drills/cart-capacity-checkpoint-20260917.json) captured 13 native movie imports and four existing-target reconciliations with recorded SHA-256 evidence, current native ownership, retained SAB history and exact payload absence. That checkpoint's journals were restore-verified; the later completed journals still need the fresh archive verification described above. Fresh Plex indexing and TV acceptance remain open. |
 | Cloud acquisition and native library infrastructure | Provider/indexer checks, mount protection and five existing-file adoptions passed. Arr owns completed imports; the legacy publisher is disabled. [Native workflow](usenet-infra/docs/native-media.md). |
 | Deliberate phone-cart movie import | User-selected media-004 completed download/unpack, native manual copy import, independent SHA-256 verification, scoped-scan Plex discovery and exact new-job scratch reclamation. SAB history and older scratch remain intact. [Import receipt](usenet-infra/recovery/drills/cart-native-import-20260914.json). Automatic Arr-owned cleanup remains unproved. |
 | Selective NAS movie copy | media-002's 14,878,405,826 bytes passed server/local SHA-256, source-change checks and exclusive publication. Repeat preserved the directory identity and bytes without another download. Plex indexed it automatically. [Live receipt](usenet-infra/recovery/drills/native-copy-live-20260913.json). |
