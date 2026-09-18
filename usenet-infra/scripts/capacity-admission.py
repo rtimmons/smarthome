@@ -11,6 +11,7 @@ import math
 import os
 from pathlib import Path
 import shutil
+import subprocess
 import tempfile
 import time
 import urllib.request
@@ -37,6 +38,15 @@ class AdmissionError(RuntimeError):
 
 class AdmissionBusy(BlockingIOError):
     pass
+
+
+def is_mountpoint(path: Path) -> bool:
+    findmnt = shutil.which('findmnt')
+    if findmnt is None:
+        return path.is_mount()
+    result = subprocess.run([findmnt, '--noheadings', '--output', 'TARGET', '--target', str(path)],
+                            capture_output=True, text=True, check=False)
+    return any(line.strip() == str(path) for line in result.stdout.splitlines())
 
 
 def atomic(path: Path, value: dict) -> None:
@@ -149,10 +159,10 @@ class Controller:
         if remote is not None:
             library = self.root / "library"
             incomplete = self.root / "downloads/incomplete"
-            if (remote.is_symlink() or not remote.is_mount() or not library.is_mount()
+            if (remote.is_symlink() or not is_mountpoint(remote) or not library.is_mount()
                     or remote.stat().st_dev != library.stat().st_dev
                     or remote.stat().st_dev == device
-                    or incomplete.is_symlink() or not incomplete.is_mount()
+                    or incomplete.is_symlink() or not is_mountpoint(incomplete)
                     or incomplete.stat().st_dev != (device if self.hybrid_scratch() else remote.stat().st_dev)
                     or not all((remote / name).is_dir() and not (remote / name).is_symlink()
                                for name in ("incomplete", "complete"))):

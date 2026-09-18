@@ -135,6 +135,7 @@
       - 'set -a; . /srv/usenet/config/catalog.env; export BACKUP_AGE=/srv/usenet/libexec/age BACKUP_OUTPUT=/srv/usenet/backups/scheduled; exec python3 /srv/usenet/libexec/scheduled-backup.py cloud --force'
   become_user: usenet
   changed_when: false
+  when: cloud_hybrid_scratch_capture_backup | default(true) | bool
 
 - name: Resume persistent import and capacity automation
   ansible.builtin.systemd_service:

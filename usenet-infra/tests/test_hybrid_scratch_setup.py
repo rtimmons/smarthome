@@ -29,6 +29,20 @@ class HybridScratchTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_mountpoint_detection_accepts_same_filesystem_bind_mounts(self):
+        path = self.root / 'downloads/incomplete'
+        with mock.patch.object(setup.shutil, 'which', return_value='/usr/bin/findmnt'), \
+                mock.patch.object(setup.subprocess, 'run', return_value=mock.Mock(
+                    stdout=f'{path}\n')):
+            self.assertTrue(setup.is_mountpoint(path))
+
+    def test_mountpoint_detection_rejects_parent_mounts(self):
+        path = self.root / 'downloads/incomplete'
+        with mock.patch.object(setup.shutil, 'which', return_value='/usr/bin/findmnt'), \
+                mock.patch.object(setup.subprocess, 'run', return_value=mock.Mock(
+                    stdout=f'{self.root}\n')):
+            self.assertFalse(setup.is_mountpoint(path))
+
     def migrate(self):
         original = Path.stat
         def stats(path, *args, **kwargs):

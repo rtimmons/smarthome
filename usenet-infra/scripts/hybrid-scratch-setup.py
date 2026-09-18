@@ -31,6 +31,15 @@ def require(value, reason):
         raise RuntimeError(reason)
 
 
+def is_mountpoint(path):
+    findmnt = shutil.which('findmnt')
+    if findmnt is None:
+        return path.is_mount()
+    result = subprocess.run([findmnt, '--noheadings', '--output', 'TARGET', '--target', str(path)],
+                            capture_output=True, text=True, check=False)
+    return any(line.strip() == str(path) for line in result.stdout.splitlines())
+
+
 def preflight(root, sab):
     old = module('remote-scratch-setup')
     snapshot = sab.snapshot()
@@ -47,7 +56,7 @@ def preflight(root, sab):
             {'schema_version': 1, 'mode': 'storagebox'}, 'expected_previous_staging_mode')
     receipt = root / 'state/catalog/hybrid-scratch-setup.json'
     require(not receipt.exists(), 'prior_setup_requires_phase_review')
-    require((root / 'downloads/incomplete').is_mount() and (root / 'library').is_mount(), 'mounts_required')
+    require(is_mountpoint(root / 'downloads/incomplete') and is_mountpoint(root / 'library'), 'mounts_required')
     value = {'schema_version': 1, 'phase': 'preflight', 'queue': snapshot['queue'],
              'paused': snapshot['paused'], 'source_metadata': old.metadata_inventory(root / 'downloads/incomplete')}
     old.save(receipt, value)
@@ -143,7 +152,7 @@ def verify(root, sab):
     require(value['phase'] in {'native_verified', 'verified'}, 'native_verification_required')
     require(json.loads((root / 'config/catalog/remote-scratch.json').read_text()) == MARKER, 'marker_invalid')
     incomplete, remote = root / 'downloads/incomplete', root / 'downloads/complete/remote'
-    require(incomplete.is_mount() and remote.is_mount() and
+    require(is_mountpoint(incomplete) and is_mountpoint(remote) and
             incomplete.stat().st_dev == root.stat().st_dev != remote.stat().st_dev, 'split_mounts_required')
     misc = sab.api('get_config', section='misc')['config']['misc']
     require(misc['download_dir'] == '/data/incomplete' and misc['complete_dir'] == '/data/complete/remote/complete'
