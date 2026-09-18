@@ -3,6 +3,8 @@
   hosts: cloud
   become: true
   gather_facts: true
+  vars:
+    cloud_cart_import_start_timers: false
   roles:
     - cloud_cart_import
     - cloud_hybrid_scratch

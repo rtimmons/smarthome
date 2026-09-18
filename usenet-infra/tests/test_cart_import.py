@@ -187,6 +187,19 @@ class WorkerTests(unittest.TestCase):
         self.coordinator.discard_held(record)
         self.assertNotIn('disposition', record)
 
+    def test_identity_disposal_accepts_frozen_admission_only_with_matching_history_origin(self):
+        directory, job = self.identity_hold()
+        record = self.record()
+        original_hash = job['provenance']['url_sha256']
+        job['provenance'] = None
+        job['source_url_sha256'] = worker.ref('different-origin')
+        with self.assertRaisesRegex(worker.Hold, 'held_payload_provenance_unproven'):
+            self.coordinator.discard_held(record)
+        self.assertTrue(directory.exists())
+        job['source_url_sha256'] = original_hash
+        self.coordinator.discard_held(record)
+        self.assertEqual(self.record()['disposition']['status'], 'discarded')
+
     def job(self, identity='new-cart', **changes):
         directory = self.scratch / identity
         directory.mkdir(exist_ok=True)

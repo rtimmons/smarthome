@@ -177,6 +177,7 @@ class SabSource:
                 item = {key: row[key] for key in ('nzo_id', 'name', 'status', 'category', 'path', 'storage')}
                 item.update(completed=epoch(row['completed']), time_added=epoch(row['time_added'] or 0),
                             archive=bool(row['archive']), provenance=None)
+                item['source_url_sha256'] = hashlib.sha256(row['url'].encode()).hexdigest() if row['url'] else None
                 matches = by_url.get(row['url'], []) if row['url'] else []
                 cart = [r for r in matches if r['feed'] in FEEDS and r['state'] == 'D' and r['downloaded_at'] is not None]
                 if len(cart) == 1:

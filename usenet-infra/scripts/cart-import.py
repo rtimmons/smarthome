@@ -294,7 +294,7 @@ class Coordinator:
         current = self.sab.job(record['job']['nzo_id'])
         if not current or current.get('status') != 'Completed' or current.get('archive') not in (None, 0, False):
             raise Hold('completed_job_changed')
-        for key in ('nzo_id', 'storage', 'category', 'completed'):
+        for key in ('nzo_id', 'name', 'storage', 'category', 'completed', 'time_added'):
             if current.get(key) != record['job'].get(key):
                 raise Hold('completed_job_identity_changed')
         if current['nzo_id'] in self.arr.owned_download_ids():
@@ -340,7 +340,15 @@ class Coordinator:
         if disposition.get('status') == 'discarded':
             return
         current = self.guard_job(record)
-        if not self.eligible(current, self.activation()):
+        # RSS rows may change long after the original admission. Accept the
+        # frozen admission proof only while SAB's exact retained origin URL hash
+        # and all immutable job fields still match; never borrow another title's
+        # current feed entry or treat the Default category as provenance.
+        frozen = record['job'].get('provenance') or {}
+        admitted = {**current, 'provenance': frozen}
+        if not (self.eligible(current, self.activation()) or
+                (self.eligible(admitted, self.activation()) and
+                 current.get('source_url_sha256') == frozen.get('url_sha256'))):
             raise Hold('held_payload_provenance_unproven')
         directory = Path(record['source_dir'])
         # Earlier explicit dispositions may already have removed the directory.
@@ -355,6 +363,7 @@ class Coordinator:
             other_paths = {Path(other['source_dir']) / n for n in other.get('sources', {})}
             if expected_paths & other_paths:
                 record['disposal_wait'] = 'shared_source_requires_review'
+                record.pop('disposal_error', None)
                 self.persist(record)
                 return
         entries = inventory(directory, allow_empty=True) if directory.exists() else {}

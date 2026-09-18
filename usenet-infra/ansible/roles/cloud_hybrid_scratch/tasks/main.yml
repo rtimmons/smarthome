@@ -40,6 +40,11 @@
       - -c
       - 'set -a; . /srv/usenet/config/catalog.env; exec python3 /srv/usenet/libexec/cart-import.py run'
   become_user: usenet
+  register: hybrid_disposal
+  failed_when: >-
+    hybrid_disposal.rc not in [0, 1] or
+    (hybrid_disposal.stdout | from_json).errors | default(1) | int > 0 or
+    (hybrid_disposal.stdout | from_json).status not in ['idle', 'held']
   changed_when: false
 
 - name: Inspect the one-time split-spool migration receipt
