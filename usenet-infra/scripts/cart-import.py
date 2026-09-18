@@ -29,6 +29,7 @@ MAX_FILES = 10000
 TERMINAL = {'cleaned', 'cleaned_with_retained_files'}
 HOLD_LOGIC_VERSION = 2
 MIGRATABLE_HOLDS = {'movie_year_missing', 'native_target_has_file'}
+DISPOSABLE_HOLDS = {'catalog_identity_ambiguous', 'movie_source_identity_mismatch'}
 
 
 class Hold(RuntimeError):
@@ -318,6 +319,94 @@ class Coordinator:
         if actual != expected:
             raise Hold('source_inventory_changed')
 
+    def discard_held(self, record):
+        """Opt-in disposal of recoverable rejected inputs, never an import success.
+
+        The retained SAB history and source hashes preserve the exact request.
+        Identity must be resolved before reacquisition; do not download-loop a
+        rejected release. A shared or changed source remains protected.
+        """
+        policy = self.library.parent / 'config/catalog/held-payload-policy.json'
+        if not policy.exists() and not policy.is_symlink():
+            return
+        if policy.is_symlink() or read_json(policy) != {
+                'schema_version': 1, 'discard_unimported_identity_holds': True}:
+            raise Hold('held_payload_policy_invalid')
+        if (record.get('hold') not in DISPOSABLE_HOLDS or record['phase'] != 'source_verified'
+                or any(k in record for k in ('plan', 'command_id', 'verified'))
+                or not record.get('sources')):
+            return
+        disposition = record.get('disposition', {})
+        if disposition.get('status') == 'discarded':
+            return
+        current = self.guard_job(record)
+        if not self.eligible(current, self.activation()):
+            raise Hold('held_payload_provenance_unproven')
+        directory = Path(record['source_dir'])
+        # Earlier explicit dispositions may already have removed the directory.
+        if not directory.exists() and not disposition:
+            return
+        confined(directory, self.root, missing=True)
+        expected_paths = {directory / n for n in record['sources']}
+        for other_path in self.jobs.glob('*.json'):
+            other = read_json(other_path)
+            if other['job']['nzo_id'] == record['job']['nzo_id'] or other['phase'] in TERMINAL:
+                continue
+            other_paths = {Path(other['source_dir']) / n for n in other.get('sources', {})}
+            if expected_paths & other_paths:
+                record['disposal_wait'] = 'shared_source_requires_review'
+                self.persist(record)
+                return
+        entries = inventory(directory, allow_empty=True) if directory.exists() else {}
+        files = disposition.get('files', {})
+        for name, proof in record['sources'].items():
+            if name in entries:
+                if entries[name] != proof['signature']:
+                    raise Hold('held_payload_changed')
+            elif not files.get(name, {}).get('delete_intent'):
+                # Old per-file dispositions can leave a parent/sidecar behind;
+                # absence without our intent cannot authorize further deletion.
+                return
+        if set(entries) - set(record['sources']):
+            raise Hold('held_payload_inventory_changed')
+        if not disposition:
+            disposition = {'status': 'discarding', 'reason': record['hold'],
+                           'requested_at': self.clock(), 'redownload_required': True,
+                           'history_retained': True, 'files': {}}
+            record['disposition'] = disposition
+            self.persist(record)
+        for name, proof in record['sources'].items():
+            source = confined(directory / name, self.root, missing=True)
+            item = disposition['files'].setdefault(name, {})
+            if source.exists():
+                if regular(source) != proof['signature']:
+                    raise Hold('held_payload_changed')
+                item['delete_intent'] = True
+                self.persist(record)
+                self.guard_job(record)
+                if regular(source) != proof['signature']:
+                    raise Hold('held_payload_changed')
+                source.unlink()
+            elif not item.get('delete_intent'):
+                raise Hold('held_payload_missing_without_intent')
+            item['removed'] = True
+            self.persist(record)
+        # Do not remove unrelated directories or follow a recursive delete.
+        for parent in sorted({p.parent for p in expected_paths}, key=lambda p: len(p.parts), reverse=True):
+            while parent == directory or directory in parent.parents:
+                try:
+                    parent.rmdir()
+                except OSError as error:
+                    if error.errno in (errno.ENOTEMPTY, errno.ENOENT, errno.EEXIST):
+                        break
+                    raise
+                parent = parent.parent
+        disposition.update(status='discarded', completed_at=self.clock(),
+                           reclaimed_bytes=sum(v['signature'][0] for v in record['sources'].values()))
+        record.pop('disposal_wait', None)
+        record.pop('disposal_error', None)
+        self.persist(record)
+
     def advance(self, record):
         self.guard_job(record)
         verified_now = False
@@ -528,6 +617,14 @@ class Coordinator:
                 record['hold_logic_version'] = HOLD_LOGIC_VERSION
                 self.persist(record)
             if record.get('hold'):
+                try:
+                    self.discard_held(record)
+                except Exception:
+                    record['disposal_error'] = 'held_payload_disposal_requires_review'
+                    self.persist(record)
+                    self.counts['errors'] += 1
+                    catalog.record_failure(self.settings, 'cart-import', 'cart-' + path.stem,
+                        catalog.CatalogError('Rejected payload cleanup needs review; its exact source was preserved.'))
                 self.counts['held'] += 1
                 continue
             self.heartbeat('processing', item=path.stem, phase=record['phase'])
@@ -572,6 +669,8 @@ class Coordinator:
         if not re.fullmatch('[0-9a-f]{64}', identity):
             raise Hold('invalid_retry_reference')
         record = read_json(self.jobs / (identity + '.json'))
+        if record.get('disposition', {}).get('status') in {'discarding', 'discarded'}:
+            raise Hold('discarded_payload_requires_identity_resolution_and_redownload')
         if ref(record['job']['nzo_id']) != identity:
             raise Hold('journal_identity_mismatch')
         if record.get('hold') == 'cart_provenance_unproven':

@@ -1,0 +1,139 @@
+---
+- name: Stop queue timers for the idle staging migration
+  ansible.builtin.systemd_service:
+    name: '{{ item }}'
+    state: stopped
+  loop: [usenet-capacity-admission.timer, usenet-cart-import.timer]
+
+- name: Refuse to interrupt an active controller or importer
+  ansible.builtin.command:
+    argv: [systemctl, is-active, '{{ item }}']
+  register: hybrid_activity
+  changed_when: false
+  failed_when: hybrid_activity.rc not in [3, 4] or hybrid_activity.stdout | trim not in ['inactive', 'failed', 'unknown']
+  loop: [usenet-capacity-admission.service, usenet-cart-import.service]
+
+- name: Install metadata migration and shared-library startup helpers
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/{{ item.source }}'
+    dest: '/srv/usenet/libexec/{{ item.name }}'
+    owner: root
+    group: usenet
+    mode: '0555'
+  loop:
+    - {source: scripts/hybrid-scratch-setup.py, name: hybrid-scratch-setup.py}
+    - {source: scripts/remote-scratch-setup.py, name: remote-scratch-setup.py}
+    - {source: config/arr-shared-library-init, name: arr-shared-library-init}
+
+- name: Enable the explicitly requested disposal of rejected recoverable inputs
+  ansible.builtin.copy:
+    content: '{"schema_version":1,"discard_unimported_identity_holds":true}'
+    dest: /srv/usenet/config/catalog/held-payload-policy.json
+    owner: root
+    group: usenet
+    mode: '0640'
+
+- name: Reclaim eligible held sources with exact per-file durable disposal receipts
+  ansible.builtin.command:
+    argv:
+      - /bin/sh
+      - -c
+      - 'set -a; . /srv/usenet/config/catalog.env; exec python3 /srv/usenet/libexec/cart-import.py run'
+  become_user: usenet
+  changed_when: false
+
+- name: Inspect the one-time split-spool migration receipt
+  ansible.builtin.stat:
+    path: /srv/usenet/state/catalog/hybrid-scratch-setup.json
+  register: hybrid_setup
+
+- name: Migrate an idle metadata-only incomplete spool
+  when: not hybrid_setup.stat.exists
+  block:
+    - name: Require paused zero-progress requests and record exact queue identities
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/hybrid-scratch-setup.py, preflight]
+      changed_when: false
+
+    - name: Stop only the idle native applications
+      ansible.builtin.systemd_service:
+        name: usenet-discovery.service
+        state: stopped
+
+    - name: Stop SAB gracefully before copying its current metadata
+      ansible.builtin.systemd_service:
+        name: usenet-sab-remote.service
+        state: stopped
+
+    - name: Copy and independently hash-check metadata while retaining remote originals
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/hybrid-scratch-setup.py, copy-metadata]
+      changed_when: true
+
+    - name: Unmount only the old incomplete binding
+      ansible.builtin.systemd_service:
+        name: srv-usenet-downloads-incomplete.mount
+        state: stopped
+
+    - name: Bind the local spool at SAB's unchanged incomplete path
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/srv-usenet-downloads-incomplete-hybrid.mount'
+        dest: /etc/systemd/system/srv-usenet-downloads-incomplete.mount
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Give Arr one common mount for native hardlinks while preserving library paths
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/compose/discovery/hybrid-scratch.override.yaml'
+        dest: /srv/usenet/compose/discovery/compose.override.yaml
+        owner: root
+        group: usenet
+        mode: '0640'
+
+    - name: Validate mount dependencies before starting applications
+      ansible.builtin.command:
+        argv: [systemd-analyze, verify, /etc/systemd/system/srv-usenet-downloads-incomplete.mount, /etc/systemd/system/usenet-sab-remote.service]
+      changed_when: false
+
+    - name: Start the local binding and scoped mount-dependent applications
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        daemon_reload: true
+        enabled: true
+        state: started
+      loop: [srv-usenet-downloads-incomplete.mount, usenet-sab-remote.service, usenet-discovery.service]
+
+    - name: Verify hardlinks inside both applications and configure native completed-path mapping
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/hybrid-scratch-setup.py, configure-native]
+      changed_when: false
+
+    - name: Activate the independently budgeted spool only after native hardlink verification
+      ansible.builtin.copy:
+        content: '{"schema_version":2,"mode":"hybrid","native_hardlinks":true}'
+        dest: /srv/usenet/config/catalog/remote-scratch.json
+        owner: root
+        group: usenet
+        mode: '0640'
+
+- name: Verify request preservation and restore the original global pause
+  ansible.builtin.command:
+    argv: [python3, /srv/usenet/libexec/hybrid-scratch-setup.py, verify]
+  changed_when: false
+
+- name: Capture new configuration and disposal receipts before acquisition resumes
+  ansible.builtin.command:
+    argv:
+      - /bin/sh
+      - -c
+      - 'set -a; . /srv/usenet/config/catalog.env; export BACKUP_AGE=/srv/usenet/libexec/age BACKUP_OUTPUT=/srv/usenet/backups/scheduled; exec python3 /srv/usenet/libexec/scheduled-backup.py cloud --force'
+  become_user: usenet
+  changed_when: false
+
+- name: Resume persistent import and capacity automation
+  ansible.builtin.systemd_service:
+    name: '{{ item }}'
+    enabled: true
+    state: started
+  loop: [usenet-cart-import.timer, usenet-capacity-admission.timer]

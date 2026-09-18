@@ -8,6 +8,7 @@ from __future__ import annotations
 import copy
 import datetime as dt
 import importlib.util
+import json
 from pathlib import Path, PurePosixPath
 import re
 import time
@@ -16,6 +17,7 @@ from urllib.parse import urlencode
 
 SOURCE_ROOT = Path('/srv/usenet/downloads/complete')
 LIBRARY_ROOT = Path('/srv/usenet/library')
+SCRATCH_MARKER = Path('/srv/usenet/config/catalog/remote-scratch.json')
 VERSIONS = {'radarr': '6.3.0.10514', 'sonarr': '4.0.19.2979'}
 VIDEO_EXTENSIONS = {'.mkv', '.mp4', '.m4v', '.avi', '.ts'}
 EPISODE_NUMBER = re.compile(r'(?<![a-z0-9])s\d{1,2}e\d{1,3}', re.I)
@@ -67,7 +69,12 @@ def signature(path):
 
 
 def api_source(path):
-    return '/data/complete/' + path.relative_to(SOURCE_ROOT).as_posix()
+    relative = path.relative_to(SOURCE_ROOT)
+    if (relative.parts[:2] == ('remote', 'complete') and SCRATCH_MARKER.is_file()
+            and not SCRATCH_MARKER.is_symlink() and json.loads(SCRATCH_MARKER.read_text()) ==
+            {'schema_version': 2, 'mode': 'hybrid', 'native_hardlinks': True}):
+        return '/storage/.acquisition-staging/' + relative.relative_to('remote').as_posix()
+    return '/data/complete/' + relative.as_posix()
 
 
 def host_destination(app, path):

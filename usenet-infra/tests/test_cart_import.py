@@ -94,6 +94,99 @@ class WorkerTests(unittest.TestCase):
         return worker.Coordinator(self.settings, self.sab, self.arr, self.remote, library=self.library,
                                   clock=lambda: self.now, sleep=lambda _: None, mounted=lambda: True)
 
+    def identity_hold(self, *, policy=True):
+        self.coordinator.arm()
+        directory, job = self.job()
+        with mock.patch.object(self.arr, 'prepare', side_effect=worker.CartImportHold('movie_source_identity_mismatch')):
+            self.coordinator.run()
+        if policy:
+            path = self.root / 'config/catalog/held-payload-policy.json'
+            path.parent.mkdir(parents=True)
+            worker.atomic(path, {'schema_version': 1, 'discard_unimported_identity_holds': True})
+        return directory, job
+
+    def test_opted_in_identity_disposal_preserves_request_and_does_not_count_import(self):
+        directory, job = self.identity_hold()
+        before = self.sab.snapshot()
+        result = self.coordinator.run()
+        record = self.record()
+        self.assertFalse(directory.exists())
+        self.assertEqual(record['hold'], 'movie_source_identity_mismatch')
+        self.assertEqual(record['phase'], 'source_verified')
+        self.assertEqual(record['disposition']['status'], 'discarded')
+        self.assertTrue(record['disposition']['redownload_required'])
+        self.assertEqual(result['completed'], 0)
+        self.assertEqual(self.arr.submissions, 0)
+        self.assertEqual(self.sab.snapshot(), before)
+        self.coordinator.run()
+        self.assertEqual(self.record()['disposition'], record['disposition'])
+        with self.assertRaisesRegex(worker.Hold, 'requires_identity_resolution_and_redownload'):
+            self.coordinator.retry(worker.ref(job['nzo_id']))
+
+    def test_identity_disposal_is_disabled_without_explicit_policy(self):
+        directory, _ = self.identity_hold(policy=False)
+        self.coordinator.run()
+        self.assertTrue(directory.exists())
+        self.assertNotIn('disposition', self.record())
+
+    def test_identity_disposal_preserves_changed_or_shared_sources(self):
+        directory, _ = self.identity_hold()
+        original = self.record()
+        other = copy.deepcopy(original)
+        other['job']['nzo_id'] = 'other-held-job'
+        self.coordinator.persist(other)
+        self.coordinator.discard_held(original)
+        self.assertTrue(directory.exists())
+        self.assertEqual(self.record()['disposal_wait'], 'shared_source_requires_review')
+        (self.coordinator.jobs / (worker.ref('other-held-job') + '.json')).unlink()
+        (directory / 'Movie.2026.mkv').write_bytes(b'changed payload')
+        with self.assertRaisesRegex(worker.Hold, 'held_payload_changed'):
+            self.coordinator.discard_held(original)
+        self.assertTrue(directory.exists())
+        self.assertEqual(self.coordinator.run()['errors'], 1)
+        self.assertEqual(self.record()['disposal_error'], 'held_payload_disposal_requires_review')
+
+    def test_identity_disposal_never_removes_submitted_or_arr_owned_work(self):
+        directory, job = self.identity_hold()
+        record = self.record()
+        record['command_id'] = 42
+        self.coordinator.discard_held(record)
+        self.assertTrue(directory.exists())
+        del record['command_id']
+        self.arr.owned.add(job['nzo_id'])
+        with self.assertRaisesRegex(worker.Hold, 'arr_owned_download'):
+            self.coordinator.discard_held(record)
+        self.assertTrue(directory.exists())
+
+    def test_identity_disposal_recovers_interrupted_unlink_from_durable_intent(self):
+        directory, _ = self.identity_hold()
+        record = self.record()
+        source = directory / 'Movie.2026.mkv'
+        unlink = Path.unlink
+        def lost_response(path, *args, **kwargs):
+            result = unlink(path, *args, **kwargs)
+            if path == source:
+                raise OSError('interrupted after unlink')
+            return result
+        with mock.patch.object(Path, 'unlink', lost_response):
+            with self.assertRaises(OSError):
+                self.coordinator.discard_held(record)
+        self.assertFalse(source.exists())
+        self.assertTrue(self.record()['disposition']['files'][source.name]['delete_intent'])
+        self.coordinator.discard_held(self.record())
+        self.assertEqual(self.record()['disposition']['status'], 'discarded')
+
+    def test_identity_disposal_refuses_missing_file_without_intent_or_bad_provenance(self):
+        directory, job = self.identity_hold()
+        record = self.record()
+        job['provenance']['unique'] = False
+        with self.assertRaisesRegex(worker.Hold, 'held_payload_provenance_unproven'):
+            self.coordinator.discard_held(record)
+        job['provenance']['unique'] = True
+        (directory / 'Movie.2026.mkv').unlink()
+        self.coordinator.discard_held(record)
+        self.assertNotIn('disposition', record)
+
     def job(self, identity='new-cart', **changes):
         directory = self.scratch / identity
         directory.mkdir(exist_ok=True)

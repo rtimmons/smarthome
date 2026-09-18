@@ -127,6 +127,16 @@ class NativeArrTests(unittest.TestCase):
     def prepare(self):
         return self.arr.prepare(self.job, self.directory, list(self.directory.iterdir()))
 
+    def test_hybrid_sources_use_common_mount_without_changing_canonical_paths(self):
+        marker = self.root / 'remote-scratch.json'
+        marker.write_text('{"schema_version":2,"mode":"hybrid","native_hardlinks":true}')
+        remote = self.scratch / 'remote/complete/Example/movie.mkv'
+        with mock.patch.object(adapter, 'SCRATCH_MARKER', marker):
+            self.assertEqual(adapter.api_source(remote), '/storage/.acquisition-staging/complete/Example/movie.mkv')
+            self.assertEqual(adapter.api_source(self.source), '/data/complete/Example.Movie.2026/Example.Movie.2026.mkv')
+            self.assertEqual(adapter.host_destination('radarr', '/library/Example/movie.mkv'),
+                             self.library / 'Movies/Example/movie.mkv')
+
     def television(self):
         self.source.unlink()
         self.source = self.directory / 'Example.Show.S01E01.mkv'

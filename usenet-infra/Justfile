@@ -26,6 +26,8 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-remote-media.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cart-import.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml remote-scratch.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml hybrid-scratch.yml --syntax-check
+	shellcheck config/arr-shared-library-init
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
 
@@ -120,6 +122,11 @@ configure-cart-import: ansible-setup
 [group: 'setup']
 configure-remote-scratch: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook remote-scratch.yml
+
+# Reclaim rejected inputs, use local compressed spool and native remote hardlinks.
+[group: 'setup']
+configure-hybrid-scratch: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook hybrid-scratch.yml
 
 # Read the host-owned cart importer status without changing acquisition or imports.
 [group: 'health']

@@ -1,0 +1,15 @@
+[Unit]
+Description=Local compressed acquisition spool with remote completed staging
+Requires=srv-usenet-downloads-complete-remote.mount
+BindsTo=srv-usenet-downloads-complete-remote.mount
+After=srv-usenet-downloads-complete-remote.mount
+
+[Mount]
+What=/srv/usenet/downloads/incomplete-local-spool
+Where=/srv/usenet/downloads/incomplete
+Type=none
+Options=bind,_netdev
+TimeoutSec=30
+
+[Install]
+WantedBy=multi-user.target srv-usenet-downloads-complete-remote.mount

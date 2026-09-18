@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+set -euo pipefail
+case "${ARR_LIBRARY_KIND:?Set the fixed library kind}" in
+  Movies|TV) ;;
+  *) exit 1 ;;
+esac
+target="/storage/$ARR_LIBRARY_KIND"
+test -d "$target"
+if test -L /library; then
+  test "$(readlink /library)" = "$target"
+else
+  # Only an absent or empty image directory may become this alias. Existing
+  # media and database paths remain /library; no collection is moved.
+  if test -e /library; then rmdir /library; fi
+  ln -s "$target" /library
+fi

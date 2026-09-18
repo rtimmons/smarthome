@@ -646,6 +646,49 @@ class CapacityAdmissionTests(unittest.TestCase):
         self.assertEqual(outcome["estimate_bytes"], 205 * 1024**3)
         self.assertEqual(sum(j["status"] == "Downloading" for j in sab.state["queue"]), 1)
 
+    def enable_hybrid(self, controller):
+        self.enable_remote(controller)
+        (self.root / 'config/catalog/remote-scratch.json').write_text(json.dumps(
+            {'schema_version': 2, 'mode': 'hybrid', 'native_hardlinks': True}))
+
+    def test_hybrid_budgets_each_filesystem_instead_of_three_remote_copies(self):
+        controller = self.controller(FakeSab([self.job('large', 80 * 1024)]))
+        controller.configure(); self.enable_hybrid(controller)
+        controller.available = lambda: 115 * 1024**3
+        controller.budget_available = lambda: 135 * 1024**3
+        self.assertEqual(controller.run()['status'], 'admitted')
+        self.assertEqual(controller.state()['admitted']['estimate_bytes'], 105 * 1024**3)
+        self.assertEqual(controller.state()['admitted']['local_estimate_bytes'], 85 * 1024**3)
+
+    def test_hybrid_requires_both_budgets_and_does_not_spend_reserves(self):
+        for local, remote in [(115 * 1024**3 - 1, 1000 * 1024**3),
+                              (1000 * 1024**3, 135 * 1024**3 - 1)]:
+            controller = self.controller(FakeSab([self.job('large', 80 * 1024)]))
+            controller.configure(); self.enable_hybrid(controller)
+            controller.available = lambda: local
+            controller.budget_available = lambda: remote
+            self.assertEqual(controller.run()['status'], 'awaiting_capacity_or_known_size')
+            self.assertIsNone(controller.state()['admitted'])
+
+    def test_hybrid_serial_drain_accounts_only_final_library_growth_after_cleanup(self):
+        sab = FakeSab([self.job(str(i), 64 * 1024) for i in range(3)])
+        controller = self.controller(sab)
+        controller.configure(); self.enable_hybrid(controller)
+        remote_free = 230 * 1024**3
+        controller.available = lambda: 110 * 1024**3
+        controller.budget_available = lambda: remote_free
+        for _ in range(3):
+            self.assertEqual(controller.run()['status'], 'admitted')
+            identity = controller.state()['admitted']['nzo_id']
+            sab.state['queue'] = [j for j in sab.state['queue'] if j['nzo_id'] != identity]
+            sab.state['history'].append({'nzo_id': identity, 'status': 'Completed', 'category': 'Default'})
+            self.assertEqual(controller.run()['status'], 'awaiting_cart_cleanup')
+            path = self.root / 'state/catalog/cart-import/jobs' / (hashlib.sha256(identity.encode()).hexdigest() + '.json')
+            path.write_text(json.dumps({'phase': 'cleaned', 'job': {'nzo_id': identity}}))
+            remote_free -= 54 * 1024**3
+        self.assertEqual(controller.run()['status'], 'idle')
+        self.assertFalse(sab.state['paused'])
+
     def test_remote_budget_reserves_source_and_canonical_copy_together(self):
         controller = self.controller(FakeSab([self.job("large", 80 * 1024)]))
         controller.configure()

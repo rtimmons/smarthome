@@ -104,10 +104,23 @@ class Controller:
         marker = self.root / "config/catalog/remote-scratch.json"
         if not marker.exists() and not marker.is_symlink():
             return None
-        if marker.is_symlink() or json.loads(marker.read_text()) != {
-                "schema_version": 1, "mode": "storagebox"}:
+        if marker.is_symlink() or json.loads(marker.read_text()) not in (
+                {"schema_version": 1, "mode": "storagebox"},
+                {"schema_version": 2, "mode": "hybrid", "native_hardlinks": True}):
             raise AdmissionError("remote_scratch_configuration_invalid")
         return self.root / "downloads/complete/remote"
+
+    def hybrid_scratch(self) -> bool:
+        if self.remote_scratch() is None:
+            return False
+        return json.loads((self.root / "config/catalog/remote-scratch.json").read_text())["mode"] == "hybrid"
+
+    def local_estimate(self, job: dict) -> int | None:
+        if not self.hybrid_scratch():
+            return 0
+        if self.estimate(job) is None:
+            return None
+        return math.ceil(float(job["mbleft"]) * 1024**2) + MARGIN
 
     def budget_available(self) -> int:
         remote = self.remote_scratch()
@@ -140,7 +153,7 @@ class Controller:
                     or remote.stat().st_dev != library.stat().st_dev
                     or remote.stat().st_dev == device
                     or incomplete.is_symlink() or not incomplete.is_mount()
-                    or incomplete.stat().st_dev != remote.stat().st_dev
+                    or incomplete.stat().st_dev != (device if self.hybrid_scratch() else remote.stat().st_dev)
                     or not all((remote / name).is_dir() and not (remote / name).is_symlink()
                                for name in ("incomplete", "complete"))):
                 raise AdmissionError("remote_scratch_mount_unavailable")
@@ -178,6 +191,13 @@ class Controller:
                         row for row in roots if row.get("path") == "/library"
                         and row.get("accessible") is True]) != 1:
                     raise AdmissionError("native_library_unavailable")
+                if self.hybrid_scratch():
+                    if api.call(app, "config/mediamanagement", timeout=5).get("copyUsingHardlinks") is not True:
+                        raise AdmissionError("native_hardlink_configuration_changed")
+                    mappings = api.call(app, "remotepathmapping", timeout=5)
+                    if not any(m.get("remotePath") == "/data/complete/remote/complete/" and
+                               m.get("localPath") == "/storage/.acquisition-staging/complete/" for m in mappings):
+                        raise AdmissionError("native_staging_mapping_changed")
         except AdmissionError:
             raise
         except Exception:
@@ -191,6 +211,11 @@ class Controller:
             return None
         if total <= 0 or left < 0 or left > total:
             return None
+        if self.hybrid_scratch():
+            # Compressed inputs stay on the application disk. Native hardlinks
+            # publish the remote unpacked output without a second payload copy.
+            # Both independent budgets must pass, including their 30 GiB floors.
+            return math.ceil(total * 1.25) + MARGIN
         if self.remote_scratch() is not None:
             # The archive/unpack peak and source/native-copy peak share the
             # Storage Box. Reserve both full expanded copies, never just the
@@ -601,7 +626,9 @@ class Controller:
             for identity in sorted(owned):
                 job = queue.get(identity)
                 estimate = self.estimate(job) if job and job.get("status") == "Paused" else None
-                if estimate is not None and available - RESERVE >= estimate:
+                local = self.local_estimate(job) if job else None
+                if (estimate is not None and local is not None
+                        and available - RESERVE >= estimate and self.available() - RESERVE >= local):
                     candidates.append((estimate, identity))
             if not candidates:
                 state["blocked"] = ("awaiting_capacity_or_known_size"
@@ -624,7 +651,8 @@ class Controller:
                     return {"status": "identity_held_before_download", "active_jobs": 0,
                             "paused_jobs": len(queue)}
             state.update(admitted={"nzo_id": identity, "filename": queue[identity].get("filename"),
-                                   "estimate_bytes": estimate, "admitted_at": self.clock()}, blocked=None)
+                                   "estimate_bytes": estimate, "local_estimate_bytes": self.local_estimate(queue[identity]),
+                                   "admitted_at": self.clock()}, blocked=None)
             self.save(state)
             self.api("queue", name="resume", value=identity)
             after = self.sab.snapshot()
