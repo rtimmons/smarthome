@@ -188,7 +188,7 @@
             <p class="workflow-card__label">Manage staging files</p>
             <h3>Use Filex</h3>
             <ol>
-              <li>Open Filex with the operator login. If the browser reports an untrusted certificate, complete the documented private-certificate trust setup before signing in.</li>
+              <li>Open Filex with the operator login. Host trust settings must remain unchanged. If a certificate warning appears, stop; browser access needs a certificate accepted under the existing policy.</li>
               <li>Browse or download files. Copy or move between <strong>Download staging</strong> and <strong>NAS staging</strong>; copy from <strong>Storage Box</strong> into either staging area.</li>
               <li>Wait for the transfer's verification and completed state. Transfers continue if the browser disconnects.</li>
               <li>Moves and deletes retain staging sources in recoverable trash. Use Restore to undo; permanent purge is disabled.</li>
@@ -237,7 +237,7 @@
             <p class="truth-card__label">Still needs acceptance</p>
             <ul>
               <li>Replacement-host startup and whole-NAS recovery</li>
-              <li>Interactive Seerr browser sign-in and operator Mac certificate trust</li>
+              <li>Interactive Seerr browser sign-in and Filex browser access under the unchanged host trust policy</li>
               <li>Archive expansion beyond the measured limits; current queue and reserve controls remain in place</li>
             </ul>
           </article>

@@ -106,8 +106,11 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   concurrent 50 GiB expansions passed within the existing reserve limits.
   `cloud-20260922T215403Z.tar.age` independently restores 752 files, five databases,
   all 44 journals and both nested Filex bundles; off-host readback passes.
-  Final service health checks pass. Follow the current plan for Mac CA trust,
-  normal-browser login, NAS backup scope and the proposed USD 1 replacement drill.
+  Final service health checks pass. Host trust-policy changes are prohibited by
+  the user: do not install the Filex CA, retry a trust prompt or bypass TLS
+  validation. Use explicit CA verification for diagnostic clients; warning-free
+  browser access under the existing policy remains unverified. Follow the current
+  plan for browser access, NAS backup scope and the proposed USD 1 replacement drill.
   No temporary replacement resources have been created.
   This entry supersedes older preserve-paused-request and unresolved-failure
   instructions below; those dated records remain historical evidence.

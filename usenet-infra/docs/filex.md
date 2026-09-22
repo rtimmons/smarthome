@@ -3,8 +3,9 @@
 September 22: encrypted Filex configuration/database/receipt capture and
 operator bootstrap-key escrow are deployed and independently restore-tested.
 See [Filex recovery](filex-recovery.md) for the exact scope and restore steps.
-Staging and media remain excluded. Operator Mac CA trust is pending because the
-macOS trust prompt was canceled; strict private-CA server HTTPS checks pass.
+Staging and media remain excluded. The user prohibits host trust-policy changes;
+CA installation is not pending approval. Strict explicit-CA HTTPS checks pass,
+but warning-free browser access under the existing policy remains unverified.
 This supersedes older statements below that configuration backup is deferred.
 
 
@@ -36,8 +37,9 @@ proxy rejects administration, executable plugins, tokens, public sharing,
 archive extraction, external protocols and unreviewed write endpoints.
 
 The private CA certificate is `secrets/filex/ca.crt`. Validate HTTPS against that
-certificate. Installing it in an operator's trust store requires their approval;
-do not disable certificate checking in ordinary use. The service certificate
+certificate in clients that support an explicit per-request CA file. Do not
+install it in the host trust store, change host trust policy, retry a trust
+prompt or disable certificate checking. The service certificate
 contains the private IP address and passes strict chain validation.
 
 ## Reviewed source and build

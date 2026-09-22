@@ -46,9 +46,10 @@ failures. Syntax and current-source scanning pass; full-history scanning still
 reports the two documented historical RSA keys.
 
 The embedded-browser Plex sign-in did not advance; user verification in the
-normal browser is pending. The Mac certificate-trust prompt was canceled, so
-local trust remains pending; do not bypass the browser warning or silently retry
-that prompt.
+normal browser is pending. The user prohibits changes to the host machine’s trust policy.
+Installing the Filex CA is therefore excluded from the plan, not a pending
+approval. Existing explicit-CA HTTPS checks remain valid; warning-free browser
+access under the unchanged host policy is not yet established.
 
 A [replacement-server drill](usenet-infra/docs/replacement-drill-20260922.md)
 is validated and planned in a separate Terraform root. It creates only four
@@ -228,7 +229,7 @@ dated checkpoints below.
 | Passed September 22 | Discard the three old paused requests and reconcile seven held journals. | Exact identities recorded privately; 14 failure records resolved, all 44 journals preserved and cloud health passes. No payload bytes were reclaimed because recorded payloads were already absent. |
 | Passed September 22 | Independently restore accepted native/storage state. | Final cloud archive independently restores 752 files, five databases, all 44 journals and both nested Filex bundles; remote ciphertext readback passes. |
 | Passed September 22 | Selected TV-series NAS copy and safe repeat. | Destination SHA-256 verification, unchanged owned copy on repeat and exact-file general NAS Plex discovery pass. |
-| User action pending | Trust the Filex CA on the operator Mac. | macOS reported cancellation of the trust prompt; strict private-CA HTTPS already passes. |
+| Host trust changes prohibited | Filex browser access under existing trust policy. | Do not install the private CA or change host trust settings. Explicit-CA HTTPS checks pass; warning-free browser access remains unverified. |
 | Passed September 22 | Filex configuration/state recovery. | Daily encrypted snapshot, bootstrap-key escrow and NAS SFTP configuration capture deployed; isolated restores and off-host ciphertext readback pass. See [Filex recovery](usenet-infra/docs/filex-recovery.md). |
 | User verified September 22 | Apple TV/Roku playback and restricted privacy. | User explicitly confirmed both devices; no agent-run codec/subtitle matrix is claimed. |
 | Passed September 22 | Seerr request through download/import. | A real request completed using a manually selected eligible 2160p alternate after an unrepairable release; import/cleanup, Plex exact-file indexing, Seerr availability and playback link pass. |
@@ -337,8 +338,9 @@ directions, file/folder download hashes, copies, verified moves, restore,
 interruption/retry, client disconnect, confinement and coexistence with real SAB
 postprocessing and native import. See the [portal runbook](usenet-infra/docs/filex.md)
 and [acceptance receipt](usenet-infra/recovery/drills/filex-pilot-20260919.json).
-Operator CA trust is an optional pending user choice; strict HTTPS validation
-against the private CA passes. User trust settings have not been changed.
+Strict HTTPS validation against the private CA passes. User trust settings
+have not been changed; the subsequent user instruction prohibits changing the
+host trust policy, superseding the earlier optional CA-installation proposal.
 
 The user-approved admitted recovery completed. Matching preserved metadata was
 restored, SAB finished downloading, and isolated remote PAR2 repair plus independent

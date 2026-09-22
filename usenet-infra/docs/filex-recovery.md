@@ -49,9 +49,10 @@ configuration and keys to be present. NAS staging/media remain excluded.
    dependencies, then verify strict private-CA HTTPS and backend identities.
    Review restored operation records before allowing writes; excluded staging
    payloads cannot be recreated from configuration receipts.
-5. Keep operator CA keys private. Trusting the CA on an operator device is a
-   separate local action. The September 22 macOS trust prompt was canceled;
-   certificate trust is therefore still pending on that Mac.
+5. Keep operator CA keys private. The user prohibits host trust-policy changes;
+   do not install the CA or retry the canceled macOS trust prompt. Recovery checks
+   may use an explicit CA file without changing the host trust store. Browser
+   access must work within the existing trust policy; it remains unverified.
 
 The first independent restores verified 26 server files and one database,
 40 files in bootstrap escrow, and 63 NAS settings files including five Filex

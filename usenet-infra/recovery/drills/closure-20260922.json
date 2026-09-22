@@ -47,7 +47,7 @@
     "apple_tv_playback_and_restricted_privacy": true,
     "agent_codec_matrix_claimed": false
   },
-  "operator_ca_trust": "pending_macos_prompt_was_cancelled",
+  "operator_ca_trust": "host_trust_policy_changes_prohibited_by_user",
   "seerr_request": {
     "status": "passed",
     "seerr_request_submitted": true,
@@ -130,5 +130,6 @@
     "seerr": "verified",
     "active_catalog_failures": 0,
     "retained_legacy_holds_informational": 37
-  }
+  },
+  "filex_browser_access_existing_trust_policy": "unverified"
 }
