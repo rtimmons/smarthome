@@ -1,5 +1,14 @@
 # Scheduled configuration backups
 
+**September 22 final closure checkpoint.**
+`cloud-20260922T215403Z.tar.age` passed off-host ciphertext readback and
+independent restore: 752 files, five application databases and all 44 journals.
+Both nested Filex bundles also independently restored. The disposition, Seerr
+acceptance and bounded capacity receipts are included. A separate one-time
+off-host checkpoint verified NAS and Plex settings ciphertext against locally
+restored archives; recurring NAS off-host coverage remains pending. See the
+[closure receipt](../recovery/drills/closure-20260922.json).
+
 **September 22 Filex coverage added.** Root-owned Filex configuration, database
 and verification receipts are captured into encrypted bundles included by the
 cloud schedule. Operator bootstrap keys have separately verified encrypted
@@ -56,7 +65,8 @@ Plex installation binaries. Media remains on the canonical Storage Box.
 | NAS | `usenet-backups` container cron at minute 7 each hour; same daily freshness gate | QNAP Usenet configuration and Plex preferences plus two databases | `/share/Usenet/Backups/automatic` on the NAS |
 | NAS | Part of the NAS job | Already encrypted cloud archives | Pulled with the existing server-enforced read-only account into `automatic/cloud` and checked against SHA-256 receipts |
 
-Plex and QNAP configuration are **not uploaded** to the Storage Box. Encryption
+The recurring NAS schedule does **not upload** Plex and QNAP configuration to
+the Storage Box; the September 22 one-time checkpoint above is separate. Encryption
 uses the existing public `qnap-admin` or `cloud-admin` recipients. Their private
 keys are already recoverable from the original SOPS vault. No private recovery
 master or administrator key is installed on either host for the schedule.

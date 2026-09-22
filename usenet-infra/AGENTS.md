@@ -92,7 +92,7 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## Current operations and closure
 
-- **September 22 follow-up in progress.** User-authorized disposition removed the
+- **September 22 follow-up checkpoint verified.** User-authorized disposition removed the
   three old zero-progress requests and resolved 14 failure records for seven
   historical held journals. All 44 journals and importer/capacity hold evidence
   remain unchanged; the completed disposition receipt is bound to the original
@@ -100,8 +100,15 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   Selected TV copying, SHA-256 verification, safe repeat and exact-file Plex NAS
   indexing pass. User confirms playback/privacy on both Apple TV and Roku.
   Filex encrypted daily capture and NAS SFTP settings coverage are deployed;
-  see [Filex recovery](docs/filex-recovery.md). Follow the current plan for
-  download completion, off-host recovery and remaining user-dependent checks.
+  see [Filex recovery](docs/filex-recovery.md). A real Seerr request completed in
+  2160p using an eligible manual alternate after an unrepairable release; import,
+  source cleanup, general Plex indexing and Seerr availability passed. Two
+  concurrent 50 GiB expansions passed within the existing reserve limits.
+  `cloud-20260922T215403Z.tar.age` independently restores 752 files, five databases,
+  all 44 journals and both nested Filex bundles; off-host readback passes.
+  Final service health checks pass. Follow the current plan for Mac CA trust,
+  normal-browser login, NAS backup scope and the proposed USD 1 replacement drill.
+  No temporary replacement resources have been created.
   This entry supersedes older preserve-paused-request and unresolved-failure
   instructions below; those dated records remain historical evidence.
 

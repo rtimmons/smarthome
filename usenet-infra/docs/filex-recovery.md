@@ -43,7 +43,8 @@ configuration and keys to be present. NAS staging/media remain excluded.
    installing its `filex-sftp` configuration. Do not regenerate host keys during
    ordinary recovery.
 4. On a replacement or stopped Filex instance, install configuration and the
-   standalone database with the captured ownership and restrictive modes.
+   standalone database with restrictive modes and ownership mapped to the new
+   host’s `filex` account; do not blindly reuse an old numeric UID.
    Rebuild the reviewed image from source, restore service/mount/network
    dependencies, then verify strict private-CA HTTPS and backend identities.
    Review restored operation records before allowing writes; excluded staging
@@ -57,3 +58,15 @@ The first independent restores verified 26 server files and one database,
 SFTP files. These are archive recovery checks, not a replacement-host startup
 or a backup of the media collection. See the current closure receipt for the
 subsequent off-host checkpoint and any remaining acceptance gaps.
+
+The same four verified archives (Filex server, Filex bootstrap, NAS settings and
+Plex settings) were uploaded as ciphertext to the existing Storage Box under
+`catalog/.backups/closure-20260922`. Every remote readback matches the exact
+archive independently restored on the Mac. This is also a one-time off-host NAS
+settings checkpoint; the recurring NAS off-host schedule and original-file scope
+remain open. The daily Filex bundle continues through the normal cloud schedule.
+
+The final outer archive `cloud-20260922T215403Z.tar.age` passed remote readback
+and independent restore, including a second independent restore of both nested
+Filex bundles. The full checkpoint contains 752 files and five application
+databases; the nested Filex database is verified separately.

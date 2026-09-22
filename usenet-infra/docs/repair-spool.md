@@ -110,3 +110,18 @@ This demonstrates the measured case, not arbitrary archive expansion or broader
 concurrency. Conservative queue controls remain enabled. The user accepted
 native Arr cleanup for new requests; historical independent verification
 receipts remain preserved.
+
+## September 22 bounded concurrency and expansion
+
+With SAB idle, two concurrent synthetic gzip streams each expanded to **50 GiB**
+and passed SHA-256 verification while **100 GiB** of separate input allocation
+remained reserved. The compressed fixture was 234,272,195 bytes, approximately
+229:1 expansion per stream. Peak allocation was **214,982,672,384 bytes**
+(200.22 GiB), with **97,677,574,144 bytes** (90.97 GiB) still free. The test took
+544 seconds; all its temporary files were removed. The live queue was unchanged.
+
+This extends the earlier 80 GiB PAR2 repair evidence with a bounded concurrency
+and high-expansion case. It does not prove unbounded archive expansion or two
+simultaneous 100 GiB repairs safe. Native queue controls, the 100 GiB release
+limit and 30 GiB reserve floors remain unchanged. The receipt is in the
+[September 22 closure record](../recovery/drills/closure-20260922.json).

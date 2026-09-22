@@ -19,16 +19,36 @@ Independent restores verified 26 current server files/one database, 40 bootstrap
 escrow files (including the operator CA key), and 63 NAS configuration files.
 Plex's separate three-file archive passed byte verification and both databases
 opened; the generic SQLite checker cannot validate Plex's custom tokenizer.
-See [Filex recovery](usenet-infra/docs/filex-recovery.md).
+See [Filex recovery](usenet-infra/docs/filex-recovery.md). All four encrypted
+archives also passed Storage Box readback and match the independently restored
+copies. This is a one-time off-host NAS settings checkpoint, not an ongoing
+NAS-originals backup.
 
-The authorized Seerr movie test selected a 4K release using profile 5 and is in
-verification/post-processing. The initial unavailable test request was removed
-without deleting media; its replacement is the sole new acquisition. The browser
-Plex sign-in did not advance in the embedded browser; user verification in the
-normal browser is pending. Fresh off-host cloud capture waits for post-processing
-to finish. A bounded two-stream capacity exercise is prepared and must wait for
-an idle queue. The Mac certificate-trust prompt was canceled, so local trust
-remains pending; do not bypass the browser warning or silently retry the prompt.
+The authorized Seerr request passed download, native import, complete source
+cleanup, exact-file general Plex discovery and Seerr availability/playback-link
+checks. The imported file is 2160p (2960×2160 for its aspect ratio), using profile 5.
+The first 4K release was unrepairable, short by 1,156 repair blocks. Its exact test
+payload was discarded after identity verification; a smaller eligible 4K release
+was selected manually for the same request. No quality rejection was bypassed
+and future automatic selection remains unchanged. This is an API-submitted
+request with a manual alternate, not a successful fresh browser sign-in test.
+
+The bounded two-stream capacity exercise passed: two 50 GiB expansions with
+100 GiB of retained allocation, 200.22 GiB peak allocation and 90.97 GiB still
+free. All synthetic files were removed. The final encrypted checkpoint,
+`cloud-20260922T215403Z.tar.age`, passed off-host readback and independent
+restore: **752 files, five application databases and all 44 journals**, including
+the disposition, Seerr and capacity receipts. Both nested Filex bundles also
+independently restored. Final cloud, NAS, native ownership, discovery, Filex and
+Seerr health checks pass; only retained historical holds remain informational.
+Infrastructure validation ran 708 cases with nine optional skips and no test
+failures. Syntax and current-source scanning pass; full-history scanning still
+reports the two documented historical RSA keys.
+
+The embedded-browser Plex sign-in did not advance; user verification in the
+normal browser is pending. The Mac certificate-trust prompt was canceled, so
+local trust remains pending; do not bypass the browser warning or silently retry
+that prompt.
 
 A [replacement-server drill](usenet-infra/docs/replacement-drill-20260922.md)
 is validated and planned in a separate Terraform root. It creates only four
@@ -206,13 +226,14 @@ dated checkpoints below.
 | --- | --- | --- |
 | Passed September 22 | Apply the three reviewed pinned application updates. | Exact images deployed; application health, native ownership, historical preservation, private access checks and post-update isolated restore pass. See the [receipt](usenet-infra/recovery/drills/app-maintenance-20260922.json). |
 | Passed September 22 | Discard the three old paused requests and reconcile seven held journals. | Exact identities recorded privately; 14 failure records resolved, all 44 journals preserved and cloud health passes. No payload bytes were reclaimed because recorded payloads were already absent. |
-| Passed; refresh in progress | Independently restore accepted native/storage state. | Earlier checkpoints pass. A new outer cloud archive including Filex and disposition state waits for the live Seerr request to finish. |
+| Passed September 22 | Independently restore accepted native/storage state. | Final cloud archive independently restores 752 files, five databases, all 44 journals and both nested Filex bundles; remote ciphertext readback passes. |
 | Passed September 22 | Selected TV-series NAS copy and safe repeat. | Destination SHA-256 verification, unchanged owned copy on repeat and exact-file general NAS Plex discovery pass. |
 | User action pending | Trust the Filex CA on the operator Mac. | macOS reported cancellation of the trust prompt; strict private-CA HTTPS already passes. |
-| Deployed; outer checkpoint pending | Filex configuration/state recovery. | Daily encrypted snapshot, bootstrap-key escrow and NAS SFTP configuration capture deployed; isolated restores pass. See [Filex recovery](usenet-infra/docs/filex-recovery.md). |
+| Passed September 22 | Filex configuration/state recovery. | Daily encrypted snapshot, bootstrap-key escrow and NAS SFTP configuration capture deployed; isolated restores and off-host ciphertext readback pass. See [Filex recovery](usenet-infra/docs/filex-recovery.md). |
 | User verified September 22 | Apple TV/Roku playback and restricted privacy. | User explicitly confirmed both devices; no agent-run codec/subtitle matrix is claimed. |
-| In progress | Seerr request through download/import and browser sign-in. | A real 4K request is verifying; interactive browser sign-in awaits user confirmation. |
-| Prepared, waiting for idle | Bounded concurrent repair/expansion capacity. | Two 50 GiB synthetic streams with retained allocated inputs and free-space guards; do not run alongside active post-processing. Arbitrary expansion cannot be proven safe by a finite test. |
+| Passed September 22 | Seerr request through download/import. | A real request completed using a manually selected eligible 2160p alternate after an unrepairable release; import/cleanup, Plex exact-file indexing, Seerr availability and playback link pass. |
+| User verification pending | Interactive Seerr browser sign-in. | The embedded-browser flow did not advance; normal-browser confirmation is requested. |
+| Passed September 22, bounded scope | Concurrent scratch and high-expansion capacity. | Two 50 GiB streams independently verified with 100 GiB retained allocation; 200.22 GiB peak, 90.97 GiB free and complete fixture cleanup. Existing limits remain; arbitrary expansion is not proven safe. |
 | Prepared, spending decision pending | Replacement-server startup. | Separate create-only four-resource plan, reviewed scope and cleanup procedure; proposed USD 1 ceiling. |
 | Scope answer pending | NAS-loss protection. | Await originals-plus-settings versus settings-only choice; private originals have not been read or uploaded. |
 

@@ -1,5 +1,12 @@
 # Native media workflow
 
+September 22: selected TV NAS copying, SHA-256 verification, safe repeat and
+exact-file Plex indexing pass. The user confirmed both Apple TV and Roku playback
+and restricted privacy. A Seerr request completed in 2160p after a manual eligible
+alternate was selected for an unrepairable release; native cleanup and general
+Plex/Seerr availability passed. These supersede the dated acceptance gaps below.
+See the [closure receipt](../recovery/drills/closure-20260922.json).
+
 September 20: the [approved storage expansion](storage-expansion-20260920.md)
 is deployed: BX21 plus a [300 GB repair spool](repair-spool.md). The observed
 repair/import-copy capacity envelope passes. The [Arr ownership cutover](native-cutover.md)

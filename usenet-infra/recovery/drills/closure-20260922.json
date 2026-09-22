@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "date": "2026-09-22",
-  "status": "in_progress",
+  "status": "verified_checkpoint_with_user_dependencies",
   "held_disposition": {
     "user_authorized": true,
     "paused_zero_progress_requests_discarded": 3,
@@ -35,7 +35,11 @@
     "nas_plex_databases_opened": 2,
     "generic_plex_integrity_check": "unsupported_custom_tokenizer",
     "media_and_staging_excluded": true,
-    "outer_cloud_checkpoint": "waiting_for_postprocessing"
+    "outer_cloud_checkpoint": "independently_restored_and_verified",
+    "offhost_archives_verified": 4,
+    "offhost_ciphertexts_match_independently_restored_archives": true,
+    "nas_settings_offhost_checkpoint": true,
+    "nas_settings_recurring_offhost_replication": false
   },
   "device_acceptance": {
     "evidence": "explicit_user_confirmation",
@@ -44,9 +48,48 @@
     "agent_codec_matrix_claimed": false
   },
   "operator_ca_trust": "pending_macos_prompt_was_cancelled",
-  "seerr_request": "4k_download_complete_verification_in_progress",
+  "seerr_request": {
+    "status": "passed",
+    "seerr_request_submitted": true,
+    "profile": 5,
+    "resolution": 2160,
+    "native_imported": true,
+    "imported_size_bytes": 4176770046,
+    "import_event_present": true,
+    "completed_source_removed": true,
+    "completed_directory_removed": true,
+    "sab_active_history_removed": true,
+    "native_grab_and_import_same_download_id": true,
+    "actual_frame_resolution": "2960x2160",
+    "manual_alternate_after_unrepairable_release": true,
+    "queue_empty": true,
+    "postprocessing_idle": true,
+    "historical_requests_not_recreated": true,
+    "seerr_available": true,
+    "plex_exact_file_indexed": true,
+    "plex_playback_link_present": true,
+    "failed_test_payload_absence_verified": true,
+    "failed_release_repair_blocks_short": 1156
+  },
   "seerr_browser_signin": "awaiting_user_verification",
-  "bounded_capacity_drill": "prepared_waiting_for_idle",
+  "bounded_capacity_drill": {
+    "schema_version": 1,
+    "scope": "bounded_synthetic_concurrency_and_expansion",
+    "streams": 2,
+    "unpacked_bytes_each": 53687091200,
+    "retained_allocated_bytes_each": 53687091200,
+    "live_queue_changed": false,
+    "compressed_bytes": 234272195,
+    "verified_streams": 2,
+    "peak_allocated_bytes": 214982672384,
+    "minimum_free_bytes": 97677574144,
+    "status": "passed",
+    "temporary_fixture_removed": true,
+    "elapsed_seconds": 544,
+    "free_after_bytes": 312660250624,
+    "production_limits_changed": false,
+    "unbounded_archive_expansion_proven": false
+  },
   "replacement_host": {
     "terraform_validated": true,
     "create_only_resource_count": 4,
@@ -62,5 +105,30 @@
     "syntax_checks_passed": true,
     "current_source_secret_scan_passed": true,
     "full_history_scan": "fails_only_on_two_previously_documented_RSA_keys"
+  },
+  "wiki_published_and_verified": true,
+  "cloud_recovery": {
+    "bytes": 64282132,
+    "created_at": 1790114050,
+    "file": "cloud-20260922T215403Z.tar.age",
+    "files": 752,
+    "remote_ciphertext_verified": true,
+    "scope": "cloud-config",
+    "sha256": "6410eb77c252356818f639f93ea94c24807e578ff5087ffeb453cee51d94c6b2",
+    "independently_restored": true,
+    "sqlite_databases_verified": 5,
+    "immutable_journals_restored": 44,
+    "nested_filex_bundles_independently_restored": 2,
+    "required_native_and_closure_receipts_verified": true
+  },
+  "final_health": {
+    "native_ownership": "verified",
+    "cloud": "passed",
+    "discovery": "verified",
+    "nas": "passed",
+    "filex": "ok",
+    "seerr": "verified",
+    "active_catalog_failures": 0,
+    "retained_legacy_holds_informational": 37
   }
 }
