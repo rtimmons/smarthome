@@ -133,7 +133,12 @@ class NativeLibrary:
 
     def titles(self) -> list[dict]:
         grouped = {}
-        for entry in self.listing("library"):
+        # Acquisition staging shares the remote mount but is not a library.
+        # Scope remote traversal before validation, so its hidden metadata
+        # neither breaks browsing nor becomes eligible for NAS copying.
+        entries = ({**entry, "path": f"{kind}/{entry['path']}"}
+                   for kind in KINDS for entry in self.listing(f"library/{kind}"))
+        for entry in entries:
             parts = entry["path"].split("/")
             if len(parts) < 3 or parts[0] not in KINDS:
                 continue

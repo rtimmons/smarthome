@@ -1,1 +1,1 @@
-{{ {'service_ip': cloud_vpn_service_ip, 'service_cidr': cloud_vpn_service_cidr, 'lan_cidr': cloud_vpn_lan_cidr, 'peer_ip': cloud_vpn_peer_ip, 'local_ip': cloud_vpn_local_ip} | to_nice_json }}
+{{ ({'service_ip': cloud_vpn_service_ip, 'service_cidr': cloud_vpn_service_cidr, 'lan_cidr': cloud_vpn_lan_cidr, 'peer_ip': cloud_vpn_peer_ip, 'local_ip': cloud_vpn_local_ip} | combine({'filex_nas_ip': cloud_vpn_filex_nas_ip} if cloud_vpn_filex_nas_ip | default('') else {})) | to_nice_json }}

@@ -1,0 +1,38 @@
+name: usenet-filex-sftp
+services:
+  sftp:
+    image: sha256:5d685f8256bf3166fbaf9a6fa5391e804f7ab904140d72bb6bd6896fabaedb87
+    user: "${FILEX_NAS_UID:?Set NAS unprivileged UID}:${FILEX_NAS_GID:?Set NAS unprivileged GID}"
+    entrypoint: [rclone]
+    command: [serve, sftp, /data, --addr, ":2226", --key, /config/host_key,
+              --authorized-keys, /config/authorized_keys, --user, filex-staging,
+              --vfs-cache-mode, "off", --dir-cache-time, 1s, --bwlimit, 20M,
+              --buffer-size, 1M, --umask, "077", --config, /dev/null]
+    ports: ["192.168.1.66:2226:2226"]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    volumes:
+      - type: bind
+        source: /share/FromDrobo/FilexStaging
+        target: /data/staging
+        bind: {create_host_path: false}
+      - type: bind
+        source: /share/Container/usenet/filex-sftp/keys
+        target: /config
+        read_only: true
+        bind: {create_host_path: false}
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777"]
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python3, -c, "import socket; s=socket.create_connection(('127.0.0.1',2226),2); assert s.recv(64).startswith(b'SSH-2.0-')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}

@@ -1,5 +1,14 @@
 # Native media workflow
 
+September 20: the [approved storage expansion](storage-expansion-20260920.md)
+is deployed: BX21 plus a [300 GB repair spool](repair-spool.md). The observed
+repair/import-copy capacity envelope passes. The [Arr ownership cutover](native-cutover.md)
+is active: fresh movie/episode imports, source cleanup, Plex discovery, an 80 GiB
+repair and scoped service restart passed. The user accepted native cleanup.
+The direct cart feeds and legacy workers are retired; native release polling
+remains off so existing missing-media entries are not implicitly downloaded. Use the top of [plan.md](../../plan.md) for current
+state; older observations below are historical.
+
 September 17, 19:23 UTC: new SAB acquisition scratch now uses the existing
 Storage Box through guarded bind mounts outside Movies/TV. The VM remains CX43;
 native import and canonical library ownership are unchanged. The first staged
@@ -33,10 +42,11 @@ mount is the existing Storage Box's `catalog/library` directory over synchronous
 SSHFS. Successful native imports enable download-client cleanup. Failed jobs
 are retained and automatic redownload remains disabled.
 
-New Default-category cart completions also have an [automatic completion
+Historically, Default-category cart completions used an [automatic completion
 worker](cart-import.md): native copy import, independent canonical SHA-256, then
 exact verified cloud-payload cleanup. Its activation baseline preserves historical
-jobs and existing pauses. This is separate from Arr-owned client cleanup.
+jobs and existing pauses. That worker is now retired; do not use this historical
+flow for new requests.
 
 `usenet-library.service` mounts storage with the existing writer identity and
 host pin. `usenet-discovery.service` requires/binds to it; Docker's independent

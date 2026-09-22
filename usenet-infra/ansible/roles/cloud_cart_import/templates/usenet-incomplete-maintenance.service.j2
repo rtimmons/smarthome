@@ -1,0 +1,21 @@
+[Unit]
+Description=Remove only stale unowned Usenet incomplete-download scratch data
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=usenet
+Group=usenet
+EnvironmentFile={{ cloud_data_root }}/config/catalog.env
+WorkingDirectory={{ cloud_data_root }}
+ExecStart=/usr/bin/mountpoint -q {{ cloud_data_root }}/downloads/incomplete
+ExecStart=/usr/bin/python3 {{ cloud_data_root }}/libexec/incomplete-maintenance.py run
+UMask=0077
+TimeoutStartSec=30m
+KillMode=control-group
+Nice=10
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths={{ cloud_data_root }}/downloads/incomplete {{ cloud_data_root }}/state/catalog

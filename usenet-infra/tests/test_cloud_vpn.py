@@ -35,9 +35,9 @@ COMMIT
 """
 
 
-def decision(chain, packet):
+def decision(chain, packet, config=CONFIG):
     """Evaluate the emitted rule predicates against synthetic packet metadata."""
-    for row in vpn.policy_rules(CONFIG):
+    for row in vpn.policy_rules(config):
         args = shlex.split(row)
         if args[1] != chain:
             continue
@@ -75,6 +75,19 @@ def incoming(**changes):
 
 
 class CloudVpnTests(unittest.TestCase):
+    def test_portal_extension_is_exact_and_requires_ipsec(self):
+        config = {**CONFIG, "filex_nas_ip": "192.168.1.66"}
+        self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=5213), config), "ACCEPT")
+        self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=5213, policy=None), config), "DROP")
+        request = incoming(src="10.77.0.1", dst="192.168.1.66", dport=2226)
+        request["policy"].update(direction="out", src=CONFIG["local_ip"] + "/32", dst=CONFIG["peer_ip"] + "/32")
+        self.assertEqual(decision(vpn.CHAINS[1], request, config), "ACCEPT")
+        for changes in ({"dst": "192.168.1.67"}, {"dport": 22}, {"policy": None}):
+            self.assertEqual(decision(vpn.CHAINS[1], {**request, **changes}, config), "DROP")
+        for address in ("8.8.8.8", "192.168.1.0", "192.168.1.255", "192.168.2.66"):
+            with self.assertRaises(vpn.PolicyError):
+                vpn.validate_config({**CONFIG, "filex_nas_ip": address})
+
     def test_config_rejects_overlap_and_untrusted_address_syntax(self):
         changes = [("service_ip", "10.77.0.1;echo invalid"), ("service_cidr", "0.0.0.0/0"),
                    ("service_ip", "10.78.0.1"), ("service_cidr", "10.77.0.1/30"),

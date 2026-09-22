@@ -1,5 +1,41 @@
 # Scheduled configuration backups
 
+**September 22: post-update state independently restored.**
+`cloud-20260922T191826Z.tar.age` captures the deployed Radarr/Sonarr/Prowlarr
+versions and guards. Remote ciphertext readback, local hash comparison,
+decryption and isolated restore passed: **726 files, four databases, 44 journals
+and 59 live hash matches**. All six mount/service unit hashes remain unchanged
+from the September 21 reconstruction check. The three stopped rollback databases
+also pass integrity checks and remain preserved on the cloud. See the
+[deployment and backup receipt](../recovery/drills/app-maintenance-20260922.json).
+This refresh closes the post-maintenance checkpoint requested below; Filex and
+replacement-host recovery remain separate, and original snapshots are unchanged.
+
+**September 21: accepted native state independently restored.**
+`cloud-20260921T155229Z.tar.age` passed remote ciphertext readback, local hash
+comparison, decryption and isolated restore of **726 files and four databases**.
+All 59 selected live configuration/helper/journal hashes match, including all
+44 journals and the active native/verified acceptance receipts. Six live unit
+definitions reconstruct exactly from source plus the restored volume identity;
+the repair binding override and live dependencies also pass. See the
+[receipt](../recovery/drills/native-state-restore-20260921.json).
+This supersedes the accepted-state capture gap below. Repeat after the prepared
+application maintenance is approved and deployed. No replacement-host startup
+or Filex recovery is claimed. `/etc` units are reconstructed, and local private
+Terraform/inventory overrides must be preserved separately; neither is a raw
+member of this cloud archive. Original bound snapshots remain unchanged.
+
+September 20, 22:05 UTC: read-only status inspection found cloud success at
+19:01:42 UTC and NAS success at 04:07:26 UTC, both within the 36-hour freshness
+limit. The cloud timer is active and its last service result succeeded. The
+cloud capture predates the accepted native checkpoint at 20:18 UTC; it cannot
+establish capture of that final state. No archive was decrypted/restored during
+this audit. The next independent checkpoint must verify native ownership and
+acceptance receipts, repair-spool/mount configuration, current helpers and all
+44 preserved journals along with the databases. Filex state remains outside
+existing backup coverage. See the [audit receipt](../recovery/drills/health-audit-20260920.json)
+and [remaining work](../../plan.md#remaining-work-and-explicit-deferrals).
+
 Enabled September 11, 2026. Schedules run on the cloud host and NAS; deleting or
 turning off the Mac does not stop them. NAS-loss protection is explicitly deferred.
 These backups exclude media, unfinished download payloads, Plex artwork, and the

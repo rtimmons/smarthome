@@ -1,0 +1,61 @@
+{
+  "schema_version": 2,
+  "checked_at": "2026-09-20T03:06:39.597506+00:00",
+  "scope": "private-filex-portal",
+  "deployment": "active",
+  "version": "0.41.4-smarthome.1",
+  "license": "MIT",
+  "image_id": "sha256:e6b89d15606318a88675070e5fc5d6e1bfc133af43ae5a77a6b16ea9655b9a2e",
+  "roots": {
+    "Download staging": "dedicated-read-write-staging",
+    "NAS staging": "dedicated-read-write-staging-over-pinned-sftp",
+    "Storage Box": "canonical-movies-tv-and-isolated-scratch-read-only-binds"
+  },
+  "verified": {
+    "private_tls_chain": "passed",
+    "private_bind_and_loopback_backend": "passed",
+    "anonymous_and_operator_admin_denial": "passed",
+    "sftp_host_key_shell_and_root_confinement": "passed",
+    "path_traversal_and_symlink_rejection": "passed",
+    "kernel_read_only_canonical_mounts": "passed",
+    "three_root_metadata_and_download_hashes": "passed",
+    "folder_download_scope": "passed",
+    "eight_browser_sort_directions": "passed",
+    "filename_search": "passed",
+    "staging_create_rename_delete_restore": "passed",
+    "permanent_delete_denial": "passed",
+    "both_writable_cross_host_copy_and_verified_move_directions": "passed",
+    "read_only_remote_copy_to_both_staging_roots": "passed",
+    "read_only_source_move_and_destination_write_denial": "passed",
+    "durable_sha256_move_receipts_and_source_quarantine": "passed",
+    "interrupted_transfer_failure_source_preservation_and_explicit_retry": "passed",
+    "client_disconnect_completion_and_independent_256_mib_destination_hash": "passed",
+    "browser_reconnect_failure_visibility": "passed",
+    "public_portal_and_backend_denial_with_private_and_ssh_controls": "passed",
+    "real_sab_postprocessing_coexistence": "passed",
+    "real_native_import_hashing_coexistence": "passed",
+    "final_image_matches_reviewed_patch_receipt": "passed",
+    "unauthenticated_sftp_denial": "passed",
+    "recovered_native_import_and_cleanup_coexistence": "passed"
+  },
+  "security_scans": {
+    "reachable_go_vulnerabilities": 0,
+    "production_npm_vulnerabilities": 0,
+    "current_source_secret_scan": "passed",
+    "historical_secret_scan": "two_existing_rsa_findings_not_waived"
+  },
+  "infrastructure_tests": {
+    "run": 668,
+    "skipped": 9,
+    "failed": 0
+  },
+  "pending": [],
+  "private_evidence": "ignored local evidence and private runtime transfer/recovery receipts; no operational names or credentials included",
+  "not_claimed": [
+    "portal-backup-coverage",
+    "canonical-write-authorization",
+    "Plex-device-playback"
+  ],
+  "durable_transfer_receipts": 14,
+  "operator_ca_trust": "unchanged; optional user approval pending"
+}

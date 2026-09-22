@@ -41,6 +41,28 @@ class ReadAPI:
 
 
 class DiscoveryTests(unittest.TestCase):
+    def test_native_inspection_requires_explicit_requests_and_keeps_health_errors(self):
+        import json
+        with tempfile.TemporaryDirectory() as directory:
+            marker = Path(directory) / 'native.json'
+            marker.write_text(json.dumps({'phase': 'active', 'integrity_policy': 'native_arr_import_and_cleanup'}))
+            with patch.object(discovery, 'NATIVE_MARKER', marker):
+                api = ReadAPI()
+                with self.assertRaises(discovery.DiscoveryError):
+                    discovery.inspect(api)
+                for app in ('radarr', 'sonarr'):
+                    api.data[app, 'config/indexer']['rssSyncInterval'] = 0
+                result = discovery.inspect(api)
+                self.assertFalse(result['automatic_acquisition'])
+                self.assertTrue(result['explicit_native_requests'])
+                self.assertFalse(result['apps']['sonarr']['rss_enabled'])
+                api.data['sonarr', 'health'] = [{'type': 'error', 'source': 'DownloadClientCheck'}]
+                with self.assertRaises(discovery.DiscoveryError):
+                    discovery.inspect(api)
+                marker.write_text('{}')
+                with self.assertRaises(discovery.DiscoveryError):
+                    discovery.inspect(ReadAPI())
+
     def test_inspection_is_read_only_and_checks_authorized_acquisition_policy(self):
         api = ReadAPI()
         result = discovery.inspect(api)

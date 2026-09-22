@@ -1,0 +1,94 @@
+name: usenet-filex
+services:
+  filex:
+    image: "${FILEX_IMAGE_DIGEST:?Set reviewed local safety image ID}"
+    user: "${FILEX_UID:?Set FILEX_UID}:${FILEX_GID:?Set FILEX_GID}"
+    read_only: true
+    network_mode: host
+    command: [serve, --config, /etc/filex/server.yaml]
+    environment:
+      FILEX_PLUGINS_DISABLED: "1"
+      FILEX_UPDATE_CHECK: "0"
+      FILEX_UPDATE_POLICY: "off"
+      FILEX_SEARCH_CONTENT: "0"
+      FILEX_CACHE: "0"
+      FILEX_SAFE_TRANSFERS: "1"
+      FILEX_TRANSFER_RECEIPTS: /data/transfer-verification
+      TZ: "${TZ:?Set TZ}"
+    volumes:
+      - type: bind
+        source: /srv/usenet-filex/data
+        target: /data
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /etc/usenet-filex/server.yaml
+        target: /etc/filex/server.yaml
+        read_only: true
+        bind:
+          create_host_path: false
+      # This is a deliberately separate staging root. Do not replace it with
+      # /, /srv, /library, or the SAB download roots.
+      - type: bind
+        source: /srv/usenet-filex/staging
+        target: /srv/files
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /srv/usenet/library/Movies
+        target: /srv/storagebox/Movies
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /srv/usenet/library/TV
+        target: /srv/storagebox/TV
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /srv/usenet/library/.acquisition-staging/filex-portal
+        target: /srv/storagebox/Scratch
+        read_only: true
+        bind: {create_host_path: false}
+    restart: "no"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=64m,mode=1777
+    pids_limit: 128
+    mem_limit: 512m
+    cpus: 0.5
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+  tls:
+    image: "${FILEX_PROXY_IMAGE:?Set reviewed private Caddy image ID}"
+    user: "${FILEX_UID}:${FILEX_GID}"
+    network_mode: host
+    read_only: true
+    command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    environment: {XDG_DATA_HOME: /tmp/data, XDG_CONFIG_HOME: /tmp/config}
+    volumes:
+      - type: bind
+        source: /etc/usenet-filex/Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /etc/usenet-filex/tls
+        target: /etc/filex-tls
+        read_only: true
+        bind: {create_host_path: false}
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=32m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 128m
+    cpus: 0.25
+    pids_limit: 64
+    restart: "no"
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: "3"}

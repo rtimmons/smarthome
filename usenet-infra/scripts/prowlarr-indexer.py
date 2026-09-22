@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect, prepare, enable, or test a saved NZBGeek or NZBFinder indexer safely.
 
-Reviewed against Prowlarr v2.5.2.5491 ProviderControllerBase, IndexerFactory,
+Reviewed against Prowlarr v2.6.5.5623 ProviderControllerBase, IndexerFactory,
 IndexerResource and SchemaBuilder. No limits are guessed or set. Enabling
 requires a successful credentialed test; no applications or clients are created.
 Run on the cloud host, including through ``python3 - inspect < this-file``.
@@ -22,7 +22,7 @@ import urllib.parse
 import urllib.request
 
 
-VERSION = '2.5.2.5491'
+VERSION = '2.6.5.5623'
 API_ROOT = 'http://127.0.0.1:9696/api/v1/'
 ENV_PATH = Path('/srv/usenet/config/catalog.env')
 LOCK_PATH = Path('/srv/usenet/state/prowlarr-indexer.lock')

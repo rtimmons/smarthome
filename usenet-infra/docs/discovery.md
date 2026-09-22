@@ -18,10 +18,10 @@ pass. A request portal and automatic list subscriptions are deferred.
 - Choose `/library` when adding metadata. This is the real canonical Storage Box library,
   mounted separately for movies and TV; it is not the selective NAS cache.
 - Automatic Search chooses a release according to your quality profile. RSS
-  checks newly posted releases every 15 minutes for monitored movies/episodes.
-  Previously added unmonitored titles stay unmonitored; enabling these features
-  does not run a backlog search. Interactive Search remains available when you
-  want to choose a particular release. The existing SAB category is `prowlarr`.
+  polling is disabled under the September 20 native policy to preserve seven
+  pre-existing monitored missing movies. Use explicit add-and-search or
+  Interactive Search for each selected request. SAB categories are `radarr` and
+  `sonarr`; Prowlarr supplies indexers but its direct download client is disabled.
 - Inspect download queue/history at `http://10.77.0.1:18080/` and import status
   in the Arr Activity view. Completed Download Handling imports successful jobs
   into the library and cleans up completed client downloads. Failed jobs remain
@@ -37,14 +37,18 @@ loopback-only Docker ports. API credentials remain on the cloud host.
 
 ## Reviewed controls and sources
 
-Reviewed September 11 against official documentation and exact release source:
+September 22: the user-approved pinned updates are deployed. All three application
+health checks report zero findings, discovery/native policy verifies, and the
+post-update encrypted archive independently restores. See the
+[maintenance record](app-maintenance-20260921.md) for source comparisons,
+validation, preservation and rollback. The following table describes live pins:
 
 | Component | Pin / behavior |
 | --- | --- |
-| Radarr | `lscr.io/linuxserver/radarr:6.3.0.10514-ls315` |
-| Sonarr | `lscr.io/linuxserver/sonarr:4.0.19.2979-ls323` |
-| Prowlarr | Existing `2.5.2.5491-ls158`; the shared profile enables interactive search, automatic search and RSS, with full sync to both applications. Its legacy name `Manual discovery only` is retained to preserve existing IDs/bindings. |
-| SABnzbd | Existing client/category; no category or provider changes, completed download removal enabled, failed download removal disabled in both clients. |
+| Radarr | `lscr.io/linuxserver/radarr:6.4.4.10685-ls318` |
+| Sonarr | `lscr.io/linuxserver/sonarr:4.0.20.3014-ls325` |
+| Prowlarr | `2.6.5.5623-ls161`; the shared profile enables interactive search, automatic search and RSS, with full sync to both applications. Its legacy name `Manual discovery only` is retained to preserve existing IDs/bindings; Arr RSS polling remains off under native policy. |
+| SABnzbd | Distinct `radarr` / `sonarr` categories, 100 GiB release limit, top-of-queue downloading and pause during postprocessing. Completed removal is enabled; failed removal and automatic retry are disabled. |
 
 The container publishers document configuration persistence, ports and runtime
 ownership for [Radarr](https://docs.linuxserver.io/images/docker-radarr/) and
@@ -56,8 +60,12 @@ documents independent RSS, automatic and interactive flags and warns that its
 download clients do not sync to applications. This implementation creates the
 two separate SAB clients server-side. It restricts sync to movie/TV categories.
 
-On September 11, the user explicitly enabled automatic search and RSS globally.
-Both applications set RSS interval to 15 minutes, enable completed download
+Historically, on September 11, the user enabled automatic search and RSS globally.
+The September 20 cutover supersedes this: RSS stays off, explicit native search
+remains enabled, and both Arr applications retain 30 GiB import reserves with
+free-space checks and hardlinks enabled. The earlier configuration follows for
+provenance only.
+Both applications then set RSS interval to 15 minutes, enable completed download
 handling and client cleanup, and disable automatic retry, including retries after
 interactive searches.
 These fields were verified in the pinned
@@ -83,22 +91,19 @@ just usenet-discovery-health
 just usenet-cloud-health
 ```
 
-For an intentional deployment, `just usenet-configure-discovery` runs the
-dedicated Ansible playbook. It manages the mount-dependent discovery project,
-configures and reads back policy, updates cloud backup support, then publishes
-the authenticated proxy paths. Repeating it preserves API keys and metadata.
-It rejects unreviewed versions, additional Prowlarr applications, foreign
-download clients/library roots and automatic list subscriptions.
+For current native configuration, use `just usenet-configure-native-ownership`.
+It verifies existing ownership and refreshes helpers without replaying the
+cutover. The old discovery configurator refuses a native ownership marker.
+Read [native cutover](native-cutover.md) before changing policy or recovering
+older configuration; do not restore the historical RSS/category settings over
+native jobs. The inspector recognizes the current explicit-request policy and
+continues to reject real application warnings/errors.
 
-The cloud backup allowlist now captures `config/radarr`, `config/sonarr` and
-`compose/discovery`, verifies SQLite snapshots, and rejects an incomplete
-deployed discovery configuration. Cover images, logs, caches and downloaded
-media are excluded. Restore configuration with the deployment UID/GID and
-run `discovery-config.py configure` and then `inspect` before exposing restored
-UIs. Older snapshots predate RSS/search authorization; configuration reconciles
-them to the saved policy. Keep restored services isolated during recovery checks
-to avoid acquisition before deliberately resuming normal operation. Automatic
-retries remain disabled; completed download handling and cleanup are enabled.
+The cloud backup allowlist captures `config/radarr`, `config/sonarr`, ownership
+receipts and `compose/discovery`, with SQLite snapshot checks. Media, cover
+images, logs and caches are excluded. Preserve ownership/permissions and keep
+restored services isolated until current native policy and storage mounts have
+been reconciled. Backup coverage is not a whole-machine restore test.
 
 Current cloud/QNAP/Plex backups are scheduled and verified; see
 [scheduled backups](scheduled-backups.md) for scope, latest evidence and retention.
@@ -146,7 +151,7 @@ and decryption verified. See its [public receipt](../recovery/application-backup
 
 The policy check verifies both exact application versions, two indexers per app
 with interactive search, automatic search and RSS enabled, one SAB client each,
-a 15-minute RSS interval, disabled automatic retry/failed removal, enabled native
+RSS disabled for explicit native requests, disabled automatic retry/failed removal, enabled native
 imports/completed removal, and absence of automatic list subscriptions. The
 latest live check reported zero health notices. Error/warning health issues fail
 the check; do not restore an exemption for deliberately disabled imports. Configuration waits for indexer

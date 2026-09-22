@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-21T16:04:13.969313+00:00",
+  "status": "verified",
+  "archive": "cloud-20260921T155229Z.tar.age",
+  "archive_created_at": "2026-09-21T15:52:33+00:00",
+  "scope": "cloud_config_isolated_restore",
+  "verification": {
+    "remote_ciphertext_readback": true,
+    "retrieved_ciphertext_hash_matches": true,
+    "authenticated_decryption": true,
+    "manifest_files": 726,
+    "sqlite_integrity_checked": 4,
+    "live_config_helper_and_journal_hashes_matched": 59,
+    "journal_count": 44,
+    "native_ownership_phase": "active",
+    "native_acceptance_phase": "verified",
+    "all_seven_acceptance_checks_recorded": true,
+    "six_unit_definitions_reconstruct_from_source_and_restored_volume_identity": true,
+    "repair_binding_override_matches": true,
+    "live_volume_resources_and_dependencies_verified": true
+  },
+  "preservation": {
+    "three_requests_remain_paused": true,
+    "global_pause_unchanged": true,
+    "original_bound_snapshot_unchanged": true,
+    "private_bx21_input_present": true,
+    "private_repair_spool_input_enabled": true,
+    "current_nas_paths_and_tv_gate_present": true,
+    "live_restore_performed": false,
+    "service_restart": false,
+    "media_mutation": false
+  },
+  "remaining_limits": [
+    "replacement_host_startup_not_tested",
+    "systemd_units_reconstructed_not_captured_as_etc_files",
+    "local_terraform_and_inventory_inputs_not_in_cloud_archive",
+    "filex_state_outside_existing_backup_scope",
+    "nas_loss_protection_not_established",
+    "source_checkout_changes_uncommitted"
+  ],
+  "application_maintenance": {
+    "status": "prepared_not_deployed",
+    "automatic_approval_review_requires_explicit_user_approval": true,
+    "radarr_candidate": "6.4.4.10685-ls318",
+    "sonarr_candidate": "4.0.20.3014-ls325",
+    "prowlarr_candidate": "2.6.5.5623-ls161",
+    "infrastructure_test_cases": 694,
+    "optional_skips": 9,
+    "test_failures": 0,
+    "syntax_checks": "passed",
+    "full_history_secret_scan": "two_documented_historical_rsa_keys"
+  }
+}

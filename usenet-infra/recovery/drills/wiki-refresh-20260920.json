@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-20T20:36:49.310167+00:00",
+  "status": "passed",
+  "scope": "wiki_completeness_followup",
+  "source_sha256": {
+    "index.html": "df917a749cb0ab8808ffe9068837b2898c9b725678649770e6e46fa022caaebe",
+    "styles.css": "3145c1fb000ed94a8794c1706eaaab212ec5a101ebeb933670e8cc783c312789",
+    "assets/ecosystem.svg": "700821c9098636db98c0d530b45c6a549f3a40435469bc6ba49b599d489a35bc",
+    "assets/favicon.svg": "8ae03107a7a6665e89da6db552cfbc79ad441b38d9a75532df633d32ad0eec4b"
+  },
+  "updated_topics": [
+    "native_request_ownership",
+    "filex_shortcut_and_staging_workflow",
+    "selective_nas_copy_workflow",
+    "verification_and_cleanup_policy",
+    "expanded_storage_and_dated_cost",
+    "backup_exclusions",
+    "precise_plex_discovery_evidence",
+    "remaining_health_findings",
+    "read_only_diagnostics",
+    "corrected_request_and_copy_diagram"
+  ],
+  "validation": {
+    "wiki_tests": 9,
+    "wiki_test_failures": 0,
+    "infrastructure_cases_before_final_cache_fix": 693,
+    "infrastructure_optional_skips": 9,
+    "infrastructure_test_failures": 0,
+    "full_recipe_findings": "two_preexisting_historical_rsa_keys",
+    "current_source_scan": "passed",
+    "nas_preflight": "passed",
+    "isolated_deployment": "passed",
+    "live_browser_content": "passed",
+    "live_browser_updated_diagram": "passed",
+    "asset_versions_match_content": true
+  },
+  "application_changes": false,
+  "media_or_credentials_published": false
+}

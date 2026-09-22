@@ -91,6 +91,19 @@ class NativeLibraryTests(unittest.TestCase):
         self.assertEqual(data["remote_bytes"], len(b"video bytesepisode bytes"))
         self.assertTrue(all(i["valid_action"] == "download" for i in data["items"]))
 
+    def test_discovery_never_traverses_shared_acquisition_staging(self):
+        staging = self.remote / "catalog/library/.acquisition-staging/incomplete"
+        staging.mkdir(parents=True)
+        (staging / "synthetic-job-state").write_bytes(b"not media")
+        self.assertEqual({i['id'] for i in self.backend.titles()}, {self.movie, self.tv})
+        self.assertEqual([call[1] for call in self.rclone.calls],
+                         ['reader:catalog/library/Movies', 'reader:catalog/library/TV'])
+
+    def test_unsafe_paths_inside_an_approved_library_still_fail_closed(self):
+        (self.remote / 'catalog/library/Movies/.unexpected').write_bytes(b'private')
+        with self.assertRaisesRegex(catalog.CatalogError, 'unsafe native-library'):
+            self.backend.titles()
+
     def test_movie_copy_verified_and_published_outside_staging(self):
         final = self.pull()
         self.assertEqual((final / "Test Movie.mkv").read_bytes(), b"video bytes")

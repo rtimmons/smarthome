@@ -1,6 +1,6 @@
 """Native, no-search imports for independently admitted cart completions.
 
-This adapter never reads media payloads, removes files or changes download clients.
+This adapter never reads media payloads, removes payloads or changes download clients.
 The coordinator owns admission, durable journaling, hashes and source reclamation.
 """
 from __future__ import annotations
@@ -9,16 +9,18 @@ import copy
 import datetime as dt
 import importlib.util
 import json
+import os
 from pathlib import Path, PurePosixPath
 import re
 import time
 import unicodedata
+import uuid
 from urllib.parse import urlencode
 
 SOURCE_ROOT = Path('/srv/usenet/downloads/complete')
 LIBRARY_ROOT = Path('/srv/usenet/library')
 SCRATCH_MARKER = Path('/srv/usenet/config/catalog/remote-scratch.json')
-VERSIONS = {'radarr': '6.3.0.10514', 'sonarr': '4.0.19.2979'}
+VERSIONS = {'radarr': '6.4.4.10685', 'sonarr': '4.0.20.3014'}
 VIDEO_EXTENSIONS = {'.mkv', '.mp4', '.m4v', '.avi', '.ts'}
 EPISODE_NUMBER = re.compile(r'(?<![a-z0-9])s\d{1,2}e\d{1,3}', re.I)
 
@@ -225,6 +227,55 @@ class NativeArr:
         return bool(rejections) and all(r.get('reason') in ('sample', 'sampleFile', 'Sample') or
                r.get('reason') is None and r.get('message') in ('Sample', 'Sample file') for r in rejections)
 
+    def _hardlink_space_check(self, app, source):
+        """Prove the exact source can be linked without allocating a second copy.
+
+        Radarr 6.3's FreeSpaceSpecification budgets the entire file even for a
+        hardlink. Only that rejection can use this exception. The native setting
+        and the SAB/host reserves remain unchanged. Remove only our new probe.
+        """
+        require(app == 'radarr' and api_source(source).startswith('/storage/.acquisition-staging/complete/'),
+                'hardlink_space_exception_not_supported')
+        require(os.path.ismount(LIBRARY_ROOT), 'canonical_mount_unavailable')
+        media = self._call(app, 'config/mediamanagement')
+        require(media.get('copyUsingHardlinks') is True and
+                str(media.get('fileDate', 'none')).lower() == 'none', 'native_hardlink_policy_changed')
+        root = LIBRARY_ROOT / 'Movies'
+        relative = source.relative_to(SOURCE_ROOT / 'remote')
+        shared_source = safe_path(LIBRARY_ROOT / '.acquisition-staging' / relative, LIBRARY_ROOT)
+        before = signature(source)
+        shared = signature(shared_source)
+        require(shared['device'] == root.stat().st_dev == before['device'] and
+                all(shared[k] == before[k] for k in ('size', 'mtime_ns')), 'native_shared_source_mismatch')
+        space = os.statvfs(root)
+        reserve = max(30 * 1024**3, int(media.get('minimumFreeSpaceWhenImporting', 0)) * 1024**2)
+        available = space.f_bavail * space.f_frsize
+        require(available >= reserve, 'native_hardlink_reserve_breached')
+        # The importer deliberately has read-only access to the canonical view.
+        # Prove server-side linking of this exact inode within its writable
+        # staging view; the verified hybrid layout gives Arr one common mount
+        # for this same filesystem and its canonical destination.
+        probe = source.parent / ('.cart-hardlink-probe-' + uuid.uuid4().hex)
+        created = False
+        try:
+            os.link(source, probe, follow_symlinks=False)
+            created = True
+            linked = probe.stat()
+            # SSHFS's SFTP attributes synthesize st_nlink=1. The successful
+            # link(2) operation is the hardlink proof; do not mistake that
+            # synthetic count for a failed link or fall back to a copy.
+            require(linked.st_size == before['size'] and linked.st_dev == shared['device'] and
+                    str(linked.st_mtime_ns) == before['mtime_ns'], 'native_hardlink_not_verified')
+            require(signature(source) == before and signature(shared_source) == shared, 'source_changed')
+        except OSError:
+            raise CartImportHold('native_hardlink_probe_failed') from None
+        finally:
+            if created:
+                probe.unlink()
+        return {'checked_at': dt.datetime.now(dt.timezone.utc).isoformat(),
+                'source_signature': before, 'available_bytes': available,
+                'reserve_bytes': reserve, 'exact_source_link_verified': True}
+
     def prepare(self, job, source_dir, source_files):
         require(isinstance(job.get('nzo_id'), str) and bool(job['nzo_id']), 'download_id_missing')
         require(job['nzo_id'] not in self.owned_download_ids(), 'arr_owned_download')
@@ -321,7 +372,12 @@ class NativeArr:
                 require(normalized(title) == normalized(selected['title']) and parsed_file.get('year') == selected.get('year'), 'movie_source_identity_mismatch')
                 item['movieId'] = target['id']
             checked = self._call(app, 'manualimport', 'POST', [item])
-            require(isinstance(checked, list) and len(checked) == 1 and not checked[0].get('rejections'), 'candidate_rejected')
+            require(isinstance(checked, list) and len(checked) == 1, 'candidate_rejected')
+            rejections = checked[0].get('rejections') or []
+            if rejections:
+                require(all(r.get('reason') == 'Not enough free space' and r.get('type') == 'permanent'
+                            for r in rejections), 'candidate_rejected')
+                mapping['hardlink_space_check'] = self._hardlink_space_check(app, source)
             remapped = checked[0]
             if television:
                 require(sorted(e['id'] for e in remapped.get('episodes', [])) == mapping['episode_ids'], 'episode_remap_mismatch')
@@ -343,6 +399,10 @@ class NativeArr:
                 and all(not f['payload'].get('downloadId') and f['payload'].get('path') == f['api_source']
                         and f['api_source'] == api_source(Path(f['source'])) for f in plan['files']), 'import_plan_invalid')
         self._absence(plan)
+        for mapping in plan['files']:
+            if mapping.get('hardlink_space_check'):
+                # A recovered prepared journal cannot reuse a stale space/link proof.
+                mapping['hardlink_space_check'] = self._hardlink_space_check(plan['app'], Path(mapping['source']))
         response = self._call(plan['app'], 'command', 'POST', plan['payload'])
         require(isinstance(response.get('id'), int), 'command_id_missing')
         plan['command_id'] = response['id']

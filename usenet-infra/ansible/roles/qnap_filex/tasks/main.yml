@@ -1,0 +1,53 @@
+---
+- name: Require the isolated NAS portal endpoint
+  ansible.builtin.assert:
+    that:
+      - filex_secrets_dir | default('') | length > 0
+      - qnap_data_root == '/share/FromDrobo'
+      - qnap_container_root == '/share/Container/usenet'
+
+- name: Prepare only the dedicated staging and SFTP configuration
+  ansible.builtin.raw: |
+    set -eu
+    for path in /share/FromDrobo/FilexStaging /share/Container/usenet/filex-sftp /share/Container/usenet/filex-sftp/keys; do
+      test ! -L "$path"
+      if test -e "$path"; then test -d "$path"; fi
+    done
+    if test -d /share/FromDrobo/FilexStaging && test ! -f /share/Container/usenet/filex-sftp/managed; then
+      echo 'Unmanaged staging path exists; refusing adoption.' >&2
+      exit 1
+    fi
+    mkdir -p /share/FromDrobo/FilexStaging /share/Container/usenet/filex-sftp/keys
+    chmod 0700 /share/Container/usenet/filex-sftp /share/Container/usenet/filex-sftp/keys
+    touch /share/Container/usenet/filex-sftp/managed
+    chmod 0700 /share/Container/usenet/filex-sftp/keys
+    printf 'FILEX_NAS_UID=%s\nFILEX_NAS_GID=%s\n' "$(id -u)" "$(id -g)" > /share/Container/usenet/filex-sftp/.env
+    {{ qnap_docker_command }} run --rm --network none --user 0:0 --cap-drop ALL --cap-add CHOWN --cap-add FOWNER \
+      --mount type=bind,source=/share/FromDrobo/FilexStaging,target=/staging \
+      --entrypoint /bin/sh sha256:5d685f8256bf3166fbaf9a6fa5391e804f7ab904140d72bb6bd6896fabaedb87 -c 'chown "$1:$2" /staging; chmod 0700 /staging' filex-permissions "$(id -u)" "$(id -g)"
+
+- name: Install dedicated keys and isolated Compose definition
+  ansible.builtin.raw: |
+    set -eu
+    umask 077
+    destination={{ item.destination | quote }}
+    test ! -L "$destination"
+    printf '%s' {{ lookup('file', item.source, rstrip=false) | b64encode | quote }} | base64 -d > "$destination.next"
+    chmod 0600 "$destination.next"
+    mv -f "$destination.next" "$destination"
+  no_log: true
+  loop:
+    - source: "{{ filex_secrets_dir }}/nas-host"
+      destination: /share/Container/usenet/filex-sftp/keys/host_key
+    - source: "{{ filex_secrets_dir }}/nas-client.pub"
+      destination: /share/Container/usenet/filex-sftp/keys/authorized_keys
+    - source: "{{ usenet_project_root }}/compose/filex/nas-compose.yaml"
+      destination: /share/Container/usenet/filex-sftp/compose.yaml
+
+- name: Start only the rootless staging SFTP endpoint
+  ansible.builtin.raw: |
+    set -eu
+    cd /share/Container/usenet/filex-sftp
+    {{ qnap_docker_command }} compose config --quiet
+    {{ qnap_docker_command }} compose up -d --no-build --pull never --wait --wait-timeout 45
+  changed_when: true

@@ -27,7 +27,8 @@ class PolicyError(Exception):
 
 
 def validate_config(value):
-    if not isinstance(value, dict) or set(value) != {"service_ip", "service_cidr", "lan_cidr", "peer_ip", "local_ip"}:
+    required = {"service_ip", "service_cidr", "lan_cidr", "peer_ip", "local_ip"}
+    if not isinstance(value, dict) or set(value) - {"filex_nas_ip"} != required:
         raise PolicyError("VPN configuration fields do not match the reviewed schema")
     try:
         service = ipaddress.IPv4Address(value["service_ip"])
@@ -41,7 +42,16 @@ def validate_config(value):
         raise PolicyError("VPN service address and LAN must use RFC1918 space")
     if service not in subnet or not any(subnet.subnet_of(network) for network in PRIVATE) or subnet.overlaps(lan) or peer == local or not peer.is_global or not local.is_global:
         raise PolicyError("VPN selectors overlap or public endpoints are invalid")
-    return dict(service_ip=str(service), service_cidr=str(subnet), lan_cidr=str(lan), peer_ip=str(peer), local_ip=str(local))
+    result = dict(service_ip=str(service), service_cidr=str(subnet), lan_cidr=str(lan), peer_ip=str(peer), local_ip=str(local))
+    if "filex_nas_ip" in value:
+        try:
+            nas = ipaddress.IPv4Address(value["filex_nas_ip"])
+        except (ValueError, TypeError) as exc:
+            raise PolicyError("Filex NAS must be a private LAN host") from exc
+        if nas not in lan or nas in (lan.network_address, lan.broadcast_address):
+            raise PolicyError("Filex NAS must be a private LAN host")
+        result["filex_nas_ip"] = str(nas)
+    return result
 
 
 def policy_rules(config):
@@ -49,7 +59,8 @@ def policy_rules(config):
     service, lan, peer, local = (c[key] for key in ("service_ip", "lan_cidr", "peer_ip", "local_ip"))
     inbound, outbound, forward = CHAINS
     subnet = c["service_cidr"]
-    return [
+    ports = "18080,19696,5213" if "filex_nas_ip" in c else "18080,19696"
+    rows = [
         # Host-only anonymous proxy health probes. Both endpoint addresses and
         # the loopback interface are required; this is never a LAN bypass.
         f"-A {inbound} -i lo -s {service}/32 -d {service}/32 -p tcp -m multiport --dports 18080,19696 "
@@ -71,6 +82,17 @@ def policy_rules(config):
         f"-A {forward} -d {subnet} -j DROP",
         f"-A {forward} -s {subnet} -j DROP",
     ]
+    rows = [row.replace("18080,19696", ports) for row in rows]
+    if "filex_nas_ip" in c:
+        nas = c["filex_nas_ip"]
+        # Exactly one rootless SFTP listener, inside the existing tunnel only.
+        rows.insert(0, f"-A {outbound} -s {service}/32 -d {nas}/32 -p tcp -m multiport --dports 2226 "
+                    f"-m conntrack --ctstate NEW,ESTABLISHED -m policy --dir out --pol ipsec --proto esp "
+                    f"--mode tunnel --tunnel-src {local}/32 --tunnel-dst {peer}/32 --strict -j ACCEPT")
+        rows.insert(0, f"-A {inbound} -s {nas}/32 -d {service}/32 -p tcp -m multiport --sports 2226 "
+                    f"-m conntrack --ctstate ESTABLISHED -m policy --dir in --pol ipsec --proto esp "
+                    f"--mode tunnel --tunnel-src {peer}/32 --tunnel-dst {local}/32 --strict -j ACCEPT")
+    return rows
 
 
 def render_ufw(before, config):
@@ -190,12 +212,17 @@ def install_firewall(config, ufw_path=Path("/etc/ufw/before.rules")):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("validate", "firewall", "address"))
+    parser.add_argument("operation", choices=("validate", "firewall", "address", "filex-enable"))
     parser.add_argument("config", type=Path)
+    parser.add_argument("--nas-ip")
     args = parser.parse_args()
     try:
         config = validate_config(json.loads(args.config.read_text()))
-        if args.operation == "firewall":
+        if args.operation == "filex-enable":
+            config = validate_config({**config, "filex_nas_ip": args.nas_ip})
+            install_firewall(config)
+            write_atomic(args.config, json.dumps(config, indent=2) + "\n")
+        elif args.operation == "firewall":
             install_firewall(config)
         elif args.operation == "address":
             install_address(config)

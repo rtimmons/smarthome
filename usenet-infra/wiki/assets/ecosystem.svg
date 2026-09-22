@@ -1,56 +1,63 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 590" role="img" aria-labelledby="title desc">
-  <title id="title">Usenet ecosystem and storage flow</title>
-  <desc id="desc">Indexers and Radarr or Sonarr send requests into cloud applications. SAB downloads article pieces from Eweka. Native import writes to the canonical Storage Box. Plex reads remote files, while an optional selected copy goes to NAS storage and a separate Plex NAS library.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 790" role="img" aria-labelledby="title desc">
+  <title id="title">Native requests, canonical storage and optional NAS copies</title>
+  <desc id="desc">Radarr and Sonarr search through Prowlarr and send selected downloads directly to SAB. Eweka supplies the articles. Arr imports completed media into the Storage Box. Both Plex Remote and optional verified NAS copies read from the Storage Box; Plex NAS reads the local copy. Filex staging is separate.</desc>
   <defs>
-    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#8dbdac"/></marker>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#a9e5c7"/></marker>
     <style>
-      .bg{fill:#142d27}.zone{fill:#19372f;stroke:#315d50;stroke-width:1.5}.box{fill:#fffdf7}.muted{fill:#b8cdc5}.ink{fill:#172522}.mint{fill:#a9e5c7}.lime{fill:#d9ef98}.coral{fill:#f19b74}.blue{fill:#a9cae8}.label{font:700 13px system-ui,sans-serif;letter-spacing:1.5px}.title{font:700 20px system-ui,sans-serif}.small{font:500 13px system-ui,sans-serif}.tiny{font:600 11px system-ui,sans-serif}.flow{fill:none;stroke:#8dbdac;stroke-width:3;marker-end:url(#arrow)}.dash{stroke-dasharray:7 7}
+      .bg{fill:#142d27}.box{fill:#fffdf7}.muted{fill:#b8cdc5}.ink{fill:#172522}.mint{fill:#a9e5c7}.label{font:700 13px system-ui,sans-serif;letter-spacing:1.5px}.title{font:700 22px system-ui,sans-serif}.small{font:500 15px system-ui,sans-serif}.tiny{font:500 13px system-ui,sans-serif}.flow{fill:none;stroke:#a9e5c7;stroke-width:3;marker-end:url(#arrow)}.search{stroke-dasharray:7 7;marker-start:url(#arrow)}
     </style>
   </defs>
-  <rect class="bg" width="960" height="590" rx="18"/>
+  <rect class="bg" width="960" height="790" rx="18"/>
+  <text x="42" y="42" class="label mint">REQUEST → DOWNLOAD → IMPORT</text>
+  <text x="580" y="42" class="label mint">INDEXERS · PROVIDER · STORAGE</text>
 
-  <text x="44" y="48" class="label mint">CHOOSE</text>
-  <rect x="42" y="68" width="230" height="106" rx="14" class="box"/>
-  <circle cx="72" cy="100" r="11" class="mint"/><text x="95" y="106" class="title ink">Cart</text>
-  <text x="72" y="134" class="small ink">NZBGeek · NZBFinder</text>
-  <text x="72" y="155" class="tiny" fill="#5d6c67">pick a specific release</text>
-  <rect x="42" y="194" width="230" height="106" rx="14" class="box"/>
-  <circle cx="72" cy="226" r="11" class="blue"/><text x="95" y="232" class="title ink">Arr</text>
-  <text x="72" y="260" class="small ink">Radarr · Sonarr</text>
-  <text x="72" y="281" class="tiny" fill="#5d6c67">pick a title + quality policy</text>
+  <rect x="42" y="68" width="400" height="110" rx="14" class="box"/>
+  <text x="68" y="104" class="title ink">Radarr / Sonarr</text>
+  <text x="68" y="131" class="small ink">Choose a title or a specific release</text>
+  <text x="68" y="155" class="tiny ink">Explicit searches · automatic polling off</text>
+  <rect x="580" y="68" width="338" height="110" rx="14" class="box"/>
+  <text x="604" y="104" class="title ink">Prowlarr + indexers</text>
+  <text x="604" y="131" class="small ink">NZBGeek · NZBFinder</text>
+  <text x="604" y="155" class="tiny ink">Indexer access · direct downloads off</text>
+  <path d="M446 122H574" class="flow search"/>
+  <text x="473" y="107" class="tiny muted">search</text>
+  <text x="473" y="145" class="tiny muted">results</text>
 
-  <text x="352" y="48" class="label mint">CLOUD WORKBENCH</text>
-  <rect x="330" y="68" width="290" height="326" rx="18" class="zone"/>
-  <rect x="354" y="94" width="242" height="72" rx="12" class="box"/>
-  <circle cx="380" cy="130" r="10" class="blue"/><text x="400" y="126" class="title ink">Prowlarr</text><text x="400" y="146" class="tiny" fill="#5d6c67">asks the indexers</text>
-  <rect x="354" y="190" width="242" height="92" rx="12" class="box"/>
-  <circle cx="380" cy="226" r="10" class="coral"/><text x="400" y="222" class="title ink">SABnzbd</text><text x="400" y="243" class="tiny" fill="#5d6c67">download · repair · unpack</text><text x="400" y="261" class="tiny" fill="#5d6c67">temporary scratch</text>
-  <rect x="354" y="306" width="242" height="62" rx="12" class="box"/>
-  <circle cx="380" cy="337" r="10" class="lime"/><text x="400" y="334" class="title ink">Native import</text><text x="400" y="353" class="tiny" fill="#5d6c67">Arr or cart worker</text>
+  <path d="M242 178v52" class="flow"/>
+  <text x="261" y="210" class="tiny muted">Arr sends its selected job</text>
+  <rect x="42" y="236" width="400" height="110" rx="14" class="box"/>
+  <text x="68" y="272" class="title ink">SABnzbd</text>
+  <text x="68" y="299" class="small ink">Download · repair · unpack</text>
+  <text x="68" y="323" class="tiny ink">300 GB repair volume · 100 GiB release limit</text>
+  <rect x="580" y="236" width="338" height="110" rx="14" class="box"/>
+  <text x="604" y="272" class="title ink">Eweka</text>
+  <text x="604" y="299" class="small ink">Usenet article provider</text>
+  <text x="604" y="323" class="tiny ink">Supplies the pieces SAB assembles</text>
+  <path d="M574 290H448" class="flow"/>
+  <text x="472" y="276" class="tiny muted">articles</text>
 
-  <rect x="330" y="438" width="290" height="88" rx="14" class="box"/>
-  <circle cx="360" cy="474" r="11" class="coral"/><text x="383" y="470" class="title ink">Eweka</text><text x="383" y="491" class="small ink">Usenet article provider</text>
+  <path d="M242 346v52" class="flow"/>
+  <text x="261" y="378" class="tiny muted">Completed files ready for import</text>
+  <rect x="42" y="404" width="400" height="110" rx="14" class="box"/>
+  <text x="68" y="440" class="title ink">Arr import + cleanup</text>
+  <text x="68" y="467" class="small ink">Each app owns its completed source</text>
+  <text x="68" y="491" class="tiny ink">SAB and Arr keep 30 GiB free-space reserves</text>
+  <rect x="580" y="404" width="338" height="110" rx="14" class="box"/>
+  <text x="604" y="440" class="title ink">Storage Box · 5 TiB</text>
+  <text x="604" y="467" class="small ink">Canonical Movies + TV</text>
+  <text x="604" y="491" class="tiny ink">Completed staging stays outside libraries</text>
+  <path d="M446 458H574" class="flow"/>
+  <text x="470" y="443" class="tiny muted">import</text>
 
-  <text x="698" y="48" class="label mint">KEEP + WATCH</text>
-  <rect x="678" y="68" width="240" height="104" rx="14" class="box"/>
-  <circle cx="708" cy="102" r="11" class="lime"/><text x="731" y="108" class="title ink">Storage Box</text>
-  <text x="708" y="136" class="small ink">canonical Movies + TV</text>
-  <text x="708" y="155" class="tiny" fill="#5d6c67">authoritative remote files</text>
-  <rect x="678" y="210" width="240" height="84" rx="14" class="box"/>
-  <circle cx="708" cy="248" r="11" class="blue"/><text x="731" y="245" class="title ink">Plex Remote</text><text x="731" y="266" class="tiny" fill="#5d6c67">read-only playback path</text>
-  <rect x="678" y="334" width="240" height="84" rx="14" class="box"/>
-  <circle cx="708" cy="372" r="11" class="coral"/><text x="731" y="369" class="title ink">Selected NAS copy</text><text x="731" y="390" class="tiny" fill="#5d6c67">optional · verified · local</text>
-  <rect x="678" y="458" width="240" height="84" rx="14" class="box"/>
-  <circle cx="708" cy="496" r="11" class="mint"/><text x="731" y="493" class="title ink">Plex NAS</text><text x="731" y="514" class="tiny" fill="#5d6c67">separate local libraries</text>
-
-  <path d="M272 121H330" class="flow"/><text x="280" y="110" class="tiny muted">NZB</text>
-  <path d="M272 247H330" class="flow"/><text x="279" y="236" class="tiny muted">request</text>
-  <path d="M475 166v24" class="flow"/>
-  <path d="M475 282v24" class="flow"/>
-  <path d="M620 337c38 0 18-217 58-217" class="flow"/>
-  <path d="M475 438v-156" class="flow dash"/><text x="490" y="421" class="tiny muted">articles</text>
-  <path d="M798 172v38" class="flow"/>
-  <path d="M798 294v40" class="flow dash"/><text x="811" y="319" class="tiny muted">select</text>
-  <path d="M798 418v40" class="flow"/>
-  <text x="675" y="569" class="tiny muted">NAS access to canonical storage is read-only</text>
+  <path d="M750 514v104" class="flow"/>
+  <text x="767" y="578" class="tiny muted">read-only</text>
+  <path d="M750 550H242v68" class="flow"/>
+  <text x="274" y="575" class="tiny muted">Selected, verified copy from Storage Box</text>
+  <rect x="42" y="624" width="400" height="100" rx="14" class="box"/>
+  <text x="68" y="660" class="title ink">NAS copy → Plex NAS</text>
+  <text x="68" y="688" class="small ink">Optional local copy · separate libraries</text>
+  <rect x="580" y="624" width="338" height="100" rx="14" class="box"/>
+  <text x="604" y="660" class="title ink">Plex Remote</text>
+  <text x="604" y="688" class="small ink">Reads through the NAS remote mount</text>
+  <text x="42" y="759" class="tiny muted">Filex manages separate staging areas. It cannot modify canonical media or active downloads.</text>
 </svg>

@@ -42,7 +42,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## File ownership and recovery
 
-- Radarr/Sonarr automatic search, RSS and native completed imports are enabled.
+- Radarr/Sonarr explicit search and native completed imports are enabled; RSS
+  polling stays off under the September 20 native policy.
   `/library` is a real Storage Box SSHFS library, with completed scratch mounted
   at `/data/complete`. Preserve mount-dependent systemd startup and mode-0000
   unmounted directory protection. Never enable the retired publisher timer.
@@ -90,6 +91,97 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   or that a configured profile proves safe startup on every client.
 
 ## Current operations and closure
+
+- **September 22: approved application maintenance completed.** Radarr
+  `6.4.4.10685-ls318`, Sonarr `4.0.20.3014-ls325` and Prowlarr
+  `2.6.5.5623-ls161` now match prepared source. Application health has zero
+  findings; discovery/native policy and all historical preservation checks pass.
+  Cloud health remains nonzero only for 14 retained catalog records. SAB was
+  not restarted. Stopped rollback configurations and old images remain private
+  under `/srv/usenet/backups/app-maintenance-20260921`; that date is the prepared
+  runner's directory, not the deployment date. Never replay its launcher.
+  The verification-only Prowlarr command refusal was reconciled without repeating
+  deployment. `cloud-20260922T191826Z.tar.age` independently restores 726 files,
+  four databases and all 44 journals, with 59 live hash matches. See the
+  [receipt](recovery/drills/app-maintenance-20260922.json) and
+  [rollback runbook](docs/app-maintenance-20260921.md). TV selection and other
+  separate follow-ups remain in the plan; this approval did not select TV media.
+
+- **September 21: accepted-state restore passed; updates prepared only.**
+  `cloud-20260921T155229Z.tar.age` independently restored 726 files and four
+  databases. All 59 selected live hashes, including 44 journals, match; mount
+  definitions reconstruct from source plus the restored volume identity.
+  See the [receipt](recovery/drills/native-state-restore-20260921.json).
+  Source pins/version guards contain reviewed updates, but live applications
+  still run the prior versions: automatic approval review requires explicit
+  user approval for the three-container maintenance. Do not mistake prepared
+  source for deployed state or replay broad setup. Follow the
+  [maintenance runbook](docs/app-maintenance-20260921.md). TV-copy selection is
+  also pending. Preserve all holds, local private overrides and original snapshots.
+
+- **September 20, 22:05 UTC: health audit complete.** Native ownership and
+  historical preservation pass; NAS and Filex health pass. Fourteen catalog
+  records map to seven old identity-held journals, including five cleanup
+  failures with later completed disposition receipts. All three application
+  health responses contain only update notices. Findings remain visible and
+  unwaived; do not clear holds or run retired workers to improve health output.
+  Cloud/NAS backup status is fresh, but accepted-state independent restore is
+  still unverified. Follow the plan's
+  [remaining-work table](../plan.md#remaining-work-and-explicit-deferrals);
+  old hybrid next-admission acceptance is superseded. See the
+  [audit receipt](recovery/drills/health-audit-20260920.json).
+
+- **September 20: storage expansion approved and deployed.** The existing
+  Storage Box is BX21; a separate 300 GB volume now backs the incomplete spool.
+  Keep private Terraform inputs `storage_box_type = "bx21"` and
+  `repair_spool_enabled = true` after restoring older snapshots. Never reapply
+  old saved purchase plans, reformat this volume, or replay the old hybrid
+  migration. Read the [repair-volume runbook](docs/repair-spool.md) for pinned
+  device/mount checks, retained original data and phase-specific recovery.
+  The observed capacity envelope passes. The user accepted native Arr cleanup
+  and random fresh movie/episode selection; native ownership is accepted and active.
+  Fresh imports/cleanup, Plex discovery, an 80 GiB repair and scoped restart passed.
+  Direct carts and all three legacy workers are disabled. Do not restart them
+  or run their old setup recipes. Native polling remains off to prevent implicit
+  backfill of seven pre-existing monitored missing movies; explicit new Arr
+  searches remain available. Use
+  `just usenet-native-cutover-preflight` for private read-only snapshots and
+  allowlisted output. Follow the [cutover runbook](docs/native-cutover.md) and use
+  `just usenet-configure-native-ownership` for current policy inspection/refresh.
+  Preserve all three held requests and journals. This active native policy
+  supersedes every older cart/admission/timer instruction below.
+
+- **September 20: Filex is deployed with verified transfers.** See the current
+  [plan](../plan.md), [portal runbook](docs/filex.md) and sanitized acceptance
+  receipt. Use `just usenet-filex-status` (service plus private HTTPS health),
+  `just usenet-filex-disable`, `just usenet-filex-build` and the isolated deployment
+  recipe. Download and NAS staging are dedicated writable roots; Storage Box
+  canonical roots and isolated portal scratch are kernel-enforced read-only.
+  Use the operator login, never the loopback-only administrator. The reviewed
+  backend hashes destinations, records receipts and quarantines moved/deleted
+  sources; permanent purge is disabled. Interrupted transfers require explicit
+  retry. Do not replace this image with unmodified upstream or expose acquisition
+  metadata. Portal state is outside existing backup coverage.
+- The user approved recovery of the retained admitted job. Missing metadata was
+  restored, its download completed, and remote PAR2 plus SHA-256 verification
+  passed after local repair exhausted space. Reversible block repair and native
+  retry preserve the reservation, original recovery evidence, held records and
+  all other pauses. The retained admission has `preserve_failed_payload: true`,
+  so another failure pauses for review without reclamation. Keep controller state
+  owned by `usenet` with mode 0600 after any root-run recovery. Follow the current
+  plan/private recovery receipts; do not
+  repeat a retry whose result is uncertain or let failed-payload reclamation
+  delete the preserved repair. The deployed local admission estimate now reserves
+  a full repair output. The NAS dashboard refresh fix is deployed and NAS health
+  passes. Native SAB completion, Radarr hardlink import, independent canonical
+  SHA-256 and exact media-source cleanup passed; six non-media files remain
+  retained. Server-side device/inode and link counts prove the actual hardlink.
+  The adapter handles only Radarr's duplicate-copy space rejection after a live
+  staging hardlink probe and reserve check; do not disable global free-space
+  checks or expand the importer's read-only canonical access. All three remaining
+  requests have existing identity holds, so the next automatic admission needs
+  a new eligible user cart selection. Do not release them merely for acceptance.
+  See the sanitized September 20 recovery receipt.
 
 - **September 18, 16:46 UTC: queue repair is incomplete.** Six requests are
   individually paused, global SAB is resumed, no job is admitted/postprocessing,

@@ -1,24 +1,33 @@
 # Usenet acquisition and selective NAS copies
 
 Start with the [current plan](../plan.md), its
-[closure and merge criteria](../plan.md#closure-and-merge-criteria), and the
+[cutover acceptance criteria](../plan.md#one-time-cutover--no-library-migration-or-replay), and the
 [agent guide](AGENTS.md). This README is an operating entrypoint; dated receipts
 record what was tested. Account setup and infrastructure bootstrap are complete.
 
 ## Current workflow
 
-Radarr/Sonarr provide discovery, monitored search and RSS acquisition using Eweka
+September 20: the approved [storage expansion](docs/storage-expansion-20260920.md)
+is deployed: BX21 and a [300 GB repair volume](docs/repair-spool.md). Capacity
+preflight passes. The [Arr ownership cutover](docs/native-cutover.md) uses the
+user-approved native import and cleanup policy for new requests; direct carts and legacy workers are disabled. Native
+requests use separate categories and a 100 GiB download limit. Release polling
+remains off to preserve the pre-existing missing-media backlog.
+
+Radarr/Sonarr provide discovery and explicit native searches using Eweka
 and the configured NZBGeek/NZBFinder indexers. SAB downloads and processes on cloud
 scratch; Arr imports into the synchronous Storage Box library and owns completed
 client cleanup. The retired publisher stays disabled. Preserve the five legacy
 objects/manifests and their native hard-linked adoptions; never run a second mover
 against Arr scratch.
 
-The separate [NZBGeek Cart feed](docs/nzbgeek-cart.md) lets a phone user add releases
-to My Cart for SAB pickup every 15 minutes. Its initial item was held, and no cart
-download has yet established end-to-end completion. Cart jobs use Default category
-and do not establish Arr ownership or automatic library import. Preserve the feed
-and its processed-entry history.
+New requests start in Radarr or Sonarr. Use add-and-search or an explicit search
+for the selected movie or episode; check the intended episode scope before
+submitting. Each application owns its own SAB category. Wait for completed
+import and cleanup before requesting another large release. The 100 GiB limit
+and 30 GiB reserves remain active. Prowlarr supplies indexers; its direct download
+client and the old cart feeds are disabled. Historical feed state, journals,
+verification receipts and all three held requests remain preserved.
 
 Plex runs on the QNAP with separate NAS/remote Movies and TV libraries. OliveTin
 provides explicit per-title NAS copy/removal actions for both native titles and
@@ -30,11 +39,12 @@ See [native media](docs/native-media.md), [NAS/Plex layout](docs/nas-plex-layout
 and [download status](docs/download-status.md).
 
 Native copying is deployed and [accepted for one selected movie](recovery/drills/native-copy-live-20260913.json):
-media-002 — Knightfall was verified, automatically indexed in Movies (NAS), and safely
+media-002 was verified, automatically indexed in Movies (NAS), and safely
 repeated without recopying. The authenticated Downloads graph, browser reconnect,
 verification and completed states passed live checks. TV publication uses
 `TV Shows/library`, with `.staging` outside Plex's source and the TV gate enabled.
-A real TV transfer and fresh movie/TV import and cleanup remain unverified.
+A real selective TV transfer to NAS remains unverified. Native movie/episode
+imports and source cleanup passed September 20; see the cutover receipt.
 Apple TV/Roku playback and startup privacy are deferred by the user.
 
 ## Access and routine operation
@@ -46,6 +56,7 @@ Apple TV/Roku playback and startup privacy are deferred by the user.
 | Prowlarr | `http://10.77.0.1:19696/` |
 | SAB | `http://10.77.0.1:18080/` |
 | NAS copy dashboard | `http://192.168.1.66:1337/` |
+| Filex staging portal | `https://10.77.0.1:5213/` |
 | Usenet field guide | `http://192.168.1.66:8090/` |
 | Plex | `http://192.168.1.66:32400/web` |
 
@@ -60,6 +71,7 @@ Read-only checks from the repository root:
 just usenet-discovery-health
 just usenet-cloud-health
 just usenet-qnap-health
+just usenet-filex-status
 just native-list
 just native-status
 just catalog-status
@@ -71,6 +83,11 @@ Legacy commands are `catalog-list`, `catalog-pull`, and `catalog-evict`. These
 catalog/native recipes have the same names inside this directory and at the
 repository root. Use [operations](docs/operations.md) for deployment and recovery
 commands; preserve active transfers and manual SAB pauses.
+
+The [private Filex portal](docs/filex.md) provides verified copies, recoverable
+moves/deletes and read-only canonical browsing. Its dedicated staging roots
+exclude active acquisition files and application state. The runbook covers its
+separate operator login, private CA and emergency disable procedure.
 
 The private [Usenet field guide](docs/wiki.md) is a static, source-controlled
 reference with no application credentials, API integration, media listing or

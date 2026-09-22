@@ -1,3 +1,12 @@
+# Native ownership — September 20, 2026
+
+The approved [storage expansion](storage-expansion-20260920.md) is deployed;
+read the [repair-volume runbook](repair-spool.md) before operating its mount.
+Native ownership uses direct Arr requests; carts and legacy workers are disabled. Use `just usenet-native-cutover-preflight` from the
+repository root for a private baseline and sanitized capacity/ownership report.
+The [cutover runbook](native-cutover.md) records the accepted native integrity
+policy, conservative size controls and recorded movie/TV acceptance. Older observations are dated.
+
 # Current workflow update — September 11, 2026
 
 Native Arr imports now own completion, and the old publisher timer is disabled.
@@ -7,6 +16,15 @@ for the current mount, backup and playback configuration, and the
 serve legacy independent objects; they must not move Arr-owned completed files.
 
 # Operations
+
+## Private file portal
+
+The [Filex portal runbook](filex.md) documents the private HTTPS portal, operator
+login, three bounded storage roots, verified transfers, recoverable deletion and
+emergency disable procedure. Download and NAS staging are writable; canonical
+Storage Box media is read-only. Active downloads and importer state are excluded.
+Use `just usenet-filex-status` or `just usenet-filex-disable` from the repository
+root. Portal backup coverage is separate from this deployment.
 
 ## Download status panel
 
@@ -42,11 +60,10 @@ for validation, deployment scope, and rollback caveats.
 
 ## Administrative access
 
-For NZBGeek's own discovery UX on a phone, the enabled
-[NZBGeek Cart feed](nzbgeek-cart.md) queues new cart selections in cloud SAB every
-15 minutes. Use that runbook for individual held-item actions, capacity checks
-and [automatic native import and verified cleanup](cart-import.md) for eligible
-new Default-category jobs.
+Start new movie/episode requests in Radarr/Sonarr, using the intended single-title
+or episode scope. Cart intake and Prowlarr direct downloading are disabled.
+Use `just usenet-native-ownership-status` to verify current ownership; the old
+cart runbooks are historical recovery references, not active intake instructions.
 
 Normally use SAB at `http://10.77.0.1:18080/` and Prowlarr/Arr at
 `http://10.77.0.1:19696/` through the existing LAN VPN route and proxy. Backend
@@ -292,8 +309,8 @@ TV source ID 3 is narrowed to `TV Shows/library`. The enabled TV gate and both
 publication/staging paths are verified in the running dashboard. The selected
 media-002 copy passed SHA-256 verification, publication, safe repeat and automatic
 NAS Plex indexing. Active graph, browser reconnection and verification/completed
-presentation also passed. A real TV-series copy and fresh native import/cleanup
-remain unverified. See the [live receipt](../recovery/drills/native-copy-live-20260913.json)
+presentation also passed. A real TV-series NAS copy remains unverified. Fresh native movie/episode
+import and cleanup passed September 20. See the [live receipt](../recovery/drills/native-copy-live-20260913.json)
 and [native media](native-media.md) for evidence and recovery boundaries.
 
 Pull requires enough free bytes for the item plus the configured reserve. It
@@ -330,6 +347,42 @@ read-only Storage Box subaccount is the independent backstop against a client
 bug.
 
 ## Health and failures
+
+September 22: approved application updates cleared all three update notices.
+Discovery policy, native ownership, NAS and Filex private HTTPS checks pass.
+Cloud health remains nonzero only for the same 14 historical catalog failure
+records; all failure files, holds and journals are unchanged. See the
+[maintenance receipt](../recovery/drills/app-maintenance-20260922.json) and
+[rollback runbook](app-maintenance-20260921.md). The September 20 warning
+classification below is historical, not the current application health result.
+
+September 20, 22:05 UTC: native ownership, capacity, SAB, NAS and Filex HTTPS
+checks pass. Cloud/discovery health remains nonzero with the findings recorded
+in the [audit receipt](../recovery/drills/health-audit-20260920.json):
+
+- Fourteen catalog failure records map to seven historical held journals, not
+  fourteen new failed requests. Three journals have source-identity mismatches;
+  four have ambiguous catalog identities. Nine records report import holds.
+  Five report cleanup failures that have later completed disposition receipts
+  and no current disposal error. Identity holds remain unresolved; the audit did
+  not reverify source files or change any record.
+- Radarr, Sonarr and Prowlarr each return one `UpdateCheck` warning and no other
+  health findings. Cloud health treats the Prowlarr warning as a failure;
+  discovery health rejects the Arr warnings with
+  `unexpected_application_health_issue`. Native ownership verification passes
+  separately and does not waive application health.
+
+Use `just usenet-native-ownership-status` and `just usenet-native-cutover-preflight`
+from the repository root to check active routing, limits and historical state.
+Use `just usenet-cloud-health`, `just usenet-discovery-health`,
+`just usenet-qnap-health` and `just usenet-filex-status` for the corresponding
+service findings. Do not clear failure records or exempt update warnings to make
+these checks green. Review application updates as pinned source/deployment
+changes with rollback; review historical holds per item. The
+[remaining-work table](../../plan.md#remaining-work-and-explicit-deferrals)
+separates those tasks from accepted rollout criteria.
+
+The following unprefixed commands run inside `usenet-infra`:
 
 ```sh
 just cloud-health

@@ -6,8 +6,8 @@
   <meta name="description" content="A private, practical field guide to Ryan's Usenet, storage, NAS copy, and Plex setup.">
   <meta name="theme-color" content="#10231f">
   <title>Usenet field guide</title>
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="assets/favicon.svg?v=8ae03107a7a6" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css?v=3145c1fb000e">
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to the guide</a>
@@ -20,7 +20,7 @@
       <div class="truth-strip" aria-label="Important context">
         <span><strong>Reference, not live health</strong></span>
         <span>Private network only</span>
-        <span>Reviewed 16 Sep 2026</span>
+        <span>Reviewed 20 Sep 2026</span>
       </div>
     </div>
   </header>
@@ -81,8 +81,8 @@
           <article class="concept concept--organize">
             <span class="concept__number">3</span>
             <h3>Automation organizes</h3>
-            <p>Radarr, Sonarr, or the cart importer moves a verified completion into the canonical library. Plex discovers it there.</p>
-            <p class="concept__tools">Radarr · Sonarr · cart importer · Plex</p>
+            <p>Radarr and Sonarr own each request, import its completed files, and remove their completed download sources. Plex discovers the library files.</p>
+            <p class="concept__tools">Radarr · Sonarr · Plex</p>
           </article>
         </div>
 
@@ -96,8 +96,10 @@
         <h2 id="map-title">From a choice to two Plex libraries</h2>
         <p class="section-intro">The Storage Box is the canonical home. Cloud scratch is temporary. A NAS copy is optional and deliberately selected.</p>
         <figure class="diagram-card">
-          <img src="assets/ecosystem.svg" alt="Flow from indexers or Radarr and Sonarr, through SAB and Eweka on the cloud host, into the canonical Storage Box, then to Plex Remote or a selected NAS copy and Plex NAS.">
-          <figcaption>Solid arrows move requests or files. The NAS receives a server-enforced read-only view of canonical storage.</figcaption>
+          <div class="diagram-scroll" role="region" aria-label="System flow diagram; scroll horizontally on smaller screens" tabindex="0">
+          <img src="assets/ecosystem.svg?v=700821c90986" alt="Radarr and Sonarr search through Prowlarr, send selected downloads to SAB, then import to the Storage Box. Eweka supplies SAB. The Storage Box feeds both Plex Remote and optional verified NAS copies for Plex NAS.">
+          </div>
+          <figcaption>Arr owns the request from search to cleanup. Prowlarr supplies indexer access; its direct downloading is disabled. Both remote playback and selected NAS copies read from the Storage Box.</figcaption>
         </figure>
       </section>
 
@@ -112,7 +114,7 @@
             <span class="service-link__mark">SA</span><span><strong>SABnzbd</strong><small>Queue, speed, repair and unpack</small></span><span aria-hidden="true">↗</span>
           </a>
           <a class="service-link" href="http://10.77.0.1:19696/">
-            <span class="service-link__mark">PR</span><span><strong>Prowlarr</strong><small>Indexer search and status</small></span><span aria-hidden="true">↗</span>
+            <span class="service-link__mark">PR</span><span><strong>Prowlarr</strong><small>Indexer connections and status</small></span><span aria-hidden="true">↗</span>
           </a>
           <a class="service-link" href="http://10.77.0.1:19696/radarr/">
             <span class="service-link__mark">RA</span><span><strong>Radarr</strong><small>Movies and their import history</small></span><span aria-hidden="true">↗</span>
@@ -123,15 +125,18 @@
           <a class="service-link" href="http://192.168.1.66:1337/">
             <span class="service-link__mark">NAS</span><span><strong>NAS copies</strong><small>Select local copies and follow transfers</small></span><span aria-hidden="true">↗</span>
           </a>
+          <a class="service-link" href="https://10.77.0.1:5213/">
+            <span class="service-link__mark">FX</span><span><strong>Filex</strong><small>Browse files and transfer between staging areas</small></span><span aria-hidden="true">↗</span>
+          </a>
           <a class="service-link" href="http://192.168.1.66:32400/web">
             <span class="service-link__mark">PX</span><span><strong>Plex</strong><small>Choose a NAS or Remote library</small></span><span aria-hidden="true">↗</span>
           </a>
         </div>
 
-        <h3 class="subhead">Accounts and carts</h3>
+        <h3 class="subhead">Provider and indexer accounts</h3>
         <div class="link-grid link-grid--compact">
-          <a class="service-link" href="https://nzbgeek.info/dashboard.php?mycart"><span class="service-link__mark">NG</span><span><strong>NZBGeek My Cart</strong><small>Choose a specific release</small></span><span aria-hidden="true">↗</span></a>
-          <a class="service-link" href="https://nzbfinder.ws/cart"><span class="service-link__mark">NF</span><span><strong>NZBFinder Cart</strong><small>Choose a specific release</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://nzbgeek.info/dashboard.php?mycart"><span class="service-link__mark">NG</span><span><strong>NZBGeek My Cart</strong><small>Saved cart · intake disabled</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://nzbfinder.ws/cart"><span class="service-link__mark">NF</span><span><strong>NZBFinder Cart</strong><small>Saved cart · intake disabled</small></span><span aria-hidden="true">↗</span></a>
           <a class="service-link" href="https://www.eweka.nl/en/myeweka"><span class="service-link__mark">EW</span><span><strong>My Eweka</strong><small>Provider account</small></span><span aria-hidden="true">↗</span></a>
           <a class="service-link" href="https://console.hetzner.com/"><span class="service-link__mark">HZ</span><span><strong>Hetzner Console</strong><small>Cloud and Storage Box account</small></span><span aria-hidden="true">↗</span></a>
         </div>
@@ -139,44 +144,70 @@
 
       <section id="workflows" aria-labelledby="workflows-title">
         <p class="section-kicker">04 · Daily use</p>
-        <h2 id="workflows-title">Two ways to ask for something</h2>
+        <h2 id="workflows-title">Start movies and episodes in Arr</h2>
         <div class="workflow-grid">
           <article class="workflow-card">
-            <p class="workflow-card__label">Release-first</p>
-            <h3>Use a cart</h3>
-            <ol>
-              <li>Pick a specific release in NZBGeek My Cart or NZBFinder Cart.</li>
-              <li>Allow up to 15 minutes for the feed to register it with SAB.</li>
-              <li>Follow download, repair and unpack in SAB. A capacity hold may deliberately keep it from starting.</li>
-              <li>The cart importer takes an eligible completion through native import, independent verification and exact scratch cleanup.</li>
-              <li>Look in the appropriate <strong>Remote</strong> Plex library. Select a NAS copy separately only if wanted.</li>
-            </ol>
-            <p class="workflow-card__note">Best when you care about the exact release. Cart jobs are not automatically owned by Radarr or Sonarr.</p>
-          </article>
-          <article class="workflow-card">
-            <p class="workflow-card__label">Title-first</p>
+            <p class="workflow-card__label">Choose a title</p>
             <h3>Use Radarr or Sonarr</h3>
             <ol>
-              <li>Add a movie in Radarr or a series in Sonarr. Choose monitoring and a quality profile deliberately.</li>
-              <li>The Arr application searches the indexers through Prowlarr and sends a match to SAB.</li>
-              <li>Follow acquisition in SAB and import in the Arr queue/history.</li>
-              <li>Arr imports the completion into the canonical library and owns completed-client cleanup.</li>
-              <li>Look in the corresponding <strong>Remote</strong> Plex library. A local NAS copy remains an explicit choice.</li>
+              <li>Open Radarr for a movie or Sonarr for TV. Add the title, choose its quality profile, and use the <code>/library</code> root.</li>
+              <li>For TV, select the episode you want; avoid searching a whole season unless that is your intent.</li>
+              <li>Choose add-and-search or run the application's search action. Adding a monitored title alone does not start release polling.</li>
+              <li>Follow download and repair in SAB, then import and cleanup in Arr's history.</li>
+              <li>Watch in the corresponding <strong>Remote</strong> Plex library. Select a NAS copy separately if wanted.</li>
             </ol>
-            <p class="workflow-card__note">Best when you care about the title and quality policy more than a particular release.</p>
+            <p class="workflow-card__note">Automatic release polling is off so the existing missing-media backlog stays untouched.</p>
+          </article>
+          <article class="workflow-card">
+            <p class="workflow-card__label">Choose a release</p>
+            <h3>Use interactive search in Arr</h3>
+            <ol>
+              <li>Open the movie or episode in its Arr application and run an interactive search.</li>
+              <li>Choose an accepted release within the 100 GiB download limit. Let the owning app send it to SAB.</li>
+              <li>Wait for import and completed-source cleanup before requesting the next large item.</li>
+              <li>If a release fails, inspect the reason. Failed records stay retained; automatic redownload is disabled.</li>
+              <li>Leave the historical paused requests held for their separate review.</li>
+            </ol>
+            <p class="workflow-card__note">Direct NZBGeek/NZBFinder cart intake, Prowlarr direct downloading, and the old cart workers are retired. New downloads use native Arr checks and cleanup.</p>
+          </article>
+          <article class="workflow-card">
+            <p class="workflow-card__label">Keep a local copy</p>
+            <h3>Use the NAS copy dashboard</h3>
+            <ol>
+              <li>Open NAS copies and select the canonical movie or TV title you want locally.</li>
+              <li>Start that title's copy action and follow the Downloads panel through copying, verification and completion. Closing the browser does not cancel the transfer.</li>
+              <li>Wait for Plex discovery, then choose the corresponding <strong>NAS</strong> library.</li>
+              <li>Use the dashboard's removal action to remove its owned local copy when finished. The canonical Storage Box source stays intact.</li>
+            </ol>
+            <p class="workflow-card__note">The NAS keeps a 100 GiB free-space reserve. A selected movie copy and safe repeat are verified; a real selective TV copy still needs acceptance. Copies do not automatically follow future episodes or upgrades.</p>
+          </article>
+          <article class="workflow-card" id="filex">
+            <p class="workflow-card__label">Manage staging files</p>
+            <h3>Use Filex</h3>
+            <ol>
+              <li>Open Filex with the operator login. If the browser reports an untrusted certificate, complete the documented private-certificate trust setup before signing in.</li>
+              <li>Browse or download files. Copy or move between <strong>Download staging</strong> and <strong>NAS staging</strong>; copy from <strong>Storage Box</strong> into either staging area.</li>
+              <li>Wait for the transfer's verification and completed state. Transfers continue if the browser disconnects.</li>
+              <li>Moves and deletes retain staging sources in recoverable trash. Use Restore to undo; permanent purge is disabled.</li>
+              <li>If interrupted, inspect the failure and retry explicitly. Keep partial output until reviewed; retries do not overwrite it.</li>
+            </ol>
+            <p class="workflow-card__note">Filex cannot change canonical media or active downloads. Its NAS staging is separate from the Plex library; use the NAS copy dashboard when you want a managed local Plex copy.</p>
           </article>
         </div>
+        <aside class="callout"><strong>Verification depends on the workflow.</strong> New downloads use SAB's checks and Arr's native import and cleanup. They no longer wait for a separate SHA-256 check before source removal. Selective NAS copies and Filex transfers still independently verify their destinations. Historical verification receipts remain preserved.</aside>
       </section>
 
       <section id="storage" aria-labelledby="storage-title">
         <p class="section-kicker">05 · Storage boundaries</p>
         <h2 id="storage-title">Canonical, temporary, local, backed up</h2>
         <div class="storage-list">
-          <article><span class="storage-list__icon">C</span><div><h3>Canonical library · Storage Box</h3><p>The authoritative Movies and TV files live here. Cloud applications can write through the controlled import path. The NAS receives read-only access.</p></div></article>
-          <article><span class="storage-list__icon">T</span><div><h3>Temporary scratch · cloud disk</h3><p>SAB downloads, repairs and unpacks here. It is working space, not a library and not a backup. Failed or retained jobs continue to consume capacity.</p></div></article>
+          <article><span class="storage-list__icon">C</span><div><h3>Canonical library · Storage Box</h3><p>The authoritative Movies and TV files live on the BX21 Storage Box, with 5 TiB total capacity. Cloud applications write through the controlled import path. The NAS and Filex receive read-only access.</p></div></article>
+          <article><span class="storage-list__icon">T</span><div><h3>Temporary scratch · repair volume</h3><p>A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves. The 100 GiB release limit and pauses during postprocessing reduce pressure; allow one large request to finish import and cleanup before the next. Archive expansion and retained failures can still consume extra space.</p></div></article>
           <article><span class="storage-list__icon">L</span><div><h3>Local copy · NAS</h3><p>An optional selected copy for local playback. Copying verifies the selected source and destination; it does not subscribe the NAS to future episodes or upgrades.</p></div></article>
-          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. They do not duplicate the whole media library or establish whole-NAS disaster recovery.</p></div></article>
+          <article><span class="storage-list__icon">F</span><div><h3>Filex staging · cloud and NAS</h3><p>These dedicated writable areas hold manual transfers and recoverable trash. They are separate from active downloads and the Plex libraries. The Storage Box view, including portal Scratch, is read-only.</p></div></article>
+          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. Filex state and staging are outside that backup coverage. The archives do not duplicate the whole media library or establish whole-NAS disaster recovery. The expanded storage and new native state have not had a fresh independent restore drill.</p></div></article>
         </div>
+        <p class="fine-print">The approved September 20 expansion retained the CX43 server and added $32.01/month at the confirmed account rates: $9 for the Storage Box upgrade and $23.01 for the repair volume. These are dated rates, not a live invoice. The original incomplete spool remains retained for recovery.</p>
         <aside class="callout callout--warning"><strong>Storage Box snapshots are not independent backups.</strong> They share the same storage system and consume its capacity. Treat the canonical library and configuration backup scopes separately.</aside>
       </section>
 
@@ -189,7 +220,10 @@
             <ul>
               <li>Private cloud search and download applications</li>
               <li>Canonical Storage Box movie and TV library paths</li>
-              <li>Automatic cart importer with durable journals</li>
+              <li>Native movie and episode import, source cleanup and Plex discovery</li>
+              <li>80 GiB synthetic PAR2 reconstruction with independent SHA-256 verification</li>
+              <li>SAB/Arr restart, storage-mount protections and retired-worker startup guards</li>
+              <li>Filex transfers, recoverable moves/deletes, restore and interruption/retry</li>
               <li>Verified selective NAS movie copying and safe repeat</li>
               <li>Separate Plex NAS and Remote libraries</li>
               <li>Scheduled encrypted configuration backups</li>
@@ -198,14 +232,15 @@
           <article class="truth-card truth-card--open">
             <p class="truth-card__label">Still needs acceptance</p>
             <ul>
-              <li>Durable receipt and backup review for the latest cart imports</li>
-              <li>A fresh TV completion and selective NAS TV copy</li>
-              <li>Fresh Arr-owned movie and TV cleanup evidence</li>
-              <li>Sequential capacity admission under burst and unpack pressure</li>
+              <li>Independent recovery review after infrastructure changes</li>
+              <li>Selective TV copying to the NAS</li>
+              <li>Broader concurrency and arbitrary archive expansion</li>
               <li>Apple TV and Roku playback, seeking and cold-start privacy</li>
             </ul>
           </article>
         </div>
+        <p class="fine-print">September 20 acceptance: Plex discovered the new movie automatically. The episode was matched to its exact imported file after a scan of the general remote TV library. Indexing does not prove device playback. The three original paused requests and their historical journals and holds remain preserved.</p>
+        <aside class="callout callout--warning"><strong>Existing health findings remain open.</strong> The final cutover check still reported 14 catalog failures and application update notices. Native acceptance did not clear or waive them; inspect current health before acting.</aside>
         <p class="fine-print">This page is deliberately static. It does not query applications, list media, or turn a documented observation into a live status claim.</p>
       </section>
 
@@ -216,11 +251,13 @@
           <table>
             <thead><tr><th>Symptom</th><th>Look first</th><th>Safe response</th></tr></thead>
             <tbody>
-              <tr><td>Scratch is full or SAB reports “no space”</td><td>SAB queue/history, cloud health, importer journals and filesystem usage</td><td>Keep acquisition held. Do not delete failures, clear history, resume a large job or restart SAB until exact jobs and durable state are reconciled.</td></tr>
+              <tr><td>Scratch is full or SAB reports “no space”</td><td>SAB queue/history, the owning Arr application, cloud health and filesystem usage</td><td>Keep acquisition held. Do not delete failures, clear history, resume a large job or restart SAB until exact jobs and durable state are reconciled.</td></tr>
               <tr><td>A job is paused</td><td>SAB’s per-job pause and current capacity notes</td><td>Assume it may be a manual or protective pause. Do not release it just to make the queue move.</td></tr>
               <tr><td>SAB, Prowlarr, Radarr or Sonarr is unavailable</td><td>Private route first, then discovery/cloud health</td><td>Separate network reachability from an application failure. Recheck after scratch recovery; do not assume every HTTP error has one cause.</td></tr>
-              <tr><td>Download finished but import is delayed</td><td>Arr queue/history for Arr jobs; cart importer status and journal phase for cart jobs</td><td>Preserve the completion and journal. Never replay an import or reset activation blindly.</td></tr>
-              <tr><td>Imported item is not visible in Plex</td><td>Correct NAS versus Remote library and Plex scan timing</td><td>Wait for normal discovery or target only the selected directory if the runbook calls for it. Never expose private libraries or empty trash to force a result.</td></tr>
+              <tr><td>Download finished but import is delayed</td><td>The owning Arr queue/history; retained journals for historical cart jobs</td><td>Preserve the completion and journal. Never replay an import or reset activation blindly.</td></tr>
+              <tr><td>Imported item is not visible in Plex</td><td>Correct NAS versus Remote library and Plex scan timing</td><td>Check the file exists in the expected library and allow the normal scan to run. If needed, scan the selected folder or its general Movies/TV library; the new TV acceptance needed a library scan. Keep private libraries excluded and automatic trash emptying off.</td></tr>
+              <tr><td>A release fails with missing articles</td><td>The failure in SAB and the owning Arr history</td><td>Keep the failed record. Automatic redownload is off; choose a different release in Arr only after reconciling the failed request. Do not submit the same uncertain grab again.</td></tr>
+              <tr><td>Filex transfer interrupted</td><td>Filex operation history and destination space</td><td>Keep the source and partial destination. Review the error before an explicit retry; use Restore for sources retained in staging trash.</td></tr>
               <tr><td>NAS copy failed</td><td>NAS Downloads panel, free-space reserve, source availability and exact failure text</td><td>Retry only the same owned item after the blocking condition is fixed. Do not overwrite an unrelated destination or grant the NAS write access upstream.</td></tr>
             </tbody>
           </table>
@@ -235,9 +272,12 @@
           <code>just usenet-discovery-health</code>
           <code>just usenet-cloud-health</code>
           <code>just usenet-qnap-health</code>
-          <code>just usenet-cart-import-status</code>
+          <code>just usenet-native-ownership-status</code>
+          <code>just usenet-native-cutover-preflight</code>
+          <code>just usenet-filex-status</code>
           <code>just native-status</code>
         </div>
+        <p class="fine-print">The native preflight reads current ownership, preserved holds and mounted free space. It does not change the system. A read-only capture can report that the earlier cutover is accepted and active.</p>
         <aside class="callout callout--privacy"><strong>Privacy note:</strong> <code>native-status</code> can print real media names. Keep its output in private ignored evidence; do not paste it into commits, tickets or chat.</aside>
       </section>
 
@@ -252,8 +292,10 @@
           <div><dt>Completion</dt><dd>Whether the provider has enough of the required article pieces to reconstruct the post.</dd></div>
           <div><dt>PAR2 repair</dt><dd>Recovery data that can rebuild some missing or damaged pieces. Repair consumes temporary disk space.</dd></div>
           <div><dt>Unpacking</dt><dd>Extracting the finished files from archives after verification or repair. Peak space may include both archives and extracted output.</dd></div>
-          <div><dt>RSS</dt><dd>A periodic feed check. The two carts are polled every 15 minutes; polling a request is not the same as admitting its payload to disk.</dd></div>
+          <div><dt>RSS</dt><dd>A periodic release check. Direct cart intake is disabled. Native polling also stays off to preserve the existing backlog; use explicit searches in Arr for new requests.</dd></div>
           <div><dt>Quality profile</dt><dd>Radarr or Sonarr rules describing acceptable resolution, source, upgrades and cutoffs.</dd></div>
+          <div><dt>Arr</dt><dd>Shorthand for Radarr (movies) and Sonarr (TV). Each owns its requests, SAB category, import and completed-source cleanup.</dd></div>
+          <div><dt>Staging</dt><dd>A temporary working area. Acquisition staging belongs to SAB and Arr; Filex has separate staging for manual transfers.</dd></div>
           <div><dt>Canonical</dt><dd>The authoritative copy. In this system that is the Storage Box library, not cloud scratch or an optional NAS copy.</dd></div>
         </dl>
       </section>

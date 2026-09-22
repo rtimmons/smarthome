@@ -1,0 +1,7 @@
+---
+- name: Configure the explicitly approved repair volume without moving canonical media
+  hosts: cloud
+  become: true
+  gather_facts: false
+  roles:
+    - cloud_repair_spool

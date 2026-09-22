@@ -702,12 +702,25 @@ class Coordinator:
         return {'status': 'retry_enabled', 'item': identity}
 
 
+def worker_exit_code(result):
+    """Return the process status for one periodic worker result.
+
+    Held records are expected review outcomes and are already represented in
+    the durable status receipt; only an actual failed run should fail the
+    systemd unit.
+    """
+    return 1 if result.get('status') == 'failed' else 0
+
+
 def main():
     os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('arm', 'run', 'status', 'retry'))
     parser.add_argument('item', nargs='?')
     args = parser.parse_args()
+    if args.action != 'status' and Path('/srv/usenet/config/catalog/native-ownership.json').exists():
+        print('{"status":"retired","reason":"native_ownership_active"}')
+        return 0
     coordinator = None
     try:
         settings = catalog.Settings.from_env()
@@ -726,7 +739,11 @@ def main():
             else:
                 result = coordinator.run()
         print(json.dumps(result), flush=True)
-        return 1 if result.get('status') in {'failed', 'held'} else 0
+        # A held item is an expected terminal outcome for an individual
+        # identity review.  The durable status and health check expose it as
+        # a warning; it must not make the periodic systemd worker look failed
+        # or trigger needless recovery of the importer itself.
+        return worker_exit_code(result)
     except catalog.CatalogBusy:
         print('{"status":"busy"}')
         return 0

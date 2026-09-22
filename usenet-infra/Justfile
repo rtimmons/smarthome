@@ -27,9 +27,20 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cart-import.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml remote-scratch.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml hybrid-scratch.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml repair-spool.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml native-cutover.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex.yml --syntax-check
 	shellcheck config/arr-shared-library-init
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
+
+# Build reviewed filex sources, safety tests, and security-updated dependencies.
+[group: 'validation']
+[positional-arguments]
+filex-build *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/filex-build.py "$@"
 
 # Check tracked content and repository history for high-confidence credential forms.
 [group: 'validation']
@@ -113,6 +124,29 @@ native-evict item:
 cloud-health:
 	@./scripts/cloud-command /srv/usenet/scripts/healthcheck
 
+# Deploy only the isolated portal with its reviewed private configuration.
+[group: 'setup']
+configure-filex: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook filex.yml
+
+# Read service state without exposing storage credentials or media names.
+[group: 'health']
+filex-status:
+	@./scripts/cloud-command systemctl show usenet-filex.service --property=LoadState,ActiveState,SubState,Result
+	@./scripts/cloud-command sudo -n sh -c 'systemctl is-active --quiet usenet-filex.service && curl --silent --show-error --fail --cacert /etc/usenet-filex/tls/ca.crt https://10.77.0.1:5213/healthz'
+
+# Stop only the portal; keep its database, staging and audit data.
+[group: 'setup']
+filex-disable:
+	@./scripts/cloud-command sudo -n systemctl disable --now usenet-filex.service
+
+[group: 'validation']
+[positional-arguments]
+filex-validate config:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec python3 scripts/filex-portal.py validate "$1"
+
 # Install and arm only future user-cart native import and verified cleanup.
 [group: 'setup']
 configure-cart-import: ansible-setup
@@ -128,10 +162,35 @@ configure-remote-scratch: ansible-setup
 configure-hybrid-scratch: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook hybrid-scratch.yml
 
+# Configure only the newly provisioned 300 GB volume, preserving original spool data.
+[group: 'setup']
+[positional-arguments]
+configure-repair-spool volume_id: ansible-setup
+	#!/usr/bin/env bash
+	set -euo pipefail
+	[[ "$1" =~ ^[1-9][0-9]*$ ]] || exit 2
+	cd ansible
+	exec uv run --with 'ansible-core==2.21.4' ansible-playbook repair-spool.yml -e "cloud_repair_spool_volume_id=$1"
+
 # Read the host-owned cart importer status without changing acquisition or imports.
 [group: 'health']
 cart-import-status:
 	@./scripts/cloud-command sudo -n -u usenet /bin/sh -c 'set -a; . /srv/usenet/config/catalog.env; exec python3 /srv/usenet/libexec/cart-import.py status'
+
+# Capture a private, read-only baseline and print only sanitized cutover findings.
+[group: 'health']
+native-cutover-preflight:
+	@python3 scripts/native-cutover-preflight.py
+
+# Verify native ownership, limits and preserved historical holds without mutation.
+[group: 'health']
+native-ownership-status:
+	@./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/native-cutover.py inspect
+
+# Requires the recorded user decision to accept native Arr import/cleanup.
+[group: 'setup']
+configure-native-ownership: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml -e native_cleanup_accepted=true
 
 # Inspect or enable NZBFinder Cart automatic downloads without exposing its key.
 [group: 'setup']

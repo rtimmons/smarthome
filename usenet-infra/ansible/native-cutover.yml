@@ -1,0 +1,42 @@
+---
+- name: Configure reviewed native ownership while retaining historical evidence
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Require the explicit native cleanup policy decision
+      ansible.builtin.assert:
+        that: native_cleanup_accepted | default(false) | bool
+        fail_msg: 'Native cleanup replaces independent pre-delete hashing for new requests; record the user decision first.'
+
+    - name: Install native configuration and legacy retirement safeguards
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/{{ item }}.py'
+        dest: '/srv/usenet/libexec/{{ item }}.py'
+        owner: root
+        group: usenet
+        mode: '0550'
+      loop:
+        - native-cutover
+        - repair-spool-setup
+        - capacity-admission
+        - cart-import
+        - incomplete-maintenance
+        - discovery-config
+        - healthcheck
+
+    - name: Inspect existing ownership marker
+      ansible.builtin.stat:
+        path: /srv/usenet/config/catalog/native-ownership.json
+      register: native_marker
+
+    - name: Switch an idle hybrid only once with durable rollback settings
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/native-cutover.py, apply, --accept-native-cleanup]
+      changed_when: true
+      when: not native_marker.stat.exists
+
+    - name: Verify the resulting native owners and preserved history
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      changed_when: false

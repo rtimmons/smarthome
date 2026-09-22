@@ -1,0 +1,25 @@
+{
+  "schema_version": 2,
+  "image_digest": "sha256:e6b89d15606318a88675070e5fc5d6e1bfc133af43ae5a77a6b16ea9655b9a2e",
+  "public_url": "https://10.77.0.1:5213",
+  "admin": {
+    "email": "admin@example.invalid",
+    "password": "REPLACE_WITH_RANDOM_ADMIN_PASSWORD"
+  },
+  "nas": {
+    "host": "192.168.1.66",
+    "port": 2226,
+    "user": "filex-staging",
+    "root": "/staging",
+    "host_key": "REPLACE_WITH_VERIFIED_SSH_ED25519_PUBLIC_KEY",
+    "private_key": "REPLACE_WITH_DEDICATED_PRIVATE_KEY",
+    "restricted_staging_account": false
+  },
+  "storagebox": {
+    "mode": "read_only_bind"
+  },
+  "operator": {
+    "email": "operator@example.invalid",
+    "password": "REPLACE_WITH_DISTINCT_RANDOM_OPERATOR_PASSWORD"
+  }
+}

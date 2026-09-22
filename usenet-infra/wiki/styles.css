@@ -191,6 +191,8 @@ h3 { line-height: 1.2; }
 }
 
 .concept {
+  display: flex;
+  flex-direction: column;
   position: relative;
   min-height: 270px;
   padding: 1.4rem;
@@ -215,7 +217,7 @@ h3 { line-height: 1.2; }
 
 .concept h3 { margin: 2rem 0 0.55rem; font-size: 1.2rem; }
 .concept p { margin: 0; font-size: 0.91rem; }
-.concept__tools { position: absolute; right: 1.4rem; bottom: 1.25rem; left: 1.4rem; color: var(--muted); font-size: 0.72rem !important; font-weight: 700; }
+.concept .concept__tools { margin-top: auto; padding-top: 0.75rem; color: var(--muted); font-size: 0.72rem; font-weight: 700; }
 
 .callout {
   margin: 1.4rem 0 0;
@@ -238,6 +240,8 @@ h3 { line-height: 1.2; }
   box-shadow: var(--shadow);
 }
 
+.diagram-scroll { overflow-x: auto; }
+.diagram-scroll img { min-width: 760px; }
 .diagram-card img { display: block; width: 100%; height: auto; border-radius: 14px; }
 .diagram-card figcaption { padding: 0.8rem 0.4rem 0.1rem; color: #bfcfc8; font-size: 0.76rem; }
 

@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from html.parser import HTMLParser
+import hashlib
 from pathlib import Path
 import re
 import unittest
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 import xml.etree.ElementTree as ET
 
 
@@ -70,6 +71,7 @@ class WikiContentTests(unittest.TestCase):
             "http://10.77.0.1:19696/radarr/",
             "http://10.77.0.1:19696/sonarr/",
             "http://192.168.1.66:1337/",
+            "https://10.77.0.1:5213/",
             "http://192.168.1.66:32400/web",
             "https://nzbgeek.info/dashboard.php?mycart",
             "https://nzbfinder.ws/cart",
@@ -84,12 +86,20 @@ class WikiContentTests(unittest.TestCase):
         for href in external:
             self.assertIsNone(re.search(r"(?:api[_-]?key|token|auth|password)=", href, re.I), href)
 
+    def test_cached_assets_change_url_when_content_changes(self):
+        for reference in self.parser.sources:
+            parsed = urlsplit(reference)
+            if parsed.scheme or parsed.netloc:
+                continue
+            expected = hashlib.sha256((WIKI / parsed.path).read_bytes()).hexdigest()[:12]
+            self.assertEqual(parse_qs(parsed.query), {"v": [expected]}, reference)
+
     def test_explains_required_workflows_boundaries_and_terms(self):
         for phrase in (
-            "Use a cart", "Use Radarr or Sonarr", "Canonical library",
+            "Use interactive search in Arr", "Use Radarr or Sonarr", "Canonical library",
             "Temporary scratch", "Local copy", "Backups", "Reference, not live health",
             "Retention", "Completion", "PAR2 repair", "Unpacking", "RSS", "Quality profile",
-            "just usenet-cloud-health", "just usenet-cart-import-status",
+            "just usenet-cloud-health", "just usenet-native-ownership-status",
         ):
             self.assertIn(phrase, self.html)
         self.assertIn("Still needs acceptance", self.html)

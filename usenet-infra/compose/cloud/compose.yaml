@@ -35,7 +35,7 @@ services:
         max-file: "3"
 
   prowlarr:
-    image: lscr.io/linuxserver/prowlarr:2.5.2.5491-ls158
+    image: lscr.io/linuxserver/prowlarr:2.6.5.5623-ls161
     environment:
       PUID: "${PUID:?Set PUID in .env}"
       PGID: "${PGID:?Set PGID in .env}"

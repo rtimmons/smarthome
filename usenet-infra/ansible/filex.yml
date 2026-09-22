@@ -1,0 +1,14 @@
+---
+- name: Deploy the dedicated NAS staging endpoint
+  hosts: qnap
+  gather_facts: false
+  roles:
+    - qnap_preflight
+    - qnap_filex
+
+- name: Deploy the isolated private file portal
+  hosts: cloud
+  become: true
+  gather_facts: false
+  roles:
+    - cloud_filex

@@ -287,6 +287,26 @@ class CapacityAdmissionTests(unittest.TestCase):
         self.assertEqual(state["held"], [])
         self.assertFalse(sab.state["paused"])
 
+    def test_recovered_admission_failure_preserves_payload_and_reservation(self):
+        sab = FakeSab([self.job("first"), self.job("second")])
+        controller = self.controller(sab)
+        controller.configure()
+        controller.run()
+        state = controller.state()
+        state["admitted"]["preserve_failed_payload"] = True
+        controller.save(state)
+        reservation = copy.deepcopy(state["admitted"])
+        identity = reservation["nzo_id"]
+        sab.state["queue"] = [j for j in sab.state["queue"] if j["nzo_id"] != identity]
+        sab.state["history"] = [{"nzo_id": identity, "status": "Failed", "category": "Default"}]
+        with mock.patch.object(controller, "recycle_failed") as recycle:
+            with self.assertRaisesRegex(admission.AdmissionError, "recovered_payload_failed_review"):
+                controller.run()
+        recycle.assert_not_called()
+        self.assertTrue(sab.state["paused"])
+        self.assertEqual(controller.state()["admitted"], reservation)
+        self.assertTrue(all(j["status"] == "Paused" for j in sab.state["queue"]))
+
     def test_nonterminal_history_never_reclaims_payload(self):
         sab = FakeSab([self.job("first")])
         controller = self.controller(sab)
@@ -472,6 +492,7 @@ class CapacityAdmissionTests(unittest.TestCase):
     def test_unexpected_scratch_mount_fails_closed(self):
         controller = self.controller(FakeSab())
         controller.remote_scratch = mock.Mock(return_value=None)
+        controller.repair_spool = mock.Mock(return_value=None)
         with mock.patch.object(Path, "stat", side_effect=[mock.Mock(st_dev=1), mock.Mock(st_mode=0o40700),
                 mock.Mock(st_mode=0o40700), mock.Mock(st_dev=2)]):
             with self.assertRaisesRegex(admission.AdmissionError, "scratch_filesystem_layout_changed"):
@@ -654,14 +675,14 @@ class CapacityAdmissionTests(unittest.TestCase):
     def test_hybrid_budgets_each_filesystem_instead_of_three_remote_copies(self):
         controller = self.controller(FakeSab([self.job('large', 80 * 1024)]))
         controller.configure(); self.enable_hybrid(controller)
-        controller.available = lambda: 115 * 1024**3
+        controller.available = lambda: 195 * 1024**3
         controller.budget_available = lambda: 135 * 1024**3
         self.assertEqual(controller.run()['status'], 'admitted')
         self.assertEqual(controller.state()['admitted']['estimate_bytes'], 105 * 1024**3)
-        self.assertEqual(controller.state()['admitted']['local_estimate_bytes'], 85 * 1024**3)
+        self.assertEqual(controller.state()['admitted']['local_estimate_bytes'], 165 * 1024**3)
 
     def test_hybrid_requires_both_budgets_and_does_not_spend_reserves(self):
-        for local, remote in [(115 * 1024**3 - 1, 1000 * 1024**3),
+        for local, remote in [(195 * 1024**3 - 1, 1000 * 1024**3),
                               (1000 * 1024**3, 135 * 1024**3 - 1)]:
             controller = self.controller(FakeSab([self.job('large', 80 * 1024)]))
             controller.configure(); self.enable_hybrid(controller)
@@ -675,7 +696,7 @@ class CapacityAdmissionTests(unittest.TestCase):
         controller = self.controller(sab)
         controller.configure(); self.enable_hybrid(controller)
         remote_free = 230 * 1024**3
-        controller.available = lambda: 110 * 1024**3
+        controller.available = lambda: 170 * 1024**3
         controller.budget_available = lambda: remote_free
         for _ in range(3):
             self.assertEqual(controller.run()['status'], 'admitted')
@@ -688,6 +709,15 @@ class CapacityAdmissionTests(unittest.TestCase):
             remote_free -= 54 * 1024**3
         self.assertEqual(controller.run()['status'], 'idle')
         self.assertFalse(sab.state['paused'])
+
+    def test_hybrid_skips_job_whose_parity_repair_would_breach_local_floor(self):
+        controller = self.controller(FakeSab([self.job('large', 80 * 1024), self.job('fitting', 12 * 1024)]))
+        controller.configure(); self.enable_hybrid(controller)
+        controller.available = lambda: 123 * 1024**3
+        controller.budget_available = lambda: 131 * 1024**3
+        self.assertEqual(controller.run()['status'], 'admitted')
+        self.assertEqual(controller.state()['admitted']['nzo_id'], 'fitting')
+        self.assertEqual(controller.state()['admitted']['local_estimate_bytes'], 29 * 1024**3)
 
     def test_remote_budget_reserves_source_and_canonical_copy_together(self):
         controller = self.controller(FakeSab([self.job("large", 80 * 1024)]))

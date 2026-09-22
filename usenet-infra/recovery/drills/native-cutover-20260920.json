@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-20T20:18:52.033482+00:00",
+  "status": "accepted",
+  "native_ownership_phase": "active",
+  "user_decisions": {
+    "storage_expansion_approved": true,
+    "native_arr_import_and_cleanup_accepted": true,
+    "random_fresh_movie_and_episode_authorized": true
+  },
+  "storage": {
+    "storage_box_tier": "bx21",
+    "storage_box_capacity_tib": 5,
+    "repair_volume_provider_gb": 300,
+    "vm_type_retained": "cx43",
+    "incremental_monthly_usd": 32.01,
+    "final_available_bytes": {
+      "repair": 312653590528,
+      "remote": 4379266514944,
+      "root": 126881193984
+    },
+    "original_spool_retained": true,
+    "original_spool_files": 535,
+    "original_spool_bytes": 28639139
+  },
+  "native_acceptance": {
+    "movie-001": {
+      "ready": true,
+      "size_bytes": 78775024506,
+      "native_grab_and_import_same_download_id": true,
+      "canonical_file_exists": true,
+      "source_file_absent": true,
+      "source_directory_absent": true,
+      "sab_active_history_removed": true
+    },
+    "episode-001": {
+      "ready": true,
+      "size_bytes": 7659480206,
+      "native_grab_and_import_same_download_id": true,
+      "canonical_file_exists": true,
+      "source_file_absent": true,
+      "source_directory_absent": true,
+      "sab_active_history_removed": true
+    },
+    "plex": {
+      "movie_indexed": true,
+      "movie_discovery": "automatic",
+      "episode_indexed": true,
+      "episode_exact_file_verified": true,
+      "episode_discovery": "verified_after_general_remote_tv_library_scan",
+      "private_library_content_accessed": false
+    },
+    "superseded_episode_selection": {
+      "distinct_failed_releases": 3,
+      "downloaded_payload_bytes": 0,
+      "failed_history_preserved": true,
+      "selection_unmonitored": true
+    }
+  },
+  "large_repair": {
+    "schema_version": 1,
+    "phase": "verified",
+    "source_bytes": 85899345920,
+    "source_is_synthetic": true,
+    "source_allocated_bytes": 85899792384,
+    "damaged_bytes": 65536,
+    "replacement_bytes": 85899345920,
+    "replacement_allocated_bytes": 85899837440,
+    "simultaneous_allocated_bytes": 171833499648,
+    "free_bytes_at_full_replacement": 140820086784,
+    "independent_sha256_passed": true,
+    "elapsed_seconds": 1705.15,
+    "fixture_removed": true
+  },
+  "restart": {
+    "phase": "verified",
+    "queue_history_and_holds_preserved": true,
+    "native_limits_and_categories_persisted": true,
+    "imported_files_still_owned": true,
+    "legacy_workers_refused_start": true,
+    "global_pause_restored": true
+  },
+  "preservation": {
+    "original_queue_count": 3,
+    "all_original_jobs_paused": true,
+    "global_sab_paused": false,
+    "original_sab_history_unchanged": true,
+    "journal_count": 44,
+    "all_journal_hashes_unchanged": true,
+    "completed_journals": 37,
+    "capacity_holds": 10,
+    "importer_holds": 27,
+    "importer_errors": 0,
+    "activation_unchanged": true
+  },
+  "policy": {
+    "request_owners": [
+      "radarr",
+      "sonarr"
+    ],
+    "distinct_categories": true,
+    "enabled_direct_cart_feeds": 0,
+    "prowlarr_direct_downloading": false,
+    "legacy_timers_disabled": 3,
+    "legacy_start_guards_verified": true,
+    "rss_interval_minutes": 0,
+    "existing_missing_movie_backlog_preserved": 7,
+    "maximum_release_bytes": 107374182400,
+    "planning_unpacked_bytes": 107374182400,
+    "reserve_bytes": 32212254720,
+    "arr_minimum_import_free_mib": 30720,
+    "hardlinks": true,
+    "skip_free_space_checks": false,
+    "completed_removal": true,
+    "failed_removal": false,
+    "automatic_redownload": false,
+    "wait_for_cleanup_before_next_large_request": true
+  },
+  "validation": {
+    "infrastructure_cases": 693,
+    "optional_skips": 9,
+    "test_failures": 0,
+    "full_recipe": "blocked_by_two_documented_historical_rsa_keys",
+    "current_source_scan": "passed",
+    "nas_health": "passed",
+    "existing_catalog_failures": 14,
+    "existing_application_notices_unwaived": true
+  },
+  "not_claimed": [
+    "arbitrary_archive_expansion",
+    "broader_concurrency",
+    "device_playback",
+    "selective_tv_nas_copy",
+    "independent_restore_of_new_state",
+    "whole_machine_replacement",
+    "nas_loss_protection"
+  ],
+  "wiki": {
+    "deployment": "passed",
+    "isolated_project": true,
+    "browser_delivery": "passed",
+    "native_request_flow_published": true
+  },
+  "backup_input_check": {
+    "backup_inputs_readable": true,
+    "input_count": 720,
+    "native_and_storage_receipts_in_allowlist": true,
+    "archive_created": false,
+    "restore_tested": false
+  }
+}

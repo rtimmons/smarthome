@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import copy
+import json
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -31,6 +33,8 @@ class FakeAPI:
         self.extra_lookup = []
         self.remap_wrong = False
         self.reject = False
+        self.rejections = []
+        self.media = {'copyUsingHardlinks': True, 'fileDate': 'none', 'minimumFreeSpaceWhenImporting': 100}
         self.fail_endpoint = None
 
     def parsed(self, app, title):
@@ -51,6 +55,8 @@ class FakeAPI:
             return {'records': copy.deepcopy(values), 'totalRecords': len(values)}
         if route == 'system/status':
             return {'version': adapter.VERSIONS[app]}
+        if route == 'config/mediamanagement':
+            return copy.deepcopy(self.media)
         if route == 'parse':
             return self.parsed(app, query['title'][0])
         if route in ('movie/lookup', 'series/lookup'):
@@ -77,13 +83,16 @@ class FakeAPI:
             return copy.deepcopy(self.files)
         if route == 'manualimport':
             if method == 'GET':
-                folder = adapter.SOURCE_ROOT / Path(query['folder'][0]).relative_to('/data/complete')
+                path = Path(query['folder'][0])
+                folder = (adapter.SOURCE_ROOT / 'remote' / path.relative_to('/storage/.acquisition-staging')
+                          if str(path).startswith('/storage/.acquisition-staging/') else
+                          adapter.SOURCE_ROOT / path.relative_to('/data/complete'))
                 return [{'path': adapter.api_source(path), 'folderName': path.parent.name, 'quality': copy.deepcopy(QUALITY),
                          'languages': copy.deepcopy(LANGUAGES), 'releaseGroup': 'test', 'indexerFlags': 0,
                          'rejections': [{'reason': 'sample', 'message': 'Sample'}] if path.stem == 'sample' else []}
                         for path in sorted(folder.iterdir()) if path.suffix == '.mkv']
             item = copy.deepcopy(body[0])
-            item['rejections'] = [{'reason': 'unknown'}] if self.reject else []
+            item['rejections'] = [{'reason': 'unknown'}] if self.reject else copy.deepcopy(self.rejections)
             if app == 'radarr':
                 item['movie'] = {'id': 99 if self.remap_wrong else 7}
             else:
@@ -136,6 +145,115 @@ class NativeArrTests(unittest.TestCase):
             self.assertEqual(adapter.api_source(self.source), '/data/complete/Example.Movie.2026/Example.Movie.2026.mkv')
             self.assertEqual(adapter.host_destination('radarr', '/library/Example/movie.mkv'),
                              self.library / 'Movies/Example/movie.mkv')
+
+    def hybrid_space_fixture(self):
+        marker = self.root / 'remote-scratch.json'
+        marker.write_text(json.dumps({'schema_version': 2, 'mode': 'hybrid', 'native_hardlinks': True}))
+        self.directory = self.scratch / 'remote/complete/Example.Movie.2026'
+        self.directory.mkdir(parents=True)
+        self.source = self.directory / 'Example.Movie.2026.mkv'
+        self.source.write_bytes(b'verified synthetic media')
+        self.shared = self.library / '.acquisition-staging/complete/Example.Movie.2026' / self.source.name
+        self.shared.parent.mkdir(parents=True)
+        os.link(self.source, self.shared)
+        self.api.rejections = [{'reason': 'Not enough free space', 'type': 'permanent'}]
+        for patch in (mock.patch.object(adapter, 'SCRATCH_MARKER', marker),
+                      mock.patch.object(adapter.os.path, 'ismount', return_value=True),
+                      mock.patch.object(adapter.os, 'statvfs', return_value=mock.Mock(f_bavail=40, f_frsize=1024**3))):
+            patch.start()
+            self.patches.append(patch)
+
+    def test_exact_hardlink_proof_accepts_only_duplicate_copy_space_requirement(self):
+        self.hybrid_space_fixture()
+        before = self.source.read_bytes()
+        plan = self.prepare()
+        proof = plan['files'][0]['hardlink_space_check']
+        self.assertTrue(proof['exact_source_link_verified'])
+        self.assertEqual(proof['reserve_bytes'], 30 * 1024**3)
+        self.assertFalse(list(self.directory.glob('.cart-hardlink-probe-*')))
+        self.assertEqual(self.source.stat().st_nlink, 2)
+        self.assertEqual(self.source.read_bytes(), before)
+        self.assertFalse(any(c[2] != 'GET' for c in self.api.calls if c[1] == 'config/mediamanagement'))
+        self.arr.submit(plan)
+        self.assertIn(42, self.api.commands)
+
+    def test_hardlink_probe_preserves_readonly_canonical_boundary(self):
+        self.hybrid_space_fixture()
+        real_link = os.link
+
+        def staging_link(source, target, **kwargs):
+            self.assertEqual(Path(target).parent, self.directory)
+            return real_link(source, target, **kwargs)
+
+        with mock.patch.object(adapter.os, 'link', side_effect=staging_link) as link:
+            self.prepare()
+        link.assert_called_once()
+        self.assertFalse(list(self.directory.glob('.cart-hardlink-probe-*')))
+        self.assertFalse(list((self.library / 'Movies').iterdir()))
+
+    def test_sshfs_synthetic_link_count_does_not_discard_successful_link(self):
+        self.hybrid_space_fixture()
+        real_stat = Path.stat
+
+        def sshfs_stat(path, **kwargs):
+            value = real_stat(path, **kwargs)
+            if path.name.startswith('.cart-hardlink-probe-'):
+                return mock.Mock(st_nlink=1, st_size=value.st_size,
+                                 st_dev=value.st_dev, st_mtime_ns=value.st_mtime_ns)
+            return value
+
+        with mock.patch.object(Path, 'stat', sshfs_stat):
+            plan = self.prepare()
+        self.assertTrue(plan['files'][0]['hardlink_space_check']['exact_source_link_verified'])
+        self.assertFalse(list(self.directory.glob('.cart-hardlink-probe-*')))
+
+    def test_hardlink_space_exception_rechecks_before_submission(self):
+        self.hybrid_space_fixture()
+        plan = self.prepare()
+        self.api.media['copyUsingHardlinks'] = False
+        with self.assertRaisesRegex(adapter.CartImportHold, 'native_hardlink_policy_changed'):
+            self.arr.submit(plan)
+        self.assertFalse(self.api.commands)
+
+    def test_hardlink_space_exception_never_waives_another_rejection(self):
+        self.hybrid_space_fixture()
+        self.api.rejections.append({'reason': 'unknown', 'type': 'permanent'})
+        with self.assertRaisesRegex(adapter.CartImportHold, 'candidate_rejected'):
+            self.prepare()
+        self.assertFalse(self.api.commands)
+
+    def test_hardlink_space_exception_preserves_reserve(self):
+        self.hybrid_space_fixture()
+        with mock.patch.object(adapter.os, 'statvfs', return_value=mock.Mock(f_bavail=29, f_frsize=1024**3)):
+            with self.assertRaisesRegex(adapter.CartImportHold, 'native_hardlink_reserve_breached'):
+                self.prepare()
+        self.assertFalse(list(self.directory.glob('.cart-hardlink-probe-*')))
+
+    def test_hardlink_space_exception_requires_mounted_library(self):
+        self.hybrid_space_fixture()
+        with mock.patch.object(adapter.os.path, 'ismount', return_value=False):
+            with self.assertRaisesRegex(adapter.CartImportHold, 'canonical_mount_unavailable'):
+                self.prepare()
+
+    def test_hardlink_probe_failure_keeps_source_and_refuses_import(self):
+        self.hybrid_space_fixture()
+        with mock.patch.object(adapter.os, 'link', side_effect=OSError('unavailable')):
+            with self.assertRaisesRegex(adapter.CartImportHold, 'native_hardlink_probe_failed'):
+                self.prepare()
+        self.assertTrue(self.source.is_file())
+        self.assertFalse(self.api.commands)
+
+    def test_hardlink_space_exception_rejects_different_shared_source(self):
+        self.hybrid_space_fixture()
+        self.shared.unlink()
+        self.shared.write_bytes(b'different file')
+        with self.assertRaisesRegex(adapter.CartImportHold, 'native_shared_source_mismatch'):
+            self.prepare()
+
+    def test_local_source_cannot_override_native_free_space_rejection(self):
+        self.api.rejections = [{'reason': 'Not enough free space', 'type': 'permanent'}]
+        with self.assertRaisesRegex(adapter.CartImportHold, 'hardlink_space_exception_not_supported'):
+            self.prepare()
 
     def television(self):
         self.source.unlink()

@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-20T03:06:39.597506+00:00",
+  "scope": "approved-admission-recovery-and-native-import",
+  "status": "verified-media-import-and-exact-cleanup; next-live-admission-awaits-eligible-input",
+  "media_alias": "recovered-media-001",
+  "recovery": {
+    "matching_job_metadata_restored": true,
+    "native_download_and_postprocessing": "Completed",
+    "isolated_remote_parity_and_sha256": "passed",
+    "reversible_local_block_repair": {
+      "changed_blocks": 7,
+      "changed_bytes": 29360128,
+      "full_repaired_sha256": "matched_independent_verified_repair"
+    },
+    "native_retry": "same_original_reservation_preserved_until_native_completion",
+    "other_pauses_and_original_holds": "preserved"
+  },
+  "native_import": {
+    "application": "Radarr",
+    "operation": "native_manual_import_copy_using_hardlinks",
+    "server_side_device_inode_match": "passed",
+    "link_count_during_verification": 2,
+    "media_bytes": 73961948234,
+    "independent_canonical_sha256": "matches_source_and_verified_repair",
+    "exact_media_source_unlink": "durable_intent_and_removal_verified",
+    "canonical_link_count_after_cleanup": 1,
+    "journal_phase": "cleaned_with_retained_files",
+    "retained_nonmedia_files": 6,
+    "retained_nonmedia_bytes": 21313535,
+    "cleanup_timestamp": "2026-09-20T03:06:28.099992+00:00"
+  },
+  "capacity": {
+    "global_pause": false,
+    "reserve_bytes_each_filesystem": 32212254720,
+    "local_available_bytes": 126936477696,
+    "remote_available_bytes": 67480977408,
+    "admitted_jobs": 0,
+    "held_records": 10,
+    "paused_requests": 3,
+    "eligible_requests": 0,
+    "blocked": null,
+    "next_automatic_admission": "not_exercised_no_eligible_request",
+    "paused_request_reasons": {
+      "preflight_catalog_identity_ambiguous": 1,
+      "identity_resolution_required_before_redownload": 2
+    },
+    "timers": "active"
+  },
+  "importer": {
+    "completed": 37,
+    "held": 27,
+    "errors": 0
+  },
+  "fixes": [
+    "local_budget_includes_full_parity_repair_output",
+    "recovered_failed_payload_preservation_guard",
+    "native_hardlink_capacity_exception_preserves_reserves_and_readonly_importer",
+    "NAS_listing_scoped_to_canonical_Movies_and_TV"
+  ],
+  "infrastructure_tests": {
+    "run": 668,
+    "skipped": 9,
+    "failed": 0,
+    "full_recipe": "fails_only_on_two_documented_historical_RSA_keys"
+  },
+  "private_evidence": "ignored local recovery evidence and durable runtime native/import journals; operational paths, identities and hashes excluded",
+  "not_claimed": [
+    "next_live_automatic_admission",
+    "resolution_of_existing_identity_holds",
+    "portal_or_machine_restore_coverage",
+    "TV_import_acceptance",
+    "Plex_device_playback"
+  ],
+  "health": {
+    "NAS": "passed",
+    "portal": "passed",
+    "capacity_admission": "passed_idle_no_eligible_requests",
+    "cloud": "fails_on_14_existing_catalog_failures_and_Prowlarr_update_notice",
+    "discovery": "fails_on_Radarr_and_Sonarr_update_notices",
+    "warnings_not_waived": true
+  },
+  "deployed_helpers_match_reviewed_source": true,
+  "native_global_space_checks": "enabled_and_unchanged"
+}

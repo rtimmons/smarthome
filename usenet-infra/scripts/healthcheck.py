@@ -311,17 +311,49 @@ def dashboard_data_check() -> Check:
         return Check("catalog_dashboard_data", "fail", "catalog refresh heartbeat could not be read")
 
 
+def native_ownership_checks() -> list[Check] | None:
+    marker = Path(os.environ.get('CATALOG_NATIVE_OWNERSHIP_PATH', '/srv/usenet/config/catalog/native-ownership.json'))
+    if not marker.exists() and not marker.is_symlink():
+        return None
+    try:
+        if marker.is_symlink() or not marker.is_file():
+            raise ValueError('invalid native marker')
+        result = subprocess.run([sys.executable, '/srv/usenet/libexec/native-cutover.py', 'inspect'],
+                                capture_output=True, text=True, timeout=90, check=True)
+        status = json.loads(result.stdout)
+        if status.get('status') != 'verified' or status.get('phase') not in ('acceptance', 'active'):
+            raise ValueError('native ownership not verified')
+        root = Path(os.environ.get('CATALOG_STATE_ROOT', '/data/state'))
+        cart = json.loads((root / 'cart-import/status.json').read_text())
+        capacity = json.loads((root / 'capacity-admission/state.json').read_text())
+        if type(cart.get('held')) is not int or cart['held'] < 0 or not isinstance(capacity.get('held'), list):
+            raise ValueError('invalid historical holds')
+        count = cart['held'] + len(capacity['held'])
+        phase = status['phase']
+        return [Check('native_ownership', 'warn' if phase == 'acceptance' else 'ok',
+                      'native owners and limits verified; ' + phase),
+                Check('legacy_holds', 'warn' if count else 'ok',
+                      f"retired workers; {cart['held']} importer holds and {len(capacity['held'])} capacity holds retained")]
+    except Exception:
+        return [Check('native_ownership', 'fail', 'native ownership or preserved legacy state could not be verified')]
+
+
 def collect_checks() -> list[Check]:
     role = os.environ.get("CATALOG_ROLE", "cloud").lower()
     checks = [storage_check(), failure_check()]
     if role == "cloud":
         checks.extend(app_checks())
-        cart = cart_import_check()
-        if cart is not None:
-            checks.append(cart)
-        capacity = capacity_admission_check()
-        if capacity is not None:
-            checks.append(capacity)
+        native = native_ownership_checks()
+        if native is not None:
+            checks.extend(native)
+            checks.append(disk_check('repair_spool', Path('/srv/usenet/downloads/incomplete'), 30 * 1024**3))
+        else:
+            cart = cart_import_check()
+            if cart is not None:
+                checks.append(cart)
+            capacity = capacity_admission_check()
+            if capacity is not None:
+                checks.append(capacity)
         checks.append(
             disk_check(
                 "vm_scratch",

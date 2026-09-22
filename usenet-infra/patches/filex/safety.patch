@@ -1,0 +1,1954 @@
+--- a/backend/go.mod
++++ b/backend/go.mod
+@@ -1,13 +1,13 @@
+ module github.com/brf-tech/filex/backend
+ 
+-go 1.25.0
++go 1.26.0
+ 
+ require (
+-	github.com/aws/aws-sdk-go-v2 v1.30.3
++	github.com/aws/aws-sdk-go-v2 v1.41.5
+ 	github.com/aws/aws-sdk-go-v2/config v1.27.27
+ 	github.com/aws/aws-sdk-go-v2/credentials v1.17.27
+-	github.com/aws/aws-sdk-go-v2/service/s3 v1.58.2
+-	github.com/aws/smithy-go v1.20.3
++	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3
++	github.com/aws/smithy-go v1.24.2
+ 	github.com/blevesearch/bleve/v2 v2.4.2
+ 	github.com/blevesearch/bleve_index_api v1.1.10
+ 	github.com/coder/websocket v1.8.15
+@@ -24,7 +24,7 @@
+ 	github.com/google/uuid v1.6.0
+ 	github.com/hanwen/go-fuse/v2 v2.11.0
+ 	github.com/hirochachacha/go-smb2 v1.1.0
+-	github.com/jackc/pgx/v5 v5.6.0
++	github.com/jackc/pgx/v5 v5.9.2
+ 	github.com/jlaffaye/ftp v0.2.0
+ 	github.com/ledongthuc/pdf v0.0.0-20250511090121-5959a4027728
+ 	github.com/modelcontextprotocol/go-sdk v1.6.1
+@@ -41,8 +41,8 @@
+ 	github.com/willscott/go-nfs v0.0.4
+ 	github.com/willscott/go-nfs-client v0.0.0-20240104095149-b44639837b00
+ 	github.com/winfsp/cgofuse v1.6.0
+-	golang.org/x/crypto v0.54.0
+-	golang.org/x/image v0.39.0
++	golang.org/x/crypto v0.56.0
++	golang.org/x/image v0.45.0
+ 	golang.org/x/net v0.57.0
+ 	golang.org/x/oauth2 v0.36.0
+ 	golang.org/x/sys v0.47.0
+@@ -55,16 +55,16 @@
+ 	filippo.io/edwards25519 v1.1.0 // indirect
+ 	github.com/Azure/go-ntlmssp v0.0.0-20221128193559-754e69321358 // indirect
+ 	github.com/RoaringBitmap/roaring v1.9.3 // indirect
+-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 // indirect
++	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 // indirect
+ 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.11 // indirect
+-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.15 // indirect
+-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 // indirect
++	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.21 // indirect
++	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.21 // indirect
+ 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
+-	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.15 // indirect
+-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 // indirect
+-	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.17 // indirect
+-	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17 // indirect
+-	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.15 // indirect
++	github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.22 // indirect
++	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.7 // indirect
++	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.13 // indirect
++	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.21 // indirect
++	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.21 // indirect
+ 	github.com/aws/aws-sdk-go-v2/service/sso v1.22.4 // indirect
+ 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 // indirect
+ 	github.com/aws/aws-sdk-go-v2/service/sts v1.30.3 // indirect
+@@ -92,7 +92,7 @@
+ 	github.com/dustin/go-humanize v1.0.1 // indirect
+ 	github.com/geoffgarside/ber v1.1.0 // indirect
+ 	github.com/go-asn1-ber/asn1-ber v1.5.5 // indirect
+-	github.com/go-jose/go-jose/v4 v4.0.2 // indirect
++	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
+ 	github.com/golang/geo v0.0.0-20210211234256-740aa86cb551 // indirect
+ 	github.com/golang/protobuf v1.5.3 // indirect
+ 	github.com/golang/snappy v0.0.1 // indirect
+@@ -102,8 +102,8 @@
+ 	github.com/hashicorp/golang-lru/v2 v2.0.7 // indirect
+ 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
+ 	github.com/jackc/pgpassfile v1.0.0 // indirect
+-	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
+-	github.com/jackc/puddle/v2 v2.2.1 // indirect
++	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
++	github.com/jackc/puddle/v2 v2.2.2 // indirect
+ 	github.com/json-iterator/go v1.1.12 // indirect
+ 	github.com/kr/fs v0.1.0 // indirect
+ 	github.com/kylelemons/godebug v1.1.0 // indirect
+@@ -130,7 +130,7 @@
+ 	go.uber.org/atomic v1.11.0 // indirect
+ 	go.uber.org/multierr v1.11.0 // indirect
+ 	golang.org/x/sync v0.22.0 // indirect
+-	golang.org/x/text v0.40.0 // indirect
++	golang.org/x/text v0.41.0 // indirect
+ 	google.golang.org/protobuf v1.36.11 // indirect
+ 	modernc.org/libc v1.75.6 // indirect
+ 	modernc.org/mathutil v1.7.1 // indirect
+--- a/backend/go.sum
++++ b/backend/go.sum
+@@ -8,8 +8,12 @@
+ github.com/alexbrainman/sspi v0.0.0-20231016080023-1a75b4708caa/go.mod h1:cEWa1LVoE5KvSD9ONXsZrj0z6KqySlCCNKHlLzbqAt4=
+ github.com/aws/aws-sdk-go-v2 v1.30.3 h1:jUeBtG0Ih+ZIFH0F4UkmL9w3cSpaMv9tYYDbzILP8dY=
+ github.com/aws/aws-sdk-go-v2 v1.30.3/go.mod h1:nIQjQVp5sfpQcTc9mPSr1B0PaWK5ByX9MOoDadSN4lc=
++github.com/aws/aws-sdk-go-v2 v1.41.5 h1:dj5kopbwUsVUVFgO4Fi5BIT3t4WyqIDjGKCangnV/yY=
++github.com/aws/aws-sdk-go-v2 v1.41.5/go.mod h1:mwsPRE8ceUUpiTgF7QmQIJ7lgsKUPQOUl3o72QBrE1o=
+ github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3 h1:tW1/Rkad38LA15X4UQtjXZXNKsCgkshC3EbmcUmghTg=
+ github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.3/go.mod h1:UbnqO+zjqk3uIt9yCACHJ9IVNhyhOCnYk8yA19SAWrM=
++github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 h1:eBMB84YGghSocM7PsjmmPffTa+1FBUeNvGvFou6V/4o=
++github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8/go.mod h1:lyw7GFp3qENLh7kwzf7iMzAxDn+NzjXEAGjKS2UOKqI=
+ github.com/aws/aws-sdk-go-v2/config v1.27.27 h1:HdqgGt1OAP0HkEDDShEl0oSYa9ZZBSOmKpdpsDMdO90=
+ github.com/aws/aws-sdk-go-v2/config v1.27.27/go.mod h1:MVYamCg76dFNINkZFu4n4RjDixhVr51HLj4ErWzrVwg=
+ github.com/aws/aws-sdk-go-v2/credentials v1.17.27 h1:2raNba6gr2IfA0eqqiP2XiQ0UVOpGPgDSi0I9iAP+UI=
+@@ -18,22 +22,38 @@
+ github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.11/go.mod h1:SeSUYBLsMYFoRvHE0Tjvn7kbxaUhl75CJi1sbfhMxkU=
+ github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.15 h1:SoNJ4RlFEQEbtDcCEt+QG56MY4fm4W8rYirAmq+/DdU=
+ github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.15/go.mod h1:U9ke74k1n2bf+RIgoX1SXFed1HLs51OgUSs+Ph0KJP8=
++github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.21 h1:Rgg6wvjjtX8bNHcvi9OnXWwcE0a2vGpbwmtICOsvcf4=
++github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.21/go.mod h1:A/kJFst/nm//cyqonihbdpQZwiUhhzpqTsdbhDdRF9c=
+ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15 h1:C6WHdGnTDIYETAm5iErQUiVNsclNx9qbJVPIt03B6bI=
+ github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.15/go.mod h1:ZQLZqhcu+JhSrA9/NXRm8SkDvsycE+JkV3WGY41e+IM=
++github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.21 h1:PEgGVtPoB6NTpPrBgqSE5hE/o47Ij9qk/SEZFbUOe9A=
++github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.21/go.mod h1:p+hz+PRAYlY3zcpJhPwXlLC4C+kqn70WIHwnzAfs6ps=
+ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 h1:hT8rVHwugYE2lEfdFE0QWVo81lF7jMrYJVDWI+f+VxU=
+ github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0/go.mod h1:8tu/lYfQfFe6IGnaOdrpVgEL2IrrDOf6/m9RQum4NkY=
+ github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.15 h1:Z5r7SycxmSllHYmaAZPpmN8GviDrSGhMS6bldqtXZPw=
+ github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.15/go.mod h1:CetW7bDE00QoGEmPUoZuRog07SGVAUVW6LFpNP0YfIg=
++github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.22 h1:rWyie/PxDRIdhNf4DzRk0lvjVOqFJuNnO8WwaIRVxzQ=
++github.com/aws/aws-sdk-go-v2/internal/v4a v1.4.22/go.mod h1:zd/JsJ4P7oGfUhXn1VyLqaRZwPmZwg44Jf2dS84Dm3Y=
+ github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3 h1:dT3MqvGhSoaIhRseqw2I0yH81l7wiR2vjs57O51EAm8=
+ github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.3/go.mod h1:GlAeCkHwugxdHaueRr4nhPuY+WW+gR8UjlcqzPr1SPI=
++github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.7 h1:5EniKhLZe4xzL7a+fU3C2tfUN4nWIqlLesfrjkuPFTY=
++github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.13.7/go.mod h1:x0nZssQ3qZSnIcePWLvcoFisRXJzcTVvYpAAdYX8+GI=
+ github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.17 h1:YPYe6ZmvUfDDDELqEKtAd6bo8zxhkm+XEFEzQisqUIE=
+ github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.17/go.mod h1:oBtcnYua/CgzCWYN7NZ5j7PotFDaFSUjCYVTtfyn7vw=
++github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.13 h1:JRaIgADQS/U6uXDqlPiefP32yXTda7Kqfx+LgspooZM=
++github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.9.13/go.mod h1:CEuVn5WqOMilYl+tbccq8+N2ieCy0gVn3OtRb0vBNNM=
+ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17 h1:HGErhhrxZlQ044RiM+WdoZxp0p+EGM62y3L6pwA4olE=
+ github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.17/go.mod h1:RkZEx4l0EHYDJpWppMJ3nD9wZJAa8/0lq9aVC+r2UII=
++github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.21 h1:c31//R3xgIJMSC8S6hEVq+38DcvUlgFY0FM6mSI5oto=
++github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.21/go.mod h1:r6+pf23ouCB718FUxaqzZdbpYFyDtehyZcmP5KL9FkA=
+ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.15 h1:246A4lSTXWJw/rmlQI+TT2OcqeDMKBdyjEQrafMaQdA=
+ github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.15/go.mod h1:haVfg3761/WF7YPuJOER2MP0k4UAXyHaLclKXB6usDg=
++github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.21 h1:ZlvrNcHSFFWURB8avufQq9gFsheUgjVD9536obIknfM=
++github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.21/go.mod h1:cv3TNhVrssKR0O/xxLJVRfd2oazSnZnkUeTf6ctUwfQ=
+ github.com/aws/aws-sdk-go-v2/service/s3 v1.58.2 h1:sZXIzO38GZOU+O0C+INqbH7C2yALwfMWpd64tONS/NE=
+ github.com/aws/aws-sdk-go-v2/service/s3 v1.58.2/go.mod h1:Lcxzg5rojyVPU/0eFwLtcyTaek/6Mtic5B1gJo7e/zE=
++github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3 h1:HwxWTbTrIHm5qY+CAEur0s/figc3qwvLWsNkF4RPToo=
++github.com/aws/aws-sdk-go-v2/service/s3 v1.97.3/go.mod h1:uoA43SdFwacedBfSgfFSjjCvYe8aYBS7EnU5GZ/YKMM=
+ github.com/aws/aws-sdk-go-v2/service/sso v1.22.4 h1:BXx0ZIxvrJdSgSvKTZ+yRBeSqqgPM89VPlulEcl37tM=
+ github.com/aws/aws-sdk-go-v2/service/sso v1.22.4/go.mod h1:ooyCOXjvJEsUw7x+ZDHeISPMhtwI3ZCB7ggFMcFfWLU=
+ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.26.4 h1:yiwVzJW2ZxZTurVbYWA7QOrAaCYQR72t0wrSBfoesUE=
+@@ -42,6 +62,8 @@
+ github.com/aws/aws-sdk-go-v2/service/sts v1.30.3/go.mod h1:zwySh8fpFyXp9yOr/KVzxOl8SRqgf/IDw5aUt9UKFcQ=
+ github.com/aws/smithy-go v1.20.3 h1:ryHwveWzPV5BIof6fyDvor6V3iUL7nTfiTKXHiW05nE=
+ github.com/aws/smithy-go v1.20.3/go.mod h1:krry+ya/rV9RDcV/Q16kpu6ypI4K2czasz0NC3qS14E=
++github.com/aws/smithy-go v1.24.2 h1:FzA3bu/nt/vDvmnkg+R8Xl46gmzEDam6mZ1hzmwXFng=
++github.com/aws/smithy-go v1.24.2/go.mod h1:YE2RhdIuDbA5E5bTdciG9KrW3+TiEONeUWCqxX9i1Fc=
+ github.com/beorn7/perks v1.0.1 h1:VlbKKnNfV8bJzeqoa4cOKqO6bYr3WgKZxO8Z16+hsOM=
+ github.com/beorn7/perks v1.0.1/go.mod h1:G2ZrVWU2WbWT9wwq4/hrbKbnv/1ERSJQ0ibhJ6rlkpw=
+ github.com/bits-and-blooms/bitset v1.12.0 h1:U/q1fAF7xXRhFCrhROzIfffYnu+dlS38vCZtmFVPHmA=
+@@ -123,6 +145,8 @@
+ github.com/go-git/go-billy/v5 v5.6.0/go.mod h1:sFDq7xD3fn3E0GOwUSZqHo9lrkmx8xJhA0ZrfvjBRGM=
+ github.com/go-jose/go-jose/v4 v4.0.2 h1:R3l3kkBds16bO7ZFAEEcofK0MkrAJt3jlJznWZG0nvk=
+ github.com/go-jose/go-jose/v4 v4.0.2/go.mod h1:WVf9LFMHh/QVrmqrOfqun0C45tMe3RoiKJMPvgWwLfY=
++github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
++github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
+ github.com/go-ldap/ldap/v3 v3.4.8 h1:loKJyspcRezt2Q3ZRMq2p/0v8iOurlmeXDPw6fikSvQ=
+ github.com/go-ldap/ldap/v3 v3.4.8/go.mod h1:qS3Sjlu76eHfHGpUdWkAXQTw4beih+cHsco2jXlIXrk=
+ github.com/go-sql-driver/mysql v1.8.1 h1:LedoTUt/eveggdHS9qUFC1EFSa8bU2+1pZjSRpvNJ1Y=
+@@ -167,10 +191,16 @@
+ github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
+ github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a h1:bbPeKD0xmW/Y25WS6cokEszi5g+S0QxI/d45PkRi7Nk=
+ github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
++github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7UlwOQYpKFhBabPMi4aNAfoODPEFNiAnClxo=
++github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
+ github.com/jackc/pgx/v5 v5.6.0 h1:SWJzexBzPL5jb0GEsrPMLIsi/3jOo7RHlzTjcAeDrPY=
+ github.com/jackc/pgx/v5 v5.6.0/go.mod h1:DNZ/vlrUnhWCoFGxHAG8U2ljioxukquj7utPDgtQdTw=
++github.com/jackc/pgx/v5 v5.9.2 h1:3ZhOzMWnR4yJ+RW1XImIPsD1aNSz4T4fyP7zlQb56hw=
++github.com/jackc/pgx/v5 v5.9.2/go.mod h1:mal1tBGAFfLHvZzaYh77YS/eC6IX9OWbRV1QIIM0Jn4=
+ github.com/jackc/puddle/v2 v2.2.1 h1:RhxXJtFG022u4ibrCSMSiu5aOq1i77R3OHKNJj77OAk=
+ github.com/jackc/puddle/v2 v2.2.1/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
++github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo=
++github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
+ github.com/jcmturner/aescts/v2 v2.0.0 h1:9YKLH6ey7H4eDBXW8khjYslgyqG2xZikXP0EQFKrle8=
+ github.com/jcmturner/aescts/v2 v2.0.0/go.mod h1:AiaICIRyfYg35RUkr8yESTqvSy7csK90qZ5xfvvsoNs=
+ github.com/jcmturner/dnsutils/v2 v2.0.0 h1:lltnkeZGL0wILNvrNiVCR6Ro5PGU/SeBvVO/8c/iPbo=
+@@ -311,8 +341,12 @@
+ golang.org/x/crypto v0.21.0/go.mod h1:0BP7YvVV9gBbVKyeTG0Gyn+gZm94bibOW5BjDEYAOMs=
+ golang.org/x/crypto v0.54.0 h1:YLIA59K4fiNzHzjnZt2tUJQjQtUWfWbeHBqKtk3eScw=
+ golang.org/x/crypto v0.54.0/go.mod h1:KWL8ny2AZdGR2cWmzeHrp2azQPGogOv+HeQaVEXC2dk=
++golang.org/x/crypto v0.56.0 h1:GUh5Ii4J5jtcseSMiRqr1jXCNHoxjeV9Fmekc2oLy6Y=
++golang.org/x/crypto v0.56.0/go.mod h1:OMW5y6CY9l38uPLmxU6l6pwcXp1obtLo3e6gT7gQR2I=
+ golang.org/x/image v0.39.0 h1:skVYidAEVKgn8lZ602XO75asgXBgLj9G/FE3RbuPFww=
+ golang.org/x/image v0.39.0/go.mod h1:sIbmppfU+xFLPIG0FoVUTvyBMmgng1/XAMhQ2ft0hpA=
++golang.org/x/image v0.45.0 h1:FMb1nTbH5H9vF55SriQHgFw5GnNL9Jg6L25BwXKzhB0=
++golang.org/x/image v0.45.0/go.mod h1:n62x/7RqlwXDvGsSU4u6IUTUf6KghUZ9Bt7cG/T9Fx4=
+ golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4/go.mod h1:jJ57K6gSWd91VN4djpZkiMVwK6gcyfeH4XE8wZrZaV4=
+ golang.org/x/mod v0.8.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
+ golang.org/x/mod v0.38.0 h1:MECBjubtXD7yj4HrhIUcywNaGeNVUdfVnxmPajOk4yk=
+@@ -365,6 +399,8 @@
+ golang.org/x/text v0.14.0/go.mod h1:18ZOQIKpY8NJVqYksKHtTdi31H5itFRjB5/qKTNYzSU=
+ golang.org/x/text v0.40.0 h1:Ub2Z6/xjgF1WrYQz2nuITOEegKFtiIy+rieRJ5lHZKs=
+ golang.org/x/text v0.40.0/go.mod h1:hpnzDAfGV753zIKo+wk3u1bVKCGPbrnF7+7LBF/UHVY=
++golang.org/x/text v0.41.0 h1:vz/seA0lnX87Othu2f/0L24RcgrXD9/YFTSuGjj3rH8=
++golang.org/x/text v0.41.0/go.mod h1:jvf1O8ajNzZqhSrQBPbutR/EB83Cc0CFrezNQIwbb5M=
+ golang.org/x/tools v0.0.0-20180917221912-90fa682c2a6e/go.mod h1:n7NCudcB/nEzxVGmLbDWY5pfWTLqBcC2KZ6jyYvM4mQ=
+ golang.org/x/tools v0.0.0-20191119224855-298f0cb1881e/go.mod h1:b+2E5dAYhXwXZwtnZ6UAqBI28+e2cm9otk0dWdXHAEo=
+ golang.org/x/tools v0.1.12/go.mod h1:hNGJHUnrk76NpqgfD5Aqm5Crs+Hm0VOH/i9J2+nxYbc=
+--- a/backend/internal/api/handlers/manager_mutate.go
++++ b/backend/internal/api/handlers/manager_mutate.go
+@@ -414,6 +414,10 @@
+ 		// Soft-delete inside `.filex-trash/` already? Hard delete this
+ 		// time (mirrors brf-mono's "delete from trash = permanent").
+ 		if strings.HasPrefix(srcRel, trashPrefix) {
++			if os.Getenv("FILEX_SAFE_TRANSFERS") == "1" {
++				writeJSON(w, http.StatusForbidden, map[string]string{"error": "permanent deletion disabled by portal policy"})
++				return
++			}
+ 			if del, ok := drv.(storage.Deleter); ok {
+ 				if err := del.Delete(r.Context(), srcRel); err != nil && !errors.Is(err, storage.ErrNotFound) {
+ 					writeJSON(w, mapDriverErr(err), map[string]string{"error": "delete: " + err.Error()})
+--- a/backend/internal/ops/cross.go
++++ b/backend/internal/ops/cross.go
+@@ -19,20 +19,19 @@
+ //   - the write is verified by size before the source is touched, so a move
+ //     can never delete an original whose copy did not fully arrive.
+ //
+-// ⚠ A cross-storage MOVE deletes the source outright — it does not go through
+-// the trash. That is Burak's call (2026-08-29): the point of moving between
+-// depolar is usually to free the first one, and a trashed copy would keep the
+-// bytes (and the quota) until the trash is emptied. The delete only runs after
+-// the destination has been written AND stat-verified.
++// Smarthome policy: independently hash destinations and quarantine moved sources.
+ 
+ import (
++	"bytes"
+ 	"context"
++	"crypto/sha256"
+ 	"errors"
+ 	"fmt"
+ 	"io"
+ 	"path"
+ 
+ 	"github.com/brf-tech/filex/backend/internal/storage"
++	"github.com/brf-tech/filex/backend/internal/trash"
+ )
+ 
+ // skipNames are filex's own bookkeeping directories. They are storage-local by
+@@ -56,7 +55,8 @@
+ 	// OnBytes is told how many new bytes were read from a source file, while
+ 	// they stream (issue #27). Unlike the two above it fires before
+ 	// verification — it measures motion, not completion.
+-	OnBytes func(n int64)
++	OnBytes    func(n int64)
++	OnVerified func(src, dst string, size int64, digest string)
+ }
+ 
+ // Transfer copies `src` (a file or a whole directory) from one storage driver
+@@ -113,7 +113,10 @@
+ // into the DB cache, and — when `move` is set — removes the source afterwards.
+ func (s *Service) crossTransfer(ctx context.Context, srcDrv, dstDrv storage.Driver, op *Op, src string, move bool) error {
+ 	dst := UniqueDest(ctx, dstDrv, joinIntoDir(op.Dest, src))
+-	hooks := TransferHooks{}
++	verifiedFiles := []map[string]any{}
++	hooks := TransferHooks{OnVerified: func(a, b string, size int64, digest string) {
++		verifiedFiles = append(verifiedFiles, map[string]any{"source": a, "destination": b, "size": size, "sha256": digest})
++	}}
+ 	if s.dbsync != nil {
+ 		hooks.OnDir = func(a, b string) { s.dbsync.SyncCopyAcross(ctx, op.StorageID, a, op.DestStorageID, b) }
+ 		hooks.OnFile = func(a, b string, _ int64) { s.dbsync.SyncCopyAcross(ctx, op.StorageID, a, op.DestStorageID, b) }
+@@ -125,19 +128,28 @@
+ 		return err
+ 	}
+ 
++	if err := recordTransfer(op, src, dst, "verified", verifiedFiles); err != nil {
++		return err
++	}
+ 	if !move {
+ 		return nil
+ 	}
+-	// The bytes are on the far side and verified; the original goes away.
+-	del, ok := srcDrv.(storage.Deleter)
+-	if !ok {
+-		return fmt.Errorf("copied to destination, but the source storage cannot delete %q — remove it by hand", src)
+-	}
+-	if err := del.Delete(ctx, src); err != nil {
+-		return fmt.Errorf("copied to destination, but deleting the source failed: %w", err)
++	if err := verifyTree(ctx, srcDrv, dstDrv, src, dst); err != nil {
++		return err
++	}
++	// Keep the source recoverable. A failed receipt or verification never deletes it.
++	out, err := trash.Put(ctx, srcDrv, src)
++	if err != nil {
++		return fmt.Errorf("verified copy retained; source quarantine failed: %w", err)
++	}
++	if !out.Trashed {
++		return errors.New("verified copy retained; source was not quarantined")
++	}
++	if err := recordTransfer(op, src, dst, "quarantined:"+out.Key, verifiedFiles); err != nil {
++		return err
+ 	}
+ 	if s.dbsync != nil {
+-		s.dbsync.SyncHardDelete(ctx, op.StorageID, src)
++		s.dbsync.SyncSoftDelete(ctx, op.StorageID, src, out.Key)
+ 	}
+ 	return nil
+ }
+@@ -193,7 +205,8 @@
+ 		return fmt.Errorf("read %q: %w", src, err)
+ 	}
+ 	rc = countBytes(rc, hooks.OnBytes)
+-	werr := wr.Write(ctx, dst, rc, stat.Size)
++	digest := sha256.New()
++	werr := wr.Write(ctx, dst, io.TeeReader(rc, digest), stat.Size)
+ 	cerr := rc.Close()
+ 	if werr != nil {
+ 		return fmt.Errorf("write %q: %w", dst, werr)
+@@ -209,8 +222,20 @@
+ 	if serr != nil {
+ 		return fmt.Errorf("wrote %q but could not verify it: %w", dst, serr)
+ 	}
+-	if stat.Size > 0 && got.Size != stat.Size {
++	if got.Size != stat.Size {
+ 		return fmt.Errorf("destination %q is %d bytes, source is %d — transfer incomplete", dst, got.Size, stat.Size)
++	}
++
++	verified, err := hashFile(ctx, dstDrv, dst)
++	if err != nil {
++		return err
++	}
++	if !bytes.Equal(digest.Sum(nil), verified) {
++		return errors.New("destination SHA-256 mismatch; source preserved")
++	}
++	current, err := srcDrv.Stat(ctx, src)
++	if err != nil || current.Size != stat.Size || !current.Mtime.Equal(stat.Mtime) {
++		return errors.New("source changed during transfer; source preserved")
+ 	}
+ 
+ 	// Carry the file's own timestamp where the target can hold one. Best
+@@ -219,6 +244,9 @@
+ 		_ = t.SetMtime(ctx, dst, stat.Mtime)
+ 	}
+ 
++	if hooks.OnVerified != nil {
++		hooks.OnVerified(src, dst, got.Size, fmt.Sprintf("%x", verified))
++	}
+ 	if hooks.OnFile != nil {
+ 		hooks.OnFile(src, dst, got.Size)
+ 	}
+--- a/backend/internal/ops/service.go
++++ b/backend/internal/ops/service.go
+@@ -218,8 +218,8 @@
+ // copy, move and delete died on "relation pending_ops does not exist" while
+ // the server reported itself healthy (issue #19).
+ func (s *Service) Migrate(ctx context.Context) error {
+-	// Any row left in `running` is from a previous crash — re-queue it.
+-	if _, err := s.db.ExecContext(ctx, `UPDATE pending_ops SET status='pending', started_at=NULL WHERE status='running'`); err != nil {
++	// Interrupted operations require an explicit retry, never automatic replay of moves.
++	if _, err := s.db.ExecContext(ctx, `UPDATE pending_ops SET status='failed', error='Interrupted by restart; source retained or quarantined. Review before retry.', finished_at=CURRENT_TIMESTAMP WHERE status='running'`); err != nil {
+ 		return fmt.Errorf("ops: requeue stale running rows: %w", err)
+ 	}
+ 	return nil
+@@ -267,6 +267,9 @@
+ 	if kind == OpDelete || kind == OpUploadCommit {
+ 		// Neither has a destination; a stray id here would only be able to lie.
+ 		destStorageID = storageID
++	}
++	if err := s.guardWrite(ctx, kind, storageID, destStorageID); err != nil {
++		return nil, err
+ 	}
+ 	srcJSON, _ := json.Marshal(sources)
+ 	id, err := s.insertOp(ctx, kind, storageID, destStorageID, string(srcJSON), dest, len(sources))
+@@ -579,6 +582,9 @@
+ }
+ 
+ func (s *Service) runOne(ctx context.Context, drv, dstDrv storage.Driver, op *Op, src string) error {
++	if err := s.guardWrite(ctx, op.Kind, op.StorageID, op.DestStorageID); err != nil {
++		return err
++	}
+ 	switch op.Kind {
+ 	case OpUploadCommit:
+ 		// `src` is the staged upload id. The committer owns the driver write
+@@ -616,19 +622,7 @@
+ 			return nil
+ 
+ 		case errors.Is(terr, trash.ErrUnsupported):
+-			// Driver can neither move nor copy — nothing can be preserved, so
+-			// this is a real delete.
+-			d, ok := drv.(storage.Deleter)
+-			if !ok {
+-				return errors.New("driver not deletable")
+-			}
+-			if err := d.Delete(ctx, src); err != nil {
+-				return err
+-			}
+-			if s.dbsync != nil {
+-				s.dbsync.SyncHardDelete(ctx, op.StorageID, src)
+-			}
+-			return nil
++			return errors.New("recoverable deletion unavailable; source preserved")
+ 
+ 		default:
+ 			return terr
+--- a/backend/internal/ops/smarthome_policy.go
++++ b/backend/internal/ops/smarthome_policy.go
+@@ -0,0 +1,164 @@
++package ops
++
++import (
++	"bytes"
++	"context"
++	"crypto/sha256"
++	"encoding/hex"
++	"encoding/json"
++	"errors"
++	"fmt"
++	"io"
++	"os"
++	"path"
++	"path/filepath"
++	"time"
++
++	"github.com/brf-tech/filex/backend/internal/storage"
++)
++
++// Check both when accepting a request and immediately before executing it.
++func (s *Service) guardWrite(ctx context.Context, kind string, source, destination int64) error {
++	if os.Getenv("FILEX_SAFE_TRANSFERS") != "1" {
++		return nil
++	}
++	if destination == 0 {
++		destination = source
++	}
++	ids := []int64{}
++	if kind != OpCopy {
++		ids = append(ids, source)
++	}
++	if kind == OpCopy || kind == OpMove {
++		ids = append(ids, destination)
++	}
++	for _, id := range ids {
++		var readonly, enabled bool
++		err := s.db.QueryRowContext(ctx, s.q(`SELECT read_only, enabled FROM storages WHERE id=?`), id).Scan(&readonly, &enabled)
++		if err != nil || readonly || !enabled {
++			return errors.New("storage is read-only, disabled or unavailable")
++		}
++	}
++	return nil
++}
++
++func hashFile(ctx context.Context, drv storage.Driver, name string) ([]byte, error) {
++	r, err := drv.Read(ctx, name)
++	if err != nil {
++		return nil, err
++	}
++	h := sha256.New()
++	_, err = io.Copy(h, r)
++	closeErr := r.Close()
++	if err != nil {
++		return nil, err
++	}
++	if closeErr != nil {
++		return nil, closeErr
++	}
++	if ctx.Err() != nil {
++		return nil, ctx.Err()
++	}
++	return h.Sum(nil), nil
++}
++
++// Re-read the complete current source tree before quarantine. New children,
++// removed files, changed bytes and same-size corruption all fail closed.
++func verifyTree(ctx context.Context, a, b storage.Driver, src, dst string) error {
++	sa, err := a.Stat(ctx, src)
++	if err != nil {
++		return err
++	}
++	sb, err := b.Stat(ctx, dst)
++	if err != nil {
++		return err
++	}
++	if sa.Kind != sb.Kind {
++		return errors.New("verification: object kind changed")
++	}
++	if sa.Kind != storage.KindDirectory {
++		ha, err := hashFile(ctx, a, src)
++		if err != nil {
++			return err
++		}
++		hb, err := hashFile(ctx, b, dst)
++		if err != nil {
++			return err
++		}
++		if sa.Size != sb.Size || !bytes.Equal(ha, hb) {
++			return errors.New("verification: source changed or destination corrupted")
++		}
++		return nil
++	}
++	aa, err := a.List(ctx, src)
++	if err != nil {
++		return err
++	}
++	bb, err := b.List(ctx, dst)
++	if err != nil {
++		return err
++	}
++	names := map[string]bool{}
++	for _, o := range bb {
++		if !skipNames[o.Name] {
++			names[o.Name] = true
++		}
++	}
++	for _, o := range aa {
++		if skipNames[o.Name] {
++			return errors.New("move of bookkeeping directories is forbidden")
++		}
++		if !names[o.Name] {
++			return errors.New("verification: directory contents changed")
++		}
++		delete(names, o.Name)
++		if err := verifyTree(ctx, a, b, path.Join(src, o.Name), path.Join(dst, o.Name)); err != nil {
++			return err
++		}
++	}
++	if len(names) != 0 {
++		return errors.New("verification: directory contents changed")
++	}
++	return nil
++}
++
++// Receipts are private, append-only files. Failure to persist stops a move.
++// Actual names belong here, never in a committed operational receipt.
++func recordTransfer(op *Op, src, dst, phase string, files []map[string]any) error {
++	if os.Getenv("FILEX_SAFE_TRANSFERS") != "1" {
++		return nil
++	}
++	root := os.Getenv("FILEX_TRANSFER_RECEIPTS")
++	if !filepath.IsAbs(root) {
++		return errors.New("private transfer receipt directory required")
++	}
++	if err := os.MkdirAll(root, 0700); err != nil {
++		return err
++	}
++	key := sha256.Sum256([]byte(fmt.Sprintf("%d:%s:%s:%s", op.ID, src, dst, phase)))
++	name := filepath.Join(root, hex.EncodeToString(key[:])+".json")
++	f, err := os.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0600)
++	if err != nil {
++		return err
++	}
++	payload := map[string]any{"operation_id": op.ID, "source_storage": op.StorageID,
++		"destination_storage": op.DestStorageID, "source": src, "destination": dst,
++		"phase": phase, "files": files, "verification": "independent-destination-sha256", "at": time.Now().UTC()}
++	err = json.NewEncoder(f).Encode(payload)
++	if err == nil {
++		err = f.Sync()
++	}
++	closeErr := f.Close()
++	if err != nil {
++		return err
++	}
++	if closeErr != nil {
++		return closeErr
++	}
++	dir, err := os.Open(root)
++	if err != nil {
++		return err
++	}
++	defer dir.Close()
++	return dir.Sync()
++}
+--- a/backend/internal/ops/smarthome_policy_test.go
++++ b/backend/internal/ops/smarthome_policy_test.go
+@@ -0,0 +1,115 @@
++package ops_test
++
++import (
++	"context"
++	"encoding/json"
++	"io"
++	"os"
++	"path/filepath"
++	"strings"
++	"testing"
++	"time"
++
++	"github.com/brf-tech/filex/backend/internal/ops"
++	"github.com/brf-tech/filex/backend/internal/storage"
++	"github.com/stretchr/testify/require"
++)
++
++type corruptSameSize struct{ storage.Driver }
++
++func (d corruptSameSize) Write(ctx context.Context, p string, r io.Reader, n int64) error {
++	b, err := io.ReadAll(r)
++	if err != nil {
++		return err
++	}
++	if len(b) > 0 {
++		b[0] ^= 1
++	}
++	return d.Driver.(storage.Writer).Write(ctx, p, strings.NewReader(string(b)), n)
++}
++
++func TestSmarthomeSameSizeCorruptionPreservesSource(t *testing.T) {
++	f := newCrossFixture(t, func(d storage.Driver) storage.Driver { return corruptSameSize{d} })
++	writeA(t, f, "fixture.txt", "synthetic fixture")
++	op := f.run(t, ops.OpMove, []string{"fixture.txt"}, "/")
++	require.Equal(t, ops.StatusFailed, op.Status)
++	require.Contains(t, op.Error, "SHA-256 mismatch")
++	require.FileExists(t, filepath.Join(f.rootA, "fixture.txt"))
++}
++
++func TestSmarthomeVerifiedMoveHasReceiptAndRecoverableSource(t *testing.T) {
++	t.Setenv("FILEX_SAFE_TRANSFERS", "1")
++	receipts := t.TempDir()
++	t.Setenv("FILEX_TRANSFER_RECEIPTS", receipts)
++	f := newCrossFixture(t, nil)
++	writeA(t, f, "fixture.txt", "synthetic fixture")
++	op := f.run(t, ops.OpMove, []string{"fixture.txt"}, "/")
++	require.Equal(t, ops.StatusOK, op.Status, op.Error)
++	require.Equal(t, "synthetic fixture", readB(t, f, "fixture.txt"))
++	paths, err := filepath.Glob(filepath.Join(f.rootA, ".filex-trash", "*"))
++	require.NoError(t, err)
++	require.Len(t, paths, 1)
++	data, err := os.ReadFile(paths[0])
++	require.NoError(t, err)
++	require.Equal(t, "synthetic fixture", string(data))
++	records, err := os.ReadDir(receipts)
++	require.NoError(t, err)
++	require.Len(t, records, 2)
++	for _, entry := range records {
++		b, err := os.ReadFile(filepath.Join(receipts, entry.Name()))
++		require.NoError(t, err)
++		var receipt map[string]any
++		require.NoError(t, json.Unmarshal(b, &receipt))
++		files := receipt["files"].([]any)
++		require.Len(t, files, 1)
++		require.Len(t, files[0].(map[string]any)["sha256"], 64)
++	}
++}
++
++func TestSmarthomeReceiptFailurePreservesSource(t *testing.T) {
++	t.Setenv("FILEX_SAFE_TRANSFERS", "1")
++	t.Setenv("FILEX_TRANSFER_RECEIPTS", "")
++	f := newCrossFixture(t, nil)
++	writeA(t, f, "fixture.txt", "synthetic fixture")
++	op := f.run(t, ops.OpMove, []string{"fixture.txt"}, "/")
++	require.Equal(t, ops.StatusFailed, op.Status)
++	require.FileExists(t, filepath.Join(f.rootA, "fixture.txt"))
++}
++
++func TestSmarthomeReadOnlyQueueGuard(t *testing.T) {
++	t.Setenv("FILEX_SAFE_TRANSFERS", "1")
++	f := newCrossFixture(t, nil)
++	ctx := context.Background()
++	f.stA.ReadOnly = true
++	require.NoError(t, f.store.UpdateStorage(ctx, f.stA))
++	for _, kind := range []string{ops.OpMove, ops.OpDelete, ops.OpUploadCommit} {
++		_, err := f.svc.SubmitTo(ctx, kind, f.stA.ID, f.stB.ID, []string{"fixture.txt"}, "/")
++		require.Error(t, err)
++	}
++	_, err := f.svc.SubmitTo(ctx, ops.OpCopy, f.stA.ID, f.stB.ID, []string{"fixture.txt"}, "/")
++	require.NoError(t, err)
++	f.stB.ReadOnly = true
++	require.NoError(t, f.store.UpdateStorage(ctx, f.stB))
++	_, err = f.svc.SubmitTo(ctx, ops.OpCopy, f.stA.ID, f.stB.ID, []string{"fixture.txt"}, "/")
++	require.Error(t, err)
++}
++
++func TestSmarthomeReadOnlyChangeAfterSubmissionStopsWorker(t *testing.T) {
++	t.Setenv("FILEX_SAFE_TRANSFERS", "1")
++	t.Setenv("FILEX_TRANSFER_RECEIPTS", t.TempDir())
++	f := newCrossFixture(t, nil)
++	ctx, cancel := context.WithCancel(context.Background())
++	defer cancel()
++	writeA(t, f, "fixture.txt", "preserve me")
++	op, err := f.svc.SubmitTo(ctx, ops.OpDelete, f.stA.ID, f.stA.ID, []string{"fixture.txt"}, "")
++	require.NoError(t, err)
++	f.stA.ReadOnly = true
++	require.NoError(t, f.store.UpdateStorage(ctx, f.stA))
++	go f.svc.Run(ctx)
++	defer f.svc.Stop()
++	require.Eventually(t, func() bool {
++		current, e := f.svc.Get(ctx, op.ID)
++		return e == nil && current.Status == ops.StatusFailed
++	}, time.Second*5, time.Millisecond*10)
++	require.FileExists(t, filepath.Join(f.rootA, "fixture.txt"))
++}
+--- a/backend/internal/server/server.go
++++ b/backend/internal/server/server.go
+@@ -74,7 +74,7 @@
+ 	_ "github.com/brf-tech/filex/backend/internal/storage/drivers/local"
+ 	_ "github.com/brf-tech/filex/backend/internal/storage/drivers/s3"
+ 	_ "github.com/brf-tech/filex/backend/internal/storage/drivers/sftp"
+-	_ "github.com/brf-tech/filex/backend/internal/storage/drivers/smb"
++	// SMB disabled: upstream dependency has an unfixed parser vulnerability; this portal uses local/SFTP only.
+ 	_ "github.com/brf-tech/filex/backend/internal/storage/drivers/webdav"
+ )
+ 
+--- a/backend/internal/storage/drivers/local/local.go
++++ b/backend/internal/storage/drivers/local/local.go
+@@ -73,11 +73,29 @@
+ // resolve joins p onto the root, returning a clean absolute path or an
+ // error if the result escapes root.
+ func (d *Driver) resolve(p string) (string, error) {
++	// Reject traversal and every symlink component rather than silently normalizing.
++	for _, part := range strings.Split(p, "/") {
++		if part == ".." {
++			return "", errors.New("local: traversal refused")
++		}
++	}
+ 	p = path.Clean("/" + strings.TrimLeft(p, "/"))
+ 	abs := filepath.Join(d.root, filepath.FromSlash(p))
+-	if !strings.HasPrefix(abs, d.root) {
++	if abs != d.root && !strings.HasPrefix(abs, d.root+string(filepath.Separator)) {
+ 		return "", errors.New("local: path escapes root")
+ 	}
++	current := d.root
++	for _, part := range strings.Split(strings.TrimPrefix(abs, d.root), string(filepath.Separator)) {
++		current = filepath.Join(current, part)
++		info, err := os.Lstat(current)
++		if err != nil && !os.IsNotExist(err) {
++			return "", err
++		}
++		if err == nil && info.Mode()&os.ModeSymlink != 0 {
++			return "", errors.New("local: symlinks refused")
++		}
++	}
++
+ 	return abs, nil
+ }
+ 
+--- a/backend/internal/storage/drivers/local/smarthome_boundary_test.go
++++ b/backend/internal/storage/drivers/local/smarthome_boundary_test.go
+@@ -0,0 +1,21 @@
++package local
++
++import (
++	"context"
++	"github.com/stretchr/testify/require"
++	"os"
++	"path/filepath"
++	"testing"
++)
++
++func TestSmarthomeTraversalAndSymlinkConfinement(t *testing.T) {
++	root, outside := t.TempDir(), t.TempDir()
++	require.NoError(t, os.WriteFile(filepath.Join(outside, "secret.txt"), []byte("private fixture"), 0600))
++	require.NoError(t, os.Symlink(outside, filepath.Join(root, "escape")))
++	d := &Driver{}
++	require.NoError(t, d.Init(context.Background(), map[string]any{"path": root}))
++	for _, p := range []string{"../secret.txt", "escape/secret.txt", "/escape/secret.txt"} {
++		_, err := d.Read(context.Background(), p)
++		require.Error(t, err)
++	}
++}
+--- a/backend/internal/storage/drivers/sftp/sftp.go
++++ b/backend/internal/storage/drivers/sftp/sftp.go
+@@ -370,9 +370,16 @@
+ 	if err != nil {
+ 		return err
+ 	}
+-	defer f.Close()
+-	_, err = io.Copy(f, r)
+-	return err
++	// Bound in-flight writes to 16 packets (512 KiB). The transfer reader
++	// wraps hashing/progress and does not expose Size, so io.Copy otherwise
++	// falls back to one packet per round trip. Partial output stays on error;
++	// the operation is never successful until independent SHA-256 readback.
++	_, err = f.ReadFromWithConcurrency(r, 16)
++	closeErr := f.Close()
++	if err != nil {
++		return err
++	}
++	return closeErr
+ }
+ 
+ // Move implements storage.Mover.
+--- a/backend/internal/trash/service.go
++++ b/backend/internal/trash/service.go
+@@ -325,6 +325,9 @@
+ 
+ // PurgeOne immediately hard-deletes a single trashed node (admin / owner).
+ func (s *Service) PurgeOne(ctx context.Context, nodeID int64) error {
++	if os.Getenv("FILEX_SAFE_TRANSFERS") == "1" {
++		return errors.New("permanent deletion disabled by portal policy")
++	}
+ 	if s == nil || s.Store == nil {
+ 		return errors.New("trash: service not initialised")
+ 	}
+@@ -387,6 +390,9 @@
+ //  3. decrement owner quota;
+ //  4. hard-delete the row.
+ func (s *Service) purgeOlderThan(ctx context.Context, cutoff time.Time, storageID int64) (PurgeResult, error) {
++	if os.Getenv("FILEX_SAFE_TRANSFERS") == "1" {
++		return PurgeResult{}, errors.New("permanent deletion disabled by portal policy")
++	}
+ 	if s == nil || s.Store == nil {
+ 		return PurgeResult{}, errors.New("trash: service not initialised")
+ 	}
+--- a/package.json
++++ b/package.json
+@@ -2,7 +2,7 @@
+   "name": "filemanager-monorepo",
+   "private": true,
+   "version": "0.1.0",
+-  "description": "filex — self-hosted file manager: Go backend + multi-framework frontend (Vue/React/WC), reachable over HTTP, S3, SFTP, FTPS, NFS and WebDAV, single binary + Docker",
++  "description": "filex \u2014 self-hosted file manager: Go backend + multi-framework frontend (Vue/React/WC), reachable over HTTP, S3, SFTP, FTPS, NFS and WebDAV, single binary + Docker",
+   "license": "MIT",
+   "repository": {
+     "type": "git",
+@@ -46,5 +46,20 @@
+     "react",
+     "web-component",
+     "go"
+-  ]
++  ],
++  "pnpm": {
++    "overrides": {
++      "dompurify": "3.4.13",
++      "@xmldom/xmldom": "0.8.15",
++      "mermaid": "11.16.1",
++      "form-data": "4.0.6",
++      "markdown-it": "14.2.0",
++      "linkify-it": "5.0.2",
++      "js-yaml": "4.3.2",
++      "postcss": "8.5.23",
++      "pdfjs-dist": "6.2.108",
++      "axios": "1.18.0",
++      "nanoid": "3.3.18"
++    }
++  }
+ }
+--- a/packages/core/src/composables/usePendingOps.ts
++++ b/packages/core/src/composables/usePendingOps.ts
+@@ -97,6 +97,7 @@
+   void config; // kept for future per-instance config knobs
+   const ops = ref<PendingOp[]>([]);
+   const announced = new Set<number>();
++  const dismissed = new Set<number>();
+   const settledAt = new Map<number, number>();
+   // First poll after mount returns the server's recent-history window
+   // (last 5 min of done/error rows). Mark them announced silently and
+@@ -142,12 +143,16 @@
+         }
+       }
+ 
+-      // Filter incoming: pending/running always; settled only if user
+-      // is currently seeing them in the local tray.
++      // Reconnect must expose server-side failures and recent completions.
++      // Failed work stays visible until explicitly dismissed.
+       const localIds = new Set(ops.value.map((o) => o.id));
+       const visibleIncoming = incoming.filter((op) => {
+-        if (op.status === 'pending' || op.status === 'running') return true;
+-        if (!firstPollDone) return false;
++        if (dismissed.has(op.id)) return false;
++        if (op.status === 'pending' || op.status === 'running' || op.status === 'error') return true;
++        if (!firstPollDone) {
++          const finished = Date.parse(op.finished_at ?? '');
++          return Number.isFinite(finished) && Date.now() - finished < 5 * 60_000;
++        }
+         return localIds.has(op.id);
+       });
+ 
+@@ -160,7 +165,8 @@
+       // Sweep: drop terminal ops past RETAIN_MS.
+       const now = Date.now();
+       const after = merged.filter((o) => {
+-        if (o.status === 'pending' || o.status === 'running') return true;
++        if (dismissed.has(o.id)) return false;
++        if (o.status === 'pending' || o.status === 'running' || o.status === 'error') return true;
+         const at = settledAt.get(o.id);
+         return at !== undefined && now - at < RETAIN_MS;
+       });
+@@ -185,6 +191,7 @@
+   }
+ 
+   function dismiss(id: number): void {
++    dismissed.add(id);
+     ops.value = ops.value.filter((o) => o.id !== id);
+     settledAt.delete(id);
+   }
+--- a/pnpm-lock.yaml
++++ b/pnpm-lock.yaml
+@@ -3,6 +3,19 @@
+ settings:
+   autoInstallPeers: true
+   excludeLinksFromLockfile: false
++
++overrides:
++  dompurify: 3.4.13
++  '@xmldom/xmldom': 0.8.15
++  mermaid: 11.16.1
++  form-data: 4.0.6
++  markdown-it: 14.2.0
++  linkify-it: 5.0.2
++  js-yaml: 4.3.2
++  postcss: 8.5.23
++  pdfjs-dist: 6.2.108
++  axios: 1.18.0
++  nanoid: 3.3.18
+ 
+ importers:
+ 
+@@ -41,7 +54,7 @@
+     devDependencies:
+       vitepress:
+         specifier: ^1.6.3
+-        version: 1.6.4(@algolia/client-search@5.56.0)(@types/node@22.19.17)(@types/react@18.3.28)(axios@1.16.0)(postcss@8.5.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(terser@5.49.2)(typescript@5.9.3)
++        version: 1.6.4(@algolia/client-search@5.56.0)(@types/node@22.19.17)(@types/react@18.3.28)(axios@1.18.0)(postcss@8.5.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(terser@5.49.2)(typescript@5.9.3)
+       vue:
+         specifier: ^3.5.13
+         version: 3.5.34(typescript@5.9.3)
+@@ -79,11 +92,11 @@
+         specifier: '*'
+         version: 0.16.45
+       markdown-it:
+-        specifier: '*'
+-        version: 14.1.1
++        specifier: 14.2.0
++        version: 14.2.0
+       mermaid:
+-        specifier: '*'
+-        version: 11.14.0
++        specifier: 11.16.1
++        version: 11.16.1
+       monaco-editor:
+         specifier: '*'
+         version: 0.55.1
+@@ -91,8 +104,8 @@
+         specifier: '*'
+         version: 5.5.3
+       pdfjs-dist:
+-        specifier: '*'
+-        version: 5.7.284
++        specifier: 6.2.108
++        version: 6.2.108
+       utif:
+         specifier: '*'
+         version: 3.1.0
+@@ -202,8 +215,8 @@
+         specifier: ^1.7.23
+         version: 1.7.23(vue@3.5.34(typescript@5.9.3))
+       axios:
+-        specifier: ^1.7.7
+-        version: 1.16.0
++        specifier: 1.18.0
++        version: 1.18.0
+       lucide-vue-next:
+         specifier: ^0.453.0
+         version: 0.453.0(vue@3.5.34(typescript@5.9.3))
+@@ -243,7 +256,7 @@
+         version: 0.5.1
+       autoprefixer:
+         specifier: ^10.4.20
+-        version: 10.5.0(postcss@8.5.14)
++        version: 10.5.0(postcss@8.5.23)
+       cypress:
+         specifier: '13'
+         version: 13.17.0
+@@ -257,8 +270,8 @@
+         specifier: ^15.7.4
+         version: 15.11.7
+       postcss:
+-        specifier: ^8.4.47
+-        version: 8.5.14
++        specifier: 8.5.23
++        version: 8.5.23
+       rimraf:
+         specifier: ^6.0.1
+         version: 6.1.3
+@@ -906,20 +919,8 @@
+   '@braintree/sanitize-url@7.1.2':
+     resolution: {integrity: sha512-jigsZK+sMF/cuiB7sERuo9V7N9jx+dhmHHnQyDSVdpZwVutaBu7WvNYqMDLSgFgfB30n452TP3vjDAvFC973mA==}
+ 
+-  '@chevrotain/cst-dts-gen@12.0.0':
+-    resolution: {integrity: sha512-fSL4KXjTl7cDgf0B5Rip9Q05BOrYvkJV/RrBTE/bKDN096E4hN/ySpcBK5B24T76dlQ2i32Zc3PAE27jFnFrKg==}
+-
+-  '@chevrotain/gast@12.0.0':
+-    resolution: {integrity: sha512-1ne/m3XsIT8aEdrvT33so0GUC+wkctpUPK6zU9IlOyJLUbR0rg4G7ZiApiJbggpgPir9ERy3FRjT6T7lpgetnQ==}
+-
+-  '@chevrotain/regexp-to-ast@12.0.0':
+-    resolution: {integrity: sha512-p+EW9MaJwgaHguhoqwOtx/FwuGr+DnNn857sXWOi/mClXIkPGl3rn7hGNWvo31HA3vyeQxjqe+H36yZJwYU8cA==}
+-
+-  '@chevrotain/types@12.0.0':
+-    resolution: {integrity: sha512-S+04vjFQKeuYw0/eW3U52LkAHQsB1ASxsPGsLPUyQgrZ2iNNibQrsidruDzjEX2JYfespXMG0eZmXlhA6z7nWA==}
+-
+-  '@chevrotain/utils@12.0.0':
+-    resolution: {integrity: sha512-lB59uJoaGIfOOL9knQqQRfhl9g7x8/wqFkp13zTdkRu1huG9kg6IJs1O8hqj9rs6h7orGxHJUKb+mX3rPbWGhA==}
++  '@chevrotain/types@11.1.2':
++    resolution: {integrity: sha512-U+HFai5+zmJCkK86QsaJtoITlboZHBqrVketcO2ROv865xfCMSFpELQoz1GkX5GzME8pTa+3kbKrZHQtI0gdbw==}
+ 
+   '@codemirror/autocomplete@6.20.2':
+     resolution: {integrity: sha512-G5FPkgIiLjOgZMjqVjvuKQ1rGPtHogLldJr33eFJdVLtmwY+giGrlv/ewljLz6b9BSQLkjxuwBc6g6omDM+YxQ==}
+@@ -1449,8 +1450,8 @@
+   '@marijn/find-cluster-break@1.0.2':
+     resolution: {integrity: sha512-l0h88YhZFyKdXIFNfSWpyjStDjGHwZ/U7iobcK1cQQD8sejsONdQtTVU+1wVN1PBw40PiiHB1vA5S7VTfQiP9g==}
+ 
+-  '@mermaid-js/parser@1.1.0':
+-    resolution: {integrity: sha512-gxK9ZX2+Fex5zu8LhRQoMeMPEHbc73UKZ0FQ54YrQtUxE1VVhMwzeNtKRPAu5aXks4FasbMe4xB4bWrmq6Jlxw==}
++  '@mermaid-js/parser@1.2.1':
++    resolution: {integrity: sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw==}
+ 
+   '@microsoft/api-extractor-model@7.33.8':
+     resolution: {integrity: sha512-aIcoQggPyer3B6Ze3usz0YWC/oBwUHfRH5ETUsr+oT2BRA6SfTJl7IKPcPZkX4UR+PohowzW4uMxsvjrn8vm+w==}
+@@ -1470,74 +1471,74 @@
+     peerDependencies:
+       three: '>= 0.159.0'
+ 
+-  '@napi-rs/canvas-android-arm64@0.1.100':
+-    resolution: {integrity: sha512-hjhCKhntPv9+t4ckHymdx0phYNcVW+GKQR6Lzw2zE+pOVjOplSmtx9nNNknTjbEDLcuLZqA1y8ufKg1XfgftzQ==}
++  '@napi-rs/canvas-android-arm64@1.0.9':
++    resolution: {integrity: sha512-4LGXk2/0HVzE29K8SzML5WubgCp++B1FH3qgl35XmSZE+lLdr6P9VRQEnZ0MCLZMTSuJP41yyhtoiVNEuvrTIA==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [android]
+ 
+-  '@napi-rs/canvas-darwin-arm64@0.1.100':
+-    resolution: {integrity: sha512-2PcswRaC7Ly645DGt88///zuFDhJxJYdKAs1uU3mfk1atYkXufgcgLfBpk6Tm12nCQBaNt1wpybuPZ4qOhTo8A==}
++  '@napi-rs/canvas-darwin-arm64@1.0.9':
++    resolution: {integrity: sha512-YNdfLBzY0W/Pep9fo2L6RmoNlNksnn05LRnX66W63R3ij58S25QOTcjdtEt2v8+PnCESzqZsYzUo+QPeIR44NA==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [darwin]
+ 
+-  '@napi-rs/canvas-darwin-x64@0.1.100':
+-    resolution: {integrity: sha512-ePNZtj7pNIva/siZMg+HmbeozkIjqUIYdoymH8HaA3qK7LfzFN4WMBM8G6HQ9ZC+H3+Dnn5pqtiXpgLykaPOhw==}
++  '@napi-rs/canvas-darwin-x64@1.0.9':
++    resolution: {integrity: sha512-ceZQSknTEcy3dOXoekv59LTCkXjvnLsq+VW5PeNNDHEPQbRS5Ervkm1EaDa7WLAjiYWMLuSQTRTHao1dEX4prg==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [darwin]
+ 
+-  '@napi-rs/canvas-linux-arm-gnueabihf@0.1.100':
+-    resolution: {integrity: sha512-d5cDB48oWFGU8/XPhUOFAlySgb/VAu7D+s8fi55K1Pcfg8aPplHWqMgibhVLU8ky7Pyg/fuiVLz4Nf3JrSTuUA==}
++  '@napi-rs/canvas-linux-arm-gnueabihf@1.0.9':
++    resolution: {integrity: sha512-XhfI0Wwv4llhd6nnWDtY3kQKjq0r+y1i91PlJlJI24ag2U9WrnwbG1qS3+fDLEyouwEVFchiKkTEHozK+5iUNA==}
+     engines: {node: '>= 10'}
+     cpu: [arm]
+     os: [linux]
+ 
+-  '@napi-rs/canvas-linux-arm64-gnu@0.1.100':
+-    resolution: {integrity: sha512-rDxgxRu69RvDlX/bh9o22DxLsGr8EqsNgotL9+RwQE1S0b0cqeatqsw6aW45mukm0B42DIAaAacKaYQ8cqS1nw==}
++  '@napi-rs/canvas-linux-arm64-gnu@1.0.9':
++    resolution: {integrity: sha512-012oiYtKaE7i9oxc8q7nraT7kDOpLcaCmFLzVe9Ty34RHDdoDzbWLrVh827CNxYh/EADX1eSikA3ymLjo/nNuw==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [linux]
+ 
+-  '@napi-rs/canvas-linux-arm64-musl@0.1.100':
+-    resolution: {integrity: sha512-K3mDW66N+xT2/V439u1alFANiBUjdEx2gLiNYnCmUsva5jZMxWTjafBYwTzYK+EMFMHrUoabuU+T1BIP5CgbYQ==}
++  '@napi-rs/canvas-linux-arm64-musl@1.0.9':
++    resolution: {integrity: sha512-Ls5UWYFFn63casTZEczbeyEg3vRDRkv9lscuGwfchtY5yLLQhgOB8SN4YGxmfJ5vTaBwZ2YUxBS3NtmjJmFXdA==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [linux]
+ 
+-  '@napi-rs/canvas-linux-riscv64-gnu@0.1.100':
+-    resolution: {integrity: sha512-mooqUBTIsccZpnoQC4NgrC1v6C1vof39etLNMnBwCY+p0gajWJvAHLGQ6g/gGyS5YrpDW+GefSN4+Cvcr08UWw==}
++  '@napi-rs/canvas-linux-riscv64-gnu@1.0.9':
++    resolution: {integrity: sha512-hLKEGxV7ZiRHqndePTokgDMdBlo/rDfzg7P4p4QIv9pUhuYobnu3R2NIFLCRghG0nwfo+s2sw+c1xZFeCmEAsw==}
+     engines: {node: '>= 10'}
+     cpu: [riscv64]
+     os: [linux]
+ 
+-  '@napi-rs/canvas-linux-x64-gnu@0.1.100':
+-    resolution: {integrity: sha512-1eCvkDCazm7FFhsT7DfGOdSaHgZVK3bt/dSBl5EWHOWmnz+I7j8tPseJqqD81NF+MH21jKUK4wQSDjN0mdhnTg==}
++  '@napi-rs/canvas-linux-x64-gnu@1.0.9':
++    resolution: {integrity: sha512-6kaz3w0QMy77PDWk6rJ1ksIihdad3qzEyX2o2oGT8GwCaypfT5mhjr8buOO5hstyLxcWXDScuz56RsINLtBPIQ==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [linux]
+ 
+-  '@napi-rs/canvas-linux-x64-musl@0.1.100':
+-    resolution: {integrity: sha512-20arT6lnI19S68qNlii73TSEDbECNgzMz2EpldC1V3mZFuRkeujXkcebRk0LRJe9SEUAooYiLokfMViY8IX7yA==}
++  '@napi-rs/canvas-linux-x64-musl@1.0.9':
++    resolution: {integrity: sha512-xrGvmS3v55hmZ86ls/kBLVNMUTYio3f6Ik0DireemG994VfPAwiA3ZXA0Uf1bByctkB3NQ1Sfb+H5bkdUnnzfQ==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [linux]
+ 
+-  '@napi-rs/canvas-win32-arm64-msvc@0.1.100':
+-    resolution: {integrity: sha512-DZFFT1wIAg37LJw37yhMRFfjATd3vTQzjZ1Yki8u2vhO6Hi5VE6BVaGQ1aaDu7xb4iMErz+9EOwjpS7xcxFeBw==}
++  '@napi-rs/canvas-win32-arm64-msvc@1.0.9':
++    resolution: {integrity: sha512-yjmVS3ArZeRVCP7jqbPq4rpZa/BhTeI7ELE2XqJg3snICQBDevLZyArxswHkiTnT34KRic33/4fLirrHI+SY8A==}
+     engines: {node: '>= 10'}
+     cpu: [arm64]
+     os: [win32]
+ 
+-  '@napi-rs/canvas-win32-x64-msvc@0.1.100':
+-    resolution: {integrity: sha512-MyT1j3mHC2+Lu4pBi9mKyMJhtP6U7k7EldY7sj/uS5gJA65gTXt8MefJQXLJo5d/vZbuWmfxzkEUNc/urV3pHA==}
++  '@napi-rs/canvas-win32-x64-msvc@1.0.9':
++    resolution: {integrity: sha512-QlSYQdMQslB81nlABo9wNfQ6npFhE7/O+saCZdqVGueGanyRk4jCogD5EwQenfP3kIq9e+mm6GreQBjX5MrA8g==}
+     engines: {node: '>= 10'}
+     cpu: [x64]
+     os: [win32]
+ 
+-  '@napi-rs/canvas@0.1.100':
+-    resolution: {integrity: sha512-xglYA6q3XO5P3BNJYxVZ1IV7DLVjp1Py6nwag88YntrS+3vKHyYcMqXVS4ZztJmwz2uGvz1FWhI/4LgbR5uQDA==}
++  '@napi-rs/canvas@1.0.9':
++    resolution: {integrity: sha512-QviPdJImDi/jMAvBfqaw+19BndMd/sizXVW3NnpMd3VJGz++QXkOHcP9kWR/smHG0hNjHeyuHFyrx/5lD0oNcQ==}
+     engines: {node: '>= 10'}
+ 
+   '@nodelib/fs.scandir@2.1.5':
+@@ -2213,7 +2214,7 @@
+     resolution: {integrity: sha512-fbGYivgK5uBTRt7p5F3zy6VrETlV9RtZjBqd1/HxGdjdckBgBM4ugP8LHpjolqTj14TXTxSK1ZfgPbHYyGuH7g==}
+     peerDependencies:
+       async-validator: ^4
+-      axios: ^1
++      axios: 1.18.0
+       change-case: ^5
+       drauu: ^0.4
+       focus-trap: ^7
+@@ -2256,14 +2257,9 @@
+   '@vueuse/shared@12.8.2':
+     resolution: {integrity: sha512-dznP38YzxZoNloI0qpEfpkms8knDtaoQ6Y/sfS0L7Yki4zh40LFHEhur0odJC6xTHG5dxWVPiUWBXn+wCG2s5w==}
+ 
+-  '@xmldom/xmldom@0.7.13':
+-    resolution: {integrity: sha512-lm2GW5PkosIzccsaZIz7tp8cPADSIlIHWDFTR1N0SzfinhhYgeIQjFMz4rYzanCScr3DqQLeomUDArp6MWKm+g==}
++  '@xmldom/xmldom@0.8.15':
++    resolution: {integrity: sha512-/5NV/vDALVFDXgLmfsy9TRCBlKwO2LNBFzpzvb9iIj+jR+eSc6DLYYvVOdivT/jm7MtU6TebYuRmzEOI7w40UA==}
+     engines: {node: '>=10.0.0'}
+-    deprecated: this version has critical issues, please update to the latest version
+-
+-  '@xmldom/xmldom@0.9.10':
+-    resolution: {integrity: sha512-A9gOqLdi6cV4ibazAjcQufGj0B1y/vDqYrcuP6d/6x8P27gRS8643Dj9o1dEKtB6O7fwxb2FgBmJS2mX7gpvdw==}
+-    engines: {node: '>=14.6'}
+ 
+   abbrev@2.0.0:
+     resolution: {integrity: sha512-6/mh1E2u2YgEsCHdY0Yx5oW+61gZU+1vXaoiHHrpKeuRNNgFvS+/jrwHiQhB5apAf5oB7UB7E19ol2R2LKH8hQ==}
+@@ -2438,7 +2434,7 @@
+     engines: {node: ^10 || ^12 || >=14}
+     hasBin: true
+     peerDependencies:
+-      postcss: ^8.1.0
++      postcss: 8.5.23
+ 
+   available-typed-arrays@1.0.7:
+     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
+@@ -2450,8 +2446,8 @@
+   aws4@1.13.2:
+     resolution: {integrity: sha512-lHe62zvbTB5eEABUVi/AwVh0ZKY9rMMDhmm+eeyuuUQbQ3+J+fONVQOZyj+DdrvD4BY33uYniyRJ4UJIaSKAfw==}
+ 
+-  axios@1.16.0:
+-    resolution: {integrity: sha512-6hp5CwvTPlN2A31g5dxnwAX0orzM7pmCRDLnZSX772mv8WDqICwFjowHuPs04Mc8deIld1+ejhtaMn5vp6b+1w==}
++  axios@1.18.0:
++    resolution: {integrity: sha512-E32NzpYKp++W7XRe52rHiXV2ehxmh3wbdgO7MHeFM+vqxLBYHzt0ElkiImtOBxtOmyp0yoC8C6uESVV84Y2/hw==}
+ 
+   babel-plugin-polyfill-corejs2@0.4.17:
+     resolution: {integrity: sha512-aTyf30K/rqAsNwN76zYrdtx8obu0E4KoUME29B1xj+B3WxgvWkp943vYQ+z8Mv3lw9xHXMHpvSPOBxzAkIa94w==}
+@@ -2634,15 +2630,6 @@
+   check-more-types@2.24.0:
+     resolution: {integrity: sha512-Pj779qHxV2tuapviy1bSZNEL1maXr13bPYpsvSDB68HlYcYuhlDrmGd63i0JHMCLKzc7rUSNIrpdJlhVlNwrxA==}
+     engines: {node: '>= 0.8.0'}
+-
+-  chevrotain-allstar@0.4.3:
+-    resolution: {integrity: sha512-2X4mkroolSMKqW+H22pyPMUVDqYZzPhephTmg/NODKb1IGYPHfxfhcW0EjS7wcPJNbze2i4vBWT7zT5FKF2lrQ==}
+-    peerDependencies:
+-      chevrotain: ^12.0.0
+-
+-  chevrotain@12.0.0:
+-    resolution: {integrity: sha512-csJvb+6kEiQaqo1woTdSAuOWdN0WTLIydkKrBnS+V5gZz0oqBrp4kQ35519QgK6TpBThiG3V1vNSHlIkv4AglQ==}
+-    engines: {node: '>=22.0.0'}
+ 
+   chokidar@3.6.0:
+     resolution: {integrity: sha512-7VT13fmjotKpGipCW9JEQAusEPE+Ei8nl6/g4FBAmIm0GOOLMua9NDDo/DWp0ZAxCr3cPq5ZpBqmPAQgDda2Pw==}
+@@ -3090,11 +3077,8 @@
+     os: [darwin]
+     hasBin: true
+ 
+-  dompurify@3.2.7:
+-    resolution: {integrity: sha512-WhL/YuveyGXJaerVlMYGWhvQswa7myDG17P7Vu65EWC05o8vfeNbvNf4d/BOvH99+ZW+LlQsc1GDKMa1vNK6dw==}
+-
+-  dompurify@3.4.2:
+-    resolution: {integrity: sha512-lHeS9SA/IKeIFFyYciHBr2n0v1VMPlSj843HdLOwjb2OxNwdq9Xykxqhk+FE42MzAdHvInbAolSE4mhahPpjXA==}
++  dompurify@3.4.13:
++    resolution: {integrity: sha512-2vmYIoqjze2d+kakP8S/nS5shfsl587kzwEjcGlTdiksUVgFHnFCsLYDVj/JNqJVOQZGSYBTmuycv0PodwmnMQ==}
+ 
+   dotenv-expand@5.1.0:
+     resolution: {integrity: sha512-YXQl1DSa4/PQyRfgrv6aoNjhasp/p4qs9FjJ4q4cQk+8m4r6k4ZSiEyytKG8f8W9gi8WsQtIObNmKd+tMzNTmA==}
+@@ -3217,6 +3201,9 @@
+     resolution: {integrity: sha512-yPDz7wqpg1/mmHLmS3tcfTfbw5f1eryXvyghYBffGdERwe+mV7ZcWzTR8LR17Kvqt3qfPurjlonmnq3MKXIOXw==}
+     engines: {node: '>= 0.4'}
+ 
++  es-toolkit@1.52.0:
++    resolution: {integrity: sha512-XTNEJQh1tY1ZJVcf6ayP/2n4ZPyaHlW2FWs7xvw5ddPuhUVjLD3olQVQS7kf58JbAB48iL0uL/jerTrjtV3lDA==}
++
+   es5-ext@0.10.64:
+     resolution: {integrity: sha512-p2snDhiLaXe6dahss1LddxqEm+SkuDvV8dnIQG0MWjyHpcMNfXKPE+/Cc0y+PhxJX3A4xGNeFCj5oc0BUh6deg==}
+     engines: {node: '>=0.10'}
+@@ -3443,8 +3430,8 @@
+   forever-agent@0.6.1:
+     resolution: {integrity: sha512-j0KLYPhm6zeac4lz3oJ3o65qvgQCcPubiyotZrXqEaG4hNagNYO8qdlUrX5vwqv9ohqeT/Z3j6+yW067yWWdUw==}
+ 
+-  form-data@4.0.5:
+-    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
++  form-data@4.0.6:
++    resolution: {integrity: sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==}
+     engines: {node: '>= 6'}
+ 
+   fraction.js@5.3.4:
+@@ -3969,8 +3956,8 @@
+   js-tokens@4.0.0:
+     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
+ 
+-  js-yaml@4.1.1:
+-    resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
++  js-yaml@4.3.2:
++    resolution: {integrity: sha512-SFNOvSJ+Dgf/9An904Yx+CgSlIPCkIpao4qo51lpee25TIRejdH3rhR4EZMGoNx3/TP3O+wzWuiTFl4sqbltzA==}
+     hasBin: true
+ 
+   jsbn@0.1.1:
+@@ -4034,10 +4021,6 @@
+   kolorist@1.8.0:
+     resolution: {integrity: sha512-Y+60/zizpJ3HRH8DCss+q95yr6145JXZo46OTpFvDZWLfRCE4qChOyk1b26nMaNpfHHgxagk9dXT5OP0Tfe+dQ==}
+ 
+-  langium@4.2.3:
+-    resolution: {integrity: sha512-sOPIi4hISFnY7twwV97ca1TsxpBtXq0URu/LL1AvxwccPG/RIBBlKS7a/f/EL6w8lTNaS0EFs/F+IdSOaqYpng==}
+-    engines: {node: '>=20.10.0', npm: '>=10.2.3'}
+-
+   layout-base@1.0.2:
+     resolution: {integrity: sha512-8h2oVEZNktL4BH2JCOI90iD1yXwL6iNW7KcCKT2QZgQJR2vbqDsldCTPRU9NifTCqHZci57XvQQ15YTu+sTYPg==}
+ 
+@@ -4076,8 +4059,8 @@
+   lines-and-columns@1.2.4:
+     resolution: {integrity: sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==}
+ 
+-  linkify-it@5.0.0:
+-    resolution: {integrity: sha512-5aHCbzQRADcdP+ATqnDuhhJ/MRIqDkZX5pyjFHRRysS8vZ5AbqGEoFIb6pYHPZ+L/OC2Lc+xT8uHVVR5CAK/wQ==}
++  linkify-it@5.0.2:
++    resolution: {integrity: sha512-ONTm2jCMAVZjgQa/Fy1kScXsuOoF5NPTsoFBdE1KVIZ2vAh/r9+Bqo+0jINCBYnavTPQZz38QzFTme79ENoN3Q==}
+ 
+   listr2@3.14.0:
+     resolution: {integrity: sha512-TyWI8G99GX9GjE54cJ+RrNMcIFBfwMPxc3XTFiAYGN4s10hWROGtOg7+O6u6LE3mNkyld7RSLE6nrKBvTfcs3g==}
+@@ -4197,8 +4180,8 @@
+   mark.js@8.11.1:
+     resolution: {integrity: sha512-1I+1qpDt4idfgLQG+BNWmrqku+7/2bi5nLf4YwF8y8zXvmfiTBY3PV3ZibfrjBueCByROpuBjLLFCajqkgYoLQ==}
+ 
+-  markdown-it@14.1.1:
+-    resolution: {integrity: sha512-BuU2qnTti9YKgK5N+IeMubp14ZUKUUw7yeJbkjtosvHiP0AZ5c8IAgEMk79D0eC8F23r4Ac/q8cAIFdm2FtyoA==}
++  markdown-it@14.2.0:
++    resolution: {integrity: sha512-1TGiQiJVRQ3NPmZH6sx5Cfnmg6GQm9jvC1ch4TK511NjSJvjzKLzn5pPfZRNZkRPZP0HqCioSndqH8v2nRaWVQ==}
+     hasBin: true
+ 
+   marked@14.0.0:
+@@ -4235,8 +4218,8 @@
+     resolution: {integrity: sha512-8q7VEgMJW4J8tcfVPy8g09NcQwZdbwFEqhe/WZkoIzjn/3TGDwtOCYtXGxA3O8tPzpczCCDgv+P2P5y00ZJOOg==}
+     engines: {node: '>= 8'}
+ 
+-  mermaid@11.14.0:
+-    resolution: {integrity: sha512-GSGloRsBs+JINmmhl0JDwjpuezCsHB4WGI4NASHxL3fHo3o/BRXTxhDLKnln8/Q0lRFRyDdEjmk1/d5Sn1Xz8g==}
++  mermaid@11.16.1:
++    resolution: {integrity: sha512-TQsq6u22fAn3rek5VOubrhKPo1g5hwC3FXUN9hiyupTckcYiGuuKGkNQrKYwGJkXUxZdojwRG46gsSCFZMDp4g==}
+ 
+   micromark-util-character@2.1.1:
+     resolution: {integrity: sha512-wv8tdUTJ3thSFFFJKtpYKOYiGP2+v96Hvk4Tu8KpCAsTMs6yi+nVmGh1syvSCsaxz45J6Jbw+9DD6g97+NV67Q==}
+@@ -4346,8 +4329,8 @@
+   mz@2.7.0:
+     resolution: {integrity: sha512-z81GNO7nnYMEhrGh9LeymoE4+Yr0Wn5McHIZMK5cfQCl+NDX08sCZgUc9/6MHni9IWuFLm1Z3HTCXu2z9fN62Q==}
+ 
+-  nanoid@3.3.12:
+-    resolution: {integrity: sha512-ZB9RH/39qpq5Vu6Y+NmUaFhQR6pp+M2Xt76XBnEwDaGcVAqhlvxrl3B2bKS5D3NH3QR76v3aSrKaF/Kiy7lEtQ==}
++  nanoid@3.3.18:
++    resolution: {integrity: sha512-DTg4MJbGMWkfi6VZFdNt2/caMbQy4Ou+Op/hJQvGEWcnVfoA1QA+xzRKAzw9jD6+GVOOeYr/mIcuDSdug6F6+w==}
+     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
+     hasBin: true
+ 
+@@ -4505,8 +4488,8 @@
+     resolution: {integrity: sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==}
+     engines: {node: '>= 14.16'}
+ 
+-  pdfjs-dist@5.7.284:
+-    resolution: {integrity: sha512-h4EdYQczmGhbOlqc3PPZwxevn7ApdWPbovAuWXOB/DjIyigSnwfy2oze7c6mRcSr9XgLp3eN3EeL4DyySTPMFw==}
++  pdfjs-dist@6.2.108:
++    resolution: {integrity: sha512-YxFb+SQcodN2rnX9Tn3dHYlqfb7NjlzzfONPpJd+AKoKtUjEdevTfbC07d5TcczzOK6261auRkP/M8OBHs9vFQ==}
+     engines: {node: '>=22.13.0 || >=24'}
+ 
+   pend@1.2.0:
+@@ -4580,20 +4563,20 @@
+     resolution: {integrity: sha512-hpr+J05B2FVYUAXHeK1YyI267J/dDDhMU6B6civm8hSY1jYJnBXxzKDKDswzJmtLHryrjhnDjqqp/49t8FALew==}
+     engines: {node: '>=14.0.0'}
+     peerDependencies:
+-      postcss: ^8.0.0
++      postcss: 8.5.23
+ 
+   postcss-js@4.1.0:
+     resolution: {integrity: sha512-oIAOTqgIo7q2EOwbhb8UalYePMvYoIeRY2YKntdpFQXNosSu3vLrniGgmH9OKs/qAkfoj5oB3le/7mINW1LCfw==}
+     engines: {node: ^12 || ^14 || >= 16}
+     peerDependencies:
+-      postcss: ^8.4.21
++      postcss: 8.5.23
+ 
+   postcss-load-config@6.0.1:
+     resolution: {integrity: sha512-oPtTM4oerL+UXmx+93ytZVN82RrlY/wPUV8IeDxFrzIjXOLF1pN+EmKPLbubvKHT2HC20xXsCAH2Z+CKV6Oz/g==}
+     engines: {node: '>= 18'}
+     peerDependencies:
+       jiti: '>=1.21.0'
+-      postcss: '>=8.0.9'
++      postcss: 8.5.23
+       tsx: ^4.8.1
+       yaml: ^2.4.2
+     peerDependenciesMeta:
+@@ -4610,7 +4593,7 @@
+     resolution: {integrity: sha512-HQbt28KulC5AJzG+cZtj9kvKB93CFCdLvog1WFLf1D+xmMvPGlBstkpTEZfK5+AN9hfJocyBFCNiqyS48bpgzQ==}
+     engines: {node: '>=12.0'}
+     peerDependencies:
+-      postcss: ^8.2.14
++      postcss: 8.5.23
+ 
+   postcss-selector-parser@6.1.2:
+     resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==}
+@@ -4619,8 +4602,8 @@
+   postcss-value-parser@4.2.0:
+     resolution: {integrity: sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ==}
+ 
+-  postcss@8.5.14:
+-    resolution: {integrity: sha512-SoSL4+OSEtR99LHFZQiJLkT59C5B1amGO1NzTwj7TT1qCUgUO6hxOvzkOYxD+vMrXBM3XJIKzokoERdqQq/Zmg==}
++  postcss@8.5.23:
++    resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
+     engines: {node: ^10 || ^12 || >=14}
+ 
+   preact@10.29.7:
+@@ -5443,7 +5426,7 @@
+     hasBin: true
+     peerDependencies:
+       markdown-it-mathjax3: ^4
+-      postcss: ^8
++      postcss: 8.5.23
+     peerDependenciesMeta:
+       markdown-it-mathjax3:
+         optional: true
+@@ -5474,23 +5457,6 @@
+         optional: true
+       jsdom:
+         optional: true
+-
+-  vscode-jsonrpc@8.2.0:
+-    resolution: {integrity: sha512-C+r0eKJUIfiDIfwJhria30+TYWPtuHJXHtI7J0YlOmKAo7ogxP20T0zxB7HZQIFhIyvoBPwWskjxrvAtfjyZfA==}
+-    engines: {node: '>=14.0.0'}
+-
+-  vscode-languageserver-protocol@3.17.5:
+-    resolution: {integrity: sha512-mb1bvRJN8SVznADSGWM9u/b07H7Ecg0I3OgXDuLdn307rl/J3A9YD6/eYOssqhecL27hK1IPZAsaqh00i/Jljg==}
+-
+-  vscode-languageserver-textdocument@1.0.12:
+-    resolution: {integrity: sha512-cxWNPesCnQCcMPeenjKKsOCKQZ/L6Tv19DTRIGuLWe32lyzWhihGVJ/rcckZXJxfdKCFvRLS3fpBIsV/ZGX4zA==}
+-
+-  vscode-languageserver-types@3.17.5:
+-    resolution: {integrity: sha512-Ld1VelNuX9pdF39h2Hgaeb5hEZM2Z3jUrrMgWQAu82jMtZp7p3vJT3BzToKtZI7NgQssZje5o0zryOrhQvzQAg==}
+-
+-  vscode-languageserver@9.0.1:
+-    resolution: {integrity: sha512-woByF3PDpkHFUreUa7Hos7+pUWdeWMXRd26+ZX2A8cFx6v/JPTtd4/uN0/jB6XQHYaOlHbio03NTHCqrgG5n7g==}
+-    hasBin: true
+ 
+   vscode-uri@3.1.0:
+     resolution: {integrity: sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==}
+@@ -6500,20 +6466,7 @@
+ 
+   '@braintree/sanitize-url@7.1.2': {}
+ 
+-  '@chevrotain/cst-dts-gen@12.0.0':
+-    dependencies:
+-      '@chevrotain/gast': 12.0.0
+-      '@chevrotain/types': 12.0.0
+-
+-  '@chevrotain/gast@12.0.0':
+-    dependencies:
+-      '@chevrotain/types': 12.0.0
+-
+-  '@chevrotain/regexp-to-ast@12.0.0': {}
+-
+-  '@chevrotain/types@12.0.0': {}
+-
+-  '@chevrotain/utils@12.0.0': {}
++  '@chevrotain/types@11.1.2': {}
+ 
+   '@codemirror/autocomplete@6.20.2':
+     dependencies:
+@@ -6572,7 +6525,7 @@
+       combined-stream: 1.0.8
+       extend: 3.0.2
+       forever-agent: 0.6.1
+-      form-data: 4.0.5
++      form-data: 4.0.6
+       http-signature: 1.4.0
+       is-typedarray: 1.0.0
+       isstream: 0.1.2
+@@ -6854,7 +6807,7 @@
+       globals: 14.0.0
+       ignore: 5.3.2
+       import-fresh: 3.3.1
+-      js-yaml: 4.1.1
++      js-yaml: 4.3.2
+       minimatch: 3.1.5
+       strip-json-comments: 3.1.1
+     transitivePeerDependencies:
+@@ -6992,9 +6945,9 @@
+ 
+   '@marijn/find-cluster-break@1.0.2': {}
+ 
+-  '@mermaid-js/parser@1.1.0':
+-    dependencies:
+-      langium: 4.2.3
++  '@mermaid-js/parser@1.2.1':
++    dependencies:
++      '@chevrotain/types': 11.1.2
+ 
+   '@microsoft/api-extractor-model@7.33.8(@types/node@22.19.17)':
+     dependencies:
+@@ -7036,52 +6989,52 @@
+       promise-worker-transferable: 1.0.4
+       three: 0.182.0
+ 
+-  '@napi-rs/canvas-android-arm64@0.1.100':
++  '@napi-rs/canvas-android-arm64@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-darwin-arm64@0.1.100':
++  '@napi-rs/canvas-darwin-arm64@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-darwin-x64@0.1.100':
++  '@napi-rs/canvas-darwin-x64@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-linux-arm-gnueabihf@0.1.100':
++  '@napi-rs/canvas-linux-arm-gnueabihf@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-linux-arm64-gnu@0.1.100':
++  '@napi-rs/canvas-linux-arm64-gnu@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-linux-arm64-musl@0.1.100':
++  '@napi-rs/canvas-linux-arm64-musl@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-linux-riscv64-gnu@0.1.100':
++  '@napi-rs/canvas-linux-riscv64-gnu@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-linux-x64-gnu@0.1.100':
++  '@napi-rs/canvas-linux-x64-gnu@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-linux-x64-musl@0.1.100':
++  '@napi-rs/canvas-linux-x64-musl@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-win32-arm64-msvc@0.1.100':
++  '@napi-rs/canvas-win32-arm64-msvc@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas-win32-x64-msvc@0.1.100':
++  '@napi-rs/canvas-win32-x64-msvc@1.0.9':
+     optional: true
+ 
+-  '@napi-rs/canvas@0.1.100':
++  '@napi-rs/canvas@1.0.9':
+     optionalDependencies:
+-      '@napi-rs/canvas-android-arm64': 0.1.100
+-      '@napi-rs/canvas-darwin-arm64': 0.1.100
+-      '@napi-rs/canvas-darwin-x64': 0.1.100
+-      '@napi-rs/canvas-linux-arm-gnueabihf': 0.1.100
+-      '@napi-rs/canvas-linux-arm64-gnu': 0.1.100
+-      '@napi-rs/canvas-linux-arm64-musl': 0.1.100
+-      '@napi-rs/canvas-linux-riscv64-gnu': 0.1.100
+-      '@napi-rs/canvas-linux-x64-gnu': 0.1.100
+-      '@napi-rs/canvas-linux-x64-musl': 0.1.100
+-      '@napi-rs/canvas-win32-arm64-msvc': 0.1.100
+-      '@napi-rs/canvas-win32-x64-msvc': 0.1.100
++      '@napi-rs/canvas-android-arm64': 1.0.9
++      '@napi-rs/canvas-darwin-arm64': 1.0.9
++      '@napi-rs/canvas-darwin-x64': 1.0.9
++      '@napi-rs/canvas-linux-arm-gnueabihf': 1.0.9
++      '@napi-rs/canvas-linux-arm64-gnu': 1.0.9
++      '@napi-rs/canvas-linux-arm64-musl': 1.0.9
++      '@napi-rs/canvas-linux-riscv64-gnu': 1.0.9
++      '@napi-rs/canvas-linux-x64-gnu': 1.0.9
++      '@napi-rs/canvas-linux-x64-musl': 1.0.9
++      '@napi-rs/canvas-win32-arm64-msvc': 1.0.9
++      '@napi-rs/canvas-win32-x64-msvc': 1.0.9
+     optional: true
+ 
+   '@nodelib/fs.scandir@2.1.5':
+@@ -7749,7 +7702,7 @@
+       '@vue/shared': 3.5.34
+       estree-walker: 2.0.2
+       magic-string: 0.30.21
+-      postcss: 8.5.14
++      postcss: 8.5.23
+       source-map-js: 1.2.1
+ 
+   '@vue/compiler-ssr@3.5.34':
+@@ -7852,13 +7805,13 @@
+     transitivePeerDependencies:
+       - typescript
+ 
+-  '@vueuse/integrations@12.8.2(axios@1.16.0)(focus-trap@7.8.0)(typescript@5.9.3)':
++  '@vueuse/integrations@12.8.2(axios@1.18.0)(focus-trap@7.8.0)(typescript@5.9.3)':
+     dependencies:
+       '@vueuse/core': 12.8.2(typescript@5.9.3)
+       '@vueuse/shared': 12.8.2(typescript@5.9.3)
+       vue: 3.5.34(typescript@5.9.3)
+     optionalDependencies:
+-      axios: 1.16.0
++      axios: 1.18.0
+       focus-trap: 7.8.0
+     transitivePeerDependencies:
+       - typescript
+@@ -7871,9 +7824,7 @@
+     transitivePeerDependencies:
+       - typescript
+ 
+-  '@xmldom/xmldom@0.7.13': {}
+-
+-  '@xmldom/xmldom@0.9.10': {}
++  '@xmldom/xmldom@0.8.15': {}
+ 
+   abbrev@2.0.0: {}
+ 
+@@ -7989,12 +7940,12 @@
+       ejs: 3.1.10
+       electron-builder-squirrel-windows: 24.13.3(dmg-builder@24.13.3)
+       electron-publish: 24.13.1
+-      form-data: 4.0.5
++      form-data: 4.0.6
+       fs-extra: 10.1.0
+       hosted-git-info: 4.1.0
+       is-ci: 3.0.1
+       isbinaryfile: 5.0.7
+-      js-yaml: 4.1.1
++      js-yaml: 4.3.2
+       lazy-val: 1.0.5
+       minimatch: 5.1.9
+       read-config-file: 6.3.2
+@@ -8086,13 +8037,13 @@
+ 
+   at-least-node@1.0.0: {}
+ 
+-  autoprefixer@10.5.0(postcss@8.5.14):
++  autoprefixer@10.5.0(postcss@8.5.23):
+     dependencies:
+       browserslist: 4.28.2
+       caniuse-lite: 1.0.30001792
+       fraction.js: 5.3.4
+       picocolors: 1.1.1
+-      postcss: 8.5.14
++      postcss: 8.5.23
+       postcss-value-parser: 4.2.0
+ 
+   available-typed-arrays@1.0.7:
+@@ -8103,13 +8054,15 @@
+ 
+   aws4@1.13.2: {}
+ 
+-  axios@1.16.0:
++  axios@1.18.0:
+     dependencies:
+       follow-redirects: 1.16.0
+-      form-data: 4.0.5
++      form-data: 4.0.6
++      https-proxy-agent: 5.0.1
+       proxy-from-env: 2.1.0
+     transitivePeerDependencies:
+       - debug
++      - supports-color
+ 
+   babel-plugin-polyfill-corejs2@0.4.17(@babel/core@7.29.7):
+     dependencies:
+@@ -8244,7 +8197,7 @@
+       http-proxy-agent: 5.0.0
+       https-proxy-agent: 5.0.1
+       is-ci: 3.0.1
+-      js-yaml: 4.1.1
++      js-yaml: 4.3.2
+       source-map-support: 0.5.21
+       stat-mode: 1.0.0
+       temp-file: 3.4.0
+@@ -8316,19 +8269,6 @@
+   check-error@2.1.3: {}
+ 
+   check-more-types@2.24.0: {}
+-
+-  chevrotain-allstar@0.4.3(chevrotain@12.0.0):
+-    dependencies:
+-      chevrotain: 12.0.0
+-      lodash-es: 4.18.1
+-
+-  chevrotain@12.0.0:
+-    dependencies:
+-      '@chevrotain/cst-dts-gen': 12.0.0
+-      '@chevrotain/gast': 12.0.0
+-      '@chevrotain/regexp-to-ast': 12.0.0
+-      '@chevrotain/types': 12.0.0
+-      '@chevrotain/utils': 12.0.0
+ 
+   chokidar@3.6.0:
+     dependencies:
+@@ -8824,7 +8764,7 @@
+       builder-util-runtime: 9.2.4
+       fs-extra: 10.1.0
+       iconv-lite: 0.6.3
+-      js-yaml: 4.1.1
++      js-yaml: 4.3.2
+     optionalDependencies:
+       dmg-license: 1.0.11
+     transitivePeerDependencies:
+@@ -8843,11 +8783,7 @@
+       verror: 1.10.0
+     optional: true
+ 
+-  dompurify@3.2.7:
+-    optionalDependencies:
+-      '@types/trusted-types': 2.0.7
+-
+-  dompurify@3.4.2:
++  dompurify@3.4.13:
+     optionalDependencies:
+       '@types/trusted-types': 2.0.7
+ 
+@@ -8926,7 +8862,7 @@
+     dependencies:
+       builder-util-runtime: 9.7.0
+       fs-extra: 10.1.0
+-      js-yaml: 4.1.1
++      js-yaml: 4.3.2
+       lazy-val: 1.0.5
+       lodash.escaperegexp: 4.1.2
+       lodash.isequal: 4.5.0
+@@ -8967,7 +8903,7 @@
+   epubjs@0.3.93:
+     dependencies:
+       '@types/localforage': 0.0.34
+-      '@xmldom/xmldom': 0.7.13
++      '@xmldom/xmldom': 0.8.15
+       core-js: 3.49.0
+       event-emitter: 0.3.5
+       jszip: 3.10.1
+@@ -9061,7 +8997,7 @@
+       es-errors: 1.3.0
+       get-intrinsic: 1.3.0
+       has-tostringtag: 1.0.2
+-      hasown: 2.0.3
++      hasown: 2.0.4
+ 
+   es-to-primitive@1.3.4:
+     dependencies:
+@@ -9071,6 +9007,8 @@
+       is-callable: 1.2.7
+       is-date-object: 1.1.0
+       is-symbol: 1.1.1
++
++  es-toolkit@1.52.0: {}
+ 
+   es5-ext@0.10.64:
+     dependencies:
+@@ -9382,12 +9320,12 @@
+ 
+   forever-agent@0.6.1: {}
+ 
+-  form-data@4.0.5:
++  form-data@4.0.6:
+     dependencies:
+       asynckit: 0.4.0
+       combined-stream: 1.0.8
+       es-set-tostringtag: 2.1.0
+-      hasown: 2.0.3
++      hasown: 2.0.4
+       mime-types: 2.1.35
+ 
+   fraction.js@5.3.4: {}
+@@ -9935,7 +9873,7 @@
+ 
+   js-tokens@4.0.0: {}
+ 
+-  js-yaml@4.1.1:
++  js-yaml@4.3.2:
+     dependencies:
+       argparse: 2.0.1
+ 
+@@ -9995,15 +9933,6 @@
+ 
+   kolorist@1.8.0: {}
+ 
+-  langium@4.2.3:
+-    dependencies:
+-      '@chevrotain/regexp-to-ast': 12.0.0
+-      chevrotain: 12.0.0
+-      chevrotain-allstar: 0.4.3(chevrotain@12.0.0)
+-      vscode-languageserver: 9.0.1
+-      vscode-languageserver-textdocument: 1.0.12
+-      vscode-uri: 3.1.0
+-
+   layout-base@1.0.2: {}
+ 
+   layout-base@2.0.1: {}
+@@ -10035,7 +9964,7 @@
+ 
+   lines-and-columns@1.2.4: {}
+ 
+-  linkify-it@5.0.0:
++  linkify-it@5.0.2:
+     dependencies:
+       uc.micro: 2.1.0
+ 
+@@ -10158,11 +10087,11 @@
+ 
+   mark.js@8.11.1: {}
+ 
+-  markdown-it@14.1.1:
++  markdown-it@14.2.0:
+     dependencies:
+       argparse: 2.0.1
+       entities: 4.5.0
+-      linkify-it: 5.0.0
++      linkify-it: 5.0.2
+       mdurl: 2.0.0
+       punycode.js: 2.3.1
+       uc.micro: 2.1.0
+@@ -10198,11 +10127,11 @@
+ 
+   merge2@1.4.1: {}
+ 
+-  mermaid@11.14.0:
++  mermaid@11.16.1:
+     dependencies:
+       '@braintree/sanitize-url': 7.1.2
+       '@iconify/utils': 3.1.2
+-      '@mermaid-js/parser': 1.1.0
++      '@mermaid-js/parser': 1.2.1
+       '@types/d3': 7.4.3
+       '@upsetjs/venn.js': 2.0.0
+       cytoscape: 3.33.3
+@@ -10212,10 +10141,10 @@
+       d3-sankey: 0.12.3
+       dagre-d3-es: 7.0.14
+       dayjs: 1.11.20
+-      dompurify: 3.4.2
++      dompurify: 3.4.13
++      es-toolkit: 1.52.0
+       katex: 0.16.45
+       khroma: 2.1.0
+-      lodash-es: 4.18.1
+       marked: 16.4.2
+       roughjs: 4.6.6
+       stylis: 4.4.0
+@@ -10308,7 +10237,7 @@
+ 
+   monaco-editor@0.55.1:
+     dependencies:
+-      dompurify: 3.2.7
++      dompurify: 3.4.13
+       marked: 14.0.0
+ 
+   ms@2.1.3: {}
+@@ -10321,7 +10250,7 @@
+       object-assign: 4.1.1
+       thenify-all: 1.6.0
+ 
+-  nanoid@3.3.12: {}
++  nanoid@3.3.18: {}
+ 
+   natural-compare@1.4.0: {}
+ 
+@@ -10457,9 +10386,9 @@
+ 
+   pathval@2.0.1: {}
+ 
+-  pdfjs-dist@5.7.284:
++  pdfjs-dist@6.2.108:
+     optionalDependencies:
+-      '@napi-rs/canvas': 0.1.100
++      '@napi-rs/canvas': 1.0.9
+ 
+   pend@1.2.0: {}
+ 
+@@ -10509,7 +10438,7 @@
+ 
+   plist@3.1.1:
+     dependencies:
+-      '@xmldom/xmldom': 0.9.10
++      '@xmldom/xmldom': 0.8.15
+       base64-js: 1.5.1
+       xmlbuilder: 15.1.1
+ 
+@@ -10522,28 +10451,28 @@
+ 
+   possible-typed-array-names@1.1.0: {}
+ 
+-  postcss-import@15.1.0(postcss@8.5.14):
+-    dependencies:
+-      postcss: 8.5.14
++  postcss-import@15.1.0(postcss@8.5.23):
++    dependencies:
++      postcss: 8.5.23
+       postcss-value-parser: 4.2.0
+       read-cache: 1.0.0
+       resolve: 1.22.12
+ 
+-  postcss-js@4.1.0(postcss@8.5.14):
++  postcss-js@4.1.0(postcss@8.5.23):
+     dependencies:
+       camelcase-css: 2.0.1
+-      postcss: 8.5.14
+-
+-  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.14):
++      postcss: 8.5.23
++
++  postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.23):
+     dependencies:
+       lilconfig: 3.1.3
+     optionalDependencies:
+       jiti: 1.21.7
+-      postcss: 8.5.14
+-
+-  postcss-nested@6.2.0(postcss@8.5.14):
+-    dependencies:
+-      postcss: 8.5.14
++      postcss: 8.5.23
++
++  postcss-nested@6.2.0(postcss@8.5.23):
++    dependencies:
++      postcss: 8.5.23
+       postcss-selector-parser: 6.1.2
+ 
+   postcss-selector-parser@6.1.2:
+@@ -10553,9 +10482,9 @@
+ 
+   postcss-value-parser@4.2.0: {}
+ 
+-  postcss@8.5.14:
+-    dependencies:
+-      nanoid: 3.3.12
++  postcss@8.5.23:
++    dependencies:
++      nanoid: 3.3.18
+       picocolors: 1.1.1
+       source-map-js: 1.2.1
+ 
+@@ -10629,7 +10558,7 @@
+       config-file-ts: 0.2.6
+       dotenv: 9.0.2
+       dotenv-expand: 5.1.0
+-      js-yaml: 4.1.1
++      js-yaml: 4.3.2
+       json5: 2.2.3
+       lazy-val: 1.0.5
+ 
+@@ -11130,11 +11059,11 @@
+       normalize-path: 3.0.0
+       object-hash: 3.0.0
+       picocolors: 1.1.1
+-      postcss: 8.5.14
+-      postcss-import: 15.1.0(postcss@8.5.14)
+-      postcss-js: 4.1.0(postcss@8.5.14)
+-      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.14)
+-      postcss-nested: 6.2.0(postcss@8.5.14)
++      postcss: 8.5.23
++      postcss-import: 15.1.0(postcss@8.5.23)
++      postcss-js: 4.1.0(postcss@8.5.23)
++      postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.23)
++      postcss-nested: 6.2.0(postcss@8.5.23)
+       postcss-selector-parser: 6.1.2
+       resolve: 1.22.12
+       sucrase: 3.35.1
+@@ -11478,14 +11407,14 @@
+   vite@5.4.21(@types/node@22.19.17)(terser@5.49.2):
+     dependencies:
+       esbuild: 0.21.5
+-      postcss: 8.5.14
++      postcss: 8.5.23
+       rollup: 4.60.3
+     optionalDependencies:
+       '@types/node': 22.19.17
+       fsevents: 2.3.3
+       terser: 5.49.2
+ 
+-  vitepress@1.6.4(@algolia/client-search@5.56.0)(@types/node@22.19.17)(@types/react@18.3.28)(axios@1.16.0)(postcss@8.5.14)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(terser@5.49.2)(typescript@5.9.3):
++  vitepress@1.6.4(@algolia/client-search@5.56.0)(@types/node@22.19.17)(@types/react@18.3.28)(axios@1.18.0)(postcss@8.5.23)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)(terser@5.49.2)(typescript@5.9.3):
+     dependencies:
+       '@docsearch/css': 3.8.2
+       '@docsearch/js': 3.8.2(@algolia/client-search@5.56.0)(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(search-insights@2.17.3)
+@@ -11498,7 +11427,7 @@
+       '@vue/devtools-api': 7.7.10
+       '@vue/shared': 3.5.34
+       '@vueuse/core': 12.8.2(typescript@5.9.3)
+-      '@vueuse/integrations': 12.8.2(axios@1.16.0)(focus-trap@7.8.0)(typescript@5.9.3)
++      '@vueuse/integrations': 12.8.2(axios@1.18.0)(focus-trap@7.8.0)(typescript@5.9.3)
+       focus-trap: 7.8.0
+       mark.js: 8.11.1
+       minisearch: 7.2.0
+@@ -11506,7 +11435,7 @@
+       vite: 5.4.21(@types/node@22.19.17)(terser@5.49.2)
+       vue: 3.5.34(typescript@5.9.3)
+     optionalDependencies:
+-      postcss: 8.5.14
++      postcss: 8.5.23
+     transitivePeerDependencies:
+       - '@algolia/client-search'
+       - '@types/node'
+@@ -11570,21 +11499,6 @@
+       - sugarss
+       - supports-color
+       - terser
+-
+-  vscode-jsonrpc@8.2.0: {}
+-
+-  vscode-languageserver-protocol@3.17.5:
+-    dependencies:
+-      vscode-jsonrpc: 8.2.0
+-      vscode-languageserver-types: 3.17.5
+-
+-  vscode-languageserver-textdocument@1.0.12: {}
+-
+-  vscode-languageserver-types@3.17.5: {}
+-
+-  vscode-languageserver@9.0.1:
+-    dependencies:
+-      vscode-languageserver-protocol: 3.17.5
+ 
+   vscode-uri@3.1.0: {}
+ 
+--- a/web/tests/operations/reconnect.test.ts
++++ b/web/tests/operations/reconnect.test.ts
+@@ -0,0 +1,32 @@
++import { describe, it, expect, vi } from 'vitest';
++import { defineComponent } from 'vue';
++import { mount } from '@vue/test-utils';
++import { usePendingOps } from '../../../packages/core/src/composables/usePendingOps';
++
++describe('durable operation reconnect', () => {
++  it('shows prior failures until dismissed, and recent completion after a disconnected client', async () => {
++    const now = Date.now();
++    const rows = [
++      { id: 1, kind: 'copy', status: 'failed', error: 'Interrupted by restart', finished_at: new Date(now - 3600000).toISOString() },
++      { id: 2, kind: 'copy', status: 'ok', finished_at: new Date(now - 1000).toISOString() },
++      { id: 3, kind: 'copy', status: 'ok', finished_at: new Date(now - 3600000).toISOString() },
++    ];
++    let tracker: ReturnType<typeof usePendingOps>;
++    const settled = vi.fn();
++    const host = mount(defineComponent({ setup() {
++      tracker = usePendingOps({} as any, { endpoints: { opsList: '/ops' }, jsonFetch: async () => ({ ops: rows }) } as any, { onSettled: settled });
++      return () => null;
++    } }));
++    await tracker!.poll();
++    expect(tracker!.ops.value.map(o => o.id)).toEqual([1, 2]);
++    expect(tracker!.ops.value[0].error_message).toBe('Interrupted by restart');
++    expect(settled).not.toHaveBeenCalled();
++    const clock = vi.spyOn(Date, 'now').mockReturnValue(now + 60000);
++    await tracker!.poll();
++    expect(tracker!.ops.value.map(o => o.id)).toEqual([1]);
++    tracker!.dismiss(1);
++    await tracker!.poll();
++    expect(tracker!.ops.value).toEqual([]);
++    clock.mockRestore(); host.unmount();
++  });
++});

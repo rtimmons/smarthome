@@ -1,0 +1,21 @@
+{
+  admin off
+  auto_https off
+}
+https://10.77.0.1:5213 {
+  bind 10.77.0.1
+  tls /etc/filex-tls/server.crt /etc/filex-tls/server.key
+  @blocked path /api/admin* /api/ai* /api/tokens* /api/files/archive/extract /api/files/archive/add /api/files/share* /api/files/permissions* /api/files/onlyoffice* /dav* /s3* /mcp* /plugins* /s/* /drop/*
+  respond @blocked "Unavailable on the private operator portal" 403
+  @unreviewedWrite {
+    method POST PUT PATCH DELETE
+    not path /api/auth/login /api/auth/logout /api/auth/refresh /api/files/manager /api/files/manager/restore /api/files/ops /api/files/copy /api/files/move /api/files/delete /api/files/upload/* /api/files/save-text /api/files/search /api/files/ws-ticket /api/files/archive/download /api/notifications/*
+  }
+  respond @unreviewedWrite "Operation unavailable on the private operator portal" 403
+  header {
+    X-Content-Type-Options nosniff
+    Referrer-Policy same-origin
+    -Server
+  }
+  reverse_proxy 127.0.0.1:5212
+}

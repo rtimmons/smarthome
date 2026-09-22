@@ -1,0 +1,132 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-20T18:03:48.951040+00:00",
+  "status": "storage_expansion_verified",
+  "cutover_performed": false,
+  "authorized_change": {
+    "storage_box": "bx11_to_bx21_in_place",
+    "capacity_tib": 5,
+    "repair_volume_gb": 300,
+    "vm_size_unchanged": true,
+    "monthly_increase_usd": 32.01,
+    "storage_increase_usd": 9,
+    "volume_monthly_usd": 23.01,
+    "account_vat_percent": 0,
+    "pricing_basis": "authenticated_account_catalog_at_apply"
+  },
+  "terraform_scope": {
+    "storage_tier_only": true,
+    "volume_and_attachment_only": true,
+    "canonical_identity_preserved": true,
+    "provider_volume_delete_protection": true,
+    "terraform_prevent_destroy": true,
+    "reader_account_drift_not_applied": true,
+    "post_apply_scoped_plans_no_changes": true
+  },
+  "available_bytes": {
+    "local": 312656355328,
+    "remote": 4465527488512,
+    "library": 4465527488512
+  },
+  "observed_workload_budget": {
+    "download_bytes": 80146712178,
+    "unpacked_bytes": 73983261769,
+    "reserve_bytes": 32212254720,
+    "planning_margin_bytes": 5368709120,
+    "local_required_bytes": 197874388196,
+    "remote_required_bytes": 185547487378,
+    "local_shortfall_bytes": 0,
+    "remote_shortfall_bytes": 0
+  },
+  "spool_copy": {
+    "files": 535,
+    "bytes": 28639139,
+    "independent_sha256_and_metadata_match": true,
+    "original_preserved": true,
+    "canonical_media_migrated": false
+  },
+  "preservation": {
+    "queue_unchanged": true,
+    "history_unchanged": true,
+    "journal_hashes_unchanged": true,
+    "activation_unchanged": true,
+    "holds_unchanged": true,
+    "owned_unchanged": true,
+    "feeds_restored": true,
+    "global_pause_restored": true,
+    "unit_states_restored": true,
+    "sab_misc_unchanged": true,
+    "sab_categories_unchanged": true,
+    "arr_settings_unchanged_excluding_free_space": true
+  },
+  "queue": {
+    "count": 3,
+    "paused_count": 3,
+    "globally_paused": false,
+    "postprocessing": 0
+  },
+  "journal_count": 44,
+  "completed_journals": 37,
+  "capacity_hold_count": 10,
+  "importer_holds": 27,
+  "importer_errors": 0,
+  "sab_30G_floors_preserved": true,
+  "filesystem_verification": {
+    "par2_repair": {
+      "bytes": 134217728,
+      "independent_sha256_passed": true,
+      "elapsed_seconds": 2.33
+    },
+    "radarr_application_user_hardlink": "passed",
+    "sonarr_application_user_hardlink": "passed",
+    "fixture_removed": true
+  },
+  "restart_verification": {
+    "phase": "verified",
+    "missing_volume_start_refused": true,
+    "unmounted_paths_nonwritable": true,
+    "queue_history_holds_preserved": true
+  },
+  "reader_verification": {
+    "status": "passed",
+    "read_matched": true,
+    "overwrite_denied": true,
+    "delete_denied": true,
+    "preserved_after_overwrite": true,
+    "preserved_after_delete": true,
+    "sentinel_cleaned": true
+  },
+  "existing_backup_inputs": {
+    "readable_as_backup_account": true,
+    "files": 708,
+    "new_restore_acceptance_claimed": false
+  },
+  "deployment_recovery": {
+    "feed_acknowledgement_fixed_and_resumed": true,
+    "dependent_discovery_restart_fixed_and_resumed": true,
+    "final_setup_phase": "verified",
+    "original_runtime_mask_simulation_failed": true,
+    "effective_mask_repeat_passed": true
+  },
+  "validation": {
+    "cases_run": 685,
+    "passed": 676,
+    "optional_skips": 9,
+    "test_failures": 0,
+    "deployment_syntax_passed": true,
+    "current_source_secret_scan_passed": true,
+    "full_recipe": "failed_only_on_two_documented_historical_RSA_keys"
+  },
+  "health": {
+    "nas": "passed",
+    "catalog_failures": 14,
+    "update_notices_unwaived": true,
+    "cloud_discovery_overall": "existing_failures_remain"
+  },
+  "limits": [
+    "Storage checkpoint precedes subsequent native-cutover work.",
+    "Synthetic repair used 128 MiB; not representative large native-job acceptance.",
+    "Original SOPS-bound snapshot remains unchanged; no whole-machine restore claim.",
+    "No media deletion, held-request release or canonical-library migration."
+  ]
+}

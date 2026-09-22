@@ -1,11 +1,95 @@
 # Current validation and acceptance
 
-Updated September 17, 2026 (UTC). This ledger records accepted behavior and its
-limits. The [current plan](../../plan.md) owns remaining work and the
-[closure and merge criteria](../../plan.md#closure-and-merge-criteria). Historical
+Updated September 22, 2026 (UTC). This ledger records accepted behavior and its
+limits. The [current plan](../../plan.md) owns
+[remaining work and explicit deferrals](../../plan.md#remaining-work-and-explicit-deferrals). Historical
 implementation narratives remain in Git and dated receipts; they are not current
 operating instructions. Private bound snapshots remain unchanged; public receipts
 were redacted during the media-privacy rewrite and use neutral aliases.
+
+## September 22 approved application maintenance
+
+The [deployment receipt](../recovery/drills/app-maintenance-20260922.json)
+verifies the exact reviewed Radarr/Sonarr/Prowlarr images, healthy containers and
+zero application health findings. Discovery and native policy pass; held requests,
+all 44 journals and historical state remain unchanged. SAB's container/start time
+and six mount/service unit hashes match. NAS and Filex health pass. Private proxy
+anonymous denial and authenticated API acceptance of its Host header pass; a
+fresh browser login was not tested. Cloud health remains nonzero only for the
+14 preserved catalog failure records.
+
+The runner's unsupported Prowlarr health command was refused before dispatch;
+verification completed using startup health and the supported policy checks,
+without replaying deployment. All three stopped rollback databases verify.
+`cloud-20260922T191826Z.tar.age` independently restores 726 files/four databases,
+including 44 journals and 59 live hash matches. The prepared-source 694-case
+suite remains applicable; no implementation changed during rollout. New
+acquisition, selective TV copying, held-record disposition and device tests
+were not part of this maintenance.
+
+## September 21 recovery and prepared maintenance
+
+The [accepted-state recovery receipt](../recovery/drills/native-state-restore-20260921.json)
+verifies remote encrypted readback, local hash comparison, decryption and an
+isolated restore of 726 files/four databases. All 59 selected live hashes match,
+including 44 journals; mount configuration reconstructs from source and the
+restored volume identity. Replacement-host startup and Filex remain separate.
+
+Prepared Radarr/Sonarr/Prowlarr pin and version-guard changes passed **694 tests**
+with **nine optional skips**, plus compilation, shell/YAML and deployment syntax
+checks. Full-history scanning still reports only the two historical RSA keys.
+Automatic approval review requires explicit user approval for live application
+replacement, so no updates or scoped restarts occurred. Follow the
+[maintenance runbook](app-maintenance-20260921.md); the current checkout's candidate
+pins do not describe the live application versions yet. TV-copy selection remains
+pending, and no media was copied or acquired during this continuation.
+
+## September 20 health audit, 22:05 UTC
+
+The [read-only audit](../recovery/drills/health-audit-20260920.json) confirms active
+native ownership, unchanged historical state and zero measured capacity
+shortfalls. NAS health, SAB API/no-warning status and Filex private HTTPS pass.
+Cloud/discovery health stays nonzero: 14 September 17–18 catalog records map to
+seven identity-held journals, and all three Arr/Prowlarr application health
+responses contain only one update notice each. Five cleanup-failure records
+have later completed disposition receipts with no current disposal error;
+neither records nor holds were cleared. This does not reverify historical files.
+
+Cloud and NAS scheduled status receipts are within the 36-hour freshness limit.
+The latest cloud success at 19:01 UTC precedes native acceptance at 20:18 UTC;
+no archive was created, decrypted or restored during this audit. Independent
+restore of the accepted state, selective TV copying, Filex backup scope and
+user-deferred device checks remain in the plan's current follow-up table.
+This continuation edits documentation and receipts only; implementation-suite
+results below remain dated evidence. Documentation file links, receipt JSON and
+counts, later-disposition chronology, whitespace and current-source secret
+scanning pass. Full-history scanning was not repeated; the two documented
+historical RSA findings remain.
+
+## September 20 native cutover accepted
+
+The [native acceptance receipt](../recovery/drills/native-cutover-20260920.json)
+records fresh movie and episode acquisition, native import and source/client
+cleanup, Plex discovery, an 80 GiB PAR2 reconstruction with independent SHA-256,
+and a scoped SAB/Arr restart. Movie discovery was automatic; episode discovery
+was verified against the exact imported file after a general remote TV scan.
+The approved BX21 and 300 GB repair volume are deployed. All original queue
+holds, 44 journal hashes, activation and original SAB history remain unchanged.
+
+New requests use explicit Radarr/Sonarr searches with distinct categories and
+native cleanup. The user accepted that integrity policy for new requests. Direct
+cart intake, Prowlarr direct downloading and three legacy workers are disabled;
+RSS stays off to preserve the existing missing-media backlog. Conservative size,
+queue and 30 GiB reserve controls remain active. The published field guide and
+[native runbook](native-cutover.md) describe the current flow. The dated hybrid
+observations below do not override it.
+
+The infrastructure suite ran 693 cases with nine optional skips and no test
+failures. Syntax and current-source checks pass; the full scan still reports the
+two documented historical RSA keys. NAS health passes. Fourteen existing catalog
+failures and application update notices remain unwaived. Native ownership is
+verified despite those separately recorded health findings. Selective TV copying,
+device playback and new-state independent/whole-machine restores are not claimed.
 
 The [September 14 media audit](../recovery/drills/media-acceptance-20260914.json)
 refreshed discovery/cloud/NAS health and normal Arr/SAB records at local head
@@ -63,7 +147,7 @@ The independently restored backup covers 671 files, four databases,
 | Live download visibility | The [live receipt](../recovery/drills/native-copy-live-20260913.json) records changing bytes/rate/ETA, graph samples, transfer/history persistence through browser closure and reopen, and verification/completed states without a stale live rate. See [download status](download-status.md) for cadence and per-attempt limits. |
 | Arr native-import configuration | [Preflight](../recovery/drills/native-rollout-preflight-20260913.json) verified automatic acquisition/import settings, the active mount-dependent services, and the disabled publisher. Five adopted movies have files. Configuration and adoption do not prove a fresh import or scratch cleanup. |
 | Remote Plex access | The [native-media record](native-media.md) documents indexing of the five remote movies and a successful 1 MiB HTTP 206 range read through the read-only mount. Sustained device playback remains untested. |
-| Phone cart configuration | [NZBGeek Cart](nzbgeek-cart.md) is enabled in SAB at a 15-minute interval. Its native reader verified the initial held entry; queues stayed empty and no acquisition was started during setup. Direct cart jobs do not establish Arr import ownership. |
+| Historical phone cart configuration | [NZBGeek Cart](nzbgeek-cart.md) was enabled in SAB at a 15-minute interval; intake is now disabled. Its native reader verified the initial held entry; queues stayed empty and no acquisition was started during setup. Direct cart jobs do not establish Arr import ownership. |
 | Secrets/state recovery | [Published clean-clone receipt](../recovery/drills/20260911T194408Z.json): 24 vault entries, 15 bundle entries and six keypairs verified; repeated restoration added zero files. The existing master and bound snapshots remain unchanged. |
 | Checkout preservation | [Checkout receipt](../recovery/drills/checkout-20260911.json): 1,319 local files, Git refs/reflog history and five stashes preserved and independently restored. Readiness passed at the recorded published revision; recheck current work before any later deletion. |
 | Scheduled configuration backups | [Archive verification receipt](../recovery/drills/scheduled-backups-20260911.json): cloud/QNAP/Plex archives fetched and verified using independently recovered identities; Plex SQLite snapshots opened successfully. Schedules run on the hosts. This is not a full Plex startup or NAS replacement drill. |
@@ -78,8 +162,8 @@ The independently restored backup covers 671 files, four databases,
 
 | Status | Work and completion evidence |
 | --- | --- |
-| Pending: automatic Arr-owned movie completion | Observe the next user-selected Arr-owned job through import, automatic completed-client removal, scratch reclamation, canonical persistence and Plex discovery. media-004's manual cart import does not establish the automatic path. Do not acquire a diagnostic title merely to fill this row. |
-| Pending: fresh TV import and copy | Observe a user-selected series/episode through native import and cleanup, then verify one selective NAS copy, correct TV-library indexing and safe repeat. No canonical TV titles were present at the recorded preflight. |
+| Passed: automatic Arr-owned movie completion | September 20 native acceptance verified a fresh movie through completed import, source/client cleanup, canonical persistence and automatic Plex discovery. |
+| Passed: fresh TV import; pending: selective NAS copy | September 20 native acceptance verified a fresh episode, source/client cleanup and exact-file Remote Plex indexing. A selective TV NAS copy and safe repeat remain separate. |
 | Investigated; deliberately retained: old completions | The [September 14 disposition](../recovery/drills/queue-disposition-20260914.json) matched all five stale entries to exact-job legacy cleanup receipts and present canonical files. Retain visible tracking: persistent native ignore lacks an established supported undo. Retain both archived scratch groups (four files, 17,253,186,699 bytes): the media group has no established canonical match, while fixture evidence is historical integrity plus current metadata only. Any later cleanup remains separate; no fresh import is established. |
 | Passed for media-004; second cart item pending | media-004's real acquisition, deliberate native import, integrity verification, Plex discovery and exact-job cleanup passed. Oversized media-006 remains paused at 0% pending capacity/release disposition; do not resume or silently replace its release. |
 | User-deferred: Apple TV/Roku | NAS and Remote playback, seeking, sustained playback, codec/audio/subtitle behavior, and cold-start/home/search privacy with the restricted profile. Do not invent or request publication of the owner's PIN. |

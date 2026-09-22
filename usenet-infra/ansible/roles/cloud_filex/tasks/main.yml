@@ -1,0 +1,259 @@
+---
+- name: Require reviewed dedicated portal configuration
+  ansible.builtin.assert:
+    that:
+      - filex_enabled | bool
+      - filex_config_source | length > 0
+      - filex_secrets_dir | default('') | length > 0
+    fail_msg: Supply the dedicated portal configuration and private certificate directory.
+
+- name: Validate private configuration on the controller before remote changes
+  ansible.builtin.command:
+    argv:
+      - python3
+      - "{{ usenet_project_root }}/scripts/filex-portal.py"
+      - validate
+      - "{{ filex_config_source }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+  no_log: true
+
+- name: Load reviewed portal inputs
+  ansible.builtin.set_fact:
+    filex_private_config: "{{ lookup('file', filex_config_source) | from_json }}"
+  no_log: true
+
+- name: Inspect dedicated portal directories without following symlinks
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    follow: false
+  loop:
+    - /etc/usenet-filex
+    - /srv/usenet-filex
+    - /srv/usenet-filex/data
+    - /srv/usenet-filex/staging
+    - /etc/usenet-filex/tls
+  register: filex_paths
+
+- name: Refuse directory aliases or non-directory collisions
+  ansible.builtin.assert:
+    that:
+      - not item.stat.exists or (item.stat.isdir | default(false) and not item.stat.islnk | default(false))
+    fail_msg: A dedicated portal path is not an ordinary directory; inspect before deploying.
+  loop: "{{ filex_paths.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+
+- name: Create dedicated identity without shell or acquisition group membership
+  ansible.builtin.user:
+    name: filex
+    system: true
+    create_home: false
+    shell: /usr/sbin/nologin
+    groups: ""
+    append: false
+  register: filex_identity
+
+- name: Prepare portal-only directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner }}"
+    group: "{{ item.owner }}"
+    mode: "0700"
+  loop:
+    - {path: /etc/usenet-filex, owner: root}
+    - {path: /srv/usenet-filex, owner: root}
+    - {path: /srv/usenet-filex/data, owner: filex}
+    - {path: /srv/usenet-filex/staging, owner: filex}
+    - {path: /etc/usenet-filex/tls, owner: filex}
+
+- name: Install validated private bootstrap inputs
+  ansible.builtin.copy:
+    src: "{{ filex_config_source }}"
+    dest: /etc/usenet-filex/inputs.json
+    owner: root
+    group: root
+    mode: "0600"
+  no_log: true
+
+- name: Install portal helper and Compose definition
+  ansible.builtin.copy:
+    src: "{{ usenet_project_root }}/{{ item.src }}"
+    dest: "/etc/usenet-filex/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0600"
+  loop:
+    - {src: scripts/filex-portal.py, dest: filex-portal.py}
+    - {src: compose/filex/compose.yaml, dest: compose.yaml}
+    - {src: compose/filex/Caddyfile, dest: Caddyfile}
+
+- name: Render secret configuration without exposing values in arguments or logs
+  block:
+    - name: Allocate private rendering directory
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: filex-config-
+      register: filex_temp
+    - name: Render filex server configuration
+      ansible.builtin.command:
+        argv: [python3, /etc/usenet-filex/filex-portal.py, render, /etc/usenet-filex/inputs.json,
+               --output, "{{ filex_temp.path }}/server.yaml"]
+      changed_when: false
+    - name: Install server configuration readable only by the service identity
+      ansible.builtin.copy:
+        remote_src: true
+        src: "{{ filex_temp.path }}/server.yaml"
+        dest: /etc/usenet-filex/server.yaml
+        owner: filex
+        group: filex
+        mode: "0400"
+  always:
+    - name: Remove temporary secret render
+      ansible.builtin.file:
+        path: "{{ filex_temp.path }}"
+        state: absent
+      when: filex_temp.path is defined
+  no_log: true
+
+- name: Make the nonsecret proxy configuration readable by its dedicated identity
+  ansible.builtin.file:
+    path: /etc/usenet-filex/Caddyfile
+    owner: filex
+    mode: "0400"
+
+- name: Install private TLS certificate and key
+  ansible.builtin.copy:
+    src: "{{ filex_secrets_dir }}/{{ item }}"
+    dest: "/etc/usenet-filex/tls/{{ item }}"
+    owner: filex
+    group: filex
+    mode: "0400"
+  loop: [server.crt, server.key, ca.crt]
+  no_log: true
+
+- name: Resolve the existing reviewed non-root Caddy image to its immutable ID
+  ansible.builtin.command:
+    argv: [docker, image, inspect, 'usenet-cloud-ui:caddy-2.11.4-nonroot', --format, '{{ "{{.Id}}" }}']
+  register: filex_proxy_image_id
+  changed_when: false
+
+- name: Verify the exact local safety image is installed
+  ansible.builtin.command:
+    argv: [docker, image, inspect, "{{ filex_private_config.image_digest }}"]
+  changed_when: false
+  no_log: true
+
+- name: Install nonsecret Compose environment
+  ansible.builtin.template:
+    src: filex.env.j2
+    dest: /etc/usenet-filex/.env
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Validate Compose before stopping the portal
+  ansible.builtin.command:
+    argv: [docker, compose, config, --quiet]
+    chdir: /etc/usenet-filex
+  changed_when: false
+
+- name: Check the canonical mount before exposing read-only subdirectories
+  ansible.builtin.command:
+    argv: [mountpoint, --quiet, /srv/usenet/library]
+  changed_when: false
+
+- name: Inspect the isolated remote scratch directory
+  ansible.builtin.stat:
+    path: /srv/usenet/library/.acquisition-staging/filex-portal
+    follow: false
+  register: filex_remote_scratch
+
+- name: Refuse an aliased remote scratch directory
+  ansible.builtin.assert:
+    that:
+      - not filex_remote_scratch.stat.exists or (filex_remote_scratch.stat.isdir and not filex_remote_scratch.stat.islnk)
+
+- name: Prepare the dedicated remote scratch view without exposing SAB metadata
+  ansible.builtin.file:
+    path: /srv/usenet/library/.acquisition-staging/filex-portal
+    state: directory
+    mode: '0755'
+
+- name: Install the tested private firewall extension
+  ansible.builtin.copy:
+    src: "{{ usenet_project_root }}/ansible/roles/cloud_vpn/files/vpn-network.py"
+    dest: /usr/local/libexec/usenet-vpn/vpn-network.py
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Permit only private HTTPS and the exact encrypted NAS SFTP path
+  ansible.builtin.command:
+    argv: [python3, /usr/local/libexec/usenet-vpn/vpn-network.py, filex-enable,
+           /etc/usenet-vpn/network.json, --nas-ip, "{{ filex_private_config.nas.host }}"]
+  changed_when: true
+
+- name: Install independent portal service
+  ansible.builtin.template:
+    src: usenet-filex.service.j2
+    dest: /etc/systemd/system/usenet-filex.service
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Start portal and configure its bounded roots
+  block:
+    - name: Restart only filex
+      ansible.builtin.systemd_service:
+        name: usenet-filex.service
+        state: restarted
+        daemon_reload: true
+        enabled: false
+    - name: Wait for loopback health
+      ansible.builtin.uri:
+        url: http://127.0.0.1:5212/healthz
+        use_proxy: false
+      register: filex_health
+      until: filex_health.status == 200
+      retries: 20
+      delay: 3
+    - name: Bootstrap storage roots and separate operator account
+      ansible.builtin.command:
+        argv: [python3, /etc/usenet-filex/filex-portal.py, bootstrap, /etc/usenet-filex/inputs.json]
+      register: filex_bootstrap
+      changed_when: (filex_bootstrap.stdout | from_json).created > 0
+    - name: Verify anonymous callers cannot list files
+      ansible.builtin.uri:
+        url: http://127.0.0.1:5212/api/admin/storages
+        status_code: [401, 403]
+        follow_redirects: none
+        use_proxy: false
+    - name: Verify the private TLS route with its pinned CA
+      ansible.builtin.command:
+        argv: [curl, --silent, --show-error, --fail, --noproxy, '*',
+               --cacert, /etc/usenet-filex/tls/ca.crt, 'https://10.77.0.1:5213/healthz']
+      changed_when: false
+    - name: Verify administration is blocked on the private route
+      ansible.builtin.command:
+        argv: [curl, --silent, --show-error, --noproxy, '*', --cacert,
+               /etc/usenet-filex/tls/ca.crt, --output, /dev/null, --write-out, '%{http_code}',
+               'https://10.77.0.1:5213/api/admin/storages']
+      register: filex_admin_route
+      changed_when: false
+      failed_when: filex_admin_route.stdout != '403'
+    - name: Enable only the configured portal
+      ansible.builtin.systemd_service:
+        name: usenet-filex.service
+        enabled: true
+  rescue:
+    - name: Disable failed portal without touching acquisition or its mounts
+      ansible.builtin.systemd_service:
+        name: usenet-filex.service
+        state: stopped
+        enabled: false
+    - name: Report preserved failed setup
+      ansible.builtin.fail:
+        msg: Portal setup failed; filex is stopped and its data is preserved for review.

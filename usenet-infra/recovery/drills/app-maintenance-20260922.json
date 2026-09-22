@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-22T19:21:36.216447+00:00",
+  "status": "deployed_and_verified",
+  "user_approved_production_update": true,
+  "started_at": "2026-09-22T19:16:14.655674+00:00",
+  "finished_at": "2026-09-22T19:17:36.639321+00:00",
+  "applications": {
+    "radarr": {
+      "previous_image": "lscr.io/linuxserver/radarr:6.3.0.10514-ls315",
+      "deployed_image": "lscr.io/linuxserver/radarr:6.4.4.10685-ls318",
+      "deployed_image_id": "sha256:adb6c09d6b729ea5e642c99cea35af72702ef476bf4763f153299ac5db9f0b4f",
+      "registry_digests": [
+        "lscr.io/linuxserver/radarr@sha256:adb6c09d6b729ea5e642c99cea35af72702ef476bf4763f153299ac5db9f0b4f"
+      ],
+      "version": "6.4.4.10685",
+      "health_issue_count": 0
+    },
+    "sonarr": {
+      "previous_image": "lscr.io/linuxserver/sonarr:4.0.19.2979-ls323",
+      "deployed_image": "lscr.io/linuxserver/sonarr:4.0.20.3014-ls325",
+      "deployed_image_id": "sha256:a5c1a5fecbef946927ab90ad68df319ac5fe644057e5fc18cd993f01ac07b2b2",
+      "registry_digests": [
+        "lscr.io/linuxserver/sonarr@sha256:a5c1a5fecbef946927ab90ad68df319ac5fe644057e5fc18cd993f01ac07b2b2"
+      ],
+      "version": "4.0.20.3014",
+      "health_issue_count": 0
+    },
+    "prowlarr": {
+      "previous_image": "lscr.io/linuxserver/prowlarr:2.5.2.5491-ls158",
+      "deployed_image": "lscr.io/linuxserver/prowlarr:2.6.5.5623-ls161",
+      "deployed_image_id": "sha256:c96b56d94d116a9f4de94bc23d3381689492e6c3cfb7435320e8d982e406f99a",
+      "registry_digests": [
+        "lscr.io/linuxserver/prowlarr@sha256:c96b56d94d116a9f4de94bc23d3381689492e6c3cfb7435320e8d982e406f99a"
+      ],
+      "version": "2.6.5.5623",
+      "health_issue_count": 0
+    }
+  },
+  "verification": {
+    "running_images_match_pulled": true,
+    "docker_health": "healthy",
+    "discovery_policy": "verified",
+    "native_ownership": "active_verified",
+    "historical_queue_history_fingerprints_unchanged": true,
+    "held_requests_paused": 3,
+    "journals_preserved": 44,
+    "importer_holds_preserved": 27,
+    "capacity_holds_preserved": 10,
+    "catalog_failure_files_unchanged": true,
+    "unresolved_catalog_failures_retained": 14,
+    "sab_container_id_and_start_time_unchanged": true,
+    "six_mount_service_unit_hashes_unchanged": true,
+    "rss_remains_off": true,
+    "legacy_timers_remain_inactive": true,
+    "nas_health": "passed",
+    "filex_private_https": "passed"
+  },
+  "private_access": {
+    "radarr": {
+      "anonymous_proxy_status": 401,
+      "backend_with_proxy_host_status": 200
+    },
+    "sonarr": {
+      "anonymous_proxy_status": 401,
+      "backend_with_proxy_host_status": 200
+    },
+    "prowlarr": {
+      "anonymous_proxy_status": 401,
+      "backend_with_proxy_host_status": 200
+    },
+    "new_browser_login_tested": false
+  },
+  "rollback": {
+    "stopped_configuration_copies_retained": true,
+    "database_integrity_checks": 3,
+    "old_pins_and_images_retained": true,
+    "private_remote_directory": "/srv/usenet/backups/app-maintenance-20260921",
+    "automatic_rollback_used": false
+  },
+  "post_update_backup": {
+    "archive": "cloud-20260922T191826Z.tar.age",
+    "scope": "cloud_config",
+    "remote_ciphertext_readback": true,
+    "retrieved_ciphertext_hash_matches": true,
+    "authenticated_decryption": true,
+    "isolated_restore": true,
+    "files": 726,
+    "sqlite_databases": 4,
+    "live_hash_matches": 59,
+    "journal_count": 44
+  },
+  "verification_interruption": {
+    "reason": "wrapper_refused_prowlarr_health_command_before_dispatch",
+    "deployment_replayed": false,
+    "resolved_by": "read_prowlarr_startup_health_and_complete_native_discovery_and_preservation_checks"
+  },
+  "validation": {
+    "implementation_suite": "prepared_source_run_20260921",
+    "cases": 694,
+    "optional_skips": 9,
+    "test_failures": 0,
+    "full_history_scan": "two_documented_historical_rsa_keys",
+    "suite_rerun": "not_needed_no_implementation_change_after_prepared_run"
+  },
+  "not_performed": [
+    "new_acquisition",
+    "held_request_release",
+    "tv_nas_copy",
+    "new_browser_login",
+    "plex_or_nas_restart",
+    "filex_backup_extension",
+    "whole_machine_restore",
+    "git_staging_or_commit"
+  ]
+}

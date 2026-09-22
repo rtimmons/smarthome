@@ -10,7 +10,9 @@ import json
 import math
 import os
 from pathlib import Path
+import re
 import shutil
+import stat
 import subprocess
 import tempfile
 import time
@@ -107,8 +109,45 @@ class Controller:
         atomic(self.state_path, state)
 
     def available(self) -> int:
-        stats = os.statvfs(self.root)
+        stats = os.statvfs(self.root / "downloads/incomplete" if self.repair_spool() else self.root)
         return stats.f_bavail * stats.f_frsize
+
+    def repair_spool(self) -> Path | None:
+        marker = self.root / "config/catalog/repair-spool.json"
+        if not marker.exists() and not marker.is_symlink():
+            return None
+        if marker.is_symlink() or not self.hybrid_scratch():
+            raise AdmissionError("repair_spool_configuration_invalid")
+        value = json.loads(marker.read_text())
+        if (set(value) != {"schema_version", "volume_id", "filesystem_uuid"}
+                or value["schema_version"] != 1
+                or type(value["volume_id"]) is not int or value["volume_id"] <= 0
+                or not isinstance(value["filesystem_uuid"], str)
+                or not re.fullmatch(r'[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}', value["filesystem_uuid"])):
+            raise AdmissionError("repair_spool_configuration_invalid")
+        return self.root / "repair"
+
+    def require_repair_spool(self) -> None:
+        spool = self.repair_spool()
+        if spool is None:
+            return
+        value = json.loads((self.root / "config/catalog/repair-spool.json").read_text())
+        device = Path('/dev/disk/by-id') / ('scsi-0HC_Volume_' + str(value['volume_id']))
+        uuid_device = Path('/dev/disk/by-uuid') / value['filesystem_uuid']
+        if (spool.is_symlink() or not is_mountpoint(spool)
+                or not device.exists() or not uuid_device.exists()
+                or device.resolve() != uuid_device.resolve()
+                or not stat.S_ISBLK(device.stat().st_mode)
+                or spool.stat().st_dev != device.stat().st_rdev
+                or spool.stat().st_dev == self.root.stat().st_dev
+                or (spool / 'incomplete').is_symlink()
+                or not (spool / 'incomplete').is_dir()):
+            raise AdmissionError("repair_spool_mount_unavailable")
+        stats = os.statvfs(spool)
+        if stats.f_files <= 0 or stats.f_favail < INODE_RESERVE:
+            raise AdmissionError("repair_spool_inode_reserve_unavailable")
+        if stats.f_bavail * stats.f_frsize < RESERVE:
+            raise AdmissionError("repair_spool_reserve_breached")
 
     def remote_scratch(self) -> Path | None:
         marker = self.root / "config/catalog/remote-scratch.json"
@@ -130,7 +169,11 @@ class Controller:
             return 0
         if self.estimate(job) is None:
             return None
-        return math.ceil(float(job["mbleft"]) * 1024**2) + MARGIN
+        # PAR2 may rename a damaged file and construct a complete replacement
+        # beside it before SAB moves the result to remote completed scratch.
+        # Reserve one full job for that repair as well as remaining acquisition;
+        # otherwise an uncompressed large file can consume the 30 GiB floor.
+        return math.ceil(float(job["mbleft"]) * 1024**2) + math.ceil(float(job["mb"]) * 1024**2) + MARGIN
 
     def budget_available(self) -> int:
         remote = self.remote_scratch()
@@ -144,6 +187,8 @@ class Controller:
         # only through the explicit marker and both verified bind mounts.
         device = self.root.stat().st_dev
         remote = self.remote_scratch()
+        spool = self.repair_spool()
+        self.require_repair_spool()
         local_paths = ["downloads/complete", "config", "state/catalog"]
         if remote is None:
             local_paths.append("downloads/incomplete")
@@ -154,7 +199,8 @@ class Controller:
         stats = os.statvfs(self.root)
         if stats.f_files <= 0 or stats.f_favail < INODE_RESERVE:
             raise AdmissionError("inode_reserve_unavailable")
-        if self.available() < RESERVE:
+        root_available = stats.f_bavail * stats.f_frsize if spool else self.available()
+        if root_available < RESERVE:
             raise AdmissionError("reserve_breached")
         if remote is not None:
             library = self.root / "library"
@@ -163,7 +209,10 @@ class Controller:
                     or remote.stat().st_dev != library.stat().st_dev
                     or remote.stat().st_dev == device
                     or incomplete.is_symlink() or not is_mountpoint(incomplete)
-                    or incomplete.stat().st_dev != (device if self.hybrid_scratch() else remote.stat().st_dev)
+                    or incomplete.stat().st_dev != (spool.stat().st_dev if spool else
+                        device if self.hybrid_scratch() else remote.stat().st_dev)
+                    or (spool is not None and (incomplete.stat().st_ino != (spool / 'incomplete').stat().st_ino
+                                              or spool.stat().st_dev == remote.stat().st_dev))
                     or not all((remote / name).is_dir() and not (remote / name).is_symlink()
                                for name in ("incomplete", "complete"))):
                 raise AdmissionError("remote_scratch_mount_unavailable")
@@ -594,7 +643,12 @@ class Controller:
                         return {"status": "materializing", "active_jobs": 0, "paused_jobs": len(queue)}
                     state["blocked"] = "admitted_history_missing_or_ambiguous"
                 elif histories[0]["status"] == "Failed":
-                    self.recycle_failed(state, owned, admitted, histories[0])
+                    if admitted.get("preserve_failed_payload"):
+                        # Explicit recovery can retain the only verified copy.
+                        # A second failure requires review, never reclamation.
+                        state["blocked"] = "recovered_payload_failed_review"
+                    else:
+                        self.recycle_failed(state, owned, admitted, histories[0])
                 elif histories[0]["status"] != "Completed":
                     age = self.clock() - float(admitted.get("admitted_at", 0))
                     if snapshot.get("postprocessing", 0) or age <= 300:
@@ -679,6 +733,9 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("action", choices=("configure", "run", "status"))
     args = parser.parse_args()
+    if args.action != "status" and Path('/srv/usenet/config/catalog/native-ownership.json').exists():
+        print(json.dumps({"status": "retired", "reason": "native_ownership_active"}))
+        return 0
     controller = Controller()
     try:
         if args.action == "configure":

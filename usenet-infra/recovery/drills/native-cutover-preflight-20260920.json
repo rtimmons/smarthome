@@ -1,0 +1,111 @@
+{
+  "schema_version": 1,
+  "status": "preflight_only",
+  "checked_at": "2026-09-20T17:17:03.347131+00:00",
+  "cutover_performed": false,
+  "blockers": [
+    "local_capacity_insufficient_for_observed_workload",
+    "remote_capacity_insufficient_for_observed_workload",
+    "arr_categories_not_distinct"
+  ],
+  "queue": {
+    "count": 3,
+    "paused_count": 3,
+    "globally_paused": false,
+    "postprocessing": 0
+  },
+  "journal_count": 44,
+  "completed_journals": 37,
+  "capacity_hold_count": 10,
+  "importer_errors": 0,
+  "importer_holds": 27,
+  "available_bytes": {
+    "local": 126914048000,
+    "remote": 67480977408,
+    "library": 67480977408
+  },
+  "observed_workload_budget": {
+    "download_bytes": 80146712178,
+    "unpacked_bytes": 73983261769,
+    "reserve_bytes": 32212254720,
+    "planning_margin_bytes": 5368709120,
+    "local_required_bytes": 197874388196,
+    "remote_required_bytes": 185547487378,
+    "local_shortfall_bytes": 70960340196,
+    "remote_shortfall_bytes": 118066509970
+  },
+  "sab_30G_floors_preserved": true,
+  "enabled_direct_feeds": 2,
+  "arr_categories_distinct": false,
+  "apps": {
+    "radarr": {
+      "client_count": 1,
+      "completed_handling": true,
+      "hardlinks_enabled": true,
+      "skip_free_space_check": false,
+      "all_roots_accessible": true,
+      "health_issue_count": 1
+    },
+    "sonarr": {
+      "client_count": 1,
+      "completed_handling": true,
+      "hardlinks_enabled": true,
+      "skip_free_space_check": false,
+      "all_roots_accessible": true,
+      "health_issue_count": 1
+    }
+  },
+  "pending_requirements": [
+    "explicit_integrity_policy",
+    "approved_future_size_and_expansion_bounds",
+    "native_queue_limit_validation",
+    "fresh_application_user_filesystem_probes",
+    "fresh_movie_and_episode_selections",
+    "movie_tv_cleanup_and_plex_acceptance",
+    "large_repair_and_service_restart_acceptance",
+    "post_cutover_hold_and_journal_comparison"
+  ],
+  "preservation_checks": {
+    "queue_unchanged": true,
+    "capacity_holds_unchanged": true,
+    "activation_unchanged": true,
+    "journals_unchanged": true
+  },
+  "scope": "Read-only preflight; no cutover, acquisition, storage purchase, resize or deletion",
+  "health": {
+    "nas": "passed_with_capacity_warning",
+    "cloud_existing_catalog_failures": 14,
+    "application_update_notices": 3,
+    "notices_waived": false
+  },
+  "proposal": {
+    "currency": "USD",
+    "vat_rate_percent": 0,
+    "storage_tier": "bx21",
+    "storage_monthly": 13,
+    "storage_monthly_increase": 9,
+    "spool_volume_gb": 300,
+    "volume_monthly": 23.01,
+    "total_monthly_increase": 32.01,
+    "approved_for_purchase": false,
+    "storage_plan_changes": [
+      {
+        "resource": "hcloud_storage_box.catalog",
+        "actions": [
+          "update"
+        ],
+        "changed_fields": [
+          ".storage_box_type"
+        ]
+      }
+    ]
+  },
+  "validation": {
+    "infrastructure_cases": 676,
+    "optional_skips": 9,
+    "test_failures": 0,
+    "syntax_checks_pass": true,
+    "current_source_secret_scan_pass": true,
+    "full_recipe_status": "fails_only_on_two_documented_historical_RSA_keys"
+  }
+}

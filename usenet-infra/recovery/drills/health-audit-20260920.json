@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-09-20T22:05:25.583839+00:00",
+  "status": "audit_complete_findings_retained",
+  "scope": "read_only_health_and_remaining_work",
+  "native_ownership": {
+    "phase": "active",
+    "inspection": "verified",
+    "acceptance_receipt_recorded": true,
+    "pending_cutover_requirements": [],
+    "paused_requests": 3,
+    "globally_paused": false,
+    "postprocessing": 0,
+    "journals": 44,
+    "completed_journals": 37,
+    "importer_holds": 27,
+    "capacity_holds": 10,
+    "importer_errors": 0,
+    "historical_state_preserved": true,
+    "legacy_timers_disabled": 3,
+    "direct_feeds_enabled": 0,
+    "local_capacity_shortfall_bytes": 0,
+    "remote_capacity_shortfall_bytes": 0
+  },
+  "application_health": {
+    "radarr": {
+      "installed_version": "6.3.0.10514",
+      "issue_count": 1,
+      "issue_sources": [
+        "UpdateCheck"
+      ],
+      "severities": [
+        "warning"
+      ]
+    },
+    "sonarr": {
+      "installed_version": "4.0.19.2979",
+      "issue_count": 1,
+      "issue_sources": [
+        "UpdateCheck"
+      ],
+      "severities": [
+        "warning"
+      ]
+    },
+    "prowlarr": {
+      "installed_version": "2.5.2.5491",
+      "issue_count": 1,
+      "issue_sources": [
+        "UpdateCheck"
+      ],
+      "severities": [
+        "warning"
+      ]
+    }
+  },
+  "catalog_failures": {
+    "unresolved_records": 14,
+    "distinct_held_journals": 7,
+    "first_failure_at": "2026-09-17T01:32:36+00:00",
+    "last_failure_at": "2026-09-18T16:29:10+00:00",
+    "hold_counts_by_journal": {
+      "catalog_identity_ambiguous": 4,
+      "movie_source_identity_mismatch": 3
+    },
+    "historical_identity_hold_records": 9,
+    "historical_cleanup_failure_records": 5,
+    "cleanup_failures_with_later_discarded_receipts": 5,
+    "current_disposal_errors_in_linked_journals": 0,
+    "live_source_files_reverified": false,
+    "records_resolved_or_removed": 0
+  },
+  "checks": {
+    "cloud_health": "failed_retained_catalog_records_and_prowlarr_update_notice",
+    "discovery_health": "failed_unexpected_application_health_issue_update_notices",
+    "sab": "authenticated_no_warnings",
+    "nas_health": "passed",
+    "nas_active_transfers": 0,
+    "nas_failed_transfers": 0,
+    "filex_service": "active",
+    "filex_private_https_health": "passed"
+  },
+  "backup_status": {
+    "cloud": {
+      "status": "ok",
+      "last_success_utc": "2026-09-20T19:01:42+00:00",
+      "timer": "active",
+      "within_36_hour_freshness_limit": true,
+      "predates_native_acceptance": true
+    },
+    "nas": {
+      "status": "ok",
+      "last_success_utc": "2026-09-20T04:07:26+00:00",
+      "within_36_hour_freshness_limit": true
+    },
+    "archive_created": false,
+    "archive_decrypted_or_restored": false,
+    "native_state_restore_evidence": "pending",
+    "filex_backup_coverage": "outside_existing_scope"
+  },
+  "changes": {
+    "production_configuration": false,
+    "service_restart": false,
+    "media_mutation": false,
+    "queue_mutation": false,
+    "health_exemptions": false,
+    "purchase": false
+  },
+  "validation": {
+    "documentation_file_links": "passed",
+    "receipt_json_and_counts": "passed",
+    "later_disposition_chronology": "passed",
+    "whitespace": "passed",
+    "current_source_secret_scan": "passed",
+    "full_history_scan": "not_rerun_two_documented_historical_rsa_findings_remain",
+    "implementation_test_suite": "not_rerun_documentation_only_changes"
+  },
+  "remaining_work": [
+    "review_pinned_application_updates",
+    "explicit_disposition_of_legacy_identity_holds",
+    "independent_archive_restore_of_accepted_native_state",
+    "selected_tv_nas_copy_and_safe_repeat",
+    "optional_filex_ca_trust_and_separate_backup_scope"
+  ],
+  "user_deferred": [
+    "apple_tv_roku_playback_and_startup_privacy"
+  ],
+  "separate_scope": [
+    "broader_concurrency_and_arbitrary_archive_expansion",
+    "whole_machine_replacement",
+    "nas_loss_protection"
+  ]
+}

@@ -1,0 +1,89 @@
+---
+- name: Require the provisioned volume identity
+  ansible.builtin.assert:
+    that:
+      - cloud_repair_spool_volume_id | default(0) | int > 0
+    fail_msg: 'Pass the approved volume ID from the cloud Terraform state.'
+
+- name: Install the bounded spool setup helper
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/scripts/repair-spool-setup.py'
+    dest: /srv/usenet/libexec/repair-spool-setup.py
+    owner: root
+    group: usenet
+    mode: '0550'
+
+- name: Inspect the durable setup receipt
+  ansible.builtin.stat:
+    path: /srv/usenet/state/catalog/repair-spool-setup.json
+  register: repair_receipt
+
+- name: Read an existing receipt privately
+  ansible.builtin.slurp:
+    src: /srv/usenet/state/catalog/repair-spool-setup.json
+  register: repair_prior
+  when: repair_receipt.stat.exists
+  no_log: true
+
+- name: Refuse an interrupted or mismatched migration
+  ansible.builtin.assert:
+    that:
+      - (repair_prior.content | b64decode | from_json).phase == 'verified'
+      - (repair_prior.content | b64decode | from_json).volume_id | int == cloud_repair_spool_volume_id | int
+    fail_msg: 'Inspect the private setup phase before continuing; never reformat or replay an interrupted migration.'
+  when: repair_receipt.stat.exists
+
+- name: Prepare and migrate the new volume once
+  when: not repair_receipt.stat.exists
+  block:
+    - name: Format only the identified new blank volume and mount it independently
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/repair-spool-setup.py, prepare, --volume-id, '{{ cloud_repair_spool_volume_id | string }}']
+      changed_when: true
+
+    - name: Allocate a private controller staging file
+      ansible.builtin.tempfile:
+        state: file
+        prefix: repair-spool-controller-
+      register: repair_controller_stage
+
+    - name: Stage the reviewed volume-aware controller
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/capacity-admission.py'
+        dest: '{{ repair_controller_stage.path }}'
+        owner: root
+        group: root
+        mode: '0500'
+
+    - name: Quiesce writers and verify the additive spool copy and path switch
+      ansible.builtin.command:
+        argv:
+          - python3
+          - /srv/usenet/libexec/repair-spool-setup.py
+          - migrate
+          - --volume-id
+          - '{{ cloud_repair_spool_volume_id | string }}'
+          - --controller-source
+          - '{{ repair_controller_stage.path }}'
+      changed_when: true
+  always:
+    - name: Remove only the temporary controller staging file
+      ansible.builtin.file:
+        path: '{{ repair_controller_stage.path }}'
+        state: absent
+      when: repair_controller_stage.path is defined
+
+- name: Verify the pinned volume, independent reserves and native dependencies
+  ansible.builtin.command:
+    argv: [python3, /srv/usenet/libexec/repair-spool-setup.py, inspect, --volume-id, '{{ cloud_repair_spool_volume_id | string }}']
+  changed_when: false
+
+- name: Preserve backup read access to root-managed setup evidence
+  ansible.builtin.file:
+    path: '/srv/usenet/state/catalog/{{ item }}'
+    owner: root
+    group: usenet
+    mode: '0640'
+  loop:
+    - repair-spool-setup.json
+    - repair-spool-controller-before.py

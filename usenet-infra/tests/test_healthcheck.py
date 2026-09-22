@@ -28,6 +28,23 @@ SPEC.loader.exec_module(healthcheck)
 
 
 class HealthTests(unittest.TestCase):
+    def test_native_health_preserves_holds_without_stale_worker_alarms(self):
+        marker = self.base / 'native.json'
+        marker.write_text('{}')
+        for name, value in [('cart-import/status.json', {'held': 2, 'updated_at': 1}),
+                            ('capacity-admission/state.json', {'held': [{}, {}, {}], 'updated_at': 1})]:
+            p = self.base / 'state' / name
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_text(json.dumps(value))
+        with mock.patch.dict(os.environ, {'CATALOG_NATIVE_OWNERSHIP_PATH': str(marker)}), mock.patch.object(
+                healthcheck.subprocess, 'run', return_value=SimpleNamespace(stdout='{"status":"verified","phase":"active"}')):
+            result = healthcheck.native_ownership_checks()
+        self.assertEqual([c.status for c in result], ['ok', 'warn'])
+        self.assertIn('2 importer holds and 3 capacity holds', result[1].detail)
+        with mock.patch.dict(os.environ, {'CATALOG_NATIVE_OWNERSHIP_PATH': str(marker)}), mock.patch.object(
+                healthcheck.subprocess, 'run', side_effect=RuntimeError('private failure')):
+            self.assertEqual(healthcheck.native_ownership_checks()[0].status, 'fail')
+
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory()
         self.base = Path(self.temp.name)

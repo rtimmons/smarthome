@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Inspect, configure, or test Prowlarr's private connection to existing SABnzbd.
 
-Reviewed against Prowlarr v2.5.2.5491 ProviderControllerBase and SabnzbdSettings,
+Reviewed against Prowlarr v2.6.5.5623 ProviderControllerBase and SabnzbdSettings,
 and SABnzbd 5.1.3 category APIs. Configuration tests read connection/category
 metadata only. This helper never searches, grabs content, or changes app/RSS
 profiles. Run on the cloud host; API keys remain inside that host.
@@ -19,7 +19,7 @@ import urllib.parse
 import urllib.request
 
 ENV_PATH = Path('/srv/usenet/config/catalog.env')
-PROWLARR_VERSION = '2.5.2.5491'
+PROWLARR_VERSION = '2.6.5.5623'
 SAB_VERSION = '5.1.3'
 NAME = 'SABnzbd'
 IMPLEMENTATION = 'Sabnzbd'

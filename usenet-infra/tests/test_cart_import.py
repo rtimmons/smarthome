@@ -90,6 +90,11 @@ class WorkerTests(unittest.TestCase):
     def tearDown(self):
         self.temp.cleanup()
 
+    def test_held_result_is_successful_worker_poll(self):
+        self.assertEqual(worker.worker_exit_code({'status': 'held'}), 0)
+        self.assertEqual(worker.worker_exit_code({'status': 'failed'}), 1)
+        self.assertEqual(worker.worker_exit_code({'status': 'idle'}), 0)
+
     def make_worker(self):
         return worker.Coordinator(self.settings, self.sab, self.arr, self.remote, library=self.library,
                                   clock=lambda: self.now, sleep=lambda _: None, mounted=lambda: True)

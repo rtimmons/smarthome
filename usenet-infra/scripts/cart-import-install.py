@@ -18,7 +18,8 @@ import stat
 import tempfile
 
 FILES = ('capacity-admission.py', 'cart-import.py', 'cart_import_sab.py', 'cart_import_arr.py',
-         'discovery-config.py', 'catalogctl.py', 'config-backup.py', 'healthcheck.py')
+         'discovery-config.py', 'catalogctl.py', 'config-backup.py', 'healthcheck.py',
+         'incomplete-maintenance.py')
 
 
 class InstallError(RuntimeError):

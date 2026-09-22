@@ -1,4 +1,14 @@
 ---
+- name: Discover native ownership before changing legacy workers
+  ansible.builtin.stat:
+    path: '{{ cloud_data_root }}/config/catalog/native-ownership.json'
+  register: native_ownership_marker
+
+- name: Refuse legacy deployment after the native ownership switch
+  ansible.builtin.assert:
+    that: not native_ownership_marker.stat.exists
+    fail_msg: 'Native ownership is active; preserve the retired worker configuration and use the native cutover runbook.'
+
 - name: Discover whether the cart importer timer is installed
   ansible.builtin.stat:
     path: /etc/systemd/system/usenet-cart-import.timer
@@ -20,6 +30,17 @@
     name: usenet-capacity-admission.timer
     state: stopped
   when: capacity_admission_timer.stat.exists
+
+- name: Discover whether the incomplete-download maintenance timer is installed
+  ansible.builtin.stat:
+    path: /etc/systemd/system/usenet-incomplete-maintenance.timer
+  register: incomplete_maintenance_timer
+
+- name: Stop incomplete-download maintenance before refreshing its helper
+  ansible.builtin.systemd_service:
+    name: usenet-incomplete-maintenance.timer
+    state: stopped
+  when: incomplete_maintenance_timer.stat.exists
 
 - name: Refuse to refresh an active importer or interrupt its native Arr command
   ansible.builtin.command:
@@ -97,6 +118,7 @@
         - catalogctl.py
         - config-backup.py
         - healthcheck.py
+        - incomplete-maintenance.py
 
     - name: Require quiet SAB and hold the shared lock across atomic helper replacements
       ansible.builtin.command:
@@ -127,6 +149,8 @@
     - usenet-cart-import.timer
     - usenet-capacity-admission.service
     - usenet-capacity-admission.timer
+    - usenet-incomplete-maintenance.service
+    - usenet-incomplete-maintenance.timer
 
 - name: Arm future cart jobs once without enrolling current jobs or resetting the baseline
   ansible.builtin.command:
@@ -159,6 +183,14 @@
   when: cloud_cart_import_start_timers | default(true)
   ansible.builtin.systemd_service:
     name: usenet-capacity-admission.timer
+    daemon_reload: true
+    enabled: true
+    state: started
+
+- name: Enable the incomplete-download maintenance timer
+  when: cloud_cart_import_start_timers | default(true)
+  ansible.builtin.systemd_service:
+    name: usenet-incomplete-maintenance.timer
     daemon_reload: true
     enabled: true
     state: started

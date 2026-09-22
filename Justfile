@@ -583,6 +583,22 @@ usenet-verify-reader-access:
 usenet-cloud-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
 
+[group: 'usenet']
+usenet-filex-build *args:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-build {{args}}
+
+[group: 'usenet']
+usenet-configure-filex:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-filex
+
+[group: 'usenet']
+usenet-filex-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-status
+
+[group: 'usenet']
+usenet-filex-disable:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-disable
+
 # Arm future user-cart native imports without reconfiguring acquisition apps.
 [group: 'usenet']
 usenet-configure-cart-import:
@@ -592,6 +608,26 @@ usenet-configure-cart-import:
 [group: 'usenet']
 usenet-cart-import-status:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cart-import-status
+
+[group: 'usenet']
+usenet-native-cutover-preflight:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-cutover-preflight
+
+[group: 'usenet']
+usenet-native-ownership-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-ownership-status
+
+[group: 'usenet']
+usenet-configure-native-ownership:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-native-ownership
+
+# Use only the approved provider volume ID from cloud Terraform state.
+[group: 'usenet']
+[positional-arguments]
+usenet-configure-repair-spool volume_id:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-repair-spool "$1"
 
 # Inspect or enable NZBFinder Cart automatic downloads using its saved cloud key.
 [group: 'usenet']

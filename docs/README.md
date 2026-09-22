@@ -46,10 +46,12 @@ This directory contains project-specific documentation for the smarthome reposit
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
 - [**Usenet plan and handoff**](../plan.md) — Completed recovery, current deployment, next steps and acceptance criteria
 - [**Native media**](../usenet-infra/docs/native-media.md) — Arr imports, canonical storage and remote Plex playback
+- [**Repair volume**](../usenet-infra/docs/repair-spool.md) — Approved storage expansion, mount checks and retained-spool recovery
 - [**Scheduled backups**](../usenet-infra/docs/scheduled-backups.md) — Host-owned schedules, freshness, scope and retention
 - [**Checkout recovery**](../usenet-infra/docs/checkout-recovery.md) — Local files, Git history/stashes, restore and deletion check
 - [**Security findings**](../usenet-infra/docs/security-findings.md) — Dependency fixes and historical-key limits
 - [**Usenet operations**](../usenet-infra/docs/operations.md) — Operating commands for acquisition and legacy selective NAS copies
+- [**Private file portal**](../usenet-infra/docs/filex.md) — Bounded staging, verified transfers, read-only canonical media and emergency disable
 - [**NAS and Plex layout**](../usenet-infra/docs/nas-plex-layout.md) — Media directories, library separation, profile permissions and rollback
 - [**Media workflow review**](../usenet-infra/docs/media-workflow-review.md) — Design rationale and historical proposal; current state is in Native media
 
