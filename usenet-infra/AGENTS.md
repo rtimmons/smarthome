@@ -65,7 +65,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   secrets/state milestone passed. Do not regenerate keys or repeat purchases/setup.
   Whole-machine replacement drills remain separate. Scheduled backups allow an
   idle or fully paused SAB queue but reject post-processing. Never delete/resume
-  jobs just to satisfy backup checks. NAS-loss protection is explicitly deferred.
+  jobs just to satisfy backup checks. NAS-loss protection awaits the user’s backup
+  scope choice; one-time settings escrow does not establish originals coverage.
 
 - Checkout-local preservation and independent restore passed at the checkpoint
   recorded in the recovery ledger. Follow

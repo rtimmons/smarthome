@@ -1,7 +1,7 @@
 # Usenet acquisition and selective NAS copies
 
 Start with the [current plan](../plan.md), its
-[cutover acceptance criteria](../plan.md#one-time-cutover--no-library-migration-or-replay), and the
+[completed acceptance checks](../plan.md#completed-and-verified), and the
 [agent guide](AGENTS.md). This README is an operating entrypoint; dated receipts
 record what was tested. Account setup and infrastructure bootstrap are complete.
 
@@ -22,13 +22,15 @@ client cleanup. The retired publisher stays disabled. Preserve the five legacy
 objects/manifests and their native hard-linked adoptions; never run a second mover
 against Arr scratch.
 
-New requests start in Radarr or Sonarr. Use add-and-search or an explicit search
-for the selected movie or episode; check the intended episode scope before
-submitting. Each application owns its own SAB category. Wait for completed
-import and cleanup before requesting another large release. The 100 GiB limit
+Start new requests in Seerr, or use an explicit search in Radarr or Sonarr.
+The default is 2160p preferred with 1080p fallback; check the intended episode
+scope before submitting. Each application owns its own SAB category. Wait for
+completed import and cleanup before requesting another large release. The 100 GiB limit
 and 30 GiB reserves remain active. Prowlarr supplies indexers; its direct download
-client and the old cart feeds are disabled. Historical feed state, journals,
-verification receipts and all three held requests remain preserved.
+client and the old cart feeds are disabled. Historical feed state, journals and
+verification receipts remain preserved.
+The three old held requests were explicitly discarded September 22; do not replay
+them. Their recorded payloads were already absent.
 
 Plex runs on the QNAP with separate NAS/remote Movies and TV libraries. OliveTin
 provides explicit per-title NAS copy/removal actions for both native titles and
