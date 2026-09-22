@@ -14,7 +14,8 @@ user-approved native import and cleanup policy for new requests; direct carts an
 requests use separate categories and a 100 GiB download limit. Release polling
 remains off to preserve the pre-existing missing-media backlog.
 
-Radarr/Sonarr provide discovery and explicit native searches using Eweka
+[Seerr](docs/seerr.md) provides trending/popular discovery and requests using
+Plex sign-in. Radarr/Sonarr perform explicit native searches using Eweka
 and the configured NZBGeek/NZBFinder indexers. SAB downloads and processes on cloud
 scratch; Arr imports into the synchronous Storage Box library and owns completed
 client cleanup. The retired publisher stays disabled. Preserve the five legacy
@@ -56,6 +57,7 @@ Apple TV/Roku playback and startup privacy are deferred by the user.
 | Prowlarr | `http://10.77.0.1:19696/` |
 | SAB | `http://10.77.0.1:18080/` |
 | NAS copy dashboard | `http://192.168.1.66:1337/` |
+| Seerr discovery and requests | `http://10.77.0.1:15055/` (Plex sign-in) |
 | Filex staging portal | `https://10.77.0.1:5213/` |
 | Usenet field guide | `http://192.168.1.66:8090/` |
 | Plex | `http://192.168.1.66:32400/web` |

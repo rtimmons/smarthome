@@ -1,0 +1,17 @@
+[Unit]
+Description=Private Seerr media discovery and requests
+Requires=docker.service usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+After=docker.service usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/srv/usenet/compose/seerr
+ExecStartPre=/usr/bin/python3 /srv/usenet/libexec/seerr-config.py ready
+ExecStart=/usr/bin/docker compose up -d --wait --wait-timeout 180
+ExecStop=/usr/bin/docker compose stop
+TimeoutStartSec=240
+TimeoutStopSec=90
+
+[Install]
+WantedBy=multi-user.target

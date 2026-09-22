@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 790" role="img" aria-labelledby="title desc">
   <title id="title">Native requests, canonical storage and optional NAS copies</title>
-  <desc id="desc">Radarr and Sonarr search through Prowlarr and send selected downloads directly to SAB. Eweka supplies the articles. Arr imports completed media into the Storage Box. Both Plex Remote and optional verified NAS copies read from the Storage Box; Plex NAS reads the local copy. Filex staging is separate.</desc>
+  <desc id="desc">Seerr provides discovery and requests. Radarr and Sonarr search through Prowlarr and send selected downloads directly to SAB. Eweka supplies the articles. Arr imports completed media into the Storage Box. Both Plex Remote and optional verified NAS copies read from the Storage Box; Plex NAS reads the local copy. Filex staging is separate.</desc>
   <defs>
     <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 10 5 0 10z" fill="#a9e5c7"/></marker>
     <style>
@@ -12,8 +12,8 @@
   <text x="580" y="42" class="label mint">INDEXERS · PROVIDER · STORAGE</text>
 
   <rect x="42" y="68" width="400" height="110" rx="14" class="box"/>
-  <text x="68" y="104" class="title ink">Radarr / Sonarr</text>
-  <text x="68" y="131" class="small ink">Choose a title or a specific release</text>
+  <text x="68" y="104" class="title ink">Seerr → Radarr / Sonarr</text>
+  <text x="68" y="131" class="small ink">Browse popular titles · request a movie or season</text>
   <text x="68" y="155" class="tiny ink">Explicit searches · automatic polling off</text>
   <rect x="580" y="68" width="338" height="110" rx="14" class="box"/>
   <text x="604" y="104" class="title ink">Prowlarr + indexers</text>

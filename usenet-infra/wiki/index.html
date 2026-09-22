@@ -20,7 +20,7 @@
       <div class="truth-strip" aria-label="Important context">
         <span><strong>Reference, not live health</strong></span>
         <span>Private network only</span>
-        <span>Reviewed 20 Sep 2026</span>
+        <span>Reviewed 22 Sep 2026</span>
       </div>
     </div>
   </header>
@@ -68,9 +68,9 @@
         <div class="concept-grid">
           <article class="concept concept--find">
             <span class="concept__number">1</span>
-            <h3>Indexers find</h3>
-            <p>NZBGeek and NZBFinder catalogue posts and produce an NZB: a small instruction file that points to article pieces on Usenet.</p>
-            <p class="concept__tools">NZBGeek · NZBFinder · Prowlarr</p>
+            <h3>Discover in Seerr</h3>
+            <p>Browse trending and popular movies and TV in Seerr, then request what you want. Radarr and Sonarr find releases through Prowlarr and the indexers.</p>
+            <p class="concept__tools">Seerr · Radarr · Sonarr · Prowlarr</p>
           </article>
           <article class="concept concept--fetch">
             <span class="concept__number">2</span>
@@ -97,9 +97,9 @@
         <p class="section-intro">The Storage Box is the canonical home. Cloud scratch is temporary. A NAS copy is optional and deliberately selected.</p>
         <figure class="diagram-card">
           <div class="diagram-scroll" role="region" aria-label="System flow diagram; scroll horizontally on smaller screens" tabindex="0">
-          <img src="assets/ecosystem.svg?v=700821c90986" alt="Radarr and Sonarr search through Prowlarr, send selected downloads to SAB, then import to the Storage Box. Eweka supplies SAB. The Storage Box feeds both Plex Remote and optional verified NAS copies for Plex NAS.">
+          <img src="assets/ecosystem.svg?v=ff7b8e82e13b" alt="Seerr provides discovery and requests. Radarr and Sonarr search through Prowlarr, send selected downloads to SAB, then import to the Storage Box. Eweka supplies SAB. The Storage Box feeds both Plex Remote and optional verified NAS copies for Plex NAS.">
           </div>
-          <figcaption>Arr owns the request from search to cleanup. Prowlarr supplies indexer access; its direct downloading is disabled. Both remote playback and selected NAS copies read from the Storage Box.</figcaption>
+          <figcaption>Start in Seerr for discovery and requests. Arr owns the request from search to cleanup. Prowlarr supplies indexer access; its direct downloading is disabled. Both remote playback and selected NAS copies read from the Storage Box.</figcaption>
         </figure>
       </section>
 
@@ -110,6 +110,9 @@
 
         <h3 class="subhead">Home stack</h3>
         <div class="link-grid">
+          <a class="service-link" href="http://10.77.0.1:15055/">
+            <span class="service-link__mark">SE</span><span><strong>Seerr</strong><small>Browse trending movies and TV · sign in with Plex</small></span><span aria-hidden="true">↗</span>
+          </a>
           <a class="service-link" href="http://10.77.0.1:18080/">
             <span class="service-link__mark">SA</span><span><strong>SABnzbd</strong><small>Queue, speed, repair and unpack</small></span><span aria-hidden="true">↗</span>
           </a>
@@ -135,8 +138,8 @@
 
         <h3 class="subhead">Provider and indexer accounts</h3>
         <div class="link-grid link-grid--compact">
-          <a class="service-link" href="https://nzbgeek.info/dashboard.php?mycart"><span class="service-link__mark">NG</span><span><strong>NZBGeek My Cart</strong><small>Saved cart · intake disabled</small></span><span aria-hidden="true">↗</span></a>
-          <a class="service-link" href="https://nzbfinder.ws/cart"><span class="service-link__mark">NF</span><span><strong>NZBFinder Cart</strong><small>Saved cart · intake disabled</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://nzbgeek.info/dashboard.php?mycart"><span class="service-link__mark">NG</span><span><strong>NZBGeek My Cart</strong><small>Cart auto-download off · use Seerr</small></span><span aria-hidden="true">↗</span></a>
+          <a class="service-link" href="https://nzbfinder.ws/cart"><span class="service-link__mark">NF</span><span><strong>NZBFinder Cart</strong><small>Cart auto-download off · use Seerr</small></span><span aria-hidden="true">↗</span></a>
           <a class="service-link" href="https://www.eweka.nl/en/myeweka"><span class="service-link__mark">EW</span><span><strong>My Eweka</strong><small>Provider account</small></span><span aria-hidden="true">↗</span></a>
           <a class="service-link" href="https://console.hetzner.com/"><span class="service-link__mark">HZ</span><span><strong>Hetzner Console</strong><small>Cloud and Storage Box account</small></span><span aria-hidden="true">↗</span></a>
         </div>
@@ -144,19 +147,19 @@
 
       <section id="workflows" aria-labelledby="workflows-title">
         <p class="section-kicker">04 · Daily use</p>
-        <h2 id="workflows-title">Start movies and episodes in Arr</h2>
+        <h2 id="workflows-title">Browse and request in Seerr</h2>
         <div class="workflow-grid">
           <article class="workflow-card">
             <p class="workflow-card__label">Choose a title</p>
-            <h3>Use Radarr or Sonarr</h3>
+            <h3>Use Seerr</h3>
             <ol>
-              <li>Open Radarr for a movie or Sonarr for TV. Add the title, choose its quality profile, and use the <code>/library</code> root.</li>
-              <li>For TV, select the episode you want; avoid searching a whole season unless that is your intent.</li>
-              <li>Choose add-and-search or run the application's search action. Adding a monitored title alone does not start release polling.</li>
+              <li>Open Seerr and sign in with your Plex account. Browse trending or popular movies and TV, filter by genre, or search for a title.</li>
+              <li>Choose Request for a movie, or select the TV seasons you want. The default is 1080p. Use Radarr or Sonarr directly for release choices or individual episodes.</li>
+              <li>Seerr sends your request to Radarr or Sonarr, which searches the indexers and starts a matching download. Available items can be opened in Plex.</li>
               <li>Follow download and repair in SAB, then import and cleanup in Arr's history.</li>
               <li>Watch in the corresponding <strong>Remote</strong> Plex library. Select a NAS copy separately if wanted.</li>
             </ol>
-            <p class="workflow-card__note">Automatic release polling is off so the existing missing-media backlog stays untouched.</p>
+            <p class="workflow-card__note">Watchlist auto-download and automatic release polling are off. New future episodes are not automatically acquired; request them explicitly in Sonarr. Wait for a large download to finish before requesting another.</p>
           </article>
           <article class="workflow-card">
             <p class="workflow-card__label">Choose a release</p>
@@ -205,7 +208,7 @@
           <article><span class="storage-list__icon">T</span><div><h3>Temporary scratch · repair volume</h3><p>A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves. The 100 GiB release limit and pauses during postprocessing reduce pressure; allow one large request to finish import and cleanup before the next. Archive expansion and retained failures can still consume extra space.</p></div></article>
           <article><span class="storage-list__icon">L</span><div><h3>Local copy · NAS</h3><p>An optional selected copy for local playback. Copying verifies the selected source and destination; it does not subscribe the NAS to future episodes or upgrades.</p></div></article>
           <article><span class="storage-list__icon">F</span><div><h3>Filex staging · cloud and NAS</h3><p>These dedicated writable areas hold manual transfers and recoverable trash. They are separate from active downloads and the Plex libraries. The Storage Box view, including portal Scratch, is read-only.</p></div></article>
-          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. Filex state and staging are outside that backup coverage. The archives do not duplicate the whole media library or establish whole-NAS disaster recovery. The expanded storage and new native state have not had a fresh independent restore drill.</p></div></article>
+          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. Filex state and staging are outside that backup coverage. The archives do not duplicate the whole media library or establish whole-NAS disaster recovery. The native state passed an independent restore on September 22. Seerr configuration and its database are included in new cloud archives.</p></div></article>
         </div>
         <p class="fine-print">The approved September 20 expansion retained the CX43 server and added $32.01/month at the confirmed account rates: $9 for the Storage Box upgrade and $23.01 for the repair volume. These are dated rates, not a live invoice. The original incomplete spool remains retained for recovery.</p>
         <aside class="callout callout--warning"><strong>Storage Box snapshots are not independent backups.</strong> They share the same storage system and consume its capacity. Treat the canonical library and configuration backup scopes separately.</aside>
@@ -218,7 +221,7 @@
           <article class="truth-card truth-card--yes">
             <p class="truth-card__label">Deployed / observed</p>
             <ul>
-              <li>Private cloud search and download applications</li>
+              <li>Seerr discovery and native request connections; private cloud search and download applications</li>
               <li>Canonical Storage Box movie and TV library paths</li>
               <li>Native movie and episode import, source cleanup and Plex discovery</li>
               <li>80 GiB synthetic PAR2 reconstruction with independent SHA-256 verification</li>
@@ -232,7 +235,7 @@
           <article class="truth-card truth-card--open">
             <p class="truth-card__label">Still needs acceptance</p>
             <ul>
-              <li>Independent recovery review after infrastructure changes</li>
+              <li>Replacement-host startup and whole-NAS recovery</li>
               <li>Selective TV copying to the NAS</li>
               <li>Broader concurrency and arbitrary archive expansion</li>
               <li>Apple TV and Roku playback, seeking and cold-start privacy</li>
@@ -240,7 +243,7 @@
           </article>
         </div>
         <p class="fine-print">September 20 acceptance: Plex discovered the new movie automatically. The episode was matched to its exact imported file after a scan of the general remote TV library. Indexing does not prove device playback. The three original paused requests and their historical journals and holds remain preserved.</p>
-        <aside class="callout callout--warning"><strong>Existing health findings remain open.</strong> The final cutover check still reported 14 catalog failures and application update notices. Native acceptance did not clear or waive them; inspect current health before acting.</aside>
+        <aside class="callout callout--warning"><strong>Existing health findings remain open.</strong> Fourteen retained historical catalog records remain visible. The September 22 application updates cleared application notices; no historical holds were cleared or waived. Inspect current health before acting.</aside>
         <p class="fine-print">This page is deliberately static. It does not query applications, list media, or turn a documented observation into a live status claim.</p>
       </section>
 

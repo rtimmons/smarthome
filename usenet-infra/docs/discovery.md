@@ -2,7 +2,10 @@
 
 Radarr and Sonarr were selected and deployed on September 11, 2026. The live
 policy checks, indexer/client wiring, metadata feeds and encrypted NAS backup
-pass. A request portal and automatic list subscriptions are deferred.
+pass. [Seerr](seerr.md) now provides browsing and explicit movie/TV requests at
+http://10.77.0.1:15055/ with Plex sign-in. Start there for trending/popular content;
+the direct Arr workflows below remain available. Automatic list subscriptions
+and watchlist downloads remain off.
 
 ## Intended use
 

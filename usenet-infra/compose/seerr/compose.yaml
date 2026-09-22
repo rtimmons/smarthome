@@ -1,0 +1,61 @@
+name: usenet-seerr
+services:
+  seerr:
+    image: ghcr.io/seerr-team/seerr:v3.4.1@sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1
+    init: true
+    user: "1991:1991"
+    network_mode: host
+    read_only: true
+    environment:
+      HOST: 127.0.0.1
+      PORT: "5055"
+      TZ: America/New_York
+      LOG_LEVEL: warn
+      HOME: /tmp
+      NPM_CONFIG_CACHE: /tmp/npm
+    volumes:
+      - type: bind
+        source: /srv/usenet/config/seerr
+        target: /app/config
+        bind: {create_host_path: false}
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=128m,mode=1777
+      - /app/.next/cache:rw,noexec,nosuid,nodev,size=256m,uid=1991,gid=1991,mode=0700
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 256
+    mem_limit: 2g
+    cpus: 1.0
+    restart: "no"
+    healthcheck:
+      test: [CMD, node, -e, "fetch('http://127.0.0.1:5055/api/v1/settings/public').then(r=>{if(!r.ok)process.exit(1)}).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: local
+      options: {max-size: 5m, max-file: "2"}
+  proxy:
+    image: usenet-cloud-ui:caddy-2.11.4-nonroot
+    network_mode: host
+    user: "1991:1991"
+    read_only: true
+    command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+    environment: {XDG_DATA_HOME: /tmp/data, XDG_CONFIG_HOME: /tmp/config}
+    volumes:
+      - type: bind
+        source: /srv/usenet/compose/seerr/Caddyfile
+        target: /etc/caddy/Caddyfile
+        read_only: true
+        bind: {create_host_path: false}
+    tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777"]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    pids_limit: 64
+    mem_limit: 128m
+    cpus: 0.25
+    restart: "no"
+    logging:
+      driver: local
+      options: {max-size: 1m, max-file: "2"}

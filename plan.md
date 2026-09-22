@@ -1,5 +1,33 @@
 # Usenet integration end-state and cutover plan
 
+## Seerr deployed — September 22, 2026
+
+[Seerr](http://10.77.0.1:15055/) is the browsing/request entry point; sign in
+with the existing Plex owner account. Trending, popular movies and popular TV
+feeds each returned 20 results. Radarr and Sonarr connections verify with the
+HD-1080p profile and canonical library roots. Only general Plex library IDs
+2/3/4/5 are selected; the completed availability scan found 40 available media
+records. The private library remains excluded. No media request was created.
+
+Both indexer cart feeds stay disabled, as requested. Prowlarr still uses the
+indexers for explicit Arr searches. Watchlist acquisition and RSS polling stay
+off; selected TV seasons can be requested, and future episodes require explicit
+Sonarr searches. Existing paused jobs, 44 journals and retired-worker guards
+remain preserved. Native ownership, discovery, NAS and Filex checks pass.
+
+Seerr's private login page renders in the browser, anonymous discovery returns
+401, and the app backend is loopback-only. A fresh interactive Plex browser
+sign-in and an actual new media request were not exercised. The encrypted
+`cloud-20260922T201332Z.tar.age` independently restored **732 files and five
+SQLite databases**, including Seerr settings/database, and all 44 old journals.
+This is isolated archive recovery, not replacement-host startup.
+
+Infrastructure validation ran **701 cases**, with nine optional skips and no
+test failures; deployment syntax and current-source scanning pass. Full-history
+scanning still reports only the two documented historical RSA keys. See the
+[Seerr runbook](usenet-infra/docs/seerr.md) and
+[acceptance receipt](usenet-infra/recovery/drills/seerr-20260922.json).
+
 ## Source checkpoint — September 22, 2026
 
 The native cutover, repair-volume and Filex implementation, application updates,

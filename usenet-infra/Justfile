@@ -30,9 +30,19 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml repair-spool.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml native-cutover.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr.yml --syntax-check
 	shellcheck config/arr-shared-library-init
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
+
+# Add the private browsing/request portal with native Arr ownership.
+[group: 'setup']
+configure-seerr: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook seerr.yml
+
+[group: 'health']
+seerr-status:
+	@./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/seerr-config.py inspect
 
 # Build reviewed filex sources, safety tests, and security-updated dependencies.
 [group: 'validation']

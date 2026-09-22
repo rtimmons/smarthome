@@ -133,8 +133,25 @@ class ConfigBackupTests(unittest.TestCase):
         self.assertIn('state/sab-smoke-test.json', paths)
         self.assertIn('metadata/manifests/test_item.v1.json', paths)
         self.assertFalse(any('movie.mkv' in path or 'MediaCover' in path or path.endswith('logs.db') or 'nzbcache' in path for path in paths))
+
         self.assertFalse(any('cloud-admin' in path for path in paths))
         self.assertNotIn('PRIVATE-', json.dumps(manifest))
+
+    def test_seerr_requires_settings_and_database_and_excludes_logs(self):
+        self.write('compose/seerr/compose.yaml', b'fixture')
+        with self.assertRaisesRegex(backup.BackupError, 'Seerr configuration'):
+            backup.inventory(self.root)
+        self.write('config/seerr/settings.json', b'{}')
+        path = self.root / 'config/seerr/db/db.sqlite3'
+        path.parent.mkdir(parents=True)
+        with sqlite3.connect(path) as db:
+            db.execute('CREATE TABLE requests (id INTEGER)')
+        self.write('config/seerr/logs/private.log', b'not backup input')
+        manifest = self.snapshot()
+        paths = {entry['path'] for entry in manifest['entries']}
+        self.assertIn('config/seerr/settings.json', paths)
+        self.assertIn('config/seerr/db/db.sqlite3', paths)
+        self.assertNotIn('config/seerr/logs/private.log', paths)
 
     def test_discovery_backup_requires_both_apps_and_verifies_their_databases(self):
         self.write('compose/discovery/compose.yaml', b'services: {}')

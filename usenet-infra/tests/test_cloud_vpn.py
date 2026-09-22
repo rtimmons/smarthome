@@ -75,6 +75,20 @@ def incoming(**changes):
 
 
 class CloudVpnTests(unittest.TestCase):
+    def test_seerr_extension_allows_only_private_ui_and_exact_plex_endpoint(self):
+        config = {**CONFIG, 'filex_nas_ip': '192.168.1.66', 'seerr_nas_ip': '192.168.1.66'}
+        self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=15055), config), 'ACCEPT')
+        self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=15055, policy=None), config), 'DROP')
+        self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=5055), config), 'DROP')
+        request = incoming(src='10.77.0.1', dst='192.168.1.66', dport=32400)
+        request['policy'].update(direction='out', src=CONFIG['local_ip'] + '/32', dst=CONFIG['peer_ip'] + '/32')
+        self.assertEqual(decision(vpn.CHAINS[1], request, config), 'ACCEPT')
+        for changes in ({'dst': '192.168.1.67'}, {'dport': 22}, {'policy': None}):
+            self.assertEqual(decision(vpn.CHAINS[1], {**request, **changes}, config), 'DROP')
+        self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=5213), config), 'ACCEPT')
+        with self.assertRaises(vpn.PolicyError):
+            vpn.validate_config({**CONFIG, 'seerr_nas_ip': '8.8.8.8'})
+
     def test_portal_extension_is_exact_and_requires_ipsec(self):
         config = {**CONFIG, "filex_nas_ip": "192.168.1.66"}
         self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=5213), config), "ACCEPT")

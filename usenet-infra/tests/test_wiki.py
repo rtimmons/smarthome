@@ -67,6 +67,7 @@ class WikiContentTests(unittest.TestCase):
         external = {href for href in self.parser.hrefs if urlsplit(href).scheme}
         required = {
             "http://10.77.0.1:18080/",
+            "http://10.77.0.1:15055/",
             "http://10.77.0.1:19696/",
             "http://10.77.0.1:19696/radarr/",
             "http://10.77.0.1:19696/sonarr/",

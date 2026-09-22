@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "component": "seerr",
+  "version": "3.4.1",
+  "image_digest": "sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1",
+  "status": "deployed",
+  "private_url": "http://10.77.0.1:15055/",
+  "login": "existing_plex_owner",
+  "anonymous_discovery_http_status": 401,
+  "loopback_backend": true,
+  "general_plex_library_ids": [
+    "2",
+    "3",
+    "4",
+    "5"
+  ],
+  "private_library_enabled": false,
+  "availability_scan_running": false,
+  "available_media_records": 40,
+  "quality_profile": "HD-1080p",
+  "native_connections_verified": [
+    "radarr",
+    "sonarr"
+  ],
+  "discovery_result_counts": {
+    "trending": 20,
+    "movies": 20,
+    "tv": 20
+  },
+  "media_requests_created": 0,
+  "watchlist_acquisition": false,
+  "direct_cart_feeds_enabled": false,
+  "legacy_workers_inactive": true,
+  "native_ownership_verified": true,
+  "historical_state_preserved": true,
+  "discovery_health": "verified",
+  "nas_health": "passed",
+  "filex_health": "passed",
+  "browser_login_page": "rendered",
+  "interactive_browser_signin": "not_exercised",
+  "actual_new_media_request": "not_exercised",
+  "backup": {
+    "archive": "cloud-20260922T201332Z.tar.age",
+    "isolated_restore": "verified",
+    "files": 732,
+    "sqlite_databases": 5,
+    "historical_journals": 44,
+    "seerr_configuration_database_and_compose_present": true,
+    "replacement_host_startup": "not_exercised"
+  },
+  "validation": {
+    "tests": 701,
+    "skipped": 9,
+    "failures": 0,
+    "syntax_checks": "passed",
+    "current_source_secret_scan": "passed",
+    "history_secret_scan": "two_preexisting_historical_rsa_keys"
+  }
+}

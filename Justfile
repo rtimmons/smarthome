@@ -584,6 +584,14 @@ usenet-cloud-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
 
 [group: 'usenet']
+usenet-configure-seerr:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr
+
+[group: 'usenet']
+usenet-seerr-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra seerr-status
+
+[group: 'usenet']
 usenet-filex-build *args:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-build {{args}}
 

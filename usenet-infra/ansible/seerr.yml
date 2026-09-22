@@ -1,0 +1,119 @@
+---
+- name: Add private Seerr without restarting download or media services
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Require the existing service identity and selected private NAS
+      ansible.builtin.assert:
+        that:
+          - usenet_uid | int == 1991
+          - usenet_gid | int == 1991
+          - cloud_vpn_service_ip == '10.77.0.1'
+    - name: Verify native ownership and disabled carts before deployment
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      become_user: usenet
+      changed_when: false
+    - name: Create separate Seerr application and deployment directories
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: directory
+        owner: usenet
+        group: usenet
+        mode: '0700'
+      loop: [/srv/usenet/config/seerr, /srv/usenet/compose/seerr]
+    - name: Install Seerr configuration helper
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/seerr-config.py'
+        dest: /srv/usenet/libexec/seerr-config.py
+        owner: root
+        group: usenet
+        mode: '0550'
+    - name: Install the isolated pinned Compose project and private proxy
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/compose/seerr/{{ item }}'
+        dest: '/srv/usenet/compose/seerr/{{ item }}'
+        owner: usenet
+        group: usenet
+        mode: '0640'
+      loop: [compose.yaml, Caddyfile]
+    - name: Validate the new project without touching existing projects
+      ansible.builtin.command:
+        argv: [docker, compose, config, --quiet]
+        chdir: /srv/usenet/compose/seerr
+      changed_when: false
+    - name: Install the narrowly extended VPN policy
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/ansible/roles/cloud_vpn/files/vpn-network.py'
+        dest: /usr/local/libexec/usenet-vpn/vpn-network.py
+        owner: root
+        group: root
+        mode: '0755'
+    - name: Permit private Seerr access and its exact Plex connection
+      ansible.builtin.command:
+        argv: [python3, /usr/local/libexec/usenet-vpn/vpn-network.py, seerr-enable,
+               /etc/usenet-vpn/network.json, --nas-ip, '192.168.1.66']
+      changed_when: true
+    - name: Start only the loopback application while setup is incomplete
+      ansible.builtin.command:
+        argv: [docker, compose, up, -d, --wait, --wait-timeout, '180', seerr]
+        chdir: /srv/usenet/compose/seerr
+      changed_when: true
+    - name: Configure Plex and native request services before opening the UI
+      block:
+        - name: Copy the existing Plex login token privately for bootstrap
+          ansible.builtin.copy:
+            src: '{{ usenet_project_root }}/secrets/seerr/plex-bootstrap.json'
+            dest: /run/usenet-seerr-bootstrap.json
+            owner: root
+            group: root
+            mode: '0600'
+          no_log: true
+        - name: Configure and verify Seerr without requesting content
+          ansible.builtin.command:
+            argv: [python3, /srv/usenet/libexec/seerr-config.py, configure,
+                   --plex-token-file, /run/usenet-seerr-bootstrap.json]
+          changed_when: false
+      always:
+        - name: Remove the temporary remote bootstrap secret
+          ansible.builtin.file:
+            path: /run/usenet-seerr-bootstrap.json
+            state: absent
+          no_log: true
+    - name: Install configuration backup coverage for Seerr
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/config-backup.py'
+        dest: /srv/usenet/libexec/config-backup.py
+        owner: root
+        group: usenet
+        mode: '0550'
+    - name: Validate the private proxy configuration
+      ansible.builtin.command:
+        argv: [docker, compose, run, --rm, --no-deps, proxy, caddy, validate,
+               --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
+        chdir: /srv/usenet/compose/seerr
+      changed_when: false
+    - name: Install independent Seerr lifecycle service
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/usenet-seerr.service'
+        dest: /etc/systemd/system/usenet-seerr.service
+        owner: root
+        group: root
+        mode: '0644'
+    - name: Start the configured private portal
+      ansible.builtin.systemd_service:
+        name: usenet-seerr.service
+        enabled: true
+        state: started
+        daemon_reload: true
+    - name: Verify anonymous private requests cannot access discovery
+      ansible.builtin.uri:
+        url: http://10.77.0.1:15055/api/v1/discover/trending
+        status_code: 401
+        use_proxy: false
+    - name: Recheck original native owners and historical state
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      become_user: usenet
+      changed_when: false

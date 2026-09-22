@@ -31,7 +31,7 @@ MAX_BYTES = 2 * 1024**3
 MAX_FILES = 100_000
 TREES = ('config/sabnzbd', 'config/prowlarr', 'config/radarr', 'config/sonarr',
          'config/rclone', 'config/catalog', 'state/catalog', 'scripts', 'libexec',
-         'compose/cloud', 'compose/discovery')
+         'compose/cloud', 'compose/discovery', 'config/seerr', 'compose/seerr')
 SINGLES = ('config/catalog.env', 'config/catalog.env.defaults', 'config/backup-recipient.pub',
            'state/sab-smoke-test.json',
            'secrets/storagebox/id_ed25519', 'secrets/storagebox/known_hosts')
@@ -113,6 +113,9 @@ def inventory(root: Path) -> dict[str, Path]:
                               for filename in ('config.xml', app + '.db')}
         if not required_discovery <= paths.keys():
             raise BackupError('Deployed discovery application configuration is incomplete.')
+    if (root / 'compose/seerr/compose.yaml').exists():
+        if not {'config/seerr/settings.json', 'config/seerr/db/db.sqlite3'} <= paths.keys():
+            raise BackupError('Deployed Seerr configuration is incomplete.')
     if len(paths) > MAX_FILES or sum(path.stat().st_size for path in paths.values()) > MAX_BYTES:
         raise BackupError('Configuration exceeds the bounded backup size or file-count limit.')
     return dict(sorted(paths.items()))
