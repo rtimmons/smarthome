@@ -95,8 +95,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 - **September 22: Seerr deployed.** The private portal at
   `http://10.77.0.1:15055/` uses the existing Plex owner login and native Arr
   requests. Only Plex libraries 2/3/4/5 are enabled. Preserve local-login and
-  new-user-registration restrictions, disabled watchlist acquisition, HD-1080p
-  defaults and existing RSS-off policy. Both direct carts remain disabled.
+  new-user-registration restrictions, disabled watchlist acquisition, Ultra-HD
+  (2160p preferred, 1080p fallback) defaults and existing RSS-off policy. Both direct carts remain disabled.
   Use `just usenet-seerr-status`; see [Seerr operations](docs/seerr.md).
   The isolated encrypted restore includes Seerr settings/database (732 files,
   five databases, 44 old journals). Browser login page and discovery/native

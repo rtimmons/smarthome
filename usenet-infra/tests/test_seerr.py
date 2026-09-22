@@ -16,7 +16,7 @@ class SeerrTests(unittest.TestCase):
                            'libraries': [{'id': str(i), 'enabled': i in (2, 3, 4, 5)} for i in range(1, 6)]}}
         for app, port in (('radarr', 7878), ('sonarr', 8989)):
             result[app] = [{'hostname': '127.0.0.1', 'port': port, 'baseUrl': '/' + app,
-                'activeDirectory': '/library', 'activeProfileId': 4, 'is4k': False,
+                'activeDirectory': '/library', 'activeProfileId': 5, 'is4k': False,
                 'isDefault': True, 'syncEnabled': True, 'preventSearch': False, 'monitorNewItems': 'none'}]
         return result
 
@@ -46,6 +46,16 @@ class SeerrTests(unittest.TestCase):
         settings['radarr'].append(copy.deepcopy(settings['radarr'][0]))
         with self.assertRaisesRegex(RuntimeError, 'unique_native_server'):
             seerr.validate(settings)
+
+    def test_4k_preference_requires_1080p_fallback_below_every_4k_source(self):
+        def profile(names):
+            return {'name': 'Ultra-HD', 'upgradeAllowed': False,
+                    'items': [{'quality': {'name': name}, 'allowed': True} for name in names]}
+        seerr.validate_quality_profile(profile(['WEB-1080p', 'Bluray-1080p', 'WEB-2160p']))
+        for names in (['WEB-2160p'], ['WEB-720p', 'WEB-2160p'],
+                      ['WEB-2160p', 'Bluray-1080p']):
+            with self.subTest(names=names), self.assertRaises(RuntimeError):
+                seerr.validate_quality_profile(profile(names))
 
     def test_bootstrap_transport_refuses_redirects(self):
         with self.assertRaisesRegex(RuntimeError, 'redirect_refused'):

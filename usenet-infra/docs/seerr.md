@@ -5,7 +5,10 @@ and **sign in with the existing Plex owner account**. There is no new password.
 Other Plex accounts cannot automatically enroll; local-password login is off.
 Browse trending/popular movies and TV, filter by genre, or search. Request a
 movie or selected TV seasons; use Sonarr directly for individual episodes.
-The default quality is HD-1080p. Availability comes from the four general Plex
+The default quality is Ultra-HD: prefer 2160p / 4K, with 1080p fallback when
+no eligible 4K release is available. Both native profile ID 5 definitions allow
+1080p beneath every 2160p source; retain that ordering when restoring profiles.
+Availability comes from the four general Plex
 libraries (IDs 2/3/4/5); private library ID 1 is excluded.
 
 Seerr sends explicit requests to Radarr/Sonarr, which find releases through
@@ -14,6 +17,11 @@ sources. Watchlist acquisition is off. Arr RSS polling remains off to preserve
 the existing missing backlog; future episodes require explicit Sonarr searches.
 Wait for a large request to finish before adding another. Failed jobs remain
 for review, and the 100 GiB release limit still applies.
+
+The existing single-copy server entries use the 4K quality profile; Seerr's
+separate `is4k` server flag stays false because it enables a second parallel
+copy workflow. Existing library items and pending requests are not bulk
+upgraded or searched by a default-profile change. Automatic upgrades remain off.
 
 Both NZBGeek and NZBFinder cart feeds remain disabled. Their credentials are
 still used by Prowlarr for native searches. The three old paused requests,
@@ -44,7 +52,7 @@ Future VPN role deployments must retain `cloud_vpn_seerr_nas_ip` in the private
 inventory. Deployment does not restart Plex, SAB, Arr or Filex.
 
 Status verifies selected library IDs, login policy, native connections,
-1080p profile, watchlist policy and nonempty discovery feeds. Connection tests
+Ultra-HD profile, watchlist policy and nonempty discovery feeds. Connection tests
 do not prove a real request/import; no media is selected implicitly for testing.
 The existing native import acceptance is documented separately in the plan.
 

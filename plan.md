@@ -1,5 +1,16 @@
 # Usenet integration end-state and cutover plan
 
+## Seerr quality preference — September 22, 2026
+
+The user requested 4K. Seerr's movie and TV defaults now use the existing
+**Ultra-HD** quality profile (ID 5), with 2160p preferred and 1080p allowed
+as fallback at the user's request. All eligible 4K sources rank above 1080p.
+Within each resolution, the native profile's source-quality ranking is retained.
+The single-copy request workflow remains in use;
+existing library items and requests were not bulk upgraded or searched.
+Automatic upgrades, RSS, watchlist acquisition and direct carts remain off.
+This supersedes the initial 1080p default in the dated deployment record below.
+
 ## Seerr deployed — September 22, 2026
 
 [Seerr](http://10.77.0.1:15055/) is the browsing/request entry point; sign in

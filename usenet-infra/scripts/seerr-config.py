@@ -37,13 +37,55 @@ def validate(settings):
         require(len(servers) == 1, 'seerr_unique_native_server_required')
         server = servers[0]
         expected = {'hostname': '127.0.0.1', 'port': port, 'baseUrl': '/' + app,
-                    'activeDirectory': '/library', 'activeProfileId': 4, 'is4k': False,
+                    'activeDirectory': '/library', 'activeProfileId': 5, 'is4k': False,
                     'isDefault': True, 'syncEnabled': True, 'preventSearch': False}
         require(all(server.get(k) == v for k, v in expected.items()), 'seerr_native_routing_changed')
         if app == 'sonarr':
             require(server.get('monitorNewItems') == 'none', 'seerr_future_seasons_policy_changed')
     return {'status': 'verified', 'private_url': URL, 'plex_library_ids': sorted(LIBRARIES),
-            'quality_profile': 'HD-1080p', 'native_requests': True, 'direct_carts': 'disabled'}
+            'quality_profile': 'Ultra-HD', 'native_requests': True, 'direct_carts': 'disabled'}
+
+
+def validate_quality_profile(profile):
+    require(profile.get('name') == 'Ultra-HD' and profile.get('upgradeAllowed') is False,
+            'seerr_quality_profile_policy_changed')
+    allowed = [item.get('quality', {}).get('name') or item.get('name', '')
+               for item in profile['items'] if item.get('allowed')]
+    require(allowed and all('1080p' in name or '2160p' in name for name in allowed),
+            'seerr_quality_resolution_changed')
+    require(any('1080p' in name for name in allowed) and any('2160p' in name for name in allowed),
+            'seerr_quality_fallback_missing')
+    first_4k = next(i for i, name in enumerate(allowed) if '2160p' in name)
+    require(all('2160p' in name for name in allowed[first_4k:]), 'seerr_quality_order_changed')
+
+
+def native_quality(root, app, *, configure=False):
+    port = {'radarr': 7878, 'sonarr': 8989}[app]
+    key = ET.parse(root / f'config/{app}/config.xml').getroot().findtext('ApiKey')
+    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirects())
+    url = f'http://127.0.0.1:{port}/{app}/api/v3/qualityprofile/5'
+
+    def call(payload=None):
+        request = urllib.request.Request(url, headers={'X-Api-Key': key, 'Content-Type': 'application/json'},
+            data=json.dumps(payload).encode() if payload is not None else None,
+            method='PUT' if payload is not None else 'GET')
+        with opener.open(request, timeout=30) as response:
+            return json.load(response)
+
+    profile = call()
+    if configure:
+        before = json.dumps(profile, sort_keys=True)
+        for item in profile['items']:
+            name = item.get('quality', {}).get('name') or item.get('name', '')
+            if '1080p' in name:
+                item['allowed'] = True
+                for child in item.get('items', []):
+                    child['allowed'] = True
+        validate_quality_profile(profile)
+        if json.dumps(profile, sort_keys=True) != before:
+            call(profile)
+            profile = call()
+    validate_quality_profile(profile)
 
 
 class API:
@@ -70,6 +112,8 @@ class NoRedirects(urllib.request.HTTPRedirectHandler):
 
 
 def configure(root, token_path):
+    for app in ('radarr', 'sonarr'):
+        native_quality(root, app, configure=True)
     api = API(root)
     settings_path = root / 'config/seerr/settings.json'
     settings = json.loads(settings_path.read_text())
@@ -95,7 +139,7 @@ def configure(root, token_path):
         require(bool(key), 'native_application_key_missing')
         server = {'name': app.capitalize(), 'hostname': '127.0.0.1', 'port': port,
                   'apiKey': key, 'useSsl': False, 'baseUrl': '/' + app,
-                  'activeProfileId': 4, 'activeProfileName': 'HD-1080p', 'activeDirectory': '/library',
+                  'activeProfileId': 5, 'activeProfileName': 'Ultra-HD', 'activeDirectory': '/library',
                   'tags': [], 'is4k': False, 'isDefault': True, 'syncEnabled': True,
                   'preventSearch': False, 'tagRequests': False, 'overrideRule': [],
                   'externalUrl': f'http://10.77.0.1:19696/{app}/'}
@@ -105,7 +149,7 @@ def configure(root, token_path):
             server.update(seriesType='standard', animeSeriesType='anime', enableSeasonFolders=True,
                           monitorNewItems='none')
         result = api.call(f'settings/{app}/test', server)
-        require(any(p['id'] == 4 and p['name'] == 'HD-1080p' for p in result['profiles'])
+        require(any(p['id'] == 5 and p['name'] == 'Ultra-HD' for p in result['profiles'])
                 and any(f['path'] == '/library' for f in result['rootFolders']),
                 'native_profile_or_library_unavailable')
         existing = api.call('settings/' + app)
@@ -133,8 +177,10 @@ def inspect(root):
         require(counts[endpoint] > 0, 'seerr_discovery_unavailable')
     report['discovery_result_counts'] = counts
     for app in ('radarr', 'sonarr'):
+        native_quality(root, app)
         api.call('settings/' + app + '/test', settings[app][0])
     report['native_connections'] = 'verified'
+    report['quality_preference'] = '2160p_then_1080p'
     return report
 
 
