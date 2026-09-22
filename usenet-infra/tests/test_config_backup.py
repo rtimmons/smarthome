@@ -137,6 +137,61 @@ class ConfigBackupTests(unittest.TestCase):
         self.assertFalse(any('cloud-admin' in path for path in paths))
         self.assertNotIn('PRIVATE-', json.dumps(manifest))
 
+    def test_cloud_backup_requires_fresh_matching_filex_ciphertext(self):
+        bundle = self.write('config/filex-recovery/latest.tar.age', b'ENCRYPTED-FIXTURE')
+        receipt = {'scope': 'filex-config', 'created_at': int(backup.time.time()),
+                   'sha256': backup.digest(bundle)}
+        self.write('config/filex-recovery/latest.json', json.dumps(receipt).encode())
+        self.assertIn('config/filex-recovery/latest.tar.age', backup.inventory(self.root))
+        receipt['created_at'] -= 37 * 3600
+        self.write('config/filex-recovery/latest.json', json.dumps(receipt).encode())
+        with self.assertRaisesRegex(backup.BackupError, 'stale or invalid'):
+            backup.inventory(self.root)
+        receipt['created_at'] = int(backup.time.time())
+        self.write('config/filex-recovery/latest.json', json.dumps(receipt).encode())
+        bundle.write_bytes(b'CHANGED-CIPHERTEXT')
+        with self.assertRaisesRegex(backup.BackupError, 'stale or invalid'):
+            backup.inventory(self.root)
+
+    def filex_fixture(self):
+        for name in backup.FILEX_REQUIRED:
+            self.write(name, b'fixture')
+        path = self.root / 'srv/usenet-filex/data/instance.sqlite'
+        path.unlink()
+        with closing(sqlite3.connect(path)) as connection:
+            connection.execute('CREATE TABLE ops_queue (status TEXT)')
+        self.write('srv/usenet-filex/data/transfer-verification/fixture.json', b'{}')
+        self.write('srv/usenet-filex/staging/private.mkv', b'BULK')
+        return path
+
+    def test_filex_snapshot_and_restore_exclude_staging(self):
+        path = self.filex_fixture()
+        with closing(sqlite3.connect(path)) as connection:
+            connection.executemany('INSERT INTO ops_queue VALUES (?)', [('done',), ('failed',), ('cancelled',)])
+            connection.commit()
+        manifest = backup.stage_snapshot(self.root, self.stage, scope='filex-config')
+        self.assertEqual(manifest['scope'], 'filex-config')
+        self.assertEqual(sum(e['sqlite'] for e in manifest['entries']), 1)
+        self.assertFalse(any('/staging/' in e['path'] for e in manifest['entries']))
+        restored = backup.extract_verified(self.tar(manifest), self.work / 'filex-restored')
+        self.assertEqual(restored, manifest)
+
+    def test_invalid_filex_database_is_not_backed_up_as_plaintext(self):
+        path = self.filex_fixture()
+        path.write_bytes(b'INVALID-DATABASE')
+        with self.assertRaises(backup.BackupError):
+            backup.stage_snapshot(self.root, self.stage, scope='filex-config')
+
+    def test_filex_busy_capture_is_refused_without_changing_operations(self):
+        path = self.filex_fixture()
+        with closing(sqlite3.connect(path)) as connection:
+            connection.execute("INSERT INTO ops_queue VALUES ('running')")
+            connection.commit()
+        with self.assertRaisesRegex(backup.BackupError, 'unfinished operations'):
+            backup.stage_snapshot(self.root, self.stage, scope='filex-config')
+        with closing(sqlite3.connect(path)) as connection:
+            self.assertEqual(connection.execute('SELECT status FROM ops_queue').fetchone()[0], 'running')
+
     def test_seerr_requires_settings_and_database_and_excludes_logs(self):
         self.write('compose/seerr/compose.yaml', b'fixture')
         with self.assertRaisesRegex(backup.BackupError, 'Seerr configuration'):

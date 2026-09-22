@@ -1,0 +1,39 @@
+---
+- name: Add encrypted Filex recovery coverage without restarting the portal
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Install bounded backup helpers
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/{{ item }}'
+        dest: '/srv/usenet/libexec/{{ item }}'
+        owner: root
+        group: usenet
+        mode: '0550'
+      loop: [config-backup.py, filex-backup.py]
+    - name: Create root-owned encrypted publication directory
+      ansible.builtin.file:
+        path: /srv/usenet/config/filex-recovery
+        state: directory
+        owner: root
+        group: usenet
+        mode: '0750'
+    - name: Install Filex backup units
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/{{ item }}'
+        dest: '/etc/systemd/system/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [usenet-filex-backup.service, usenet-filex-backup.timer]
+    - name: Capture the first encrypted portal snapshot
+      ansible.builtin.systemd_service:
+        name: usenet-filex-backup.service
+        state: started
+        daemon_reload: true
+    - name: Enable hourly retry with daily capture
+      ansible.builtin.systemd_service:
+        name: usenet-filex-backup.timer
+        enabled: true
+        state: started

@@ -105,6 +105,17 @@ class BackupQnapTests(unittest.TestCase):
         self.assertNotIn('PRIVATE-', json.dumps(manifest))
         self.assertFalse(manifest['cache_content_included'])
 
+    def test_filex_server_identity_capture_and_missing_key_refusal(self):
+        names = ('filex-sftp/managed', 'filex-sftp/.env', 'filex-sftp/compose.yaml',
+                 'filex-sftp/keys/host_key', 'filex-sftp/keys/authorized_keys')
+        for name in names:
+            self.write(name, b'SYNTHETIC-FILEX-CONFIG')
+        manifest, contents = self.snapshot()
+        self.assertTrue(set(names) <= set(contents))
+        (self.root / 'filex-sftp/keys/host_key').unlink()
+        with self.assertRaises(backup.BackupError):
+            self.snapshot()
+
     def test_locks_use_existing_readonly_descriptors_and_leave_no_new_files(self):
         lock = self.write('state/locks/cache.lock', b'')
         lock.chmod(0o400)

@@ -1,5 +1,14 @@
 # Scheduled configuration backups
 
+**September 22 Filex coverage added.** Root-owned Filex configuration, database
+and verification receipts are captured into encrypted bundles included by the
+cloud schedule. Operator bootstrap keys have separately verified encrypted
+escrow. NAS archives now include Filex SFTP settings and server identity.
+See [capture scope and recovery](filex-recovery.md). Staging and media are
+excluded; this supersedes older statements that Filex configuration is outside
+coverage. NAS-loss protection still depends on the pending backup-scope choice.
+
+
 **September 22: post-update state independently restored.**
 `cloud-20260922T191826Z.tar.age` captures the deployed Radarr/Sonarr/Prowlarr
 versions and guards. Remote ciphertext readback, local hash comparison,

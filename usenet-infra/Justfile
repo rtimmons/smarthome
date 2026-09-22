@@ -31,6 +31,7 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml native-cutover.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex-backups.yml --syntax-check
 	shellcheck config/arr-shared-library-init
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
@@ -480,6 +481,11 @@ wiki-deploy: ansible-setup
 [group: 'setup']
 configure-publishing: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook publish.yml
+
+# Capture root-owned Filex state as ciphertext for the scheduled cloud backup.
+[group: 'backup']
+configure-filex-backups: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook filex-backups.yml
 
 # Host-owned daily encrypted backups with hourly retry; no Mac scheduler required.
 [group: 'backup']

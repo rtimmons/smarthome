@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-22",
+  "status": "in_progress",
+  "held_disposition": {
+    "user_authorized": true,
+    "paused_zero_progress_requests_discarded": 3,
+    "held_journals_reconciled": 7,
+    "failure_records_resolved": 14,
+    "immutable_journals_preserved": 44,
+    "newly_deleted_payload_bytes": 0,
+    "recorded_payloads_already_absent": true,
+    "baseline_bound_disposition_receipt": true,
+    "native_ownership_verified": true,
+    "cloud_health_passed": true
+  },
+  "tv_copy": {
+    "destination_sha256_verified": true,
+    "atomic_publication": true,
+    "safe_repeat_verified_existing_owned_copy": true,
+    "nas_general_plex_library_id": 3,
+    "exact_episode_file_indexed": true,
+    "forced_general_library_scan_required": true,
+    "private_library_browsed": false
+  },
+  "filex_recovery": {
+    "daily_capture_with_hourly_retry_deployed": true,
+    "server_files_restored": 26,
+    "server_sqlite_databases_verified": 1,
+    "bootstrap_escrow_files_restored": 40,
+    "bootstrap_encrypted_before_upload": true,
+    "nas_configuration_files_restored": 63,
+    "nas_filex_sftp_files_restored": 5,
+    "nas_plex_archive_files_verified": 3,
+    "nas_plex_databases_opened": 2,
+    "generic_plex_integrity_check": "unsupported_custom_tokenizer",
+    "media_and_staging_excluded": true,
+    "outer_cloud_checkpoint": "waiting_for_postprocessing"
+  },
+  "device_acceptance": {
+    "evidence": "explicit_user_confirmation",
+    "roku_playback_and_restricted_privacy": true,
+    "apple_tv_playback_and_restricted_privacy": true,
+    "agent_codec_matrix_claimed": false
+  },
+  "operator_ca_trust": "pending_macos_prompt_was_cancelled",
+  "seerr_request": "4k_download_complete_verification_in_progress",
+  "seerr_browser_signin": "awaiting_user_verification",
+  "bounded_capacity_drill": "prepared_waiting_for_idle",
+  "replacement_host": {
+    "terraform_validated": true,
+    "create_only_resource_count": 4,
+    "production_changes_in_plan": 0,
+    "applied": false,
+    "spending_decision": "pending"
+  },
+  "nas_loss_backup_scope": "awaiting_user_choice",
+  "validation": {
+    "unit_tests_run": 708,
+    "optional_skips": 9,
+    "unit_test_failures": 0,
+    "syntax_checks_passed": true,
+    "current_source_secret_scan_passed": true,
+    "full_history_scan": "fails_only_on_two_previously_documented_RSA_keys"
+  }
+}

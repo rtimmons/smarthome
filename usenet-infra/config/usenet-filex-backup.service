@@ -1,0 +1,16 @@
+[Unit]
+Description=Encrypt Filex configuration and database for cloud backup
+After=usenet-filex.service
+Before=usenet-backup.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 /srv/usenet/libexec/filex-backup.py
+UMask=0077
+TimeoutStartSec=5min
+Nice=15
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/srv/usenet/config/filex-recovery

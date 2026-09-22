@@ -87,10 +87,24 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 - Plex watches local changes, performs partial scans and scans hourly; automatic
   trash emptying is disabled. Do not empty trash to resolve an unavailable mount.
 - Native TV sorting, the read-only remote mount and native selective-copy actions
-  are deployed. Actual Apple TV/Roku playback remains deferred. Do not claim file indexing proves playback
-  or that a configured profile proves safe startup on every client.
+  are deployed. The user confirmed Apple TV and Roku playback and restricted privacy on September 22.
+  Record this as user verification, not an agent-run codec/subtitle matrix or proof for every future client.
 
 ## Current operations and closure
+
+- **September 22 follow-up in progress.** User-authorized disposition removed the
+  three old zero-progress requests and resolved 14 failure records for seven
+  historical held journals. All 44 journals and importer/capacity hold evidence
+  remain unchanged; the completed disposition receipt is bound to the original
+  native baseline. Cloud health now passes. Do not resurrect discarded requests.
+  Selected TV copying, SHA-256 verification, safe repeat and exact-file Plex NAS
+  indexing pass. User confirms playback/privacy on both Apple TV and Roku.
+  Filex encrypted daily capture and NAS SFTP settings coverage are deployed;
+  see [Filex recovery](docs/filex-recovery.md). Follow the current plan for
+  download completion, off-host recovery and remaining user-dependent checks.
+  This entry supersedes older preserve-paused-request and unresolved-failure
+  instructions below; those dated records remain historical evidence.
+
 
 - **September 22: Seerr deployed.** The private portal at
   `http://10.77.0.1:15055/` uses the existing Plex owner login and native Arr

@@ -1,5 +1,13 @@
 # Private file-management portal
 
+September 22: encrypted Filex configuration/database/receipt capture and
+operator bootstrap-key escrow are deployed and independently restore-tested.
+See [Filex recovery](filex-recovery.md) for the exact scope and restore steps.
+Staging and media remain excluded. Operator Mac CA trust is pending because the
+macOS trust prompt was canceled; strict private-CA server HTTPS checks pass.
+This supersedes older statements below that configuration backup is deferred.
+
+
 ## Deployment and scope
 
 Filex runs separately from acquisition at **https://10.77.0.1:5213**. The cloud

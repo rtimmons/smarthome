@@ -33,7 +33,7 @@ MAX_BYTES = 128 * 1024**2
 MAX_FILES = 25_000
 MAX_TAR_BYTES = MAX_BYTES + 32 * 1024**2
 TREES = ('compose/qnap', 'scripts', 'config/catalog', 'config/backup', 'state/items', 'state/native-items',
-         'state/failures', 'state/operations', 'state/dashboard')
+         'state/failures', 'state/operations', 'state/dashboard', 'filex-sftp')
 SINGLES = ('secrets/dashboard-auth.json', 'secrets/storagebox/id_ed25519',
            'secrets/storagebox/known_hosts')
 REQUIRED = ('compose/qnap/compose.yaml', 'compose/qnap/.env', 'compose/qnap/Dockerfile.catalog',
@@ -60,7 +60,7 @@ def allowed(name: str) -> bool:
         return False
     parts = PurePosixPath(name).parts
     if (any(part in {'docker-client', '__pycache__', 'cache', '.staging'} for part in parts)
-            or any(part.startswith('.') for part in parts) and name != 'compose/qnap/.env'
+            or any(part.startswith('.') for part in parts) and name not in {'compose/qnap/.env', 'filex-sftp/.env'}
             or name.endswith(('.lock', '.pyc', '.ansible'))):
         return False
     return name in SINGLES or any(name.startswith(tree + '/') for tree in TREES)
@@ -116,6 +116,11 @@ def inventory(root: Path) -> dict[str, os.stat_result]:
     for name in SINGLES:
         with secure_open(root, name) as source:
             result[name] = os.fstat(source.fileno())
+    if (root / 'filex-sftp/managed').exists():
+        filex_required = {'filex-sftp/.env', 'filex-sftp/compose.yaml',
+                          'filex-sftp/keys/host_key', 'filex-sftp/keys/authorized_keys'}
+        if not filex_required <= result.keys():
+            raise BackupError('Filex NAS endpoint configuration is incomplete.')
     if not set(REQUIRED) <= result.keys():
         raise BackupError('Required QNAP configuration is missing; backup refused.')
     if len(result) > MAX_FILES or sum(info.st_size for info in result.values()) > MAX_BYTES:

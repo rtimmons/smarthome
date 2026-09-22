@@ -62,3 +62,10 @@ class NativeCutoverTests(unittest.TestCase):
         after['queue'][1]['status'] = 'Downloading'
         self.assertFalse(cutover.preserved(before, after))
         self.assertFalse(cutover.preserved(before, {'queue': []}))
+
+    def test_disposition_allows_only_exact_absent_original_requests(self):
+        before = {'queue': [{'nzo_id': 'held-fixture', 'status': 'Paused'}]}
+        self.assertTrue(cutover.preserved(before, {'queue': []}, ['held-fixture']))
+        self.assertFalse(cutover.preserved(before, before, ['held-fixture']))
+        self.assertFalse(cutover.preserved(before, {'queue': []}, ['unrelated-fixture']))
+        self.assertFalse(cutover.preserved(before, {'queue': []}, ['held-fixture', 'held-fixture']))

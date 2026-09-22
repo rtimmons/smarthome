@@ -1,5 +1,13 @@
 # Deployed NAS and Plex layout
 
+September 22 follow-up: the selected native TV copy, SHA-256 verification,
+safe repeat and exact-file discovery in general NAS library 3 pass. A forced
+scan of library 3 was needed after the ordinary scan had not indexed the file.
+The user confirmed playback and restricted privacy on both Roku and Apple TV.
+This supersedes older playback and TV-copy deferrals below; it is user
+acceptance, not an agent-run test of every codec, subtitle or client setting.
+
+
 The existing `FromDrobo` SMB share is retained to preserve
 network shortcuts and permissions. Its physical root is
 `/share/CACHEDEV2_DATA/FromDrobo`, on the 4 TiB data volume, not the roughly

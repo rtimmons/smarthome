@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry the daily encrypted Filex snapshot hourly
+
+[Timer]
+OnCalendar=hourly
+Persistent=true
+Unit=usenet-filex-backup.service
+
+[Install]
+WantedBy=timers.target

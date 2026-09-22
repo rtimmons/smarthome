@@ -208,7 +208,7 @@
           <article><span class="storage-list__icon">T</span><div><h3>Temporary scratch · repair volume</h3><p>A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves. The 100 GiB release limit and pauses during postprocessing reduce pressure; allow one large request to finish import and cleanup before the next. Archive expansion and retained failures can still consume extra space.</p></div></article>
           <article><span class="storage-list__icon">L</span><div><h3>Local copy · NAS</h3><p>An optional selected copy for local playback. Copying verifies the selected source and destination; it does not subscribe the NAS to future episodes or upgrades.</p></div></article>
           <article><span class="storage-list__icon">F</span><div><h3>Filex staging · cloud and NAS</h3><p>These dedicated writable areas hold manual transfers and recoverable trash. They are separate from active downloads and the Plex libraries. The Storage Box view, including portal Scratch, is read-only.</p></div></article>
-          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. Filex state and staging are outside that backup coverage. The archives do not duplicate the whole media library or establish whole-NAS disaster recovery. The native state passed an independent restore on September 22. Seerr configuration and its database are included in new cloud archives.</p></div></article>
+          <article><span class="storage-list__icon">B</span><div><h3>Backups · configuration and receipts</h3><p>Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. Filex configuration, database and verification receipts now have encrypted recovery coverage; staging and media remain excluded. The archives do not duplicate the whole media library or establish whole-NAS disaster recovery. The native state passed an independent restore on September 22. Seerr configuration and its database are included in new cloud archives.</p></div></article>
         </div>
         <p class="fine-print">The approved September 20 expansion retained the CX43 server and added $32.01/month at the confirmed account rates: $9 for the Storage Box upgrade and $23.01 for the repair volume. These are dated rates, not a live invoice. The original incomplete spool remains retained for recovery.</p>
         <aside class="callout callout--warning"><strong>Storage Box snapshots are not independent backups.</strong> They share the same storage system and consume its capacity. Treat the canonical library and configuration backup scopes separately.</aside>
@@ -227,8 +227,9 @@
               <li>80 GiB synthetic PAR2 reconstruction with independent SHA-256 verification</li>
               <li>SAB/Arr restart, storage-mount protections and retired-worker startup guards</li>
               <li>Filex transfers, recoverable moves/deletes, restore and interruption/retry</li>
-              <li>Verified selective NAS movie copying and safe repeat</li>
+              <li>Verified selective NAS movie and TV copying, safe repeat and Plex discovery</li>
               <li>Separate Plex NAS and Remote libraries</li>
+              <li>Apple TV and Roku playback and restricted privacy confirmed by the user</li>
               <li>Scheduled encrypted configuration backups</li>
             </ul>
           </article>
@@ -236,14 +237,13 @@
             <p class="truth-card__label">Still needs acceptance</p>
             <ul>
               <li>Replacement-host startup and whole-NAS recovery</li>
-              <li>Selective TV copying to the NAS</li>
+              <li>Interactive Seerr browser sign-in and operator Mac certificate trust</li>
               <li>Broader concurrency and arbitrary archive expansion</li>
-              <li>Apple TV and Roku playback, seeking and cold-start privacy</li>
             </ul>
           </article>
         </div>
-        <p class="fine-print">September 20 acceptance: Plex discovered the new movie automatically. The episode was matched to its exact imported file after a scan of the general remote TV library. Indexing does not prove device playback. The three original paused requests and their historical journals and holds remain preserved.</p>
-        <aside class="callout callout--warning"><strong>Existing health findings remain open.</strong> Fourteen retained historical catalog records remain visible. The September 22 application updates cleared application notices; no historical holds were cleared or waived. Inspect current health before acting.</aside>
+        <p class="fine-print">September 20 acceptance: Plex discovered the new movie automatically. The episode was matched to its exact imported file after a scan of the general remote TV library. Indexing does not prove device playback. The three old paused requests were discarded on September 22 at the user’s request; their historical journals and hold evidence remain preserved.</p>
+        <aside class="callout callout--warning"><strong>September 22 health check passed.</strong> The user-authorized disposal resolved fourteen historical failure records while retaining their audit history. Application health is clear. This dated result is not a live health monitor.</aside>
         <p class="fine-print">This page is deliberately static. It does not query applications, list media, or turn a documented observation into a live status claim.</p>
       </section>
 

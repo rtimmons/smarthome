@@ -31,7 +31,7 @@ MAX_BYTES = 2 * 1024**3
 MAX_FILES = 100_000
 TREES = ('config/sabnzbd', 'config/prowlarr', 'config/radarr', 'config/sonarr',
          'config/rclone', 'config/catalog', 'state/catalog', 'scripts', 'libexec',
-         'compose/cloud', 'compose/discovery', 'config/seerr', 'compose/seerr')
+         'compose/cloud', 'compose/discovery', 'config/seerr', 'compose/seerr', 'config/filex-recovery')
 SINGLES = ('config/catalog.env', 'config/catalog.env.defaults', 'config/backup-recipient.pub',
            'state/sab-smoke-test.json',
            'secrets/storagebox/id_ed25519', 'secrets/storagebox/known_hosts')
@@ -40,6 +40,13 @@ REQUIRED = ('config/sabnzbd/sabnzbd.ini', 'config/prowlarr/config.xml',
             'config/rclone/rclone.conf', 'compose/cloud/compose.yaml')
 OMIT_DIRS = {'logs', 'log', 'backups', '__pycache__', 'cache', 'nzbcache', 'nzb_backup',
              'download', 'downloads', 'incomplete', 'complete', 'nzb', 'mediacover', 'updates', 'updatelogs'}
+FILEX_TREES = ('etc/usenet-filex', 'srv/usenet-filex/data/transfer-verification')
+FILEX_SINGLES = ('srv/usenet-filex/data/instance.sqlite',
+                 'etc/systemd/system/usenet-filex.service', 'etc/usenet-vpn/network.json')
+FILEX_REQUIRED = (*FILEX_SINGLES, 'etc/usenet-filex/inputs.json',
+                  'etc/usenet-filex/server.yaml', 'etc/usenet-filex/compose.yaml',
+                  'etc/usenet-filex/.env', 'etc/usenet-filex/tls/ca.crt',
+                  'etc/usenet-filex/tls/server.crt', 'etc/usenet-filex/tls/server.key')
 SQLITE_HEADER = b'SQLite format 3\x00'
 
 
@@ -62,7 +69,9 @@ def ordinary(path: Path) -> os.stat_result:
     return info
 
 
-def allowed(name: str) -> bool:
+def allowed(name: str, scope='cloud-config') -> bool:
+    if scope == 'filex-config':
+        return name in FILEX_SINGLES or any(name.startswith(tree + '/') for tree in FILEX_TREES)
     return (name in SINGLES or any(name.startswith(tree + '/') for tree in TREES)
             or re.fullmatch(r'metadata/manifests/[a-z0-9][a-z0-9._-]{2,127}\.json', name) is not None)
 
@@ -72,9 +81,12 @@ def safe_name(name: str) -> bool:
     return bool(name) and not path.is_absolute() and str(path) == name and '..' not in path.parts and '\\' not in name
 
 
-def inventory(root: Path) -> dict[str, Path]:
+def inventory(root: Path, scope='cloud-config') -> dict[str, Path]:
+    if scope not in ('cloud-config', 'filex-config'):
+        raise BackupError('Unsupported backup scope.')
+    trees, singles, required = (FILEX_TREES, FILEX_SINGLES, FILEX_REQUIRED) if scope == 'filex-config' else (TREES, SINGLES, REQUIRED)
     paths = {}
-    for tree in TREES:
+    for tree in trees:
         base = root / tree
         if not base.exists():
             continue
@@ -96,7 +108,7 @@ def inventory(root: Path) -> dict[str, Path]:
                 path = Path(directory) / filename
                 ordinary(path)
                 paths[path.relative_to(root).as_posix()] = path
-    for name in SINGLES:
+    for name in singles:
         path = root / name
         if path.exists() or path.is_symlink():
             for parent in path.parents:
@@ -106,8 +118,14 @@ def inventory(root: Path) -> dict[str, Path]:
                     raise BackupError('Source directory links are refused.')
             ordinary(path)
             paths[name] = path
-    if not set(REQUIRED) <= paths.keys():
+    if not set(required) <= paths.keys():
         raise BackupError('Required cloud configuration is missing; no complete backup was produced.')
+    if scope == 'cloud-config' and (root / 'config/filex-recovery').exists():
+        bundle = root / 'config/filex-recovery/latest.tar.age'
+        receipt = json.loads((root / 'config/filex-recovery/latest.json').read_text())
+        if (receipt.get('scope') != 'filex-config' or time.time() - receipt.get('created_at', 0) > 36 * 3600
+                or not bundle.is_file() or digest(bundle) != receipt.get('sha256')):
+            raise BackupError('Filex recovery bundle is stale or invalid.')
     if (root / 'compose/discovery/compose.yaml').exists():
         required_discovery = {f'config/{app}/{filename}' for app in ('radarr', 'sonarr')
                               for filename in ('config.xml', app + '.db')}
@@ -222,10 +240,22 @@ def sqlite_integrity(path: Path) -> None:
             raise BackupError('A settings database failed its integrity check.')
 
 
-def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture_manifests) -> dict:
-    paths = inventory(root)
-    environment = read_environment(root)
-    idle(environment['SABNZBD_API_KEY'])
+def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture_manifests, scope='cloud-config') -> dict:
+    paths = inventory(root, scope)
+    environment = read_environment(root) if scope == 'cloud-config' else {}
+    def check_idle():
+        if scope == 'cloud-config':
+            idle(environment['SABNZBD_API_KEY'])
+        else:
+            database = root / 'srv/usenet-filex/data/instance.sqlite'
+            try:
+                with closing(sqlite3.connect(database.as_uri() + '?mode=ro', uri=True)) as connection:
+                    active = connection.execute("SELECT count(*) FROM ops_queue WHERE status IS NULL OR status NOT IN ('done','failed','cancelled')").fetchone()[0]
+            except sqlite3.Error as error:
+                raise BackupError('Filex operation database is invalid or unavailable.') from error
+            if active:
+                raise BackupError('Filex has unfinished operations; retry while idle.')
+    check_idle()
     entries, fingerprints, databases = [], {}, []
     with ExitStack() as stack:
         for name, source in paths.items():
@@ -234,7 +264,7 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
             target.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
             with source.open('rb') as stream:
                 is_sqlite = stream.read(16) == SQLITE_HEADER
-            if source.suffix == '.db' and not is_sqlite:
+            if source.suffix in ('.db', '.sqlite', '.sqlite3') and not is_sqlite:
                 raise BackupError('A settings database has an invalid SQLite header.')
             if is_sqlite:
                 connection = stack.enter_context(closing(sqlite3.connect(source.as_uri() + '?mode=ro', uri=True, timeout=5)))
@@ -264,7 +294,7 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
             entries.append({'path': name, 'size': target.stat().st_size, 'sha256': digest(target),
                             'sqlite': is_sqlite, 'source_mode': stat.S_IMODE(info.st_mode),
                             'source_uid': info.st_uid, 'source_gid': info.st_gid})
-        remote = manifests(root, environment['CATALOG_REMOTE'])
+        remote = manifests(root, environment['CATALOG_REMOTE']) if scope == 'cloud-config' else {}
         for name, content in remote.items():
             if not safe_name(name) or not allowed(name):
                 raise BackupError('Remote metadata path was not allowlisted.')
@@ -274,8 +304,9 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
             target.chmod(0o600)
             entries.append({'path': name, 'size': len(content), 'sha256': digest(target),
                             'sqlite': False, 'source_mode': 0o600, 'source_uid': None, 'source_gid': None})
-        idle(environment['SABNZBD_API_KEY'])
-        if paths.keys() != inventory(root).keys() or remote != manifests(root, environment['CATALOG_REMOTE']):
+        check_idle()
+        current_remote = manifests(root, environment['CATALOG_REMOTE']) if scope == 'cloud-config' else {}
+        if paths.keys() != inventory(root, scope).keys() or remote != current_remote:
             raise BackupError('Configuration or catalog metadata changed during capture; retry while idle.')
         for name, before in fingerprints.items():
             info = ordinary(paths[name])
@@ -289,7 +320,7 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
                 raise BackupError('A settings database changed during capture; retry during a quiet interval.')
     if len(entries) > MAX_FILES or sum(entry['size'] for entry in entries) > MAX_BYTES:
         raise BackupError('Combined configuration and metadata exceeds the bounded backup limits.')
-    result = {'schema_version': 1, 'created_at': int(time.time()), 'scope': 'cloud-config',
+    result = {'schema_version': 1, 'created_at': int(time.time()), 'scope': scope,
               'age_version': AGE_VERSION, 'entries': entries}
     (stage / 'MANIFEST.json').write_text(json.dumps(result, sort_keys=True))
     (stage / 'MANIFEST.json').chmod(0o600)
@@ -357,12 +388,14 @@ def extract_verified(tar_path: Path, destination: Path) -> dict:
             if manifest_member.size > 32 * 1024**2:
                 raise BackupError('Archive inventory exceeds the size limit.')
             manifest = json.load(archive.extractfile(manifest_member))
-            if manifest.get('schema_version') != 1 or manifest.get('scope') != 'cloud-config':
+            if manifest.get('schema_version') != 1 or manifest.get('scope') not in ('cloud-config', 'filex-config'):
                 raise BackupError('Unsupported configuration archive schema.')
+            scope = manifest['scope']
+            required = FILEX_REQUIRED if scope == 'filex-config' else REQUIRED
             entries = manifest['entries']
             paths = [entry['path'] for entry in entries]
-            if (len(paths) != len(set(paths)) or not set(REQUIRED) <= set(paths)
-                    or any(not safe_name(name) or not allowed(name) for name in paths)
+            if (len(paths) != len(set(paths)) or not set(required) <= set(paths)
+                    or any(not safe_name(name) or not allowed(name, scope) for name in paths)
                     or set(names) != {'MANIFEST.json', *('payload/' + name for name in paths)}):
                 raise BackupError('Archive does not match its allowlisted inventory.')
             for entry in entries:

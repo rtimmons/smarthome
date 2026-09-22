@@ -52,6 +52,7 @@ This directory contains project-specific documentation for the smarthome reposit
 - [**Security findings**](../usenet-infra/docs/security-findings.md) — Dependency fixes and historical-key limits
 - [**Usenet operations**](../usenet-infra/docs/operations.md) — Operating commands for acquisition and legacy selective NAS copies
 - [**Private file portal**](../usenet-infra/docs/filex.md) — Bounded staging, verified transfers, read-only canonical media and emergency disable
+- [**Filex recovery**](../usenet-infra/docs/filex-recovery.md) — Encrypted portal state, key escrow and restore procedure
 - [**NAS and Plex layout**](../usenet-infra/docs/nas-plex-layout.md) — Media directories, library separation, profile permissions and rollback
 - [**Media workflow review**](../usenet-infra/docs/media-workflow-review.md) — Design rationale and historical proposal; current state is in Native media
 

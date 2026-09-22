@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import copy
 import fcntl
+import hashlib
 import importlib.util
 import json
 import os
@@ -52,10 +53,13 @@ def native_client(client, app):
     return result
 
 
-def preserved(before, after):
+def preserved(before, after, discarded=()):
     # Historical requests are compared by identity even after new jobs exist.
     current = {j['nzo_id']: j for j in after['queue']}
-    return all(current.get(j['nzo_id']) == j for j in before['queue'])
+    original = {j['nzo_id'] for j in before['queue']}
+    if len(discarded) != len(set(discarded)) or not set(discarded) <= original or set(discarded) & current.keys():
+        return False
+    return all(j['nzo_id'] in discarded or current.get(j['nzo_id']) == j for j in before['queue'])
 
 
 def limits_match(misc):
@@ -94,10 +98,20 @@ def inspect(root, api, sab, helper):
         require(helper.command('systemctl', 'show', timer, '--property=ActiveState', '--value') == 'inactive',
                 'legacy_timer_still_active')
     old = json.loads((root / RECEIPT).read_text())
-    require(preserved(old['snapshot'], sab.snapshot()) and helper.state_fingerprints(root) == old['fingerprints'],
+    disposition_path = root / 'state/catalog/native-disposition.json'
+    discarded = []
+    if disposition_path.exists():
+        require(not disposition_path.is_symlink(), 'disposition_receipt_invalid')
+        disposition = json.loads(disposition_path.read_text())
+        require(disposition.get('schema_version') == 1 and disposition.get('status') == 'completed'
+                and disposition.get('baseline_sha256') == hashlib.sha256((root / RECEIPT).read_bytes()).hexdigest(),
+                'disposition_receipt_invalid')
+        discarded = disposition['discarded_queue_ids']
+    require(preserved(old['snapshot'], sab.snapshot(), discarded) and helper.state_fingerprints(root) == old['fingerprints'],
             'historical_holds_or_journals_changed')
     return {'status': 'verified', 'phase': marker['phase'], 'distinct_categories': True,
             'legacy_timers_inactive': True, 'historical_state_preserved': True,
+            'discarded_historical_requests': len(discarded),
             'integrity_policy': marker['integrity_policy'], 'download_limit': '100G'}
 
 

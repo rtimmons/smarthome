@@ -44,9 +44,10 @@ media-002 was verified, automatically indexed in Movies (NAS), and safely
 repeated without recopying. The authenticated Downloads graph, browser reconnect,
 verification and completed states passed live checks. TV publication uses
 `TV Shows/library`, with `.staging` outside Plex's source and the TV gate enabled.
-A real selective TV transfer to NAS remains unverified. Native movie/episode
-imports and source cleanup passed September 20; see the cutover receipt.
-Apple TV/Roku playback and startup privacy are deferred by the user.
+A selected TV transfer, SHA-256 verification, safe repeat and exact-file NAS
+Plex discovery passed September 22. Native movie/episode imports and source
+cleanup passed September 20; see the cutover receipt. The user confirmed both
+Apple TV and Roku playback and restricted privacy on September 22.
 
 ## Access and routine operation
 
@@ -104,7 +105,9 @@ checks do not prove a device starts in the restricted profile; do not browse
 private content while inspecting settings.
 
 [Scheduled encrypted backups](docs/scheduled-backups.md) run on the hosts and
-cover cloud/QNAP/Plex configuration. The deployed NAS helper includes native
+cover cloud/QNAP/Plex configuration. [Filex recovery](docs/filex-recovery.md) adds
+the portal database, configuration, verification receipts and encrypted bootstrap
+key escrow; staging and media remain excluded. The deployed NAS helper includes native
 ownership receipts; [a fresh archive verified the published receipt](recovery/drills/native-receipt-backup-20260913.json).
 The [published clean-clone drill](recovery/drills/20260911T194408Z.json) and
 [checkout restore](docs/checkout-recovery.md) passed at their recorded checkpoints.

@@ -1,5 +1,43 @@
 # Usenet integration end-state and cutover plan
 
+## Remaining-work execution — September 22, 2026
+
+The user authorized all remaining follow-ups and explicitly requested disposal
+of old held downloads. Three exact old zero-progress SAB requests were discarded;
+14 failure records for seven held journals were resolved with a baseline-bound
+disposition receipt. All 44 immutable journals and historical hold evidence remain
+preserved. Recorded payload paths were already absent, so this operation claims
+**zero newly reclaimed payload bytes**. Cloud health now passes.
+
+The selected native TV copy, destination SHA-256 verification, safe repeat and
+exact-file NAS Plex discovery passed. A forced scan of general library 3 was
+needed. The user confirmed playback and restricted privacy on **both Roku and
+Apple TV**; this is user verification, not a separate agent-run codec matrix.
+
+Filex encrypted daily capture and NAS SFTP settings coverage are deployed.
+Independent restores verified 26 current server files/one database, 40 bootstrap
+escrow files (including the operator CA key), and 63 NAS configuration files.
+Plex's separate three-file archive passed byte verification and both databases
+opened; the generic SQLite checker cannot validate Plex's custom tokenizer.
+See [Filex recovery](usenet-infra/docs/filex-recovery.md).
+
+The authorized Seerr movie test selected a 4K release using profile 5 and is in
+verification/post-processing. The initial unavailable test request was removed
+without deleting media; its replacement is the sole new acquisition. The browser
+Plex sign-in did not advance in the embedded browser; user verification in the
+normal browser is pending. Fresh off-host cloud capture waits for post-processing
+to finish. A bounded two-stream capacity exercise is prepared and must wait for
+an idle queue. The Mac certificate-trust prompt was canceled, so local trust
+remains pending; do not bypass the browser warning or silently retry the prompt.
+
+A [replacement-server drill](usenet-infra/docs/replacement-drill-20260922.md)
+is validated and planned in a separate Terraform root. It creates only four
+disposable resources; it awaits the requested USD 1 spending ceiling. No temporary
+server has been created. NAS-loss backup scope (originals plus settings versus
+settings only) also awaits the user's answer. Do not treat either pending answer
+as approval. These explicit dependencies replace the old blanket deferrals below.
+
+
 ## Seerr quality preference — September 22, 2026
 
 The user requested 4K. Seerr's movie and TV defaults now use the existing
@@ -167,13 +205,16 @@ dated checkpoints below.
 | Status | Follow-up | Completion evidence |
 | --- | --- | --- |
 | Passed September 22 | Apply the three reviewed pinned application updates. | Exact images deployed; application health, native ownership, historical preservation, private access checks and post-update isolated restore pass. See the [receipt](usenet-infra/recovery/drills/app-maintenance-20260922.json). |
-| Separate disposition | Resolve the identities and intended disposition of the three paused requests and seven historical held journals. | Match exact private identities and record per-item decisions. Preserve records and payloads until that review; no bulk release, deletion, retry or legacy replay. The counts describe different populations and must not be added together. |
-| Passed; refreshed September 22 | Capture and independently restore the accepted native/storage state into an isolated directory. | The [post-update receipt](usenet-infra/recovery/drills/app-maintenance-20260922.json) verifies 726 files, four databases, 59 live hash matches and all 44 journals. Mount units remain unchanged from the September 21 reconstruction check. Preserve local private overrides separately; replacement-host startup is not claimed. |
-| Selection pending | Verify one selected TV-series NAS copy and a safe repeat. | Await the requested selection of the already imported acceptance series, then verify destination SHA-256 and atomic publication outside staging, safe repeat, and exact-file NAS Plex discovery. No new acquisition is needed. |
-| Optional operator choice | Trust the private Filex CA on the operator device. | User/device trust choice; strict private-CA HTTPS already passes. |
-| Separate backup scope | Add Filex configuration/state recovery coverage. | Define included credentials, database and receipts, then verify encrypted capture and isolated restore. Existing cloud backup coverage does not include this portal. |
-| User-deferred | Apple TV/Roku playback and startup privacy. | Real-device playback, seeking, codec/audio/subtitle checks and restricted-profile cold-start/home/search behavior. Indexing does not establish playback. |
-| Outside this closure | Broader concurrency/arbitrary archive expansion, whole-machine replacement and NAS-loss protection. | Separate scoped capacity or recovery drills. Retain the current queue/size limits until broader behavior is demonstrated. |
+| Passed September 22 | Discard the three old paused requests and reconcile seven held journals. | Exact identities recorded privately; 14 failure records resolved, all 44 journals preserved and cloud health passes. No payload bytes were reclaimed because recorded payloads were already absent. |
+| Passed; refresh in progress | Independently restore accepted native/storage state. | Earlier checkpoints pass. A new outer cloud archive including Filex and disposition state waits for the live Seerr request to finish. |
+| Passed September 22 | Selected TV-series NAS copy and safe repeat. | Destination SHA-256 verification, unchanged owned copy on repeat and exact-file general NAS Plex discovery pass. |
+| User action pending | Trust the Filex CA on the operator Mac. | macOS reported cancellation of the trust prompt; strict private-CA HTTPS already passes. |
+| Deployed; outer checkpoint pending | Filex configuration/state recovery. | Daily encrypted snapshot, bootstrap-key escrow and NAS SFTP configuration capture deployed; isolated restores pass. See [Filex recovery](usenet-infra/docs/filex-recovery.md). |
+| User verified September 22 | Apple TV/Roku playback and restricted privacy. | User explicitly confirmed both devices; no agent-run codec/subtitle matrix is claimed. |
+| In progress | Seerr request through download/import and browser sign-in. | A real 4K request is verifying; interactive browser sign-in awaits user confirmation. |
+| Prepared, waiting for idle | Bounded concurrent repair/expansion capacity. | Two 50 GiB synthetic streams with retained allocated inputs and free-space guards; do not run alongside active post-processing. Arbitrary expansion cannot be proven safe by a finite test. |
+| Prepared, spending decision pending | Replacement-server startup. | Separate create-only four-resource plan, reviewed scope and cleanup procedure; proposed USD 1 ceiling. |
+| Scope answer pending | NAS-loss protection. | Await originals-plus-settings versus settings-only choice; private originals have not been read or uploaded. |
 
 ## Completed — native Arr cutover, September 20, 2026
 
