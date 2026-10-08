@@ -11,8 +11,12 @@ variable "admin_ssh_cidrs" {
     error_message = "Provide trusted source CIDRs; global SSH ingress is forbidden."
   }
 }
+variable "bootstrap_file" {
+  type        = string
+  description = "Private cloud-init document with a pre-pinned disposable SSH host identity."
+}
 locals {
-  name   = "codex-recovery-drill-20260922"
+  name   = "codex-recovery-drill-20261008"
   labels = { purpose = "disposable-recovery-drill", managed-by = "terraform" }
 }
 resource "hcloud_firewall" "drill" {
@@ -31,6 +35,7 @@ resource "hcloud_server" "drill" {
   image        = "ubuntu-26.04"
   location     = "hel1"
   ssh_keys     = [var.admin_ssh_key_id]
+  user_data    = sensitive(file(var.bootstrap_file))
   firewall_ids = [hcloud_firewall.drill.id]
   labels       = local.labels
   public_net {

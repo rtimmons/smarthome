@@ -95,7 +95,7 @@ def server_config(config):
     # JSON is a YAML subset, avoiding YAML interpolation of passwords.
     return {'listen': '127.0.0.1:5212', 'data_dir': '/data', 'public_url': config['public_url'],
             'auth': {'drivers': ['local']}, 'plugins_disabled': True,
-            'cors': {'allowed_origins': [config['public_url'].rstrip('/')]},
+            'cors': {'allowed_origins': [config['public_url'].rstrip('/'), 'http://127.0.0.1:15213']},
             'thumbs': {'enabled': False}, 'search': {'enabled': True},
             'queue': {'enabled': True, 'workers': 1},
             'seed': {'admin_email': config['admin']['email'],

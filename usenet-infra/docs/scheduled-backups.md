@@ -1,5 +1,18 @@
 # Scheduled configuration backups
 
+**October 8: recurring off-host NAS settings coverage is deployed and verified.**
+Final `cloud-20261008T192037Z.tar.age` also passed off-host readback and
+independent restore: 785 files, five databases, 44 journals and both nested
+Filex bundles, including the corrected operator login escrow.
+The user selected settings only. The scheduled NAS job now uploads encrypted
+QNAP and Plex settings to a separate Storage Box subaccount confined to
+`catalog/.backups/nas-settings`. Every upload is downloaded again and its
+SHA-256 compared before success is recorded. Independent restores passed for
+66 QNAP settings files and three Plex files; both Plex database snapshots opened.
+NAS originals, artwork and installation binaries are excluded by choice.
+This supersedes earlier pending-scope and one-time-only statements below.
+
+
 **September 22 final closure checkpoint.**
 `cloud-20260922T215403Z.tar.age` passed off-host ciphertext readback and
 independent restore: 752 files, five application databases and all 44 journals.
@@ -55,18 +68,18 @@ existing backup coverage. See the [audit receipt](../recovery/drills/health-audi
 and [remaining work](../../plan.md#remaining-work-and-explicit-deferrals).
 
 Enabled September 11, 2026. Schedules run on the cloud host and NAS; deleting or
-turning off the Mac does not stop them. NAS-loss protection is explicitly deferred.
+turning off the Mac does not stop them. NAS-loss coverage is settings only.
 These backups exclude media, unfinished download payloads, Plex artwork, and the
 Plex installation binaries. Media remains on the canonical Storage Box.
 
 | Host | Schedule | Protected state | Destination |
 | --- | --- | --- | --- |
 | Cloud | systemd `usenet-backup.timer`, hourly retry; skip when a success is less than 23 hours old | SAB, Prowlarr, Radarr, Sonarr, catalog state, deployment scripts/configuration | Encrypted locally, copied to `catalog/.backups/cloud` on the existing Storage Box, independently downloaded and compared |
-| NAS | `usenet-backups` container cron at minute 7 each hour; same daily freshness gate | QNAP Usenet configuration and Plex preferences plus two databases | `/share/Usenet/Backups/automatic` on the NAS |
+| NAS | `usenet-backups` container cron at minute 7 each hour; same daily freshness gate | QNAP Usenet configuration and Plex preferences plus two databases | `/share/Usenet/Backups/automatic` plus independently verified encrypted off-host copies |
 | NAS | Part of the NAS job | Already encrypted cloud archives | Pulled with the existing server-enforced read-only account into `automatic/cloud` and checked against SHA-256 receipts |
 
-The recurring NAS schedule does **not upload** Plex and QNAP configuration to
-the Storage Box; the September 22 one-time checkpoint above is separate. Encryption
+The recurring NAS schedule uploads Plex and QNAP configuration to the confined
+backup account. The canonical media reader remains server-enforced read-only. Encryption
 uses the existing public `qnap-admin` or `cloud-admin` recipients. Their private
 keys are already recoverable from the original SOPS vault. No private recovery
 master or administrator key is installed on either host for the schedule.
@@ -80,7 +93,7 @@ restarting Plex. Artwork can be regenerated; this is not a full Plex package cop
 
 NAS/local retention keeps at least seven generations and removes only this
 scheduler's checksum-matching archives older than 90 days. Original master
-snapshots are never pruned. Storage Box cloud ciphertext is currently retained
+snapshots are never pruned. Storage Box cloud and NAS settings ciphertext is currently retained
 indefinitely; monitor its small daily growth. NAS snapshot capture retries short catalog refresh conflicts for up to one minute
 without interrupting transfers; longer activity defers until the next hour.
 The NAS status health check fails
@@ -201,3 +214,29 @@ media identities and raw manifests private. Record only neutral scope, timestamp
 counts and integrity results in the public receipt. Ciphertext readback alone does
 not prove decryption or inclusion of the new files. Do not restore this inspection
 copy over running state, or replace original bound snapshots.
+
+## Confined NAS backup account recovery
+
+The separate `terraform/nas-backup` root manages only the backup subaccount,
+with `prevent_destroy`; never use the canonical storage root to recreate it.
+Its local state and private inputs are ignored. Existing account ID 331416 is
+recoverable by importing it into this root if local state is lost; inspect the
+provider account first, rather than creating a duplicate. The account is
+`u666991-sub2` at `u666991-sub2.your-storagebox.de`, SSH port 23.
+
+The scheduler reads `/source/usenet/config/backup/offhost/rclone.conf`, dedicated
+`id_ed25519` and pinned `known_hosts` from its read-only source mount. These
+three mode-0600 files are included in the encrypted QNAP settings archive.
+The local bootstrap copies live under ignored `secrets/nas-backup`. Recovery
+requires the existing administrator decryption identity, then those restored
+connection files; no administrator private key is installed on the NAS.
+
+Preserve `qnap_backup_offhost_required: true` in private inventory and redeploy
+only `ansible/qnap-backups.yml` when needed. It sets `NAS_OFFHOST_REQUIRED=true`;
+missing connection settings or a failed upload/readback makes the job fail.
+The freshness check requires two remotely verified settings archives.
+The backup account can list only its confined backup directory, and a parent
+path probe to the canonical library was refused. It cannot replace the separate
+read-only media credential. Remote retention is currently indefinite; local
+90-day/minimum-seven retention remains unchanged. This is recoverable settings
+coverage, not a tested replacement NAS boot or protection of private originals.

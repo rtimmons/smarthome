@@ -1,19 +1,26 @@
 # Private file-management portal
 
-September 22: encrypted Filex configuration/database/receipt capture and
-operator bootstrap-key escrow are deployed and independently restore-tested.
-See [Filex recovery](filex-recovery.md) for the exact scope and restore steps.
-Staging and media remain excluded. The user prohibits host trust-policy changes;
-CA installation is not pending approval. Strict explicit-CA HTTPS checks pass,
-but warning-free browser access under the existing policy remains unverified.
-This supersedes older statements below that configuration backup is deferred.
+October 8: the user verified sign-in and browsing at
+**http://127.0.0.1:15213/** through the encrypted, host-pinned SSH tunnel.
+Run `just usenet-filex-ui` from the repository root and leave that command running
+while using Filex. Restart it after closing the terminal or restarting the Mac.
+The link works on the computer running the tunnel. No domain, certificate
+installation or change to host trust policy is needed.
 
+The saved operator login is the ignored mode-0600
+`secrets/filex/operator-login.txt`. A truncated local password was corrected from
+the existing server credential; the account password was not rotated. Encrypted
+bootstrap escrow was refreshed. See [Filex recovery](filex-recovery.md).
+Staging and media remain excluded from configuration backups.
 
 ## Deployment and scope
 
-Filex runs separately from acquisition at **https://10.77.0.1:5213**. The cloud
-listener binds only the existing private VPN address; its backend listens on
-loopback. The NAS endpoint is reachable from the cloud only through the existing
+Filex runs separately from acquisition. The browser tunnel forwards local port
+15213 to the restricted cloud proxy on loopback port 5214. This HTTP endpoint
+uses the same operator restrictions as private HTTPS and rejects foreign browser
+origins. The network connection between computers is encrypted by SSH.
+The diagnostic HTTPS listener remains at **https://10.77.0.1:5213**, bound only
+to the private VPN address; the backend also listens on loopback. The NAS endpoint is reachable from the cloud only through the existing
 IPsec path. Neither service is part of normal acquisition startup.
 
 | Portal root | Access | Host boundary |

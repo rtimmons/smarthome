@@ -25,6 +25,7 @@ HERE = Path(__file__).resolve().parent
 AGE = os.environ.get('BACKUP_AGE', '/opt/usenet/bin/age')
 OUTPUT = Path(os.environ.get('BACKUP_OUTPUT', '/backups'))
 RETENTION_DAYS = 90
+NAS_OFFHOST_CONFIG = Path('/source/usenet/config/backup/offhost/rclone.conf')
 PLEX_FILES = ('Preferences.xml', 'Plug-in Support/Databases/com.plexapp.plugins.library.db',
               'Plug-in Support/Databases/com.plexapp.plugins.library.blobs.db')
 
@@ -200,10 +201,42 @@ def nas(stamp):
         archive.chmod(0o640)
         if archive.is_symlink() or digest(archive) != value['sha256']:
             raise RuntimeError('NAS cloud replica verification failed')
+    replicate_nas_settings(receipts)
     for scope in ('qnap', 'plex'):
         prune_local(scope)
     prune_local('cloud', mirror)
     return receipts
+
+
+def replicate_nas_settings(receipts):
+    """Upload only this capture's encrypted settings through a confined account."""
+    config = NAS_OFFHOST_CONFIG
+    if not config.exists():
+        if os.environ.get('NAS_OFFHOST_REQUIRED') == 'true':
+            raise RuntimeError('required offhost backup configuration missing')
+        return
+    if config.is_symlink() or config.stat().st_mode & 0o077:
+        raise RuntimeError('unsafe offhost backup configuration')
+    base = ['rclone', '--config', str(config), '--sftp-connections', '3',
+            '--transfers', '1', '--checkers', '1']
+    for receipt in receipts:
+        name = receipt['file']
+        if not re.fullmatch(r'(qnap|plex)-\d{8}T\d{6}Z\.tar\.age', name):
+            raise RuntimeError('unexpected NAS backup filename')
+        source = OUTPUT / name
+        if source.is_symlink() or not source.is_file() or digest(source) != receipt['sha256']:
+            raise RuntimeError('NAS backup ciphertext mismatch')
+        remote = 'nasbackup:archives/' + name
+        run([*base, 'copyto', str(source), remote, '--immutable'])
+        with tempfile.TemporaryDirectory(prefix='nas-readback-', dir=OUTPUT) as directory:
+            readback = Path(directory) / name
+            run([*base, 'copyto', remote, str(readback)])
+            if digest(readback) != receipt['sha256']:
+                raise RuntimeError('NAS offhost readback mismatch')
+        receipt['remote_ciphertext_verified'] = True
+        receipt_file = source.with_suffix('.json')
+        atomic_json(receipt_file, receipt)
+        run([*base, 'copyto', str(receipt_file), 'nasbackup:archives/' + receipt_file.name, '--immutable'])
 
 
 def main():
@@ -226,6 +259,9 @@ def main():
     last_success = previous.get('last_success', 0)
     if args.check:
         healthy = previous.get('status') == 'ok' and time.time() - last_success < 36 * 3600
+        if args.host == 'nas' and os.environ.get('NAS_OFFHOST_REQUIRED') == 'true':
+            healthy = healthy and len(previous.get('archives', [])) == 2 and all(
+                r.get('remote_ciphertext_verified') is True for r in previous['archives'])
         print(json.dumps({'host': args.host, 'healthy': healthy, 'last_success': last_success}))
         return 0 if healthy else 1
     if not args.force and time.time() - last_success < 23 * 3600:

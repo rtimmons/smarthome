@@ -44,6 +44,10 @@ class FakeAPI:
 
 
 class FilexPolicyTests(unittest.TestCase):
+    def test_browser_tunnel_has_only_fixed_loopback_origin(self):
+        self.assertEqual(portal.server_config(fixture())['cors']['allowed_origins'],
+                         ['https://10.77.0.1:5213', 'http://127.0.0.1:15213'])
+
     def test_only_reviewed_image_and_https_origin(self):
         self.assertIsNotNone(portal.validate(fixture()))
         for field, value in [('image_digest', 'sha256:' + 'a' * 64),

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-08",
+  "status": "approved_plan_complete",
+  "user_choices": {
+    "temporary_drill_ceiling_usd": 1,
+    "nas_backup_scope": "settings_only",
+    "host_trust_policy_changes": false,
+    "seerr_normal_browser_sign_in_and_browsing": "user_confirmed",
+    "filex_tunnel_sign_in_and_browsing": "user_confirmed"
+  },
+  "filex": {
+    "browser_url": "http://127.0.0.1:15213/",
+    "transport": "loopback_http_over_pinned_ssh",
+    "shared_operator_proxy_restrictions": true,
+    "foreign_origin_refused": true,
+    "anonymous_listing_refused": true,
+    "admin_and_archive_extract_refused": true,
+    "existing_password_not_rotated": true,
+    "truncated_local_login_corrected": true,
+    "corrected_login_matches_final_encrypted_escrow": true,
+    "server_bundle_files": 26,
+    "bootstrap_bundle_files": 40,
+    "host_trust_policy_unchanged": true
+  },
+  "nas_settings_backup": {
+    "recurring_offhost_upload_required": true,
+    "dedicated_confined_subaccount": true,
+    "canonical_media_reader_unchanged": true,
+    "canonical_parent_path_access_refused": true,
+    "offhost_archives_readback_verified": 2,
+    "qnap_settings_files_independently_restored": 66,
+    "plex_files_independently_restored": 3,
+    "plex_databases_opened": 2,
+    "generic_plex_integrity_check": "unsupported_custom_tokenizer",
+    "backup_connection_files_in_encrypted_archive": true,
+    "remote_retention": "indefinite",
+    "original_media_artwork_and_binaries_excluded": true,
+    "whole_nas_boot_test": false
+  },
+  "replacement_drill": {
+    "restored_archive": "cloud-20261008T190549Z.tar.age",
+    "archive_files": 785,
+    "application_databases": 5,
+    "authenticated_applications": [
+      "sabnzbd",
+      "prowlarr",
+      "radarr",
+      "sonarr",
+      "seerr",
+      "filex"
+    ],
+    "new_boot_verified": true,
+    "storage_loss_stops_all_apps": true,
+    "missing_storage_start_refused": true,
+    "underlying_mountpoint_mode": "0000",
+    "historical_journals_byte_identical": 44,
+    "retired_worker_conditions_verified": 3,
+    "older_publisher_never_started": true,
+    "egress_blocked_before_sensitive_restore": true,
+    "sab_paused_empty_internal_only_network": true,
+    "canonical_library": "empty_read_only_fixture",
+    "nas_vpn_and_live_acquisition": "excluded",
+    "canonical_writer_key": "excluded",
+    "filex_https_explicit_ca_verified": true,
+    "temporary_resources_created": 4,
+    "temporary_resources_destroyed": 4,
+    "provider_verified_absence": {
+      "servers": true,
+      "volumes": true,
+      "firewalls": true,
+      "primary_ips": true
+    },
+    "paid_window_seconds": 1121,
+    "estimated_cost_usd_under": 0.15,
+    "actual_invoice_not_yet_available": true,
+    "budget_deadline_watchdog": true
+  },
+  "final_cloud_checkpoint": {
+    "bytes": 66228212,
+    "created_at": 1791487250,
+    "file": "cloud-20261008T192037Z.tar.age",
+    "files": 785,
+    "remote_ciphertext_verified": true,
+    "scope": "cloud-config",
+    "sha256": "fdebb70a73394f9f16951ff802e4ad36c7529c9bf1a5a2a51e29e5ef15c0ed73",
+    "independently_restored_files": 785,
+    "sqlite_databases": 5,
+    "historical_journals": 44,
+    "both_nested_filex_bundles_independently_restored": true
+  },
+  "production_checks": {
+    "cloud_health": "passed",
+    "nas_health": "passed",
+    "filex_health": "passed",
+    "seerr_policy_and_discovery": "passed",
+    "nas_backup_freshness": "passed",
+    "catalog_failures": 0,
+    "historical_holds_retained": 37,
+    "discovery_health": "passed",
+    "native_ownership": "passed",
+    "wiki_isolated_deployment": "passed"
+  },
+  "validation": {
+    "test_cases": 712,
+    "optional_skips": 9,
+    "test_failures": 0,
+    "syntax_checks": "passed",
+    "both_terraform_roots": "valid",
+    "current_source_secret_scan": "passed",
+    "full_history_secret_findings": "two_preexisting_RSA_keys"
+  },
+  "limits": [
+    "No live provider acquisition or production canonical writes during replacement drill",
+    "No NAS/VPN integration or whole-NAS/Plex replacement boot",
+    "Settings-only NAS coverage deliberately excludes original media",
+    "No unlimited capacity or codec guarantee",
+    "No merge, push or PR"
+  ]
+}

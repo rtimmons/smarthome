@@ -61,6 +61,7 @@
         printf '%s\n' '7 * * * * /usr/local/bin/python3 /opt/usenet/scripts/scheduled-backup.py nas' > /share/Container/usenet/config/backup/crontabs/root
         chmod 0600 /share/Container/usenet/config/backup/crontabs/root
         printf 'QNAP_BACKUP_ROOT=%s\nQNAP_PLEX_ROOT=%s\n' {{ qnap_backup_root | quote }} {{ qnap_plex_root | quote }} > /share/Container/usenet/config/backup/paths.env
+        printf 'NAS_OFFHOST_REQUIRED=%s\n' {{ (qnap_backup_offhost_required | default(false) | bool | ternary("true", "false")) | quote }} >> /share/Container/usenet/config/backup/paths.env
         qnap_package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
         export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
         cd /share/Container/usenet/compose/qnap

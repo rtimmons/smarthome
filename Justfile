@@ -847,3 +847,8 @@ alias ls := addons
 [group: 'usenet']
 usenet-configure-publishing:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-publishing
+
+# Open Filex through a loopback-only encrypted SSH tunnel.
+[group: 'usenet']
+usenet-filex-ui:
+	just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-ui

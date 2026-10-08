@@ -128,8 +128,8 @@
           <a class="service-link" href="http://192.168.1.66:1337/">
             <span class="service-link__mark">NAS</span><span><strong>NAS copies</strong><small>Select local copies and follow transfers</small></span><span aria-hidden="true">↗</span>
           </a>
-          <a class="service-link" href="https://10.77.0.1:5213/">
-            <span class="service-link__mark">FX</span><span><strong>Filex</strong><small>Browse files and transfer between staging areas</small></span><span aria-hidden="true">↗</span>
+          <a class="service-link" href="http://127.0.0.1:15213/">
+            <span class="service-link__mark">FX</span><span><strong>Filex</strong><small>Browse staging files · SSH tunnel required</small></span><span aria-hidden="true">↗</span>
           </a>
           <a class="service-link" href="http://192.168.1.66:32400/web">
             <span class="service-link__mark">PX</span><span><strong>Plex</strong><small>Choose a NAS or Remote library</small></span><span aria-hidden="true">↗</span>
@@ -188,7 +188,7 @@
             <p class="workflow-card__label">Manage staging files</p>
             <h3>Use Filex</h3>
             <ol>
-              <li>Open Filex with the operator login. Host trust settings must remain unchanged. If a certificate warning appears, stop; browser access needs a certificate accepted under the existing policy.</li>
+              <li>Start <code>just usenet-filex-ui</code> from the smarthome folder on this computer and keep it running. Open Filex with the saved operator login. The SSH tunnel encrypts the connection; no certificate installation is needed.</li>
               <li>Browse or download files. Copy or move between <strong>Download staging</strong> and <strong>NAS staging</strong>; copy from <strong>Storage Box</strong> into either staging area.</li>
               <li>Wait for the transfer's verification and completed state. Transfers continue if the browser disconnects.</li>
               <li>Moves and deletes retain staging sources in recoverable trash. Use Restore to undo; permanent purge is disabled.</li>
@@ -230,14 +230,16 @@
               <li>Verified selective NAS movie and TV copying, safe repeat and Plex discovery</li>
               <li>Separate Plex NAS and Remote libraries</li>
               <li>Apple TV and Roku playback and restricted privacy confirmed by the user</li>
-              <li>Scheduled encrypted configuration backups</li>
+              <li>Scheduled encrypted configuration backups, including verified off-host NAS/Plex settings</li>
+              <li>Seerr and Filex browser sign-in and browsing confirmed by the user</li>
+              <li>Isolated replacement-server startup, reboot and storage-loss guards; temporary resources removed</li>
             </ul>
           </article>
           <article class="truth-card truth-card--open">
-            <p class="truth-card__label">Still needs acceptance</p>
+            <p class="truth-card__label">Scope limits</p>
             <ul>
-              <li>Replacement-host startup and whole-NAS recovery</li>
-              <li>Interactive Seerr browser sign-in and Filex browser access under the unchanged host trust policy</li>
+              <li>NAS backups cover settings only by choice; original media and whole-NAS recovery are excluded</li>
+              <li>The replacement drill used empty read-only library fixtures; live provider, NAS and VPN integration were excluded</li>
               <li>Archive expansion beyond the measured limits; current queue and reserve controls remain in place</li>
             </ul>
           </article>

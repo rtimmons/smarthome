@@ -1,11 +1,28 @@
 # Current validation and acceptance
 
-Updated September 22, 2026 (UTC). This ledger records accepted behavior and its
+Updated October 8, 2026 (UTC). This ledger records accepted behavior and its
 limits. The [current plan](../../plan.md) owns
 [remaining work and explicit deferrals](../../plan.md#remaining-work-and-explicit-deferrals). Historical
 implementation narratives remain in Git and dated receipts; they are not current
 operating instructions. Private bound snapshots remain unchanged; public receipts
 were redacted during the media-privacy rewrite and use neutral aliases.
+
+## October 8 plan closure
+
+The [closure receipt](../recovery/drills/closure-20261008.json) records user-confirmed
+Filex/Seerr browsing, recurring off-host NAS settings recovery and the isolated
+replacement-server reboot drill. Authenticated APIs, paused empty acquisition,
+read-only fixture mounts, missing-storage refusal, retired-worker conditions and
+44 byte-identical historical journals passed. All temporary billed resources
+were removed and checked absent. Production canonical writes, provider delivery,
+NAS/VPN integration and whole-NAS replacement were excluded from the drill.
+
+The final cloud archive independently restored 785 files, five databases and
+both Filex bundles. NAS settings restored 66 files plus three Plex files; both
+Plex databases opened. The user chose to exclude original media. Filex browsing
+uses pinned encrypted SSH without modifying host trust policy. Implementation
+validation ran 712 cases with nine optional skips and no test failures; full
+history scanning retains the two known historical RSA findings.
 
 ## September 22 approved application maintenance
 

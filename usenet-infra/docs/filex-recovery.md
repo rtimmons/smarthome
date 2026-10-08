@@ -1,5 +1,13 @@
 # Filex encrypted recovery
 
+October 8: the loopback browser tunnel and corrected operator login are included
+in refreshed recovery material. The local credential file had been truncated;
+it now matches the existing live credential. Bootstrap escrow was re-encrypted
+and independently restored without rotating keys or changing the original
+SOPS snapshot. Browser sign-in and browsing were confirmed by the user.
+Use [the tunnel instructions](filex.md) after restoring the current proxy policy.
+
+
 Filex recovery capture is deployed as of September 22, 2026. Run
 `just configure-filex-backups` inside `usenet-infra` to install the bounded
 capture helper and timer. It does not restart Filex or media services.

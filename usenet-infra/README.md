@@ -61,7 +61,7 @@ Apple TV and Roku playback and restricted privacy on September 22.
 | SAB | `http://10.77.0.1:18080/` |
 | NAS copy dashboard | `http://192.168.1.66:1337/` |
 | Seerr discovery and requests | `http://10.77.0.1:15055/` (Plex sign-in) |
-| Filex staging portal | `https://10.77.0.1:5213/` |
+| Filex staging portal | `http://127.0.0.1:15213/` with `just usenet-filex-ui` running |
 | Usenet field guide | `http://192.168.1.66:8090/` |
 | Plex | `http://192.168.1.66:32400/web` |
 

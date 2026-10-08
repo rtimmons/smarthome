@@ -2,9 +2,7 @@
   admin off
   auto_https off
 }
-https://10.77.0.1:5213 {
-  bind 10.77.0.1
-  tls /etc/filex-tls/server.crt /etc/filex-tls/server.key
+(operator_policy) {
   @blocked path /api/admin* /api/ai* /api/tokens* /api/files/archive/extract /api/files/archive/add /api/files/share* /api/files/permissions* /api/files/onlyoffice* /dav* /s3* /mcp* /plugins* /s/* /drop/*
   respond @blocked "Unavailable on the private operator portal" 403
   @unreviewedWrite {
@@ -18,4 +16,19 @@ https://10.77.0.1:5213 {
     -Server
   }
   reverse_proxy 127.0.0.1:5212
+}
+https://10.77.0.1:5213 {
+  bind 10.77.0.1
+  tls /etc/filex-tls/server.crt /etc/filex-tls/server.key
+  import operator_policy
+}
+# Loopback only; reached through the dedicated, host-pinned SSH tunnel.
+http://127.0.0.1:5214 {
+  bind 127.0.0.1
+  @foreignOrigin {
+    header Origin *
+    not header Origin http://127.0.0.1:15213
+  }
+  respond @foreignOrigin "Origin refused" 403
+  import operator_policy
 }

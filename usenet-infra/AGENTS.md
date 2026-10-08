@@ -65,8 +65,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   secrets/state milestone passed. Do not regenerate keys or repeat purchases/setup.
   Whole-machine replacement drills remain separate. Scheduled backups allow an
   idle or fully paused SAB queue but reject post-processing. Never delete/resume
-  jobs just to satisfy backup checks. NAS-loss protection awaits the user’s backup
-  scope choice; one-time settings escrow does not establish originals coverage.
+  jobs just to satisfy backup checks. NAS settings-only coverage is deployed with required recurring off-host readback.
+  Original media is excluded by the user’s choice; never infer originals coverage.
 
 - Checkout-local preservation and independent restore passed at the checkpoint
   recorded in the recovery ledger. Follow
@@ -92,6 +92,25 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   Record this as user verification, not an agent-run codec/subtitle matrix or proof for every future client.
 
 ## Current operations and closure
+
+- **October 8: approved plan complete.** This checkpoint supersedes older open
+  items below. User confirmed Seerr sign-in/browsing and Filex sign-in/browsing.
+  Filex uses `just usenet-filex-ui` and `http://127.0.0.1:15213/` through a pinned
+  encrypted SSH tunnel; keep it running while browsing. No CA installation, host
+  trust-policy changes, TLS bypass or domain is needed. Corrected local operator
+  login and refreshed escrow match the existing live account. Recurring NAS
+  settings-only uploads use a separate confined Storage Box account; preserve
+  `qnap_backup_offhost_required: true` in private inventory and the backed-up
+  connection files. Canonical media access stays read-only. Independent restore
+  passed for 66 QNAP files and three Plex files; original media is excluded.
+  The approved replacement drill passed authenticated APIs, reboot, storage-loss
+  protections and retired-worker guards with empty read-only fixture storage.
+  Temporary server, volume, firewall and IPv4 allocation were deleted and checked
+  absent. No real provider acquisition, NAS/VPN integration or canonical writes
+  were exercised. Final `cloud-20261008T192037Z.tar.age` independently restores
+  785 files, five databases, 44 journals and both nested Filex bundles. See the
+  [closure receipt](recovery/drills/closure-20261008.json) and current plan.
+
 
 - **September 22 follow-up checkpoint verified.** User-authorized disposition removed the
   three old zero-progress requests and resolved 14 failure records for seven

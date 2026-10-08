@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+set -euo pipefail
+: "${CLOUD_SSH_TARGET:?Set CLOUD_SSH_TARGET in usenet-infra/.env}"
+: "${CLOUD_SSH_KEY:?Set the dedicated cloud administrator key}"
+: "${CLOUD_SSH_KNOWN_HOSTS:?Set the verified cloud host-key file}"
+echo 'Filex: http://127.0.0.1:15213 — encrypted SSH transport; keep this terminal open.'
+exec ssh -N -T -o BatchMode=yes -o IdentitiesOnly=yes -o IdentityAgent=none \
+  -o StrictHostKeyChecking=yes -o ExitOnForwardFailure=yes \
+  -o ServerAliveInterval=30 -o ServerAliveCountMax=3 \
+  -i "${CLOUD_SSH_KEY}" -o "UserKnownHostsFile=${CLOUD_SSH_KNOWN_HOSTS}" \
+  -L 127.0.0.1:15213:127.0.0.1:5214 "${CLOUD_SSH_TARGET}"
