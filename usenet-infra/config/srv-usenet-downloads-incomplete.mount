@@ -1,11 +1,11 @@
 [Unit]
-Description=Keep SAB's existing download path on private remote staging
-Requires=srv-usenet-downloads-complete-remote.mount
-BindsTo=srv-usenet-downloads-complete-remote.mount
-After=srv-usenet-downloads-complete-remote.mount
+Description=Bind the dedicated repair volume at the SAB incomplete path
+Requires=srv-usenet-downloads-complete-remote.mount srv-usenet-repair.mount
+BindsTo=srv-usenet-downloads-complete-remote.mount srv-usenet-repair.mount
+After=srv-usenet-downloads-complete-remote.mount srv-usenet-repair.mount
 
 [Mount]
-What=/srv/usenet/downloads/complete/remote/incomplete
+What=/srv/usenet/repair/incomplete
 Where=/srv/usenet/downloads/incomplete
 Type=none
 Options=bind,_netdev

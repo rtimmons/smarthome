@@ -17,7 +17,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from catalogctl import CatalogError, Settings, read_json_records
+from catalogctl import CatalogError, Settings, read_json_records, operation_records
 
 
 @dataclass
@@ -186,84 +186,8 @@ def failure_check() -> Check:
     return Check("catalog_failures", "ok", "none")
 
 
-def cart_import_check() -> Check | None:
-    root = Path(os.environ.get('CATALOG_STATE_ROOT', '/data/state')) / 'cart-import'
-    if not any(p.exists() or p.is_symlink() for p in (root / 'armed.json', root / 'status.json')):
-        return None  # Existing installations remain optional until explicitly armed.
-    try:
-        if root.is_symlink() or (root / 'armed.json').is_symlink() or (root / 'status.json').is_symlink():
-            raise ValueError('invalid receipt')
-        if not (root / 'armed.json').is_file():
-            raise ValueError('missing activation')
-        payload = json.loads((root / 'status.json').read_text())
-        state = payload['status']
-        updated = payload['updated_at']
-        if state not in {'idle', 'processing', 'held', 'failed'} or isinstance(updated, bool):
-            raise ValueError('invalid state')
-        age = time.time() - float(updated)
-        counts = [payload[k] for k in ('completed', 'held', 'errors')]
-        if any(type(v) is not int or v < 0 for v in counts) or not math.isfinite(age) or age < -30:
-            raise ValueError('invalid counts or clock')
-        if state == 'processing':
-            pid = payload.get('pid')
-            if type(pid) is not int or pid < 1:
-                raise ValueError('invalid worker')
-            try:
-                os.kill(pid, 0)
-            except PermissionError:
-                pass  # The local process exists under another authorized identity.
-            if age > 6 * 3600:
-                return Check('cart_import', 'fail', 'cart import worker exceeded its six-hour limit')
-        elif age > 300:
-            return Check('cart_import', 'fail', 'cart import heartbeat is stale')
-        if state == 'failed' or counts[2]:
-            return Check('cart_import', 'fail', f'{counts[2]} cart import error(s); inspect cart import status')
-        if state == 'held' or counts[1]:
-            return Check('cart_import', 'warn', f'{counts[1]} cart item(s) held for review; source retained')
-        return Check('cart_import', 'ok', f'{state}; {counts[0]} completed cart import(s)')
-    except (OSError, ValueError, TypeError, KeyError, AttributeError):
-        return Check('cart_import', 'fail', 'cart import activation or worker status could not be verified')
-
-
-def capacity_admission_check() -> Check | None:
-    path = Path(os.environ.get('CATALOG_STATE_ROOT', '/data/state')) / 'capacity-admission/state.json'
-    if not path.exists() and not path.is_symlink():
-        return None
-    try:
-        if path.is_symlink() or not path.is_file():
-            raise ValueError('invalid state path')
-        payload = json.loads(path.read_text(encoding='utf-8'))
-        if payload.get('schema_version') != 1 or not isinstance(payload.get('owned'), list):
-            raise ValueError('invalid state')
-        held = payload.get('held', [])
-        retries = payload.get('failure_retries', {})
-        admitted = payload.get('admitted')
-        blocked = payload.get('blocked')
-        age = time.time() - float(payload['updated_at'])
-        if (not isinstance(held, list) or not isinstance(retries, dict)
-                or admitted is not None and not isinstance(admitted, dict)
-                or blocked is not None and not isinstance(blocked, str)
-                or not math.isfinite(age) or age < -30 or age > 180):
-            raise ValueError('invalid state')
-        detail = f'{len(payload["owned"])} queued, {int(bool(admitted))} admitted, {len(held)} held'
-        if blocked in {'awaiting_capacity_or_known_size', 'awaiting_cart_reconciliation'}:
-            suffix = ('awaiting safe capacity or a known size'
-                      if blocked == 'awaiting_capacity_or_known_size'
-                      else 'awaiting cart import reconciliation')
-            return Check('capacity_admission', 'warn', detail + '; ' + suffix)
-        if blocked:
-            return Check('capacity_admission', 'fail', detail + '; controller is fail-closed')
-        return Check('capacity_admission', 'ok', detail + '; serialized admission healthy')
-    except (OSError, ValueError, TypeError, KeyError, AttributeError):
-        return Check('capacity_admission', 'fail', 'capacity admission state could not be verified')
-
-
 def qnap_transfer_check() -> Check:
     try:
-        # Only QNAP uses operation records. Cloud installations may still run
-        # the earlier catalog implementation and need no migration for health.
-        from catalogctl import operation_records
-
         settings = Settings.from_env()
         operations = operation_records(settings)
         failed = [item for item in operations if item["status"] in {"failed", "stalled"}]
@@ -273,8 +197,6 @@ def qnap_transfer_check() -> Check:
             return Check("qnap_transfers", "fail", f"{len(failed)} failed or stalled operation(s); {len(abandoned)} interrupted staging item(s); inspect the catalog dashboard privately")
         active = [item for item in operations if item["active"] and item["operation"] == "pull"]
         return Check("qnap_transfers", "ok", f"{len(active)} active pull(s); no failed or interrupted pulls")
-    except ImportError:
-        return Check("qnap_transfers", "fail", "catalog implementation must be updated to check transfer state")
     except (CatalogError, OSError, ValueError, TypeError, KeyError):
         return Check("qnap_transfers", "fail", "transfer state could not be read")
 
@@ -311,17 +233,17 @@ def dashboard_data_check() -> Check:
         return Check("catalog_dashboard_data", "fail", "catalog refresh heartbeat could not be read")
 
 
-def native_ownership_checks() -> list[Check] | None:
+def native_ownership_checks() -> list[Check]:
     marker = Path(os.environ.get('CATALOG_NATIVE_OWNERSHIP_PATH', '/srv/usenet/config/catalog/native-ownership.json'))
     if not marker.exists() and not marker.is_symlink():
-        return None
+        return [Check('native_ownership', 'fail', 'native ownership marker is missing')]
     try:
         if marker.is_symlink() or not marker.is_file():
             raise ValueError('invalid native marker')
         result = subprocess.run([sys.executable, '/srv/usenet/libexec/native-cutover.py', 'inspect'],
                                 capture_output=True, text=True, timeout=90, check=True)
         status = json.loads(result.stdout)
-        if status.get('status') != 'verified' or status.get('phase') not in ('acceptance', 'active'):
+        if status.get('status') != 'verified' or status.get('phase') != 'active':
             raise ValueError('native ownership not verified')
         root = Path(os.environ.get('CATALOG_STATE_ROOT', '/data/state'))
         cart = json.loads((root / 'cart-import/status.json').read_text())
@@ -330,7 +252,7 @@ def native_ownership_checks() -> list[Check] | None:
             raise ValueError('invalid historical holds')
         count = cart['held'] + len(capacity['held'])
         phase = status['phase']
-        return [Check('native_ownership', 'warn' if phase == 'acceptance' else 'ok',
+        return [Check('native_ownership', 'ok',
                       'native owners and limits verified; ' + phase),
                 Check('legacy_holds', 'warn' if count else 'ok',
                       f"retired workers; {cart['held']} importer holds and {len(capacity['held'])} capacity holds retained")]
@@ -343,17 +265,8 @@ def collect_checks() -> list[Check]:
     checks = [storage_check(), failure_check()]
     if role == "cloud":
         checks.extend(app_checks())
-        native = native_ownership_checks()
-        if native is not None:
-            checks.extend(native)
-            checks.append(disk_check('repair_spool', Path('/srv/usenet/downloads/incomplete'), 30 * 1024**3))
-        else:
-            cart = cart_import_check()
-            if cart is not None:
-                checks.append(cart)
-            capacity = capacity_admission_check()
-            if capacity is not None:
-                checks.append(capacity)
+        checks.extend(native_ownership_checks())
+        checks.append(disk_check('repair_spool', Path('/srv/usenet/downloads/incomplete'), 30 * 1024**3))
         checks.append(
             disk_check(
                 "vm_scratch",

@@ -38,7 +38,6 @@
   roles:
     - role: cloud_base
     - role: cloud_apps
-    - role: cloud_publish
     - role: cloud_backup
     - role: scheduled_backups
     - role: cloud_vpn

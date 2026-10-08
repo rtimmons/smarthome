@@ -1,8 +1,9 @@
 # Checkout deletion and recovery
 
-The user authorized preserving the checkout so it can be deleted, and explicitly
-deferred NAS-loss protection. This is narrower than replacing Home Assistant,
-UniFi or the entire NAS. No checkout was deleted.
+This records the September 11 checkout-preservation drill. It does not authorize
+checkout deletion today. Current off-host NAS settings coverage is described in
+[scheduled backups](scheduled-backups.md); originals and replacement NAS boot
+remain outside that scope. No checkout was deleted.
 
 The additive snapshot `20260911T235253Z-9d6bbacf00ac982a` lives at:
 

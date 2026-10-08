@@ -65,6 +65,14 @@
     group: root
     mode: '0644'
 
+- name: Install the common-filesystem library alias helper
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/config/arr-shared-library-init'
+    dest: /srv/usenet/libexec/arr-shared-library-init
+    owner: root
+    group: usenet
+    mode: '0555'
+
 - name: Start mount-dependent discovery applications
   ansible.builtin.systemd_service:
     name: usenet-discovery.service
@@ -72,10 +80,10 @@
     enabled: true
     state: restarted
 
-- name: Apply and read back discovery controls before exposing the UI
+- name: Verify restored native discovery controls before exposing the UI
   tags: [discovery-config]
   ansible.builtin.command:
-    argv: [python3, /srv/usenet/libexec/discovery-config.py, configure]
+    argv: [python3, /srv/usenet/libexec/discovery-config.py, inspect]
   become_user: usenet
   register: discovery_configuration
-  changed_when: "'\"changed\": true' in discovery_configuration.stdout"
+  changed_when: false

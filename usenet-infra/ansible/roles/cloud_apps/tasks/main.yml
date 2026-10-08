@@ -104,12 +104,14 @@
   loop:
     - catalog-evict
     - catalog-list
-    - catalog-promote
     - catalog-pull
     - catalog-status
     - catalogctl.py
     - healthcheck
     - healthcheck.py
+    - native-cutover.py
+    - cart_import_sab.py
+    - discovery-config.py
     - sync-health-api-keys.py
 
 - name: Deploy administrator-facing catalog wrappers
@@ -122,7 +124,6 @@
   loop:
     - catalog-evict
     - catalog-list
-    - catalog-promote
     - catalog-pull
     - catalog-status
     - healthcheck
@@ -263,13 +264,22 @@
   when: cloud_storagebox_known_hosts_source | length > 0
   no_log: true
 
-- name: Start the cloud Compose project
+- name: Start the independent Prowlarr service
   community.docker.docker_compose_v2:
     project_src: "{{ cloud_deploy_dir }}"
+    services: [prowlarr]
     state: present
     pull: missing
     wait: true
     wait_timeout: 180
+  when: cloud_start_compose | bool
+
+- name: Start SAB only through its storage-dependent service
+  ansible.builtin.systemd_service:
+    name: usenet-sab-remote.service
+    daemon_reload: true
+    state: restarted
+    enabled: true
   when: cloud_start_compose | bool
 
 - name: Synchronize generated application API keys into the health environment

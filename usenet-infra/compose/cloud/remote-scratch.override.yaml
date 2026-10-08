@@ -1,5 +1,0 @@
-# Installed as compose.override.yaml only by configure-remote-scratch.
-# systemd owns startup/restart after both staging mounts exist.
-services:
-  sabnzbd:
-    restart: "no"

@@ -6,16 +6,22 @@ upgrade, or otherwise alter QTS/QuTS, Container Station, or QNAP packages.
 
 ## Controller setup
 
-Run Ansible from this directory so the local configuration and ignored paths
-are unambiguous:
+Run recipes from `usenet-infra`; Ansible runs in its `ansible` subdirectory.
+Recover the existing private inventory before deployment. For a new controller:
 
 ```sh
-cp inventory.example.yml inventory.yml
+cp ansible/inventory.example.yml ansible/inventory.yml
 just ansible-setup
-just configure-cloud
+# Bootstrap packages only until current mounts/state are restored:
+just --command sh -c "cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud.yml -e cloud_start_compose=false"
 just configure-qnap
 just wiki-deploy
 ```
+
+Before enabling cloud applications, restore accepted configuration and follow
+[storage recovery](../docs/repair-spool.md). Then normal `configure-cloud` starts
+SAB through systemd. `discovery.yml` verifies native policy; the former setup
+configurator and storage migration playbooks are intentionally absent.
 
 `site.yml` runs both host groups. Host-key checking remains enabled; populate
 the controller's `known_hosts` before the first run rather than bypassing it.

@@ -41,6 +41,16 @@ class ReadAPI:
 
 
 class DiscoveryTests(unittest.TestCase):
+    def setUp(self):
+        import json
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        marker = Path(temporary.name) / 'native.json'
+        marker.write_text(json.dumps({'phase': 'active', 'integrity_policy': 'native_arr_import_and_cleanup'}))
+        patcher = patch.object(discovery, 'NATIVE_MARKER', marker)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_native_inspection_requires_explicit_requests_and_keeps_health_errors(self):
         import json
         with tempfile.TemporaryDirectory() as directory:
@@ -48,6 +58,7 @@ class DiscoveryTests(unittest.TestCase):
             marker.write_text(json.dumps({'phase': 'active', 'integrity_policy': 'native_arr_import_and_cleanup'}))
             with patch.object(discovery, 'NATIVE_MARKER', marker):
                 api = ReadAPI()
+                api.data['radarr', 'config/indexer']['rssSyncInterval'] = 15
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(api)
                 for app in ('radarr', 'sonarr'):
@@ -67,10 +78,10 @@ class DiscoveryTests(unittest.TestCase):
         api = ReadAPI()
         result = discovery.inspect(api)
         self.assertEqual(result['status'], 'verified')
-        self.assertTrue(result['automatic_acquisition'])
+        self.assertFalse(result['automatic_acquisition'])
         self.assertTrue(result['automatic_import'])
         changes = [
-            ('config/indexer', 'rssSyncInterval', 0),
+            ('config/indexer', 'rssSyncInterval', 15),
             *[('config/downloadclient', key, not value) for key, value in discovery.DOWNLOAD_POLICY.items()],
         ]
         for app in ('radarr', 'sonarr'):
@@ -91,20 +102,6 @@ class DiscoveryTests(unittest.TestCase):
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(broken)
 
-    def test_configuration_commands_wait_for_completion_and_refuse_searches(self):
-        from unittest.mock import Mock
-        api = Mock()
-        api.call.side_effect = [{'id': 9}, {'status': 'started'}, {'status': 'completed'}]
-        with patch.object(discovery.time, 'sleep'):
-            discovery.run_configuration_command(api, 'prowlarr', 'ApplicationIndexerSync')
-        self.assertEqual(api.call.call_count, 3)
-        api = Mock()
-        with self.assertRaises(discovery.DiscoveryError):
-            discovery.run_configuration_command(api, 'radarr', 'MoviesSearch')
-        api.call.assert_not_called()
-        api.call.side_effect = [{'id': 10}, {'status': 'failed'}]
-        with self.assertRaises(discovery.DiscoveryError):
-            discovery.run_configuration_command(api, 'radarr', 'CheckHealth')
 
     def test_missing_controls_and_upgraded_versions_fail_closed(self):
         api = ReadAPI()
@@ -162,33 +159,9 @@ class DiscoveryTests(unittest.TestCase):
         compose = (Path(__file__).parents[1] / 'compose/discovery/compose.yaml').read_text()
         for forbidden in ('/downloads/incomplete', '/secrets', 'storagebox', 'docker.sock', ':latest', '0.0.0.0:'):
             self.assertNotIn(forbidden, compose)
-        self.assertIn('/srv/usenet/library/Movies:/library', compose)
-        self.assertIn('/srv/usenet/library/TV:/library', compose)
+        self.assertIn('/srv/usenet/library:/storage', compose)
+        self.assertIn('ARR_LIBRARY_KIND: TV', compose)
         self.assertIn('/srv/usenet/downloads/complete:/data/complete', compose)
         self.assertIn('restart: "no"', compose)
         self.assertIn('127.0.0.1:7878:7878', compose)
         self.assertIn('127.0.0.1:8989:8989', compose)
-
-    def test_masked_unchanged_connection_is_tested_without_rewriting_credentials(self):
-        resource = {'id': 1, 'name': 'fixture', 'implementation': 'Sabnzbd', 'enable': True,
-                    'fields': [{'name': 'apiKey', 'value': '********'}]}
-        from unittest.mock import Mock
-        api = Mock()
-        api.call.side_effect = [[resource], None]
-        result, changed = discovery.upsert(api, 'radarr', 'downloadclient', 'fixture',
-            {'enable': True}, {'apiKey': 'fixture-current-key'}, 'Sabnzbd')
-        self.assertFalse(changed)
-        self.assertEqual(api.call.call_count, 2)
-        self.assertEqual(api.call.call_args.args, ('radarr', 'downloadclient/test', 'POST', resource))
-
-    def test_failed_masked_connection_is_repaired_with_current_key_and_retested(self):
-        resource = {'id': 1, 'name': 'fixture', 'implementation': 'Sabnzbd', 'enable': True,
-                    'fields': [{'name': 'apiKey', 'value': '********'}]}
-        from unittest.mock import Mock
-        api = Mock()
-        api.call.side_effect = [[resource], discovery.DiscoveryError('invalid_stored_key'), None, resource]
-        _, changed = discovery.upsert(api, 'radarr', 'downloadclient', 'fixture',
-            {'enable': True}, {'apiKey': 'fixture-current-key'}, 'Sabnzbd')
-        self.assertTrue(changed)
-        self.assertEqual(api.call.call_args_list[2].args[3]['fields'][0]['value'], 'fixture-current-key')
-        self.assertEqual(api.call.call_args.args[2], 'PUT')

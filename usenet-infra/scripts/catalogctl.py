@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Safe catalog promotion and selective-cache operations.
+"""Verified selective NAS copies of existing catalog objects.
 
-The remote object bytes are canonical.  Manifests are published only after a
-verified upload, and eviction never invokes an rclone mutation command.
+The remote object bytes and manifests are read-only. Eviction acts only on owned
+local copies; new canonical imports belong to Radarr and Sonarr.
 """
 
 from __future__ import annotations
@@ -67,12 +67,6 @@ def safe_id(value: str) -> str:
     return value
 
 
-def default_id(title: str) -> str:
-    slug = re.sub(r"[^a-z0-9]+", "-", title.lower()).strip("-")[:48]
-    slug = slug or "item"
-    return f"{slug}-{uuid.uuid4().hex[:12]}"
-
-
 def confined(path: Path, root: Path, *, allow_root: bool = False) -> Path:
     resolved = path.resolve()
     try:
@@ -99,7 +93,6 @@ class Settings:
     local_root: Path
     state_root: Path
     staging_root: Path
-    promotion_root: Path
     rclone: str
     transfers: int
     checkers: int
@@ -116,9 +109,6 @@ class Settings:
             local_root=env_path("CATALOG_LOCAL_ROOT", "/data/library"),
             state_root=env_path("CATALOG_STATE_ROOT", "/data/state"),
             staging_root=env_path("CATALOG_STAGING_ROOT", "/data/staging"),
-            promotion_root=env_path(
-                "CATALOG_PROMOTION_ROOT", "/srv/usenet/downloads/complete"
-            ),
             rclone=os.environ.get("RCLONE_BIN", "rclone"),
             transfers=int(os.environ.get("RCLONE_TRANSFERS", "2")),
             checkers=int(os.environ.get("RCLONE_CHECKERS", "4")),
@@ -219,23 +209,6 @@ def sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def inventory_files(root: Path) -> tuple[list[dict[str, Any]], int]:
-    entries: list[dict[str, Any]] = []
-    total = 0
-    for path in sorted(root.rglob("*")):
-        if path.is_symlink():
-            raise CatalogError(f"symlinks are not allowed in catalog objects: {path}")
-        if not path.is_file():
-            continue
-        relative = path.relative_to(root).as_posix()
-        size = path.stat().st_size
-        entries.append({"path": relative, "size_bytes": size, "sha256": sha256_file(path)})
-        total += size
-    if not entries:
-        raise CatalogError(f"no files found beneath {root}")
-    return entries, total
 
 
 def validate_manifest(manifest: dict[str, Any]) -> None:
@@ -770,74 +743,6 @@ def cmd_evict(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> N
             print(f"evicted local copy only: {manifest['id']}", flush=True)
 
 
-def cmd_promote(args: argparse.Namespace, settings: Settings, rclone: Rclone) -> None:
-    if os.environ.get("CATALOG_ROLE", "").lower() != "cloud":
-        raise CatalogError("promotion requires CATALOG_ROLE=cloud")
-    source = confined(Path(args.path), settings.promotion_root)
-    if not source.is_dir():
-        raise CatalogError(f"promotion source is not a directory: {source}")
-    item_id = safe_id(args.id or default_id(args.title))
-    category = args.category
-    files, total = inventory_files(source)
-    remote_path = f"objects/{category}/{item_id}"
-    manifest = {
-        "schema_version": SCHEMA_VERSION,
-        "id": item_id,
-        "title": args.title,
-        "category": category,
-        "source": {"description": args.source},
-        "authorization": {"basis": args.authorization},
-        "acquired_at": args.acquired_at or utc_now(),
-        "remote_path": remote_path,
-        "size_bytes": total,
-        "files": files,
-        "integrity": {"algorithm": "sha256", "verified_at": None},
-        "notes": args.notes or "",
-    }
-    validate_manifest(manifest)
-    suffix = uuid.uuid4().hex
-    incoming = remote_join(settings.remote, ".incoming", f"{item_id}.{suffix}")
-    incoming_data = remote_join(incoming, "data")
-    final_data = remote_join(settings.remote, remote_path)
-    final_manifest = remote_join(settings.remote, "manifests", f"{item_id}.json")
-    try:
-        # A prior run may have completed the remote rename and then stopped
-        # before publishing its manifest. Re-verify that exact immutable object
-        # and finish the transaction instead of creating a duplicate.
-        final_already_verified = rclone.succeeds(
-            "check", str(source), final_data, "--download", "--one-way"
-        )
-        if not final_already_verified:
-            rclone.run(
-                "copy",
-                str(source),
-                incoming_data,
-                "--immutable",
-                "--transfers",
-                str(settings.transfers),
-                "--checkers",
-                str(settings.checkers),
-                "--bwlimit",
-                settings.bwlimit,
-            )
-            rclone.run("check", str(source), incoming_data, "--download", "--one-way")
-            rclone.run("moveto", incoming_data, final_data, "--immutable")
-        manifest["integrity"]["verified_at"] = utc_now()
-        with tempfile.TemporaryDirectory() as directory:
-            local_manifest = Path(directory) / f"{item_id}.json"
-            local_manifest.write_text(
-                json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
-            )
-            rclone.run("copyto", str(local_manifest), final_manifest, "--immutable")
-        if args.delete_local:
-            shutil.rmtree(source)
-        resolve_failures(settings, item_id)
-    except Exception as exc:
-        record_failure(settings, "promote", item_id, exc)
-        raise
-    print(f"promoted and verified: {item_id} -> {final_data}")
-
-
 def parser() -> argparse.ArgumentParser:
     result = argparse.ArgumentParser(description=__doc__)
     commands = result.add_subparsers(dest="command", required=True)
@@ -853,17 +758,6 @@ def parser() -> argparse.ArgumentParser:
     evict = commands.add_parser("evict", help="remove only one local cached item")
     evict.add_argument("item")
     evict.set_defaults(func=cmd_evict)
-    promote = commands.add_parser("promote", help="publish a verified staged item")
-    promote.add_argument("path")
-    promote.add_argument("--title", required=True)
-    promote.add_argument("--category", required=True, choices=CATEGORIES)
-    promote.add_argument("--source", required=True)
-    promote.add_argument("--authorization", required=True)
-    promote.add_argument("--notes")
-    promote.add_argument("--id")
-    promote.add_argument("--acquired-at")
-    promote.add_argument("--delete-local", action="store_true")
-    promote.set_defaults(func=cmd_promote)
     return result
 
 

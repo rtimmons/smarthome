@@ -73,12 +73,6 @@ class DashboardTests(unittest.TestCase):
         self.assertIn('left:98.00%', markup)
         self.assertIn('<style>fieldset:has(.transfer-status)', markup)
 
-    def test_presentation_supports_existing_legacy_only_deployment(self):
-        with mock.patch.object(dash, 'NATIVE_BACKEND') as native, mock.patch.object(dash, 'backend_snapshot', return_value={'items': []}) as backend:
-            native.is_file.return_value = False
-            self.assertEqual(dash.snapshot(), {'items': []})
-            backend.assert_called_once_with(dash.BACKEND)
-
     def test_startup_can_publish_pre_upgrade_legacy_provenance_objects(self):
         with tempfile.TemporaryDirectory() as directory, mock.patch.dict(os.environ, {'CATALOG_DASHBOARD_ROOT': directory}):
             dash.publish({'items': [item(source={'description': 'legacy manifest provenance'})]})

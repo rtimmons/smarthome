@@ -129,7 +129,6 @@ class CatalogTests(unittest.TestCase):
             local_root=base / "library",
             state_root=base / "state",
             staging_root=base / "staging",
-            promotion_root=base / "complete",
             rclone="rclone",
             transfers=2,
             checkers=4,
@@ -426,43 +425,6 @@ class CatalogTests(unittest.TestCase):
             with self.assertRaisesRegex(catalogctl.CatalogError, "fixture permission denied"):
                 catalogctl.Rclone(settings).run("-c", "import sys; print('fixture permission denied', file=sys.stderr); sys.exit(3)")
             self.assertIn("fixture permission denied", output.getvalue())
-
-    def test_promote_recovers_after_object_publish_before_manifest(self) -> None:
-        source = self.settings.promotion_root / "completed-item"
-        source.mkdir(parents=True)
-        (source / "fixture.txt").write_bytes(b"authorized integration fixture\n")
-
-        class PublishedObjectRclone:
-            def __init__(self) -> None:
-                self.calls: list[tuple[str, ...]] = []
-
-            def succeeds(self, *args: str) -> bool:
-                self.calls.append(("succeeds", *args))
-                return True
-
-            def run(self, *args: str, **kwargs: object) -> str:
-                self.calls.append(args)
-                if args[0] != "copyto":
-                    raise AssertionError(f"unexpected operation after recovery: {args}")
-                return ""
-
-        fake = PublishedObjectRclone()
-        args = SimpleNamespace(
-            path=str(source),
-            title="Authorized test",
-            category="other",
-            source="generated fixture",
-            authorization="generated for this test",
-            notes=None,
-            id="authorized-test",
-            acquired_at=None,
-            delete_local=False,
-        )
-        with mock.patch.dict(os.environ, {"CATALOG_ROLE": "cloud"}):
-            catalogctl.cmd_promote(args, self.settings, fake)
-        operations = [call[0] for call in fake.calls]
-        self.assertEqual(operations, ["succeeds", "copyto"])
-        self.assertTrue(source.exists())
 
 
 if __name__ == "__main__":

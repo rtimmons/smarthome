@@ -12,19 +12,6 @@ spec.loader.exec_module(cutover)
 
 
 class NativeCutoverTests(unittest.TestCase):
-    def test_finish_cannot_claim_acceptance_from_partial_evidence(self):
-        with tempfile.TemporaryDirectory() as folder:
-            root = Path(folder)
-            receipt = root / 'state/catalog/native-acceptance.json'
-            receipt.parent.mkdir(parents=True)
-            receipt.write_text(json.dumps({'phase': 'verified', 'verification': {'movie_import_cleanup': True}}))
-            api, helper = mock.Mock(), mock.Mock()
-            with mock.patch.object(cutover, 'inspect', return_value={'phase': 'acceptance'}):
-                with self.assertRaisesRegex(RuntimeError, 'complete_native_acceptance_evidence_required'):
-                    cutover.finish(root, api, mock.Mock(), helper)
-            api.call.assert_not_called()
-            helper.save_receipt.assert_not_called()
-
     def test_sab_switch_readback_accepts_native_booleans_but_not_disabled_limits(self):
         misc = dict(cutover.LIMITS, top_only=True, pause_on_post_processing=True, preserve_paused_state=True)
         self.assertTrue(cutover.limits_match(misc))
@@ -69,3 +56,45 @@ class NativeCutoverTests(unittest.TestCase):
         self.assertFalse(cutover.preserved(before, before, ['held-fixture']))
         self.assertFalse(cutover.preserved(before, {'queue': []}, ['unrelated-fixture']))
         self.assertFalse(cutover.preserved(before, {'queue': []}, ['held-fixture', 'held-fixture']))
+
+    def test_current_inspector_preserves_journals_and_refuses_retired_workers(self):
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            def save(name, value):
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(json.dumps(value))
+            save(cutover.MARKER, {'phase': 'active', 'integrity_policy': 'native_arr_import_and_cleanup'})
+            save('config/catalog/remote-scratch.json', {'mode': 'hybrid'})
+            save('state/catalog/cart-import/armed.json', {'baseline': 'fixture'})
+            save('state/catalog/cart-import/jobs/fixture.json', {'status': 'completed'})
+            save('state/catalog/capacity-admission/state.json', {'held': [], 'owned': [], 'admitted': None})
+            save(cutover.RECEIPT, {'snapshot': {'queue': []}, 'fingerprints': cutover.state_fingerprints(root)})
+            data = {('prowlarr', 'downloadclient'): []}
+            for app, prefix in [('radarr', 'Movie'), ('sonarr', 'Tv')]:
+                fields = [prefix[0].lower() + prefix[1:] + 'Category', 'recent' + prefix + 'Priority', 'older' + prefix + 'Priority']
+                client = cutover.native_client({'implementation': 'Sabnzbd', 'fields': [{'name': f} for f in fields]}, app)
+                data[app, 'downloadclient'] = [client]
+                data[app, 'config/downloadclient'] = {'enableCompletedDownloadHandling': True,
+                    'autoRedownloadFailed': False, 'autoRedownloadFailedFromInteractiveSearch': False}
+                data[app, 'config/mediamanagement'] = {'skipFreeSpaceCheckWhenImporting': False,
+                    'minimumFreeSpaceWhenImporting': 30 * 1024, 'copyUsingHardlinks': True}
+                data[app, 'config/indexer'] = {'rssSyncInterval': 0}
+            api = mock.Mock()
+            api.call.side_effect = lambda app, endpoint: data[app, endpoint]
+            config = {'misc': dict(cutover.LIMITS), 'rss': [], 'categories': [
+                {'name': app, 'dir': app, 'priority': 0, 'pp': 3} for app in ('radarr', 'sonarr')]}
+            sab = mock.Mock()
+            sab.api.side_effect = lambda mode, section: {'config': {section: config[section]}}
+            sab.snapshot.return_value = {'queue': []}
+            with mock.patch.object(cutover, 'command', return_value='inactive') as command:
+                self.assertEqual(cutover.inspect(root, api, sab)['status'], 'verified')
+                self.assertTrue(any('usenet-publish.timer' in c.args for c in command.call_args_list))
+                command.return_value = 'active'
+                with self.assertRaisesRegex(RuntimeError, 'legacy_timer_still_active'):
+                    cutover.inspect(root, api, sab)
+                command.return_value = 'inactive'
+                save('state/catalog/cart-import/jobs/fixture.json', {'status': 'changed'})
+                with self.assertRaisesRegex(RuntimeError, 'historical_holds_or_journals_changed'):
+                    cutover.inspect(root, api, sab)
+            self.assertTrue(all(c.args[0] == 'get_config' for c in sab.api.call_args_list))

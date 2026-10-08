@@ -328,6 +328,6 @@ Before deleting the original checkout, preserve unrelated user work and all
 other inventoried/external prerequisites, and resolve the HA and remaining
 application/machine recovery gaps. Record actual results in `plan.md`; inventory success alone must
 never be treated as deletion approval. Capture freshness, new archive inventory,
-future native-recipient migration and manual scheduling/retention remain explicit
-maintenance work. New files in bounded discovery roots require inventory review;
+and current backup freshness remain ongoing maintenance work; see
+[scheduled backups](scheduled-backups.md) for the deployed schedules and retention. New files in bounded discovery roots require inventory review;
 changing inventory policy also requires re-encrypting the small vault.

@@ -1,127 +1,68 @@
-# Dedicated repair volume
+# Repair storage and mount recovery
 
-The September 20, 2026 approved expansion is deployed. A 300 GB cloud block
-volume backs `/srv/usenet/repair/incomplete`, bound at the existing host path
-`/srv/usenet/downloads/incomplete` and SAB path `/data/incomplete`. The VM remains
-CX43. Completed output and canonical media stay on the existing Storage Box,
-now BX21. See the [expansion record](storage-expansion-20260920.md).
+The CX43 host uses an existing 300 GB ext4 volume for incomplete downloads.
+Completed staging and canonical media share the BX21 Storage Box. Preserve
+`repair_spool_enabled = true`, `storage_box_type = "bx21"`, provider deletion
+protection and Terraform `prevent_destroy` in current private inputs.
 
-The former `/srv/usenet/downloads/incomplete-local-spool` remains untouched:
-535 files, 28,639,139 bytes, independently hashed before and after copying.
-It is a dated rollback source, not a synchronized copy of future downloads.
-Do not delete it, reformat the new volume or replay the earlier hybrid migration.
+| Host path | Backing storage / purpose |
+| --- | --- |
+| `/srv/usenet/repair` | Existing repair volume, mounted by filesystem UUID |
+| `/srv/usenet/repair/incomplete` | SAB compressed/repair spool |
+| `/srv/usenet/downloads/incomplete` | Bind of the repair spool; SAB sees `/data/incomplete` |
+| `/srv/usenet/library` | Synchronous Storage Box SSHFS mount |
+| `/srv/usenet/downloads/complete/remote` | Bind of `library/.acquisition-staging`; completed output is its `complete` child |
 
-## Ownership and capacity
+`config/catalog/repair-spool.json` records the provider volume ID and filesystem
+UUID. `state/catalog/repair-spool-setup.json` is immutable historical evidence,
+not a command to replay. The former `downloads/incomplete-local-spool` is a dated
+rollback copy, not synchronized state; retain it until a separate disposition.
 
-`terraform/cloud/repair-spool.tf` manages the volume and attachment, with provider
-deletion protection and Terraform `prevent_destroy`. The private cloud tfvars
-must retain `repair_spool_enabled = true`; storage tfvars must retain `bx21`.
-Older SOPS-bound inputs predate both changes and must not silently replace them.
-Do not apply saved provisioning plans again. Reader-account drift was excluded.
+## Restore current definitions
 
-The root-owned `config/catalog/repair-spool.json` pins the provider volume ID
-and filesystem UUID. The controller verifies both resolve to the same block
-device, the actual mounted filesystem matches it, and the incomplete bind has
-the device/inode of `repair/incomplete`. The root disk, repair volume and remote
-filesystem each retain their own inode and 30 GiB reserve checks. SAB's two
-`30G` floors remain unchanged. The legacy capacity-admission worker is now
-retired under native ownership; the mount checks remain available for inspection.
+The deleted remote/hybrid/repair migration helpers are not needed for the current
+layout. Restore application configuration and current source from the verified
+backup chain. Restore the existing writer key and pinned host, then the library
+mount through `ansible/cloud-library.yml`. Keep SAB and Arr stopped while repairing
+mount configuration; inspect activity before stopping either service.
 
-The post-expansion preflight measured 291.18 GiB free on the formatted repair
-filesystem and 4.06 TiB remotely. This covers the recorded workload, including
-full PAR2 replacement and remote import-copy fallback. Native controls enforce a 100 GiB release limit, with a 100 GiB planning
-allowance for unpacked output;
-free capacity alone does not bound archive expansion or concurrent arrivals.
+Run from `usenet-infra` only on the restored host:
 
-## Mount and restart behavior
+```sh
+just restore-storage
+```
 
-`srv-usenet-repair.mount` mounts the filesystem by UUID with
-`nodev,nosuid,noexec`. The `repair-spool.conf` drop-in for
-`srv-usenet-downloads-incomplete.mount` changes its source and adds
-`Requires`, `BindsTo` and `After` dependencies on the repair mount. SAB and
-discovery already bind to the incomplete mount: stopping it stops both SAB
-and Arr. Restore the repair mount, incomplete bind, SAB and discovery in that
-order, then check actual filesystem identity and API health before restoring
-intake. Never assume starting SAB also restarts Arr.
+This checks that SAB/Arr systemd services are inactive, verifies the existing
+provider device's UUID against the restored marker, protects empty unmounted
+directories, installs current units and enables mounts. It does not format,
+copy payloads, switch a running installation, or start applications. An unknown
+volume, nonempty unmounted directory or active application requires inspection.
+A replacement volume needs a separately reviewed initialization and identity;
+never use the production marker to format it.
 
-Both uncovered mount directories are root-owned mode 0000 and empty. Live
-verification stopped the repair mount and proved the dependencies stopped,
-both underlying directories rejected writes as `usenet`, and SAB could not
-start while the repair mount was effectively masked. After restoring the unit,
-the services recovered and queue/history, journals, holds, feeds, global pause
-and all three timer states matched the saved baseline. The first simulation
-used an ineffective runtime mask beneath the existing `/etc` unit; it was
-restored and repeated with a verified `LoadState=masked`. No volume was detached.
+The repair unit requires the saved UUID; the incomplete bind requires both
+repair and completed-storage mounts. SAB binds to incomplete storage; Arr binds
+to the library and SAB storage lifecycle. `config/usenet-discovery.service` and
+`compose/discovery/compose.yaml` contain the final layout directly. Install
+`config/arr-shared-library-init` at `/srv/usenet/libexec/arr-shared-library-init`
+as root-owned mode 0555 before starting Arr; the discovery role does this.
 
-## Deployment and interruption recovery
+Keep restored old workers disabled. Review any restored Compose overrides or
+systemd drop-ins before startup: they must agree with these current definitions,
+not redirect scratch to an earlier layout. Mount the existing filesystems and
+verify paths, free space, ownership and the saved Arr completed-path mapping.
+Then start SAB through `usenet-sab-remote.service` and Arr through
+`usenet-discovery.service`, preserving queue pauses. Do not start SAB directly
+with Docker Compose or grant Docker its own restart policy.
 
-The deployment entrypoint is `just usenet-configure-repair-spool <volume_id>`
-from the root, using the ID from private cloud Terraform output. It is already
-deployed. Repeating against a verified receipt refreshes the helper, checks
-identity/resources/dependencies and preserves backup permissions; it does not
-format, recopy or restart the services. An interrupted or mismatched receipt
-is refused for explicit phase review.
+## Capacity and failure behavior
 
-The durable receipt is `state/catalog/repair-spool-setup.json`. It records the
-original queue/history, feed flags, pause, timer states, fingerprints and source
-inventory. It and `repair-spool-controller-before.py` are root-owned,
-group-readable by the backup account, with no group/world write access.
-The helper also remains readable by that account. Runtime configuration and
-these receipts fall under the existing encrypted configuration-backup allowlist;
-the repair payload and `/etc/systemd/system` unit files do not. Do not infer a
-whole-machine recovery test or a new independently restored archive from this.
+Keep the 100 GiB release limit, both 30 GiB SAB reserves, Arr hardlinks/free-space
+checks and mount-dependent startup. A mount failure must stop/refuse applications;
+never make its underlying directory writable to get past a startup failure.
+Do not run `mkfs`, replay purchase plans, delete retained spools or apply the
+canonical storage root during a cloud restore.
 
-If interrupted, keep intake held and inspect the exact recorded phase and live
-mounts first. `format_intent`, `formatted`, `copy_intent` and `copied` require
-manual reconciliation; do not repeat formatting or copy into an occupied target.
-The helper exposes `resume-quiesce` only for the unchanged original binding and
-empty destination, and `resume-bound` only for an already established new bind.
-Both preserve the original baseline. They are recovery actions, not generic
-retry commands. The deployment's two interruptions were reconciled this way:
-SAB feed-write acknowledgement required readback, and discovery needed explicit
-restart after its mount dependency stopped. Both corrections have regression
-coverage; the final receipt is `verified`.
-
-For rollback, first disable feed intake, pause SAB, stop the admission/import/
-incomplete-maintenance timers and wait for writers to finish. Reconcile every
-new job against the old spool; never replace newer metadata with the preserved
-September 20 copy. Only with a verified idle baseline may the incomplete bind
-drop-in, controller and marker be restored to their saved original versions.
-Stop SAB/discovery before switching mounts, preserve mode-0000 protection,
-verify root-disk capacity and the exact original bind, then restore saved
-settings. Retain the new volume and all receipts; deleting or detaching it
-requires a separate disposition decision.
-
-## Acceptance boundary
-
-A 128 MiB synthetic PAR2 repair passed independent SHA-256 verification. Both
-Arr users passed live hardlink probes, and the NAS reader still rejects writes
-and deletion. Temporary probe files were removed. All three held requests,
-44 historical journals, ten capacity holds and 27 importer holds were preserved.
-The original spool was retained; no canonical media was copied or deleted.
-
-The later native acceptance reconstructed an 80 GiB synthetic PAR2 source with
-independent SHA-256 verification, while retaining both complete copies. Peak
-simultaneous allocation was 171,833,499,648 bytes; 140,820,086,784 bytes remained
-free at full replacement. The temporary fixture was removed. Native movie and
-episode import/cleanup and the final scoped service restart also passed. See
-[native cutover](native-cutover.md) for Plex discovery and the final receipt.
-This demonstrates the measured case, not arbitrary archive expansion or broader
-concurrency. Conservative queue controls remain enabled. The user accepted
-native Arr cleanup for new requests; historical independent verification
-receipts remain preserved.
-
-## September 22 bounded concurrency and expansion
-
-With SAB idle, two concurrent synthetic gzip streams each expanded to **50 GiB**
-and passed SHA-256 verification while **100 GiB** of separate input allocation
-remained reserved. The compressed fixture was 234,272,195 bytes, approximately
-229:1 expansion per stream. Peak allocation was **214,982,672,384 bytes**
-(200.22 GiB), with **97,677,574,144 bytes** (90.97 GiB) still free. The test took
-544 seconds; all its temporary files were removed. The live queue was unchanged.
-
-This extends the earlier 80 GiB PAR2 repair evidence with a bounded concurrency
-and high-expansion case. It does not prove unbounded archive expansion or two
-simultaneous 100 GiB repairs safe. Native queue controls, the 100 GiB release
-limit and 30 GiB reserve floors remain unchanged. The receipt is in the
-[September 22 closure record](../recovery/drills/closure-20260922.json).
+The accepted 80 GiB PAR2 repair and two concurrent 50 GiB expansions are bounded
+tests, not guarantees for arbitrary archives. See [validation](validation.md)
+for evidence and [recovery](recovery.md) for the wider recovery procedure.

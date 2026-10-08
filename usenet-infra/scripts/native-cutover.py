@@ -1,21 +1,14 @@
 #!/usr/bin/env python3
-"""Switch an idle hybrid to native ownership; never search, grab or delete media.
-
-The private receipt is the rollback baseline. An interrupted apply is not replayed.
-RSS stays disabled to preserve the existing backlog; new explicit Arr searches
-own acquisition. Finish requires complete acceptance evidence.
-"""
+"""Verify native Arr ownership, acquisition limits and preserved recovery evidence."""
 from __future__ import annotations
 
 import argparse
 import copy
-import fcntl
 import hashlib
 import importlib.util
 import json
-import os
 from pathlib import Path
-import time
+import subprocess
 
 ROOT = Path('/srv/usenet')
 LIMITS = {'size_limit': '100G', 'top_only': 1, 'pause_on_post_processing': 1,
@@ -67,10 +60,33 @@ def limits_match(misc):
     return all(misc.get(k) == v for k, v in LIMITS.items())
 
 
-def inspect(root, api, sab, helper):
+TIMERS = ('usenet-capacity-admission.timer', 'usenet-cart-import.timer',
+          'usenet-incomplete-maintenance.timer', 'usenet-publish.timer')
+
+
+def command(*args):
+    return subprocess.check_output(args, text=True, stderr=subprocess.PIPE).strip()
+
+
+def digest(path):
+    with path.open('rb') as stream:
+        return hashlib.file_digest(stream, 'sha256').hexdigest()
+
+
+def state_fingerprints(root):
+    paths = [root / 'state/catalog/cart-import/armed.json',
+             root / 'config/catalog/remote-scratch.json',
+             *sorted((root / 'state/catalog/cart-import/jobs').glob('*.json'))]
+    capacity = json.loads((root / 'state/catalog/capacity-admission/state.json').read_text())
+    require(not capacity.get('admitted'), 'admission_active')
+    return {'files': {str(p.relative_to(root)): digest(p) for p in paths},
+            'held': capacity['held'], 'owned': capacity['owned']}
+
+
+def inspect(root, api, sab):
     marker = json.loads((root / MARKER).read_text())
     require(marker.get('integrity_policy') == 'native_arr_import_and_cleanup'
-            and marker.get('phase') in ('acceptance', 'active'), 'native_marker_invalid')
+            and marker.get('phase') == 'active', 'native_marker_invalid')
     misc = sab.api('get_config', section='misc')['config']['misc']
     require(limits_match(misc), 'native_sab_limits_changed')
     categories = {v['name']: v for v in sab.api('get_config', section='categories')['config']['categories']}
@@ -94,8 +110,8 @@ def inspect(root, api, sab, helper):
             'direct_feed_still_enabled')
     require(not any(c.get('enable') for c in api.call('prowlarr', 'downloadclient')),
             'prowlarr_direct_download_still_enabled')
-    for timer in helper.TIMERS:
-        require(helper.command('systemctl', 'show', timer, '--property=ActiveState', '--value') == 'inactive',
+    for timer in TIMERS:
+        require(command('systemctl', 'show', timer, '--property=ActiveState', '--value') == 'inactive',
                 'legacy_timer_still_active')
     old = json.loads((root / RECEIPT).read_text())
     disposition_path = root / 'state/catalog/native-disposition.json'
@@ -107,7 +123,7 @@ def inspect(root, api, sab, helper):
                 and disposition.get('baseline_sha256') == hashlib.sha256((root / RECEIPT).read_bytes()).hexdigest(),
                 'disposition_receipt_invalid')
         discarded = disposition['discarded_queue_ids']
-    require(preserved(old['snapshot'], sab.snapshot(), discarded) and helper.state_fingerprints(root) == old['fingerprints'],
+    require(preserved(old['snapshot'], sab.snapshot(), discarded) and state_fingerprints(root) == old['fingerprints'],
             'historical_holds_or_journals_changed')
     return {'status': 'verified', 'phase': marker['phase'], 'distinct_categories': True,
             'legacy_timers_inactive': True, 'historical_state_preserved': True,
@@ -115,127 +131,19 @@ def inspect(root, api, sab, helper):
             'integrity_policy': marker['integrity_policy'], 'download_limit': '100G'}
 
 
-def apply(root, api, sab, helper):
-    receipt = root / RECEIPT
-    require(not receipt.exists() and not (root / MARKER).exists(), 'existing_cutover_requires_phase_review')
-    snapshot = helper.quiet(sab)
-    controller = helper.capacity_module(root).Controller(root)
-    controller.require_resources(); controller.require_dependencies()
-    require(controller.available() >= 235 * 1024**3 and controller.budget_available() >= 235 * 1024**3,
-            'initial_100g_envelope_not_available')
-    value = {'schema_version': 1, 'phase': 'quiesce_intent', 'created_at': time.time(),
-             'snapshot': snapshot, 'fingerprints': helper.state_fingerprints(root),
-             'timers': {t: helper.command('systemctl', 'show', t, '--property=ActiveState,UnitFileState')
-                        for t in helper.TIMERS},
-             'feeds': sab.api('get_config', section='rss')['config']['rss'],
-             'misc': sab.api('get_config', section='misc')['config']['misc'],
-             'categories': sab.api('get_config', section='categories')['config']['categories'],
-             'prowlarr_downloadclients': api.call('prowlarr', 'downloadclient'),
-             'apps': {a: {e: api.call(a, e) for e in ('downloadclient', 'config/downloadclient', 'config/indexer', 'config/mediamanagement')}
-                      for a in ('radarr', 'sonarr')}}
-    require(not any(c['name'] in ('radarr', 'sonarr') for c in value['categories']), 'native_category_already_exists')
-    require(all(len(v['downloadclient']) == 1 for v in value['apps'].values()), 'unique_clients_required')
-    require(all(c.get('implementation') == 'Sabnzbd' for c in value['prowlarr_downloadclients']),
-            'unreviewed_prowlarr_download_client')
-    helper.save_receipt(receipt, value)
-    helper.command('systemctl', 'stop', *helper.TIMERS)
-    deadline = time.monotonic() + 150
-    while any(helper.command('systemctl', 'show', t.replace('.timer', '.service'), '--property=ActiveState', '--value')
-              not in ('inactive', 'failed') for t in helper.TIMERS):
-        require(time.monotonic() < deadline, 'legacy_worker_still_active')
-        time.sleep(1)
-    with (root / 'state/catalog/capacity-admission/lock').open('r+') as admission, \
-            (root / 'state/catalog/locks/cache.lock').open('r+') as cache:
-        fcntl.flock(admission, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        fcntl.flock(cache, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        require(helper.quiet(sab)['queue'] == snapshot['queue'], 'queue_changed_before_cutover')
-        for feed in value['feeds']:
-            helper.set_feed(sab, feed['name'], 0)
-        require(sab.api('pause').get('status') is True, 'global_pause_failed')
-        marker = {'schema_version': 1, 'phase': 'acceptance', 'integrity_policy': 'native_arr_import_and_cleanup',
-                  'max_download_bytes': 100 * 1024**3, 'planning_unpacked_bytes': 100 * 1024**3}
-        helper.save_receipt(root / MARKER, marker)
-        for timer in helper.TIMERS:
-            service = timer.replace('.timer', '.service')
-            dropin = Path('/etc/systemd/system') / (service + '.d/native-ownership.conf')
-            require(not dropin.exists(), 'legacy_guard_already_exists')
-            dropin.parent.mkdir(exist_ok=True)
-            dropin.write_text('[Unit]\nConditionPathExists=!' + str(root / MARKER) + '\n')
-            dropin.chmod(0o644)
-            helper.command('systemctl', 'disable', timer)
-        helper.command('systemctl', 'daemon-reload')
-        value['phase'] = 'configuration_intent'; helper.save_receipt(receipt, value)
-        for client in value['prowlarr_downloadclients']:
-            disabled = dict(client, enable=False)
-            api.call('prowlarr', 'downloadclient/' + str(client['id']), 'PUT', disabled)
-        for key, setting in LIMITS.items():
-            sab.api('set_config', section='misc', keyword=key, value=setting)
-        for app in ('radarr', 'sonarr'):
-            sab.api('set_config', section='categories', name=app, dir=app, priority=0, pp=3, script='None', newzbin='')
-            client = native_client(value['apps'][app]['downloadclient'][0], app)
-            api.call(app, 'downloadclient/' + str(client['id']), 'PUT', client)
-            config = copy.deepcopy(value['apps'][app]['config/downloadclient'])
-            config.update(enableCompletedDownloadHandling=True, autoRedownloadFailed=False,
-                          autoRedownloadFailedFromInteractiveSearch=False)
-            api.call(app, 'config/downloadclient', 'PUT', config)
-            config = copy.deepcopy(value['apps'][app]['config/indexer'])
-            config.update(rssSyncInterval=0, maximumSize=102400)
-            api.call(app, 'config/indexer', 'PUT', config)
-            media = copy.deepcopy(value['apps'][app]['config/mediamanagement'])
-            media.update(skipFreeSpaceCheckWhenImporting=False, copyUsingHardlinks=True,
-                         minimumFreeSpaceWhenImporting=max(30 * 1024, media['minimumFreeSpaceWhenImporting']))
-            api.call(app, 'config/mediamanagement', 'PUT', media)
-        require(helper.quiet(sab)['history'] == snapshot['history'], 'historical_sab_history_changed')
-        result = inspect(root, api, sab, helper)
-        value['phase'] = 'configured'; helper.save_receipt(receipt, value)
-        # The operator admits only the selected acceptance jobs while RSS is off.
-        if not snapshot['paused']:
-            require(sab.api('resume').get('status') is True, 'global_resume_failed')
-        return result
-
-
-def finish(root, api, sab, helper):
-    result = inspect(root, api, sab, helper)
-    helper.quiet(sab)
-    evidence = json.loads((root / 'state/catalog/native-acceptance.json').read_text())
-    required = {'movie_import_cleanup', 'episode_import_cleanup', 'plex_movie', 'plex_episode',
-                'large_repair', 'service_restart', 'historical_state_preserved'}
-    require(evidence.get('phase') == 'verified'
-            and all(evidence.get('verification', {}).get(k) is True for k in required),
-            'complete_native_acceptance_evidence_required')
-    require(api.call('radarr', 'movie/' + str(evidence['added']['radarr']['id'])).get('hasFile') is True
-            and api.call('sonarr', 'episode/' + str(evidence['episode']['id'])).get('hasFile') is True,
-            'native_media_files_required')
-    marker = json.loads((root / MARKER).read_text())
-    marker.update(phase='active', rss_policy='explicit_requests_only_preserve_existing_backlog',
-                  accepted_at=time.time())
-    helper.save_receipt(root / MARKER, marker)
-    # Existing monitored missing movies must not become an implicit backfill.
-    # Keep RSS off; explicit native searches/add-and-search own new requests.
-    result['phase'] = 'active'
-    return result
-
-
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('apply', 'inspect', 'finish'))
-    parser.add_argument('--accept-native-cleanup', action='store_true')
+    parser.add_argument('action', choices=('inspect',))
     args = parser.parse_args()
     try:
         import cart_import_sab
-        helper = module('repair-spool-setup')
         api = module('discovery-config').API()
         sab = cart_import_sab.SabSource(ROOT)
-        require(args.action != 'apply' or (args.accept_native_cleanup and os.geteuid() == 0),
-                'explicit_native_cleanup_decision_required')
-        require(args.action != 'finish' or os.geteuid() == 0, 'root_required')
-        result = (apply(ROOT, api, sab, helper) if args.action == 'apply' else
-                  finish(ROOT, api, sab, helper) if args.action == 'finish' else
-                  inspect(ROOT, api, sab, helper))
+        result = inspect(ROOT, api, sab)
         print(json.dumps(result))
     except Exception as error:
         print(json.dumps({'status': 'blocked', 'reason': str(error) if type(error) is RuntimeError
-                          else 'private_cutover_phase_requires_review', 'error_type': type(error).__name__}))
+                          else 'native_ownership_requires_review', 'error_type': type(error).__name__}))
         raise SystemExit(1)
 
 

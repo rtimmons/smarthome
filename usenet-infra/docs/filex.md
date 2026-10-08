@@ -185,7 +185,7 @@ receipts, restore the reviewed portal-only state/pin, and repeat acceptance.
 There is no automatic database rollback.
 
 Portal state is outside the existing cloud backup allowlist. This deployment
-does not claim backup coverage or alter the deferred restore work.
+does not replace the independent checks in [Filex recovery](filex-recovery.md).
 
 ## Acceptance evidence
 

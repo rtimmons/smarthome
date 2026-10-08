@@ -1,12 +1,7 @@
-# Download status handoff
+# Download status
 
-Read the current increment in [plan.md](../../plan.md) before operating the NAS.
-The Downloads panel at `http://192.168.1.66:1337/` is deployed for both native and
-legacy copies. The full native rollout and TV source migration passed September
-13 UTC. media-002's native download was started through the authenticated action at
-03:43:06 UTC. Changing byte counts, rate, ETA and graph samples were observed in
-the rendered UI. SHA-256 publication, safe repeat and automatic NAS Plex indexing
-also passed; see the [live receipt](../recovery/drills/native-copy-live-20260913.json).
+The authenticated NAS Downloads panel reports native and catalog copies.
+It is a transfer view, not a live summary of SAB or remote playback.
 
 ## Implementation and contract
 
@@ -46,8 +41,8 @@ keys; do not waive those findings or describe the full command as green. See
 [security findings](security-findings.md). `test_dashboard_deploy.py` also lints
 both generated shell modes and runs the actual payload against a local Docker
 transport double. The production lease code acquires a real file lock. Tests
-cover contention with no script writes, exact rollback bytes, absent/present
-native backends, lock ownership during restart, failure cleanup, and assets-only
+cover contention with no script writes, exact rollback bytes, missing-backend
+refusal, lock ownership during restart, failure cleanup, and assets-only
 updates without Docker or cache-lock access. They do not exercise QNAP Docker
 lifecycle or a lost SSH connection.
 
@@ -72,7 +67,7 @@ Recorded evidence is in [download-status receipt](../recovery/drills/download-st
 `just configure-download-status` from `usenet-infra` uses the dedicated pinned
 connection from private inputs and updates only the existing script set. It does
 not rebuild images, change Compose/environment/authentication/Plex, or install
-an absent native backend. Inspect the runtime first; do not redeploy merely to
+an absent native backend. A missing backend fails before script changes. Inspect the runtime first; do not redeploy merely to
 check status. The helper holds the shared cache lock in an existing-image,
 network-disabled container while installing scripts and restarting the dashboard.
 A busy cache or unavailable lease fails before script writes. The lease has a
@@ -87,33 +82,25 @@ An installation/restart/check failure can leave updated scripts installed and th
 UI unavailable. Inspect state/logs and the exact backup before fixing forward or
 restoring a compatible script set while idle. A successful file copy or restart
 alone is not acceptance: require dashboard refresh/health success and an
-authenticated rendered page. The known final rollback set is recorded in the plan;
-the earlier `20260913T021208Z` set predates the legacy-cache compatibility fix.
+authenticated rendered page. Choose the backup created for that deployment;
+do not assume an older historical script set matches the current runtime.
 
 `just configure-download-status assets` atomically replaces only the custom JS
 source/runtime files, without a lock or restart. It creates no rollback snapshot;
 use Git for the prior asset version. Browser caching can delay its effect.
 
-## Remaining acceptance and limits
+## Limits
 
-- Live acceptance verified the authenticated, full-width panel during the native
-  media-002 copy: 5.0% / 24.5 MiB/s / three samples, then 11.6% / 25.9 MiB/s / seven
-  samples spanning 60 seconds. The screenshot showed a readable graph and progress
-  bar. Closing and reopening the tab preserved the running copy and 180 seconds
-  of history (31.8%, 23.8 MiB/s). Verification and completion retained the graph
-  and displayed no stale live rate; completion showed succeeded and 100%.
-- This measures Storage Box → NAS copies. It does not report SAB acquisition,
-  repair/unpack, remote-playback-cache traffic, or whole-NAS link utilization.
-- Rclone's reported rate is smoothed; ETA and totals belong to the current attempt
-  and may change on retries/checks. Bytes reaching 100% do not establish a
-  verified copy or Plex discovery. Verification has phase text, not a percent bar.
+The [accepted movie-copy check](../recovery/drills/native-copy-live-20260913.json)
+verified graph/progress, reconnect, verification and completed states. Current
+media, playback and recovery acceptance is summarized in [validation](validation.md).
+
+- This measures Storage Box → NAS copies, not SAB acquisition, repair/unpack,
+  remote-playback-cache traffic or whole-NAS utilization.
+- Rclone rates are smoothed and totals/ETA can change. Bytes at 100% do not prove
+  verification or Plex indexing. Verification has phase text, not a percent bar.
 - Samples are about ten seconds apart; catalog refresh is normally 60 seconds
-  plus listing latency, and browser interaction/dialogs/hidden tabs defer reload.
-  This is not a ten-second live UI guarantee. Missing data is not measured zero.
-- A numeric receipt-write failure follows the existing operation failure path;
-  telemetry is not an independent best-effort service. Existing copy verification,
+  plus listing latency. Interaction, dialogs and hidden tabs can defer reload.
+  Missing data is not measured zero.
+- Receipt-write failures follow the operation failure path. Copy integrity,
   publication and cache-lock protections still apply.
-- The native backend, TV source migration/enablement and backup helper are deployed.
-  Actual TV copying, fresh native import,
-  new receipt backup capture, device playback/seeking/privacy, and NAS-loss
-  recovery remain separate. Follow the current handoff for live acceptance.

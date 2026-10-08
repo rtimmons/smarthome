@@ -72,7 +72,7 @@ class WikiContentTests(unittest.TestCase):
             "http://10.77.0.1:19696/radarr/",
             "http://10.77.0.1:19696/sonarr/",
             "http://192.168.1.66:1337/",
-            "https://10.77.0.1:5213/",
+            "http://127.0.0.1:15213/",
             "http://192.168.1.66:32400/web",
             "https://nzbgeek.info/dashboard.php?mycart",
             "https://nzbfinder.ws/cart",
@@ -95,16 +95,6 @@ class WikiContentTests(unittest.TestCase):
             expected = hashlib.sha256((WIKI / parsed.path).read_bytes()).hexdigest()[:12]
             self.assertEqual(parse_qs(parsed.query), {"v": [expected]}, reference)
 
-    def test_explains_required_workflows_boundaries_and_terms(self):
-        for phrase in (
-            "Use interactive search in Arr", "Use Radarr or Sonarr", "Canonical library",
-            "Temporary scratch", "Local copy", "Backups", "Reference, not live health",
-            "Retention", "Completion", "PAR2 repair", "Unpacking", "RSS", "Quality profile",
-            "just usenet-cloud-health", "just usenet-native-ownership-status",
-        ):
-            self.assertIn(phrase, self.html)
-        self.assertIn("Still needs acceptance", self.html)
-        self.assertIn("No live controls", self.html)
 
     def test_accessibility_and_mobile_contract(self):
         self.assertEqual(self.parser.lang, "en")

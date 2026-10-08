@@ -529,10 +529,6 @@ usenet-configure-discovery:
 usenet-discovery-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra discovery-health
 
-[group: 'usenet']
-usenet-discovery-backup:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra discovery-backup
-
 # Securely store a Hetzner API token without putting it in chat or shell history
 [group: 'usenet']
 usenet-store-hcloud-token:
@@ -607,20 +603,6 @@ usenet-filex-status:
 usenet-filex-disable:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-disable
 
-# Arm future user-cart native imports without reconfiguring acquisition apps.
-[group: 'usenet']
-usenet-configure-cart-import:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cart-import
-
-# Read the durable cart import and cleanup status.
-[group: 'usenet']
-usenet-cart-import-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cart-import-status
-
-[group: 'usenet']
-usenet-native-cutover-preflight:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-cutover-preflight
-
 [group: 'usenet']
 usenet-native-ownership-status:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-ownership-status
@@ -628,22 +610,6 @@ usenet-native-ownership-status:
 [group: 'usenet']
 usenet-configure-native-ownership:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-native-ownership
-
-# Use only the approved provider volume ID from cloud Terraform state.
-[group: 'usenet']
-[positional-arguments]
-usenet-configure-repair-spool volume_id:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-repair-spool "$1"
-
-# Inspect or enable NZBFinder Cart automatic downloads using its saved cloud key.
-[group: 'usenet']
-[positional-arguments]
-usenet-nzbfinder-cart command='inspect':
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra nzbfinder-cart "$1"
 
 # Read NAS versions, resource headroom, and share metadata through dedicated SSH.
 [group: 'usenet']
@@ -663,14 +629,6 @@ usenet-prowlarr-indexer command='inspect' indexer='nzbgeek':
 	set -euo pipefail
 	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra prowlarr-indexer "$1" "$2"
 
-# Inspect, configure, or test Prowlarr's internal SABnzbd connection.
-[group: 'usenet']
-[positional-arguments]
-usenet-prowlarr-download-client command='inspect':
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra prowlarr-download-client "$1"
-
 # Inspect, configure, or test Eweka using only saved credentials on the cloud host.
 [group: 'usenet']
 [positional-arguments]
@@ -678,22 +636,6 @@ usenet-sab-provider command='inspect':
 	#!/usr/bin/env bash
 	set -euo pipefail
 	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-provider "$1"
-
-# Inspect or apply conservative SAB storage and processing settings while idle.
-[group: 'usenet']
-[positional-arguments]
-usenet-sab-settings command='inspect':
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-settings "$1"
-
-# Start once, or inspect, the official authorized 100 MB SAB download test.
-[group: 'usenet']
-[positional-arguments]
-usenet-sab-smoke-test command='status':
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-smoke-test "$1"
 
 # Encrypt cloud application configuration and verify its off-VM backup.
 [group: 'usenet']
@@ -843,10 +785,6 @@ alias k := kill
 
 # Aliases for information
 alias ls := addons
-
-[group: 'usenet']
-usenet-configure-publishing:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-publishing
 
 # Open Filex through a loopback-only encrypted SSH tunnel.
 [group: 'usenet']

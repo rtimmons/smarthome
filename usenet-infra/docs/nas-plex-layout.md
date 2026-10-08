@@ -1,138 +1,60 @@
-# Deployed NAS and Plex layout
+# NAS and Plex layout
 
-September 22 follow-up: the selected native TV copy, SHA-256 verification,
-safe repeat and exact-file discovery in general NAS library 3 pass. A forced
-scan of library 3 was needed after the ordinary scan had not indexed the file.
-The user confirmed playback and restricted privacy on both Roku and Apple TV.
-This supersedes older playback and TV-copy deferrals below; it is user
-acceptance, not an agent-run test of every codec, subtitle or client setting.
-
-
-The existing `FromDrobo` SMB share is retained to preserve
-network shortcuts and permissions. Its physical root is
-`/share/CACHEDEV2_DATA/FromDrobo`, on the 4 TiB data volume, not the roughly
-99 GiB system volume containing the default `Multimedia` share.
+The existing `FromDrobo` share remains at `/share/CACHEDEV2_DATA/FromDrobo` on
+the 4 TiB data volume. Application state is `/share/Container/usenet`. Preserve
+`qnap_data_root: /share/FromDrobo` and `qnap_catalog_cache_dir: /share/FromDrobo/Movies`
+in private inventory; older bound snapshots contain the former cache path.
 
 ```text
 FromDrobo/
-├── loljk/               existing private collection; unchanged
-├── Movies/              selective, verified Usenet cache
-│   ├── video/<item-id>/  completed movie files visible to Plex
-│   ├── .staging/        incomplete transfers; excluded from Plex's root
-│   └── other/           diagnostic/nonvideo catalog entries
-├── TV Shows/            separate TV bind
-│   ├── library/<series>/ published TV files visible to Plex
-│   └── .staging/        incomplete transfers; outside the Plex source
-├── Remote/files/        read-only Storage Box mount
-└── .remote-cache/       bounded disposable streaming cache
+├── loljk/                    private collection
+├── Movies/
+│   ├── video/<item-id>/       published NAS movies
+│   ├── .staging/             excluded from Plex
+│   └── other/                nonvideo catalog objects
+├── TV Shows/
+│   ├── library/<series>/     published NAS TV
+│   └── .staging/             same bind mount, outside Plex's source
+├── Remote/files/             read-only Storage Box mount
+└── .remote-cache/            disposable playback cache
 ```
 
-The September 11 layout change relocated only the former
-`/share/Usenet/usenet-cache` directory, using an
-atomic same-filesystem rename to `/share/FromDrobo/Movies`. The inode and device
-were verified unchanged. Zero media bytes were copied by this layout operation.
-The `loljk` inode, modification time, library path and 5,258-entry count were
-preserved. No recursive permission changes, share deletion, collection-wide
-hashing, or cross-volume copy was performed.
+## Libraries and profile grants
 
-The private deployment inventory now sets `qnap_data_root` to
-`/share/FromDrobo` and `qnap_catalog_cache_dir` to `/share/FromDrobo/Movies`.
-The deployed Compose environment agrees; containers still use `/data/library`.
-Only the catalog dashboard and rclone services were recreated. Plex and other
-NAS applications were not restarted. The cache remains selective: removing a
-local catalog copy removes its NAS file, while the canonical Storage Box copy
-remains. Do not manually rename files inside an item-ID directory: manifests
-and verification records refer to those relative paths.
-
-## Plex libraries and access
-
-| Library | Plex ID | Physical source |
+| Library | Plex ID | Source beneath the physical share |
 | --- | --- | --- |
-| `loljk` | 1 | `/share/CACHEDEV2_DATA/FromDrobo/loljk` |
-| `Movies (NAS)` | 2 | `/share/CACHEDEV2_DATA/FromDrobo/Movies/video` |
-| `TV Shows (NAS)` | 3 | `/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library` |
-| `Movies (Remote)` | 4 | `Remote/files/library/Movies` and legacy `Remote/files/objects/video`, beneath the same physical share |
-| `TV Shows (Remote)` | 5 | `Remote/files/library/TV`, beneath the same physical share |
+| Private `loljk` | 1 | `loljk` |
+| Movies (NAS) | 2 | `Movies/video` |
+| TV Shows (NAS) | 3 | `TV Shows/library` |
+| Movies (Remote) | 4 | `Remote/files/library/Movies` and `Remote/files/objects/video` |
+| TV Shows (Remote) | 5 | `Remote/files/library/TV` |
 
-New libraries use Plex Movie and Plex TV Series agents. Video preview thumbnail
-generation is disabled for these libraries to avoid unnecessary NAS processing.
-Do not point either general library at the share root.
+The managed `Movies & TV` profile receives exactly IDs 2/3/4/5 and is denied ID 1.
+The private library is excluded from home/global search. Never point a general
+library at the share root or staging, and never browse private media to inspect
+settings. Owner PIN and client profile choice remain private user/device work.
+The user confirmed restricted privacy and playback on Apple TV and Roku; this
+is not a guarantee about a future client's saved profile.
 
-The `Movies & TV` managed Home profile is explicitly granted only IDs 2, 3, 4 and 5;
-verification using that profile's server token returned only those libraries,
-and direct access to ID 1 returned HTTP 403. `loljk` visibility is set to **Exclude from home screen and
-global search**. The owner can still deliberately open that library.
+Plex watches local changes, uses partial scans and scans hourly. Automatic trash
+emptying stays disabled so a missing mount does not purge metadata. Remote/TV
+files may require a general-library scan. OliveTin does not own discovery.
 
-The owner profile did not have a PIN. Set one privately in Plex Home and select
-`Movies & TV` on each Apple TV/Roku. Client startup behavior has not been changed
-remotely or tested: a device still signed into the owner, especially one reopening
-the last library, is not equivalent to the restricted profile. Avoid automatic
-sign-in to the last-used owner profile. Library visibility alone is not access
-control. [Plex Home](https://support.plex.tv/articles/204234323-creating-a-plex-home/),
-[Roku settings](https://support.plex.tv/articles/204275243-settings-plex-for-roku/)
+## Copying and recovery
 
-Plex already watched local filesystem changes. Partial scans are now enabled,
-with an hourly scan fallback. Automatic trash emptying is disabled to preserve
-metadata if storage temporarily disappears. These are Plex's native settings;
-OliveTin does not perform the Plex library scan.
+Movie copies publish under `Movies/video/native-<id>/<title>`. TV copies publish
+under `TV Shows/library/<series>`, with the staging and destination directories
+inside one container bind for atomic rename. The private inventory enables
+`qnap_native_tv_copy_enabled`; disable it if restoring an older Plex source
+that includes staging. Never relocate existing series automatically.
 
-The first real movie copy, `media-003` (13.5 GiB), completed and passed
-SHA-256 verification. Plex indexed it automatically in `Movies (NAS)`; a
-read-only API check confirmed the title, year and media-file entry. This tests
-copy/publication/indexing, not Apple TV/Roku decoding or client startup. The
-transfer took about 30 minutes with variable throughput; remote playback later passed a 1 MiB HTTP 206 range read, as recorded in
-[native media](native-media.md). Sustained playback on each real TV client remains
-unverified.
+Selective copying uses the read-only canonical credential, a shared lock,
+100 GiB reserve, independent SHA-256 and owned-copy receipts. See
+[native workflow](native-media.md). Do not rename manifest-managed files,
+modify shared hardlinks in place or adopt unrelated files after restoring receipts.
 
-## Recovery and boundaries
-
-Before-change Plex paths/library preferences and the changed server preferences
-are recorded in ignored `build/plex-layout-before-20260911.json`. The NAS stores
-the old private Compose environment and a nonsecret move receipt under
-`/share/Container/usenet/state/media-layout-20260911/`. The private deployment
-inventory also has an ignored local before-change copy. These are rollback
-records, not a full Plex database backup or proof of whole-NAS disaster recovery.
-
-To reverse only the directory relocation, first stop the two cache services
-when no transfer is active, confirm the old destination is absent and both
-parents are on the same filesystem, then rename `Movies` back to the old cache
-path and restore the matching Compose/inventory settings. The Plex Movies source
-must be updated before scanning that reversed layout. Do not copy a directory
-over an existing collection, remove the share, or empty Plex trash as part of
-this operation.
-
-Native Radarr/Sonarr imports now sort new movies and TV into separate canonical
-library folders. The old publisher timer is disabled. See [native media](native-media.md)
-for mount dependencies and remaining client tests, and [scheduled backups](scheduled-backups.md)
-for encrypted Plex/database protection.
-
-## Deployed native-copy layout
-
-The full QNAP application deployment installed the native backend and separate
-TV bind. Native movie copies publish under `Movies/video/native-<id>/<title>`,
-preserving Plex source ID 2. Plex source ID 3 was narrowed from
-`/share/CACHEDEV2_DATA/FromDrobo/TV Shows` to
-`/share/CACHEDEV2_DATA/FromDrobo/TV Shows/library`, after confirming there were no
-existing series to preserve outside the child. All other stable library fields
-and roots were verified unchanged. No collection move was required.
-
-TV staging lives at `TV Shows/.staging`, outside the new Plex source but inside
-the same container bind as publication. Distinct bind mounts cannot perform an
-atomic rename between them, even when their device numbers match. New/restored
-configurations default the TV copy gate to disabled; private inventory now enables
-it following migration. The final application deployment passed, and the running
-dashboard confirms the enabled gate and the separate publication/staging paths.
-A real TV-series transfer has not been tested.
-
-The [live receipt](../recovery/drills/native-copy-live-20260913.json) records the
-selected media-002 copy: 14,878,405,826 bytes, SHA-256 verified and published at
-`2026-09-13T03:56:01Z`, then automatically indexed in ID 2 by `03:57:17Z`. The safe
-repeat preserved directory identity and verified bytes without recopying. The
-Downloads graph, browser reconnection and verification/completed phases passed.
-Restricted profile grants remain exactly 2/3/4/5, with ID 1 denied; private
-home/search exclusion and disabled automatic trash emptying were rechecked.
-Fresh Arr completion/cleanup, TV copying and deferred Apple TV/Roku playback/privacy
-remain separate. Follow [native media](native-media.md#selective-native-library-nas-copies)
-and the current [handoff](../../plan.md).
-Before restoring the old TV Plex source for rollback, disable TV copying so Plex
-cannot scan in-progress staging.
+[Scheduled settings backups](scheduled-backups.md) include native-copy receipts,
+dashboard state and Plex preferences/databases. They exclude originals and
+artwork. Preserve library IDs, grants, physical paths and the separate confined
+backup credential on recovery. A settings restore is not a replacement NAS
+boot test or permission to delete the original collection.

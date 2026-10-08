@@ -10,62 +10,8 @@ QNAP and Plex settings to a separate Storage Box subaccount confined to
 SHA-256 compared before success is recorded. Independent restores passed for
 66 QNAP settings files and three Plex files; both Plex database snapshots opened.
 NAS originals, artwork and installation binaries are excluded by choice.
-This supersedes earlier pending-scope and one-time-only statements below.
+Media and staging are excluded from this settings-only scope.
 
-
-**September 22 final closure checkpoint.**
-`cloud-20260922T215403Z.tar.age` passed off-host ciphertext readback and
-independent restore: 752 files, five application databases and all 44 journals.
-Both nested Filex bundles also independently restored. The disposition, Seerr
-acceptance and bounded capacity receipts are included. A separate one-time
-off-host checkpoint verified NAS and Plex settings ciphertext against locally
-restored archives; recurring NAS off-host coverage remains pending. See the
-[closure receipt](../recovery/drills/closure-20260922.json).
-
-**September 22 Filex coverage added.** Root-owned Filex configuration, database
-and verification receipts are captured into encrypted bundles included by the
-cloud schedule. Operator bootstrap keys have separately verified encrypted
-escrow. NAS archives now include Filex SFTP settings and server identity.
-See [capture scope and recovery](filex-recovery.md). Staging and media are
-excluded; this supersedes older statements that Filex configuration is outside
-coverage. NAS-loss protection still depends on the pending backup-scope choice.
-
-
-**September 22: post-update state independently restored.**
-`cloud-20260922T191826Z.tar.age` captures the deployed Radarr/Sonarr/Prowlarr
-versions and guards. Remote ciphertext readback, local hash comparison,
-decryption and isolated restore passed: **726 files, four databases, 44 journals
-and 59 live hash matches**. All six mount/service unit hashes remain unchanged
-from the September 21 reconstruction check. The three stopped rollback databases
-also pass integrity checks and remain preserved on the cloud. See the
-[deployment and backup receipt](../recovery/drills/app-maintenance-20260922.json).
-This refresh closes the post-maintenance checkpoint requested below; Filex and
-replacement-host recovery remain separate, and original snapshots are unchanged.
-
-**September 21: accepted native state independently restored.**
-`cloud-20260921T155229Z.tar.age` passed remote ciphertext readback, local hash
-comparison, decryption and isolated restore of **726 files and four databases**.
-All 59 selected live configuration/helper/journal hashes match, including all
-44 journals and the active native/verified acceptance receipts. Six live unit
-definitions reconstruct exactly from source plus the restored volume identity;
-the repair binding override and live dependencies also pass. See the
-[receipt](../recovery/drills/native-state-restore-20260921.json).
-This supersedes the accepted-state capture gap below. Repeat after the prepared
-application maintenance is approved and deployed. No replacement-host startup
-or Filex recovery is claimed. `/etc` units are reconstructed, and local private
-Terraform/inventory overrides must be preserved separately; neither is a raw
-member of this cloud archive. Original bound snapshots remain unchanged.
-
-September 20, 22:05 UTC: read-only status inspection found cloud success at
-19:01:42 UTC and NAS success at 04:07:26 UTC, both within the 36-hour freshness
-limit. The cloud timer is active and its last service result succeeded. The
-cloud capture predates the accepted native checkpoint at 20:18 UTC; it cannot
-establish capture of that final state. No archive was decrypted/restored during
-this audit. The next independent checkpoint must verify native ownership and
-acceptance receipts, repair-spool/mount configuration, current helpers and all
-44 preserved journals along with the databases. Filex state remains outside
-existing backup coverage. See the [audit receipt](../recovery/drills/health-audit-20260920.json)
-and [remaining work](../../plan.md#remaining-work-and-explicit-deferrals).
 
 Enabled September 11, 2026. Schedules run on the cloud host and NAS; deleting or
 turning off the Mac does not stop them. NAS-loss coverage is settings only.
@@ -148,72 +94,6 @@ This closes capture of the new receipt; it does not prove restoration onto a
 replacement destination or whole-NAS recovery. Original bound snapshots remain
 immutable, and ordinary freshness checks still apply.
 
-
-## Cart importer checkpoint
-
-The remote-staging deployment and subsequent postprocessing correction were
-installed after the archive below. New configuration/state falls within the
-existing allowlist, but fresh independent capture/restore verification is still
-outstanding. It must verify `config/catalog/remote-scratch.json`,
-`state/catalog/remote-scratch-setup.json`, the migration/controller/importer helpers,
-the Compose override and new journals. Systemd mount/dependency units come from
-the committed repository; restore them before starting SAB against the restored
-remote marker. Preserve active media work while the host-owned backup timer runs.
-
-Latest verified capture: `cloud-20260917T143828Z.tar.age` independently decrypted
-and restored all 671 entries and four databases, including 28 importer journals
-(22 completed), both user-approved held-payload disposition journals, unchanged
-activation, then-current helpers and matching controller state. This supersedes the
-older count below; no replacement-host restore is claimed.
-[Progress receipt](../recovery/drills/cart-queue-progress-20260917.json).
-
-**Verified September 17, 2026:** the installed scheduler captured
-`cloud-20260917T042530Z.tar.age` under its normal locks and quiet-state guard.
-Independent local decryption and isolated restore verified all 660 manifest
-entries and four SQLite snapshots. The immutable activation marker and all four
-current cart/capacity helpers matched live state and repository source. Controller
-state, importer status and all 21 journals were captured, including 17 completed
-journals that matched the live snapshot. This closes current extension capture;
-repeat after later accepted completions change state. It does not establish a
-replacement-host restore or whole-NAS recovery.
-[Receipt](../recovery/drills/cart-capacity-checkpoint-20260917.json).
-
-The earlier September 17 02:02 archive also decrypted successfully (645 files and
-four databases), but contained older helpers and only 12 journals. It was not used
-to claim current coverage. Original bound recovery snapshots remain immutable.
-
-The importer was activated September 14 at 01:38:39 UTC. Its marker, journals and
-status are under the already included `state/catalog` tree, and worker/adapters
-are under `libexec`. Coverage by an allowlist is not proof of capture. The
-02:58 UTC handoff check found the most recent scheduled cloud success at September
-13, 22:05:43 UTC, before activation. That historical coverage gap is closed by the
-September 17 verification above; repeat after new accepted jobs add journals.
-
-First inspect current status and worker/SAB activity using the existing wrappers.
-A new scheduled archive may already exist. If one is needed, invoke the installed
-scheduler with its service environment; do not redeploy backup support merely to
-capture state:
-
-```sh
-just --justfile usenet-infra/Justfile --working-directory usenet-infra --command ./scripts/cloud-command sudo -n -u usenet /bin/sh -c 'set -a; . /srv/usenet/config/catalog.env; export BACKUP_AGE=/srv/usenet/libexec/age BACKUP_OUTPUT=/srv/usenet/backups/scheduled; exec python3 /srv/usenet/libexec/scheduled-backup.py cloud --force'
-```
-
-This uses the existing scheduler and catalog locks, enforces idle/fully paused
-SAB with no post-processing, and preserves pauses. A busy operation or failed
-quiet-state check is a reason to defer, never to cancel media work or disable the
-cart feed. Inspect the status after invocation: the scheduler may skip a busy
-lock without creating an archive.
-
-After successful encrypted upload/readback, retrieve the exact archive privately
-with the dedicated cloud wrapper and use `scripts/config-backup-local verify`
-with the existing administrator identity. To establish exact member coverage,
-restore into a new empty ignored directory using the same helper's `restore`
-action, inspect its manifest and compare the activation marker and installed
-worker/adapters to the captured versions. Keep decrypted state, paths containing
-media identities and raw manifests private. Record only neutral scope, timestamps,
-counts and integrity results in the public receipt. Ciphertext readback alone does
-not prove decryption or inclusion of the new files. Do not restore this inspection
-copy over running state, or replace original bound snapshots.
 
 ## Confined NAS backup account recovery
 

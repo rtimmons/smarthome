@@ -58,7 +58,7 @@ class DashboardDeployTests(unittest.TestCase):
             (self.root / directory).mkdir(parents=True, exist_ok=True)
         (self.root / 'state/locks/cache.lock').write_text('{}')
         self.originals = {}
-        for name in ('catalogctl.py', 'catalog-dashboard.py', 'catalog-refresh.js'):
+        for name in ('catalogctl.py', 'catalog-dashboard.py', 'catalog-refresh.js', 'native_library.py'):
             self.originals[name] = 'prior ' + name
             (self.root / 'scripts' / name).write_text(self.originals[name])
         self.executable(self.root / 'package/bin/docker', DOCKER)
@@ -94,7 +94,7 @@ class DashboardDeployTests(unittest.TestCase):
         self.assertFalse((self.root / 'state/dashboard-status-backups').exists())
         self.assert_lock_released()
 
-    def test_idle_deploy_backs_up_exact_files_and_preserves_legacy_only_install(self):
+    def test_idle_deploy_backs_up_exact_files(self):
         result = self.run_deploy()
         self.assertEqual(result.returncode, 0, result.stderr)
         backups = list((self.root / 'state/dashboard-status-backups').iterdir())
@@ -102,9 +102,17 @@ class DashboardDeployTests(unittest.TestCase):
         for name, original in self.originals.items():
             self.assertEqual((backups[0] / name).read_text(), original)
             self.assertEqual((self.root / 'scripts' / name).read_bytes(), (deploy.SCRIPTS / name).read_bytes())
-        self.assertFalse((self.root / 'scripts/native_library.py').exists())
         self.assertTrue((self.root / 'restart-under-lock').exists())
         self.assert_lock_released()
+
+    def test_missing_backend_refuses_before_changing_files(self):
+        (self.root / 'scripts/native_library.py').unlink()
+        result = self.run_deploy()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse((self.root / 'calls.jsonl').exists())
+        for name, original in self.originals.items():
+            if name != 'native_library.py':
+                self.assertEqual((self.root / 'scripts' / name).read_text(), original)
 
     def test_existing_native_backend_is_updated_without_new_mounts(self):
         (self.root / 'scripts/native_library.py').write_text('old native')

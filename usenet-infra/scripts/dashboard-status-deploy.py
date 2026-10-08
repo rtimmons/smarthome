@@ -32,6 +32,9 @@ test -x "$qnap_docker"
 '''
     shell += 'app=' + shlex.quote(app) + '\n'
     shell += '''export DOCKER_CONFIG="$app/state/docker-client"
+for script in catalogctl.py catalog-dashboard.py catalog-refresh.js native_library.py; do
+  test -f "$app/scripts/$script"
+done
 cd "$app/compose/qnap"
 qnap_dashboard=$("$qnap_docker" --config "$DOCKER_CONFIG" compose ps -q dashboard)
 test -n "$qnap_dashboard"
@@ -63,13 +66,9 @@ mkdir -m 700 "$backup_dir"
 '''
     for name in ('catalogctl.py', 'catalog-dashboard.py', 'catalog-refresh.js', 'native_library.py'):
         encoded = base64.b64encode((SCRIPTS / name).read_bytes()).decode()
-        if name == 'native_library.py':
-            shell += 'if test -f "$app/scripts/native_library.py"; then\n'
         shell += f'cp -p "$app/scripts/{name}" "$backup_dir/{name}"\n'
         shell += f"printf '%s' '{encoded}' | base64 -d > \"$app/scripts/{name}.update\"\n"
         shell += f'chmod 750 "$app/scripts/{name}.update"\nmv -f "$app/scripts/{name}.update" "$app/scripts/{name}"\n'
-        if name == 'native_library.py':
-            shell += 'fi\n'
     shell += '''"$qnap_docker" --config "$DOCKER_CONFIG" restart --time 30 "$qnap_dashboard"
 cleanup
 trap - EXIT

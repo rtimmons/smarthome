@@ -60,7 +60,7 @@ configuration and keys to be present. NAS staging/media remain excluded.
 5. Keep operator CA keys private. The user prohibits host trust-policy changes;
    do not install the CA or retry the canceled macOS trust prompt. Recovery checks
    may use an explicit CA file without changing the host trust store. Browser
-   access must work within the existing trust policy; it remains unverified.
+   access uses the existing pinned SSH tunnel and was user-verified October 8.
 
 The first independent restores verified 26 server files and one database,
 40 files in bootstrap escrow, and 63 NAS settings files including five Filex

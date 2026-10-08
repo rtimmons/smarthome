@@ -19,7 +19,7 @@ services:
         target: /data/complete
     ports:
       - "127.0.0.1:${SABNZBD_PORT:-8080}:8080"
-    restart: unless-stopped
+    restart: "no"
     healthcheck:
       test:
         - CMD-SHELL

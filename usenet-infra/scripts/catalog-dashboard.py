@@ -82,9 +82,6 @@ def backend_snapshot(backend: Path) -> dict:
 
 def snapshot() -> dict:
     legacy = backend_snapshot(BACKEND)
-    # Presentation updates may precede the separate native-library rollout.
-    if not NATIVE_BACKEND.is_file():
-        return legacy
     native = backend_snapshot(NATIVE_BACKEND)
     merged = dict(legacy)
     merged['items'] = [dict(item, source='legacy') for item in legacy.get('items', [])] + [

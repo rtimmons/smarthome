@@ -262,8 +262,6 @@
       mode: "0750"
     - path: "{{ cloud_data_root }}/downloads"
       mode: "0750"
-    - path: "{{ cloud_data_root }}/downloads/incomplete"
-      mode: "0750"
     - path: "{{ cloud_data_root }}/downloads/complete"
       mode: "0750"
     - path: "{{ cloud_data_root }}/logs"

@@ -55,7 +55,7 @@ class NativeLibraryTests(unittest.TestCase):
         self.env.start()
         self.settings = catalog.Settings(remote="reader:catalog", local_root=self.root / "Movies",
                                          state_root=self.root / "state", staging_root=self.root / "Movies/.staging",
-                                         promotion_root=self.root / "scratch", rclone="rclone", transfers=2,
+                                         rclone="rclone", transfers=2,
                                          checkers=4, min_free_bytes=0)
         self.settings.local_root.mkdir()
         self.remote = self.root / "remote"

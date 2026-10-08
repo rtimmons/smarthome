@@ -1,0 +1,13 @@
+[Unit]
+Description=Usenet repair volume
+After=network-online.target
+
+[Mount]
+What=/dev/disk/by-uuid/{{ repair_marker.filesystem_uuid }}
+Where=/srv/usenet/repair
+Type=ext4
+Options=nodev,nosuid,noexec
+TimeoutSec=90
+
+[Install]
+WantedBy=multi-user.target

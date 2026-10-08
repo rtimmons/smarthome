@@ -1,0 +1,103 @@
+---
+- name: Reconstruct current mounts on a restored cloud host
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Refuse to interrupt active applications
+      ansible.builtin.command:
+        argv: [systemctl, show, '{{ item }}', --property=ActiveState, --value]
+      loop: [usenet-discovery.service, usenet-sab-remote.service]
+      register: storage_service
+      changed_when: false
+      failed_when: storage_service.stdout | trim not in ['inactive', 'failed']
+
+    - name: Refuse directly started SAB or Arr containers
+      ansible.builtin.command:
+        argv:
+          - docker
+          - ps
+          - -q
+          - --filter
+          - name=^/usenet-cloud-sabnzbd-1$
+          - --filter
+          - name=^/usenet-discovery-radarr-1$
+          - --filter
+          - name=^/usenet-discovery-sonarr-1$
+      register: storage_containers
+      changed_when: false
+      failed_when: storage_containers.rc != 0 or storage_containers.stdout | trim != ''
+
+    - name: Read the restored repair volume identity
+      ansible.builtin.slurp:
+        src: /srv/usenet/config/catalog/repair-spool.json
+      register: repair_identity
+
+    - name: Decode the restored identity
+      ansible.builtin.set_fact:
+        repair_marker: '{{ repair_identity.content | b64decode | from_json }}'
+
+    - name: Require an explicit filesystem identity
+      ansible.builtin.assert:
+        that:
+          - repair_marker.volume_id | int > 0
+          - repair_marker.filesystem_uuid is match('^[a-f0-9-]{36}$')
+
+    - name: Check the existing provider volume filesystem
+      ansible.builtin.command:
+        argv: [blkid, -s, UUID, -o, value, '/dev/disk/by-id/scsi-0HC_Volume_{{ repair_marker.volume_id }}']
+      register: repair_uuid
+      changed_when: false
+      failed_when: repair_uuid.rc != 0 or repair_uuid.stdout | trim != repair_marker.filesystem_uuid
+
+    - name: Protect empty unmounted directories without touching mounted data
+      ansible.builtin.shell: |
+        set -eu
+        test ! -L '{{ item }}'
+        if ! mountpoint -q '{{ item }}'; then
+          mkdir -p '{{ item }}'
+          test -z "$(ls -A '{{ item }}')"
+          chown root:root '{{ item }}'
+          chmod 0000 '{{ item }}'
+        fi
+      loop:
+        - /srv/usenet/repair
+        - /srv/usenet/downloads/incomplete
+        - /srv/usenet/downloads/complete/remote
+      changed_when: false
+
+    - name: Install the pinned repair filesystem mount
+      ansible.builtin.template:
+        src: '{{ usenet_project_root }}/config/srv-usenet-repair.mount.j2'
+        dest: /etc/systemd/system/srv-usenet-repair.mount
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Install current bind mounts and application dependencies
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/{{ item }}'
+        dest: '/etc/systemd/system/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - srv-usenet-downloads-complete-remote.mount
+        - srv-usenet-downloads-incomplete.mount
+        - usenet-sab-remote.service
+        - usenet-discovery.service
+
+    - name: Validate definitions before enabling mounts
+      ansible.builtin.command:
+        argv: [systemd-analyze, verify, /etc/systemd/system/usenet-sab-remote.service, /etc/systemd/system/usenet-discovery.service]
+      changed_when: false
+
+    - name: Enable current mount definitions without starting applications
+      ansible.builtin.systemd_service:
+        name: '{{ item }}'
+        enabled: true
+        daemon_reload: true
+      loop:
+        - srv-usenet-repair.mount
+        - srv-usenet-downloads-complete-remote.mount
+        - srv-usenet-downloads-incomplete.mount
