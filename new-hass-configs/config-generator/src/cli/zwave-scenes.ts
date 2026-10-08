@@ -17,6 +17,8 @@ import {
   getFastSceneScriptEntityId,
 } from "../scene-generation";
 import { Device } from "../types";
+import { buildNetworkHealth } from "./zwave-health";
+import { cacheDiscoveryCommand, diagnosticLogCommands, parseCachePaths } from "./zwave-diagnostics";
 import {
   callHomeAssistantWs,
   callService,
@@ -249,13 +251,9 @@ function scpFromRemote(host: string, remotePath: string, localPath: string) {
 }
 
 function fetchLiveArtifacts(options: Options, outputDir: string) {
-  const valuesRemote = runSsh(
-    options.host,
-    "ls /addon_configs/core_zwave_js/cache/*.values.jsonl | head -n 1"
-  );
-  const metadataRemote = runSsh(
-    options.host,
-    "ls /addon_configs/core_zwave_js/cache/*.metadata.jsonl | head -n 1"
+  const logCommands = diagnosticLogCommands(options.logLines);
+  const { values: valuesRemote, metadata: metadataRemote } = parseCachePaths(
+    runSsh(options.host, cacheDiscoveryCommand())
   );
 
   const files = [
@@ -283,12 +281,12 @@ function fetchLiveArtifacts(options: Options, outputDir: string) {
 
   fs.writeFileSync(
     path.join(outputDir, "zwave.log"),
-    runSsh(options.host, `ha apps logs core_zwave_js | tail -n ${options.logLines}`),
+    runSsh(options.host, logCommands.zwave),
     "utf8"
   );
   fs.writeFileSync(
     path.join(outputDir, "core.log"),
-    runSsh(options.host, `ha core logs | tail -n ${options.logLines}`),
+    runSsh(options.host, logCommands.core),
     "utf8"
   );
 
@@ -1171,6 +1169,19 @@ async function inventory(options: Options) {
   );
   const registryDriftSummary = summarizeRegistryDrift(entityAuditFindings);
   const suspiciousLogSummary = summarizeSuspiciousLogs(artifacts.zwaveLog, nodeMap);
+  const networkHealth = buildNetworkHealth(
+    nodeMap.values(),
+    states.map((state) => ({
+      entity_id: state.entity_id,
+      state: state.state,
+      last_changed: state.last_changed,
+    })),
+    suspiciousLogSummary,
+    artifacts.zwaveLog
+  );
+  const availableNodesWithErrors = networkHealth.nodes.filter(
+    (node) => node.assessment === "errors_despite_available_status"
+  );
   const sceneParallelismFindings = buildSceneParallelismFindings(options.sceneIds);
 
   const report = {
@@ -1193,6 +1204,7 @@ async function inventory(options: Options) {
       registry_drift_mismatched_device_count: registryDriftSummary.mismatchedDeviceCount,
       remaining_grouped_zwave_call_count: sceneParallelismFindings.length,
       suspicious_log_categories: suspiciousLogSummary.counts,
+      available_nodes_with_log_errors: availableNodesWithErrors.length,
     },
     scene_summaries: sceneSummaries,
     scene_parallelism_findings: sceneParallelismFindings,
@@ -1204,6 +1216,7 @@ async function inventory(options: Options) {
     registry_drift_summary: registryDriftSummary,
     entity_audit_findings: entityAuditFindings,
     suspicious_log_summary: suspiciousLogSummary,
+    network_health: networkHealth,
     live_ramp_plan: liveRampPlan,
   };
 
@@ -1214,6 +1227,7 @@ async function inventory(options: Options) {
   writeJson(path.join(outputDir, "registry-drift-summary.json"), registryDriftSummary);
   writeJson(path.join(outputDir, "entity-audit-findings.json"), entityAuditFindings);
   writeJson(path.join(outputDir, "suspicious-log-summary.json"), suspiciousLogSummary);
+  writeJson(path.join(outputDir, "network-health.json"), networkHealth);
 
   console.log(`Output directory: ${outputDir}`);
   console.log("");
@@ -1227,6 +1241,10 @@ async function inventory(options: Options) {
     `Temporarily excluded scene devices: ${temporarilyExcludedSceneDevices.length}`
   );
   console.log(`Pending ramp changes: ${liveRampPlan.length}`);
+  console.log(`Captured Z-Wave log window: ${networkHealth.logWindow.firstTimestamp ?? "unknown"} through ${networkHealth.logWindow.lastTimestamp ?? "unknown"} (driver timestamps)`);
+  for (const node of availableNodesWithErrors) {
+    console.log(`  node ${node.nodeId}: ${node.state}, but ${node.capturedErrorCount} errors in captured logs`);
+  }
   console.log(
     `Unavailable configured entities: ${configuredUnavailable.length} | Unhealthy Z-Wave nodes: ${unhealthyNodeFindings.length} | Scenes impacted: ${sceneAvailabilityFindings.length}`
   );

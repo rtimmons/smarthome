@@ -232,3 +232,17 @@
               - fan.fancontroller_2_fan_3
               - fan.fancontroller_2_fan_4
   mode: restart
+
+- id: led_grid_wall_pace_demo
+  alias: LED Grid Wall - Pace Demo
+  description: Set wall pace to 1.25x only when the explicit led_grid_wall_pace_demo event is fired.
+  triggers:
+    - trigger: event
+      event_type: led_grid_wall_pace_demo
+  actions:
+    - action: number.set_value
+      target:
+        entity_id: number.led_grid_wall_pace
+      data:
+        value: 1.25
+  mode: single

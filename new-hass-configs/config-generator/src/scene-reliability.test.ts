@@ -74,6 +74,25 @@ function intentHelpersForWrapper(script: Record<string, any>): string[] {
 }
 
 describe("Fast scene reliability contract", () => {
+  it("dispatches guarded wall scenes once and preserves convergence for other scenes", () => {
+    const scripts = generateFastScriptsFromRegistry(scenes);
+    const wall = scripts.fast_scene_dispatch_led_grid_wall_ten_percent;
+    expect(wall.sequence).toHaveLength(1);
+    expect(wall.sequence[0].data.retry_mismatches).toBe(false);
+    expect(generateSceneTargets(scenes.led_grid_wall_ten_percent).map(t => t.entityId))
+      .toEqual(["light.led_grid_wall"]);
+    expect(generateSceneTargets(scenes.all_off).map(t => t.entityId))
+      .not.toContain("light.led_grid_wall");
+    expect(scripts.fast_scene_dispatch_outdoor.sequence).toHaveLength(3);
+    const mixed = generateFastScriptsFromRegistry({
+      wall_low: { ...scenes.led_grid_wall_ten_percent },
+      wall_high: { ...scenes.led_grid_wall_ten_percent, fastSceneConvergence: true }
+    });
+    expect(mixed.fast_scene_dispatch_wall.sequence[1]).toEqual({
+      condition: "template", value_template: '{{ scene_id in ["wall_high"] }}'
+    });
+  });
+
   it("gives every source scene automation latest-intent restart behavior", () => {
     for (const [automationId, automation] of Object.entries(automations)) {
       if (sceneActions(automation.action).length > 0) {
@@ -259,7 +278,7 @@ describe("Fast scene reliability contract", () => {
           (candidate) => candidate.delay?.milliseconds === 2000
         ),
         sceneId
-      ).toHaveLength(1);
+      ).toHaveLength(scenes[sceneId].fastSceneConvergence === false ? 0 : 1);
     }
   });
 

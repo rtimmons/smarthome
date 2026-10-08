@@ -100,7 +100,7 @@ describe("runCommand", () => {
         "process.stderr.write('expected failure'); process.exit(1)",
         secret,
       ])
-    ).toThrow("node failed: expected failure");
+    ).toThrow("node failed (exit 1): expected failure");
 
     try {
       runCommand(process.execPath, ["-e", "process.exit(1)", secret]);

@@ -1007,6 +1007,9 @@ export function generateFastScriptsFromRegistry(
   for (const [familyId, entries] of sceneEntriesByFamily) {
     const familyDispatcherId = getFamilyDispatcherId(familyId);
     const familyWorkerId = getFamilyWorkerId(familyId);
+    const convergenceSceneIds = entries
+      .filter(([, scene]) => scene.fastSceneConvergence !== false)
+      .map(([sceneId]) => sceneId);
     familyScripts[familyDispatcherId] = {
       alias: `Fast Scene Dispatcher - ${familyId.replace(/_/g, " ")}`,
       mode: "restart",
@@ -1021,6 +1024,11 @@ export function generateFastScriptsFromRegistry(
             retry_mismatches: false,
           },
         },
+        ...(convergenceSceneIds.length === 0 ? [] : [
+          ...(convergenceSceneIds.length === entries.length ? [] : [{
+            condition: "template",
+            value_template: `{{ scene_id in ${JSON.stringify(convergenceSceneIds)} }}`,
+          }]),
         { delay: { milliseconds: FAST_SCENE_CONVERGENCE_DELAY_MS } },
         {
           action: `script.${familyWorkerId}`,
@@ -1031,6 +1039,7 @@ export function generateFastScriptsFromRegistry(
             retry_mismatches: true,
           },
         },
+        ]),
       ],
     };
     familyScripts[familyWorkerId] = {

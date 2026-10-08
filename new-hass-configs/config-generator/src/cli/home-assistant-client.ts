@@ -41,6 +41,8 @@ export function runCommand(
   try {
     return execFileSync(command, args, {
       encoding: "utf8",
+      // Expanded Core log captures routinely exceed Node's 1 MiB default.
+      maxBuffer: 16 * 1024 * 1024,
       env: {
         ...process.env,
         ...extraEnv,
@@ -56,7 +58,13 @@ export function runCommand(
       typeof error.stderr === "string"
         ? error.stderr.trim()
         : "";
-    throw new Error(`${command} failed${stderr ? `: ${stderr}` : ""}`);
+    const failure = error as { status?: number | null; signal?: string | null; code?: string };
+    const details = [
+      failure.status != null ? `exit ${failure.status}` : "",
+      failure.signal ? `signal ${failure.signal}` : "",
+      failure.code ? `code ${failure.code}` : "",
+    ].filter(Boolean).join(", ");
+    throw new Error(`${command} failed${details ? ` (${details})` : ""}${stderr ? `: ${stderr}` : ""}`);
   }
 }
 

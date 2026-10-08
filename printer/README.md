@@ -25,6 +25,16 @@ archive and supports previewing, downloading, reprinting, and deleting saved lab
 Local development uses `printer/label-output/printed-labels` by default and can be
 overridden with `PRINTED_LABELS_DIR`.
 
+The PNG preview and archive show artwork, not the untrimmed paper. For the QL-810W
+on 62 mm continuous tape, the Brother driver scales the 720 × 390 canvas to
+696 × 377 printable dots. The paper also has 18-dot (~1.5 mm) margins across the
+roll and 35-dot (~3 mm) margins at each cut edge. These margins are additional to
+any white underlap in the artwork. This setup cannot print full bleed without
+trimming the paper; changing image-fit settings cannot remove hardware margins.
+The `generate-labels` skill produces a separate physical-paper preview and uses
+`--require-full-bleed` to reject an untrimmed full-bleed requirement. See Brother's
+[Raster Command Reference, pp. 14–16](https://download.brother.com/welcome/docp100278/cv_ql800_eng_raster_101.pdf).
+
 ### Print a PNG from the repository
 
 From the repository root, validate and print a PNG with:

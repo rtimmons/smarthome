@@ -108,6 +108,8 @@ export interface LightState {
 }
 
 export interface Scene {
+  /** Guarded controllers reject stale intent; never retry them with fresh guards. */
+  fastSceneConvergence?: boolean;
   name: string;
   icon?: string;
   lights: LightState[];
