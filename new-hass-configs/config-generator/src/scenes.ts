@@ -24,6 +24,12 @@ import { devices, getPairedDeviceName } from "./devices";
  *   <room>_<activity> - e.g., living_room_movie, bedroom_reading
  */
 export const scenes: SceneRegistry = {
+  led_grid_wall_ten_percent: {
+    name: "LED Grid Wall - Ten Percent",
+    fastSceneConvergence: false,
+    lights: [{ device: "led_grid_wall", state: "on", brightness: 26 }]
+  },
+
   // ============================================================================
   // Outdoor Scenes (exposed through the dashboard's Move room)
   // ============================================================================

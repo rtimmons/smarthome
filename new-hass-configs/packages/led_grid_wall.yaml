@@ -1,0 +1,250 @@
+# Install as one Home Assistant package. No startup/restore write actions.
+# The direct hostname is reserved for this installed wall; replace all three
+# occurrences together if the installation address changes.
+rest_command:
+  led_grid_wall_observe:
+    url: http://ledgridwall.local:5000/api/v1/composer/settings/observed
+    method: get
+    timeout: 5
+  led_grid_wall_command:
+    url: "http://ledgridwall.local:5000/api/config/{{ route }}"
+    method: post
+    content_type: application/json
+    payload: "{{ payload | to_json }}"
+    timeout: 5
+
+template:
+  - triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: time_pattern
+        seconds: /2
+      - trigger: event
+        event_type: led_grid_wall_refresh
+    actions:
+      - variables:
+          observation_response:
+            status: 0
+            content: {}
+      - action: rest_command.led_grid_wall_observe
+        response_variable: observation_response
+        continue_on_error: true
+    sensor:
+      - name: LED Grid Wall Observation
+        unique_id: led_grid_wall_observation
+        default_entity_id: sensor.led_grid_wall_observation
+        state: >-
+          {{ observation_response.content.get('controller_session_id', '') ~ ':' ~ observation_response.content.get('controller_state_revision', '')
+             if observation_response.content is mapping else 'unavailable' }}
+        availability: >-
+          {%- set value_json = observation_response.content -%}
+          {{ observation_response.status == 200 and value_json is mapping
+             and value_json.get('schema') == 'ledgrid.composer-settings-observation'
+             and value_json.get('schema_version') == 1
+             and value_json.get('last_applied_command_id') is number
+             and value_json.get('controller_session_id') is string
+             and value_json.get('controller_session_id') | length > 0
+             and value_json.get('controller_state_revision') is integer
+             and value_json.get('is_running') is boolean
+             and value_json.get('brightness') is integer
+             and 0 <= value_json.get('brightness') <= 255
+             and value_json.get('animation_speed_scale') is number
+             and value_json.get('animation_speed_scale') > 0
+             and value_json.get('observed_at') is number
+             and -2 <= as_timestamp(now()) - value_json.get('observed_at') < 15 }}
+        attributes:
+          controller_session_id: "{{ observation_response.content.get('controller_session_id') if observation_response.content is mapping else none }}"
+          controller_state_revision: "{{ observation_response.content.get('controller_state_revision') if observation_response.content is mapping else none }}"
+          observed_at: "{{ observation_response.content.get('observed_at') if observation_response.content is mapping else none }}"
+          is_running: "{{ observation_response.content.get('is_running') if observation_response.content is mapping else none }}"
+          brightness: "{{ observation_response.content.get('brightness') if observation_response.content is mapping else none }}"
+          animation_speed_scale: "{{ observation_response.content.get('animation_speed_scale') if observation_response.content is mapping else none }}"
+          active_identity: "{{ observation_response.content.get('active_identity') if observation_response.content is mapping else none }}"
+  - light:
+      - name: LED Grid Wall
+        unique_id: led_grid_wall
+        default_entity_id: light.led_grid_wall
+        availability: "{{ has_value('sensor.led_grid_wall_observation') }}"
+        state: "{{ state_attr('sensor.led_grid_wall_observation', 'is_running') }}"
+        level: "{{ state_attr('sensor.led_grid_wall_observation', 'brightness') }}"
+        turn_on:
+          action: script.led_grid_wall_apply
+          data:
+            power: true
+        turn_off:
+          action: script.led_grid_wall_apply
+          data:
+            power: false
+        set_level:
+          action: script.led_grid_wall_apply
+          data:
+            brightness: "{{ brightness }}"
+            power: true
+  - number:
+      - name: LED Grid Wall Pace
+        unique_id: led_grid_wall_pace
+        default_entity_id: number.led_grid_wall_pace
+        unit_of_measurement: x
+        min: 0.1
+        max: 25
+        step: 0.05
+        optimistic: false
+        availability: "{{ has_value('sensor.led_grid_wall_observation') }}"
+        state: >-
+          {{ (state_attr('sensor.led_grid_wall_observation', 'animation_speed_scale') | float(0)) / 0.3 }}
+        set_value:
+          action: script.led_grid_wall_apply
+          data:
+            multiplier: "{{ value }}"
+
+script:
+  led_grid_wall_apply:
+    alias: LED Grid Wall - Apply observed controls
+    description: >-
+      Set master brightness (0..255), power, or operator pace (positive multiplier).
+      Omitted settings are preserved. Conflicting requests fail instead of queuing
+      stale intent. Every write is checked against fresh controller feedback.
+    mode: parallel
+    max: 10
+    max_exceeded: error
+    fields:
+      brightness:
+        description: Master output brightness, 0..255; 26 is approximately 10 percent.
+        selector:
+          number:
+            min: 0
+            max: 255
+            step: 1
+      power:
+        description: Start or stop the retained Scene.
+        selector:
+          boolean:
+      multiplier:
+        description: Operator pace multiplier; 1x equals controller speed scale 0.3.
+        selector:
+          number:
+            min: 0.1
+            max: 25
+            step: 0.05
+    sequence:
+      - variables:
+          command_session: null
+          command_revision: null
+      - if: >-
+          {{ (brightness is defined and (brightness is not integer or brightness is boolean or brightness < 0 or brightness > 255))
+             or (power is defined and power is not boolean)
+             or (multiplier is defined and (multiplier is not number or multiplier is boolean or not (0 < multiplier <= 25)))
+             or (brightness is not defined and power is not defined and multiplier is not defined) }}
+        then:
+          - variables:
+              result:
+                success: false
+                error: Invalid wall controls; brightness is 0..255, power is boolean, pace is positive and at most 25x.
+          - stop: Invalid wall controls; brightness is 0..255, power is boolean, pace is positive and at most 25x.
+            response_variable: result
+      # Set brightness before powering on to avoid a flash at the old level.
+      - repeat:
+          for_each: [brightness, power, multiplier]
+          sequence:
+            - if: >-
+                {{ (repeat.item == 'brightness' and brightness is defined)
+                   or (repeat.item == 'power' and power is defined)
+                   or (repeat.item == 'multiplier' and multiplier is defined) }}
+              then:
+                - variables:
+                    field: "{{ repeat.item }}"
+                    requested: >-
+                      {{ brightness if field == 'brightness' else power if field == 'power' else multiplier }}
+                    observed_field: "{{ 'is_running' if field == 'power' else 'animation_speed_scale' if field == 'multiplier' else field }}"
+                    expected: "{{ requested * 0.3 if field == 'multiplier' else requested }}"
+                    route: "{{ 'animation-speed' if field == 'multiplier' else field }}"
+                - action: rest_command.led_grid_wall_observe
+                  response_variable: before_response
+                - if: >-
+                    {{ before_response.status != 200 or before_response.content is not mapping
+                       or before_response.content.get('schema') != 'ledgrid.composer-settings-observation'
+                       or before_response.content.get('schema_version') != 1
+                       or before_response.content.get('last_applied_command_id') is not number
+                       or before_response.content.controller_session_id is not string
+                       or before_response.content.controller_session_id | length == 0
+                       or before_response.content.controller_state_revision is not integer
+                       or before_response.content.observed_at is not number
+                       or not (-2 <= as_timestamp(now()) - before_response.content.observed_at < 15) }}
+                  then:
+                    - variables:
+                        result:
+                          success: false
+                          error: No fresh controller observation; no command sent.
+                    - stop: No fresh controller observation; no command sent.
+                      response_variable: result
+                - variables:
+                    before: "{{ before_response.content }}"
+                - if: >-
+                    {{ command_session is not none and
+                       (before.controller_session_id != command_session
+                        or before.controller_state_revision != command_revision) }}
+                  then:
+                    - variables:
+                        result:
+                          success: false
+                          error: Controller changed during this request; remaining settings were not sent.
+                    - stop: Controller changed during this request; remaining settings were not sent.
+                      response_variable: result
+                - variables:
+                    command_session: "{{ before.controller_session_id }}"
+                    command_revision: "{{ before.controller_state_revision }}"
+                - if: "{{ before[observed_field] != expected }}"
+                  then:
+                    - action: rest_command.led_grid_wall_command
+                      data:
+                        route: "{{ route }}"
+                        payload: >-
+                          {{ {field: requested,
+                              'expected_controller_session_id': before.controller_session_id,
+                              'expected_controller_state_revision': before.controller_state_revision,
+                              'expires_at': as_timestamp(now()) + 10} }}
+                      response_variable: command_response
+                    - if: >-
+                        {{ command_response.status not in [200, 202]
+                           or command_response.content is not mapping
+                           or command_response.content.command_id is not number }}
+                      then:
+                        - variables:
+                            result:
+                              success: false
+                              error: Wall command was not accepted; no retry was sent.
+                        - stop: Wall command was not accepted; no retry was sent.
+                          response_variable: result
+                    - repeat:
+                        sequence:
+                          - delay:
+                              milliseconds: 250
+                          - action: rest_command.led_grid_wall_observe
+                            response_variable: after_response
+                          - variables:
+                              matched: >-
+                                {{ after_response.status == 200 and after_response.content is mapping
+                                   and after_response.content.controller_session_id == before.controller_session_id
+                                   and after_response.content.controller_state_revision is integer
+                                   and after_response.content.controller_state_revision == before.controller_state_revision + 1
+                                   and after_response.content.last_applied_command_id == command_response.content.command_id
+                                   and after_response.content[observed_field] == expected }}
+                        until: "{{ matched or repeat.index >= 20 }}"
+                    - if: "{{ not matched }}"
+                      then:
+                        - variables:
+                            result:
+                              success: false
+                              error: Controller did not confirm the requested setting; no retry was sent.
+                        - stop: Controller did not confirm the requested setting; no retry was sent.
+                          response_variable: result
+                    - variables:
+                        command_revision: "{{ after_response.content.controller_state_revision }}"
+      - event: led_grid_wall_refresh
+      - variables:
+          result:
+            success: true
+            controller_session_id: "{{ command_session }}"
+            controller_state_revision: "{{ command_revision }}"
+      - stop: Requested settings are observed.
+        response_variable: result
