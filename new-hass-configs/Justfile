@@ -81,9 +81,12 @@ zwave-verify-instant-ramps *args="": preflight config-generator-install
 
 # Install repo-owned priority device configs and restart only the Z-Wave JS app
 zwave-deploy-device-configs: preflight
+	#!/usr/bin/env bash
+	set -euo pipefail
 	bash sync-tools/test-zwave-device-configs.sh
-	rsync -av -e "{{ha_ssh_command}}" zwave-device-configs/ root@homeassistant.local:/addon_configs/core_zwave_js/config/
-	{{ha_ssh_command}} root@homeassistant.local "ha addons restart core_zwave_js"
+	config_root="$({{ha_ssh_command}} root@homeassistant.local 'if [ -d /app_configs/core_zwave_js ]; then echo /app_configs/core_zwave_js; elif [ -d /addon_configs/core_zwave_js ]; then echo /addon_configs/core_zwave_js; else echo "Z-Wave app configuration directory not found" >&2; exit 1; fi')"
+	rsync -av -e "{{ha_ssh_command}}" zwave-device-configs/ "root@homeassistant.local:${config_root}/config/"
+	{{ha_ssh_command}} root@homeassistant.local "ha apps restart core_zwave_js"
 
 # Generate Home Assistant configs from TypeScript sources
 generate: config-generator-install

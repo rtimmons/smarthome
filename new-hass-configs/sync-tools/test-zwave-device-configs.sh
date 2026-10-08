@@ -16,7 +16,9 @@ for filename in "${expected_files[@]}"; do
     type == "object" and
     (."$import" | type == "string") and
     (."$import" | test("^~/0x[0-9a-f]{4}/")) and
-    .compat.disableAutoRefresh == true
+    .compat.disableAutoRefresh == true and
+    (.compat.commandClasses.remove | keys) == ["0x31"] and
+    .compat.commandClasses.remove["0x31"].endpoints == "*"
   ' "${file}" >/dev/null
 done
 
