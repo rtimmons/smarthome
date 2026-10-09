@@ -249,6 +249,17 @@ stopped on two unrelated printer visual baselines (`bluey_meter_mode.png` and
 node add-on container/package recipe also passed; generated configuration has
 `boot: manual` and no watchdog endpoint.
 
+Deployment of commit `7e5fd01` succeeded for both Sonos add-ons with
+`just deploy node-sonos-http-api sonos-api --skip-config`. Post-deployment
+verification at **2026-10-09T16:53:56Z (12:53:56 p.m. America/New_York)** found
+manual boot, watchdog false, port 5005 closed, healthy/live HA-backed Sonos API,
+and Grid zones HTTP 200. Supervisor still reports the retained node add-on as
+`error`, not `stopped`; its API is not listening. No rebuild or start of the old
+service occurred during deployment. The conservative 24-hour follow-up point is
+**2026-10-10 at 12:54 p.m. America/New_York** or later. This is a timestamp for a
+future user-requested check, not a claim of continuous monitoring or approval to
+delete code automatically.
+
 No speaker playback, volume, or grouping was changed. The add-on remains
 installed and repository sources remain available for rollback. The prior
 retirement requirements (including the stopped observation, backup/reinstall
