@@ -85,7 +85,8 @@ deploy-preflight:
 	fi
 	# Check Python version
 	required_python=$(tr -d '[:space:]' < .python-version)
-	if ! pyenv versions --bare | grep -q "^${required_python}$"; then
+	# Consume all output so pipefail does not mistake pyenv's SIGPIPE for a missing version.
+	if ! pyenv versions --bare | grep "^${required_python}$" >/dev/null; then
 		echo "Python ${required_python} not installed via pyenv. Run 'just setup' first." >&2
 		exit 1
 	fi
