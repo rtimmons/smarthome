@@ -222,6 +222,39 @@ An unchecked plan criterion remains a blocker. A green root command alone does n
 
 ## Live rollout evidence
 
+### Retirement check (2026-10-09)
+
+The user requested stopping and removing the legacy service. Live Sonos API
+health confirmed `backendMode: home_assistant`, `ready: true`, live freshness,
+and no missing/unavailable rooms or missing favorite/preset sources. The
+Supervisor stop command for `local_node_sonos_http_api` succeeded. Afterward,
+Sonos API remained ready and Grid Dashboard `/sonos/zones` returned HTTP 200.
+The old add-on hostname no longer resolved from the SSH add-on. Supervisor
+reported `state: error` rather than `stopped`; this is not proof of a clean
+stopped observation window. Boot was changed to `manual` and watchdog to
+`false`, with both settings read back successfully, to prevent automatic restart.
+
+The user subsequently instructed committing and deploying persistent disablement,
+retaining the actual code until a later request after at least 24 hours. The
+manifest now declares `disabled: true`; Talos packages manual boot without a
+watchdog, enforces disabled live options, stops the installed service, and exits
+before install/rebuild/start. Local development omits disabled add-ons. Sonos API
+no longer depends on node and defaults to Home Assistant while retaining explicit
+node/shadow rollback modes.
+
+Validation: the full `just test` run passed Talos and Grid Dashboard checks but
+stopped on two unrelated printer visual baselines (`bluey_meter_mode.png` and
+`bluey_meter_mode_long_text_high_reading.png`); printer code was not modified. `just test sonos-api` then passed, including
+121 Talos tests, the Sonos suites/build, and its container recipe. The retained
+node add-on container/package recipe also passed; generated configuration has
+`boot: manual` and no watchdog endpoint.
+
+No speaker playback, volume, or grouping was changed. The add-on remains
+installed and repository sources remain available for rollback. The prior
+retirement requirements (including the stopped observation, backup/reinstall
+evidence, and live behavior matrix) remain incomplete; these read-only health
+checks do not satisfy them or claim repository retirement is complete.
+
 The merged 1.1.1 candidate is deployed and the live Sonos API is explicitly configured in `home_assistant` mode. The node add-on remains installed for rollback, but it was not used for the final restoration writes. The required long observation windows are still pending, so this evidence does not claim migration completion.
 
 | Stage | Status | Evidence |

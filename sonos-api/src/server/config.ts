@@ -8,8 +8,8 @@ const parsePort = (value: string | undefined, fallback: number): number => {
 const normalizeUrl = (value: string): string => value.replace(/\/+$/, '');
 
 const parseBackendMode = (value: string | undefined): SonosBackendMode => {
-  if (value === 'shadow' || value === 'home_assistant') return value;
-  return 'node';
+  if (value === 'node' || value === 'shadow') return value;
+  return 'home_assistant';
 };
 
 export const loadAppConfig = (env: NodeJS.ProcessEnv = process.env) => ({

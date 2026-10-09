@@ -1,4 +1,6 @@
 slug: node_sonos_http_api
+# Retain rollback code, but never start during deployment or local development.
+disabled: true
 name: Node Sonos HTTP API
 description: The actual node-sonos-http-api server for controlling Sonos speakers via HTTP.
 url: https://github.com/jishi/node-sonos-http-api

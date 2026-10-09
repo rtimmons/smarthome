@@ -22,7 +22,7 @@ APP_PORT="5006"
 export APP_PORT
 SONOS_BACKEND_MODE="$(config_get 'backend_mode')"
 if [ -z "$SONOS_BACKEND_MODE" ]; then
-  SONOS_BACKEND_MODE="node"
+  SONOS_BACKEND_MODE="home_assistant"
 fi
 case "$SONOS_BACKEND_MODE" in
   node|shadow|home_assistant) ;;

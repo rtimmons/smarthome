@@ -24,9 +24,8 @@ def test_dependency_waves_parallelize_only_independent_addons():
     )
 
     assert [[path.name for path in wave] for wave in waves] == [
-        ["mongodb", "node-sonos-http-api", "snapshot-service"],
-        ["printer", "sonos-api", "tinyurl-service"],
-        ["grid-dashboard"],
+        ["mongodb", "node-sonos-http-api", "snapshot-service", "sonos-api"],
+        ["grid-dashboard", "printer", "tinyurl-service"],
     ]
 
 

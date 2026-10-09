@@ -28,9 +28,8 @@ def test_repository_dependency_graph_is_valid_and_deterministic():
     )
 
     assert [[path.name for path in wave] for wave in waves] == [
-        ["mongodb", "node-sonos-http-api", "snapshot-service"],
-        ["printer", "sonos-api", "tinyurl-service"],
-        ["grid-dashboard"],
+        ["mongodb", "node-sonos-http-api", "snapshot-service", "sonos-api"],
+        ["grid-dashboard", "printer", "tinyurl-service"],
     ]
     assert installed_addon_id(manifests["tinyurl-service"]) == "local_tinyurl_service"
 

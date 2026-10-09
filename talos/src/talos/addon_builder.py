@@ -512,6 +512,7 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
     context = {
         "addon": {
             "key": addon_key,
+            "disabled": raw.get("disabled", False),
             "slug": raw["slug"],
             "name": raw["name"],
             "description": raw["description"],
@@ -797,6 +798,7 @@ def render_remote_deploy_script(
     verbose: bool,
     health_port: int | None = None,
     health_path: str | None = None,
+    disabled: bool = False,
 ) -> str:
     verbose_flag = "true" if verbose else "false"
     health_port_value = shlex.quote(str(health_port)) if health_port is not None else "''"
@@ -811,6 +813,7 @@ REMOTE_ADDON_DIR="{remote_addon_dir}"
 VERBOSE="{verbose_flag}"
 HEALTH_PORT={health_port_value}
 HEALTH_PATH={health_path_value}
+DISABLED={"true" if disabled else "false"}
 READINESS_ATTEMPTS=60
 LAST_HEALTH_TARGET="not-resolved"
 
@@ -963,6 +966,22 @@ if ! run_metric "remote.reload" reload_addons; then
     exit 1
 fi
 
+# A retained disabled add-on must not be rebuilt or started by a broad deploy.
+if [ "$DISABLED" = "true" ]; then
+    if read_addon_info >/dev/null 2>&1; then
+        test -n "${{SUPERVISOR_TOKEN:-}}"
+        curl -fsS -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+            -H "Content-Type: application/json" -X POST \
+            -d '{{"boot":"manual","watchdog":false}}' \
+            http://supervisor/addons/"$ADDON_ID"/options | jq -e '.result == "ok"' >/dev/null
+        run_quiet ha apps stop "$ADDON_ID"
+        read_addon_info | jq -e '.data.boot == "manual" and .data.watchdog == false and .data.state != "started"' >/dev/null
+    fi
+    log_info "Add-on $ADDON_ID retained and disabled"
+    REMOTE_TOTAL_STATUS="ok"
+    exit 0
+fi
+
 log_info "Installing/rebuilding add-on $ADDON_ID..."
 if read_addon_info >/dev/null 2>&1; then
     if ! run_metric "remote.rebuild" run_quiet ha apps rebuild "$ADDON_ID"; then
@@ -1087,6 +1106,9 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
             console.print(f"  1. Build add-on locally")
             console.print(f"  2. Upload to {ha_host}")
             console.print(f"  3. Stop existing add-on (if running)")
+            if addon.get("disabled", False):
+                console.print("  4. Retain files; enforce manual boot, watchdog off, and stopped state")
+                return
             console.print(f"  4. Install/rebuild add-on")
             console.print(f"  5. Configure add-on options")
             console.print(f"  6. Start add-on")
@@ -1147,6 +1169,7 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
             verbose=verbose,
             health_port=port,
             health_path=addon.get("deploy_health_path"),
+            disabled=addon.get("disabled", False),
         )
 
         # Execute remote deployment script

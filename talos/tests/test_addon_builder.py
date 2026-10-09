@@ -260,10 +260,44 @@ def test_slow_stopping_node_addons_exec_the_service_as_pid_one():
     assert "npm start" not in sonos_run
 
 
-def test_sonos_custom_launcher_reads_backend_mode_with_safe_node_default():
+def test_sonos_custom_launcher_defaults_to_home_assistant():
     sonos_run = (addon_builder.REPO_ROOT / "sonos-api/run.sh").read_text()
 
     assert "config_get 'backend_mode'" in sonos_run
-    assert 'SONOS_BACKEND_MODE="node"' in sonos_run
+    assert 'SONOS_BACKEND_MODE="home_assistant"' in sonos_run
     assert "node|shadow|home_assistant" in sonos_run
     assert "export SONOS_BACKEND_MODE" in sonos_run
+
+
+def test_disabled_addon_is_packaged_for_manual_boot_without_watchdog():
+    context = addon_builder.build_context("node-sonos-http-api", addon_builder.discover_addons())
+    assert context["addon"]["disabled"] is True
+    rendered = addon_builder.render_template(addon_builder.jinja_env(), "config.yaml.j2", context)
+    assert "boot: manual" in rendered
+    assert "watchdog:" not in rendered
+
+
+def test_disabled_deployment_exits_before_start_and_fails_closed_without_token():
+    import subprocess
+
+    script = addon_builder.render_remote_deploy_script(
+        "node_sonos_http_api", "/tmp/node.tar.gz", "/addons/node", "/addons", False,
+        disabled=True,
+    )
+    branch = script[script.index('# A retained disabled'):script.index('log_info "Installing/rebuilding')]
+    prelude = '''set -euo pipefail
+DISABLED=true
+ADDON_ID=local_node_sonos_http_api
+read_addon_info() { echo '{"data":{"boot":"manual","watchdog":false,"state":"stopped"}}'; }
+curl() { echo '{"result":"ok"}'; }
+ha() { echo "stop:$*"; }
+run_quiet() { "$@"; }
+log_info() { :; }
+'''
+    success = subprocess.run(["bash", "-c", prelude + 'SUPERVISOR_TOKEN=test\n' + branch + 'echo UNEXPECTED_START'], capture_output=True, text=True)
+    assert success.returncode == 0, success.stderr
+    assert "apps stop local_node_sonos_http_api" in success.stdout
+    assert "UNEXPECTED_START" not in success.stdout
+    failure = subprocess.run(["bash", "-c", prelude + 'unset SUPERVISOR_TOKEN\n' + branch + 'echo UNEXPECTED_START'], capture_output=True, text=True)
+    assert failure.returncode != 0
+    assert "UNEXPECTED_START" not in failure.stdout

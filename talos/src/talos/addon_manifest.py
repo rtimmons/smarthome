@@ -29,6 +29,9 @@ def discover_addons(repo_root: Path = REPO_ROOT) -> dict[str, dict[str, Any]]:
             )
         slugs[slug] = addon_key
 
+        if not isinstance(raw.get("disabled", False), bool):
+            raise click.ClickException(f"Invalid disabled flag for add-on '{addon_key}'; expected a boolean.")
+
         dependencies = raw.get("depends_on", [])
         if not isinstance(dependencies, list) or not all(
             isinstance(item, str) and item for item in dependencies

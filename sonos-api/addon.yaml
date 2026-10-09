@@ -2,8 +2,6 @@ slug: sonos_api
 name: Sonos API
 description: Sonos compatibility and orchestration API backed by Home Assistant, with a node rollback mode.
 url: https://github.com/rtimmons/smarthome
-depends_on:
-  - node-sonos-http-api
 copy:
   - src
   - package.json
@@ -24,7 +22,7 @@ deploy_health_path: "/sonos/zones"
 environment:
   NODE_OPTIONS: "--enable-source-maps"
 options:
-  backend_mode: "node"
+  backend_mode: "home_assistant"
   sonos_base_url: "http://local-node-sonos-http-api:5005"
 schema:
   backend_mode: "list(node|shadow|home_assistant)"
@@ -54,7 +52,7 @@ run_env:
     value: "5006"
   - env: SONOS_BACKEND_MODE
     from_option: backend_mode
-    default: "node"
+    default: "home_assistant"
   - env: SONOS_BASE_URL
     from_option: sonos_base_url
     default: "http://local-node-sonos-http-api:5005"

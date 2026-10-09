@@ -4,7 +4,7 @@ This Home Assistant add-on preserves the Grid Dashboard's Sonos HTTP contract wh
 
 ## Dependencies
 
-`node-sonos-http-api` is required only in `node` and `shadow` modes. It remains installed during the staged migration so configuration-only rollback is fast. In `home_assistant` mode, reads and writes use the allowlisted Home Assistant media-player entities and the Supervisor token remains inside the add-on.
+`node-sonos-http-api` is required only in `node` and `shadow` modes. It remains installed but disabled during the stopped-service observation window. Rollback requires explicitly re-enabling the old service. In `home_assistant` mode, reads and writes use the allowlisted Home Assistant media-player entities and the Supervisor token remains inside the add-on.
 
 ## Features
 
@@ -48,7 +48,7 @@ HA_HOST=smarterhome5.local just deploy
 
 The add-on accepts the following configuration options:
 
-- `backend_mode`: `node`, `shadow`, or `home_assistant` (default: `node` for safe upgrades)
+- `backend_mode`: `node`, `shadow`, or `home_assistant` (default: `home_assistant`)
 - `sonos_base_url`: node service URL used only by `node` and `shadow` modes (default: `http://local-node-sonos-http-api:5005`)
 
 `shadow` serves and writes through node while comparing Home Assistant reads. It never mirrors a write to Home Assistant. `home_assistant` requires the add-on's `homeassistant_api` permission and a live snapshot containing every configured room and source.

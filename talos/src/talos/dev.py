@@ -257,7 +257,7 @@ class AddonDiscovery:
 
             try:
                 data = yaml.safe_load(yaml_path.read_text(encoding="utf-8"))
-                if data:
+                if data and not data.get("disabled", False):
                     addons[key] = AddonConfig(key, yaml_path, data)
             except Exception as e:
                 console.print(f"[red]Error loading {yaml_path}:[/red] {e}")

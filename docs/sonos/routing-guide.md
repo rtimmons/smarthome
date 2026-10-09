@@ -17,7 +17,8 @@ The Grid server also maps browser-facing `/sonos-intents/*` requests to the inte
 
 ## Backend modes
 
-- `node` is the default for upgraded installations. Routes retain their existing node behavior.
+- `home_assistant` is the default. The old node service is disabled pending retirement.
+- `node` is retained for explicitly requested rollback and requires re-enabling the old service. Routes retain their existing node behavior.
 - `shadow` still serves every response and executes every command through node. Home Assistant state is read asynchronously for structured comparison only; there is exactly one node write and zero Home Assistant writes per action.
 - `home_assistant` serves canonical state and executes allowlisted `media_player` services through Home Assistant. Its health is ready only after authentication and a complete, live snapshot.
 

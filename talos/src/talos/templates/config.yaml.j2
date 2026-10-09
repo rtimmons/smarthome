@@ -7,6 +7,8 @@ arch:
   - aarch64
   - amd64
 startup: {{ addon.startup }}
+{% if addon.disabled %}boot: manual
+{% endif -%}
 {% if addon.backup %}backup: {{ addon.backup }}
 {% endif -%}
 {% if addon.backup_pre %}backup_pre: {{ addon.backup_pre | tojson }}
@@ -16,7 +18,7 @@ startup: {{ addon.startup }}
 {% if addon.backup_exclude %}backup_exclude:
 {{ backup_exclude_yaml | indent(2, true) }}
 {% endif -%}
-{% if addon.port %}watchdog: tcp://[HOST]:[PORT:{{ addon.port }}]
+{% if addon.port and not addon.disabled %}watchdog: tcp://[HOST]:[PORT:{{ addon.port }}]
 {% endif -%}
 ingress: {{ "true" if addon.ingress else "false" }}
 {% if addon.ingress -%}

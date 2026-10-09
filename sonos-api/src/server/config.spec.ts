@@ -3,9 +3,9 @@ import test from 'node:test';
 
 import {loadAppConfig} from './config';
 
-test('an upgraded installation without backend mode remains on node', () => {
+test('an installation without backend mode uses Home Assistant', () => {
   const config = loadAppConfig({SONOS_BASE_URL: 'http://node:5005/'});
-  assert.equal(config.backendMode, 'node');
+  assert.equal(config.backendMode, 'home_assistant');
   assert.equal(config.sonosUrl, 'http://node:5005');
 });
 
@@ -30,4 +30,8 @@ test('local development endpoints are injectable without changing add-on options
   assert.equal(config.homeAssistantRestUrl, 'http://homeassistant.local:8123/api');
   assert.equal(config.homeAssistantWebSocketUrl, 'ws://homeassistant.local:8123/api/websocket');
   assert.equal(config.homeAssistantToken, 'local-token');
+});
+
+test('node rollback still requires explicit selection', () => {
+  assert.equal(loadAppConfig({SONOS_BACKEND_MODE: 'node'}).backendMode, 'node');
 });

@@ -97,3 +97,11 @@ def test_printer_addon_data_archive_is_localized_for_local_dev():
     assert addon.build_env_vars()["PRINTED_LABELS_DIR"] == (
         "printer/label-output/printed-labels"
     )
+
+
+def test_local_discovery_skips_disabled_sonos_backend():
+    from talos.dev import AddonDiscovery
+
+    addons = AddonDiscovery.discover()
+    assert "node-sonos-http-api" not in addons
+    assert "sonos-api" in addons

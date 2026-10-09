@@ -4,7 +4,7 @@ The Grid Dashboard uses `sonos-api` as a stable compatibility and orchestration 
 
 | Mode | Reads | Writes | Purpose |
 | --- | --- | --- | --- |
-| `node` | node-sonos-http-api | node-sonos-http-api | Safe default and rollback |
+| `node` | node-sonos-http-api | node-sonos-http-api | Explicit rollback only; service currently disabled |
 | `shadow` | Node response is served; Home Assistant is compared asynchronously | node-sonos-http-api only | Read-parity observation without duplicate commands |
 | `home_assistant` | Home Assistant Sonos entities | Home Assistant media-player services | Native target architecture |
 
@@ -48,7 +48,12 @@ The retained root policies are `/up`, `/down`, and `/same/:room`. The unused leg
 
 ## Staged dependency and rollback
 
-`node-sonos-http-api` remains installed and is listed as a temporary add-on dependency while `node` or `shadow` mode can be selected. It continues to expose port 5005 for baseline and rollback validation. Do not stop, uninstall, or remove it from the repository until the shadow, pilot, whole-house, stopped-node, backup, and explicit-approval gates in [the migration plan](../plan-replace-sonos-node-api.md) have passed.
+`node-sonos-http-api` is disabled as of 2026-10-09 for stopped-service observation.
+Its code and installed data remain available for rollback. Deployment enforces
+manual boot, watchdog off, and a non-running state; local development skips it.
+Sonos API no longer declares it as a deployment dependency. The live backend is
+`home_assistant`; dormant node/shadow configuration is retained until the user
+requests final removal after at least 24 hours. Do not re-enable it automatically.
 
 Every live test must restore the frozen household state before its stage can pass: one Bathroom-coordinated group containing all eight configured rooms, volume 20 and mute false on every member, playing `CH 735 - Steve Aoki's Remix Radio`. Home Assistant, direct node while retained, Sonos API, Grid Dashboard, and the Sonos app must agree, with no pending operation. See the validation record for the complete checkpoint.
 
