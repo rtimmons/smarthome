@@ -137,10 +137,15 @@ class RecoveryDrillTests(unittest.TestCase):
         clone = next(command for command, kwargs in self.calls if 'clone' in command)
         self.assertIn('--no-local', clone)
         self.assertIn('--no-hardlinks', clone)
-        self.assertEqual(clone[clone.index('--branch') + 1], 'usenet')
+        self.assertEqual(clone[clone.index('--branch') + 1], 'master')
         statuses = [command for command, kwargs in self.calls if 'status' in command]
         self.assertIn('--untracked-files=all', statuses[0])
         self.assertIn('usenet-infra', statuses[0])
+
+    def test_explicit_recovery_branch(self):
+        self.execute(branch='recovery-checkpoint')
+        clone = next(command for command, kwargs in self.calls if 'clone' in command)
+        self.assertEqual(clone[clone.index('--branch') + 1], 'recovery-checkpoint')
 
     def test_uncommitted_source_prevents_clone_and_master_never_reaches_git(self):
         self.dirty = True

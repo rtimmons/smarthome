@@ -21,7 +21,7 @@ import sys
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = 'git@github.com:rtimmons/smarthome.git'
-BRANCH = 'usenet'
+BRANCH = 'master'
 RELEVANT = ('.sops.yaml', '.gitignore', 'AGENTS.md', 'Justfile', 'plan.md', 'usenet-infra')
 REVISION = re.compile(r'[a-f0-9]{40}(?:[a-f0-9]{24})?')
 SNAPSHOT = re.compile(r'[0-9]{8}T[0-9]{6}Z-[a-f0-9]{16}')
@@ -122,7 +122,7 @@ def count(value):
     return value
 
 
-def drill(snapshot, destination, *, source=SOURCE, expected_revision=None, root=ROOT,
+def drill(snapshot, destination, *, source=SOURCE, branch=BRANCH, expected_revision=None, root=ROOT,
           environ=None, runner=subprocess.run, module_loader=load_module):
     environ = os.environ if environ is None else environ
     # Remove the master before Git, bootstrap, imports or any other child work.
@@ -146,7 +146,7 @@ def drill(snapshot, destination, *, source=SOURCE, expected_revision=None, root=
         destination.mkdir(mode=0o700)
         created = True
         git(root, ['-c', 'init.templateDir=', '-c', 'protocol.file.allow=never', 'clone',
-                   '--no-local', '--no-hardlinks', '--single-branch', '--branch', BRANCH,
+                   '--no-local', '--no-hardlinks', '--single-branch', '--branch', branch,
                    '--', source, str(destination)], env, runner)
         stage = 'clone-revision-gate'
         cloned_revision = committed_revision(destination, env, runner)
@@ -212,10 +212,11 @@ def main(argv=None):
     parser.add_argument('--snapshot', required=True)
     parser.add_argument('--destination', required=True, type=Path)
     parser.add_argument('--source', default=SOURCE)
+    parser.add_argument('--branch', default=BRANCH, help='Published recovery branch (default: master)')
     parser.add_argument('--expected-revision')
     args = parser.parse_args(argv)
     try:
-        path, report = drill(args.snapshot, args.destination, source=args.source,
+        path, report = drill(args.snapshot, args.destination, source=args.source, branch=args.branch,
                              expected_revision=args.expected_revision)
         print('Clean-clone recovery verified: ' + str(report['vault_entries_restored']) + ' vault entries, '
               + str(report['bundle_entries_verified']) + ' bundle entries, '

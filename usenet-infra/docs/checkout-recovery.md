@@ -70,7 +70,7 @@ published current branch as proof that local stashes and other branches survived
 
 ## Recovery sequence
 
-1. Clone the published `usenet` branch using the HTTPS GitHub URL and bootstrap
+1. Clone the published `master` branch using the HTTPS GitHub URL and bootstrap
    pinned tools with `just setup` / the narrower infrastructure bootstrap recipes.
 2. Restore the original SOPS vault using the existing master from 1Password or
    its already confirmed paper copy. Follow the original clean-clone runbook;
@@ -95,7 +95,8 @@ To verify that the current checkout still matches this backup, run
 `checkout-backup.py check --archive /absolute/files/recovery.tar.age --git-archive
 /absolute/git/recovery.tar.age --identity /absolute/cloud-admin`. It checks every preserved local file, Git refs/stashes/configuration and extra
 reflog history, refuses existing dependent worktrees/custom unpreserved hooks,
-rejects tracked changes, and requires HEAD to match published `usenet`. This command never deletes
+rejects tracked changes, and requires HEAD to match published `master`. Use
+`--branch NAME` to check a different published branch. This command never deletes
 anything. Host-owned backup schedules continue when the checkout is absent.
 
 Loss of the NAS disks remains out of scope. Actual HA/UniFi replacement drills,

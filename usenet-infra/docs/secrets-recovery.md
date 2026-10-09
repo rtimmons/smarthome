@@ -331,3 +331,7 @@ never be treated as deletion approval. Capture freshness, new archive inventory,
 and current backup freshness remain ongoing maintenance work; see
 [scheduled backups](scheduled-backups.md) for the deployed schedules and retention. New files in bounded discovery roots require inventory review;
 changing inventory policy also requires re-encrypting the small vault.
+
+Recovery drills clone published `master` by default. Use `recovery-drill --branch NAME`
+for another published recovery branch; the cloned revision must still match the
+clean local checkout. Publish the reviewed merge before running a new drill.

@@ -22,7 +22,7 @@ services:
       - /tmp:rw,noexec,nosuid,nodev,size=128m,mode=1777
       - /app/.next/cache:rw,noexec,nosuid,nodev,size=256m,uid=1991,gid=1991,mode=0700
     cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     pids_limit: 256
     mem_limit: 2g
     cpus: 1.0
@@ -51,7 +51,7 @@ services:
         bind: {create_host_path: false}
     tmpfs: ["/tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777"]
     cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    security_opt: ["no-new-privileges:true"]
     pids_limit: 64
     mem_limit: 128m
     cpus: 0.25

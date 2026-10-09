@@ -28,14 +28,14 @@ preserve unrelated edits, ignored inputs and `msg`. Before live changes, inspect
 health and active work with the existing wrappers. Do not restart services or
 enqueue downloads merely for an audit.
 
-## Closure and merge criteria
+## Ongoing maintenance
 
-The branch is being consolidated for review against `master`. Retired workers,
+The Usenet workflow is maintained on `master`. Retired workers,
 one-time migrations, redundant setup paths and historical runbook narratives
 are removed; original encrypted snapshots, recovery receipts and journals remain
 unchanged. Recovery reconstructs the current layout directly.
 
-Validate the reviewed source before merging, report the two documented historical
-key findings separately, and protect local work. Root instructions require
-permission before taking a Git lock. No PR, push, branch deletion or checkout
-removal is part of this consolidation.
+Validate changes, report the two documented historical key findings separately,
+and protect local work. Root instructions require permission before taking a Git
+lock. Publishing changes, deleting branches and removing checkouts require their
+own authorization.

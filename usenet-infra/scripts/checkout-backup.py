@@ -282,6 +282,7 @@ if __name__ == '__main__':
     parser.add_argument('--destination', type=Path)
     parser.add_argument('--source-directory', type=Path)
     parser.add_argument('--source-checkout')
+    parser.add_argument('--branch', default='master', help='Published branch for checkout check (default: master)')
     args = parser.parse_args()
     if args.action == 'inventory':
         items = inventory(ROOT)
@@ -328,7 +329,9 @@ if __name__ == '__main__':
             if run(['git', 'status', '--porcelain', '--untracked-files=no'], cwd=ROOT):
                 raise RuntimeError('tracked changes remain unpublished')
             head = run(['git', 'rev-parse', 'HEAD'], cwd=ROOT).decode().strip()
-            remote = run(['git', 'ls-remote', 'https://github.com/rtimmons/smarthome.git', 'refs/heads/usenet'], cwd=ROOT).decode().split()[0]
+            remote = published.get('refs/heads/' + args.branch)
+            if remote is None:
+                raise RuntimeError('published recovery branch is missing')
             if head != remote:
                 raise RuntimeError('current source revision is not published')
             print(json.dumps({'status': 'verified', 'local_files_match': True,
