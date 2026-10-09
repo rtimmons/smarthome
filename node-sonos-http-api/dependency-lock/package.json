@@ -11,7 +11,7 @@
     "html-entities": "1.2.1",
     "json5": "2.2.3",
     "mime": "1.6.0",
-    "music-metadata": "11.14.0",
+    "music-metadata": "11.16.0",
     "serve-static": "1.16.2",
     "sonos-discovery": "https://github.com/jishi/node-sonos-discovery/archive/v1.8.0.tar.gz",
     "wav-file-info": "0.0.10"
