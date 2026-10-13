@@ -62,6 +62,17 @@ class ContentTests(unittest.TestCase):
 
 
 class TransactionTests(unittest.TestCase):
+    def test_unreachable_wiki_stops_before_services_change(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output = Path(directory)
+            (output / "manifest.json").write_text(json.dumps({"publication": {}}))
+            with patch.dict(os.environ, {}, clear=True), patch.object(tool, "build", return_value=output), \
+                 patch.object(tool, "existing_receipts", side_effect=OSError("No route to host")), \
+                 patch.object(tool.subprocess, "call") as services, patch.object(tool, "deploy") as publish:
+                self.assertEqual(tool.with_deployment("media", ["true"]), 3)
+                services.assert_not_called()
+                publish.assert_not_called()
+
     def test_receipt_survives_failure_to_fetch_previous_evidence(self):
         with tempfile.TemporaryDirectory() as directory:
             output = Path(directory)
@@ -70,7 +81,7 @@ class TransactionTests(unittest.TestCase):
             with patch.dict(os.environ, {}, clear=True), patch.object(tool, "BUILD", output), \
                  patch.object(tool, "build", return_value=output), patch.object(tool.subprocess, "call", return_value=0), \
                  patch.object(tool, "publication_inputs", return_value="abc"), \
-                 patch.object(tool, "existing_receipts", side_effect=OSError("NAS unreachable")):
+                 patch.object(tool, "existing_receipts", side_effect=[{}, OSError("NAS unreachable")]):
                 self.assertEqual(tool.with_deployment("media", ["true"]), 3)
                 self.assertIn("media", json.loads((output / "pending-receipts.json").read_text()))
 
@@ -80,6 +91,7 @@ class TransactionTests(unittest.TestCase):
             (output / "manifest.json").write_text(json.dumps({"publication": {}}))
             with patch.dict(os.environ, {"WIKI_CALLER_DIR": str(ROOT)}, clear=True), \
                  patch.object(tool, "build", return_value=output), \
+                 patch.object(tool, "existing_receipts", return_value={}), \
                  patch.object(tool.subprocess, "call", return_value=7), patch.object(tool, "deploy") as publish:
                 self.assertEqual(tool.with_deployment("media", ["false"]), 7)
                 publish.assert_not_called()
@@ -129,6 +141,72 @@ class TransactionTests(unittest.TestCase):
                 receipts = json.loads((output / "pending-receipts.json").read_text())
                 self.assertEqual(receipts["unrelated"]["completed_at"], "old")
                 self.assertEqual(receipts["media"]["revision"], before["revision"])
+
+
+class ReceiptFetchTests(unittest.TestCase):
+    def test_direct_bounded_fetch_preserves_receipts(self):
+        def respond(argv, **kwargs):
+            self.assertEqual(argv[:2], ["/usr/bin/curl", "--disable"])
+            self.assertEqual(argv[argv.index("--noproxy") + 1], "*")
+            self.assertIn("--max-time", argv)
+            self.assertIn("--max-filesize", argv)
+            self.assertNotIn("--location", argv)
+            Path(argv[argv.index("--output") + 1]).write_text('{"receipts":{"lighting":{"completed_at":"today"}}}')
+            return subprocess.CompletedProcess(argv, 0, "200", "")
+        with patch.object(tool.sys, "platform", "darwin"), patch.object(tool.subprocess, "run", side_effect=respond):
+            self.assertEqual(tool.existing_receipts(), {"lighting": {"completed_at": "today"}})
+
+    def test_network_failure_reports_both_urls(self):
+        failure = subprocess.CompletedProcess([], 7, "000", "No route to host")
+        with patch.object(tool.subprocess, "run", return_value=failure):
+            with self.assertRaises(ValueError) as error:
+                tool.existing_receipts()
+        self.assertIn("http://192.168.1.66/publication.json", str(error.exception))
+        self.assertIn("http://192.168.1.66:8090/", str(error.exception))
+        self.assertIn("No route to host", str(error.exception))
+
+    def test_missing_metadata_does_not_discard_history(self):
+        with patch.object(tool.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "404", "")) as fetch:
+            with self.assertRaisesRegex(ValueError, "do not discard"):
+                tool.existing_receipts()
+            self.assertEqual(fetch.call_count, 1)
+
+    def test_only_original_guide_allows_empty_receipts(self):
+        for body, allowed in [("Usenet field guide", True), ("Smarthome field guide Usenet field guide", False)]:
+            with patch.object(tool, "fetch_wiki", side_effect=[ConnectionError("No route to host"), body]):
+                if allowed:
+                    self.assertEqual(tool.existing_receipts(), {})
+                else:
+                    with self.assertRaises(ValueError):
+                        tool.existing_receipts()
+
+    def test_http_redirect_is_rejected(self):
+        with patch.object(tool.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "302", "")):
+            with self.assertRaises(tool.WikiHTTPError):
+                tool.existing_receipts()
+
+
+class DeploymentLogTests(unittest.TestCase):
+    def test_wrapper_saves_both_streams_and_preserves_failure_status(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "wiki").mkdir()
+            (root / "wiki/run").write_bytes((ROOT / "wiki/run").read_bytes())
+            (root / ".python-version").write_text("3.14.6")
+            uv = root / "uv"
+            uv.write_text("#!/bin/sh\necho service-output\necho wiki-error >&2\nexit 3\n")
+            uv.chmod(0o755)
+            result = subprocess.run(["bash", str(root / "wiki/run"), "deploy"], capture_output=True, text=True,
+                                    env={**os.environ, "PATH": str(root) + os.pathsep + os.environ["PATH"],
+                                         "SMARTHOME_WIKI_DEPLOY_ACTIVE": ""})
+            self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+            logs = list((root / "build/wiki/logs").iterdir())
+            self.assertEqual(len(logs), 1)
+            self.assertEqual(logs[0].stat().st_mode & 0o777, 0o600)
+            self.assertIn("service-output", logs[0].read_text())
+            self.assertIn("wiki-error", logs[0].read_text())
+            self.assertIn("Deployment exited 3", logs[0].read_text())
+            self.assertIn(str(logs[0]), result.stdout)
 
 
 class RuntimeRollbackTests(unittest.TestCase):

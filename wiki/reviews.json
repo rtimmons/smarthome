@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-13"
   },
   "maintenance": {
-    "fingerprint": "4373585773f1d095a11ccfab0e50c315e346e154b94ecf4964d7ef3c254bf11a",
-    "reason": "Reviewed new Z-Wave hotfix and route recipes plus lighting source watch paths; existing wiki deployment and backup behavior is unchanged.",
+    "fingerprint": "8ac4813c84be0c59d658aaf34c3876974fd8b2911973354e1499b1482ea89b48",
+    "reason": "Pin macOS wiki receipt requests to the verified Apple curl path; document environment-independent HTTP client selection and preserve private failure logs.",
     "reviewed_at": "2026-10-13"
   },
   "media": {

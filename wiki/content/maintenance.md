@@ -16,6 +16,8 @@ Generated service, device, and scene tables update directly from repository conf
 
 `just wiki-preview` builds and serves a local preview. `just wiki-deploy` publishes documentation-only changes. Supported service deployments prepare the guide before changing services and publish it after successful completion. A failed wiki update preserves the previous release and does not roll back household services.
 
+The deployment wrapper checks access to the existing wiki before changing services. It prints and saves its output under `build/wiki/logs/`. If publication fails after services succeed, use `just wiki-deploy` to publish the retained receipts; the failure log identifies the URL and connection error.
+
 Use `just wiki-rollback` to restore the retained previous release. Inspect deployment receipts for scope and revision; these record successful deployment commands, not continuous health monitoring.
 
 The [wiki operations guide](../../docs/operations/wiki.md) owns publication details. Read [add-on state backups](../../docs/operations/addon-state-backups.md) and [media configuration backups](../../usenet-infra/docs/scheduled-backups.md) for the state each system protects. NAS media is excluded from the settings-only backup scope.

@@ -16,8 +16,6 @@ import sys
 import tempfile
 import tarfile
 from urllib.parse import quote, unquote, urlsplit
-from urllib.request import urlopen
-from urllib.error import HTTPError, URLError
 
 import yaml
 
@@ -326,23 +324,50 @@ def build(receipts=None):
     return output
 
 
+class WikiHTTPError(ValueError):
+    def __init__(self, url, code):
+        self.code = code
+        super().__init__(f"{url}: unexpected HTTP status {code}")
+
+
+def fetch_wiki(path):
+    """Use the native HTTP client for direct LAN access, independent of Python proxies."""
+    url = "http://192.168.1.66" + path
+    # Shell environments such as Conda can shadow curl. On macOS use the
+    # Apple-provided client whose LAN access was verified in the user's terminal.
+    client = "/usr/bin/curl" if sys.platform == "darwin" else "curl"
+    with tempfile.TemporaryDirectory() as directory:
+        body = Path(directory) / "response"
+        result = subprocess.run(
+            [client, "--disable", "--silent", "--show-error", "--noproxy", "*",
+             "--connect-timeout", "8", "--max-time", "15", "--max-filesize", "1048576",
+             "--output", str(body), "--write-out", "%{http_code}", url],
+            capture_output=True, text=True, timeout=20)
+        if result.returncode:
+            raise ConnectionError(f"{url}: {client} exit {result.returncode}: {result.stderr.strip()}")
+        if result.stdout != "200":
+            raise WikiHTTPError(url, int(result.stdout))
+        return body.read_text()
+
+
 def existing_receipts():
     try:
-        with urlopen("http://192.168.1.66/publication.json", timeout=8) as response:
-            data = json.load(response)
+        data = json.loads(fetch_wiki("/publication.json"))
         return data.get("receipts", {})
-    except HTTPError as e:
+    except WikiHTTPError as e:
         if e.code == 404:
             raise ValueError("Live wiki has no publication metadata; do not discard its evidence") from e
         raise
-    except URLError:
+    except ConnectionError as original:
         # First migration only: positively identify the original guide. An
         # unavailable modern site must never silently lose deployment receipts.
-        with urlopen("http://192.168.1.66:8090/", timeout=8) as response:
-            body = response.read(1024 * 1024).decode()
-            if response.url == "http://192.168.1.66:8090/" and "Usenet field guide" in body and "Smarthome field guide" not in body:
-                return {}
-        raise ValueError("Cannot establish the previous wiki's publication evidence")
+        try:
+            body = fetch_wiki(":8090/")
+        except (ValueError, OSError, subprocess.SubprocessError) as fallback:
+            raise ValueError(f"Cannot read existing wiki receipts: {original}; legacy probe: {fallback}") from original
+        if "Usenet field guide" in body and "Smarthome field guide" not in body:
+            return {}
+        raise ValueError(f"Cannot establish the previous wiki's publication evidence: {original}") from original
 
 
 def deploy(output):
@@ -391,6 +416,11 @@ def with_deployment(scopes, command):
         return subprocess.call(command, cwd=cwd)
     output = build()
     before = json.loads((output / "manifest.json").read_text())["publication"]
+    try:
+        existing_receipts()
+    except (ValueError, OSError, subprocess.SubprocessError) as error:
+        print(f"Wiki preflight failed before services were changed: {error}", file=sys.stderr)
+        return 3
     environment = {**os.environ, "SMARTHOME_WIKI_DEPLOY_ACTIVE": "1"}
     result = subprocess.call(command, cwd=cwd, env=environment)
     if result:
@@ -460,6 +490,6 @@ def main():
 if __name__ == "__main__":
     try:
         sys.exit(main())
-    except (ValueError, OSError, subprocess.CalledProcessError) as error:
+    except (ValueError, OSError, subprocess.SubprocessError) as error:
         print(error, file=sys.stderr)
         sys.exit(1)

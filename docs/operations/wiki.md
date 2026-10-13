@@ -44,6 +44,22 @@ their operational command: prepare documentation first, run the deployment,
 then publish once after success. Nested wrappers inherit a transaction marker;
 dry runs and help/version requests bypass publication. DNS changes use their separate workflow.
 
+Before changing services, the wrapper checks that it can read the existing wiki's
+publication evidence. It fetches that evidence again after service deployment to
+merge current receipts. These bounded requests use `curl` directly to the NAS,
+with proxies and curl configuration disabled. On macOS it selects `/usr/bin/curl`
+explicitly so Conda or another shell environment cannot substitute its own client.
+Python's HTTP client and its proxy
+discovery are not part of this path. A network error is never treated as empty
+publication history.
+
+Wrapped deployments and wiki-only publication print a private log path under
+`build/wiki/logs/` and save combined output there, including the exit status.
+Nested deployments share the outer log. These ignored files can contain operational
+details; review them before sharing. Root recipe setup steps before the wiki wrapper
+are not included. Deployments before this logging was added did not save console
+output automatically, despite the older `/tmp/deployment-*.log` documentation.
+
 The build carries a source revision, source fingerprint, working-tree indicator,
 and build time. A receipt means its named deployment command completed
 successfully; it does not imply continuous monitoring or verify unrelated scopes.
@@ -54,6 +70,12 @@ changed before that retry.
 If services deploy but the wiki fails, the command reports that distinction and
 exits nonzero. Retry documentation publication; do not roll back healthy household
 services solely because the wiki is unavailable.
+
+For a connection failure, the saved output includes the requested URL and curl
+error. Check connectivity from the same terminal that ran the deployment; a
+successful request from a different application does not establish that terminal's
+access. A preflight failure changes no services. A failure after service deployment
+keeps `build/wiki/pending-receipts.json` for the wiki-only retry.
 
 ## Isolation and rollback
 

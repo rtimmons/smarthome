@@ -5,4 +5,20 @@ export UV_CACHE_DIR="$WIKI_REPO_ROOT/build/wiki/uv-cache"
 export UV_PROJECT_ENVIRONMENT="$WIKI_REPO_ROOT/build/wiki/venv"
 export WIKI_CALLER_DIR="$PWD"
 cd "$WIKI_REPO_ROOT"
-exec uv run --project wiki --python "$(cat .python-version)" --frozen python wiki/tool.py "$@"
+wiki_command=(uv run --project wiki --python "$(cat .python-version)" --frozen python -u wiki/tool.py "$@")
+case "${1:-}" in
+    deploy|rollback|with-deployment)
+        if [[ -z "${SMARTHOME_WIKI_DEPLOY_ACTIVE:-}" ]]; then
+            mkdir -p "$WIKI_REPO_ROOT/build/wiki/logs"
+            wiki_log=$(umask 077; mktemp "$WIKI_REPO_ROOT/build/wiki/logs/$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX")
+            echo "Deployment log: $wiki_log"
+            set +e
+            "${wiki_command[@]}" 2>&1 | tee "$wiki_log"
+            wiki_status=$?
+            set -e
+            echo "Deployment exited $wiki_status. Log: $wiki_log" | tee -a "$wiki_log"
+            exit "$wiki_status"
+        fi
+        ;;
+esac
+exec "${wiki_command[@]}"

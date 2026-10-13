@@ -162,11 +162,11 @@ deployment:
 ## Monitoring and Logs
 
 ### Deployment Logs
-Logs are stored in `/tmp/deployment-<timestamp>.log` with:
-- All executed commands and output
-- Timing information for each phase
-- Error details and context
-- System health information
+The wiki deployment wrapper prints a private log path under `build/wiki/logs/`.
+It saves combined command output and the final exit status for `just deploy` and
+`just wiki-deploy`. Root setup steps before the wrapper are not captured. Earlier
+deployments did not automatically create the `/tmp/deployment-*.log` files that
+this guide previously described. See [wiki operations](../operations/wiki.md).
 
 ### Health Monitoring
 Post-deployment health checks include:
@@ -200,7 +200,7 @@ The enhanced deployment system is backward compatible:
 
 For deployment issues:
 1. Run with `--verbose` flag for detailed output
-2. Check deployment logs in `/tmp/deployment-*.log`
+2. Check the printed deployment log under `build/wiki/logs/`
 3. Verify Home Assistant system health
 4. Review add-on specific logs and configuration
 5. Use dry-run mode to validate deployment plan
