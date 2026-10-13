@@ -41,7 +41,11 @@
         "new-hass-configs/config-generator/src/*",
         "new-hass-configs/manual/*",
         "new-hass-configs/configuration.yaml",
-        "new-hass-configs/zwave-device-configs/*"
+        "new-hass-configs/zwave-device-configs/*",
+        "new-hass-configs/zwave-driver-plugins/*",
+        "new-hass-configs/sync-tools/deploy-zwave-driver-hotfix.sh",
+        "new-hass-configs/zwave-route-preferences.json",
+        "new-hass-configs/sync-tools/zwave-*.cjs"
       ]
     },
     {

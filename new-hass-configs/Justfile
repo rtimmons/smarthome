@@ -38,6 +38,8 @@ home-assistant-build: config-generator-install
 
 # Run tests for config-generator
 test: config-generator-install
+	node --test zwave-driver-plugins/*.test.cjs
+	node --test sync-tools/zwave-route-preferences.test.cjs
 	bash sync-tools/test-detect-changes.sh
 	bash sync-tools/test-generated-config-policy.sh
 	bash sync-tools/test-ha-ssh.sh
@@ -87,6 +89,15 @@ zwave-deploy-device-configs: preflight
 	config_root="$({{ha_ssh_command}} root@homeassistant.local 'if [ -d /app_configs/core_zwave_js ]; then echo /app_configs/core_zwave_js; elif [ -d /addon_configs/core_zwave_js ]; then echo /addon_configs/core_zwave_js; else echo "Z-Wave app configuration directory not found" >&2; exit 1; fi')"
 	rsync -av -e "{{ha_ssh_command}}" zwave-device-configs/ "root@homeassistant.local:${config_root}/config/"
 	{{ha_ssh_command}} root@homeassistant.local "ha apps restart core_zwave_js"
+
+# Apply/remove the version-guarded Transport Service correction
+zwave-driver-hotfix action="install": preflight
+	node --test zwave-driver-plugins/*.test.cjs
+	bash sync-tools/deploy-zwave-driver-hotfix.sh "{{action}}"
+
+# Inspect/reapply/remove the individually verified controller route preferences
+zwave-routes action="check": home-assistant-preflight home-assistant-build
+	node sync-tools/zwave-route-preferences.cjs "{{action}}"
 
 # Generate Home Assistant configs from TypeScript sources
 generate: config-generator-install

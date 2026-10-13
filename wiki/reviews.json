@@ -20,13 +20,13 @@
     "reviewed_at": "2026-10-09"
   },
   "lighting": {
-    "fingerprint": "b9b4166b0fcbe17a024db7d74d6f3b6526bce0341e0491bcd2f7183bffe8dcfa",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "68d12af9c1f494e42969e944b1ea8192b47297313ae42479ac2d2ab765601d79",
+    "reason": "Document reproduced Transport Service security regression, version-guarded correction, 26 measured route preferences, rollback, and clean live room acceptance.",
+    "reviewed_at": "2026-10-13"
   },
   "maintenance": {
-    "fingerprint": "d4581d4455fa9fcddb06f2cc1f7afd62b8de3347145210b45b9b85115bcfd8f6",
-    "reason": "Removed the GitHub Actions workflow at user request; validation remains local through the existing wiki recipes and deployment checks.",
+    "fingerprint": "4373585773f1d095a11ccfab0e50c315e346e154b94ecf4964d7ef3c254bf11a",
+    "reason": "Reviewed new Z-Wave hotfix and route recipes plus lighting source watch paths; existing wiki deployment and backup behavior is unchanged.",
     "reviewed_at": "2026-10-13"
   },
   "media": {

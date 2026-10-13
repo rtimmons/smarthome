@@ -1,0 +1,165 @@
+{
+  "homeId": 3224976460,
+  "verifiedOn": "2026-10-13",
+  "reason": "Prefer individually verified low-latency routes over repeated 100 kbit/s failures; see docs/operations/zwave-scene-ops.md. Speeds: 1 = 9.6 kbit/s, 2 = 40 kbit/s. These are first-attempt preferences; fallback routing remains enabled.",
+  "routes": [
+    {
+      "nodeId": 3,
+      "name": "light_living_behindtv",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 5,
+      "name": "light_living_ledwall",
+      "repeaters": [
+        6
+      ],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 6,
+      "name": "light_living_sliderring",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 7,
+      "name": "light_living_curtains",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 8,
+      "name": "light_living_windowsillleft",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 9,
+      "name": "light_living_cornerspot",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 10,
+      "name": "light_living_windowsillright",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 11,
+      "name": "light_dining_nook",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 13,
+      "name": "light_kitchen_upper",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 14,
+      "name": "light_kitchen_lower",
+      "repeaters": [],
+      "routeSpeed": 1
+    },
+    {
+      "nodeId": 15,
+      "name": "light_living_abovetv",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 17,
+      "name": "switch_living_hallway",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 19,
+      "name": "light_dining_abovetable",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 20,
+      "name": "light_kitchen_hanging",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 21,
+      "name": "light_bedroom_sconces",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 22,
+      "name": "light_closet_main",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 24,
+      "name": "light_guestbathroom_sconce",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 25,
+      "name": "light_office_toggle",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 26,
+      "name": "light_makerroom_main",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 27,
+      "name": "light_dining_weenie",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 29,
+      "name": "light_bedroom_flamingopower",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 31,
+      "name": "light_outdoor_sconces",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 32,
+      "name": "light_office_abovecouch",
+      "repeaters": [],
+      "routeSpeed": 1
+    },
+    {
+      "nodeId": 33,
+      "name": "lights_office_abovetv",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 34,
+      "name": "light_office_pianolight",
+      "repeaters": [],
+      "routeSpeed": 2
+    },
+    {
+      "nodeId": 42,
+      "name": "light_makerroom_undershelf",
+      "repeaters": [],
+      "routeSpeed": 2
+    }
+  ]
+}

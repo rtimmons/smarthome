@@ -1,6 +1,6 @@
 # Lighting and automation
 
-Room controls select desired lighting states. The repository’s TypeScript model generates Home Assistant scenes, automation triggers, and the scripts that dispatch them reliably.
+Room controls select desired lighting states. The repository’s TypeScript model generates Home Assistant scenes, automation triggers, and the scripts that apply them.
 
 ## Everyday use
 
@@ -11,6 +11,10 @@ Operational automation must call `script.fast_scene_<scene_id>`. Native `scene.t
 ## Why a scene can take time
 
 Z-Wave commands share a paced queue. Health filtering skips unavailable targets; later passes reconcile mismatches. Switch-originated requests suppress the already-operated local load initially and briefly allow the radio network to settle. Non-Z-Wave work starts alongside the Z-Wave branch.
+
+The October 13 investigation reproduced a driver defect that affects otherwise responsive lights: Z-Wave JS 15.31.1 rejects valid fragment-completion replies after a security session renews, retries a command the light has already accepted, and eventually times out. That unnecessary wait delays other lights in the shared queue. A repository-owned compatibility plugin restores the missing protocol exception while preserving security checks on lighting commands. It survives restarts, is limited to the verified driver version, and must be reviewed when Z-Wave JS updates. See the runbook for evidence, deployment, rollback, and live test results. The USB hub has not been established as a cause.
+
+A second measured problem was repeated use of failing radio rates and indirect paths. The controller now has 26 individually tested route preferences, mostly using 40 kbit/s. One light's transmission fell from 2,430 ms to 10 ms with that change. In the final living-room test, all available targets reported the requested state within 4.9 seconds and confirmation finished within eight seconds, with no radio errors during the test; Ryan confirmed the restored lighting looked right. The dead desk lamps were skipped. Two Z-Wave devices remain offline, so this result does not mean every device has been repaired.
 
 Installed RGBW strips use aggregate endpoint 1 once. Separate white endpoint entities are diagnostic and may report on without lighting the strips. Multicast remains disabled. Outlets that power smart bulbs must not be turned off by scenes.
 

@@ -333,6 +333,15 @@ zwave-verify-instant-ramps *args="":
 zwave-deploy-device-configs:
 	@cd new-hass-configs && just zwave-deploy-device-configs
 
+# Install/remove the version-guarded Transport Service correction and restart Z-Wave JS
+[group: 'deploy']
+zwave-driver-hotfix action="install":
+	@{{nvm_use}} && cd new-hass-configs && just zwave-driver-hotfix "{{action}}"
+
+[group: 'deploy']
+zwave-routes action="check":
+	@{{nvm_use}} && cd new-hass-configs && just zwave-routes "{{action}}"
+
 # List all available addons
 [group: 'info']
 addons:
