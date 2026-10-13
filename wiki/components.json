@@ -187,8 +187,7 @@
         "wiki/theme/*",
         "wiki/assets/*",
         "wiki/pyproject.toml",
-        "wiki/uv.lock",
-        ".github/workflows/wiki.yml"
+        "wiki/uv.lock"
       ]
     }
   ],

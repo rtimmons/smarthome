@@ -53,7 +53,7 @@ verify it separately. Keep rollback copies of prior DHCP and resolver settings.
 
 Require explanatory-document review or an explicit no-impact acknowledgement
 against each changed source fingerprint. Generate mechanical facts automatically.
-Run coverage, review, static-build, link and boundary checks locally and in CI,
+Run coverage, review, static-build, link and boundary checks locally,
 without household credentials. Contributor and agent completion includes this
 review. Direct device-interface changes still require intentional source updates;
 checks cannot prove prose is semantically correct.
@@ -93,7 +93,7 @@ Implemented on 2026-10-09:
 
 - MkDocs guides for all seven add-ons and the wider ecosystem, imported canonical
   runbooks, generated device/scene/service reference, local assets/search, review
-  fingerprints, CI and deployment transaction hooks.
+  fingerprints, local validation and deployment transaction hooks.
 - Live QNAP port-80 wiki; legacy `8090/#storage` redirects to the correct preserved
   anchor. Desktop and 390-pixel phone layout, mobile menu and local search passed.
 - Two AdGuard resolvers pass UDP/TCP wiki A, empty AAAA, unknown local names and

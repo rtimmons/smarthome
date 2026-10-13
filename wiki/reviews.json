@@ -25,9 +25,9 @@
     "reviewed_at": "2026-10-09"
   },
   "maintenance": {
-    "fingerprint": "8761c252ab7b0a25e1be438f92990d3b535c0d25758c6676ffa72c4bd3a9142e",
-    "reason": "Reviewed catalog/navigation expansion for the new media access directory; build, publication and rollback behavior are unchanged.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "d4581d4455fa9fcddb06f2cc1f7afd62b8de3347145210b45b9b85115bcfd8f6",
+    "reason": "Removed the GitHub Actions workflow at user request; validation remains local through the existing wiki recipes and deployment checks.",
+    "reviewed_at": "2026-10-13"
   },
   "media": {
     "fingerprint": "b3df033ae4e96a55f55021edf1ef8561a8deade9a0c598e08464600dc5abf61a",
