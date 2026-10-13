@@ -12,6 +12,7 @@ services:
     init: true
     ports:
       - "${WIKI_BIND_ADDRESS:?Set the private NAS IPv4 address}:${WIKI_PORT:-8090}:8090"
+      - "${WIKI_BIND_ADDRESS:?Set the private NAS IPv4 address}:80:8080"
     command: [caddy, run, --config, /etc/caddy/Caddyfile, --adapter, caddyfile]
     environment:
       XDG_DATA_HOME: /data
@@ -24,7 +25,7 @@ services:
         bind:
           create_host_path: false
       - type: bind
-        source: "${WIKI_ROOT:?Set the wiki deployment root}/Caddyfile"
+        source: "${WIKI_RUNTIME_DIR:?Set the immutable runtime directory}/Caddyfile"
         target: /etc/caddy/Caddyfile
         read_only: true
         bind:

@@ -1,0 +1,52 @@
+{
+  "audio": {
+    "fingerprint": "03b6925f1eb6fe74608d1ab02d1c37b118e3a34d82833d66b5f5a0cd77801f29",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  },
+  "dashboard": {
+    "fingerprint": "89684927f1f9580e35dae5415c458e2e279c87501d1bdf2d5f878059770b6976",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  },
+  "home": {
+    "fingerprint": "51313352bc0c6538c9482050933e0c121250a673ffa1070ae11f57d89a6d75c6",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  },
+  "integrations": {
+    "fingerprint": "d8e6a91ba4d6b18f3ac201ba42551164b2399c9654df3e32733996e9b89a1c34",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  },
+  "lighting": {
+    "fingerprint": "b9b4166b0fcbe17a024db7d74d6f3b6526bce0341e0491bcd2f7183bffe8dcfa",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  },
+  "maintenance": {
+    "fingerprint": "8761c252ab7b0a25e1be438f92990d3b535c0d25758c6676ffa72c4bd3a9142e",
+    "reason": "Reviewed catalog/navigation expansion for the new media access directory; build, publication and rollback behavior are unchanged.",
+    "reviewed_at": "2026-10-09"
+  },
+  "media": {
+    "fingerprint": "b3df033ae4e96a55f55021edf1ef8561a8deade9a0c598e08464600dc5abf61a",
+    "reason": "Added access directory from LAN proxy configuration and canonical Seerr/Filex/account runbooks; distinguishes shared proxy login, app accounts and provider accounts without publishing secrets.",
+    "reviewed_at": "2026-10-09"
+  },
+  "network": {
+    "fingerprint": "9af2fe810b1ca87e56ec74db0479a2a33ea05107758b5f07dd1433b4b05a11a7",
+    "reason": "Validated both resolvers and local negative responses; DHCP and client failover explicitly remain pending. Reviewed private current-policy backup and rollback handling.",
+    "reviewed_at": "2026-10-09"
+  },
+  "printing": {
+    "fingerprint": "9b004461a2bce554494a738f15f68fe62b6a9d3efd65d4bf0f9a647009ac8e30",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  },
+  "utilities": {
+    "fingerprint": "94893f532ff102330ba8cd26060a817fb63e2ba8b2523927df7678e0ca3f5564",
+    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
+    "reviewed_at": "2026-10-09"
+  }
+}

@@ -2,6 +2,10 @@
 
 This directory contains project-specific documentation for the smarthome repository. For contributor guidance and workflow overview, start with [`AGENTS.md`](../AGENTS.md) in the repo root.
 
+The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built from
+`wiki/` and selected runbooks here. See [wiki operations](operations/wiki.md),
+[DNS operations](operations/home-dns.md), and the [expansion plan](../wiki-plan.md).
+
 ## Quick Start
 
 - **New contributors**: Start with [`AGENTS.md`](../AGENTS.md), then [`setup/dev-setup.md`](setup/dev-setup.md)

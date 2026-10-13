@@ -1,0 +1,16 @@
+:root { --bs-primary: #245f53; --bs-link-color: #245f53; }
+body { background: #f6f5ef; color: #202f2b; font-size: 1.05rem; }
+.navbar { background: #183e35 !important; background-image: none !important; }
+h1, h2, h3 { color: #183e35; letter-spacing: -.025em; }
+h1 { font-weight: 700; margin-bottom: 1.25rem; }
+h2 { margin-top: 2rem; }
+.col-md-9 { background: #fffefa; padding: 2rem; border-radius: .5rem; }
+.col-md-9 img { max-width: 100%; height: auto; }
+.col-md-9 table { display: block; overflow-x: auto; }
+pre { overflow-x: auto; }
+.wiki-provenance { font-size: .85rem; border-top: 1px solid #ccd9d0; padding-top: 1rem; margin-top: 3rem; }
+.wiki-skip { position: absolute; left: -10000px; }
+.wiki-skip:focus { position: static; }
+a:focus-visible, button:focus-visible { outline: 3px solid #bf7609; outline-offset: 3px; }
+@media (max-width: 680px) { .col-md-9 { padding: 1.1rem; } h1 { font-size: 2rem; } }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }

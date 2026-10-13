@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+WIKI_REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export UV_CACHE_DIR="$WIKI_REPO_ROOT/build/wiki/uv-cache"
+export UV_PROJECT_ENVIRONMENT="$WIKI_REPO_ROOT/build/wiki/venv"
+export WIKI_CALLER_DIR="$PWD"
+cd "$WIKI_REPO_ROOT"
+exec uv run --project wiki --python "$(cat .python-version)" --frozen python wiki/tool.py "$@"

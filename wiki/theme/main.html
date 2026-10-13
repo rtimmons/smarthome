@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<a class="wiki-skip" href="#wiki-content">Skip to content</a>
+<div class="col-md-3">{% include "toc.html" %}</div>
+<div id="wiki-content" class="col-md-9" role="main">{% include "content.html" %}</div>
+{% endblock %}
+{% block scripts %}
+<script src="{{ 'js/bootstrap.bundle.min.js'|url }}"></script>
+<script src="{{ 'assets/settings.js'|url }}" data-base-url="{{ base_url }}" data-shortcuts='{{ config.theme.shortcuts|tojson }}'></script>
+<script src="{{ 'js/base.js'|url }}"></script>
+{% for script in config.extra_javascript %}{{ script|script_tag }}{% endfor %}
+{% endblock %}

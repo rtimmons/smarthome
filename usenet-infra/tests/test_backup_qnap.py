@@ -23,6 +23,14 @@ REAL_AGE = backup.age_binary()
 
 
 class BackupQnapTests(unittest.TestCase):
+    def test_wiki_and_dns_settings_exclude_generated_sites_and_query_history(self):
+        for name in ('wiki/.env', 'wiki/.env.previous', 'wiki/releases/abc/runtime/Caddyfile',
+                     'dns/config/AdGuardHome.yaml', 'dns/runtime/compose.yaml', 'dns/backups/primary-before.json'):
+            self.assertTrue(backup.allowed(name), name)
+        for name in ('wiki/releases/abc/site/index.html', 'wiki/.env.candidate',
+                     'dns/state/querylog.json', 'dns/state/stats.db', 'wiki/.upload.tar.gz'):
+            self.assertFalse(backup.allowed(name), name)
+
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
         self.addCleanup(self.temporary.cleanup)

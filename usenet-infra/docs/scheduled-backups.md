@@ -120,3 +120,14 @@ path probe to the canonical library was refused. It cannot replace the separate
 read-only media credential. Remote retention is currently indefinite; local
 90-day/minimum-seven retention remains unchanged. This is recoverable settings
 coverage, not a tested replacement NAS boot or protection of private originals.
+
+## Household wiki and DNS configuration
+
+The NAS configuration inventory also includes `wiki/.env`, `wiki/.env.previous`,
+versioned wiki runtime definitions, and `dns/config`, `dns/runtime`, and private
+`dns/backups`. Generated wiki site files and DNS query/statistics data are excluded.
+Rebuild wiki content from the repository after restoring its runtime configuration.
+DNS administration credentials remain inside the encrypted private archive.
+See [wiki recovery](../../docs/operations/wiki.md) and
+[DNS recovery](../../docs/operations/home-dns.md) for numeric-address access and
+DHCP rollback order. The primary policy snapshot is included here; full primary state requires a Home Assistant backup explicitly including `a0d7b954_adguard`. The repository seven-add-on partial backup does not include that community add-on.

@@ -7,25 +7,34 @@
 	}
 }
 
-:8090 {
-	bind 0.0.0.0
-
+(static_headers) {
 	header {
-		Content-Security-Policy "default-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'; object-src 'none'"
 		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
 		Referrer-Policy "no-referrer"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
+		Cache-Control "no-cache"
 	}
+}
 
+:8080 {
+	import static_headers
 	handle /healthz {
 		respond "ok" 200
 	}
-
-	@assets path /assets/* /styles.css
-	header @assets Cache-Control "public, max-age=3600"
-
 	root * /srv
 	encode zstd gzip
+	file_server
+}
+
+:8090 {
+	import static_headers
+	handle /healthz {
+		respond "ok" 200
+	}
+	# Keep the original fragment and a DNS-independent destination.
+	redir / http://192.168.1.66/media/usenet/ 302
+	root * /srv
 	file_server
 }

@@ -6,6 +6,7 @@ default:
 # Run all checks that do not require live infrastructure.
 [group: 'validation']
 test: ansible-setup
+	@just --justfile ../Justfile --working-directory .. wiki-check
 	python3 -m unittest discover -s tests -v
 	python3 scripts/secrets-check.py --manifest-only
 	python3 -m compileall -q scripts
@@ -35,7 +36,7 @@ test: ansible-setup
 # Add the private browsing/request portal with native Arr ownership.
 [group: 'setup']
 configure-seerr: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook seerr.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-seerr -- uv run --with 'ansible-core==2.21.4' ansible-playbook seerr.yml
 
 [group: 'health']
 seerr-status:
@@ -134,7 +135,7 @@ cloud-health:
 # Deploy only the isolated portal with its reviewed private configuration.
 [group: 'setup']
 configure-filex: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook filex.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-filex -- uv run --with 'ansible-core==2.21.4' ansible-playbook filex.yml
 
 # Read service state without exposing storage credentials or media names.
 [group: 'health']
@@ -162,12 +163,12 @@ native-ownership-status:
 # Refresh native health helpers and verify the restored ownership policy.
 [group: 'setup']
 configure-native-ownership: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml
 
 # Install and verify the selected Radarr/Sonarr integration.
 [group: 'setup']
 configure-discovery: age-bootstrap ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook discovery.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-discovery -- uv run --with 'ansible-core==2.21.4' ansible-playbook discovery.yml
 
 # Read back all acquisition controls without searching or downloading.
 [group: 'health']
@@ -218,7 +219,7 @@ qnap-health:
 # Install transfer status on the existing NAS; refuse active cache operations.
 [group: 'ansible']
 configure-download-status mode='all':
-	@python3 scripts/dashboard-status-deploy.py {{quote(mode)}}
+	@../wiki/run with-deployment --scope media-download-status -- python3 scripts/dashboard-status-deploy.py {{quote(mode)}}
 
 # Initialize both independent Terraform roots.
 [group: 'terraform']
@@ -240,12 +241,12 @@ ansible-setup:
 # Apply host configuration after inventory and secret files exist.
 [group: 'ansible']
 configure-cloud: age-bootstrap ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-cloud -- uv run --with 'ansible-core==2.21.4' ansible-playbook cloud.yml
 
 # Configure the scoped UniFi VPN and authenticated cloud UI proxy.
 [group: 'ansible']
 configure-cloud-lan-ui: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cloud-lan-ui.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-cloud-lan-ui -- uv run --with 'ansible-core==2.21.4' ansible-playbook cloud-lan-ui.yml
 
 # Cache the exact verified age binaries for this workstation and cloud VM.
 [group: 'setup']
@@ -327,7 +328,7 @@ recovery-drill *args:
 # Install only backup support; does not restart or reconfigure applications.
 [group: 'ansible']
 configure-backup: age-bootstrap ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook backup.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-backup -- uv run --with 'ansible-core==2.21.4' ansible-playbook backup.yml
 
 # Capture on the cloud, encrypt there, transfer, decrypt and verify locally.
 [group: 'backup']
@@ -385,22 +386,30 @@ backup-restore archive destination: age-bootstrap
 
 [group: 'ansible']
 configure-qnap: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-qnap -- uv run --with 'ansible-core==2.21.4' ansible-playbook qnap.yml
 
 # Publish only the static private wiki with retained-release rollback.
 [group: 'ansible']
 wiki-deploy: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-wiki.yml
+	@just --justfile ../Justfile --working-directory .. wiki-deploy
+
+[private]
+wiki-publish vars: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-wiki.yml --extra-vars @{{quote(vars)}}
+
+[group: 'setup']
+wiki-rollback: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-wiki.yml --extra-vars '{"qnap_wiki_action":"rollback"}'
 
 # Capture root-owned Filex state as ciphertext for the scheduled cloud backup.
 [group: 'backup']
 configure-filex-backups: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook filex-backups.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-filex-backups -- uv run --with 'ansible-core==2.21.4' ansible-playbook filex-backups.yml
 
 # Host-owned daily encrypted backups with hourly retry; no Mac scheduler required.
 [group: 'backup']
 configure-scheduled-backups: age-bootstrap ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook scheduled-backups.yml qnap-backups.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-scheduled-backups -- uv run --with 'ansible-core==2.21.4' ansible-playbook scheduled-backups.yml qnap-backups.yml
 
 # Preserve ignored/local work in an additive encrypted NAS snapshot.
 [group: 'backup']
@@ -413,7 +422,7 @@ checkout-backup *args:
 # Mount remote media read-only for the existing QNAP Plex server.
 [group: 'setup']
 configure-remote-media: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-remote-media.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-remote-media -- uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-remote-media.yml
 
 # Open the bounded Filex operator route through encrypted SSH; no CA install.
 [group: 'operations']
@@ -424,3 +433,14 @@ filex-ui:
 [group: 'recovery']
 restore-storage: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook restore-storage.yml
+
+# DNS deployment is intentionally independent of wiki/service publication.
+[group: 'network']
+[positional-arguments]
+dns action *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	cd ..
+	export UV_CACHE_DIR="$PWD/build/wiki/uv-cache"
+	export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
+	exec uv run --project wiki --python "$(cat .python-version)" --frozen python network-infra/dns/manage.py "$@"

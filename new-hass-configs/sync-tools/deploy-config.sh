@@ -154,6 +154,10 @@ deploy() {
 }
 
 main() {
+  # The outermost deployment prepares and publishes documentation exactly once.
+  if [[ -z "${SMARTHOME_WIKI_DEPLOY_ACTIVE:-}" && ( "${1:-}" == deploy || "${1:-}" == apply ) ]]; then
+    exec "${CONFIG_DIR}/../wiki/run" with-deployment --scope home-assistant-config -- "$0" "$@"
+  fi
   require_tools
   case "${1:-}" in
     precheck) precheck ;;

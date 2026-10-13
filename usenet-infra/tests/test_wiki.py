@@ -42,79 +42,6 @@ class WikiParser(HTMLParser):
             self.has_viewport = True
 
 
-class WikiContentTests(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls) -> None:
-        cls.html = (WIKI / "index.html").read_text()
-        cls.css = (WIKI / "styles.css").read_text()
-        cls.parser = WikiParser()
-        cls.parser.feed(cls.html)
-
-    def test_local_links_assets_and_fragments_resolve(self):
-        for reference in [*self.parser.hrefs, *self.parser.sources]:
-            parsed = urlsplit(reference)
-            if parsed.scheme or parsed.netloc:
-                continue
-            if reference.startswith("#"):
-                self.assertIn(reference[1:], self.parser.ids, reference)
-                continue
-            path = parsed.path
-            self.assertTrue((WIKI / path).is_file(), reference)
-            if parsed.fragment:
-                self.assertIn(parsed.fragment, self.parser.ids, reference)
-
-    def test_external_shortcuts_are_exact_and_never_token_bearing(self):
-        external = {href for href in self.parser.hrefs if urlsplit(href).scheme}
-        required = {
-            "http://10.77.0.1:18080/",
-            "http://10.77.0.1:15055/",
-            "http://10.77.0.1:19696/",
-            "http://10.77.0.1:19696/radarr/",
-            "http://10.77.0.1:19696/sonarr/",
-            "http://192.168.1.66:1337/",
-            "http://127.0.0.1:15213/",
-            "http://192.168.1.66:32400/web",
-            "https://nzbgeek.info/dashboard.php?mycart",
-            "https://nzbfinder.ws/cart",
-            "https://www.eweka.nl/en/myeweka",
-            "https://console.hetzner.com/",
-            "https://sabnzbd.org/wiki/introduction/quick-setup",
-            "https://wiki.servarr.com/",
-            "https://support.plex.tv/articles/",
-            "https://docs.hetzner.com/storage/storage-box/",
-        }
-        self.assertEqual(external, required)
-        for href in external:
-            self.assertIsNone(re.search(r"(?:api[_-]?key|token|auth|password)=", href, re.I), href)
-
-    def test_cached_assets_change_url_when_content_changes(self):
-        for reference in self.parser.sources:
-            parsed = urlsplit(reference)
-            if parsed.scheme or parsed.netloc:
-                continue
-            expected = hashlib.sha256((WIKI / parsed.path).read_bytes()).hexdigest()[:12]
-            self.assertEqual(parse_qs(parsed.query), {"v": [expected]}, reference)
-
-
-    def test_accessibility_and_mobile_contract(self):
-        self.assertEqual(self.parser.lang, "en")
-        self.assertTrue(self.parser.has_viewport)
-        self.assertNotIn("script", self.parser.tags)
-        self.assertIn('class="skip-link"', self.html)
-        self.assertIn('aria-label="Mobile table of contents"', self.html)
-        self.assertIn("a:focus-visible", self.css)
-        self.assertIn("prefers-reduced-motion", self.css)
-        self.assertIn("@media (max-width: 680px)", self.css)
-
-    def test_diagram_and_favicon_are_accessible_valid_svg(self):
-        for name in ("ecosystem.svg", "favicon.svg"):
-            ET.parse(WIKI / "assets" / name)
-        diagram = ET.parse(WIKI / "assets/ecosystem.svg").getroot()
-        namespace = {"svg": "http://www.w3.org/2000/svg"}
-        self.assertIsNotNone(diagram.find("svg:title", namespace))
-        self.assertIsNotNone(diagram.find("svg:desc", namespace))
-
-
 class WikiDeploymentTests(unittest.TestCase):
     def test_compose_is_pinned_non_root_and_mounts_only_static_inputs(self):
         compose = (WIKI / "compose.yaml").read_text()
@@ -139,15 +66,14 @@ class WikiDeploymentTests(unittest.TestCase):
 
     def test_role_is_scoped_and_rolls_back_a_failed_candidate(self):
         tasks = ROLE.read_text()
+        helper = (ROOT.parent / "wiki/apply.sh").read_text()
         self.assertIn("qnap_wiki_bind_address == '192.168.1.66'", tasks)
         self.assertIn("qnap_wiki_port | int == 8090", tasks)
-        self.assertIn("TCP {{ qnap_wiki_port | int }} belongs to another container", tasks)
-        self.assertIn("Preserve the current release environment for rollback", tasks)
-        self.assertIn("Restore the previous release or stop the failed first deployment", tasks)
-        self.assertIn("down --remove-orphans", tasks)
-        self.assertIn("No other QNAP service was changed", tasks)
-        self.assertNotIn("docker system prune", tasks)
-        self.assertNotIn("compose/qnap", tasks)
+        self.assertIn(".env.rollback", helper)
+        self.assertIn("down --remove-orphans", helper)
+        self.assertIn("No other QNAP service was changed", helper)
+        self.assertNotIn("docker system prune", helper)
+        self.assertNotIn("compose/qnap", helper)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "zone": "home.arpa",
+  "records": {"wiki.home.arpa": "192.168.1.66"},
+  "resolvers": ["192.168.1.163", "192.168.1.66"],
+  "upstream_dns": ["https://dns10.quad9.net/dns-query"],
+  "bootstrap_dns": ["1.1.1.1:53"],
+  "fallback_dns": [],
+  "filters": [
+    {"enabled": true, "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt", "name": "AdGuard DNS filter", "id": 1},
+    {"enabled": false, "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt", "name": "AdAway Default Blocklist", "id": 2}
+  ],
+  "user_rules": [
+    "! Repository-owned home.arpa zone. Keep unknown names local.",
+    "||home.arpa^$dnsrewrite=NXDOMAIN;;",
+    "@@|wiki.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|wiki.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66"
+  ]
+}

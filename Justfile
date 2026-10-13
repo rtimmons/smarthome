@@ -205,7 +205,7 @@ talos-deploy mode addon *args:
 deploy addon="all" *args="":
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
-	@just talos-deploy normal "{{addon}}" {{args}}
+	@./wiki/run with-deployment --scope home-assistant -- just talos-deploy normal "{{addon}}" {{args}}
 	@echo "✅ Deployment completed successfully!"
 
 # Deploy with verbose output for troubleshooting
@@ -213,7 +213,7 @@ deploy addon="all" *args="":
 deploy-verbose addon="all" *args="":
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
-	@just talos-deploy verbose "{{addon}}" {{args}}
+	@./wiki/run with-deployment --scope home-assistant -- just talos-deploy verbose "{{addon}}" {{args}}
 	@echo "✅ Deployment completed successfully!"
 
 # Dry run deployment to see what would be deployed
@@ -241,6 +241,7 @@ deploy-dry-run-verbose addon="all":
 # Run fast tests for addons (excludes slow integration tests)
 [group: 'test']
 test addon="all":
+		@just wiki-check
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "⚡ Running fast tests (excluding slow integration tests)..."; \
@@ -568,7 +569,44 @@ usenet-configure-qnap:
 # Deploy only the private, static NAS Usenet wiki.
 [group: 'usenet']
 usenet-wiki-deploy:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra wiki-deploy
+	@just wiki-deploy
+
+# Build and validate the private smarthome field guide.
+[group: 'wiki']
+wiki-build:
+	@./wiki/run build
+
+[group: 'wiki']
+wiki-check:
+	@./wiki/run check
+
+[group: 'wiki']
+wiki-preview:
+	@./wiki/run preview
+
+[group: 'wiki']
+wiki-deploy:
+	@./wiki/run deploy
+
+[group: 'wiki']
+wiki-rollback:
+	@./wiki/run rollback
+
+[group: 'wiki']
+[positional-arguments]
+wiki-review component reason:
+	@./wiki/run review "$1" "$2"
+
+[private]
+wiki-model-export:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	export NVM_DIR="{{repo_root}}/build/nvm"
+	{{nvm_use}}
+	mkdir -p "{{repo_root}}/build/wiki"
+	cd "{{repo_root}}/new-hass-configs/config-generator"
+	npm run build >&2
+	node dist/wiki-export.js > "{{repo_root}}/build/wiki/model.json"
 
 # Verify the NAS reader cannot alter a disposable remote test file.
 [group: 'usenet']
@@ -791,3 +829,16 @@ alias ls := addons
 [group: 'usenet']
 usenet-filex-ui:
 	just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-ui
+
+[group: 'network']
+dns-check:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns check
+
+[group: 'network']
+dns-deploy:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns deploy
+
+[group: 'network']
+[positional-arguments]
+dns-rollback-primary snapshot:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns rollback-primary --snapshot "$1"

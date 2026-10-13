@@ -1,0 +1,71 @@
+---
+- name: Require a checksummed build from the wiki tool
+  ansible.builtin.assert:
+    that:
+      - qnap_wiki_manifest.release is match('^[a-f0-9]{64}$')
+      - qnap_wiki_archive_sha256 is match('^[a-f0-9]{64}$')
+      - qnap_wiki_manifest.files['index.html'] is defined
+      - qnap_wiki_manifest.files['publication.json'] is defined
+
+- name: Reject an absent private address or conflicting web listeners
+  ansible.builtin.raw: |
+    set -eu
+    ip -4 address show | grep -F ' 192.168.1.66/' >/dev/null
+    wiki_ids=$({{ qnap_docker_command }} ps -q --filter label=com.docker.compose.project=usenet-wiki --filter label=com.docker.compose.service=wiki)
+    for port in 80 8090; do
+      port_ids=$({{ qnap_docker_command }} ps -q --filter publish="$port")
+      for id in $port_ids; do
+        case " $wiki_ids " in *" $id "*) ;; *) echo "TCP $port belongs to another container" >&2; exit 1;; esac
+      done
+      if test -z "$port_ids" && netstat -ltn 2>/dev/null | awk '{print $4}' | grep -E "(^|:)$port$" >/dev/null; then
+        echo "TCP $port has a non-wiki listener" >&2; exit 1
+      fi
+    done
+    mkdir -p {{ (qnap_wiki_root ~ '/releases') | quote }}
+    chmod 0750 {{ qnap_wiki_root | quote }} {{ (qnap_wiki_root ~ '/releases') | quote }}
+  changed_when: false
+
+- name: Upload the release with the dedicated inventory identity
+  ansible.builtin.command:
+    argv:
+      - "{{ ansible_playbook_python }}"
+      - "{{ usenet_project_root }}/../wiki/transfer.py"
+      - "{{ qnap_wiki_archive }}"
+      - "{{ qnap_wiki_root }}/.upload-{{ qnap_wiki_manifest.release }}.tar.gz"
+      - "{{ ansible_user }}"
+      - "{{ ansible_host }}"
+      - "{{ ansible_ssh_private_key_file }}"
+      - "{{ ansible_ssh_common_args }}"
+  delegate_to: localhost
+  become: false
+  changed_when: false
+
+- name: Verify and install the immutable release
+  ansible.builtin.raw: |
+    set -eu
+    cd {{ qnap_wiki_root | quote }}
+    archive={{ ('.upload-' ~ qnap_wiki_manifest.release ~ '.tar.gz') | quote }}
+    test "$(sha256sum "$archive" | cut -d ' ' -f 1)" = {{ qnap_wiki_archive_sha256 | quote }}
+    release={{ qnap_wiki_manifest.release | quote }}
+    if test ! -d "releases/$release"; then
+      staging=$(mktemp -d "$PWD/releases/.incoming-XXXXXXXX")
+      trap 'rm -rf "$staging"' EXIT HUP INT TERM
+      tar -xzf "$archive" -C "$staging"
+      (cd "$staging" && sha256sum -c SHA256SUMS >/dev/null)
+      chmod -R a+rX "$staging/site" "$staging/runtime"
+      mv "$staging" "releases/$release"
+      trap - EXIT HUP INT TERM
+    fi
+    (cd "releases/$release" && sha256sum -c SHA256SUMS >/dev/null)
+    rm -f "$archive"
+  changed_when: false
+
+- name: Publish with exact binding checks and automatic runtime rollback
+  ansible.builtin.raw: >-
+    DOCKER_CONFIG={{ qnap_docker_config_dir | quote }}
+    sh {{ (qnap_wiki_root ~ '/releases/' ~ qnap_wiki_manifest.release ~ '/runtime/apply.sh') | quote }}
+    {{ qnap_wiki_root | quote }} publish {{ qnap_wiki_manifest.release | quote }}
+    {{ qnap_uid | int }} {{ qnap_gid | int }} {{ qnap_docker_executable | quote }}
+    {{ 'true' if qnap_wiki_test_fail_smoke | default(false) | bool else 'false' }}
+  register: qnap_wiki_apply
+  changed_when: "'Wiki release accepted' in qnap_wiki_apply.stdout"

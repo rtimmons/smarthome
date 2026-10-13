@@ -34,6 +34,7 @@ just deploy  # Deploy and restart Home Assistant
 ```
 
 ## Documentation
+- **[Smarthome field guide](http://wiki.home.arpa/)** — Household guides and generated configuration reference ([numeric recovery address](http://192.168.1.66/)); see [wiki operations](docs/operations/wiki.md).
 - **[AGENTS.md](AGENTS.md)** — Developer guide and operational procedures
 - **[docs/README.md](docs/README.md)** — Complete documentation index
 - **[docs/operations/improvements.md](docs/operations/improvements.md)** — Comprehensive improvements roadmap

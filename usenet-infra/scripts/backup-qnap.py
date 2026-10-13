@@ -33,7 +33,7 @@ MAX_BYTES = 128 * 1024**2
 MAX_FILES = 25_000
 MAX_TAR_BYTES = MAX_BYTES + 32 * 1024**2
 TREES = ('compose/qnap', 'scripts', 'config/catalog', 'config/backup', 'state/items', 'state/native-items',
-         'state/failures', 'state/operations', 'state/dashboard', 'filex-sftp')
+         'state/failures', 'state/operations', 'state/dashboard', 'filex-sftp', 'wiki', 'dns/config', 'dns/runtime', 'dns/backups')
 SINGLES = ('secrets/dashboard-auth.json', 'secrets/storagebox/id_ed25519',
            'secrets/storagebox/known_hosts')
 REQUIRED = ('compose/qnap/compose.yaml', 'compose/qnap/.env', 'compose/qnap/Dockerfile.catalog',
@@ -60,9 +60,15 @@ def allowed(name: str) -> bool:
         return False
     parts = PurePosixPath(name).parts
     if (any(part in {'docker-client', '__pycache__', 'cache', '.staging'} for part in parts)
-            or any(part.startswith('.') for part in parts) and name not in {'compose/qnap/.env', 'filex-sftp/.env'}
+            or any(part.startswith('.') for part in parts) and name not in {'compose/qnap/.env', 'filex-sftp/.env', 'wiki/.env', 'wiki/.env.previous', 'dns/runtime/.env', 'dns/runtime/.dockerignore'}
             or name.endswith(('.lock', '.pyc', '.ansible'))):
         return False
+    if name.startswith('wiki/'):
+        # Static output is reproducible; retain pointers and versioned runtime,
+        # not every generated release or upload. Rebuild the site on recovery.
+        return name in {'wiki/.env', 'wiki/.env.previous', 'dns/runtime/.env', 'dns/runtime/.dockerignore'} or (
+            len(parts) == 5 and parts[1] == 'releases' and parts[3] == 'runtime'
+            and parts[4] in {'compose.yaml', 'Caddyfile', 'Dockerfile', 'apply.sh'})
     return name in SINGLES or any(name.startswith(tree + '/') for tree in TREES)
 
 
