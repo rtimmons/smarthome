@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-16"
   },
   "maintenance": {
-    "fingerprint": "53ba693ff2ae55e98de386b261cd2ca1e0e9c4f9d1e5b5c532bc41b245fa3986",
-    "reason": "Reviewed scoped deployment recipes, the added settings-playbook syntax check, and documentation imports. Added the Sonoff enable/recovery guide with authenticated SOPS verification; publication remains a static private wiki, with credentials and backup archives excluded.",
+    "fingerprint": "8a5edf96fee9e8978e364dff330fcff4343a4bf175f55cb026d5ca90795f766c",
+    "reason": "Reviewed the additional explicit Cleanuparr offline-replay recipe and syntax check. They do not run as part of wiki publication; existing static documentation deployment, rollback, and credential exclusions remain unchanged.",
     "reviewed_at": "2026-10-16"
   },
   "media": {
-    "fingerprint": "274970a8a6da20ad2ca3fcb874b9c7ba17297cefcaee92a95d44db4968cce01c",
-    "reason": "Reviewed buffered-copy deployment, native failure retry distinctions, report-only recovery and Plex scan/source-route checks against their guides. Corrected the stale retry row. Reviewed the pinned optional Recyclarr settings workflow and validation-only quality-profile helper; source availability alone does not establish deployment.",
+    "fingerprint": "ab58524b477f507d787b00076d6ff9e32715ab0495479558d37821a72972d532",
+    "reason": "Reviewed current media sources and guides, including the newly added internal-network Cleanuparr fixture Compose. That optional offline replay has no published ports, production media mounts or operational wiki instructions; it does not change the documented report-only production recovery policy.",
     "reviewed_at": "2026-10-16"
   },
   "network": {
