@@ -47,6 +47,22 @@ Connection failures are stage-specific. Use the ignored repository identity expl
 4. If scenes still lag, inspect the generated fast scene calls. The GE 46203 and on/off-only Minoston MP22ZD fixtures expose Switch Multilevel CC38, not Binary Switch CC37. They use isolated `zwave_js.set_value` calls with `wait_for_result: false` and an explicit zero-second transition.
 5. If a target entity is `unavailable` or its node-status sensor is `dead`, treat the underlying fault as a device/platform issue. The generated dispatcher skips it so the fault does not block healthy targets, but that resilience is not a substitute for repairing or removing the node.
 
+## Desk-Lamp Plug Recovery: 2026-10-16
+
+The desk-lamp adapter is a **Minoston MP22ZD V1.0**, firmware **1.0.1**. Its former node **4** was dead and last reported radio contact on September 16 at 20:42 EDT. Local button presses still controlled the load, but a power cycle and isolated ping did not restore communication. Local operation therefore did not establish radio health.
+
+After factory reset (two quick taps, then hold the third press for at least ten seconds until one confirmation flash), the plug joined as node **43**, but S2 bootstrapping timed out before the requested security classes arrived. Its reported round-trip time was about 12 seconds through repeaters 5 and 14. A temporary direct **40 kbit/s** preference produced a successful **28 ms** ping, with a 10 ms RF transmission on channel 1. The trial preference was removed afterward. The controller still measured approximately -71 dBm on channel 0 and -106 dBm on channels 1/2.
+
+Node 43 was cleanly excluded. The next completed inclusion applied the proven direct 40 kbit/s preference before return-route setup and S2 bootstrapping. The plug joined as node **44**, completed its interview with **S2 Authenticated**, and matched the original device's full DSK. The temporary setup wrapper restored the driver's normal method after its single use; no persistent driver patch was added for this repair. Reset alone had not been sufficient for secure setup, and this comparison does not establish the cause of the original September outage.
+
+Node 44 retains the direct preference in `new-hass-configs/zwave-route-preferences.json`. The original `light.light_living_desklamps` entity and diagnostic names were restored, together with its Living Room assignment and parameter 10 value **1** (the reset default was 4). The old node 4 was removed with one failed-node removal request after saving a controller backup; no add-on restart was needed. Keep the existing scene entity ID rather than changing scenes to a newly generated plug name.
+
+The final on/off/on exercise received fresh levels **99 / 0 / 99**, with no dropped commands or response timeouts and a final reported round-trip time of **27.7 ms**. Ryan confirmed that the lamps physically followed the sequence and finished on. The plug still takes approximately one second to fade even when sent a zero-second transition; an early off poll returned an intermediate level before the final zero report. Allow that fade to finish when verifying physical output.
+
+The final 18:58 inventory had zero entity drift, no pending ramp changes, and a healthy desk-lamp node. Unrelated nodes 9, 10, and 28 remained dead. All 27 declared route preferences matched the controller, and the four route-management tests passed. Runtime logging was returned to persistent info after the repair.
+
+Private controller backups exist before repair and after secure inclusion. The initial inventory, route trial, registry mappings, and on/off/on verification are under `new-hass-configs/inventory_snapshots/zwave-scene-audits/20261016-175048/`; the final inventory is under `20261016-185813/` in the same audit directory.
+
 ## Failed-Node Removal and Re-Inclusion
 
 Before removing a failed node, save a Z-Wave JS NVM backup. Submit one failed-node removal request and wait for the controller response. If the request is accepted but the WebSocket completion event times out, do not submit a duplicate removal: inspect the persistent Z-Wave log and controller state first. When a later operation reports `node_not_found`, restart only the Z-Wave JS add-on once to reconcile its runtime with the controller NVM, then verify the node is absent from the fresh startup list and that Home Assistant removed the corresponding active device and entity registry entries.

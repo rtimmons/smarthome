@@ -15,8 +15,12 @@ Seerr sends explicit requests to Radarr/Sonarr, which find releases through
 Prowlarr, send them to SAB, import into the Storage Box and clean up completed
 sources. Watchlist acquisition is off. Arr RSS polling remains off to preserve
 the existing missing backlog; future episodes require explicit Sonarr searches.
-Wait for a large request to finish before adding another. Failed jobs remain
-for review, and the 100 GiB release limit still applies.
+Wait for a large request to finish before adding another. For automatically
+selected releases, Arr blocklists a failed release and searches for an eligible
+alternative under the same quality profile. Manually selected interactive-search
+releases retain manual retry behavior. Failed payloads remain for review; the
+100 GiB release limit and 30 GiB reserves still apply. This does not abort a
+slow repair on a time limit, and replacements are not guaranteed to be available.
 
 The existing single-copy server entries use the 4K quality profile; Seerr's
 separate `is4k` server flag stays false because it enables a second parallel
@@ -69,3 +73,61 @@ manual requests remain available. Never restore historical cart/RSS policy.
 Official references: [release](https://github.com/seerr-team/seerr/releases/tag/v3.4.1),
 [Docker setup](https://docs.seerr.dev/getting-started/docker/),
 [service settings](https://docs.seerr.dev/using-seerr/settings/services/).
+
+## Availability sync and Plex routing
+
+Plex must index an imported episode before its availability can be reconciled.
+For the remote filesystem, watches are not sufficient: retain the hourly Plex
+library scan. When recovering already-imported files, verify visibility through
+the NAS reader mount, scan only the affected general-library folders, then run
+Seerr's Plex Recently Added Scan from Settings → Jobs. Do not re-request the
+media or manually mark it available to hide a sync failure.
+
+Sonarr's automatic episode renaming is now enabled for future imports, retaining
+the existing naming formats. This setting does not rename the existing library
+or start downloads; recovery remains report-only. Preserve it on configuration
+restore. It improves filenames after matching, but cannot identify an ambiguous
+file or replace Plex's scan.
+
+An older imported file can still be invisible to Plex when manual matching left
+an opaque filename while episode renaming was disabled. Use the existing
+Sonarr episode-to-file assignments as the authority. Save a private before
+snapshot, verify the exact approved request seasons and file IDs, preview native
+renames, require absent destinations, and submit `RenameFiles` only for those
+verified IDs. First confirm imports and downloads are idle and retain the
+complete naming configuration. Preserve the currently enabled renaming policy;
+if any format changes are necessary for an explicitly authorized repair, restore
+the saved formats after the scoped commands finish. Do not rename a whole library or
+guess assignments from scrambled filenames. Verify unchanged episode bindings,
+device/inode, size and modification time, then scan the affected Plex folders.
+Keep the original recovery receipts immutable and record new paths separately.
+
+Seerr uses ordinary outbound sockets. Its exact Plex-host route must select
+`10.77.0.1` as the source so it matches the existing IPsec selector. A public
+source can time out while an explicitly bound diagnostic connection succeeds.
+The reviewed helper installs only a `/32` route for the configured Plex host,
+using the existing default gateway/interface with a preferred VPN source.
+It refuses unrelated exact-host routes and leaves the default route unchanged.
+Existing firewall rules still require IPsec and approved ports. The address
+service restores this route on boot; normal VPN and Seerr deployments reconcile it.
+
+`just usenet-configure-seerr-sync` installs that repair and read-only checks
+without restarting Plex, Seerr, SAB or Arr. `just usenet-seerr-status` now checks
+an ordinary connection against Plex's saved server identity. The report-only
+recovery monitor also alerts and holds proposals if any selected general
+library's Seerr scan timestamp is missing or more than 20 minutes old. The
+five-minute recently-added scan and nightly full scan remain native Seerr jobs.
+The report-only monitor still cannot start scans, acquisitions or imports.
+
+To investigate an availability gap, compare native file records and sizes,
+Plex episode identities, Seerr scan freshness and request/season states in that
+order. Preserve library IDs 2/3/4/5, disabled trash emptying, existing file IDs,
+queue contents and acquisition settings. Verify fresh automatic scan timestamps
+and fulfilled request seasons after repair. Exact operational evidence remains
+in private runtime snapshots, not published media listings.
+
+The October 16 sync repair verified all 191 requested episodes across three
+series. Forty-two opaque filenames required native renames; all 189 physical
+file identities and metadata were preserved. The source-route repair and scoped
+folder scans restored native availability without acquisition commands. These
+checks establish catalogue availability, not playback on every client.

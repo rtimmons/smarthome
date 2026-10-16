@@ -46,6 +46,7 @@ The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built fr
 - [**unifi-apple-tv-remote.md**](operations/unifi-apple-tv-remote.md) — Evidence-first UniFi, Bonjour, and Apple TV Remote troubleshooting
 - [**nest-integration.md**](operations/nest-integration.md) — Google Nest OAuth, Device Access, Pub/Sub, entity naming, and verification
 - [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow
+- [**sonoff-zigbee-thread.md**](operations/sonoff-zigbee-thread.md) — Shared Sonoff Zigbee and Thread configuration, restore fix, and recovery
 - [**esphome-fancontrollers.md**](operations/esphome-fancontrollers.md) — ESPHome fan controller inventory and setup workflow
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
 - [**Usenet plan and handoff**](../plan.md) — Current deployment and accepted recovery limits

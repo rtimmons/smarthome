@@ -17,6 +17,8 @@ import subprocess
 import sys
 
 VAULT_PATH = 'usenet-infra/vault/secrets.sops.json'
+RADIO_VAULT_PATH = 'usenet-infra/vault/homeassistant-radio-20261016.sops.json'
+VAULT_PATHS = {VAULT_PATH, RADIO_VAULT_PATH}
 MAX_JSON = 32 * 1024**2
 CHUNK = 1024**2
 OVERLAP = 8192
@@ -55,21 +57,40 @@ def _encrypted(value):
         return False
 
 
-def valid_sops(content: bytes) -> bool:
-    """Accept exactly the reviewed small-vault shape, with every payload leaf encrypted."""
+def valid_sops(content: bytes, *, radio: bool = False) -> bool:
+    """Accept the selected exact vault schema, with every payload leaf encrypted."""
     try:
         if len(content) > MAX_JSON:
             return False
         value = _json(content)
-        if not isinstance(value, dict) or set(value) != {'entries', 'inventory_sha256', 'schema_version', 'source_checkout', 'sops'}:
+        if not isinstance(value, dict):
             return False
-        if any(not _encrypted(value[key]) for key in ('inventory_sha256', 'schema_version', 'source_checkout')):
-            return False
-        if not isinstance(value['entries'], list) or not 1 <= len(value['entries']) <= 1000:
-            return False
-        for entry in value['entries']:
-            if not isinstance(entry, dict) or set(entry) != {'id', 'sha256', 'content'} or not all(_encrypted(v) for v in entry.values()):
+        if radio:
+            if set(value) != {'schema_version', 'captured_at', 'purpose', 'thread', 'backups', 'sops'}:
                 return False
+            if any(not _encrypted(value[key]) for key in ('schema_version', 'captured_at', 'purpose')):
+                return False
+            thread = value['thread']
+            if (not isinstance(thread, dict) or set(thread) != {'network_name', 'channel', 'active_dataset_tlvs'}
+                    or not all(_encrypted(v) for v in thread.values())):
+                return False
+            if not isinstance(value['backups'], list) or len(value['backups']) != 3:
+                return False
+            for backup in value['backups']:
+                if (not isinstance(backup, dict)
+                        or set(backup) != {'slug', 'purpose', 'archive_path', 'sha256', 'password'}
+                        or not all(_encrypted(v) for v in backup.values())):
+                    return False
+        else:
+            if set(value) != {'entries', 'inventory_sha256', 'schema_version', 'source_checkout', 'sops'}:
+                return False
+            if any(not _encrypted(value[key]) for key in ('inventory_sha256', 'schema_version', 'source_checkout')):
+                return False
+            if not isinstance(value['entries'], list) or not 1 <= len(value['entries']) <= 1000:
+                return False
+            for entry in value['entries']:
+                if not isinstance(entry, dict) or set(entry) != {'id', 'sha256', 'content'} or not all(_encrypted(v) for v in entry.values()):
+                    return False
         metadata = value['sops']
         if not isinstance(metadata, dict) or set(metadata) != {'age', 'lastmodified', 'mac', 'unencrypted_suffix', 'version'}:
             return False
@@ -105,7 +126,7 @@ def forbidden_path(path):
     """Existing Usenet runtime-path policy, including renamed decrypted vault copies."""
     pure = PurePosixPath(path)
     if path.startswith('usenet-infra/vault/'):
-        return path != VAULT_PATH and pure.name not in ('README.md', '.gitkeep')
+        return path not in VAULT_PATHS and pure.name not in ('README.md', '.gitkeep')
     if not path.startswith('usenet-infra/'):
         return False
     name = pure.name
@@ -117,7 +138,7 @@ def forbidden_path(path):
 
 def inspect_content(path, content):
     findings = {label for label, pattern in PATTERNS if pattern.search(content)}
-    if path == VAULT_PATH and not valid_sops(content):
+    if path in VAULT_PATHS and not valid_sops(content, radio=path == RADIO_VAULT_PATH):
         findings.add('invalid or plaintext SOPS vault envelope')
     if len(content) <= MAX_JSON and content.lstrip().startswith(b'{'):
         try:
@@ -125,7 +146,10 @@ def inspect_content(path, content):
             if (isinstance(value, dict) and {'entries', 'inventory_sha256', 'schema_version', 'source_checkout'} <= set(value)
                     and not valid_sops(content)):
                 findings.add('plaintext or malformed recovery bundle')
-            if isinstance(value, dict) and 'sops' in value and path != VAULT_PATH:
+            if (isinstance(value, dict) and {'schema_version', 'captured_at', 'purpose', 'thread', 'backups'} <= set(value)
+                    and not valid_sops(content, radio=True)):
+                findings.add('plaintext or malformed radio recovery supplement')
+            if isinstance(value, dict) and 'sops' in value and path not in VAULT_PATHS:
                 findings.add('SOPS ciphertext outside the exact reviewed vault path')
         except (ValueError, TypeError, UnicodeError):
             pass
@@ -138,7 +162,7 @@ def inspect_stream(path, stream, size):
         if len(content) != size:
             raise ScanError('Source content changed or Git returned a truncated blob.')
         return inspect_content(path, content)
-    findings = {'reviewed JSON size limit exceeded'} if path == VAULT_PATH or path.endswith('.json') else set()
+    findings = {'reviewed JSON size limit exceeded'} if path in VAULT_PATHS or path.endswith('.json') else set()
     remaining, tail = size, b''
     while remaining:
         content = stream.read(min(CHUNK, remaining))

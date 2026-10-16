@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "verified_at": "2026-10-16T23:04:05.060Z",
+  "supplement": "usenet-infra/vault/homeassistant-radio-20261016.sops.json",
+  "supplement_sha256": "8a70cba6265978e97207af2a39706898c5d69ee73030f4273d050e71ce7d4cee",
+  "sops_version": "3.13.3",
+  "master_source": "Existing 1Password recovery identity, injected into one isolated SOPS process",
+  "authenticated_decryption_verified": true,
+  "thread_dataset_matches_saved_active_network": true,
+  "backup_passwords_match_private_originals": 3,
+  "backup_archive_sha256_matches": 3,
+  "original_vault_unchanged": true,
+  "plaintext_persisted": false,
+  "scope": "Authenticates the SOPS supplement and compares recovered recovery data with retained originals; does not restore Home Assistant or commission Matter devices."
+}

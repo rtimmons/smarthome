@@ -152,10 +152,21 @@
         "usenet-infra/docs/operations.md",
         "usenet-infra/docs/validation.md",
         "usenet-infra/scripts/backup-qnap.py",
+        "usenet-infra/scripts/sab-buffered.py",
+        "usenet-infra/ansible/sab-buffered.yml",
         "usenet-infra/docs/lan-ui.md",
         "usenet-infra/docs/seerr.md",
         "usenet-infra/docs/filex.md",
-        "usenet-infra/docs/account-setup.md"
+        "usenet-infra/docs/account-setup.md",
+        "usenet-infra/scripts/seerr-recovery*.py",
+        "usenet-infra/ansible/seerr-recovery.yml",
+        "usenet-infra/config/usenet-seerr-recovery.*",
+        "usenet-infra/tests/test_seerr_recovery.py",
+        "new-hass-configs/packages/usenet_recovery.yaml",
+        "usenet-infra/scripts/seerr-config.py",
+        "usenet-infra/ansible/seerr-sync.yml",
+        "usenet-infra/tests/test_seerr.py",
+        "usenet-infra/tests/test_cloud_vpn.py"
       ]
     },
     {
@@ -196,6 +207,7 @@
     }
   ],
   "imports": {
+    "docs/operations/sonoff-zigbee-thread.md": "runbooks/docs/operations/sonoff-zigbee-thread.md",
     "docs/operations/zwave-scene-ops.md": "runbooks/docs/operations/zwave-scene-ops.md",
     "new-hass-configs/config-generator/README.md": "runbooks/new-hass-configs/config-generator/README.md",
     "docs/sonos/overview.md": "runbooks/docs/sonos/overview.md",
@@ -213,6 +225,7 @@
     "docs/operations/addon-state-backups.md": "runbooks/docs/operations/addon-state-backups.md",
     "usenet-infra/docs/scheduled-backups.md": "runbooks/usenet-infra/docs/scheduled-backups.md",
     "usenet-infra/docs/native-media.md": "runbooks/usenet-infra/docs/native-media.md",
+    "usenet-infra/docs/seerr.md": "runbooks/usenet-infra/docs/seerr.md",
     "usenet-infra/docs/nas-plex-layout.md": "runbooks/usenet-infra/docs/nas-plex-layout.md",
     "docs/operations/wiki.md": "runbooks/docs/operations/wiki.md",
     "docs/operations/home-dns.md": "runbooks/docs/operations/home-dns.md",
@@ -264,6 +277,9 @@
     },
     {
       "Technical runbooks": [
+        {
+          "Sonoff Zigbee and Thread": "runbooks/docs/operations/sonoff-zigbee-thread.md"
+        },
         {
           "Z-Wave scene operations": "runbooks/docs/operations/zwave-scene-ops.md"
         },

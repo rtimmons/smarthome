@@ -34,6 +34,13 @@ def age_secret():
     return ('AGE-' + 'SECRET-KEY-1' + 'Q' * 58).encode()
 
 
+def radio_envelope():
+    return {'schema_version': encrypted(), 'captured_at': encrypted(), 'purpose': encrypted(),
+            'thread': {key: encrypted() for key in ('network_name', 'channel', 'active_dataset_tlvs')},
+            'backups': [{key: encrypted() for key in ('slug', 'purpose', 'archive_path', 'sha256', 'password')}
+                        for _ in range(3)], 'sops': envelope()['sops']}
+
+
 class SecretScanTests(unittest.TestCase):
     def test_complete_native_age_identity_detected_but_template_literals_are_not(self):
         self.assertIn('native age private identity', scanner.inspect_content('anywhere.txt', age_secret()))
@@ -84,6 +91,45 @@ class SecretScanTests(unittest.TestCase):
         value = {'entries': [{'content': 'aGVsbG8='}], 'schema_version': 1,
                  'inventory_sha256': 'a' * 64, 'source_checkout': '/synthetic'}
         self.assertIn('plaintext or malformed recovery bundle', scanner.inspect_content('unexpected.data', json.dumps(value).encode()))
+
+    def test_radio_ciphertext_is_accepted_only_at_its_exact_path_and_schema(self):
+        content = json.dumps(radio_envelope()).encode()
+        self.assertFalse(scanner.inspect_content(scanner.RADIO_VAULT_PATH, content))
+        self.assertFalse(scanner.forbidden_path(scanner.RADIO_VAULT_PATH))
+        self.assertTrue(scanner.inspect_content(scanner.VAULT_PATH, content))
+        self.assertTrue(scanner.inspect_content(scanner.RADIO_VAULT_PATH, json.dumps(envelope()).encode()))
+        for path in ('other.json', 'usenet-infra/vault/homeassistant-radio-20261017.sops.json'):
+            self.assertIn('SOPS ciphertext outside the exact reviewed vault path', scanner.inspect_content(path, content))
+        self.assertTrue(scanner.forbidden_path('usenet-infra/vault/homeassistant-radio-20261017.sops.json'))
+
+    def test_radio_rejects_plaintext_and_extra_fields_at_every_level(self):
+        for location in ('root', 'thread', 'backup'):
+            for change in ('plaintext', 'extra', 'missing'):
+                value = radio_envelope()
+                target, key = {'root': (value, 'purpose'), 'thread': (value['thread'], 'active_dataset_tlvs'),
+                               'backup': (value['backups'][0], 'password')}[location]
+                if change == 'plaintext':
+                    target[key] = 'synthetic private value'
+                elif change == 'extra':
+                    target['extra_unencrypted'] = 'synthetic private value'
+                else:
+                    del target[key]
+                with self.subTest(location=location, change=change):
+                    self.assertTrue(scanner.inspect_content(scanner.RADIO_VAULT_PATH, json.dumps(value).encode()))
+
+    def test_radio_rejects_missing_backups_metadata_and_renamed_plaintext(self):
+        for field in ('mac', 'age', 'unencrypted_suffix'):
+            value = radio_envelope()
+            value['sops'].pop(field)
+            self.assertFalse(scanner.valid_sops(json.dumps(value).encode(), radio=True))
+        value = radio_envelope()
+        value['backups'].pop()
+        self.assertFalse(scanner.valid_sops(json.dumps(value).encode(), radio=True))
+        value = radio_envelope()
+        value.pop('sops')
+        value['backups'][0]['password'] = 'synthetic private value'
+        self.assertIn('plaintext or malformed radio recovery supplement',
+                      scanner.inspect_content('renamed.data', json.dumps(value).encode()))
 
     def test_chunk_boundaries_cannot_hide_complete_identity(self):
         content = b'x' * (scanner.CHUNK - 20) + b'\n' + age_secret() + b'\n' + b'x' * 100

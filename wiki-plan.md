@@ -1,5 +1,25 @@
 # Smarthome wiki expansion
 
+## Current handoff — 2026-10-16
+
+Ryan ordered **Cloud Gateway Max NS (US Version), UCG-Max-NS**, on October 16.
+Arrival is estimated for **October 23–30**; it has not been installed. The device
+will replace the USG gateway and take over this site's Network controller role
+from the Cloud Key. Hardware inventory and the future cutover sequence are in
+the [UniFi migration plan](docs/operations/unifi-network-setup.md#planned-cloud-gateway-max-migration).
+
+Ryan will ask for controller migration and settings work after arrival. Defer
+live cutover, DHCP/DNS, filtering, and other network changes until that request.
+The original dual-AdGuard design below remains implemented at the resolver level;
+native UCG-Max DNS/ad blocking versus retaining AdGuard is still an open decision.
+Do not treat the older DHCP-cutover instructions as immediate work or remove
+either resolver while deciding.
+
+October 16 read-only checks passed against both AdGuard resolvers over UDP/TCP.
+This Mac still used `192.168.1.1` with search domain `localdomain`, and its normal
+`wiki.home.arpa` lookup returned `NXDOMAIN`. These checks do not establish fresh
+DHCP lease delivery, other-client behavior, or failover acceptance.
+
 ## Approved design
 
 Expand the Usenet guide into a household and maintenance wiki at
@@ -110,12 +130,14 @@ Implemented on 2026-10-09:
 
 Pending acceptance:
 
-- Authenticated UniFi access to pilot and apply Default-network DHCP DNS. No DHCP,
-  printer-network, WAN-forward or VPN setting has been changed. The requested
-  hostname works through either new resolver but is not yet advertised to the LAN.
-- Fresh laptop/phone leases, client failover with either resolver unavailable,
-  independent VPN/split-DNS access, and a physical phone check. Phone-sized browser
-  testing is not a substitute for those network checks.
+- Post-arrival UCG-Max controller/gateway migration, then a DNS ownership decision
+  and supported client cutover when Ryan requests it. The original dual-AdGuard
+  DHCP rollout is deferred; no DHCP, printer-network, WAN-forward or VPN setting
+  was changed for this DNS rollout. The hostname works through either resolver,
+  but the October 16 Mac check still uses gateway DNS and fails to resolve it.
+- Fresh laptop/phone leases, client failover with either resolver unavailable if
+  retaining dual AdGuard, independent VPN/split-DNS access, and a physical phone
+  check. Phone-sized browser testing is not a substitute for those network checks.
 Completed recovery checks:
 
 - Repeating the accepted wiki deployment reported zero changes. UniFi’s stored

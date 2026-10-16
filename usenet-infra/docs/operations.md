@@ -18,7 +18,7 @@ just usenet-seerr-status
 
 Start explicit requests in Seerr or Arr. RSS and direct carts stay disabled.
 Check the intended movie/episode scope and wait for import/cleanup before another
-large request. A failed release needs deliberate selection of an alternative;
+large request. An automatically selected failed release triggers Arr's alternative search;
 never replay a request with an uncertain response before reconciling its exact
 Arr/SAB identity. Preserve manual pauses, failed payloads and history.
 
@@ -58,7 +58,16 @@ never restart Plex, the NAS or unrelated services for a Usenet refresh.
 
 | Root recipe | Scope |
 | --- | --- |
+| `usenet-configure-seerr-sync` | Repair the exact Plex-host VPN source route and install connection/scan-freshness checks; no media-service restart |
+| `usenet-configure-seerr-recovery` | Install five-minute report-only checks for approved Seerr requests and Home Assistant persistent alerts; no acquisition writes |
+| `usenet-seerr-recovery-status` / `usenet-seerr-recovery-run` | Read report age or request another report-only pass |
 | `usenet-configure-native-ownership` | Refresh current native health helpers and verify existing ownership; no migration or application restart |
+| `usenet-configure-failed-downloads` | Enable automatic alternative-release searches after failure in both Arr apps; retain manual-selection behavior and failed payloads |
+| `usenet-configure-post-processing` | Between processing jobs, persist concurrent downloading and `-T4`; verify reserves and direct unpack off without resuming manual pauses or restarting services |
+| `usenet-sab-buffered-build` | Build the pinned buffered-copy image and run isolated integration tests; no application restart |
+| `usenet-sab-buffered-deploy` | With SAB/Arr idle, retain the current image and Compose definition, switch SAB and restore its pause state; automatically roll back an unhealthy candidate |
+| `usenet-sab-buffered-rollback` | With SAB/Arr idle, restore the retained image and Compose definition |
+| `usenet-sab-buffered-status` / `usenet-sab-buffered-verify-import` | Read deployment state and verify the next naturally requested download's native import and source cleanup |
 | `usenet-configure-discovery` | Deploy pinned Arr applications and verify restored explicit-request policy |
 | `usenet-configure-download-status` | Refresh existing NAS transfer backend/presentation; refuses active transfers |
 | `usenet-wiki-deploy` | Static private field guide, with retained-release rollback |

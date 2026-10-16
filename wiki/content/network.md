@@ -4,15 +4,23 @@ UniFi connects the trusted household network, Home Assistant, the NAS, and the d
 
 ## Find this guide
 
-The stable name is `http://wiki.home.arpa/`. As of October 9, both resolvers answer it, but the DHCP cutover still awaits UniFi sign-in; use the numeric address until your client uses those resolvers. If DNS is unavailable, use [the NAS address](http://192.168.1.66/). The old [Usenet address](http://192.168.1.66:8090/) remains a compatibility entrance.
+The stable name is `http://wiki.home.arpa/`. On October 16, both AdGuard resolvers answered it, but the checked Mac still used the USG for DNS and received “name not found.” Client cutover remains pending; use the numeric address until your client's DNS path is verified. If DNS is unavailable, use [the NAS address](http://192.168.1.66/). The old [Usenet address](http://192.168.1.66:8090/) remains a compatibility entrance.
 
 The wiki is plain HTTP on the trusted network, without a separate login. Application links still require their own authentication. There is no public wiki listener or certificate installation.
+
+## Gateway upgrade ordered
+
+Ryan ordered a **Cloud Gateway Max NS (US Version), UCG-Max-NS**, on **October 16, 2026**. Expected arrival is approximately **October 23–30**, based on his one-to-two-week estimate. It is not installed; the USG 3P and Cloud Key Gen2 Plus remain the current gateway and controller.
+
+The new device is intended to take over both routing and this site's UniFi Network management. Keep the existing switch and two access points. Retain the old gateway and Cloud Key for rollback, and check the Cloud Key's other applications/sites before deciding whether to retire it.
+
+Ryan will request migration help once it arrives. Network settings, including DNS and ad blocking, are deferred until then. First migrate and verify the existing network; then choose between native UniFi DNS/ad blocking and the existing AdGuard pair. The [migration plan and hardware inventory](../../docs/operations/unifi-network-setup.md#planned-cloud-gateway-max-migration) record preparation, checks, and rollback.
 
 ## DNS design
 
 Two resolvers on existing hosts provide the same local records: Home Assistant AdGuard at `192.168.1.163` and NAS AdGuard at `192.168.1.66`. Both map `wiki.home.arpa` to `192.168.1.66`. Neither depends on the other for internet DNS, and unknown names below `home.arpa` stay local.
 
-Both addresses must be advertised together by trusted-LAN DHCP after the rollout checks pass. A public resolver is not a suitable fallback because it cannot answer the private name. The deployment record distinguishes configured intent from completed DHCP cutover.
+If the AdGuard design is retained, both addresses must be advertised together by trusted-LAN DHCP after the rollout checks pass. The current policy assigns only `wiki.home.arpa`; other device names still need records. A public resolver is not a suitable fallback because it cannot answer private names. Keep the resolvers intact while the gateway migration and final DNS design remain pending.
 
 ## Troubleshooting and recovery
 

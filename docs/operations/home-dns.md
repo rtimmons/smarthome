@@ -2,7 +2,7 @@
 
 ## Design and rollout status
 
-The desired resolvers are existing Home Assistant AdGuard (`192.168.1.163`) and
+The existing dual-resolver design uses Home Assistant AdGuard (`192.168.1.163`) and
 an independent NAS AdGuard (`192.168.1.66`). Both serve the repository's local
 policy; neither forwards to the other. The wiki record is `wiki.home.arpa` →
 `192.168.1.66`. Unknown names in `home.arpa` must be answered locally.
@@ -12,6 +12,26 @@ available specifically on its LAN address, and trusted-LAN DHCP using automatic
 gateway DNS. A stored Home Assistant DNS address was disabled. These observations
 are not a completed cutover. See the implementation/acceptance record in
 [wiki-plan.md](../../wiki-plan.md) for subsequent verification.
+
+### October 16 status and planned gateway replacement
+
+Read-only checks on **2026-10-16** passed the repository's full UDP/TCP DNS checks
+against both AdGuard addresses: wiki A, empty wiki AAAA, unknown local names,
+zone apex, and public A resolution. This Mac's active resolver was still
+`192.168.1.1`, with search domain `localdomain`; its normal `wiki.home.arpa`
+lookup returned `NXDOMAIN`. This confirms the client-path gap on this Mac, not
+the DHCP configuration or behavior of every LAN client. No settings changed.
+The repository policy currently assigns only `wiki.home.arpa`; arbitrary device
+names have not yet been added.
+
+Ryan ordered **Cloud Gateway Max NS (US Version), UCG-Max-NS**, on October 16,
+with estimated arrival October 23–30. Controller/gateway migration and all
+DNS/DHCP/filtering changes are deferred until arrival and his follow-up request.
+The [migration plan](unifi-network-setup.md#planned-cloud-gateway-max-migration)
+first preserves the current network, then selects native UniFi DNS/ad blocking
+or the existing dual-AdGuard design. The procedures below remain the AdGuard
+option and its rollback, not an instruction to cut DHCP over before migration.
+Keep both existing resolvers and their policy intact pending that decision.
 
 ## Configuration ownership
 
@@ -82,7 +102,8 @@ recorded local `RewriteRule` handling with no upstream. This also demonstrates
 that the tested controller path was not transparently replaced by gateway DNS.
 It does not establish that every client or VLAN follows the same path.
 
-The DHCP cutover is still pending authenticated UniFi access. Default-network
+The DHCP cutover remains unaccepted and is now deferred to the post-arrival
+migration/settings session described above. Default-network
 DHCP previously used automatic/gateway DNS (`dhcpd_dns_enabled: false`), with
 `192.168.1.163` stored in the first disabled manual field. Before saving, capture
 the current form and all manual fields privately. Set only this network's DNS

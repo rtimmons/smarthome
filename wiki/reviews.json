@@ -20,24 +20,24 @@
     "reviewed_at": "2026-10-09"
   },
   "lighting": {
-    "fingerprint": "68d12af9c1f494e42969e944b1ea8192b47297313ae42479ac2d2ab765601d79",
-    "reason": "Document reproduced Transport Service security regression, version-guarded correction, 26 measured route preferences, rollback, and clean live room acceptance.",
-    "reviewed_at": "2026-10-13"
+    "fingerprint": "e0cc7228be12ec68e1f6d73c67b4a08f158a3660925faaebde2a9b7fc1bf8042",
+    "reason": "Reviewed the retained node-44 desk-lamp route and guide against the recorded recovery evidence; documented the Sonoff restore workaround, preserved eight Zigbee pairings, parked Thread/Matter, and verified SOPS recovery.",
+    "reviewed_at": "2026-10-16"
   },
   "maintenance": {
-    "fingerprint": "8ac4813c84be0c59d658aaf34c3876974fd8b2911973354e1499b1482ea89b48",
-    "reason": "Pin macOS wiki receipt requests to the verified Apple curl path; document environment-independent HTTP client selection and preserve private failure logs.",
-    "reviewed_at": "2026-10-13"
+    "fingerprint": "53ba693ff2ae55e98de386b261cd2ca1e0e9c4f9d1e5b5c532bc41b245fa3986",
+    "reason": "Reviewed scoped deployment recipes, the added settings-playbook syntax check, and documentation imports. Added the Sonoff enable/recovery guide with authenticated SOPS verification; publication remains a static private wiki, with credentials and backup archives excluded.",
+    "reviewed_at": "2026-10-16"
   },
   "media": {
-    "fingerprint": "b3df033ae4e96a55f55021edf1ef8561a8deade9a0c598e08464600dc5abf61a",
-    "reason": "Added access directory from LAN proxy configuration and canonical Seerr/Filex/account runbooks; distinguishes shared proxy login, app accounts and provider accounts without publishing secrets.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "274970a8a6da20ad2ca3fcb874b9c7ba17297cefcaee92a95d44db4968cce01c",
+    "reason": "Reviewed buffered-copy deployment, native failure retry distinctions, report-only recovery and Plex scan/source-route checks against their guides. Corrected the stale retry row. Reviewed the pinned optional Recyclarr settings workflow and validation-only quality-profile helper; source availability alone does not establish deployment.",
+    "reviewed_at": "2026-10-16"
   },
   "network": {
-    "fingerprint": "9af2fe810b1ca87e56ec74db0479a2a33ea05107758b5f07dd1433b4b05a11a7",
-    "reason": "Validated both resolvers and local negative responses; DHCP and client failover explicitly remain pending. Reviewed private current-policy backup and rollback handling.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "f87eeb374351c46fb399b8a46a40bef916ae2ff5201a02c36a1a812b475d7cd9",
+    "reason": "Record the October 16 UCG-Max-NS US order and estimated October 23\u201330 arrival; preserve the active USG/Cloud Key baseline, defer live changes until Ryan requests migration, and distinguish direct AdGuard checks from the failing gateway DNS client path.",
+    "reviewed_at": "2026-10-16"
   },
   "printing": {
     "fingerprint": "9b004461a2bce554494a738f15f68fe62b6a9d3efd65d4bf0f9a647009ac8e30",

@@ -4,6 +4,8 @@ Use this document as the current UniFi Network baseline and as the change log fo
 
 The whole-site configuration baseline in this file was observed read-only on **2026-08-31**. The radio investigation history from **2026-08-05** remains useful comparison data. UniFi device addresses, firmware, controller schema, RF conditions, client placement, and dynamic UPnP mappings can change; confirm live state before making another change.
 
+**2026-10-16 planning update:** Ryan ordered a **Cloud Gateway Max NS (US Version), UCG-Max-NS**. It has not arrived or been installed. See [Planned Cloud Gateway Max migration](#planned-cloud-gateway-max-migration) for the purchase inventory and deferred cutover plan; the current topology below remains the pre-migration baseline.
+
 ## Design Goals
 
 - Keep the two wired APs because the condo utility wall weakens coverage into the bedroom wing and primary bathroom.
@@ -32,6 +34,77 @@ The AC-HD was removed from controller management. The 2026-08-05 audit still fou
 
 On 2026-08-31 the controller had exactly four device records, all adopted, and switch port 24 was down with no active PoE load. Controller cleanup is therefore complete. The remaining open question is only physical disposition: confirm whether the retired AP and its cable have been removed or merely left disconnected. Do not re-adopt it.
 
+## Planned Cloud Gateway Max migration
+
+### Ordered hardware inventory — 2026-10-16
+
+| Item | Recorded status |
+| --- | --- |
+| Product | Cloud Gateway Max NS (US Version) |
+| Model | `UCG-Max-NS` — Cloud Gateway with built-in UniFi Network controller; not the independent `UXG-Max` |
+| Purchase | Ordered by Ryan on 2026-10-16; purchase price and order identifiers not recorded |
+| Arrival | Expected in one to two weeks, approximately **2026-10-23 through 2026-10-30**; user estimate, not confirmed delivery |
+| Installation | Pending arrival and Ryan's follow-up request; no device address, MAC, serial number, or installed firmware recorded yet |
+| Intended role | Replace the USG 3P as router/gateway and migrate this site's Network management from the Cloud Key Gen2 Plus |
+| Storage | NS / no storage model; no NVR-storage purchase or Protect migration selected |
+| Retained network hardware | US 24 PoE 250W switch, U7 Pro XG, and U6+ |
+| Old hardware | Keep USG and Cloud Key available for rollback; Cloud Key retirement depends on checking its other applications/sites |
+
+The purchase resolves the gateway-selection question. It does not choose between
+native UniFi DNS/ad blocking and the existing dual-AdGuard design. Ryan will ask
+for help with controller/gateway migration and settings after the hardware arrives.
+Until that request, defer live migration, DHCP/DNS, filtering, firmware, and other
+network-setting changes. The goals remain reliable `name.home.arpa` resolution
+for LAN clients and ad blocking, preferably through Ubiquiti-supported features.
+
+### Sequence for the later migration session
+
+1. **Refresh the baseline and recovery material.** Confirm delivery/model and
+   inventory the new unit. Re-read current Ubiquiti migration guidance and release
+   compatibility. Export fresh off-device Cloud Key System Config and Network
+   backups through supported interfaces; verify the restore path on the target
+   software. Keep credentials and backups private. Check for other sites,
+   Protect/other applications, and recovery access before deciding the Cloud Key's
+   final role. Inventory any active legacy `config.gateway.json` customizations;
+   do not assume a backup translates them to the new gateway.
+2. **Prepare a bounded cutover.** Agree the maintenance window and rollback
+   conditions. Capture WAN/DHCP, reservations, SSIDs, VLANs, firewall rules, VPN,
+   DNS/filtering, dynamic DNS, and port dependencies as they actually exist then.
+   Preserve `192.168.1.1` as the intended LAN gateway and the existing infrastructure
+   reservations. Keep the replacement isolated from the production LAN during
+   preparation so it cannot compete with the USG's gateway address or DHCP service.
+3. **Migrate routing and Network management first.** Use the supported
+   backup/restore workflow appropriate to the installed versions. Move the switch
+   and AP management to the UCG-Max's controller and prevent the old Network
+   application from competing for those devices. Preserve existing network
+   behavior; defer new DNS, filtering, Wi-Fi tuning, segmentation, and VPN-policy
+   changes until the migrated baseline works. Retain the old hardware and backups
+   without factory-resetting them during the rollback window.
+4. **Verify household operation.** Check a fresh wired and wireless DHCP lease,
+   internet access, reservations, management/adoption, Home Assistant, NAS/wiki,
+   printers, Sonos/AirPlay/Apple TV discovery, and the existing site-to-site VPN.
+   Verify both the allowed print-API path and the denied Internet/other-LAN paths
+   on `sintheta-printer`; it already has outstanding client acceptance tests.
+   Save an accepted post-migration backup and update topology/access documentation.
+5. **Choose and validate DNS/ad blocking separately.** Review native UniFi local
+   records and ad blocking against retaining AdGuard on `192.168.1.163` and
+   `192.168.1.66`. Establish one owner for `home.arpa` records, preserve
+   `wiki.home.arpa` and local negative answers, add agreed device names, and test
+   actual laptop/phone DNS paths, encrypted-DNS overrides, UDP/TCP, and applicable
+   resolver failover. A DHCP search suffix alone does not create chosen device
+   records. Handle gateway DNS interception explicitly if using AdGuard; do not
+   silently disable filtering or advertise public DNS as a private-zone fallback.
+
+Rollback must cover both gateway cabling/configuration and device management,
+not just reconnecting the USG. Record the recovery procedure before
+cutover, including how the switch/APs return to the old controller if needed.
+Do not retire the Cloud Key, remove the AdGuard instances, or discard backups
+merely because the new gateway initially comes online.
+
+References: [Ubiquiti backups and migration](https://help.ui.com/hc/en-us/articles/360008976393-Backups-and-Migration-in-UniFi),
+[ordered product](https://store.ui.com/us/en/products/ucg-max-ns), and
+[household DNS status and rollback](home-dns.md).
+
 ## Routed Networks and Services
 
 | Name | Purpose | Addressing | Internet | Discovery and isolation | Audit note |
@@ -55,7 +128,7 @@ The following service endpoints use UniFi fixed-IP reservations on `Default`. Tr
 
 All five mappings had `use_fixedip:true` in controller state on 2026-08-31. The Brother and LED Grid Wall reservations were created that day at their already-active addresses; the other three were verified as existing reservations. Fan controllers are deliberately outside this infrastructure reservation set and were not changed.
 
-Current [UniFi DNS documentation](https://help.ui.com/hc/en-us/articles/15179064940439-UniFi-DNS-Records-and-Local-Hostnames) supports a per-client **Local DNS Record** or a gateway DNS host record on capable gateways. This legacy USG site exposes neither control in the supported Network UI, and the five client records above have no `local_dns_record` value. Continue using the reserved numeric addresses where ordinary DNS is required. If the gateway is replaced or a dedicated resolver is introduced, use an internal namespace such as `home.arpa`; do not overload `.local`, which is reserved for mDNS.
+Current [UniFi DNS documentation](https://help.ui.com/hc/en-us/articles/15179064940439-UniFi-DNS-Records-and-Local-Hostnames) supports a per-client **Local DNS Record** or a gateway DNS host record on capable gateways. The August audit found neither control in this legacy USG site's supported Network UI, and the five client records above had no `local_dns_record` value. Dedicated AdGuard resolvers now serve `wiki.home.arpa`, but the October 16 client check still used gateway DNS and received `NXDOMAIN`; see [DNS operations](home-dns.md). Continue using reserved numeric addresses where ordinary DNS is required until client cutover is verified. The planned UCG-Max migration will revisit local records under `home.arpa`; do not overload `.local`, which is reserved for mDNS.
 
 ### WAN, VPN, and exposure baseline
 
@@ -186,7 +259,7 @@ The recommendation is not permission to change live state. Answer the question i
 | Priority | Setting or scope | Observed value | Recommended next step | Question that determines the target value |
 | --- | --- | --- | --- | --- |
 | High | `sintheta-printer` validation | Saved and provisioned; no client test | Join an expendable client and prove DHCP, `homeassistant.local`, TCP/8099, blocked Internet, blocked other LAN/gateway ports, and client isolation | Which device types will join, and do any require NTP or other traffic beyond the print API? |
-| High | Gateway lifecycle | USG 3P / firmware 4.4.57; Ubiquiti classifies USG as Legacy | Plan replacement before a controller update or hardware failure forces it | Preserve Cloud Key or consolidate into a Cloud Gateway? Required WAN count, site VPNs, rack form, throughput, IDS/IPS rate, and migration window? |
+| High | Gateway lifecycle | USG 3P still active; UCG-Max-NS (US) ordered 2026-10-16, expected approximately October 23–30 | Follow [planned migration](#planned-cloud-gateway-max-migration) after arrival and Ryan's follow-up; consolidate gateway and this site's Network controller on UCG-Max | Confirm arrival, restore compatibility, Cloud Key's other roles, maintenance window, and rollback; hardware choice is settled |
 | High | UPnP/NAT-PMP | Enabled on `Default`; live dynamic mappings exist | Inventory mappings and owners, then disable UPnP if each need can be removed or replaced with VPN/manual narrowly scoped access | Are Plex remote access, gaming, peer-to-peer apps, or Home Assistant integrations relying on a mapping? |
 | High | Site-to-site VPN crypto and scope | IKEv1/AES-128/SHA-1; all local subnets included | Coordinate both peers toward IKEv2, AES-256, and SHA-256, and explicitly select only required local networks | What gateway is at 2117 Lehigh, what does it support, and should it reach any future IoT VLAN? |
 | Medium | IoT segmentation | `sintheta-iot` shares trusted `Default` | Inventory dependencies and migrate small device groups to a real restricted VLAN with explicit Home Assistant and discovery exceptions | Which Sonos, AirPlay, Chromecast, printer, cloud, and phone-to-device flows must cross the boundary? |
@@ -195,7 +268,7 @@ The recommendation is not permission to change live state. Answer the question i
 | Medium | Management access and logs | One recorded owner; device password auth enabled; NetFlow/syslog off | Verify MFA/recovery and a break-glass path; repair USG key access before considering key-only device SSH; choose a log destination if forensic history matters | Who must recover the site if the owner account or Cloud Key fails, and what event retention/privacy budget is appropriate? |
 | Medium | Hidden/test WLANs | Element Adoption and `sintheta-6-test` enabled | Disable each only when its owner confirms it is unused; verify AP generated state afterward | Are any AutoLink/Element devices still present, and what experiment/expiry date owns `sintheta-6-test`? |
 | Medium | STP | Classic STP, sole switch priority 4096 | Document the intended root and consider RSTP during a maintenance window; set edge/BPDU behavior only after mapping downstream switches | Is `Switch Server Closet` the permanent root, and which ports lead to switches or bridges rather than endpoints? |
-| Low | DNS/filtering | DHCP DNS is automatic; legacy USG exposes no supported local-DNS record control; ad filtering is enabled; DoH off | Use the reserved addresses above for ordinary unicast access; verify DNS servers from a fresh lease before introducing a capable gateway or dedicated `home.arpa` resolver | Should a replacement gateway own local DNS, or should Home Assistant/QNAP host an independently managed resolver? |
+| High | DNS/filtering | October 16: both AdGuard resolvers pass direct checks; this Mac still uses `192.168.1.1` / `localdomain` and gets `NXDOMAIN` for `wiki.home.arpa` | Defer settings changes to Ryan's post-arrival session; verify migrated baseline before selecting DNS ownership and testing client cutover | Use native UCG-Max DNS/ad blocking or retain dual AdGuard? Which client names should be assigned under `home.arpa`? |
 | Low | Smart Queues and IPv6 | Smart Queues off; IPv6 protocol disabled | Leave off unless a measured latency or IPv6 requirement justifies an end-to-end design and gateway-capacity test | What are sustained WAN rates, bufferbloat under load, ISP IPv6 support, and VPN/firewall requirements? |
 
 ### Optional audit automation

@@ -215,6 +215,21 @@ files, SSH agents and other providers cannot satisfy a wrong-key test.
 
 ## State and archive package
 
+### Separate Home Assistant radio supplement
+
+`vault/homeassistant-radio-20261016.sops.json` separately escrows the retained
+Thread dataset and passwords for three encrypted Home Assistant archives. It
+uses the same recovery identity but is not part of `setup-secrets`, the original
+inventory, or its immutable snapshots. Authenticated decryption and comparisons
+with the private originals passed on October 16; see the
+[radio runbook](../../docs/operations/sonoff-zigbee-thread.md#credentials-and-sops).
+The source scanner accepts only this exact additional path and schema, requires
+every payload value to be encrypted, and still rejects renamed or plaintext
+copies. This does not change the historical credential findings or prove a full
+Home Assistant restore. Preserve the actual backup archives separately.
+
+### Original state and archive workflow
+
 Run from the repository root, using a new absolute output directory each time:
 
 ```sh

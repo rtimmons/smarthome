@@ -85,7 +85,7 @@ Choose a title
 1. Open Seerr and sign in with your Plex account. Browse trending or popular movies and TV, filter by genre, or search for a title.
 2. Choose Request for a movie, or select the TV seasons you want. The default prefers 4K (2160p), with 1080p fallback if no suitable 4K release is available. Use Radarr or Sonarr directly for release choices or individual episodes.
 3. Seerr sends your request to Radarr or Sonarr, which searches the indexers and starts a matching download. Available items can be opened in Plex.
-4. Follow download and repair in SAB, then import and cleanup in Arr's history.
+4. Follow download and repair in SAB, then import and cleanup in Arr's history. If an automatically selected release fails, Arr blocklists it and searches for another eligible release. Manually selected releases keep manual retry behavior. This does not put a time limit on repairs; failed payloads remain for review and can consume scratch space.
 5. Watch in the corresponding **Remote** Plex library. Select a NAS copy separately if wanted.
 
 Watchlist auto-download and automatic release polling are off. New future episodes are not automatically acquired; request them explicitly in Sonarr. Wait for a large download to finish before requesting another.
@@ -141,7 +141,15 @@ The authoritative Movies and TV files live on the BX21 Storage Box, with 5 TiB t
 
 ### Temporary scratch · repair volume
 
-A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves. The 100 GiB release limit and pauses during postprocessing reduce pressure; allow one large request to finish import and cleanup before the next. Archive expansion and retained failures can still consume extra space.
+A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves and the 100 GiB release limit remains. The October 15 policy allows downloading during postprocessing and trials four-file parallel verification (`-T4`); direct unpack stays off. Apply this policy between processing jobs with `just usenet-configure-post-processing`. It preserves manual pauses. Allow one large request to finish import and cleanup before the next: queued downloads, archive expansion and retained failures can still consume extra space. The reserve stops intake at low space but does not guarantee room for every repair.
+
+The buffered-copy update targets SAB's completed-file transfer to the Storage
+Box. Isolated tests measured about 93 MiB/s versus 41 MiB/s with the original
+copy routine; this does not predict repair, unpack or total download time.
+The rollout waits for processing to finish, retains the previous image for
+rollback and checks the next real import. Storage safety limits remain unchanged.
+See the [native media runbook](../../../usenet-infra/docs/native-media.md) for the
+deployment and rollback controls.
 
 ### Local copy · NAS
 
@@ -204,8 +212,8 @@ This page is deliberately static. It does not query applications, list media, or
 | A job is paused | SAB’s per-job pause and current capacity notes | Assume it may be a manual or protective pause. Do not release it just to make the queue move. |
 | SAB, Prowlarr, Radarr or Sonarr is unavailable | Private route first, then discovery/cloud health | Separate network reachability from an application failure. Recheck after scratch recovery; do not assume every HTTP error has one cause. |
 | Download finished but import is delayed | The owning Arr queue/history; retained journals for historical cart jobs | Preserve the completion and journal. Never replay an import or reset activation blindly. |
-| Imported item is not visible in Plex | Correct NAS versus Remote library and Plex scan timing | Check the file exists in the expected library and allow the normal scan to run. If needed, scan the selected folder or its general Movies/TV library; the new TV acceptance needed a library scan. Keep private libraries excluded and automatic trash emptying off. |
-| A release fails with missing articles | The failure in SAB and the owning Arr history | Keep the failed record. Automatic redownload is off; choose a different release in Arr only after reconciling the failed request. Do not submit the same uncertain grab again. |
+| Imported item is not visible in Plex | Correct library, readable episode filename and Plex scan timing | Check the file exists in the expected library. A manually matched episode may still have a scrambled name: use Sonarr's verified file assignments and scoped rename preview before scanning its folder. See the [availability repair procedure](../../../usenet-infra/docs/seerr.md). Keep private libraries excluded and automatic trash emptying off. |
+| A release fails with missing articles | The failure in SAB and the owning Arr history | Keep the failed record and payload. Arr searches for an alternative after an automatically selected release fails; manually selected releases retain manual retry behavior. Reconcile the existing request before another manual grab. |
 | Filex transfer interrupted | Filex operation history and destination space | Keep the source and partial destination. Review the error before an explicit retry; use Restore for sources retained in staging trash. |
 | NAS copy failed | NAS Downloads panel, free-space reserve, source availability and exact failure text | Retry only the same owned item after the blocking condition is fixed. Do not overwrite an unrelated destination or grant the NAS write access upstream. |
 
@@ -274,6 +282,31 @@ Canonical
 <a id="references"></a>
 
 <a id="references-title"></a>
+
+## Recovery alerts
+
+Sonarr now gives future imported episodes readable names using its existing
+series and episode format, so Plex can identify them. Enabling this preserved
+existing filenames and did not start downloads. Recovery remains report-only.
+
+A five-minute report-only check follows approved Seerr requests through native
+media processing. It checks for existing files first, holds active downloads,
+and proposes matching completed files before looking for missing episodes.
+Ambiguous files and extras-only packs need review. It does not start recovery
+downloads, change files, or apply new release filters during this trial.
+
+Home Assistant shows one persistent notification when something needs attention
+and clears it when resolved. It also warns if the cloud monitor stops checking
+in for 20 minutes. Imported files waiting more than 15 minutes for Seerr to show
+availability are reported separately; that status does not prove playback. A Plex
+sync that has stopped for 20 minutes also raises an alert. The private connection
+check verifies that Seerr can reach the expected Plex server through the VPN.
+For repaired files, refresh the affected Plex folders and sync Seerr instead of
+requesting the episodes again.
+
+Use `just usenet-seerr-recovery-status` for a private summary. The
+[native media runbook](../../../usenet-infra/docs/native-media.md#seerr-recovery-reporting)
+explains matching rules, reports, deployment and how to pause monitoring.
 
 ## Official references
 

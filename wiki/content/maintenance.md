@@ -21,3 +21,9 @@ The deployment wrapper checks access to the existing wiki before changing servic
 Use `just wiki-rollback` to restore the retained previous release. Inspect deployment receipts for scope and revision; these record successful deployment commands, not continuous health monitoring.
 
 The [wiki operations guide](../../docs/operations/wiki.md) owns publication details. Read [add-on state backups](../../docs/operations/addon-state-backups.md) and [media configuration backups](../../usenet-infra/docs/scheduled-backups.md) for the state each system protects. NAS media is excluded from the settings-only backup scope.
+
+The scoped media recovery deployment installs only reporting and Home Assistant notifications, validates the HA package, and publishes this guide after success. See the [media recovery runbook](../../usenet-infra/docs/native-media.md#seerr-recovery-reporting); promotion to automatic repairs is a separate change.
+
+`just usenet-configure-seerr-sync` repairs only the Plex destination route and read-only sync checks. It preserves the default route and does not restart media services.
+
+The [Sonoff recovery guide](../../docs/operations/sonoff-zigbee-thread.md) covers the preserved Zigbee network and the disabled Thread/Matter services. Its separate SOPS supplement stores the saved Thread credentials and encrypted-backup passwords; decryption with the existing recovery key was verified on October 16. Keep the actual Home Assistant and app backups as well. Enabling Thread later uses Home Assistant's retained credentials and does not require decrypting the supplement.
