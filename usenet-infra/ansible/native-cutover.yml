@@ -14,6 +14,20 @@
         that: native_marker.stat.isreg | default(false)
         fail_msg: 'Restore the accepted native configuration before refreshing helpers.'
 
+    - name: Require idle post-processing before installing changed policy
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - >-
+            import sys; sys.path.insert(0, '/srv/usenet/libexec');
+            from cart_import_sab import SabSource;
+            h = SabSource().api('history', start=0, limit=1, archive=0)['history'];
+            sys.exit(0 if str(h.get('ppslots')) == '0' else 'post_processing_active_retry_when_idle')
+      become_user: usenet
+      when: native_configure_processing | default(false) | bool
+      changed_when: false
+
     - name: Install current native health helpers
       ansible.builtin.copy:
         src: '{{ usenet_project_root }}/scripts/{{ item }}.py'
@@ -22,6 +36,22 @@
         group: usenet
         mode: '0550'
       loop: [native-cutover, cart_import_sab, discovery-config, healthcheck, catalogctl]
+
+    - name: Apply explicitly requested processing tuning between jobs
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/native-cutover.py, configure-processing]
+      become_user: usenet
+      when: native_configure_processing | default(false) | bool
+      register: processing_tuning
+      changed_when: (processing_tuning.stdout | from_json).changed
+
+    - name: Enable explicitly requested automatic failed-release replacement
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/discovery-config.py, configure-failed-downloads]
+      become_user: usenet
+      when: native_configure_failed_downloads | default(false) | bool
+      register: failed_download_policy
+      changed_when: (failed_download_policy.stdout | from_json).changed
 
     - name: Verify native owners, retired timers and preserved history
       ansible.builtin.command:

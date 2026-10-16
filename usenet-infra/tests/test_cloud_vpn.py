@@ -75,6 +75,54 @@ def incoming(**changes):
 
 
 class CloudVpnTests(unittest.TestCase):
+    def test_plex_route_uses_existing_gateway_and_exact_host_only(self):
+        config = {**CONFIG, 'seerr_nas_ip': '192.168.1.66'}
+        def result(value):
+            return subprocess.CompletedProcess([], 0, json.dumps(value), '')
+        with mock.patch.object(vpn, 'check_interface', return_value=True), mock.patch.object(vpn, 'run') as run:
+            run.side_effect = [result([{'gateway': '172.31.1.1', 'dev': 'eth0'}]), result([]),
+                               result([]), result([{'prefsrc': '10.77.0.1'}])]
+            vpn.install_plex_route(config)
+            self.assertEqual(run.call_args_list[2].args[0], ['/usr/sbin/ip', '-4', 'route', 'add',
+                '192.168.1.66/32', 'via', '172.31.1.1', 'dev', 'eth0', 'src', '10.77.0.1',
+                'proto', 'static', 'metric', '1991'])
+
+    def test_plex_route_is_idempotent_and_refuses_foreign_host_route(self):
+        config = {**CONFIG, 'seerr_nas_ip': '192.168.1.66'}
+        default = {'gateway': '172.31.1.1', 'dev': 'eth0'}
+        owned = {**default, 'protocol': 'static', 'metric': 1991, 'prefsrc': '10.77.0.1'}
+        def result(value):
+            return subprocess.CompletedProcess([], 0, json.dumps(value), '')
+        with mock.patch.object(vpn, 'check_interface', return_value=True), mock.patch.object(vpn, 'run') as run:
+            run.side_effect = [result([default]), result([owned]), result([{'prefsrc': '10.77.0.1'}])]
+            vpn.install_plex_route(config)
+            self.assertEqual(run.call_count, 3)
+            run.reset_mock()
+            run.side_effect = [result([default]), result([{**owned, 'metric': 20}])]
+            with self.assertRaisesRegex(vpn.PolicyError, 'unrelated exact-host'):
+                vpn.install_plex_route(config)
+            self.assertEqual(run.call_count, 2)
+
+    def test_plex_route_refuses_missing_address_or_ambiguous_gateway(self):
+        with mock.patch.object(vpn, 'check_interface', return_value=False), mock.patch.object(vpn, 'run') as run:
+            with self.assertRaises(vpn.PolicyError): vpn.install_plex_route({**CONFIG, 'seerr_nas_ip': '192.168.1.66'})
+            run.assert_not_called()
+        with mock.patch.object(vpn, 'check_interface', return_value=True), mock.patch.object(vpn, 'run') as run:
+            run.return_value = subprocess.CompletedProcess([], 0, '[]', '')
+            with self.assertRaisesRegex(vpn.PolicyError, 'unique existing'):
+                vpn.install_plex_route({**CONFIG, 'seerr_nas_ip': '192.168.1.66'})
+            self.assertEqual(run.call_count, 1)
+
+    def test_recovery_webhook_is_exact_private_host_port_and_ipsec_only(self):
+        config = {**CONFIG, 'recovery_ha_ip': '192.168.1.163'}
+        request = incoming(src='10.77.0.1', dst='192.168.1.163', dport=8123)
+        request['policy'].update(direction='out', src=CONFIG['local_ip'] + '/32', dst=CONFIG['peer_ip'] + '/32')
+        self.assertEqual(decision(vpn.CHAINS[1], request, config), 'ACCEPT')
+        for changes in ({'dst': '192.168.1.164'}, {'dport': 22}, {'policy': None}):
+            self.assertEqual(decision(vpn.CHAINS[1], {**request, **changes}, config), 'DROP')
+        for address in ('8.8.8.8', '192.168.1.0', '192.168.2.163'):
+            with self.assertRaises(vpn.PolicyError): vpn.validate_config({**CONFIG, 'recovery_ha_ip': address})
+
     def test_seerr_extension_allows_only_private_ui_and_exact_plex_endpoint(self):
         config = {**CONFIG, 'filex_nas_ip': '192.168.1.66', 'seerr_nas_ip': '192.168.1.66'}
         self.assertEqual(decision(vpn.CHAINS[0], incoming(dport=15055), config), 'ACCEPT')

@@ -61,6 +61,22 @@
     mode: "0500"
   register: cloud_vpn_loader
 
+- name: Inspect existing optional recovery notification policy
+  ansible.builtin.stat:
+    path: /etc/usenet-vpn/network.json
+  register: cloud_vpn_existing_policy
+
+- name: Preserve installed recovery notification destination on ordinary redeploys
+  ansible.builtin.slurp:
+    src: /etc/usenet-vpn/network.json
+  register: cloud_vpn_existing_policy_data
+  when: cloud_vpn_existing_policy.stat.exists
+  no_log: true
+
+- name: Select explicitly configured or previously installed notification destination
+  ansible.builtin.set_fact:
+    cloud_vpn_recovery_host: "{{ cloud_vpn_recovery_ha_ip | default((cloud_vpn_existing_policy_data.content | default('e30=') | b64decode | from_json).get('recovery_ha_ip', '')) }}"
+
 - name: Render the non-secret network policy
   ansible.builtin.template:
     src: network.json.j2
@@ -215,6 +231,13 @@
   loop:
     - usenet-vpn-firewall.service
     - usenet-vpn-address.service
+
+- name: Reconcile the exact Plex source route when that integration is configured
+  ansible.builtin.command:
+    argv: [python3, /usr/local/libexec/usenet-vpn/vpn-network.py, plex-route,
+           /etc/usenet-vpn/network.json]
+  when: cloud_vpn_seerr_nas_ip | default('') | length > 0
+  changed_when: cloud_vpn_network_config.changed or cloud_vpn_network_helper.changed
 
 - name: Start the systemd IPsec daemon
   ansible.builtin.systemd_service:

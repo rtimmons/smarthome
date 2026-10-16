@@ -1,0 +1,14 @@
+services:
+  recyclarr:
+    image: ghcr.io/recyclarr/recyclarr:8.8.0@sha256:b1fbb929ba718fdbdac2c1fc25b32b0ae916d7a5a0892c2068c9bfae6f1a9209
+    user: "${USENET_UID}:${USENET_GID}"
+    network_mode: host
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp]
+    volumes:
+      - ${RECYCLARR_CONFIG_DIR:-/srv/usenet/config/catalog/recyclarr}:/config
+    # One-shot only; the explicit systemd timer owns settings synchronization.
+    command: [sync]
+    restart: "no"

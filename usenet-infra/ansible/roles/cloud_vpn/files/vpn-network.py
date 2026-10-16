@@ -28,7 +28,7 @@ class PolicyError(Exception):
 
 def validate_config(value):
     required = {"service_ip", "service_cidr", "lan_cidr", "peer_ip", "local_ip"}
-    if not isinstance(value, dict) or set(value) - {"filex_nas_ip", "seerr_nas_ip"} != required:
+    if not isinstance(value, dict) or set(value) - {"filex_nas_ip", "seerr_nas_ip", "recovery_ha_ip"} != required:
         raise PolicyError("VPN configuration fields do not match the reviewed schema")
     try:
         service = ipaddress.IPv4Address(value["service_ip"])
@@ -43,7 +43,7 @@ def validate_config(value):
     if service not in subnet or not any(subnet.subnet_of(network) for network in PRIVATE) or subnet.overlaps(lan) or peer == local or not peer.is_global or not local.is_global:
         raise PolicyError("VPN selectors overlap or public endpoints are invalid")
     result = dict(service_ip=str(service), service_cidr=str(subnet), lan_cidr=str(lan), peer_ip=str(peer), local_ip=str(local))
-    for field in ("filex_nas_ip", "seerr_nas_ip"):
+    for field in ("filex_nas_ip", "seerr_nas_ip", "recovery_ha_ip"):
         if field not in value:
             continue
         try:
@@ -87,7 +87,7 @@ def policy_rules(config):
         f"-A {forward} -s {subnet} -j DROP",
     ]
     rows = [row.replace("18080,19696", ports) for row in rows]
-    for field, port in (("filex_nas_ip", 2226), ("seerr_nas_ip", 32400)):
+    for field, port in (("filex_nas_ip", 2226), ("seerr_nas_ip", 32400), ("recovery_ha_ip", 8123)):
         if field not in c:
             continue
         nas = c[field]
@@ -172,6 +172,42 @@ def install_address(config):
     run(["/usr/sbin/ip", "link", "set", "dev", INTERFACE, "addrgenmode", "none"])
     run(["/usr/sbin/ip", "address", "replace", f"{config['service_ip']}/32", "dev", INTERFACE])
     run(["/usr/sbin/ip", "link", "set", "dev", INTERFACE, "up"])
+    if config.get("seerr_nas_ip"):
+        install_plex_route(config)
+
+
+def install_plex_route(config):
+    """Select the VPN source for the exact Plex host; preserve default routing.
+
+    Seerr does not bind a local address. Without this route its sockets choose
+    the public address, which cannot match the IPsec local traffic selector.
+    The existing firewall still requires IPsec and the approved service ports.
+    """
+    config = validate_config(config)
+    if not config.get("seerr_nas_ip") or not check_interface(config):
+        raise PolicyError("The configured Plex host and VPN address are required")
+    host, source = config["seerr_nas_ip"], config["service_ip"]
+    defaults = json.loads(run(["/usr/sbin/ip", "-j", "-4", "route", "show", "default"]).stdout)
+    if len(defaults) != 1 or not defaults[0].get("gateway") or not defaults[0].get("dev"):
+        raise PolicyError("A unique existing IPv4 default gateway is required")
+    gateway = str(ipaddress.IPv4Address(defaults[0]["gateway"]))
+    device = defaults[0]["dev"]
+    if not isinstance(device, str) or not device or device.startswith("-") or "/" in device:
+        raise PolicyError("Invalid default-route interface")
+    existing = json.loads(run(["/usr/sbin/ip", "-j", "-4", "route", "show", "table", "main", "exact", host + "/32"]).stdout)
+    if existing and (len(existing) != 1 or existing[0].get("protocol") != "static"
+                     or existing[0].get("metric") != 1991 or existing[0].get("prefsrc") != source):
+        raise PolicyError("An unrelated exact-host route already exists; refusing replacement")
+    desired = {"gateway": gateway, "dev": device, "prefsrc": source, "protocol": "static", "metric": 1991}
+    if not existing or any(existing[0].get(k) != v for k, v in desired.items()):
+        argv = ["/usr/sbin/ip", "-4", "route", "replace" if existing else "add", host + "/32",
+                "via", gateway, "dev", device, "src", source, "proto", "static", "metric", "1991"]
+        if "onlink" in defaults[0].get("flags", []):
+            argv.append("onlink")
+        run(argv)
+    selected = json.loads(run(["/usr/sbin/ip", "-j", "-4", "route", "get", host]).stdout)
+    if len(selected) != 1 or selected[0].get("prefsrc") != source:
+        raise PolicyError("Plex routing did not select the VPN source")
 
 
 def write_atomic(path, content):
@@ -218,21 +254,25 @@ def install_firewall(config, ufw_path=Path("/etc/ufw/before.rules")):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("operation", choices=("validate", "firewall", "address", "filex-enable", "seerr-enable"))
+    parser.add_argument("operation", choices=("validate", "firewall", "address", "plex-route", "filex-enable", "seerr-enable", "recovery-enable"))
     parser.add_argument("config", type=Path)
     parser.add_argument("--nas-ip")
     args = parser.parse_args()
     try:
         config = validate_config(json.loads(args.config.read_text()))
-        if args.operation in ("filex-enable", "seerr-enable"):
-            field = "filex_nas_ip" if args.operation == "filex-enable" else "seerr_nas_ip"
+        if args.operation in ("filex-enable", "seerr-enable", "recovery-enable"):
+            field = {"filex-enable": "filex_nas_ip", "seerr-enable": "seerr_nas_ip", "recovery-enable": "recovery_ha_ip"}[args.operation]
             config = validate_config({**config, field: args.nas_ip})
             install_firewall(config)
             write_atomic(args.config, json.dumps(config, indent=2) + "\n")
+            if args.operation == "seerr-enable":
+                install_plex_route(config)
         elif args.operation == "firewall":
             install_firewall(config)
         elif args.operation == "address":
             install_address(config)
+        elif args.operation == "plex-route":
+            install_plex_route(config)
         print(json.dumps({"operation": args.operation, "ok": True}))
     except (PolicyError, ValueError, OSError, subprocess.SubprocessError):
         raise SystemExit("VPN network operation refused or failed; inspect the reviewed configuration and service status")

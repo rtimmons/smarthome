@@ -59,33 +59,20 @@ def validate_quality_profile(profile):
     require(all('2160p' in name for name in allowed[first_4k:]), 'seerr_quality_order_changed')
 
 
-def native_quality(root, app, *, configure=False):
+def native_quality(root, app):
     port = {'radarr': 7878, 'sonarr': 8989}[app]
     key = ET.parse(root / f'config/{app}/config.xml').getroot().findtext('ApiKey')
     opener = urllib.request.build_opener(urllib.request.ProxyHandler({}), NoRedirects())
     url = f'http://127.0.0.1:{port}/{app}/api/v3/qualityprofile/5'
 
-    def call(payload=None):
-        request = urllib.request.Request(url, headers={'X-Api-Key': key, 'Content-Type': 'application/json'},
-            data=json.dumps(payload).encode() if payload is not None else None,
-            method='PUT' if payload is not None else 'GET')
+    def call():
+        request = urllib.request.Request(url, headers={'X-Api-Key': key}, method='GET')
         with opener.open(request, timeout=30) as response:
             return json.load(response)
 
-    profile = call()
-    if configure:
-        before = json.dumps(profile, sort_keys=True)
-        for item in profile['items']:
-            name = item.get('quality', {}).get('name') or item.get('name', '')
-            if '1080p' in name:
-                item['allowed'] = True
-                for child in item.get('items', []):
-                    child['allowed'] = True
-        validate_quality_profile(profile)
-        if json.dumps(profile, sort_keys=True) != before:
-            call(profile)
-            profile = call()
-    validate_quality_profile(profile)
+    # Recyclarr owns settings. Bootstrap/restore must preserve the reviewed
+    # single-copy profile; the request portal only validates it.
+    validate_quality_profile(call())
 
 
 class API:
@@ -113,7 +100,7 @@ class NoRedirects(urllib.request.HTTPRedirectHandler):
 
 def configure(root, token_path):
     for app in ('radarr', 'sonarr'):
-        native_quality(root, app, configure=True)
+        native_quality(root, app)
     api = API(root)
     settings_path = root / 'config/seerr/settings.json'
     settings = json.loads(settings_path.read_text())
@@ -137,10 +124,13 @@ def configure(root, token_path):
     for app, port in (('radarr', 7878), ('sonarr', 8989)):
         key = ET.parse(root / f'config/{app}/config.xml').getroot().findtext('ApiKey')
         require(bool(key), 'native_application_key_missing')
+        existing = api.call('settings/' + app)
+        require(len(existing) <= 1, 'seerr_unique_native_server_required')
         server = {'name': app.capitalize(), 'hostname': '127.0.0.1', 'port': port,
                   'apiKey': key, 'useSsl': False, 'baseUrl': '/' + app,
                   'activeProfileId': 5, 'activeProfileName': 'Ultra-HD', 'activeDirectory': '/library',
-                  'tags': [], 'is4k': False, 'isDefault': True, 'syncEnabled': True,
+                  'tags': list(existing[0].get('tags', [])) if existing else [],
+                  'is4k': False, 'isDefault': True, 'syncEnabled': True,
                   'preventSearch': False, 'tagRequests': False, 'overrideRule': [],
                   'externalUrl': f'http://10.77.0.1:19696/{app}/'}
         if app == 'radarr':
@@ -152,7 +142,6 @@ def configure(root, token_path):
         require(any(p['id'] == 5 and p['name'] == 'Ultra-HD' for p in result['profiles'])
                 and any(f['path'] == '/library' for f in result['rootFolders']),
                 'native_profile_or_library_unavailable')
-        existing = api.call('settings/' + app)
         if existing:
             require(len(existing) == 1 and all(existing[0].get(k) == v for k, v in server.items()),
                     'partial_seerr_setup_requires_review')
@@ -162,11 +151,29 @@ def configure(root, token_path):
     return inspect(root)
 
 
+def verify_plex_connection(opener, settings):
+    # An ordinary socket must select the private VPN source, as Seerr does.
+    # /identity is public server identity metadata, not a library-content query.
+    try:
+        request = urllib.request.Request('http://192.168.1.66:32400/identity', method='GET')
+        with opener.open(request, timeout=10) as response:
+            identity = ET.fromstring(response.read(8192))
+        require(bool(settings['plex'].get('machineId'))
+                and identity.get('machineIdentifier') == settings['plex']['machineId'],
+                'seerr_plex_identity_mismatch')
+    except RuntimeError:
+        raise
+    except Exception:
+        raise RuntimeError('seerr_plex_connection_unavailable') from None
+
+
 def inspect(root):
     settings = json.loads((root / 'config/seerr/settings.json').read_text())
     report = validate(settings)
     api = API(root)
     require(api.call('settings/public', authenticated=False)['initialized'], 'seerr_not_ready')
+    verify_plex_connection(api.opener, settings)
+    report['plex_connection'] = 'verified'
     profile = api.call('user/1/settings/main')
     require(not profile.get('watchlistSyncMovies') and not profile.get('watchlistSyncTv'),
             'unrequested_watchlist_acquisition_enabled')

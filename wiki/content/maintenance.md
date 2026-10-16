@@ -27,3 +27,9 @@ The scoped media recovery deployment installs only reporting and Home Assistant 
 `just usenet-configure-seerr-sync` repairs only the Plex destination route and read-only sync checks. It preserves the default route and does not restart media services.
 
 The [Sonoff recovery guide](../../docs/operations/sonoff-zigbee-thread.md) covers the preserved Zigbee network and the disabled Thread/Matter services. Its separate SOPS supplement stores the saved Thread credentials and encrypted-backup passwords; decryption with the existing recovery key was verified on October 16. Keep the actual Home Assistant and app backups as well. Enabling Thread later uses Home Assistant's retained credentials and does not require decrypting the supplement.
+
+`just usenet-configure-seerr-safety` stages a private Recyclarr preview; adding
+`true` applies only the reviewed settings and request-monitoring scope. The daily
+Recyclarr timer maintains settings, while recovery stays report-only. The
+separate `just usenet-cleanuparr-replay` lab has no production credentials or
+media mounts and is removed after testing. See the [settings rollout runbook](../../usenet-infra/docs/native-media.md#settings-ownership-and-offline-recovery-qualification).

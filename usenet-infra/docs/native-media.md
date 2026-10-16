@@ -201,3 +201,114 @@ retain the token for redeploy. Keep those aligned on restore; the installer
 refuses token rotation. Reinstall the service/HA package after rebuilding a host.
 To suspend reporting, stop and disable `usenet-seerr-recovery.timer` and disable
 `automation.usenet_recovery_watchdog` in HA; native media processing continues.
+
+## Settings ownership and offline recovery qualification
+
+Recyclarr 8.8.0 is the settings owner. Its official image is pinned by digest in
+`compose/recyclarr/compose.yaml`; it runs as the existing service identity with
+no media mounts. `config/recyclarr.yml` explicitly enables future-import naming,
+disables Proper/Repack preference and keeps upgrades disabled in all six existing
+profiles. Existing naming formats, profile quality order, allowed resolutions,
+custom formats and per-item profiles are retained. The request portal validates
+Ultra-HD's 2160p preference and 1080p fallback rather than rewriting the profile.
+The existing movie-specific lower-resolution exception remains unchanged.
+
+This deliberately adopts a small part of Recyclarr, without importing an entire
+TRaSH profile or adding another settings generator. Unspecified naming and media
+management settings are not synchronized, as documented by Recyclarr's
+[media naming](https://recyclarr.dev/reference/configuration/media-naming/) and
+[media management](https://recyclarr.dev/reference/configuration/media-management/)
+references. The [quality-profile reference](https://recyclarr.dev/reference/configuration/quality-profiles/)
+describes the upgrade flag. Disabled upgrades are this household's preservation
+policy, not a claim that every TRaSH recommendation disables upgrades.
+
+`usenet-recyclarr.timer` runs settings synchronization daily at 05:35 UTC with
+up to 15 minutes of jitter. Service output uses the bounded system journal;
+Recyclarr also retains its own rotating logs. A failed sync is a failed systemd
+service; inspect it before treating the policy as current. There are no searches,
+imports or existing-file renames in this configuration. RSS remains off. Native
+completed-download and failed-download handling retain their existing settings.
+
+```sh
+just usenet-configure-seerr-safety         # stage a private preview
+just usenet-configure-seerr-safety true    # apply reviewed settings and verify
+just usenet-recyclarr-preview             # preview the currently deployed policy
+just usenet-seerr-recovery-status
+just usenet-cleanuparr-replay              # disposable offline compatibility test
+```
+
+The installer stores preview policy separately from the timer's active policy.
+Private `config/catalog/recyclarr-preview/preview.log` contains the CLI log;
+Recyclarr suppresses interactive tables when output is redirected. Inspect the
+configuration as well as warnings before applying. Apply reconciles the
+`seerr-approved` tag through exact native/catalog IDs and approved TV seasons,
+unmonitors items outside those requests, and prevents monitoring new seasons.
+It never re-enables an unmonitored item or season. Seerr attaches the same tag to
+future requests. Tags aid inspection; they do not prove approval or enforce an
+external application's scope. A cancelled/changed request needs a new scope
+audit; no custom monitoring writer runs in the background.
+
+Before and after each migration, private snapshots record all native file
+records and device/inode/size/mtime, acquisition commands, queue state and policy.
+Verification rejects any changed file record, file identity, quality choice,
+profile assignment, naming format, RSS setting or download-client configuration.
+The October 16 rollout preserved 435 episode files and 59 movie files, and
+unmonitored ten movies outside approved requests. It did not download, import,
+rename or delete existing media. Configuration backups include Recyclarr's
+policy, secrets, state and Compose definition; its regenerable guide/template
+cache is excluded. Restore secrets privately and reconstruct systemd units from
+source. Do not rerun legacy profile setters after restore.
+
+To suspend settings maintenance, stop and disable `usenet-recyclarr.timer`.
+Retain current safe settings and the private `settings-rollout` snapshots.
+If a settings rollback is needed, review only the changed settings against the
+saved `before.json`; do not restore whole Arr databases or older monitoring/RSS
+policy over newer requests. Rollback does not require changing media.
+
+### Cleanuparr trial boundary
+
+Cleanuparr 2.10.11 is pinned by digest and tested only in the disposable
+`cleanuparr-replay` Compose project. Its network is internal, has no published
+ports, and contains only Cleanuparr and a fixture API. Neither container has
+production credentials, production network access, a Docker socket or media
+mounts. The fixture API refuses and records every Arr write. Lab credentials and
+logs stay in the private catalog directory; each repeat preserves the previous
+trial. The playbook removes test containers/network even when a test fails.
+There is no live Cleanuparr service or timer.
+
+The export selects the three repaired TV requests and two repaired movie
+requests from saved evidence using exact approved bindings. It excludes unrelated
+queue rows. Tests exercise the original blocked state, the verified repaired
+state, and synthetic controls for a supported import, an existing file, an active
+import and unavailable history. Synthetic data is explicitly labelled and is not
+claimed as historical repair evidence. Global dry-run is enabled before fixture
+instances are connected; Seeker and proactive search are disabled, cleanup strike
+thresholds are zero, and no SAB/download client is configured.
+
+The October 16 trial passed all seven scenarios twice. The historical TV
+blockers were held, neither missing-movie nor repaired-state fixtures triggered
+an action, and only the supported synthetic case logged an import proposal.
+The existing-file, active-import and unavailable-history controls prevented
+imports. There were zero Arr write attempts. Runtime inspection confirmed the
+internal network, rootless pinned containers, no published ports and no media
+mounts. Two unrelated movie queue entries were excluded from the replay.
+These are compatibility results, not authorization to act on production.
+
+The upstream [dry-run documentation](https://cleanuparr.github.io/docs/configuration/general/)
+describes suppressed actions. [Queue Cleaner documentation](https://cleanuparr.github.io/docs/configuration/queue-cleaner/)
+limits force-import bypasses to ID-match and sample-detection blockers. Our
+ambiguous season/episode mappings require review; Cleanuparr does not reproduce
+the earlier metadata matching repair. Failed SAB removal is also a separate path,
+so a zero failed-import strike threshold is not a blanket removal safeguard when
+SAB is connected. The [Seeker documentation](https://cleanuparr.github.io/docs/configuration/seeker/)
+describes native-item searching, including season-level Sonarr searches; it does
+not establish exact Seerr request/season authorization or global completed-file
+and release-overlap exclusion.
+
+**Recovery remains report-only.** Do not connect this trial to production or
+promote its dry-run switch alone. Off-the-shelf recovery has not demonstrated
+all of: exact current Seerr scope, checking completed sources before any search,
+excluding existing episodes from packs, durable bounded retries, and safe behavior
+through restart/API failures. Prefer leaving ambiguous cases for manual review
+over building a second acquisition engine. The small existing report-only
+observer and Home Assistant alerts remain; neither has a recovery apply path.

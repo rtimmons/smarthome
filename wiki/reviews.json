@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-16"
   },
   "maintenance": {
-    "fingerprint": "8a5edf96fee9e8978e364dff330fcff4343a4bf175f55cb026d5ca90795f766c",
-    "reason": "Reviewed the additional explicit Cleanuparr offline-replay recipe and syntax check. They do not run as part of wiki publication; existing static documentation deployment, rollback, and credential exclusions remain unchanged.",
+    "fingerprint": "53aeade0f79364a340e6fec437bd03d7d20a38ca04db8b3a626291367b97bfb1",
+    "reason": "Document settings-only Recyclarr rollout commands and disposable Cleanuparr replay; retain report-only recovery and existing backup guidance.",
     "reviewed_at": "2026-10-16"
   },
   "media": {
-    "fingerprint": "ab58524b477f507d787b00076d6ff9e32715ab0495479558d37821a72972d532",
-    "reason": "Reviewed current media sources and guides, including the newly added internal-network Cleanuparr fixture Compose. That optional offline replay has no published ports, production media mounts or operational wiki instructions; it does not change the documented report-only production recovery policy.",
+    "fingerprint": "dc1ebf32178ce7b6e80b7a41a68605928852af6fc24e303465a5305123571c3c",
+    "reason": "Reviewed the complete media recovery rollout for commit, including preservation guards and private evidence boundaries; normalized service whitespace and made all safety tests runnable directly.",
     "reviewed_at": "2026-10-16"
   },
   "network": {

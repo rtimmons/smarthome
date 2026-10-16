@@ -1,0 +1,11 @@
+[Unit]
+Description=Recyclarr safety settings synchronization (no media actions)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/usenet/compose/recyclarr
+ExecStart=/usr/bin/docker compose run --rm recyclarr sync
+TimeoutStartSec=600
+UMask=0077

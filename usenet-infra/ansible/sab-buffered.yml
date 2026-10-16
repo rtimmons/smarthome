@@ -1,0 +1,65 @@
+---
+- name: Build or idle-deploy the pinned SAB buffered copy image
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Require an explicit supported action
+      ansible.builtin.assert:
+        that: sab_buffered_action in ['build', 'deploy']
+
+    - name: Install the protected SAB build context
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/compose/cloud/sab-buffered/'
+        dest: /srv/usenet/compose/cloud/sab-buffered/
+        owner: root
+        group: root
+        mode: preserve
+
+    - name: Read the live Compose definition without exposing application settings
+      ansible.builtin.slurp:
+        src: /srv/usenet/compose/cloud/compose.yaml
+      register: sab_buffered_live_compose
+      no_log: true
+
+    - name: Select only the reviewed SAB image and health fields
+      ansible.builtin.set_fact:
+        sab_buffered_desired: "{{ (lookup('ansible.builtin.file', usenet_project_root + '/compose/cloud/compose.yaml') | from_yaml).services.sabnzbd }}"
+      no_log: true
+
+    - name: Stage only the SAB image change on the preserved live Compose definition
+      ansible.builtin.copy:
+        content: >-
+          {{ (sab_buffered_live_compose.content | b64decode | from_yaml)
+             | combine({'services': {'sabnzbd': {
+                 'image': sab_buffered_desired.image,
+                 'pull_policy': sab_buffered_desired.pull_policy,
+                 'healthcheck': sab_buffered_desired.healthcheck
+               }}}, recursive=True)
+             | to_nice_yaml }}
+        dest: /srv/usenet/compose/cloud/compose.buffered.yaml
+        owner: root
+        group: usenet
+        mode: '0640'
+      no_log: true
+
+    - name: Install the bounded deployment helper
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/sab-buffered.py'
+        dest: /srv/usenet/libexec/sab-buffered.py
+        owner: root
+        group: usenet
+        mode: '0550'
+
+    - name: Build and run isolated tests against the exact candidate image
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/sab-buffered.py, build]
+      register: sab_buffered_build
+      changed_when: true
+
+    - name: Deploy only after the helper rechecks idle state and rollback protection
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/sab-buffered.py, deploy]
+      when: sab_buffered_action == 'deploy'
+      register: sab_buffered_deployment
+      changed_when: sab_buffered_deployment.rc == 0 and (sab_buffered_deployment.stdout | from_json).status == 'deployed'

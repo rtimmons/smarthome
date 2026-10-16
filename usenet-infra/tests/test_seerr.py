@@ -1,7 +1,9 @@
 import copy
 import importlib.util
+import io
 from pathlib import Path
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).parents[1]
 spec = importlib.util.spec_from_file_location('seerr_config', ROOT / 'scripts/seerr-config.py')
@@ -10,6 +12,21 @@ spec.loader.exec_module(seerr)
 
 
 class SeerrTests(unittest.TestCase):
+    def test_plex_health_uses_normal_connection_and_checks_exact_server(self):
+        opener = mock.Mock()
+        opener.open.return_value = io.BytesIO(b'<MediaContainer machineIdentifier="fixture-server"/>')
+        seerr.verify_plex_connection(opener, {'plex': {'machineId': 'fixture-server'}})
+        self.assertEqual(opener.open.call_args.args[0].full_url, 'http://192.168.1.66:32400/identity')
+        self.assertEqual(opener.open.call_args.kwargs['timeout'], 10)
+        opener.open.return_value = io.BytesIO(b'<MediaContainer machineIdentifier="wrong-server"/>')
+        with self.assertRaisesRegex(RuntimeError, 'identity_mismatch'):
+            seerr.verify_plex_connection(opener, {'plex': {'machineId': 'fixture-server'}})
+
+    def test_plex_health_timeout_is_a_sanitized_failure(self):
+        opener = mock.Mock(); opener.open.side_effect = TimeoutError('sensitive upstream detail')
+        with self.assertRaisesRegex(RuntimeError, '^seerr_plex_connection_unavailable$'):
+            seerr.verify_plex_connection(opener, {'plex': {'machineId': 'fixture-server'}})
+
     def settings(self):
         result = {'main': dict(seerr.MAIN), 'public': {'initialized': True},
                   'plex': {'ip': '192.168.1.66', 'port': 32400, 'useSsl': False,

@@ -1,0 +1,6 @@
+*
+!Dockerfile
+!buffered_copy.py
+!install.py
+!verify.py
+!integration_test.py

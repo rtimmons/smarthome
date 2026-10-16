@@ -1,0 +1,28 @@
+# Disposable offline replay only. No production API keys, ports or media mounts.
+services:
+  fixtures:
+    image: ghcr.io/cleanuparr/cleanuparr:2.10.11@sha256:c51af6957780ad2719e97a2131fe668f61da28e43363719c7b557577fc39ebaf
+    user: '${USENET_UID}:${USENET_GID}'
+    entrypoint: [python3, /test/cleanuparr_replay.py, serve]
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - /srv/usenet/config/catalog/cleanuparr-replay/data:/replay
+      - /srv/usenet/libexec/cleanuparr_replay.py:/test/cleanuparr_replay.py:ro
+    networks: [offline]
+    restart: 'no'
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:2.10.11@sha256:c51af6957780ad2719e97a2131fe668f61da28e43363719c7b557577fc39ebaf
+    user: '${USENET_UID}:${USENET_GID}'
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    tmpfs: [/tmp]
+    volumes:
+      - /srv/usenet/config/catalog/cleanuparr-replay/config:/config
+    networks: [offline]
+    restart: 'no'
+networks:
+  offline:
+    internal: true

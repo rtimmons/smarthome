@@ -1,0 +1,38 @@
+---
+- name: Repair Seerr to Plex routing without restarting media services
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Verify unchanged native ownership
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      changed_when: false
+
+    - name: Install the tested VPN source-route helper
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/ansible/roles/cloud_vpn/files/vpn-network.py'
+        dest: /usr/local/libexec/usenet-vpn/vpn-network.py
+        owner: root
+        group: root
+        mode: '0500'
+
+    - name: Select the private source only for the configured Plex host
+      ansible.builtin.command:
+        argv: [python3, /usr/local/libexec/usenet-vpn/vpn-network.py, plex-route,
+               /etc/usenet-vpn/network.json]
+      changed_when: true
+
+    - name: Install read-only connection and scan-freshness checks
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/{{ item }}.py'
+        dest: '/srv/usenet/libexec/{{ item }}.py'
+        owner: root
+        group: usenet
+        mode: '0550'
+      loop: [seerr-config, seerr-recovery]
+
+    - name: Verify an ordinary connection reaches the expected Plex server
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/seerr-config.py, inspect]
+      changed_when: false

@@ -71,6 +71,35 @@
     - "{{ cloud_data_root }}/libexec"
     - "{{ cloud_data_root }}/scripts"
 
+- name: Install the pinned SAB image sources for restoration and normal deployment
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/compose/cloud/sab-buffered/'
+    dest: '{{ cloud_deploy_dir }}/sab-buffered/'
+    owner: root
+    group: root
+    mode: preserve
+
+- name: Stage the SAB candidate Compose definition
+  ansible.builtin.copy:
+    src: '{{ cloud_compose_source }}'
+    dest: '{{ cloud_deploy_dir }}/compose.buffered.yaml'
+    owner: root
+    group: usenet
+    mode: '0640'
+
+- name: Install the SAB image build and rollback helper
+  ansible.builtin.copy:
+    src: '{{ usenet_project_root }}/scripts/sab-buffered.py'
+    dest: '{{ cloud_data_root }}/libexec/sab-buffered.py'
+    owner: root
+    group: usenet
+    mode: '0550'
+
+- name: Build and test the pinned SAB image before changing Compose
+  ansible.builtin.command:
+    argv: [python3, /srv/usenet/libexec/sab-buffered.py, build]
+  changed_when: true
+
 - name: Deploy the cloud Compose project
   ansible.builtin.copy:
     src: "{{ item.src }}"

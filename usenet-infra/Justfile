@@ -3,6 +3,20 @@ set dotenv-load
 default:
 	@just --list
 
+# Preview first; apply only reviewed settings, never media/recovery actions.
+[group: 'setup']
+configure-seerr-safety apply="false": ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook seerr-safety.yml -e seerr_safety_apply={{apply}}
+
+# A fresh private lab is required; reruns retain evidence and fail closed.
+[group: 'validation']
+cleanuparr-replay: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cleanuparr-replay.yml
+
+[group: 'health']
+recyclarr-preview:
+	@./scripts/cloud-command sudo -n docker compose --project-directory /srv/usenet/compose/recyclarr run --rm recyclarr sync --preview
+
 # Run all checks that do not require live infrastructure.
 [group: 'validation']
 test: ansible-setup
@@ -25,13 +39,47 @@ test: ansible-setup
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-library.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-remote-media.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml native-cutover.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml sab-buffered.yml -e sab_buffered_action=build --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr-recovery.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr-sync.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr-safety.yml --syntax-check
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cleanuparr-replay.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex-backups.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml restore-storage.yml --syntax-check
 	shellcheck config/arr-shared-library-init
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
+
+# Install only report-only recovery and the scoped Home Assistant notification package.
+[group: 'setup']
+configure-seerr-recovery: ansible-setup
+	@../wiki/run with-deployment --scope media-recovery -- just _deploy-seerr-recovery
+
+[private]
+_deploy-seerr-recovery:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	source ../talos/scripts/nvm_use.sh
+	just --justfile ../new-hass-configs/Justfile --working-directory ../new-hass-configs home-assistant-build
+	python3 scripts/seerr-recovery-ha.py
+	cd ansible
+	uv run --with 'ansible-core==2.21.4' ansible-playbook seerr-recovery.yml
+
+[group: 'health']
+seerr-recovery-status:
+	@./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/seerr-recovery.py status
+
+[group: 'health']
+seerr-recovery-run:
+	@./scripts/cloud-command sudo -n systemctl start usenet-seerr-recovery.service
+	@just seerr-recovery-status
+
+# Repair only Seerr's exact-host Plex route and read-only sync health checks.
+[group: 'setup']
+configure-seerr-sync: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-seerr-sync -- uv run --with 'ansible-core==2.21.4' ansible-playbook seerr-sync.yml
 
 # Add the private browsing/request portal with native Arr ownership.
 [group: 'setup']
@@ -164,6 +212,36 @@ native-ownership-status:
 [group: 'setup']
 configure-native-ownership: ansible-setup
 	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml
+
+# Enable concurrent downloads and four-file PAR verification between processing jobs.
+[group: 'setup']
+configure-post-processing: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml -e native_configure_processing=true
+
+[group: 'setup']
+configure-failed-downloads: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml -e native_configure_failed_downloads=true
+
+# Build and test without restarting production services.
+[group: 'setup']
+sab-buffered-build: ansible-setup
+	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook sab-buffered.yml -e sab_buffered_action=build
+
+[group: 'setup']
+sab-buffered-deploy: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-sab-buffered -- uv run --with 'ansible-core==2.21.4' ansible-playbook sab-buffered.yml -e sab_buffered_action=deploy
+
+[group: 'setup']
+sab-buffered-rollback:
+	@../wiki/run with-deployment --scope media-sab-buffered -- ./scripts/cloud-command sudo -n python3 /srv/usenet/libexec/sab-buffered.py rollback
+
+[group: 'health']
+sab-buffered-status:
+	@./scripts/cloud-command sudo -n python3 /srv/usenet/libexec/sab-buffered.py status
+
+[group: 'health']
+sab-buffered-verify-import:
+	@./scripts/cloud-command sudo -n python3 /srv/usenet/libexec/sab-buffered.py verify-import
 
 # Install and verify the selected Radarr/Sonarr integration.
 [group: 'setup']

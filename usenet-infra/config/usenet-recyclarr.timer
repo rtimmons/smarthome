@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily Recyclarr safety settings maintenance
+
+[Timer]
+OnCalendar=*-*-* 05:35:00 UTC
+RandomizedDelaySec=15m
+Persistent=true
+Unit=usenet-recyclarr.service
+
+[Install]
+WantedBy=timers.target

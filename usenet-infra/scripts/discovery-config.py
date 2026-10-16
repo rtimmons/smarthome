@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect pinned Radarr and Sonarr acquisition settings on the cloud host.
+"""Inspect pinned Arr settings or explicitly enable native failed-release searches.
 
 No search, grab, import, download deletion, or arbitrary URL entry point exists.
 Only sanitized summaries leave this helper; application keys remain in memory.
@@ -21,7 +21,7 @@ APPS = {'radarr': (7878, '6.4.4.10685'), 'sonarr': (8989, '4.0.20.3014'),
 PROFILE = 'Manual discovery only'
 CLIENT = 'SABnzbd manual discovery'
 DOWNLOAD_POLICY = {'enableCompletedDownloadHandling': True,
-                   'autoRedownloadFailed': False,
+                   'autoRedownloadFailed': True,
                    'autoRedownloadFailedFromInteractiveSearch': False}
 RSS_INTERVAL = 0
 PROFILE_POLICY = {'enableRss': True, 'enableAutomaticSearch': True,
@@ -96,6 +96,29 @@ def ensure_versions(api):
             raise DiscoveryError('application_version_not_reviewed')
 
 
+def configure_failed_downloads(api):
+    """Enable native replacement searches without changing cleanup or manual grabs."""
+    ensure_versions(api)
+    before = {app: api.call(app, 'config/downloadclient') for app in ('radarr', 'sonarr')}
+    for resource in before.values():
+        if (not require_policy(resource, {'enableCompletedDownloadHandling': True,
+                'autoRedownloadFailedFromInteractiveSearch': False})
+                or type(resource.get('autoRedownloadFailed')) is not bool):
+            raise DiscoveryError('existing_download_policy_requires_review')
+    changed = False
+    for app, resource in before.items():
+        if resource['autoRedownloadFailed']:
+            continue
+        desired = dict(resource, autoRedownloadFailed=True)
+        api.call(app, 'config/downloadclient', 'PUT', desired)
+        actual = api.call(app, 'config/downloadclient')
+        if any(actual.get(key) != value for key, value in desired.items()):
+            raise DiscoveryError('failed_download_policy_readback_failed')
+        changed = True
+    return {'status': 'verified', 'changed': changed, 'automatic_failed_release_search': True,
+            'interactive_failed_release_search': False}
+
+
 def check_lists(api, app):
     # No lists are created implicitly. Existing lists must remain metadata-only.
     for item in api.call(app, 'importlist'):
@@ -119,7 +142,7 @@ def inspect(api):
     if len(source_indexers) != 2 or any(item.get('appProfileId') != owned[0]['id'] for item in source_indexers):
         raise DiscoveryError('source_indexer_policy_not_verified')
     result = {'status': 'verified', 'automatic_acquisition': False, 'automatic_import': True,
-              'explicit_native_requests': True, 'apps': {}}
+              'explicit_native_requests': True, 'automatic_failed_release_search': True, 'apps': {}}
     for app in ('radarr', 'sonarr'):
         check_lists(api, app)
         if not require_policy(api.call(app, 'config/indexer'), {'rssSyncInterval': rss_interval}):
@@ -146,11 +169,12 @@ def inspect(api):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('inspect',))
+    parser.add_argument('action', choices=('inspect', 'configure-failed-downloads'))
     args = parser.parse_args()
     try:
         api = API()
-        result = inspect(api)
+        result = (configure_failed_downloads(api) if args.action == 'configure-failed-downloads'
+                  else inspect(api))
         print(json.dumps(result, sort_keys=True))
     except DiscoveryError as error:
         print(json.dumps({'status': 'failed', 'reason': str(error)}))

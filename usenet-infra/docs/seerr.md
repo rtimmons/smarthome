@@ -131,3 +131,19 @@ series. Forty-two opaque filenames required native renames; all 189 physical
 file identities and metadata were preserved. The source-route repair and scoped
 folder scans restored native availability without acquisition commands. These
 checks establish catalogue availability, not playback on every client.
+
+## Safe settings and request scope
+
+Recyclarr now owns future-import naming and disabled upgrade/Proper/Repack
+settings for Sonarr and Radarr. It preserves the current formats, quality order
+and per-movie exceptions. Existing files were not renamed. Approved requests carry
+`seerr-approved`; existing movies outside approved requests are unmonitored, and
+unrequested TV seasons remain unmonitored. Exact request and season bindings,
+not tags alone, continue to define the report-only recovery scope.
+
+Cleanuparr is evaluated in an offline dry-run lab against the five repaired
+requests. It has no live service, credentials or media access. Its limited
+force-import support cannot resolve the ambiguous episode mappings from those
+repairs. Keep manual review for those cases and keep automated recovery
+report-only. The [settings and qualification runbook](native-media.md#settings-ownership-and-offline-recovery-qualification)
+records commands, evidence, official references, rollback and promotion limits.

@@ -41,6 +41,43 @@ class ReadAPI:
 
 
 class DiscoveryTests(unittest.TestCase):
+    def test_failed_release_policy_preserves_unrelated_settings_and_is_idempotent(self):
+        api = ReadAPI()
+        writes = []
+        original_call = api.call
+        for app in ('radarr', 'sonarr'):
+            api.data[app, 'config/downloadclient'].update(autoRedownloadFailed=False,
+                id=1, checkForFinishedDownloadInterval=1)
+        def call(app, endpoint, method='GET', body=None):
+            if method == 'GET':
+                return original_call(app, endpoint)
+            self.assertEqual((endpoint, method), ('config/downloadclient', 'PUT'))
+            self.assertEqual(body, dict(api.data[app, endpoint], autoRedownloadFailed=True))
+            writes.append(app)
+            api.data[app, endpoint] = copy.deepcopy(body)
+            return body
+        api.call = call
+        self.assertTrue(discovery.configure_failed_downloads(api)['changed'])
+        self.assertEqual(writes, ['radarr', 'sonarr'])
+        self.assertFalse(discovery.configure_failed_downloads(api)['changed'])
+        self.assertEqual(len(writes), 2)
+
+    def test_failed_release_policy_preflights_both_apps_before_any_write(self):
+        api = ReadAPI()
+        api.data['radarr', 'config/downloadclient']['autoRedownloadFailed'] = False
+        api.data['sonarr', 'config/downloadclient']['autoRedownloadFailedFromInteractiveSearch'] = True
+        with self.assertRaisesRegex(discovery.DiscoveryError, 'existing_download_policy'):
+            discovery.configure_failed_downloads(api)
+
+    def test_failed_release_policy_requires_persisted_readback(self):
+        api = ReadAPI()
+        api.data['radarr', 'config/downloadclient']['autoRedownloadFailed'] = False
+        original_call = api.call
+        api.call = lambda app, endpoint, method='GET', body=None: (
+            original_call(app, endpoint) if method == 'GET' else body)
+        with self.assertRaisesRegex(discovery.DiscoveryError, 'readback_failed'):
+            discovery.configure_failed_downloads(api)
+
     def setUp(self):
         import json
         temporary = tempfile.TemporaryDirectory()

@@ -1,0 +1,55 @@
+# Private webhook, reachable through the existing encrypted cloud-to-home VPN.
+# The opaque webhook ID is held in secrets.yaml; no Home Assistant API token
+# is installed on the cloud server. No acquisition actions are exposed here.
+automation:
+  - id: usenet_recovery_receive
+    alias: Usenet recovery receive
+    mode: queued
+    max: 5
+    triggers:
+      - trigger: webhook
+        webhook_id: !secret usenet_recovery_webhook_id
+        allowed_methods: [POST]
+        local_only: true
+    conditions:
+      - condition: template
+        value_template: "{{ trigger.json is defined and trigger.json.action | default('') in ['create', 'dismiss', 'heartbeat'] }}"
+    actions:
+      - action: persistent_notification.dismiss
+        data:
+          notification_id: usenet_recovery_offline
+      - choose:
+          - conditions: "{{ trigger.json.action == 'create' }}"
+            sequence:
+              - action: persistent_notification.create
+                data:
+                  notification_id: usenet_recovery_report
+                  title: Media recovery needs attention
+                  message: "{{ (trigger.json.message | default('Open Seerr to review your requests.'))[:1000] }}"
+          - conditions: "{{ trigger.json.action == 'dismiss' }}"
+            sequence:
+              - action: persistent_notification.dismiss
+                data:
+                  notification_id: usenet_recovery_report
+
+  - id: usenet_recovery_watchdog
+    alias: Usenet recovery watchdog
+    mode: single
+    triggers:
+      - trigger: time_pattern
+        minutes: "/5"
+    conditions:
+      - condition: template
+        value_template: >-
+          {% set heartbeat = as_timestamp(state_attr('automation.usenet_recovery_receive', 'last_triggered'), 0) %}
+          {% set alerted = as_timestamp(this.attributes.last_triggered, 0) %}
+          {{ as_timestamp(now()) - heartbeat > 1200 and (alerted == 0 or alerted < heartbeat) }}
+    actions:
+      - action: persistent_notification.create
+        data:
+          notification_id: usenet_recovery_offline
+          title: Media recovery monitor is offline
+          message: >-
+            The cloud recovery monitor has not checked in for over 20 minutes.
+            Automatic recovery is in report-only mode. Check the cloud service
+            or its connection to Home Assistant.

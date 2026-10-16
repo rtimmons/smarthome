@@ -659,6 +659,34 @@ usenet-native-ownership-status:
 usenet-configure-native-ownership:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-native-ownership
 
+[group: 'usenet']
+usenet-configure-post-processing:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-post-processing
+
+[group: 'usenet']
+usenet-configure-failed-downloads:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-failed-downloads
+
+[group: 'usenet']
+usenet-sab-buffered-build:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-build
+
+[group: 'usenet']
+usenet-sab-buffered-deploy:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-deploy
+
+[group: 'usenet']
+usenet-sab-buffered-rollback:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-rollback
+
+[group: 'usenet']
+usenet-sab-buffered-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-status
+
+[group: 'usenet']
+usenet-sab-buffered-verify-import:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-verify-import
+
 # Read NAS versions, resource headroom, and share metadata through dedicated SSH.
 [group: 'usenet']
 usenet-qnap-recon:
@@ -851,3 +879,32 @@ dns-deploy:
 [positional-arguments]
 dns-rollback-primary snapshot:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns rollback-primary --snapshot "$1"
+
+# Report-only recovery for approved Seerr requests, with Home Assistant alerts.
+[group: 'usenet']
+usenet-configure-seerr-recovery:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr-recovery
+
+[group: 'usenet']
+usenet-seerr-recovery-status:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra seerr-recovery-status
+
+[group: 'usenet']
+usenet-seerr-recovery-run:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra seerr-recovery-run
+
+[group: 'usenet']
+usenet-configure-seerr-sync:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr-sync
+
+[group: 'usenet']
+usenet-configure-seerr-safety apply="false":
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr-safety {{apply}}
+
+[group: 'usenet']
+usenet-recyclarr-preview:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra recyclarr-preview
+
+[group: 'usenet']
+usenet-cleanuparr-replay:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cleanuparr-replay

@@ -11,7 +11,8 @@ from pathlib import Path
 import subprocess
 
 ROOT = Path('/srv/usenet')
-LIMITS = {'size_limit': '100G', 'top_only': 1, 'pause_on_post_processing': 1,
+PROCESSING = {'par_option': '-T4', 'pause_on_post_processing': 0}
+LIMITS = {'size_limit': '100G', 'top_only': 1, **PROCESSING,
           'direct_unpack': 0, 'safe_postproc': 1, 'download_free': '30G',
           'complete_free': '30G', 'preserve_paused_state': 1}
 MARKER = 'config/catalog/native-ownership.json'
@@ -60,6 +61,31 @@ def limits_match(misc):
     return all(misc.get(k) == v for k, v in LIMITS.items())
 
 
+def configure_processing(sab):
+    """Persist the reviewed tuning only between jobs; never resume a manual pause."""
+    misc = sab.api('get_config', section='misc')['config']['misc']
+    require(all(misc.get(k) == v for k, v in LIMITS.items() if k not in PROCESSING),
+            'native_sab_safety_limits_changed')
+    require(misc.get('par_option') in ('', '-T4')
+            and misc.get('pause_on_post_processing') in (0, 1),
+            'unexpected_processing_settings')
+    changed = False
+    for key, value in PROCESSING.items():
+        if misc.get(key) == value:
+            continue
+        history = sab.api('history', start=0, limit=1, archive=0)['history']
+        require(str(history.get('ppslots')) == '0', 'post_processing_active_retry_when_idle')
+        response = sab.api('set_config', section='misc', keyword=key, value=value)
+        # SAB 5.1.3 returns configuration data on success, not status: true.
+        require(isinstance(response.get('config'), dict), 'processing_setting_update_failed')
+        readback = sab.api('get_config', section='misc')['config']['misc']
+        require(readback.get(key) == value, 'processing_settings_readback_failed')
+        changed = True
+    after = sab.api('get_config', section='misc')['config']['misc']
+    require(limits_match(after), 'processing_settings_readback_failed')
+    return {'status': 'verified', 'changed': changed, **PROCESSING}
+
+
 TIMERS = ('usenet-capacity-admission.timer', 'usenet-cart-import.timer',
           'usenet-incomplete-maintenance.timer', 'usenet-publish.timer')
 
@@ -98,7 +124,7 @@ def inspect(root, api, sab):
         require(len(clients) == 1 and clients[0] == native_client(clients[0], app), 'native_client_changed')
         config = api.call(app, 'config/downloadclient')
         require(config.get('enableCompletedDownloadHandling') is True
-                and config.get('autoRedownloadFailed') is False
+                and config.get('autoRedownloadFailed') is True
                 and config.get('autoRedownloadFailedFromInteractiveSearch') is False, 'native_cleanup_changed')
         media = api.call(app, 'config/mediamanagement')
         require(media.get('skipFreeSpaceCheckWhenImporting') is False
@@ -133,13 +159,14 @@ def inspect(root, api, sab):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('inspect',))
+    parser.add_argument('action', choices=('inspect', 'configure-processing'))
     args = parser.parse_args()
     try:
         import cart_import_sab
         api = module('discovery-config').API()
         sab = cart_import_sab.SabSource(ROOT)
-        result = inspect(ROOT, api, sab)
+        result = (configure_processing(sab) if args.action == 'configure-processing'
+                  else inspect(ROOT, api, sab))
         print(json.dumps(result))
     except Exception as error:
         print(json.dumps({'status': 'blocked', 'reason': str(error) if type(error) is RuntimeError

@@ -31,7 +31,8 @@ MAX_BYTES = 2 * 1024**3
 MAX_FILES = 100_000
 TREES = ('config/sabnzbd', 'config/prowlarr', 'config/radarr', 'config/sonarr',
          'config/rclone', 'config/catalog', 'state/catalog', 'scripts', 'libexec',
-         'compose/cloud', 'compose/discovery', 'config/seerr', 'compose/seerr', 'config/filex-recovery')
+         'compose/cloud', 'compose/discovery', 'config/seerr', 'compose/seerr',
+         'compose/recyclarr', 'config/filex-recovery')
 SINGLES = ('config/catalog.env', 'config/catalog.env.defaults', 'config/backup-recipient.pub',
            'state/sab-smoke-test.json',
            'secrets/storagebox/id_ed25519', 'secrets/storagebox/known_hosts')
@@ -98,6 +99,10 @@ def inventory(root: Path, scope='cloud-config') -> dict[str, Path]:
             if parent.is_symlink():
                 raise BackupError('Source directory links are refused.')
         for directory, folders, files in os.walk(base, followlinks=False):
+            # Recyclarr regenerates its upstream guide/template cache; retain
+            # configuration, secrets and synchronization state, not Git clones.
+            if Path(directory).relative_to(root).as_posix() in ('config/catalog/recyclarr', 'config/catalog/recyclarr-preview'):
+                folders[:] = [folder for folder in folders if folder != 'resources']
             for folder in folders:
                 if (Path(directory) / folder).is_symlink():
                     raise BackupError('Source directory links are refused.')

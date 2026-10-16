@@ -1,0 +1,11 @@
+[Unit]
+Description=Check requested-media recovery every five minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=5min
+RandomizedDelaySec=15s
+Unit=usenet-seerr-recovery.service
+
+[Install]
+WantedBy=timers.target

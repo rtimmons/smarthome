@@ -1,0 +1,119 @@
+---
+- name: Adopt Recyclarr settings and approved Seerr monitoring without media actions
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Verify existing native ownership
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      changed_when: false
+
+    - name: Create private settings and Compose directories
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: directory
+        owner: usenet
+        group: usenet
+        mode: '0700'
+      loop:
+        - /srv/usenet/config/catalog/recyclarr
+        - /srv/usenet/compose/recyclarr
+        - /srv/usenet/config/catalog/recyclarr-preview
+        - /srv/usenet/compose/recyclarr-preview
+
+    - name: Install settings-only migration and read-only policy helpers
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/{{ item }}'
+        dest: '/srv/usenet/libexec/{{ item }}'
+        owner: root
+        group: usenet
+        mode: '0550'
+      loop: [seerr-safety.py, seerr-config.py, seerr-recovery.py, config-backup.py]
+
+    - name: Install pinned official Recyclarr Compose
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/compose/recyclarr/compose.yaml'
+        dest: /srv/usenet/compose/recyclarr-preview/compose.yaml
+        owner: usenet
+        group: usenet
+        mode: '0600'
+
+    - name: Install explicit safety settings without external templates
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/recyclarr.yml'
+        dest: /srv/usenet/config/catalog/recyclarr-preview/recyclarr.yml
+        owner: usenet
+        group: usenet
+        mode: '0600'
+
+    - name: Capture settings and exact existing file identities and provision local secrets
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/seerr-safety.py, prepare]
+      changed_when: true
+
+    - name: Preview Recyclarr changes privately
+      ansible.builtin.shell:
+        cmd: 'umask 077; docker compose run --rm recyclarr sync --preview > /srv/usenet/config/catalog/recyclarr-preview/preview.log 2>&1'
+        chdir: /srv/usenet/compose/recyclarr-preview
+      changed_when: false
+
+    - name: Promote reviewed settings only for an explicit apply
+      ansible.builtin.copy:
+        src: '/srv/usenet/{{ item.source }}'
+        dest: '/srv/usenet/{{ item.destination }}'
+        remote_src: true
+        owner: usenet
+        group: usenet
+        mode: '0600'
+      loop:
+        - {source: config/catalog/recyclarr-preview/recyclarr.yml, destination: config/catalog/recyclarr/recyclarr.yml}
+        - {source: config/catalog/recyclarr-preview/secrets.yml, destination: config/catalog/recyclarr/secrets.yml}
+        - {source: compose/recyclarr-preview/compose.yaml, destination: compose/recyclarr/compose.yaml}
+      when: seerr_safety_apply | default(false) | bool
+
+    - name: Write active service identity without the preview override
+      ansible.builtin.shell:
+        cmd: 'umask 077; id -u usenet | sed "s/^/USENET_UID=/" > .env; id -g usenet | sed "s/^/USENET_GID=/" >> .env; chown usenet:usenet .env'
+        chdir: /srv/usenet/compose/recyclarr
+      when: seerr_safety_apply | default(false) | bool
+      changed_when: true
+
+    # Keep this a two-stage rollout: a successful preview alone is not approval
+    # of arbitrary settings changes. The operator reviews it before apply=true.
+    - name: Reconcile only request tags and monitoring
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/seerr-safety.py, scope]
+      when: seerr_safety_apply | default(false) | bool
+      changed_when: true
+
+    - name: Apply the reviewed Recyclarr settings
+      ansible.builtin.shell:
+        cmd: 'umask 077; docker compose run --rm recyclarr sync > /srv/usenet/config/catalog/recyclarr/sync.log 2>&1'
+        chdir: /srv/usenet/compose/recyclarr
+      when: seerr_safety_apply | default(false) | bool
+      changed_when: true
+
+    - name: Verify media preservation and exact policy readback
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/seerr-safety.py, verify]
+      when: seerr_safety_apply | default(false) | bool
+      changed_when: false
+
+    - name: Install settings synchronization units
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/{{ item }}'
+        dest: '/etc/systemd/system/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [usenet-recyclarr.service, usenet-recyclarr.timer]
+      when: seerr_safety_apply | default(false) | bool
+
+    - name: Enable settings maintenance only after verification
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        name: usenet-recyclarr.timer
+        state: started
+        enabled: true
+      when: seerr_safety_apply | default(false) | bool

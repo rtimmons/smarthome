@@ -1,0 +1,34 @@
+# Settings only: no searches, renames of existing files, quality reordering,
+# custom-format imports, or template updates. Unspecified settings are retained.
+radarr:
+  seerr_movies:
+    base_url: http://127.0.0.1:7878/radarr
+    api_key: !secret radarr_api_key
+    media_management:
+      propers_and_repacks: do_not_prefer
+    media_naming:
+      movie:
+        rename: true
+    quality_profiles: &no_upgrades
+      - name: Any
+        upgrade: {allowed: false}
+      - name: SD
+        upgrade: {allowed: false}
+      - name: HD-720p
+        upgrade: {allowed: false}
+      - name: HD-1080p
+        upgrade: {allowed: false}
+      - name: Ultra-HD
+        upgrade: {allowed: false}
+      - name: HD - 720p/1080p
+        upgrade: {allowed: false}
+sonarr:
+  seerr_tv:
+    base_url: http://127.0.0.1:8989/sonarr
+    api_key: !secret sonarr_api_key
+    media_management:
+      propers_and_repacks: do_not_prefer
+    media_naming:
+      episodes:
+        rename: true
+    quality_profiles: *no_upgrades

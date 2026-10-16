@@ -285,9 +285,9 @@ Canonical
 
 ## Recovery alerts
 
-Sonarr now gives future imported episodes readable names using its existing
-series and episode format, so Plex can identify them. Enabling this preserved
-existing filenames and did not start downloads. Recovery remains report-only.
+Sonarr and Radarr give future imports readable names using their existing
+formats. Recyclarr maintains those settings and keeps automatic upgrades off.
+Existing filenames and quality choices are preserved. Recovery remains report-only.
 
 A five-minute report-only check follows approved Seerr requests through native
 media processing. It checks for existing files first, holds active downloads,
@@ -307,6 +307,12 @@ requesting the episodes again.
 Use `just usenet-seerr-recovery-status` for a private summary. The
 [native media runbook](../../../usenet-infra/docs/native-media.md#seerr-recovery-reporting)
 explains matching rules, reports, deployment and how to pause monitoring.
+
+Recyclarr maintains settings daily. Approved Seerr requests are tagged, and
+movies outside approved requests are unmonitored. Cleanuparr is being qualified
+only in an offline dry-run lab, with saved repair cases and no media access.
+Ambiguous episode matches still need review. It is not enabled against the live
+library. See the [rollout and qualification details](../../../usenet-infra/docs/native-media.md#settings-ownership-and-offline-recovery-qualification).
 
 ## Official references
 

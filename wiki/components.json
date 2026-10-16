@@ -166,7 +166,14 @@
         "usenet-infra/scripts/seerr-config.py",
         "usenet-infra/ansible/seerr-sync.yml",
         "usenet-infra/tests/test_seerr.py",
-        "usenet-infra/tests/test_cloud_vpn.py"
+        "usenet-infra/tests/test_cloud_vpn.py",
+        "usenet-infra/scripts/seerr-safety.py",
+        "usenet-infra/ansible/seerr-safety.yml",
+        "usenet-infra/ansible/cleanuparr-replay.yml",
+        "usenet-infra/config/recyclarr.yml",
+        "usenet-infra/config/usenet-recyclarr.*",
+        "usenet-infra/tests/test_seerr_safety.py",
+        "usenet-infra/tests/cleanuparr_replay.py"
       ]
     },
     {

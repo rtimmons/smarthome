@@ -137,6 +137,19 @@ class ConfigBackupTests(unittest.TestCase):
         self.assertFalse(any('cloud-admin' in path for path in paths))
         self.assertNotIn('PRIVATE-', json.dumps(manifest))
 
+    def test_recyclarr_retains_policy_secrets_state_but_omits_regenerated_resources(self):
+        retained = ('config/catalog/recyclarr/recyclarr.yml',
+                    'config/catalog/recyclarr/secrets.yml',
+                    'config/catalog/recyclarr/state/radarr/profiles.json',
+                    'compose/recyclarr/compose.yaml', 'compose/recyclarr/.env')
+        for name in retained:
+            self.write(name, b'synthetic')
+        self.write('config/catalog/recyclarr/resources/guide/.git/config', b'generated')
+        self.write('config/catalog/recyclarr/sync.log', b'log')
+        inventory = backup.inventory(self.root)
+        self.assertTrue(set(retained) <= inventory.keys())
+        self.assertFalse(any('/resources/' in name or name.endswith('sync.log') for name in inventory))
+
     def test_cloud_backup_requires_fresh_matching_filex_ciphertext(self):
         bundle = self.write('config/filex-recovery/latest.tar.age', b'ENCRYPTED-FIXTURE')
         receipt = {'scope': 'filex-config', 'created_at': int(backup.time.time()),
