@@ -160,6 +160,13 @@
       "name": "light_makerroom_undershelf",
       "repeaters": [],
       "routeSpeed": 2
+    },
+    {
+      "nodeId": 44,
+      "name": "light_living_desklamps",
+      "repeaters": [],
+      "routeSpeed": 2,
+      "verifiedOn": "2026-10-16"
     }
   ]
 }
