@@ -14,7 +14,7 @@ Earlier migration sections describe staged tests and unresolved acceptance windo
 
 ## Configuration, diagnosis, and recovery
 
-Sonos API enforces the allowed room-to-entity map generated from the shared `home-model/rooms.json`, and owns favorites, TV presets, and backend selection. Fixed rooms use the same names as Home Assistant areas; Move retains an explicit Outdoor dashboard mapping. Additional physical areas do not automatically become playback destinations. See the [dashboard guide](dashboard.md) for room maintenance. The browser does not receive Home Assistant credentials or signed artwork URLs. Topology operations wait for authoritative state rather than assuming a successful write means speakers have regrouped.
+Sonos API enforces the allowed room-to-entity map generated from the shared `home-model/rooms.json`, and owns favorites, TV presets, and backend selection. Fixed rooms use the same names as Home Assistant areas except Move, which keeps its speaker/dashboard name and is permanently assigned to Patio. Patio retains the existing `outdoor` lighting routes. Additional physical areas do not automatically become playback destinations. See the [dashboard guide](dashboard.md) for room maintenance. The browser does not receive Home Assistant credentials or signed artwork URLs. Topology operations wait for authoritative state rather than assuming a successful write means speakers have regrouped.
 
 If all audio controls fail, check Sonos API readiness and Home Assistant connectivity. If only one room fails, inspect that speaker’s reachability and group membership. Bonjour/multicast problems belong to the network investigation, not to arbitrary application restarts.
 

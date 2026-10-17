@@ -28,7 +28,12 @@ describe('shared home rooms', () => {
         expect(thermostatEntityId('Move')).to.equal('weather.forecast_home');
         expect(thermostatEntityId('Bathroom')).to.equal(undefined);
         expect(thermostatEntityId('constructor')).to.equal(undefined);
-        expect(catalog.rooms.find((room: any) => room.id === 'move').portable).to.equal(true);
+        const move = catalog.rooms.find((room: any) => room.id === 'move');
+        expect(move.portable).to.equal(false);
+        expect(catalog.areas.find((area: any) => area.id === move.areaId).name).to.equal('Patio');
+        const undocumented = structuredClone(catalog);
+        delete undocumented.rooms.find((room: any) => room.id === 'move').areaNameException;
+        expect(() => validate(undocumented)).to.throw('document its name exception');
     });
 
     it('rejects a fixed room mapped to the wrong physical area', () => {

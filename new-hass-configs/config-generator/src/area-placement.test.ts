@@ -61,8 +61,9 @@ describe("area placement reconciliation", () => {
       expect(placements.get(device.entity)?.areaId, device.entity).toBe(device.areaId);
     }
     for (const room of rooms.rooms.filter(r => !r.portable)) expect(placements.get(room.sonosEntityId)?.areaId).toBe(room.areaId);
-    expect(placements.get("media_player.move")?.status).toBe("portable");
-    expect(placements.get("media_player.move")?.areaId).toBeNull();
+    expect(placements.get("media_player.move")?.status).toBe("assigned");
+    expect(placements.get("media_player.move")?.areaId).toBe("outdoor");
+    expect(rooms.areas.find(a => a.id === "outdoor")?.name).toBe("Patio");
     for (const product of buildWikiModel().products) for (const ref of product.references) expect(placements.get(ref.entityId)?.areaId).toBe(ref.areaId);
     expect(placements.has("light.light_living_palm")).toBe(false);
   });

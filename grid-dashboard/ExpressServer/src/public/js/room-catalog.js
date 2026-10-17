@@ -22,8 +22,10 @@ const homeRooms = {
         },
         {
             "id": "outdoor",
-            "name": "Outdoor",
-            "aliases": []
+            "name": "Patio",
+            "aliases": [
+                "Outdoor"
+            ]
         },
         {
             "id": "kitchen",
@@ -94,7 +96,8 @@ const homeRooms = {
             "sonosEntityId": "media_player.move",
             "lightingSceneRoom": "outdoor",
             "temperatureEntityId": "weather.forecast_home",
-            "portable": true,
+            "portable": false,
+            "areaNameException": "Move keeps its speaker and dashboard name while permanently assigned to Patio.",
             "emojiName": "Tent"
         },
         {

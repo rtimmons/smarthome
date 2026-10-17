@@ -28,17 +28,20 @@ def render_rooms(model, table):
     if speakers:
         body += "## Sonos and Home Assistant name agreement {#speaker-names}\n\n"
         body += f"Read directly from speaker descriptions and Home Assistant on **{escape(speakers['verifiedAt'])}**. "
-        body += "An unreachable speaker is unverified, even if its saved Home Assistant name matches. Move has no permanent physical area.\n\n"
+        body += "An unreachable speaker is unverified, even if its saved Home Assistant name matches. Names and physical areas are checked against their separate catalog fields.\n\n"
         if not speakers.get("catalogMatches"):
             body += "**The room or device catalog changed after this check; rerun `just rooms-verify --record-verification`.**\n\n"
         outcomes = {"matches": "Matches", "speaker_unreachable": "Speaker unreachable; HA matches", "mismatch": "Mismatch — review required"}
         body += table(["Expected name", "Sonos speaker reports", "HA player / device name", "HA physical area", "Result"],
                       [[s["expectedName"], s["sonosName"] or "Not verified", (s["homeAssistantName"] or "Missing") + " / " + (s["homeAssistantDeviceName"] or "Missing"),
-                        s["areaName"] or "Unassigned (portable)", outcomes[s["status"]]] for s in speakers["speakers"]]) + "\n"
+                        s["areaName"] or "Unassigned", outcomes[s["status"]]] for s in speakers["speakers"]]) + "\n"
     body += "## Dashboard mapping\n\n"
     body += table(["Selection", "Physical area / context", "Sonos entity", "Lighting family", "Temperature"],
                   [[r["name"], names[r["areaId"]] + (" (control context; speaker portable)" if r["portable"] else ""),
                     r["sonosEntityId"], r["lightingSceneRoom"], r["temperatureEntityId"] or "None"] for r in rooms["rooms"]]) + "\n"
+    for room in rooms["rooms"]:
+        if room.get("areaNameException"):
+            body += escape(room["areaNameException"]) + "\n\n"
     for area in rooms["areas"]:
         body += f"## {area['name']} {{#{area['id']}}}\n\n"
         body += f"Stable area ID: `{area['id']}`. "

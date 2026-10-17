@@ -1,6 +1,6 @@
 {
-  "verifiedAt": "2026-10-17T02:24:17.018Z",
-  "catalogSha256": "2f942f037470b34453e0984c9b577a47eeb92f21b7cb428db93673ff6fff9078",
+  "verifiedAt": "2026-10-17T13:34:44.456Z",
+  "catalogSha256": "d273206f490460eb70cc0fe0f22f70c6a9d63178a6ae5313859472aeb3f9b16a",
   "coveredDevices": 138,
   "coveredEntities": 2491,
   "devicesWithoutEntities": 2,
@@ -28,9 +28,9 @@
     },
     {
       "areaId": "outdoor",
-      "devices": 1,
-      "entities": 32,
-      "disabledEntities": 16
+      "devices": 2,
+      "entities": 47,
+      "disabledEntities": 20
     },
     {
       "areaId": "kitchen",
@@ -70,9 +70,9 @@
     },
     {
       "areaId": null,
-      "devices": 57,
-      "entities": 460,
-      "disabledEntities": 221
+      "devices": 56,
+      "entities": 445,
+      "disabledEntities": 217
     }
   ]
 }

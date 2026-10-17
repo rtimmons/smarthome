@@ -21,8 +21,12 @@ function validate(model) {
   const areas = new Map(model.areas.map(area => [area.id, area]));
   for (const room of model.rooms) {
     const area = areas.get(room.areaId);
-    if (!area || (!room.portable && area.name !== room.name)) {
-      throw new Error(`Room ${room.id} must map to a matching physical area`);
+    if (room.areaNameException !== undefined &&
+        (typeof room.areaNameException !== 'string' || !room.areaNameException.trim())) {
+      throw new Error(`Room ${room.id} needs a nonempty area-name exception explanation`);
+    }
+    if (!area || (!room.portable && area.name !== room.name && !room.areaNameException)) {
+      throw new Error(`Room ${room.id} must map to a matching physical area or document its name exception`);
     }
     if (!/^media_player\.[a-z0-9_]+$/.test(room.sonosEntityId) ||
         !/^[a-z0-9_]+$/.test(room.lightingSceneRoom) ||

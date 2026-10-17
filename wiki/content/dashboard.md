@@ -10,7 +10,7 @@ The browser talks to the Grid Dashboard server. Lighting requests go through Hom
 
 The dashboard, Sonos API, and Home Assistant use the same names for fixed rooms: Bathroom, Closet, Bedroom, Kitchen, Living Room, Guest Bathroom, and Office. Home Assistant calls physical rooms **areas**; its geographic zones and Sonos playback groups have separate purposes. The old Main Bathroom and Main Closet names remain voice aliases.
 
-Move is a portable speaker. Its dashboard selection continues to control Outdoor lighting and show outdoor weather, without assigning the speaker permanently to the Outdoor area. Dining Room and Maker Room remain valid Home Assistant areas without dashboard selections. Grouping speakers for playback never changes their physical areas.
+Move is permanently assigned to **Patio** while keeping its speaker and dashboard name. Patio replaces the former Outdoor area, including its lights; the stable `outdoor` area ID and lighting routes remain, and the Move selection still shows outdoor weather. This intentional name exception is recorded in the shared catalog. Dining Room and Maker Room remain valid Home Assistant areas without dashboard selections. Grouping speakers for playback never changes their physical areas.
 
 The shared definition in `home-model/rooms.json` connects each selection to its area, Sonos player, lighting scene family, temperature source, and icon. Both dashboard layouts and the Sonos allowlist are built from it. Lighting still uses the generated fast-scene scripts, including their pacing, device exclusions, and smart-light power protections; area membership does not automatically expand scene targets.
 

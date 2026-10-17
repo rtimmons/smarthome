@@ -1,12 +1,12 @@
 {
   "audio": {
-    "fingerprint": "caf73f385dd55e6f034a5c301302f409abbda0273a9b6439a430647e62675664",
-    "reason": "Sonos room allowlist is generated from the shared home model; all eight existing destinations and grouping behavior are preserved.",
+    "fingerprint": "18786e786671d6f96aec9fe0b454d937c683eb6298fcf642b21e55fb90a45645",
+    "reason": "Documented Move as a fixed Patio speaker with its existing Sonos name and unchanged playback allowlist",
     "reviewed_at": "2026-10-17"
   },
   "dashboard": {
-    "fingerprint": "d53e24d0cf3346e9ac899be82120fda02b62c93a81aac65f439dbfb7217b9eaa",
-    "reason": "Generated direct Sonos versus Home Assistant name comparison, including source digests and explicitly unverified offline speakers; eight dashboard speakers match and portable Move remains unassigned",
+    "fingerprint": "e795220b4c57630a055209ee1493f3ac798a44a7fb141e11bb1b13209f69c174",
+    "reason": "Renamed the Outdoor display area to Patio and permanently assigned Move; documented its explicit speaker-name exception while preserving existing outdoor control routes",
     "reviewed_at": "2026-10-17"
   },
   "home": {
@@ -20,13 +20,13 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "c6f056d6b08ae4897b8fd232d1fe1c35264ba983e8f9c8bcafa619a80e726085",
-    "reason": "Reviewed area metadata and generated room/device reference export, including dated name evidence; scene targets and power protections are unchanged by room organization",
+    "fingerprint": "e86b063a48d1ada611de0cc7b9b72db93e1ab311a386244b7fca4d4ac00fb505",
+    "reason": "Reviewed the placement contract for Move in the renamed Patio area; lighting device identities, area IDs and scene targets remain unchanged",
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {
-    "fingerprint": "46b31c3fc57b88fb2de54b434837ebd16ad5b198a09f0878eeeb64c14d238b89",
-    "reason": "Documented generated room, device and verification references; reviewed read-only speaker name audit and static comparison rendering",
+    "fingerprint": "78e2c1b8797893319e5d698f02e41cc043d3056b1fd0180d97ff162266dd22c8",
+    "reason": "Generated wiki renders explicit speaker-area name exceptions and independently checked names and areas",
     "reviewed_at": "2026-10-17"
   },
   "media": {

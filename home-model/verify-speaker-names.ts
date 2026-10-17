@@ -26,7 +26,9 @@ async function main() {
     const state = fetchState(options, token, placement.entityId);
     const areaId = entity.area_id ?? device.area_id ?? null;
     const areaName = areas.find(a => a.area_id === areaId)?.name ?? null;
-    const expectedName = placement.areaId === null ? placement.name : rooms.areas.find(a => a.id === placement.areaId)?.name;
+    // Speaker names and physical area names may intentionally differ (Move in Patio).
+    const expectedName = rooms.rooms.find(r => r.sonosEntityId === placement.entityId)?.name ?? placement.name;
+    const expectedAreaName = rooms.areas.find(a => a.id === placement.areaId)?.name ?? null;
     const homeAssistantName = state?.attributes?.friendly_name ?? null;
     const homeAssistantDeviceName = device.name_by_user ?? device.name;
     let sonosName: string | null = null;
@@ -41,7 +43,7 @@ async function main() {
       if (name) sonosName = xmlText(name);
     } catch { /* A sleeping/offline speaker is unverified, never a successful match. */ }
     const homeAssistantMatches = homeAssistantName === expectedName && homeAssistantDeviceName === expectedName &&
-      areaId === placement.areaId && (areaId === null || areaName === expectedName);
+      areaId === placement.areaId && areaName === expectedAreaName;
     return { entityId: placement.entityId, expectedName, sonosName, homeAssistantName, homeAssistantDeviceName,
       areaId, areaName, status: !homeAssistantMatches ? 'mismatch' : sonosName === null ? 'speaker_unreachable' : sonosName === expectedName ? 'matches' : 'mismatch' };
   }));

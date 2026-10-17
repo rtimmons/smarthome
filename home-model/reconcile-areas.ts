@@ -43,8 +43,8 @@ async function main() {
     }
   }
 
-  // Verify fixed speakers; never assign the portable Move or add Maker Room to
-  // the playback allowlist as a side effect of organizing physical areas.
+  // Verify fixed speakers, including Move in Patio. Placement changes use the
+  // separate device catalog; area renames never expand the playback allowlist.
   for (const room of model.rooms.filter((item: any) => !item.portable)) {
     const entity = entities.find(item => item.entity_id === room.sonosEntityId);
     const device = devices.find(item => item.id === entity?.device_id);
