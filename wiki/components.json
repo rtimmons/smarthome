@@ -16,7 +16,8 @@
       "id": "dashboard",
       "title": "Dashboard and controls",
       "pages": [
-        "wiki/content/dashboard.md"
+        "wiki/content/dashboard.md",
+        "wiki/content/rooms.md"
       ],
       "addons": [
         "grid-dashboard"
@@ -27,7 +28,8 @@
         "new-hass-configs/packages/led_grid_wall.yaml",
         "grid-dashboard/Justfile",
         "grid-dashboard/ExpressServer/package.json",
-        "grid-dashboard/ExpressServer/package-lock.json"
+        "grid-dashboard/ExpressServer/package-lock.json",
+        "home-model/*"
       ],
       "runbooks": []
     },
@@ -50,7 +52,8 @@
         "new-hass-configs/sync-tools/zwave-*.cjs",
         "new-hass-configs/config-generator/tsconfig.json",
         "new-hass-configs/config-generator/package.json",
-        "new-hass-configs/config-generator/package-lock.json"
+        "new-hass-configs/config-generator/package-lock.json",
+        "docs/operations/zwave-product-catalog.json"
       ],
       "runbooks": [
         "docs/operations/sonoff-zigbee-thread.md",
@@ -225,6 +228,8 @@
       "addons": [],
       "watch": [
         "wiki/tool.py",
+        "talos/src/talos/addon_builder.py",
+        "talos/tests/test_addon_builder.py",
         "wiki/components.json",
         "usenet-infra/wiki/Caddyfile",
         "usenet-infra/wiki/compose.yaml",
@@ -241,7 +246,8 @@
         "wiki/pyproject.toml",
         "wiki/uv.lock",
         ".nvmrc",
-        ".python-version"
+        ".python-version",
+        "wiki/areas.py"
       ],
       "runbooks": [
         "docs/operations/addon-state-backups.md",

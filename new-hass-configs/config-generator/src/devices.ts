@@ -1,11 +1,11 @@
 /**
  * Home Assistant Device Registry
  *
- * This file defines all physical devices in the smart home system.
+ * This file defines logical lighting targets and wall-switch controls.
  * It maps logical device names to their Home Assistant entity IDs and capabilities.
  *
- * TODO: Populate this registry with all devices discovered via `just fetch`
- *       using the current Home Assistant entity names.
+ * Physical placements and non-lighting devices are cataloged in
+ * home-model/device-catalog.json. Area metadata never expands scene targets.
  */
 
 import { DeviceRegistry } from "./types";
@@ -14,7 +14,7 @@ import { DeviceRegistry } from "./types";
  * Device Registry
  *
  * Maps logical device names to Home Assistant entities and their capabilities.
- * This registry serves as the single source of truth for all devices.
+ * Area declarations are checked against the shared physical device catalog.
  *
  * Example usage:
  *   devices.lights.bedroom_main -> { entity: "light.bedroom_ceiling_rgbw", ... }
@@ -27,6 +27,7 @@ export const devices: DeviceRegistry = {
     // Software output control; scene off means zero brightness, never mains off.
     led_grid_wall: {
       entity: "light.led_grid_wall",
+      areaId: "living_room",
       type: "dimmer_light",
       capabilities: ["brightness"],
       sceneControl: "led_grid_wall"
@@ -34,36 +35,43 @@ export const devices: DeviceRegistry = {
     // Office lights - RGBW Zooz Zen31 devices (have both RGBW and separate white channels)
     office_abovecouch: {
       entity: "light.light_office_abovecouch",
+      areaId: "office",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     office_abovecouch_white: {
       entity: "light.light_office_abovecouch_white",
+      areaId: "office",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     office_abovetv: {
       entity: "light.light_office_abovetv",
+      areaId: "office",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     lights_office_abovetv: {
       entity: "light.light_office_abovetv",
+      areaId: "office",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     office_abovetv_white: {
       entity: "light.light_office_abovetv_white",
+      areaId: "office",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     office_sidetable: {
       entity: "light.office_light_sidetable",
+      areaId: "office",
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     office_toggle: {
       entity: "light.light_office_toggle",
+      areaId: "office",
       type: "zwave_dimmer_46203",
       capabilities: ["brightness"]
     },
@@ -71,30 +79,35 @@ export const devices: DeviceRegistry = {
     // Bathroom lights - Zigbee lights
     bathroom_vanity_left: {
       entity: "light.light_bathroom_vanity_left",
+      areaId: "bathroom",
       type: "color_light",
       protocol: "zigbee",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     bathroom_vanity_right: {
       entity: "light.light_bathroom_vanity_right",
+      areaId: "bathroom",
       type: "color_light",
       protocol: "zigbee",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     bathroom_abovesauna: {
       entity: "light.light_bathroom_abovesauna",
+      areaId: "bathroom",
       type: "color_light",
       protocol: "zigbee",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     bathroom_edison_top: {
       entity: "light.light_bathroom_edison_top",
+      areaId: "bathroom",
       type: "dimmer_light",
       protocol: "zigbee",
       capabilities: ["brightness"]
     },
     bathroom_edison_bottom: {
       entity: "light.light_bathroom_edison_bottom",
+      areaId: "bathroom",
       type: "dimmer_light",
       protocol: "zigbee",
       capabilities: ["brightness"]
@@ -103,108 +116,129 @@ export const devices: DeviceRegistry = {
     // Living room lights - mix of Hue and Z-Wave
     living_floor: {
       entity: "light.living_light_floor",
+      areaId: "living_room",
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     entry_nook: {
       entity: "light.entry_light_nook",
+      areaId: "living_room",
       type: "color_light",
       capabilities: ["brightness", "color_temp"]
     },
     living_curtains: {
       entity: "light.light_living_curtains",
+      areaId: "living_room",
       type: "zwave_zen31_rgbw",
       fastSceneForceOnDispatch: true,
       capabilities: ["brightness", "rgbw_color"]
     },
     living_curtains_white: {
       entity: "light.light_living_curtains_white",
+      areaId: "living_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     living_windowsillleft: {
       entity: "light.light_living_windowsillleft",
+      areaId: "living_room",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     living_windowsillleft_white: {
       entity: "light.light_living_windowsillleft_white",
+      areaId: "living_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     living_windowsillright: {
       entity: "light.light_living_windowsillright",
+      areaId: "living_room",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     living_windowsillright_white: {
       entity: "light.light_living_windowsillright_white",
+      areaId: "living_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     living_behindtv: {
       entity: "light.light_living_behindtv",
+      areaId: "living_room",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     living_behindtv_white: {
       entity: "light.light_living_behindtv_white",
+      areaId: "living_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     living_desklamps: {
       entity: "light.light_living_desklamps",
+      areaId: "living_room",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     living_sliderring: {
       entity: "light.light_living_sliderring",
+      areaId: "living_room",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     living_abovetv: {
       entity: "light.light_living_abovetv",
+      areaId: "living_room",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     living_abovetv_white: {
       entity: "light.light_living_abovetv_white",
+      areaId: "living_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     living_cornerspot: {
       entity: "light.light_living_cornerspot",
+      areaId: "living_room",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     living_hallway: {
       entity: "light.light_living_hallway",
+      areaId: "living_room",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     outdoor_cafe: {
       entity: "light.light_outdoor_cafe",
+      areaId: "outdoor",
       type: "zwave_switch_light",
       inventoryStatus: "temporarily_removed",
       capabilities: ["on_off"]
     },
     outdoor_sconces: {
       entity: "light.light_outdoor_sconces",
+      areaId: "outdoor",
       type: "zwave_dimmer_46203",
       capabilities: ["brightness"]
     },
     makerroom_main: {
       entity: "light.light_makerroom_main",
+      areaId: "maker_room",
       type: "zwave_dimmer_46203",
       capabilities: ["brightness"]
     },
     makerroom_undershelf: {
       entity: "light.light_makerroom_undershelf",
+      areaId: "maker_room",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     makerroom_undershelf_white: {
       entity: "light.light_makerroom_undershelf_white",
+      areaId: "maker_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
@@ -212,51 +246,61 @@ export const devices: DeviceRegistry = {
     // Kitchen lights (including dining area)
     kitchen_upper: {
       entity: "light.light_kitchen_upper",
+      areaId: "kitchen",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     kitchen_upper_white: {
       entity: "light.light_kitchen_upper_white",
+      areaId: "kitchen",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     kitchen_lower: {
       entity: "light.light_kitchen_lower",
+      areaId: "kitchen",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     kitchen_lower_white: {
       entity: "light.light_kitchen_lower_white",
+      areaId: "kitchen",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     kitchen_ring: {
       entity: "light.light_kitchen_ring",
+      areaId: "kitchen",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     kitchen_hanging: {
       entity: "light.light_kitchen_hanging",
+      areaId: "kitchen",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     kitchen_dining_nook: {
       entity: "light.light_dining_nook",
+      areaId: "dining_room",
       type: "zwave_zen31_rgbw",
       capabilities: ["brightness", "rgbw_color"]
     },
     kitchen_dining_nook_white: {
       entity: "light.light_dining_nook_white",
+      areaId: "dining_room",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
     dining_abovetable: {
       entity: "light.light_dining_abovetable",
+      areaId: "dining_room",
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
     guestbathroom_overhead: {
       entity: "light.light_guestbathroom_overhead",
+      areaId: "guest_bathroom",
       type: "zwave_dimmer_46203",
       // Node 23 changes its load locally but repeatedly times out acknowledging
       // commands. The physical paddle remains an automation trigger; scenes
@@ -266,11 +310,13 @@ export const devices: DeviceRegistry = {
     },
     guestbathroom_sconce: {
       entity: "light.light_guestbathroom_sconce",
+      areaId: "guest_bathroom",
       type: "zwave_dimmer_46203",
       capabilities: ["brightness"]
     },
     closet_main: {
       entity: "light.light_closet_main",
+      areaId: "closet",
       type: "zwave_dimmer_46203",
       capabilities: ["brightness"]
     },
@@ -278,16 +324,19 @@ export const devices: DeviceRegistry = {
     // Bedroom lights - Hue
     bedroom_dresser: {
       entity: "light.bedroom_light_dresser",
+      areaId: "bedroom",
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     bedroom_flamingo: {
       entity: "light.bedroom_light_flamingo",
+      areaId: "bedroom",
       type: "color_light",
       capabilities: ["brightness", "color_temp", "rgb_color"]
     },
     bedroom_sconces: {
       entity: "light.light_bedroom_sconces",
+      areaId: "bedroom",
       type: "dimmer_light",
       capabilities: ["brightness"]
     },
@@ -300,6 +349,7 @@ export const devices: DeviceRegistry = {
     // Office wall switch - Z-Wave Central Scene device
     office_wall_switch: {
       entity: "light.light_office_toggle",
+      areaId: "office",
       type: "zwave_dimmer_46203",
       includeInAllOff: false,
       device_id: "44ca863fc3d89c94bdfb7471c370a932",
@@ -350,6 +400,7 @@ export const devices: DeviceRegistry = {
     // Bedroom sconces switch - Z-Wave Central Scene device (GE/Enbrighten 46203)
     bedroom_switch_sconces: {
       entity: "light.light_bedroom_sconces",
+      areaId: "bedroom",
       type: "zwave_dimmer_46203",
       device_id: "a5b63da64e115065d5b0ed424de805d5",
       events: {
@@ -379,6 +430,7 @@ export const devices: DeviceRegistry = {
     // Guest bathroom overhead switch - controls both guest bathroom lights via scenes
     guestbathroom_switch: {
       entity: "light.light_guestbathroom_overhead",
+      areaId: "guest_bathroom",
       type: "zwave_dimmer_46203",
       // Same node-23 load as lights.guestbathroom_overhead. Keep its Central
       // Scene events active while suppressing generated commands to the load.
@@ -411,6 +463,7 @@ export const devices: DeviceRegistry = {
     // Guest bathroom sconce switch - also triggers shared scenes
     guestbathroom_sconce_switch: {
       entity: "light.light_guestbathroom_sconce",
+      areaId: "guest_bathroom",
       type: "zwave_dimmer_46203",
       device_id: "59fbd1c8d089fc4b6cab59f7bd20b085",
       events: {
@@ -440,6 +493,7 @@ export const devices: DeviceRegistry = {
     // Living hallway wall dimmer - used as a scene controller for whole-home off
     living_hallway_switch: {
       entity: "light.light_living_hallway",
+      areaId: "living_room",
       type: "zwave_dimmer_46203",
       includeInAllOff: false,
       device_id: "c136100e5d6664e5b6fa256eaeb6c9b3",
@@ -475,11 +529,13 @@ export const devices: DeviceRegistry = {
     // Office piano light (controlled as a switch)
     office_pianolight: {
       entity: "switch.light_office_pianolight",
+      areaId: "office",
       type: "outlet",
       capabilities: ["on_off"]
     },
     living_sillleftpower: {
       entity: "switch.light_living_sillleftpower",
+      areaId: "living_room",
       type: "zwave_outlet",
       // Node 28 is dead. Preserve it in inventory, but send it no scene traffic.
       sceneStatus: "temporarily_excluded",
@@ -487,6 +543,7 @@ export const devices: DeviceRegistry = {
     },
     dining_weenie: {
       entity: "switch.light_dining_weenie",
+      areaId: "dining_room",
       type: "outlet",
       capabilities: ["on_off"]
     },
@@ -494,6 +551,7 @@ export const devices: DeviceRegistry = {
     // Living room LED wall
     living_ledwall: {
       entity: "switch.light_living_ledwall",
+      areaId: "living_room",
       type: "outlet",
       includeInAllOff: false,
       allowSceneTurnOff: false,
@@ -503,6 +561,7 @@ export const devices: DeviceRegistry = {
     // Bedroom flamingo power - Controls the flamingo Hue light
     bedroom_flamingopower: {
       entity: "switch.light_bedroom_flamingopower",
+      areaId: "bedroom",
       type: "outlet",
       includeInAllOff: false,
       allowSceneTurnOff: false,

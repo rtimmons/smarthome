@@ -1,13 +1,5 @@
-export const SONOS_ROOM_TO_ENTITY = {
-  Bathroom: 'media_player.bathroom',
-  Closet: 'media_player.closet',
-  Bedroom: 'media_player.bedroom',
-  Move: 'media_player.move',
-  Kitchen: 'media_player.kitchen',
-  'Living Room': 'media_player.living_room',
-  'Guest Bathroom': 'media_player.guest_bathroom',
-  Office: 'media_player.office',
-} as const;
+import { SONOS_ROOM_TO_ENTITY } from './room-catalog';
+export { SONOS_ROOM_TO_ENTITY } from './room-catalog';
 
 export type SonosRoomName = keyof typeof SONOS_ROOM_TO_ENTITY;
 export type SonosEntityId = (typeof SONOS_ROOM_TO_ENTITY)[SonosRoomName];

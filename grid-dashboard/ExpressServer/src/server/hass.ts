@@ -2,16 +2,13 @@ import { Request as RQ, Response as RS, Router } from 'express';
 
 import { appConfig } from './config';
 import { requestText, type HttpResponse } from './http';
+import homeRooms from '../public/js/room-catalog';
 
 const app = Router();
 
-const THERMOSTAT_ENTITIES: Readonly<Record<string, string>> = {
-    Bedroom: 'climate.bedroom',
-    Kitchen: 'climate.kitchen',
-    'Living Room': 'climate.living_room',
-    Move: 'weather.forecast_home',
-    Office: 'climate.office',
-};
+const THERMOSTAT_ENTITIES = new Map(
+    homeRooms.rooms.map(room => [room.name, room.temperatureEntityId])
+);
 
 export const SCENE_DEDUP_WINDOW_MS = 1000;
 export const SCENE_WEBHOOK_TIMEOUT_MS = 60000;
@@ -74,7 +71,7 @@ const defaultRuntime = (): SceneActivationRuntime => {
 };
 
 export const thermostatEntityId = (room: string): string | undefined =>
-    THERMOSTAT_ENTITIES[room];
+    THERMOSTAT_ENTITIES.get(room) ?? undefined;
 
 export interface ThermostatStateReaderDependencies {
     request?: (

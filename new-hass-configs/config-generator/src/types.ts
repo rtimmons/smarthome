@@ -45,6 +45,8 @@ export interface ZWaveEventData {
 
 export interface Device {
   entity: string;
+  /** Physical HA area; documentation/registry metadata, never scene expansion. */
+  areaId?: string;
   type: DeviceType;
   protocol?: "zigbee" | "zwave";
   /**

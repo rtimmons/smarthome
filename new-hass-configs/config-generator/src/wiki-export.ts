@@ -5,8 +5,15 @@ import { automations } from "./automations";
 import { getEffectiveAutomationMode } from "./automation-generation";
 import { generateSceneTargets, getFastSceneScriptEntityId } from "./scene-generation";
 import { Action, Device, Trigger } from "./types";
+import { homeModelRoot, loadPlacements, loadRooms, validatePlacements } from "./area-placement";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { createHash } from "node:crypto";
 
 export function buildWikiModel() {
+  const placements = loadPlacements();
+  const rooms = loadRooms();
+  validatePlacements(placements, rooms.areas.map(area => area.id));
   const definitions = Object.entries(scenes).map(([id, scene]) => {
     const targets = generateSceneTargets(scene);
     const declared = [...scene.lights.map((target) => target.device), ...Object.keys(scene.switches ?? {})];
@@ -22,6 +29,7 @@ export function buildWikiModel() {
   const inventory = Object.entries(devices).flatMap(([category, entries]) =>
     Object.entries(entries as Record<string, Device>).map(([key, device]) => ({
       category, key, entity: device.entity, type: device.type,
+      areaId: device.areaId,
       inventoryStatus: device.inventoryStatus ?? "active",
       sceneStatus: device.sceneStatus ?? "active",
       includeInAllOff: device.includeInAllOff !== false,
@@ -36,7 +44,20 @@ export function buildWikiModel() {
     conditional: Boolean(automation.condition),
     mode: getEffectiveAutomationMode(automation) ?? "single",
   }));
-  return { devices: inventory, scenes: definitions, controls };
+  const verificationPath = path.join(homeModelRoot, "area-verification.json");
+  const verification = fs.existsSync(verificationPath) ? JSON.parse(fs.readFileSync(verificationPath, "utf8")) : null;
+  if (verification) verification.catalogMatches = verification.catalogSha256 === createHash("sha256")
+    .update(fs.readFileSync(path.join(homeModelRoot, "device-catalog.json"))).digest("hex");
+  const speakerVerificationPath = path.join(homeModelRoot, "speaker-name-verification.json");
+  const speakerVerification = fs.existsSync(speakerVerificationPath) ? JSON.parse(fs.readFileSync(speakerVerificationPath, "utf8")) : null;
+  if (speakerVerification) speakerVerification.catalogMatches =
+    speakerVerification.catalogSha256 === createHash("sha256").update(fs.readFileSync(path.join(homeModelRoot, "device-catalog.json"))).digest("hex") &&
+    speakerVerification.roomsSha256 === createHash("sha256").update(fs.readFileSync(path.join(homeModelRoot, "rooms.json"))).digest("hex");
+  // Publish only product identity and area references, never host/MAC/config data.
+  const products = JSON.parse(fs.readFileSync(path.join(homeModelRoot, "../docs/operations/zwave-product-catalog.json"), "utf8"))
+    .products.map((p: any) => ({ id: p.id, label: p.label, manufacturer: p.manufacturer,
+      references: p.knownRepoReferences.map((r: any) => ({ entityId: r.entityId, areaId: r.area })) }));
+  return { devices: inventory, scenes: definitions, controls, placements, rooms, verification, speakerVerification, products };
 }
 
 // Summarize only reviewed fields. Never export webhook IDs, service payloads,

@@ -6,9 +6,13 @@ Use `just setup` for the pinned runtimes and `just dev` for local development. V
 
 Before changing a system, read its current runbook, inspect health, preserve unrelated local edits, and retain rollback information. Scene operations, printing, media requests, and speaker writes can affect the household; do not use them as generic smoke tests.
 
+Standard local add-on deployment detects the actual source mount in the SSH environment: `/local_apps` on current Home Assistant, or a mounted `/addons` on older versions. It refuses to stop or replace an add-on if neither mount is present. An ordinary leftover `/addons` directory is not a valid destination: uploading there can produce an apparently successful rebuild of old source. Verify served assets or behavior after deployment, in addition to service readiness.
+
 Home Assistant configuration checks and deployments preserve remote-only backups, hidden recovery directories, and installed template blueprints during synchronization. These files may not exist in the checkout and must not be deleted just because they are absent locally.
 
 The configuration deployment also includes the root `light_profiles.csv`, which supplies the household's zero-second default light transition. It is an explicit deployment include; unrelated CSV files are not deployed.
+
+Room organization has separate, explicit maintenance commands: `just rooms-generate` and `just rooms-check` manage the shared dashboard/Sonos definitions; `just rooms-audit` inspects Home Assistant areas; `just rooms-apply` aligns known names while preserving stable IDs and voice aliases. Optional legacy-area cleanup only removes audited empty, unreferenced areas and saves private recovery metadata first. Follow the [dashboard guide](dashboard.md) for scope and deployment.
 
 ## Keep explanations with changes
 

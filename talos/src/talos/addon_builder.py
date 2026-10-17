@@ -810,6 +810,7 @@ ADDON_SLUG="{slug}"
 ADDON_ID="local_{slug}"
 REMOTE_TAR="{remote_tar}"
 REMOTE_ADDON_DIR="{remote_addon_dir}"
+REMOTE_ADDONS_DIR="{remote_addons_dir}"
 VERBOSE="{verbose_flag}"
 HEALTH_PORT={health_port_value}
 HEALTH_PATH={health_path_value}
@@ -832,6 +833,20 @@ log_error() {{ echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2; }}
 
 run_quiet() {{
     if [ "$VERBOSE" = "true" ]; then "$@"; else "$@" >/dev/null 2>&1; fi
+}}
+
+resolve_addons_dir() {{
+    # Current Supervisor exposes local source at /local_apps. A leftover
+    # /addons directory inside the SSH app is not a Supervisor source mount.
+    awk '
+        $5 == "/local_apps" {{ current = 1 }}
+        $5 == "/addons" {{ legacy = 1 }}
+        END {{
+            if (current) print "/local_apps"
+            else if (legacy) print "/addons"
+            else exit 1
+        }}
+    ' "${{1:-/proc/self/mountinfo}}"
 }}
 
 emit_metric() {{
@@ -865,8 +880,7 @@ trap emit_total_metric EXIT
 
 extract_addon() {{
     rm -rf "$REMOTE_ADDON_DIR"
-    mkdir -p "{remote_addons_dir}"
-    tar -xzf "$REMOTE_TAR" -C "{remote_addons_dir}"
+    tar -xzf "$REMOTE_TAR" -C "$REMOTE_ADDONS_DIR"
     rm -f "$REMOTE_TAR"
 }}
 
@@ -930,6 +944,13 @@ wait_for_readiness() {{
         sleep 1
     done
 }}
+
+if ! REMOTE_ADDONS_DIR="$(resolve_addons_dir)"; then
+    log_error "No mounted local app source directory (/local_apps or /addons); refusing deployment"
+    exit 1
+fi
+REMOTE_ADDON_DIR="${{REMOTE_ADDONS_DIR}}/${{ADDON_SLUG}}"
+log_info "Using mounted local app source: $REMOTE_ADDONS_DIR"
 
 log_info "Stopping add-on $ADDON_ID if running..."
 INSPECT_STARTED_MS="$(monotonic_ms)"

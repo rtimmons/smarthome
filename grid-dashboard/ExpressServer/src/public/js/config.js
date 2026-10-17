@@ -1,3 +1,7 @@
+const roomCatalog = typeof module !== 'undefined' && module.exports
+    ? require('./room-catalog')
+    : homeRooms;
+
 const roomTiles = function({ xPos, roomName, emojiName }) {
     return [
         {
@@ -135,18 +139,9 @@ const cols = 11;
 const phoneRows = 12;
 const phoneCols = 6;
 
-const lightSceneRooms = {
-    Bathroom: 'bathroom',
-    Closet: 'closet',
-    Bedroom: 'bedroom',
-    Move: 'outdoor',
-    Kitchen: 'kitchen',
-    'Living Room': 'living_room',
-    'Guest Bathroom': 'guest_bathroom',
-    Office: 'office',
-};
-
-let roomX = 1;
+const lightSceneRooms = Object.fromEntries(
+    roomCatalog.rooms.map(room => [room.name, room.lightingSceneRoom])
+);
 
 const config = {
     emojis: {
@@ -215,18 +210,10 @@ const config = {
     cols: cols,
     printerPort: 8099,
     lightSceneRooms: lightSceneRooms,
-    rooms: [
-        // This is used by allJoin (double-tap a room).
-        // This "should" be implemented in the ExpressAPI
-        'Living Room',
-        'Bedroom',
-        'Kitchen',
-        'Bathroom',
-        'Office',
-        'Guest Bathroom',
-        'Closet',
-        'Move',
-    ],
+    // Preserve the established join-all dispatch order independently of tile order.
+    rooms: roomCatalog.groupAllOrder.map(
+        id => roomCatalog.rooms.find(room => room.id === id).name
+    ),
     cells: buildCells(rows, cols, [
         /*
     Only one room can be "active" at a time.
@@ -262,14 +249,11 @@ const config = {
 
     */
 
-        ...roomTiles({ xPos: roomX++, emojiName: 'Shower',    roomName: 'Bathroom' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Kimono',    roomName: 'Closet' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Bed',       roomName: 'Bedroom' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Tent',      roomName: 'Move' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Rice',      roomName: 'Kitchen' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'TV',        roomName: 'Living Room' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Guest',     roomName: 'Guest Bathroom' }),
-        ...roomTiles({ xPos: roomX++, emojiName: 'Briefcase', roomName: 'Office' }),
+        ...roomCatalog.rooms.flatMap((room, index) => roomTiles({
+            xPos: index + 1,
+            emojiName: room.emojiName,
+            roomName: room.name,
+        })),
 
         {
             w: 1,
@@ -664,54 +648,12 @@ const config = {
             cells: buildCells(phoneRows, phoneCols, [
                 // Room selection and Sonos membership stay paired, just as
                 // they are in the two top rows of the default dashboard.
-                ...phoneRoomPair({
-                    xPos: 0,
-                    yPos: 0,
-                    emojiName: 'Shower',
-                    roomName: 'Bathroom',
-                }),
-                ...phoneRoomPair({
-                    xPos: 2,
-                    yPos: 0,
-                    emojiName: 'Kimono',
-                    roomName: 'Closet',
-                }),
-                ...phoneRoomPair({
-                    xPos: 4,
-                    yPos: 0,
-                    emojiName: 'Bed',
-                    roomName: 'Bedroom',
-                }),
-                ...phoneRoomPair({
-                    xPos: 0,
-                    yPos: 1,
-                    emojiName: 'Tent',
-                    roomName: 'Move',
-                }),
-                ...phoneRoomPair({
-                    xPos: 2,
-                    yPos: 1,
-                    emojiName: 'Rice',
-                    roomName: 'Kitchen',
-                }),
-                ...phoneRoomPair({
-                    xPos: 4,
-                    yPos: 1,
-                    emojiName: 'TV',
-                    roomName: 'Living Room',
-                }),
-                ...phoneRoomPair({
-                    xPos: 0,
-                    yPos: 2,
-                    emojiName: 'Guest',
-                    roomName: 'Guest Bathroom',
-                }),
-                ...phoneRoomPair({
-                    xPos: 2,
-                    yPos: 2,
-                    emojiName: 'Briefcase',
-                    roomName: 'Office',
-                }),
+                ...roomCatalog.rooms.flatMap((room, index) => phoneRoomPair({
+                    xPos: (index % 3) * 2,
+                    yPos: Math.floor(index / 3),
+                    emojiName: room.emojiName,
+                    roomName: room.name,
+                })),
                 {
                     x: 5,
                     y: 2,

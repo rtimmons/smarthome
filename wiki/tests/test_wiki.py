@@ -12,9 +12,31 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "wiki"))
 import tool
+from areas import render_rooms
 
 
 class ContentTests(unittest.TestCase):
+    def test_room_catalog_distinguishes_inheritance_controls_and_stale_verification(self):
+        model = {"devices": [{"entity": "light.fixture", "areaId": "office"}], "scenes": [
+            {"id": "fixture_high", "name": "Fixture high", "targets": [{"entity": "light.fixture"}]}],
+            "rooms": {"areas": [{"id": "office", "name": "Office"}], "rooms": []},
+            "placements": {"devices": [{"name": "Fixture", "entityId": "light.fixture", "areaId": "office", "status": "assigned", "note": "Confirmed"}],
+                           "entities": [{"entityId": "script.fixture", "areaId": "office", "status": "assigned", "note": "Room control"}], "retired": []},
+            "verification": {"verifiedAt": "2026-01-01T00:00:00Z", "coveredDevices": 1, "coveredEntities": 2,
+                             "devicesWithoutEntities": 0, "catalogMatches": False, "areas": []}}
+        rendered = render_rooms(model, tool.table)
+        self.assertIn("every entity attached to that device inherits", rendered)
+        self.assertIn("catalog has changed since this check", rendered)
+        self.assertIn("scenes.md#fixture-high", rendered)
+        self.assertIn("<details><summary>Room controls and helpers (1)", rendered)
+        self.assertIn("script.fixture", rendered)
+        model["speakerVerification"] = {"verifiedAt": "2026-01-01T00:00:00Z", "catalogMatches": False, "speakers": [
+            {"expectedName": "Office", "sonosName": None, "homeAssistantName": "Office", "homeAssistantDeviceName": "Office", "areaName": "Office", "status": "speaker_unreachable"}]}
+        rendered = render_rooms(model, tool.table)
+        self.assertIn("Speaker unreachable; HA matches", rendered)
+        self.assertIn("Not verified", rendered)
+        self.assertIn("room or device catalog changed", rendered)
+
     def test_guide_and_runbook_changes_participate_in_review(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

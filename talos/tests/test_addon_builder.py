@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 
 from rich.console import Console
 
@@ -122,6 +123,43 @@ def test_remote_metrics_are_recorded_and_hidden():
     assert timer.events[0]["name"] == "addon.remote.stop"
     assert timer.events[0]["seconds"] == 0.25
     assert timer.events[0]["addon"] == "grid-dashboard"
+
+
+@pytest.mark.parametrize(
+    ("mounts", "expected"),
+    [
+        (["/addons", "/local_apps"], "/local_apps"),
+        (["/local_apps"], "/local_apps"),
+        (["/addons"], "/addons"),
+        (["/", "/config"], None),
+    ],
+)
+def test_remote_deploy_requires_the_real_supervisor_source_mount(tmp_path, mounts, expected):
+    script = addon_builder.render_remote_deploy_script(
+        slug="grid_dashboard",
+        remote_tar="/root/grid_dashboard.tar.gz",
+        remote_addon_dir="/addons/grid_dashboard",
+        remote_addons_dir="/addons",
+        verbose=False,
+    )
+    mountinfo = tmp_path / "mountinfo"
+    mountinfo.write_text("".join(
+        f"1 0 8:8 /source {mount} rw - ext4 /dev/sda8 rw\n" for mount in mounts
+    ))
+    body = script.split("resolve_addons_dir() {\n", 1)[1].split("\n}\n", 1)[0]
+    result = subprocess.run(
+        ["bash", "-c", 'resolve_addons_dir() {\n' + body + '\n}\nresolve_addons_dir "$1"', "test", str(mountinfo)],
+        capture_output=True, text=True,
+    )
+    if expected is None:
+        assert result.returncode != 0
+        assert not result.stdout
+    else:
+        assert result.returncode == 0
+        assert result.stdout.strip() == expected
+    assert script.index('REMOTE_ADDONS_DIR="$(resolve_addons_dir)"') < script.index('log_info "Stopping add-on')
+    assert 'REMOTE_ADDON_DIR="${REMOTE_ADDONS_DIR}/${ADDON_SLUG}"' in script
+    assert 'tar -xzf "$REMOTE_TAR" -C "$REMOTE_ADDONS_DIR"' in script
 
 
 def test_generated_dockerfile_caches_dependencies_before_source():

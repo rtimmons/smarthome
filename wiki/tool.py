@@ -19,6 +19,7 @@ import tarfile
 from urllib.parse import quote, unquote, urlsplit
 
 import yaml
+from areas import render_rooms
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT = ROOT / "wiki"
@@ -140,7 +141,7 @@ def table(headers, rows):
 
 
 REFERENCE_PAGES = {
-    "Overview": "index.md", "Services": "services.md", "Devices": "devices.md",
+    "Overview": "index.md", "Services": "services.md", "Rooms and areas": "rooms.md", "Devices": "devices.md",
     "Scenes": "scenes.md", "Controls and automations": "controls.md", "DNS policy": "network.md",
     "Documentation coverage": "coverage.md", "Deployment evidence": "deployments.md",
 }
@@ -193,13 +194,21 @@ def export_reference(stage, data, revision):
               "A declared host mapping is not add-on-only isolation. Dependencies list manifest build/deploy ordering; "
               "external devices and Home Assistant integrations are described in the guides.\n\n" +
               table(["Service", "Source directory", "Desired status", "HA sidebar", "Network", "Ports", "Dependencies"], services))
-    generated("devices.md", "Devices", ["new-hass-configs/config-generator/src/devices.ts", "new-hass-configs/config-generator/src/scenes.ts"],
+    generated("rooms.md", "Rooms and device areas", ["home-model/rooms.json", "home-model/device-catalog.json", "home-model/area-verification.json", "home-model/speaker-name-verification.json"], render_rooms(model, table))
+    area_names = {a["id"]: a["name"] for a in model.get("rooms", {}).get("areas", [])}
+    generated("devices.md", "Lighting device catalog", ["new-hass-configs/config-generator/src/devices.ts", "new-hass-configs/config-generator/src/scenes.ts", "docs/operations/zwave-product-catalog.json"],
+              "[Browse all devices by physical room](rooms.md), including speakers, climate, sensors and unconfirmed locations. "
+              "This table lists the logical lighting targets and wall-switch aliases. Physical area never expands a scene's target list.\n\n" +
               "Logical names can alias the same entity. All-off membership below comes from the actual scene generator, "
               "including its blocklist, diagnostic-endpoint and scene-exclusion rules. An inventory removal marker alone "
               "does not remove a declared scene target; live health filtering still runs during dispatch.\n\n" +
-              table(["Logical name", "Entity", "Type", "Inventory", "Scene status", "In generated all-off", "Scene off permitted"],
-                    [[d["key"], d["entity"], d["type"], d["inventoryStatus"], d["sceneStatus"],
-                      "yes" if d["effectiveAllOff"] else "no", "yes" if d["allowSceneTurnOff"] else "no"] for d in model["devices"]]))
+              table(["Physical area", "Logical name", "Entity", "Type", "Inventory", "Scene status", "In generated all-off", "Scene off permitted"],
+                    [[area_names.get(d.get("areaId"), "Unassigned"), d["key"], d["entity"], d["type"], d["inventoryStatus"], d["sceneStatus"],
+                      "yes" if d["effectiveAllOff"] else "no", "yes" if d["allowSceneTurnOff"] else "no"] for d in sorted(model["devices"], key=lambda d: (d.get("areaId") or "", d["key"]))]) +
+              "\n## Hardware product references\n\nArea names are checked against the physical catalog.\n\n" +
+              table(["Manufacturer / product", "Entity", "Physical area"],
+                    [[p["manufacturer"] + " / " + p["label"], r["entityId"], area_names.get(r["areaId"], "Unassigned")]
+                     for p in model.get("products", []) for r in p["references"]]))
     scene_body = "Use these fast-scene scripts for operation. Targets and desired states use the same generator as deployment, "
     scene_body += "after static exclusions and entity deduplication, before live health/mismatch filtering. Brightness is 0–255.\n\n"
     scene_body += "\n".join(f"- [{s['name']}](#{s['id'].replace('_', '-')})" for s in model["scenes"]) + "\n\n"

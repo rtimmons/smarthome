@@ -1,0 +1,78 @@
+{
+  "verifiedAt": "2026-10-17T02:24:17.018Z",
+  "catalogSha256": "2f942f037470b34453e0984c9b577a47eeb92f21b7cb428db93673ff6fff9078",
+  "coveredDevices": 138,
+  "coveredEntities": 2491,
+  "devicesWithoutEntities": 2,
+  "absent": [
+    "light.light_outdoor_cafe"
+  ],
+  "areas": [
+    {
+      "areaId": "bathroom",
+      "devices": 9,
+      "entities": 113,
+      "disabledEntities": 21
+    },
+    {
+      "areaId": "closet",
+      "devices": 2,
+      "entities": 49,
+      "disabledEntities": 19
+    },
+    {
+      "areaId": "bedroom",
+      "devices": 12,
+      "entities": 122,
+      "disabledEntities": 31
+    },
+    {
+      "areaId": "outdoor",
+      "devices": 1,
+      "entities": 32,
+      "disabledEntities": 16
+    },
+    {
+      "areaId": "kitchen",
+      "devices": 13,
+      "entities": 283,
+      "disabledEntities": 150
+    },
+    {
+      "areaId": "living_room",
+      "devices": 27,
+      "entities": 848,
+      "disabledEntities": 501
+    },
+    {
+      "areaId": "guest_bathroom",
+      "devices": 3,
+      "entities": 77,
+      "disabledEntities": 35
+    },
+    {
+      "areaId": "office",
+      "devices": 10,
+      "entities": 263,
+      "disabledEntities": 144
+    },
+    {
+      "areaId": "dining_room",
+      "devices": 3,
+      "entities": 118,
+      "disabledEntities": 82
+    },
+    {
+      "areaId": "maker_room",
+      "devices": 3,
+      "entities": 126,
+      "disabledEntities": 76
+    },
+    {
+      "areaId": null,
+      "devices": 57,
+      "entities": 460,
+      "disabledEntities": 221
+    }
+  ]
+}

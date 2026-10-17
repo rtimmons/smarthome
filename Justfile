@@ -298,6 +298,41 @@ test-slow:
 zwave-diagnose *args="":
 	@cd new-hass-configs && just zwave-diagnose {{args}}
 
+# Regenerate the shared dashboard/Sonos room definitions
+[group: 'build']
+rooms-generate:
+	@{{nvm_use}} && node home-model/generate.cjs
+
+# Check shared room definitions without changing files
+[group: 'test']
+rooms-check:
+	@{{nvm_use}} && node home-model/generate.cjs --check
+
+# Compare speaker-reported Sonos names with HA names and physical areas
+[group: 'info']
+rooms-verify *args="":
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/verify-speaker-names.ts {{args}}
+
+# Inspect room names, fixed-speaker assignments and legacy area references
+[group: 'info']
+rooms-audit:
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-areas.ts
+
+# Align known area names; optionally remove audited, empty legacy areas
+[group: 'deploy']
+rooms-apply *args="":
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-areas.ts --apply {{args}}
+
+# Compare reviewed device/entity locations with live Home Assistant registries
+[group: 'info']
+areas-audit *args="":
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-placements.ts {{args}}
+
+# Apply reviewed area metadata only; save private before/after recovery evidence
+[group: 'deploy']
+areas-apply *args="":
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-placements.ts --apply {{args}}
+
 # Capture the live Home Assistant device and entity registries
 [group: 'info']
 ha-inventory *args="":

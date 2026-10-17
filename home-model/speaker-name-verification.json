@@ -1,0 +1,97 @@
+{
+  "verifiedAt": "2026-10-17T02:31:36.647Z",
+  "catalogSha256": "2f942f037470b34453e0984c9b577a47eeb92f21b7cb428db93673ff6fff9078",
+  "roomsSha256": "bb3c3d6eea1886010ed019a66e4cbf55448c7379b44455ffbb1795dc95126bd5",
+  "speakers": [
+    {
+      "entityId": "media_player.bathroom",
+      "expectedName": "Bathroom",
+      "sonosName": "Bathroom",
+      "homeAssistantName": "Bathroom",
+      "homeAssistantDeviceName": "Bathroom",
+      "areaId": "bathroom",
+      "areaName": "Bathroom",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.office",
+      "expectedName": "Office",
+      "sonosName": "Office",
+      "homeAssistantName": "Office",
+      "homeAssistantDeviceName": "Office",
+      "areaId": "office",
+      "areaName": "Office",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.closet",
+      "expectedName": "Closet",
+      "sonosName": "Closet",
+      "homeAssistantName": "Closet",
+      "homeAssistantDeviceName": "Closet",
+      "areaId": "closet",
+      "areaName": "Closet",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.guest_bathroom",
+      "expectedName": "Guest Bathroom",
+      "sonosName": "Guest Bathroom",
+      "homeAssistantName": "Guest Bathroom",
+      "homeAssistantDeviceName": "Guest Bathroom",
+      "areaId": "guest_bathroom",
+      "areaName": "Guest Bathroom",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.kitchen",
+      "expectedName": "Kitchen",
+      "sonosName": "Kitchen",
+      "homeAssistantName": "Kitchen",
+      "homeAssistantDeviceName": "Kitchen",
+      "areaId": "kitchen",
+      "areaName": "Kitchen",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.bedroom",
+      "expectedName": "Bedroom",
+      "sonosName": "Bedroom",
+      "homeAssistantName": "Bedroom",
+      "homeAssistantDeviceName": "Bedroom",
+      "areaId": "bedroom",
+      "areaName": "Bedroom",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.living_room",
+      "expectedName": "Living Room",
+      "sonosName": "Living Room",
+      "homeAssistantName": "Living Room",
+      "homeAssistantDeviceName": "Living Room",
+      "areaId": "living_room",
+      "areaName": "Living Room",
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.move",
+      "expectedName": "Move",
+      "sonosName": "Move",
+      "homeAssistantName": "Move",
+      "homeAssistantDeviceName": "Move",
+      "areaId": null,
+      "areaName": null,
+      "status": "matches"
+    },
+    {
+      "entityId": "media_player.maker_room",
+      "expectedName": "Maker Room",
+      "sonosName": null,
+      "homeAssistantName": "Maker Room",
+      "homeAssistantDeviceName": "Maker Room",
+      "areaId": "maker_room",
+      "areaName": "Maker Room",
+      "status": "speaker_unreachable"
+    }
+  ]
+}

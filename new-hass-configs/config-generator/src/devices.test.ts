@@ -20,30 +20,35 @@ describe("Device Pairing Functions", () => {
     ]).toEqual([
       {
         entity: "light.light_bathroom_vanity_left",
+        areaId: "bathroom",
         type: "color_light",
         protocol: "zigbee",
         capabilities: ["brightness", "color_temp", "rgb_color"],
       },
       {
         entity: "light.light_bathroom_vanity_right",
+        areaId: "bathroom",
         type: "color_light",
         protocol: "zigbee",
         capabilities: ["brightness", "color_temp", "rgb_color"],
       },
       {
         entity: "light.light_bathroom_abovesauna",
+        areaId: "bathroom",
         type: "color_light",
         protocol: "zigbee",
         capabilities: ["brightness", "color_temp", "rgb_color"],
       },
       {
         entity: "light.light_bathroom_edison_top",
+        areaId: "bathroom",
         type: "dimmer_light",
         protocol: "zigbee",
         capabilities: ["brightness"],
       },
       {
         entity: "light.light_bathroom_edison_bottom",
+        areaId: "bathroom",
         type: "dimmer_light",
         protocol: "zigbee",
         capabilities: ["brightness"],

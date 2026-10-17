@@ -129,15 +129,18 @@
       "knownRepoReferences": [
         {
           "deviceKey": "bathroom_vanity_left",
-          "entityId": "light.light_bathroom_vanity_left"
+          "entityId": "light.light_bathroom_vanity_left",
+          "area": "bathroom"
         },
         {
           "deviceKey": "bathroom_vanity_right",
-          "entityId": "light.light_bathroom_vanity_right"
+          "entityId": "light.light_bathroom_vanity_right",
+          "area": "bathroom"
         },
         {
           "deviceKey": "bathroom_abovesauna",
-          "entityId": "light.light_bathroom_abovesauna"
+          "entityId": "light.light_bathroom_abovesauna",
+          "area": "bathroom"
         }
       ]
     },
@@ -157,11 +160,13 @@
       "knownRepoReferences": [
         {
           "deviceKey": "bathroom_edison_top",
-          "entityId": "light.light_bathroom_edison_top"
+          "entityId": "light.light_bathroom_edison_top",
+          "area": "bathroom"
         },
         {
           "deviceKey": "bathroom_edison_bottom",
-          "entityId": "light.light_bathroom_edison_bottom"
+          "entityId": "light.light_bathroom_edison_bottom",
+          "area": "bathroom"
         }
       ]
     },
@@ -179,7 +184,8 @@
       "knownRepoReferences": [
         {
           "deviceKey": "living_sillleftpower",
-          "entityId": "switch.light_living_sillleftpower"
+          "entityId": "switch.light_living_sillleftpower",
+          "area": "living_room"
         }
       ]
     },
@@ -197,19 +203,23 @@
       "knownRepoReferences": [
         {
           "deviceKey": "living_desklamps",
-          "entityId": "light.light_living_desklamps"
+          "entityId": "light.light_living_desklamps",
+          "area": "living_room"
         },
         {
           "deviceKey": "kitchen_ring",
-          "entityId": "light.light_kitchen_ring"
+          "entityId": "light.light_kitchen_ring",
+          "area": "kitchen"
         },
         {
           "deviceKey": "living_sliderring",
-          "entityId": "light.light_living_sliderring"
+          "entityId": "light.light_living_sliderring",
+          "area": "living_room"
         },
         {
           "deviceKey": "living_cornerspot",
-          "entityId": "light.light_living_cornerspot"
+          "entityId": "light.light_living_cornerspot",
+          "area": "living_room"
         },
         {
           "deviceKey": "outdoor_cafe",
@@ -217,7 +227,8 @@
           "formerNodeId": 16,
           "status": "temporarily_removed",
           "removedAt": "2026-08-21",
-          "note": "Removed from the failed-node list and Home Assistant registries; preserve this desired entity identity for a later re-inclusion."
+          "note": "Removed from the failed-node list and Home Assistant registries; preserve this desired entity identity for a later re-inclusion.",
+          "area": "outdoor"
         }
       ]
     },
@@ -235,13 +246,16 @@
       "knownRepoReferences": [
         {
           "deviceKey": "guestbathroom_overhead",
-          "entityId": "light.light_guestbathroom_overhead"
+          "entityId": "light.light_guestbathroom_overhead",
+          "area": "guest_bathroom"
         },
         {
           "deviceKey": "dining_abovetable",
-          "entityId": "light.light_dining_abovetable"
+          "entityId": "light.light_dining_abovetable",
+          "area": "dining_room"
         }
       ]
     }
-  ]
+  ],
+  "areaMappingSource": "home-model/device-catalog.json"
 }

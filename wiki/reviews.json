@@ -1,18 +1,18 @@
 {
   "audio": {
-    "fingerprint": "fba5ee61c76167e3ae9f69e87210970a3d994cd56fd3396ff6fab7fdc21253a2",
-    "reason": "Reviewed the active Home Assistant backend, disabled legacy manifest, routing and migration records; canonical Sonos runbooks now participate in review fingerprints.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "caf73f385dd55e6f034a5c301302f409abbda0273a9b6439a430647e62675664",
+    "reason": "Sonos room allowlist is generated from the shared home model; all eight existing destinations and grouping behavior are preserved.",
+    "reviewed_at": "2026-10-17"
   },
   "dashboard": {
-    "fingerprint": "e644b2591a05cc5997d16e2ab7b1a701c8b02a44db8b8be1fea5fcd15190ad1b",
-    "reason": "Reconciled native wall package; scene script checks animation acknowledgement, controller revision, and latest room intent before applying brightness.",
+    "fingerprint": "d53e24d0cf3346e9ac899be82120fda02b62c93a81aac65f439dbfb7217b9eaa",
+    "reason": "Generated direct Sonos versus Home Assistant name comparison, including source digests and explicitly unverified offline speakers; eight dashboard speakers match and portable Move remains unassigned",
     "reviewed_at": "2026-10-17"
   },
   "home": {
-    "fingerprint": "3c872182c7dfc7ccbc66e1ff902e5baf2218e2dce5f96fbbbae6546057dd7ff6",
-    "reason": "Corrected snapshot and disabled Sonos descriptions against manifests and server code; added symptom-based entry points and reviewed the household architecture.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "3fcfd96708cb626ecda63f8af4ef6a67a13c9298867b55b2b39b64681faa4aaf",
+    "reason": "Added the room and device mapping entry point to household tasks",
+    "reviewed_at": "2026-10-17"
   },
   "integrations": {
     "fingerprint": "e46d195288d1ff279573965ae97993f4571d6be55d25c67e221386d3dfdcd980",
@@ -20,13 +20,13 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "89b9a47189df5aeaccb456258f3966dbe6bef76d3116b9dcdd671f944888ce11",
-    "reason": "Documented Pebble MCP setup and natural lighting phrases; reviewed script aliases and preset-specific descriptions while preserving stable IDs and lighting dispatch behavior.",
+    "fingerprint": "c6f056d6b08ae4897b8fd232d1fe1c35264ba983e8f9c8bcafa619a80e726085",
+    "reason": "Reviewed area metadata and generated room/device reference export, including dated name evidence; scene targets and power protections are unchanged by room organization",
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {
-    "fingerprint": "9659b566495f530a6f9b78480c68401cd697c21e6d4c011e1d4dc8a40a57a962",
-    "reason": "Reviewed explicit light_profiles.csv inclusion in Home Assistant deployment, configuration checks, backup and restore filters; tested that unrelated CSV files remain excluded.",
+    "fingerprint": "46b31c3fc57b88fb2de54b434837ebd16ad5b198a09f0878eeeb64c14d238b89",
+    "reason": "Documented generated room, device and verification references; reviewed read-only speaker name audit and static comparison rendering",
     "reviewed_at": "2026-10-17"
   },
   "media": {

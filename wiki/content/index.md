@@ -6,6 +6,7 @@ Use this guide to understand the house, find the right application, and decide w
 
 | I want to… | Start here |
 | --- | --- |
+| Find a device's room or confirm its mapping | [Rooms and device locations](rooms.md), then the [room catalog](wiki-reference:rooms) |
 | Change a room’s lighting | [Dashboard and controls](dashboard.md), then [lighting](lighting.md) |
 | Play music or change speaker groups | [Audio](audio.md) |
 | Check temperature or heat-pump fans | [Climate and fans](integrations.md) |

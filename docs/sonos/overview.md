@@ -42,7 +42,9 @@ Join-all isolates member writes in requested-room order. A member that is unavai
 
 ## Room and policy ownership
 
-The room-to-entity map, configured favorites, and TV presets are repository-owned allowlists under `sonos-api/src/server/`. `media_player.maker_room` and dynamically discovered entities are intentionally excluded.
+The room-to-entity map is generated from `home-model/rooms.json`, shared with Grid Dashboard's lighting, temperature and layout mappings. Run `just rooms-generate` after editing it; tests reject stale generated copies. The packaged map, configured favorites, and TV presets remain repository-owned allowlists under `sonos-api/src/server/`. `media_player.maker_room` and dynamically discovered entities are intentionally excluded.
+
+Fixed Sonos room names match their Home Assistant physical areas. Move remains a portable speaker whose dashboard controls map explicitly to Outdoor; it is not automatically assigned to an area. Additional physical areas do not become Sonos destinations. Area naming and audio group membership are independent, and existing media-player entity IDs remain stable.
 
 The retained root policies are `/up`, `/down`, and `/same/:room`. The unused legacy root routes `/pause`, `/play`, `/tv`, `/07`, and `/quiet` return the frozen `410` deprecated-route response only in `home_assistant` mode. They remain exact pass-throughs in `node` and `shadow` so configuration rollback retains baseline behavior until retirement. Room-scoped playback, favorite, volume, and preset routes remain available below `/sonos/` in every mode.
 

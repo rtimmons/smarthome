@@ -45,6 +45,12 @@ change simply to make a check green.
 
 Generated reference pages show desired configuration. Services include ingress,
 network mode, declared host mappings and dependencies from add-on manifests.
+Room and device tables come from `home-model/rooms.json`, the reviewed physical
+device catalog, and generator sources. Cross-room presets and hardware reference
+areas are computed at build time. Separately dated, sanitized verification
+receipts show registry totals and direct Sonos/HA name comparisons; their source
+digests flag stale evidence, and unreachable speakers remain unverified. Refresh
+with `just areas-audit --record-verification` and `just rooms-verify --record-verification`.
 Device all-off membership and scene targets use the same functions as deployment,
 including exclusions, blocklists and entity deduplication. Controls show generated
 automation modes without webhook IDs or action payloads. DNS records, resolvers

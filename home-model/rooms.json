@@ -1,0 +1,25 @@
+{
+  "areas": [
+    { "id": "bathroom", "name": "Bathroom", "aliases": ["Main Bathroom"] },
+    { "id": "closet", "name": "Closet", "aliases": ["Main Closet"] },
+    { "id": "bedroom", "name": "Bedroom", "aliases": [] },
+    { "id": "outdoor", "name": "Outdoor", "aliases": [] },
+    { "id": "kitchen", "name": "Kitchen", "aliases": [] },
+    { "id": "living_room", "name": "Living Room", "aliases": [] },
+    { "id": "guest_bathroom", "name": "Guest Bathroom", "aliases": [] },
+    { "id": "office", "name": "Office", "aliases": [] },
+    { "id": "dining_room", "name": "Dining Room", "aliases": [] },
+    { "id": "maker_room", "name": "Maker Room", "aliases": [] }
+  ],
+  "rooms": [
+    { "id": "bathroom", "name": "Bathroom", "areaId": "bathroom", "sonosEntityId": "media_player.bathroom", "lightingSceneRoom": "bathroom", "temperatureEntityId": null, "portable": false, "emojiName": "Shower" },
+    { "id": "closet", "name": "Closet", "areaId": "closet", "sonosEntityId": "media_player.closet", "lightingSceneRoom": "closet", "temperatureEntityId": null, "portable": false, "emojiName": "Kimono" },
+    { "id": "bedroom", "name": "Bedroom", "areaId": "bedroom", "sonosEntityId": "media_player.bedroom", "lightingSceneRoom": "bedroom", "temperatureEntityId": "climate.bedroom", "portable": false, "emojiName": "Bed" },
+    { "id": "move", "name": "Move", "areaId": "outdoor", "sonosEntityId": "media_player.move", "lightingSceneRoom": "outdoor", "temperatureEntityId": "weather.forecast_home", "portable": true, "emojiName": "Tent" },
+    { "id": "kitchen", "name": "Kitchen", "areaId": "kitchen", "sonosEntityId": "media_player.kitchen", "lightingSceneRoom": "kitchen", "temperatureEntityId": "climate.kitchen", "portable": false, "emojiName": "Rice" },
+    { "id": "living_room", "name": "Living Room", "areaId": "living_room", "sonosEntityId": "media_player.living_room", "lightingSceneRoom": "living_room", "temperatureEntityId": "climate.living_room", "portable": false, "emojiName": "TV" },
+    { "id": "guest_bathroom", "name": "Guest Bathroom", "areaId": "guest_bathroom", "sonosEntityId": "media_player.guest_bathroom", "lightingSceneRoom": "guest_bathroom", "temperatureEntityId": null, "portable": false, "emojiName": "Guest" },
+    { "id": "office", "name": "Office", "areaId": "office", "sonosEntityId": "media_player.office", "lightingSceneRoom": "office", "temperatureEntityId": "climate.office", "portable": false, "emojiName": "Briefcase" }
+  ],
+  "groupAllOrder": ["living_room", "bedroom", "kitchen", "bathroom", "office", "guest_bathroom", "closet", "move"]
+}
