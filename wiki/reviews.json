@@ -5,9 +5,9 @@
     "reviewed_at": "2026-10-16"
   },
   "dashboard": {
-    "fingerprint": "e5be034772472f8bc493e8eb6d60e5d219af2f080fda49a42de6c0238cbdbf08",
-    "reason": "Verified fast-scene and Sonos forwarding plus LED wall configuration; repaired package watch paths and included the household guide in review coverage.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "e644b2591a05cc5997d16e2ab7b1a701c8b02a44db8b8be1fea5fcd15190ad1b",
+    "reason": "Reconciled native wall package; scene script checks animation acknowledgement, controller revision, and latest room intent before applying brightness.",
+    "reviewed_at": "2026-10-17"
   },
   "home": {
     "fingerprint": "3c872182c7dfc7ccbc66e1ff902e5baf2218e2dce5f96fbbbae6546057dd7ff6",
@@ -20,9 +20,9 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "de98973ffcd36fa97d149069a6c5f06754819a437d6fc1f897b96b4505ed7f20",
-    "reason": "Compared exported scene targets, all-off membership and automation modes with production generator functions; added control links while retaining dated radio evidence and exclusions.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "727a8198d845e8fa83e021521174771afa9db533a3e9fe6bef6d465f385415f9",
+    "reason": "Living scenes use guarded native wall controls: exact zero/full brightness, Medium Lava Lamp, per-wall no replay, and observer-aware scene verification.",
+    "reviewed_at": "2026-10-17"
   },
   "maintenance": {
     "fingerprint": "369a8100a15e5f4e1dea11f6cb445fb40a487f860f521162f84b7df301a1d980",

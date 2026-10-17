@@ -242,7 +242,7 @@ describe("Scene Generation", () => {
         '{%- set force_dispatch_entities = ["light.light_living_curtains"] -%}'
       );
       expect(livingMismatchTemplate).toContain(
-        "{%- if entity_id in force_dispatch_entities -%}"
+        "{%- elif entity_id in force_dispatch_entities -%}"
       );
       expect(kitchenMismatchTemplate).toContain(
         "{%- set force_dispatch_entities = [] -%}"
@@ -304,7 +304,7 @@ describe("Scene Generation", () => {
 
       const calls = generateFastCalls(scenes.living_room_high);
 
-      expect(calls).toHaveLength(12);
+      expect(calls).toHaveLength(13);
       expect(
         calls.flatMap((call: any) => call.target.entity_id)
       ).not.toContain("switch.light_living_sillleftpower");

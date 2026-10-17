@@ -32,6 +32,7 @@ export interface SceneEntityTarget {
   device: Device;
   domain: string;
   zwaveBacked: boolean;
+  animation?: string;
 }
 
 export const FAST_SCENE_SCRIPT_PREFIX = "fast_scene_";
@@ -275,6 +276,7 @@ export function generateSceneTargets(scene: Scene): SceneEntityTarget[] {
       device,
       domain: "light",
       zwaveBacked: isZWaveBackedDevice(device),
+      ...(light.animation && { animation: light.animation }),
     });
   }
 
@@ -418,6 +420,19 @@ export function generateFastSceneCalls(scene: Scene): HAServiceCall[] {
     const { entityId, entityState, domain } = target;
     const desiredState = entityState.state;
 
+    if (target.device.sceneControl === "led_grid_wall") {
+      groupedCalls.set(entityId, {
+        service: "script.led_grid_wall_scene",
+        entityIds: [entityId],
+        data: {
+          brightness: desiredState === "off" ? 0 : entityState.brightness,
+          ...(desiredState === "on" && { power: true }),
+          ...(target.animation && { animation: target.animation }),
+        },
+      });
+      continue;
+    }
+
     if (desiredState !== "on" && desiredState !== "off") {
       throw new Error(`Unsupported entity state for ${entityId}: ${desiredState}`);
     }
@@ -560,6 +575,12 @@ function buildSceneMismatchedEntitiesTemplate(
       .filter((target) => typeof target.entityState.white_value === "number")
       .map((target) => [target.entityId, target.entityState.white_value])
   );
+  const wallTargets = targets.filter(target => target.device.sceneControl === "led_grid_wall");
+  const wallBrightness = Object.fromEntries(wallTargets.map(target => [
+    target.entityId, target.entityState.state === "off" ? 0 : target.entityState.brightness,
+  ]));
+  const wallAnimations = Object.fromEntries(wallTargets.filter(target => target.animation)
+    .map(target => [target.entityId, target.animation]));
 
   return [
     "{%- set mismatched = namespace(entities=[]) -%}",
@@ -571,13 +592,21 @@ function buildSceneMismatchedEntitiesTemplate(
       expectedColorTemperature
     )} -%}`,
     `{%- set expected_white_value = ${JSON.stringify(expectedWhiteValue)} -%}`,
+    `{%- set wall_brightness = ${JSON.stringify(wallBrightness)} -%}`,
+    `{%- set wall_animations = ${JSON.stringify(wallAnimations)} -%}`,
     `{%- set force_dispatch_entities = ${JSON.stringify(
       forceDispatchEntityIds
     )} -%}`,
     `{%- for entity_id in ${JSON.stringify(entityIds)} -%}`,
     "{%- if entity_id not in fast_scene_skipped_entities -%}",
     "{%- set brightness = state_attr(entity_id, 'brightness') -%}",
-    "{%- if entity_id in force_dispatch_entities -%}",
+    "{%- if entity_id in wall_brightness -%}",
+    // The light's on/off state describes playback, not whether master output is zero.
+    // An intervening Composer edit must never be overwritten by convergence.
+    "{%- if not (retry_mismatches | default(false)) and (state_attr('sensor.led_grid_wall_observation', 'brightness') != wall_brightness[entity_id] or (expected_states[entity_id] == 'on' and states(entity_id) != 'on') or (entity_id in wall_animations and state_attr('select.led_grid_wall_animation', 'content_id') != wall_animations[entity_id])) -%}",
+    "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
+    "{%- endif -%}",
+    "{%- elif entity_id in force_dispatch_entities -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
     "{%- elif states(entity_id) != expected_states[entity_id] -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
@@ -656,7 +685,16 @@ function buildIntentAwareCall(
   return {
     if: conditions,
     then: [
-      buildRunnableCall(call, eligibleEntities),
+      // A direct script call uses data, not a light-domain target selector.
+      ...(call.action === "script.led_grid_wall_scene" ? [{
+        action: call.action,
+        continue_on_error: true,
+        data: {
+          ...call.data,
+          intent_helper: intentHelperEntityId,
+          intent_token: "{{ intent_token }}",
+        },
+      }] : [buildRunnableCall(call, eligibleEntities)]),
     ],
   };
 }

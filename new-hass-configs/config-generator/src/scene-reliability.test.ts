@@ -74,6 +74,36 @@ function intentHelpersForWrapper(script: Record<string, any>): string[] {
 }
 
 describe("Fast scene reliability contract", () => {
+  it("uses exact wall brightness without stopping playback or selecting an animation for High", () => {
+    const wallCall = (sceneId: string) => generateFastSceneCalls(scenes[sceneId])
+      .find(call => call.target.entity_id.includes("light.led_grid_wall"));
+    for (const sceneId of ["all_off", "living_room_off"]) {
+      expect(wallCall(sceneId)).toMatchObject({
+        action: "script.led_grid_wall_scene", data: { brightness: 0 },
+      });
+      expect(wallCall(sceneId)!.data).not.toHaveProperty("power");
+      expect(wallCall(sceneId)!.data).not.toHaveProperty("animation");
+      expect(generateFastSceneCalls(scenes[sceneId]).some(call =>
+        call.target.entity_id.includes("switch.light_living_ledwall"))).toBe(false);
+    }
+    expect(wallCall("living_room_high")!.data).toEqual({ brightness: 255, power: true });
+    expect(wallCall("living_room_medium")!.data).toEqual({
+      brightness: 255, power: true, animation: "animation:python:lava_lamp:v1",
+    });
+    const scripts = generateFastScriptsFromRegistry(scenes);
+    for (const sceneId of ["all_off", "living_room_off", "living_room_high", "living_room_medium"]) {
+      const sequence = getSceneWorkerSequence(scripts, sceneId);
+      const wallActions = collectObjects(sequence, candidate => candidate.action === "script.led_grid_wall_scene");
+      expect(wallActions).toHaveLength(1);
+      expect(wallActions[0].data.intent_helper)
+        .toBe("input_text.fast_scene_intent_led_grid_wall_ten_percent_and_living_room");
+      expect(wallActions[0]).not.toHaveProperty("target");
+      expect(sequence[1].variables.fast_scene_mismatched_entities)
+        .toContain("not (retry_mismatches | default(false))");
+    }
+    expect(scripts.fast_scene_dispatch_living_room.sequence).toHaveLength(3);
+  });
+
   it("dispatches guarded wall scenes once and preserves convergence for other scenes", () => {
     const scripts = generateFastScriptsFromRegistry(scenes);
     const wall = scripts.fast_scene_dispatch_led_grid_wall_ten_percent;
@@ -82,7 +112,7 @@ describe("Fast scene reliability contract", () => {
     expect(generateSceneTargets(scenes.led_grid_wall_ten_percent).map(t => t.entityId))
       .toEqual(["light.led_grid_wall"]);
     expect(generateSceneTargets(scenes.all_off).map(t => t.entityId))
-      .not.toContain("light.led_grid_wall");
+      .toContain("light.led_grid_wall");
     expect(scripts.fast_scene_dispatch_outdoor.sequence).toHaveLength(3);
     const mixed = generateFastScriptsFromRegistry({
       wall_low: { ...scenes.led_grid_wall_ten_percent },
@@ -298,6 +328,7 @@ describe("Fast scene reliability contract", () => {
       "input_text.fast_scene_intent_kitchen_and_living_room"
     );
     expect(livingHighHelpers).toEqual([
+      "input_text.fast_scene_intent_led_grid_wall_ten_percent_and_living_room",
       "input_text.fast_scene_intent_living_room",
     ]);
     expect(livingHighHelpers).not.toContain(
@@ -413,6 +444,7 @@ describe("Fast scene reliability contract", () => {
         (candidate) =>
           typeof candidate.action === "string" &&
           (/^(light|switch)\.turn_(on|off)$/.test(candidate.action) ||
+            candidate.action === "script.led_grid_wall_scene" ||
             candidate.action === `script.${FAST_SCENE_ZWAVE_GATE_ID}`)
       );
       const skippedEvents = collectObjects(

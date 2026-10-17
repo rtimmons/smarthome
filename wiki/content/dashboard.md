@@ -16,6 +16,6 @@ Avoid repeated scene presses as a generic repair: the scene engine already paces
 
 ## Configuration and recovery
 
-UI and server sources live under `grid-dashboard/ExpressServer`; add-on network and dependency declarations live in its manifest. The LED Grid Wall integration is in the Home Assistant packages. Deploy through the root recipes, and use the [maintenance guide](maintenance.md) for validation and recovery. Restore application configuration from the appropriate Home Assistant backup rather than changing device addresses to match a stale bookmark.
+UI and server sources live under `grid-dashboard/ExpressServer`; add-on network and dependency declarations live in its manifest. The LED Grid Wall uses its installed native Home Assistant integration; the repository package supplies the compatibility and fast-scene scripts. Keep that native package when deploying: the former template/REST package would duplicate its entities. Living room scene behavior is described in the [lighting guide](lighting.md). Deploy through the root recipes, and use the [maintenance guide](maintenance.md) for validation and recovery. Restore application configuration from the appropriate Home Assistant backup rather than changing device addresses to match a stale bookmark.
 
 See [lighting](lighting.md), [audio](audio.md), and the [dashboard contributor guide](../../grid-dashboard/AGENTS.md).

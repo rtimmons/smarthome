@@ -398,6 +398,7 @@ export const scenes: SceneRegistry = {
   living_room_high: {
     name: "Living Room - High",
     lights: [
+      { device: "led_grid_wall", state: "on", brightness: 255 },
       {
         device: "living_floor",
         state: "on",
@@ -473,6 +474,10 @@ export const scenes: SceneRegistry = {
   living_room_medium: {
     name: "Living Room - Medium",
     lights: [
+      {
+        device: "led_grid_wall", state: "on", brightness: 255,
+        animation: "animation:python:lava_lamp:v1"
+      },
       {
         device: "living_floor",
         state: "on",
@@ -560,6 +565,7 @@ export const scenes: SceneRegistry = {
   living_room_off: {
     name: "Living Room - Off",
     lights: [
+      { device: "led_grid_wall", state: "off" },
       {
         device: "living_floor",
         state: "off"

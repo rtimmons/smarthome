@@ -71,6 +71,8 @@ export interface Device {
    * live testing proves the integration can report an optimistic false match.
    */
   fastSceneForceOnDispatch?: boolean;
+  /** Guarded wall commands use exact master brightness and never converge/replay. */
+  sceneControl?: "led_grid_wall";
   /**
    * Allow only live-verified, model-homogeneous devices to share a Z-Wave
    * multicast value. Unmarked devices always remain isolated.
@@ -100,6 +102,8 @@ export interface LightState {
   device: string; // Reference to device key in devices registry
   state?: "on" | "off";
   brightness?: number; // 0-255
+  /** Stable native wall animation content ID; omitted means retain selection. */
+  animation?: string;
   rgb_color?: [number, number, number]; // RGB values 0-255
   rgbw_color?: [number, number, number, number]; // RGBW values 0-255
   color_temp_kelvin?: number; // Kelvin

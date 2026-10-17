@@ -8,6 +8,8 @@ Use the room controls in the dashboard or normal wall switches. The [generated c
 
 Operational automation must call `script.fast_scene_<scene_id>`. Native `scene.turn_on` bypasses the repository’s dispatch protections.
 
+The LED wall follows the living room presets: **High** sets master brightness to 100% and keeps the selected animation; **Medium** selects **Lava Lamp** at 100%. **Living Room Off** and **All Off** set master brightness to exactly zero, preserving playback and animation. Its protected power outlet stays on. Wall commands run once per request; the other lights retain their normal mismatch correction. A newer wall or room request cancels unsent work for the same wall.
+
 ## Why a scene can take time
 
 Z-Wave commands share a paced queue. Health filtering skips unavailable targets; later passes reconcile mismatches. Switch-originated requests suppress the already-operated local load initially and briefly allow the radio network to settle. Non-Z-Wave work starts alongside the Z-Wave branch.

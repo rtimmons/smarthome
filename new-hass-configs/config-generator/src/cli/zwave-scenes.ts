@@ -900,10 +900,22 @@ function pickComparableAttributes(entityState: Record<string, any>): Record<stri
 
 export function entityMatchesTarget(
   target: ReturnType<typeof generateSceneTargets>[number],
-  state: JsonObject | null
+  state: JsonObject | null,
+  statesByEntityId: Map<string, JsonObject | null> = new Map()
 ) {
   if (!state) {
     return false;
+  }
+
+  if (target.device?.sceneControl === "led_grid_wall") {
+    const observation = statesByEntityId.get("sensor.led_grid_wall_observation");
+    const animation = statesByEntityId.get("select.led_grid_wall_animation");
+    const outputOff = target.entityState.state === "off";
+    return !["unavailable", "unknown"].includes(state.state)
+      && observation != null && !["unavailable", "unknown"].includes(observation.state)
+      && observation.attributes?.brightness === (outputOff ? 0 : target.entityState.brightness)
+      && (outputOff || state.state === "on")
+      && (!target.animation || animation?.attributes?.content_id === target.animation);
   }
 
   if (state.state !== target.entityState.state) {
@@ -939,7 +951,7 @@ function buildPendingExerciseStates(
   statesByEntityId: Map<string, JsonObject | null>
 ): ExercisedEntityState[] {
   return targets
-    .filter((target) => !entityMatchesTarget(target, statesByEntityId.get(target.entityId) ?? null))
+    .filter((target) => !entityMatchesTarget(target, statesByEntityId.get(target.entityId) ?? null, statesByEntityId))
     .map((target) => {
       const state = statesByEntityId.get(target.entityId) ?? null;
       return {
@@ -992,7 +1004,8 @@ async function exerciseScene(
   const targetTimings: ExercisedEntityTiming[] = testableTargets.map((target) => {
     const initiallyMatched = entityMatchesTarget(
       target,
-      initialStatesByEntityId.get(target.entityId) ?? null
+      initialStatesByEntityId.get(target.entityId) ?? null,
+      initialStatesByEntityId
     );
     return {
       entityId: target.entityId,
@@ -1014,7 +1027,7 @@ async function exerciseScene(
     for (const [index, target] of testableTargets.entries()) {
       if (
         targetTimings[index].firstMatchedAtMs === undefined &&
-        entityMatchesTarget(target, statesByEntityId.get(target.entityId) ?? null)
+        entityMatchesTarget(target, statesByEntityId.get(target.entityId) ?? null, statesByEntityId)
       ) {
         targetTimings[index].firstMatchedAtMs = elapsedMs;
       }

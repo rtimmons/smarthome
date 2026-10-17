@@ -24,12 +24,12 @@ export const devices: DeviceRegistry = {
   // Lights
   // ============================================================================
   lights: {
-    // Software output control; preserve existing whole-home all-off behavior.
+    // Software output control; scene off means zero brightness, never mains off.
     led_grid_wall: {
       entity: "light.led_grid_wall",
       type: "dimmer_light",
       capabilities: ["brightness"],
-      includeInAllOff: false
+      sceneControl: "led_grid_wall"
     },
     // Office lights - RGBW Zooz Zen31 devices (have both RGBW and separate white channels)
     office_abovecouch: {

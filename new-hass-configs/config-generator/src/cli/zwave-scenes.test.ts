@@ -5,6 +5,8 @@ import {
   entityMatchesTarget,
   flattenConfiguredDevices,
 } from "./zwave-scenes";
+import { generateSceneTargets } from "../scene-generation";
+import { scenes } from "../scenes";
 
 function configuredDevice(
   inventoryStatus: ConfiguredDeviceSummary["inventoryStatus"]
@@ -21,6 +23,25 @@ function configuredDevice(
 }
 
 describe("Z-Wave inventory audit", () => {
+  it("verifies wall output zero independently of playback, and checks Medium's animation", () => {
+    const wallTarget = (sceneId: string) => generateSceneTargets(scenes[sceneId])
+      .find(target => target.entityId === "light.led_grid_wall")!;
+    const state = { state: "on", attributes: { brightness: 0 } };
+    const observed = new Map<string, any>([
+      ["sensor.led_grid_wall_observation", { state: "fresh", attributes: { brightness: 0 } }],
+      ["select.led_grid_wall_animation", { state: "Synthetic animation", attributes: { content_id: "animation:python:lava_lamp:v1" } }],
+    ]);
+    expect(entityMatchesTarget(wallTarget("all_off"), state, observed)).toBe(true);
+    expect(entityMatchesTarget(wallTarget("living_room_off"), state, observed)).toBe(true);
+    observed.get("sensor.led_grid_wall_observation").attributes.brightness = 1;
+    expect(entityMatchesTarget(wallTarget("all_off"), state, observed)).toBe(false);
+    observed.get("sensor.led_grid_wall_observation").attributes.brightness = 255;
+    expect(entityMatchesTarget(wallTarget("living_room_medium"), state, observed)).toBe(true);
+    observed.get("select.led_grid_wall_animation").attributes.content_id = "animation:python:gradient:v1";
+    expect(entityMatchesTarget(wallTarget("living_room_medium"), state, observed)).toBe(false);
+    expect(entityMatchesTarget(wallTarget("living_room_high"), state, observed)).toBe(true);
+  });
+
   it("does not flag live-verified multicast groups as accidental parallelism", () => {
     expect(buildSceneParallelismFindings([])).toEqual([]);
   });
