@@ -378,7 +378,7 @@ function buildNodeMap(deviceRegistry: JsonObject, entityRegistry: JsonObject): M
   return nodes;
 }
 
-function determineTargetValue(metadata: JsonObject, currentValue: unknown): {
+export function determineTargetValue(metadata: JsonObject, currentValue: unknown): {
   targetValue: number;
   reason: string;
 } | null {
@@ -403,10 +403,10 @@ function determineTargetValue(metadata: JsonObject, currentValue: unknown): {
 
   if (/Dimming Rate/i.test(label)) {
     const targetValue =
-      typeof metadata.default === "number"
-        ? metadata.default
-        : typeof metadata.min === "number"
-          ? metadata.min
+      typeof metadata.min === "number"
+        ? metadata.min
+        : typeof metadata.default === "number"
+          ? metadata.default
           : 1;
     return {
       targetValue,

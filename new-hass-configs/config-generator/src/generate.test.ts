@@ -417,7 +417,7 @@ describe("Scene Generation", () => {
               "light.light_bathroom_vanity_right",
             ],
           },
-          data: { brightness: 155 },
+          data: { brightness: 155, transition: 0 },
         },
       ]);
       expect(lowCalls).toHaveLength(2);
@@ -426,6 +426,7 @@ describe("Scene Generation", () => {
           {
             action: "light.turn_off",
             target: { entity_id: ["light.light_bathroom_abovesauna"] },
+            data: { transition: 0 },
           },
           {
             action: "light.turn_on",
@@ -437,13 +438,14 @@ describe("Scene Generation", () => {
                 "light.light_bathroom_vanity_right",
               ],
             },
-            data: { brightness: 50 },
+            data: { brightness: 50, transition: 0 },
           },
         ])
       );
       expect(offCalls).toEqual([
         {
           action: "light.turn_off",
+          data: { transition: 0 },
           target: {
             entity_id: [
               "light.light_bathroom_abovesauna",

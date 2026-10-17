@@ -74,6 +74,21 @@ function intentHelpersForWrapper(script: Record<string, any>): string[] {
 }
 
 describe("Fast scene reliability contract", () => {
+  it("requests zero-duration on and off transitions for every dimmable light platform", () => {
+    for (const scene of Object.values(scenes)) {
+      for (const target of generateSceneTargets(scene)) {
+        if (target.device.capabilities?.includes("brightness") && !target.device.sceneControl) {
+          expect(target.entityState.transition, target.entityId).toBe(0);
+        }
+      }
+      for (const call of generateFastSceneCalls(scene)) {
+        if (call.action === "light.turn_on" || call.action === "light.turn_off") {
+          expect(call.data?.transition, call.target.entity_id.join(",")).toBe(0);
+        }
+      }
+    }
+  });
+
   it("uses exact wall brightness without stopping playback or selecting an animation for High", () => {
     const wallCall = (sceneId: string) => generateFastSceneCalls(scenes[sceneId])
       .find(call => call.target.entity_id.includes("light.led_grid_wall"));

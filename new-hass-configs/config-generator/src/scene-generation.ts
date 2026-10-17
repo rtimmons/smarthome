@@ -206,7 +206,7 @@ function buildLightEntityState(light: LightState): Record<string, any> {
   const desiredState = light.state || "on";
   const transition =
     light.transition ??
-    (isZWaveBackedDevice(device) && device.capabilities?.includes("brightness")
+    (device.capabilities?.includes("brightness") && !device.sceneControl
       ? 0
       : undefined);
   const entityState: Record<string, any> = {

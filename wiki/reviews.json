@@ -20,13 +20,13 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "727a8198d845e8fa83e021521174771afa9db533a3e9fe6bef6d465f385415f9",
-    "reason": "Living scenes use guarded native wall controls: exact zero/full brightness, Medium Lava Lamp, per-wall no replay, and observer-aware scene verification.",
+    "fingerprint": "32b7104107401e40a23c5e2d559cfc90b15d2e95c363cad2e60214682e33a968",
+    "reason": "Zero-second transitions now cover all dimmable scene platforms and manual Home Assistant controls through a transition-only light profile; documented supported hardware minimums, offline verification limits, and preserved radio pacing.",
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {
-    "fingerprint": "369a8100a15e5f4e1dea11f6cb445fb40a487f860f521162f84b7df301a1d980",
-    "reason": "Protect remote-only Home Assistant recovery snapshots and template blueprints from configuration sync deletion; verified both sync filter sets with synthetic files.",
+    "fingerprint": "9659b566495f530a6f9b78480c68401cd697c21e6d4c011e1d4dc8a40a57a962",
+    "reason": "Reviewed explicit light_profiles.csv inclusion in Home Assistant deployment, configuration checks, backup and restore filters; tested that unrelated CSV files remain excluded.",
     "reviewed_at": "2026-10-17"
   },
   "media": {

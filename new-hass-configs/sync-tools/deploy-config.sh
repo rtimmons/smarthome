@@ -37,6 +37,7 @@ LOCAL_REPO_EXCLUDES=(
 
 DEPLOY_FILTERS=(
   "--include=*/"
+  "--include=/light_profiles.csv"
   "--include=*.yaml"
   "--include=*.yml"
   "--include=*.json"

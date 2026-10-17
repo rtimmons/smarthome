@@ -8,6 +8,8 @@ Use the room controls in the dashboard or normal wall switches. The [generated c
 
 Operational automation must call `script.fast_scene_<scene_id>`. Native `scene.turn_on` bypasses the repository’s dispatch protections.
 
+Lighting commands request an immediate change: generated dimmable-light scenes explicitly use zero-second transitions, and the Home Assistant default light profile applies the same setting to manual on/off, toggle, and brightness/color controls. The profile sets no color or brightness of its own. Device parameters use instant operation where supported, otherwise the fastest documented rate. Some dimmer hardware still fades at its minimum setting; the Minoston desk-lamp plug has an observed fade of about one second. Radio queue spacing is separate from fading and remains necessary for reliable Z-Wave delivery.
+
 The LED wall follows the living room presets: **High** sets master brightness to 100% and keeps the selected animation; **Medium** selects **Lava Lamp** at 100%. **Living Room Off** and **All Off** set master brightness to exactly zero, preserving playback and animation. Its protected power outlet stays on. Wall commands run once per request; the other lights retain their normal mismatch correction. A newer wall or room request cancels unsent work for the same wall.
 
 ## Why a scene can take time

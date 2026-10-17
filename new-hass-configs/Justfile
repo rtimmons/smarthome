@@ -143,6 +143,7 @@ fetch: preflight
 		--filter='protect inventory_snapshots/***' \
 		--filter='protect .git/***' \
 		--include '*/' \
+		--include '/light_profiles.csv' \
 		--include '*.yaml' \
 		--include '*.yml' \
 		--include '*.json' \
@@ -172,6 +173,7 @@ check: preflight
 		--prune-empty-dirs \
 		{{local_repo_excludes}} \
 		--include '*/' \
+		--include '/light_profiles.csv' \
 		--include '*.yaml' \
 		--include '*.yml' \
 		--include '*.json' \
@@ -201,6 +203,7 @@ check: preflight
 		rsync -av --delete --prune-empty-dirs \
 			{{rsync_protect_filters}} \
 			--include '*/' \
+			--include '/light_profiles.csv' \
 			--include '*.yaml' \
 			--include '*.yml' \
 			--include '*.json' \
@@ -233,6 +236,7 @@ check: preflight
 		--prune-empty-dirs \
 		{{local_repo_excludes}} \
 		--include '*/' \
+		--include '/light_profiles.csv' \
 		--include '*.yaml' \
 		--include '*.yml' \
 		--include '*.json' \
@@ -326,6 +330,7 @@ backup DESCRIPTION="":
 	rsync -av \
 		--prune-empty-dirs \
 		--include '*/' \
+		--include '/light_profiles.csv' \
 		--include '*.yaml' \
 		--include '*.yml' \
 		--include '*.json' \
@@ -406,6 +411,7 @@ restore TIMESTAMP:
 	rsync -av \
 		--prune-empty-dirs \
 		--include '*/' \
+		--include '/light_profiles.csv' \
 		--include '*.yaml' \
 		--include '*.yml' \
 		--include '*.json' \
@@ -431,6 +437,7 @@ restore TIMESTAMP:
 		--delete \
 		--prune-empty-dirs \
 		--include '*/' \
+		--include '/light_profiles.csv' \
 		--include '*.yaml' \
 		--include '*.yml' \
 		--include '*.json' \
@@ -463,6 +470,7 @@ restore TIMESTAMP:
 			--delete \
 			--prune-empty-dirs \
 			--include '*/' \
+			--include '/light_profiles.csv' \
 			--include '*.yaml' \
 			--include '*.yml' \
 			--include '*.json' \

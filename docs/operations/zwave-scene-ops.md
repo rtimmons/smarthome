@@ -47,6 +47,16 @@ Connection failures are stage-specific. Use the ignored repository identity expl
 4. If scenes still lag, inspect the generated fast scene calls. The GE 46203 and on/off-only Minoston MP22ZD fixtures expose Switch Multilevel CC38, not Binary Switch CC37. They use isolated `zwave_js.set_value` calls with `wait_for_result: false` and an explicit zero-second transition.
 5. If a target entity is `unavailable` or its node-status sensor is `dead`, treat the underlying fault as a device/platform issue. The generated dispatcher skips it so the fault does not block healthy targets, but that resilience is not a substitute for repairing or removing the node.
 
+## Immediate Lighting Transitions
+
+Generated scenes request `transition: 0` for every dimmable light, including Hue and ZHA devices. Compatible Z-Wave dimmers retain their isolated CC38 command with `transitionDuration: 0s`. The guarded LED wall uses its existing immediate master-brightness command. The root `new-hass-configs/light_profiles.csv` sets only the default transition to zero for Home Assistant light on/off, toggle, and brightness/color controls; blank color and brightness columns preserve the requested or remembered values. Explicit transition data in a future service call would override that default. See [Home Assistant light profiles](https://www.home-assistant.io/integrations/light/#default-turn-on-values).
+
+The supported deployment and configuration-check filters explicitly include the root profile file. Deploy through the normal Home Assistant configuration workflow so Core loads the profile after restart. This default does not change native Hue-app controls or commands sent directly to a device outside Home Assistant.
+
+Installed Zooz ZEN31 and Fibaro FGRGBW-442 controllers support zero for both local and Z-Wave transition parameters 151/152. GE/Jasco 46203 dimmers expose parameter 6's fastest `Dim Quickly` setting, value 0; that label is not a guarantee of a physically instantaneous transition. Minoston MP22ZD parameters 9/10 have a supported minimum of 1, not 0. Never write an unsupported zero or disable useful dimming to claim the fade has been removed; node 44 was observed fading for about one second even with parameter 10 set to 1 and a zero-second command. The ramp planner chooses the supported minimum rather than assuming the factory default is fastest.
+
+Verify current parameters with fresh device reports where reachable. Cached minimum values and an empty pending-change plan do not prove an offline or non-reporting device was queried. Preserve offline-device configuration and existing scene exclusions. The global 500 ms command spacing, Central Scene quiet window, and mismatch-only convergence are delivery safeguards, not fades; removing them previously caused radio failures.
+
 ## Desk-Lamp Plug Recovery: 2026-10-16
 
 The desk-lamp adapter is a **Minoston MP22ZD V1.0**, firmware **1.0.1**. Its former node **4** was dead and last reported radio contact on September 16 at 20:42 EDT. Local button presses still controlled the load, but a power cycle and isolated ping did not restore communication. Local operation therefore did not establish radio health.

@@ -51,6 +51,22 @@ for filters in (just_filters, deploy_filters):
         assert all((target / name).read_text() == "Synthetic recovery data\n" for name in protected)
         assert not (target / "obsolete.yaml").exists()
         assert (target / "scripts.yaml").read_text() == "updated generated scripts\n"
+
+# The transition profile must reach staging and the final configuration, while
+# unrelated CSV artifacts remain excluded by the real deployment filters.
+filter_block = re.search(r"DEPLOY_FILTERS=\(\n(.*?)\n\)", deploy_source, re.S).group(1)
+deployment_filters = shlex.split(filter_block)
+with tempfile.TemporaryDirectory() as directory:
+    source, target = Path(directory) / "source", Path(directory) / "target"
+    source.mkdir()
+    target.mkdir()
+    profile = "id,x,y,brightness,transition\ngroup.all_lights.default,,,,0\n"
+    (source / "light_profiles.csv").write_text(profile)
+    (source / "unrelated.csv").write_text("private fixture\n")
+    subprocess.run(["rsync", "-a", *deployment_filters,
+                    str(source) + "/", str(target) + "/"], check=True)
+    assert (target / "light_profiles.csv").read_text() == profile
+    assert not (target / "unrelated.csv").exists()
 PY
 
 echo "generated configuration policy tests passed"

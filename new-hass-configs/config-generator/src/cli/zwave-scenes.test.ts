@@ -2,6 +2,7 @@ import {
   buildEntityAuditFindings,
   buildSceneParallelismFindings,
   ConfiguredDeviceSummary,
+  determineTargetValue,
   entityMatchesTarget,
   flattenConfiguredDevices,
 } from "./zwave-scenes";
@@ -23,6 +24,15 @@ function configuredDevice(
 }
 
 describe("Z-Wave inventory audit", () => {
+  it("uses the supported minimum dimming duration instead of a slower factory default", () => {
+    expect(determineTargetValue({ label: "Dimming Rate (Manual Dimming / Z-Wave)", min: 1, default: 4 }, 4))
+      .toMatchObject({ targetValue: 1 });
+    expect(determineTargetValue({ label: "Ramp Rate (Z-Wave)", min: 0, default: 3 }, 3))
+      .toMatchObject({ targetValue: 0 });
+    expect(determineTargetValue({ label: "Duration of Alarm Signalization", min: 0, default: 600 }, 600))
+      .toBeNull();
+  });
+
   it("verifies wall output zero independently of playback, and checks Medium's animation", () => {
     const wallTarget = (sceneId: string) => generateSceneTargets(scenes[sceneId])
       .find(target => target.entityId === "light.led_grid_wall")!;

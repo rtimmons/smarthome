@@ -8,6 +8,8 @@ Before changing a system, read its current runbook, inspect health, preserve unr
 
 Home Assistant configuration checks and deployments preserve remote-only backups, hidden recovery directories, and installed template blueprints during synchronization. These files may not exist in the checkout and must not be deleted just because they are absent locally.
 
+The configuration deployment also includes the root `light_profiles.csv`, which supplies the household's zero-second default light transition. It is an explicit deployment include; unrelated CSV files are not deployed.
+
 ## Keep explanations with changes
 
 Update the corresponding guide or runbook when behavior changes. The component catalog connects source files to their explanations. `just wiki-check` rejects unreviewed source fingerprints. After reviewing, record a specific explanation with `just wiki-review <component> '<reason>'`; a no-documentation-impact decision must explain why.
