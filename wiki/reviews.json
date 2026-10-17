@@ -1,12 +1,12 @@
 {
   "audio": {
-    "fingerprint": "18786e786671d6f96aec9fe0b454d937c683eb6298fcf642b21e55fb90a45645",
-    "reason": "Documented Move as a fixed Patio speaker with its existing Sonos name and unchanged playback allowlist",
+    "fingerprint": "bd3035f81c23535358539020eae03f645a11f5a5d16c7b3ae00f3e87e6255a42",
+    "reason": "Renamed the allowlisted Move display name to Patio while preserving media_player.move and playback policies; updated current routing guidance and annotated historical evidence",
     "reviewed_at": "2026-10-17"
   },
   "dashboard": {
-    "fingerprint": "e795220b4c57630a055209ee1493f3ac798a44a7fb141e11bb1b13209f69c174",
-    "reason": "Renamed the Outdoor display area to Patio and permanently assigned Move; documented its explicit speaker-name exception while preserving existing outdoor control routes",
+    "fingerprint": "e236ffc845ac986c76f772c43ce415bfcfc4428a3657c1d25879c94803b481ca",
+    "reason": "Patio now names the speaker, HA player/device, area and dashboard tile; preserved stable IDs and added shared-catalog migration for saved Move selections",
     "reviewed_at": "2026-10-17"
   },
   "home": {

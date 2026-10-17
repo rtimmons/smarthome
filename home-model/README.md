@@ -6,9 +6,11 @@ The `rooms` array preserves tile and Sonos allowlist order. `groupAllOrder`
 preserves the existing join-all dispatch order independently of the layouts.
 
 Each dashboard room explicitly selects its Sonos entity, lighting scene family,
-temperature source, and icon. Move is permanently assigned to Patio while keeping
-its speaker/dashboard name. Patio retains the stable `outdoor` area ID and lighting
-scene family. An intentional fixed-speaker/area name difference must include an
+temperature source, and icon. Patio is the fixed speaker formerly called Move;
+its Sonos, Home Assistant, dashboard and area display names now agree. The stable
+room ID `move`, entity ID `media_player.move`, and `outdoor` area ID and lighting
+scene family remain. `previousNames` migrates saved dashboard selections on reload.
+Any future intentional fixed-speaker/area name difference must include an
 `areaNameException` explanation, which also appears in the generated wiki.
 Dining Room and Maker Room are physical areas without dashboard tiles. Extra
 areas never expand the Sonos allowlist or lighting targets automatically.

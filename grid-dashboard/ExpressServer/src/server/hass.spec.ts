@@ -301,7 +301,7 @@ describe('Home Assistant thermostat routing', () => {
             'climate.living_room'
         );
         expect(thermostatEntityId('Kitchen')).to.equal('climate.kitchen');
-        expect(thermostatEntityId('Move')).to.equal(
+        expect(thermostatEntityId('Patio')).to.equal(
             'weather.forecast_home'
         );
         expect(thermostatEntityId('Office')).to.equal('climate.office');
@@ -358,7 +358,7 @@ describe('Home Assistant thermostat routing', () => {
         });
     });
 
-    it('reads outdoor temperature for Move from native Home Assistant weather', async () => {
+    it('reads outdoor temperature for Patio from native Home Assistant weather', async () => {
         const requests: Array<{ url: string; options?: RequestInit }> = [];
         const readState = createThermostatStateReader({
             runtime: coreRuntime,
@@ -380,7 +380,7 @@ describe('Home Assistant thermostat routing', () => {
         const response = new FakeResponse();
 
         await readState(
-            { params: { room: 'Move' } } as any,
+            { params: { room: 'Patio' } } as any,
             response as any
         );
 
@@ -394,7 +394,7 @@ describe('Home Assistant thermostat routing', () => {
             },
         ]);
         expect(response.body).to.deep.equal({
-            room: 'Move',
+            room: 'Patio',
             thermostat: {
                 entityId: 'weather.forecast_home',
                 currentTemperature: 74,

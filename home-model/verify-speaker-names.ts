@@ -26,7 +26,7 @@ async function main() {
     const state = fetchState(options, token, placement.entityId);
     const areaId = entity.area_id ?? device.area_id ?? null;
     const areaName = areas.find(a => a.area_id === areaId)?.name ?? null;
-    // Speaker names and physical area names may intentionally differ (Move in Patio).
+    // Check speaker names and physical areas against their own catalog fields.
     const expectedName = rooms.rooms.find(r => r.sonosEntityId === placement.entityId)?.name ?? placement.name;
     const expectedAreaName = rooms.areas.find(a => a.id === placement.areaId)?.name ?? null;
     const homeAssistantName = state?.attributes?.friendly_name ?? null;

@@ -16,6 +16,12 @@ function validate(model) {
   unique(model.areas.map(area => area.name), 'area names');
   unique(model.rooms.map(room => room.id), 'room IDs');
   unique(model.rooms.map(room => room.name), 'room names');
+  for (const room of model.rooms) {
+    if (room.previousNames !== undefined && !Array.isArray(room.previousNames)) {
+      throw new Error(`Room ${room.id} previousNames must be an array`);
+    }
+  }
+  unique(model.rooms.flatMap(room => [room.name, ...(room.previousNames ?? [])]), 'current and historical room names');
   unique(model.rooms.map(room => room.sonosEntityId), 'Sonos entities');
   unique(model.groupAllOrder, 'group-all room IDs');
   const areas = new Map(model.areas.map(area => [area.id, area]));

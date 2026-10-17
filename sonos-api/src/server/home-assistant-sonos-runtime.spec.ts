@@ -1020,7 +1020,7 @@ test('pauseOthers preset waits for every non-member to be authoritatively paused
   await new Promise(resolve => setImmediate(resolve));
   assert.equal(runtime.actions.operationQueue.getOperation(operation.id)?.status, 'running');
 
-  for (const room of ['Bathroom', 'Closet', 'Bedroom', 'Move', 'Office'] as const) {
+  for (const room of ['Bathroom', 'Closet', 'Bedroom', 'Patio', 'Office'] as const) {
     const state = stateStore.entities.get(SONOS_ROOM_TO_ENTITY[room]);
     assert.ok(state);
     state.state = 'paused';

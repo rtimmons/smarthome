@@ -2,6 +2,10 @@
 
 This record is the evidence log for `docs/plan-replace-sonos-node-api.md`. It contains no Home Assistant token, signed artwork URL, speaker UUID, IP address, or private configuration payload.
 
+On October 17, 2026, Ryan renamed the speaker formerly called Move to **Patio**.
+The stable Home Assistant entity remains `media_player.move`. Dated evidence below
+retains the room name observed at that time; current controls use Patio.
+
 ## Candidate and baseline
 
 | Item | Value |

@@ -4,7 +4,7 @@ Start with the [room-by-room catalog](wiki-reference:rooms). It shows each physi
 
 ## How room assignments work
 
-Home Assistant **areas** describe physical rooms. Fixed Sonos rooms and dashboard selections use the same names, with the explicit Move → Patio exception below. Home Assistant geographic zones remain location/geofencing concepts; playback groups remain temporary audio groupings.
+Home Assistant **areas** describe physical rooms. Fixed Sonos rooms and dashboard selections use the same names, including Patio. Home Assistant geographic zones remain location/geofencing concepts; playback groups remain temporary audio groupings.
 
 The [generated name comparison](wiki-reference:rooms#speaker-names) shows what Sonos speakers reported beside their Home Assistant player/device names and physical areas. Refresh it with `just rooms-verify --record-verification`. Offline speakers remain explicitly unverified; a new wiki build alone does not claim a fresh live check.
 
@@ -12,7 +12,7 @@ Set the area on a physical device so all its entities inherit it: lights, fans, 
 
 The Dining Room nook stays in **Dining Room**, as confirmed by Ryan on October 16, 2026. Kitchen presets also control it; those are separate facts. Dining Room and Maker Room keep their physical areas even though they have no dashboard tile. The Maker Room Roam belongs to Maker Room but remains outside the dashboard playback/join-all allowlist.
 
-Move is permanently assigned to **Patio**, as confirmed by Ryan on October 17, 2026, and keeps its Sonos and dashboard name. Patio replaces the former Outdoor area, including its lights. The stable area ID and lighting scene family remain `outdoor`, so existing controls continue to work; the Move selection still shows outdoor weather. Shared infrastructure and whole-home controls remain intentionally unassigned. Unidentified Sense loads remain **location unconfirmed**, per Ryan's instruction. The five named kitchen appliances are assigned to Kitchen. Both retired SHIELD players were removed; Bedroom Chromecast remains.
+The Move speaker is permanently assigned to **Patio**, as confirmed by Ryan on October 17, 2026. Ryan subsequently renamed the speaker Patio as well; Sonos, Home Assistant, the dashboard and the physical area now all use Patio. Its stable entity ID remains `media_player.move`, and saved Move dashboard selections become Patio on reload. Patio replaces the former Outdoor area, including its lights. The stable area ID and lighting scene family remain `outdoor`, so existing controls continue to work; the Patio selection still shows outdoor weather. Shared infrastructure and whole-home controls remain intentionally unassigned. Unidentified Sense loads remain **location unconfirmed**, per Ryan's instruction. The five named kitchen appliances are assigned to Kitchen. Both retired SHIELD players were removed; Bedroom Chromecast remains.
 
 The unused legacy scenes `scene.scene_001_keypressed2x` and `scene.scene_002_keypressed2x` were removed after Ryan confirmed their retirement on October 16, 2026. They were orphaned registry entries with no remaining configured scene definitions. The catalog records them under Retired. The temporarily removed Outdoor cafe lights keep their desired Patio placement; assigning areas does not restore retired hardware or clear scene exclusions.
 

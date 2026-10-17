@@ -2,6 +2,30 @@ import { expect } from 'chai';
 
 const listeners: any = require('./listeners');
 
+describe('saved room selection', () => {
+    it('restores an old Move selection as Patio and saves the current name', () => {
+        const previousWindow = (global as any).window;
+        const saved: unknown[] = [];
+        (global as any).window = { cookies: {
+            get: () => 'Move', set: (key: string, value: string) => saved.push([key, value]),
+        } };
+        const saver = new listeners.RoomSaver();
+        const app = {
+            baseConfig: require('./config').config,
+            changeRoom: (room: string) => {
+                expect(room).to.equal('Patio');
+                saver.onMessage({ Topic: 'Room.Changed', Event: { ToRoom: room } });
+            },
+        };
+        try {
+            saver.onMessage({ Topic: 'App.Initialized', Globals: { App: app } });
+            expect(saved).to.deep.equal([['Room', 'Patio']]);
+        } finally {
+            (global as any).window = previousWindow;
+        }
+    });
+});
+
 describe('listeners banner formatting', () => {
     it('distinguishes live, stale, and unknown response metadata', () => {
         expect(listeners.freshnessFromMeta({})).to.equal('live');
@@ -73,13 +97,13 @@ describe('listeners banner formatting', () => {
         expect(updates).to.deep.equal([['Kitchen']]);
     });
 
-    it('passes an unavailable portable-room marker through with live zones', () => {
+    it('passes an unavailable room marker through with live zones', () => {
         const updater = new listeners.ZoneUpdater();
         let observedMeta: any = null;
         updater.onMessage({
             Event: {
                 Zones: [{members: [{roomName: 'Kitchen'}]}],
-                Meta: {unavailableRooms: ['Move']},
+                Meta: {unavailableRooms: ['Patio']},
                 RequestSequence: 1,
             },
             Globals: {App: {
@@ -87,7 +111,7 @@ describe('listeners banner formatting', () => {
             }},
         });
 
-        expect(observedMeta).to.deep.equal({unavailableRooms: ['Move']});
+        expect(observedMeta).to.deep.equal({unavailableRooms: ['Patio']});
     });
 
     it('keeps stale artwork but clears it when media state becomes unknown', () => {

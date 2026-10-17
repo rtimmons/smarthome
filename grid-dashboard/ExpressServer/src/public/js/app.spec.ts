@@ -129,7 +129,7 @@ describe('App Sonos topology pending lifecycle', () => {
     it('keeps reachable zones live while warning about an unavailable portable room', () => {
         const app: any = Object.create(App.prototype);
         app.room = 'Kitchen';
-        app.rooms = ['Kitchen', 'Move'];
+        app.rooms = ['Kitchen', 'Patio'];
         app.pendingZoneMutations = {};
         app.grid = {
             updateZones: () => undefined,
@@ -139,10 +139,10 @@ describe('App Sonos topology pending lifecycle', () => {
         app._reconcileZoneMutations = () => undefined;
         app._refreshIntentPresentation = () => undefined;
 
-        app.updateZones([{members: ['Kitchen']}], {unavailableRooms: ['Move']});
+        app.updateZones([{members: ['Kitchen']}], {unavailableRooms: ['Patio']});
 
         expect(app.zoneStateFreshness).to.equal('live');
-        expect(app.topologyBanner).to.equal('Sonos unavailable: Move');
+        expect(app.topologyBanner).to.equal('Sonos unavailable: Patio');
     });
 
     it('adopts a last-confirmed stale zones payload on a fresh page', () => {

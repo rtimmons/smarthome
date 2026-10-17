@@ -20,20 +20,20 @@ describe('shared home rooms', () => {
         }
         const config = JSON.parse(vm.runInContext('JSON.stringify(config)', context));
         expect(config.rooms).to.deep.equal([
-            'Living Room', 'Bedroom', 'Kitchen', 'Bathroom', 'Office', 'Guest Bathroom', 'Closet', 'Move',
+            'Living Room', 'Bedroom', 'Kitchen', 'Bathroom', 'Office', 'Guest Bathroom', 'Closet', 'Patio',
         ]);
         expect(config.cells.filter((cell: any) => cell.activeWhenRoom).map((cell: any) => cell.activeWhenRoom))
-            .to.deep.equal(['Bathroom', 'Closet', 'Bedroom', 'Move', 'Kitchen', 'Living Room', 'Guest Bathroom', 'Office']);
-        expect(config.lightSceneRooms.Move).to.equal('outdoor');
-        expect(thermostatEntityId('Move')).to.equal('weather.forecast_home');
+            .to.deep.equal(['Bathroom', 'Closet', 'Bedroom', 'Patio', 'Kitchen', 'Living Room', 'Guest Bathroom', 'Office']);
+        expect(config.lightSceneRooms.Patio).to.equal('outdoor');
+        expect(thermostatEntityId('Patio')).to.equal('weather.forecast_home');
         expect(thermostatEntityId('Bathroom')).to.equal(undefined);
         expect(thermostatEntityId('constructor')).to.equal(undefined);
         const move = catalog.rooms.find((room: any) => room.id === 'move');
         expect(move.portable).to.equal(false);
         expect(catalog.areas.find((area: any) => area.id === move.areaId).name).to.equal('Patio');
-        const undocumented = structuredClone(catalog);
-        delete undocumented.rooms.find((room: any) => room.id === 'move').areaNameException;
-        expect(() => validate(undocumented)).to.throw('document its name exception');
+        expect(move.name).to.equal('Patio');
+        expect(move.areaNameException).to.equal(undefined);
+        expect(config.roomAliases.Move).to.equal('Patio');
     });
 
     it('rejects a fixed room mapped to the wrong physical area', () => {

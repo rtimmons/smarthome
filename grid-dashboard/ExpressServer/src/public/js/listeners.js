@@ -36,6 +36,10 @@ class RoomSaver {
     onMessage(e) {
         if (e.Topic == 'App.Initialized') {
             var room = window.cookies.get('Room') || 'Kitchen';
+            var aliases = (e.Globals.App.baseConfig || {}).roomAliases || {};
+            if (Object.prototype.hasOwnProperty.call(aliases, room)) {
+                room = aliases[room];
+            }
             e.Globals.App.changeRoom(room);
         }
 
@@ -405,6 +409,7 @@ class IntentUpdater {
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         ActiveCells: ActiveCells,
+        RoomSaver: RoomSaver,
         BackgroundChanger: BackgroundChanger,
         FetchThermostatStateOnRoomChange: FetchThermostatStateOnRoomChange,
         displayedIntent: displayedIntent,

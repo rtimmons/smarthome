@@ -92,7 +92,7 @@ describe('MusicController Sonos state', () => {
             'X-Sonos-Age-Ms': '0',
             'X-Sonos-Response-Source': 'home_assistant',
             'X-Sonos-Response-Stale': 'false',
-            'X-Sonos-Unavailable-Rooms': 'Move',
+            'X-Sonos-Unavailable-Rooms': 'Patio',
         };
 
         expect(fixture.controller.responseMeta({
@@ -103,7 +103,7 @@ describe('MusicController Sonos state', () => {
             stale: false,
             observedAt: '',
             ageMs: 0,
-            unavailableRooms: ['Move'],
+            unavailableRooms: ['Patio'],
         });
     });
 

@@ -69,7 +69,7 @@ const run = async (): Promise<void> => {
       'Bathroom',
       'Closet',
       'Bedroom',
-      'Move',
+      'Patio',
       'Office',
     ]);
     assert.deepEqual(expectedCalls('Living Room-tv'), [

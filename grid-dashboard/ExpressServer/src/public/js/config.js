@@ -210,6 +210,9 @@ const config = {
     cols: cols,
     printerPort: 8099,
     lightSceneRooms: lightSceneRooms,
+    roomAliases: Object.fromEntries(roomCatalog.rooms.flatMap(room =>
+        (room.previousNames || []).map(name => [name, room.name])
+    )),
     // Preserve the established join-all dispatch order independently of tile order.
     rooms: roomCatalog.groupAllOrder.map(
         id => roomCatalog.rooms.find(room => room.id === id).name

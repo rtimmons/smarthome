@@ -57,7 +57,7 @@ describe('LightController', () => {
         });
     });
 
-    it('maps the Move room controls to the outdoor scenes', () => {
+    it('maps the Patio room controls to the outdoor scenes', () => {
         const requests: any[] = [];
         const previousWindow = (global as any).window;
         (global as any).window = { location: { pathname: '' } };
@@ -65,7 +65,7 @@ describe('LightController', () => {
         try {
             const controller = new lightController({
                 app: {
-                    currentRoom: () => 'Move',
+                    currentRoom: () => 'Patio',
                     request: (request: any) => requests.push(request),
                 },
                 root: '',

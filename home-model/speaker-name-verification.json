@@ -1,7 +1,7 @@
 {
-  "verifiedAt": "2026-10-17T13:34:53.841Z",
-  "catalogSha256": "d273206f490460eb70cc0fe0f22f70c6a9d63178a6ae5313859472aeb3f9b16a",
-  "roomsSha256": "fba3b337e4cbece5845be57256be53b9af8bd8aef1e29cfc03bddafa769dd8b6",
+  "verifiedAt": "2026-10-17T13:44:47.613Z",
+  "catalogSha256": "2296c2d0ad8656102dbc9e872d80dd30f44e00275820b49cda362f971d378698",
+  "roomsSha256": "b0df83bda58c59a50e9dcc3d5368895480d56e4422ab8f8032f4d26740ffec82",
   "speakers": [
     {
       "entityId": "media_player.bathroom",
@@ -75,10 +75,10 @@
     },
     {
       "entityId": "media_player.move",
-      "expectedName": "Move",
-      "sonosName": "Move",
-      "homeAssistantName": "Move",
-      "homeAssistantDeviceName": "Move",
+      "expectedName": "Patio",
+      "sonosName": "Patio",
+      "homeAssistantName": "Patio",
+      "homeAssistantDeviceName": "Patio",
       "areaId": "outdoor",
       "areaName": "Patio",
       "status": "matches"

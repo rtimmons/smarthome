@@ -305,7 +305,7 @@ const run = (): void => {
     }],
   }], 'the complete legacy /zones member schema and defaults are frozen');
   assert.deepEqual(singletonGolden.unknownRooms, [
-    'Bathroom', 'Bedroom', 'Closet', 'Guest Bathroom', 'Living Room', 'Move', 'Office',
+    'Bathroom', 'Bedroom', 'Closet', 'Guest Bathroom', 'Living Room', 'Office', 'Patio',
   ]);
 
   const coordinator: SonosRoomName = 'Bedroom';
@@ -404,7 +404,7 @@ const run = (): void => {
     {coordinator: 'Bathroom', members: ['Bathroom', 'Kitchen']},
     {coordinator: 'Bedroom', members: ['Bedroom', 'Closet', 'Office']},
     {coordinator: 'Living Room', members: ['Living Room', 'Guest Bathroom']},
-    {coordinator: 'Move', members: ['Move']},
+    {coordinator: 'Patio', members: ['Patio']},
   ];
   const multipleGroups = projectCanonicalSonosTopology(haSnapshot(
     SONOS_ROOM_NAMES.map((room, index) => {
@@ -429,7 +429,7 @@ const run = (): void => {
       {coordinator: 'Bathroom', members: ['Bathroom', 'Kitchen']},
       {coordinator: 'Bedroom', members: ['Bedroom', 'Closet', 'Office']},
       {coordinator: 'Living Room', members: ['Living Room', 'Guest Bathroom']},
-      {coordinator: 'Move', members: ['Move']},
+      {coordinator: 'Patio', members: ['Patio']},
     ],
     'multiple groups and a singleton are independently canonicalized'
   );

@@ -43,7 +43,7 @@ async function main() {
     }
   }
 
-  // Verify fixed speakers, including Move in Patio. Placement changes use the
+  // Verify fixed speakers, including the Patio speaker. Placement changes use the
   // separate device catalog; area renames never expand the playback allowlist.
   for (const room of model.rooms.filter((item: any) => !item.portable)) {
     const entity = entities.find(item => item.entity_id === room.sonosEntityId);
