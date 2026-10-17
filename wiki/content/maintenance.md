@@ -10,7 +10,7 @@ Before changing a system, read its current runbook, inspect health, preserve unr
 
 Update the corresponding guide or runbook when behavior changes. The component catalog connects source files to their explanations. `just wiki-check` rejects unreviewed source fingerprints. After reviewing, record a specific explanation with `just wiki-review <component> '<reason>'`; a no-documentation-impact decision must explain why.
 
-Generated service, device, and scene tables update directly from repository configuration. Narrative review dates remain separate from build dates. Direct UI changes still need an intentional update to the repository’s runbook.
+Generated service, device, effective scene, control and DNS tables update directly from repository configuration. The [coverage report](wiki-reference:coverage) records guide ownership, watched sources and review reasons. Narrative review dates remain separate from build dates. Direct UI changes still need an intentional update to the repository’s runbook.
 
 ## Publish and recover this guide
 
@@ -33,3 +33,15 @@ The [Sonoff recovery guide](../../docs/operations/sonoff-zigbee-thread.md) cover
 Recyclarr timer maintains settings, while recovery stays report-only. The
 separate `just usenet-cleanuparr-replay` lab has no production credentials or
 media mounts and is removed after testing. See the [settings rollout runbook](../../usenet-infra/docs/native-media.md#settings-ownership-and-offline-recovery-qualification).
+
+## Choose the recovery scope
+
+| What was lost | Recovery guide | What it can recover |
+| --- | --- | --- |
+| An add-on’s saved state | [Add-on backups](../../docs/operations/addon-state-backups.md) | The selected application state; verify the archive scope |
+| Cloud services or NAS settings | [Media recovery](../../usenet-infra/docs/recovery.md) | Configuration and databases; media and replacement NAS boot are excluded |
+| Filex settings or operator access | [Filex recovery](../../usenet-infra/docs/filex-recovery.md) | Portal state and separately escrowed operator material; staging payloads are excluded |
+| This checkout or its private local files | [Checkout recovery](../../usenet-infra/docs/checkout-recovery.md) | The dated preserved files and Git history; check freshness before relying on it |
+| Recovery credentials | [Secrets and state recovery](../../usenet-infra/docs/secrets-recovery.md) | Existing escrowed identities; retain the original recovery key and bound inventory |
+
+Restore into a new private directory for verification before touching surviving state. A fresh wiki build does not refresh a backup or prove a full Home Assistant restore.

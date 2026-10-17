@@ -4,7 +4,7 @@
 
 `tinyurl-service` maps short links to their destinations. MongoDB stores persistent mappings; it is a dependency, not a user-facing website. An HTTP service restart cannot recover missing database data.
 
-Use short links through the applications that create them. If a link fails, separate an unavailable TinyURL service from a missing or invalid mapping, then check database connectivity. Do not expose database administration on the LAN as a troubleshooting shortcut.
+Use short links through the applications that create them. If a link fails, separate an unavailable TinyURL service from a missing or invalid mapping, then check database connectivity. The manifest declares host port 27017, so add-on-only isolation cannot be assumed. Inspect the actual mapping and network rules; do not broaden access as a troubleshooting shortcut.
 
 Configuration belongs to the respective add-on manifests and service sources. Local development ports do not establish production exposure. Keep database credentials in the existing private configuration stores.
 

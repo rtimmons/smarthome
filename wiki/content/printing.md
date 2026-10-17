@@ -4,7 +4,7 @@ The printer service renders and sends labels to the Brother QL-810W. Its reserve
 
 ## Daily use
 
-Use the normal label interface. From the repository, `just print-check <file.png>` performs a preflight without printing; `just print <file.png>` prints. Select the intended label dimensions before sending a job.
+Open **Printer Service** from Home Assistant’s sidebar and choose **PNG Upload** to preview, print, or inspect saved labels. From the repository, `just print-check <file.png>` performs a preflight without printing; `just print <file.png>` prints. Select the intended label dimensions before sending a job.
 
 ## If a label does not print
 
@@ -17,3 +17,9 @@ The printer service listens on port 8099. The restricted VLAN is allowed to reac
 The add-on manifest and printer service settings own its endpoint and runtime configuration. Rendering requires its documented fonts and graphics libraries, so validate with the repository’s container preflight rather than assuming a host-only render represents production.
 
 See the [printer guide](../../printer/README.md) and [QL-810W troubleshooting](../../printer/docs/ql810w-troubleshooting.md). Restore saved service configuration and the fixed address before changing application targets.
+
+## Daily summaries and receipt checkboxes
+
+`snapshot-service` serves a fixture-based daily summary for print layouts and accepts receipt photos for checkbox analysis. Its `/snapshot` response is sample data, not current weather, calendar or camera information. See the [snapshot service guide](../../snapshot-service/README.md) for the implemented endpoints and limits.
+
+[Generated service settings](wiki-reference:services) list ports, sidebar access and declared dependencies, including MongoDB.

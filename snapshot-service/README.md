@@ -1,130 +1,61 @@
-# Snapshot Service
+# Daily snapshot and receipt service
 
-Backend add-on that returns a fully shaped daily snapshot JSON for the `printer` UI to render (no client-side intelligence needed). Uses TypeScript + Fastify for speed, safety, and easy local development.
+This add-on supports printed daily summaries and receipt checkbox analysis. The
+implemented `/snapshot` endpoint returns a checked-in fixture; it does not fetch
+live weather, calendars, thermostat state or camera images. Treat the fixture's
+dates and values as sample data even when the service is healthy.
 
-## Tech stack
+## Implemented endpoints
 
-- Node.js 20 (per repo `.nvmrc`), TypeScript, Fastify (or Express if preferred), npm (corepack-enabled; pnpm also fine).
-- Runtime validation + OpenAPI from one source (e.g., Zod + zod-openapi).
-- Testing: Vitest + Supertest, tsx for watch mode, msw-style mocks for outbound APIs.
-- Tooling: ESLint + Prettier + type-check + coverage in CI; Husky/lint-staged optional.
-- Config: dotenv for local, typed config loader, strict TS.
+| Method and path | Purpose |
+| --- | --- |
+| `GET /healthz` | Process liveness (`status: ok`); does not verify external data freshness |
+| `GET /snapshot` | Fixture summary validated against the snapshot schema |
+| `GET /receipt/upload` | Browser form for a photographed printed checklist |
+| `POST /receipt/analyze` | Analyze one multipart upload and return checkbox results |
 
-## Milestones
+The receipt form sends an image with optional item labels, date and receipt ID.
+The upload limit is one file of at most 15 MiB. The analyzer returns its findings;
+it does not print a label or write a Home Assistant entity. Use the
+[receipt guide](docs/receipt.md) for layout and image-processing details.
+That guide's printing demo sends a physical print job.
 
-1. **Bootstrap + mock endpoint**
-   - Scaffold service with `Justfile` targets: `setup` (install deps), `dev` (fast reload server), `lint`, `test`, `fmt`, `typecheck`, `build`.
-   - Expose `GET /snapshot` serving a single mock JSON file (fixtures) that already matches the printer contract. `just dev` should bring this up locally.
-   - Add CI job (GitHub Actions) running lint/test/typecheck.
-2. **Data contract + validation**
-   - Define `Snapshot` schema (Zod) and derive OpenAPI/JSON Schema; publish `/openapi.json`.
-   - Keep the printer dumb: snapshot includes all derived fields (today’s date, localized strings, computed highs/lows, week rows, etc.).
-   - Add contract tests that ensure fixture conforms to schema and is backward-compatible.
-3. **Sources + adapters**
-   - Weather provider adapter (e.g., OpenWeather or Tomorrow.io) behind an interface; add caching + timeouts + fallback to mock.
-   - Calendar adapter (Google Calendar/Workspaces service account + timezone handling).
-   - Optional adapters: commute (Google/Apple/Here), health metrics, reminders/tasks.
-   - Use dependency injection to swap real vs mock in dev/test.
-4. **Composition + business rules**
-   - Snapshot builder aggregates adapters, handles timezones, dedupes overlaps, clamps text lengths, and sets color/intensity hints (e.g., `status: "today"` → printer renders in red).
-   - Add feature flags for sections (weather/calendar/schedule/reminders/commute/habits/metrics).
-5. **Operations**
-   - Structured logging, request IDs, healthcheck (`/healthz`), metrics-ready hook (Prom/StatsD).
-   - Configurable port/bind address; minimal runtime image (node:24-alpine + npm prune).
-   - Add-on packaging: `addon.yaml`, container build, and hook into root `talos` CLI.
+The server registers no `/openapi.json` route and has no live weather/calendar
+adapters. Those were development proposals, not delivered capabilities.
 
-## Local dev (first cut)
+## Configuration and ownership
 
-- `cd snapshot-service`
-- `just setup` (installs npm deps via corepack)
-- `just dev` (Fastify + tsx watch on port 4010)
-- `just test` / `just lint` / `just typecheck` / `just fmt` / `just build`
-- The first `npm install` will generate `package-lock.json`, which is required for Docker/add-on builds.
+The service uses the repository-pinned Node runtime from [`.nvmrc`](../.nvmrc),
+TypeScript, Fastify and Zod. [The manifest](addon.yaml) owns deployment ports and
+packaging; the [server](src/server.ts) owns routes and runtime defaults.
 
-## First success criteria (`just dev`)
+| Environment variable | Default | Purpose |
+| --- | --- | --- |
+| `PORT` | `4010` | HTTP listener |
+| `HOST` | `0.0.0.0` | Bind address |
+| `LOG_LEVEL` | `info` | Server logging |
 
-- `just dev` runs Fastify in watch mode on port 4010 and serves `GET /snapshot` returning a static fixture from `src/fixtures/snapshot.json`.
-- Lint/test pass; `just test snapshot-service` (or equivalent) runs Vitest suite over the fixture and schema.
-- Printer add-on can hit `http://localhost:<port>/snapshot` and render without any extra logic.
+There is no Home Assistant ingress page declared for this add-on. Access depends
+on the mapped host port and network policy. Keep uploaded household photos and
+raw request evidence private.
 
-## Receipt checklist flow
+## Development and validation
 
-- `GET /receipt/upload` renders the upload UI used by the printed checklist QR.
-- `POST /receipt/analyze` accepts a photo (multipart field `receipt`) and returns which checkboxes were checked.
-- See `docs/receipt.md` for layout, processing details, and a quick demo (`cd snapshot-service && ./check.sh --print` to generate/print a checklist).
+From the repository root, `just setup` installs the pinned toolchain and
+`just dev` runs the local stack. In `snapshot-service`, use `just dev` for the
+service alone and `just test`, `just lint`, `just typecheck`, and `just build`
+for its checks. Root `just test snapshot-service` also runs the repository's
+add-on/container checks.
 
-## Proposed JSON shape (fixture example)
+If a daily summary looks old, first identify whether it came from `/snapshot`:
+that endpoint intentionally returns the fixture. For receipt failures, separate
+upload/size errors from image alignment and checkbox interpretation. A successful
+health response does not prove a photographed receipt was interpreted correctly.
 
-```json
-{
-  "generated_at": "2024-09-10T07:14:00-07:00",
-  "timezone": "America/Los_Angeles",
-  "today": { "iso_date": "2024-09-10", "weekday": "Tuesday", "label": "Tue Sep 10, 2024" },
-  "weather": {
-    "summary": "Mostly Cloudy",
-    "temperature_now_f": 68,
-    "temperature_high_f": 71,
-    "temperature_low_f": 55,
-    "feels_like_f": 67,
-    "wind_mph": 6,
-    "wind_direction": "NW",
-    "chance_of_rain_pct": 10,
-    "humidity_pct": 62,
-    "aqi": 32,
-    "uv_index": 5
-  },
-  "calendar_month": {
-    "year": 2024,
-    "month": 9,
-    "weeks": [
-      [
-        { "day": 8, "status": "past" },
-        { "day": 9, "status": "past" },
-        { "day": 10, "status": "today" }
-      ]
-    ],
-    "month_label": "September"
-  },
-  "schedule": [
-    {
-      "time": "08:30",
-      "title": "Standup",
-      "duration_minutes": 30,
-      "location": "Zoom",
-      "source": "work"
-    },
-    {
-      "time": "10:00",
-      "title": "Client Sync",
-      "duration_minutes": 60,
-      "location": "Room 2B",
-      "source": "work"
-    },
-    { "time": "12:30", "title": "Lunch w/ Alex", "location": "Cafe Grin" },
-    { "time": "15:00", "title": "Dentist", "duration_minutes": 45 },
-    { "time": "19:00", "title": "Date Night" }
-  ],
-  "reminders": ["Water plants", "Ship return by 5pm"],
-  "commute": {
-    "legs": [
-      { "label": "Home → Office", "duration_minutes": 22, "traffic": "light", "route": "101N" },
-      {
-        "label": "Office → Home",
-        "duration_minutes": 28,
-        "traffic": "moderate",
-        "route": "280S",
-        "notes": "after 6:15p"
-      }
-    ]
-  },
-  "habits": [
-    { "label": "Hydrate x8", "checked": false },
-    { "label": "Stretch", "checked": false },
-    { "label": "Meds AM", "checked": false }
-  ],
-  "metrics": { "glucose_mg_dL": 96, "hydration_cups": 1 },
-  "tips": ["Do 2h deep work before noon"]
-}
-```
+## Recovery
 
-Notes: `status: "today"` is what the printer uses to render the date in red; any future/past styling can follow the same pattern (`past`, `future`, `disabled`). Long strings should be truncated server-side to fit the receipt width.
+Rebuild the service from repository source and restore its configured endpoint.
+The fixture and schemas are source-controlled. Printer archives and printer
+application state belong to the [printer service](../printer/README.md), not this
+API. Follow [add-on state backup procedures](../docs/operations/addon-state-backups.md)
+for any separately persisted application state.

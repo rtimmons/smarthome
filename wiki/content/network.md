@@ -18,9 +18,9 @@ Ryan will request migration help once it arrives. Network settings, including DN
 
 ## DNS design
 
-Two resolvers on existing hosts provide the same local records: Home Assistant AdGuard at `192.168.1.163` and NAS AdGuard at `192.168.1.66`. Both map `wiki.home.arpa` to `192.168.1.66`. Neither depends on the other for internet DNS, and unknown names below `home.arpa` stay local.
+The [generated DNS policy](wiki-reference:network) lists the configured resolvers, local records, upstreams and filter settings directly from the repository. The resolvers use independent upstream access, and unknown names below the local zone stay local.
 
-If the AdGuard design is retained, both addresses must be advertised together by trusted-LAN DHCP after the rollout checks pass. The current policy assigns only `wiki.home.arpa`; other device names still need records. A public resolver is not a suitable fallback because it cannot answer private names. Keep the resolvers intact while the gateway migration and final DNS design remain pending.
+If the AdGuard design is retained, both addresses must be advertised together by trusted-LAN DHCP after the rollout checks pass. A public resolver is not a suitable fallback because it cannot answer private names. Keep the resolvers intact while the gateway migration and final DNS design remain pending.
 
 ## Troubleshooting and recovery
 

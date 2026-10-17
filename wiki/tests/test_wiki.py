@@ -15,6 +15,63 @@ import tool
 
 
 class ContentTests(unittest.TestCase):
+    def test_guide_and_runbook_changes_participate_in_review(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for name in ("source.ts", "guide.md", "runbook.md"):
+                (root / name).write_text("initial")
+            component = {"id": "fixture", "watch": ["source.ts"], "pages": ["guide.md"], "runbooks": ["runbook.md"]}
+            with patch.object(tool.subprocess, "check_output", return_value="source.ts\n"):
+                paths = tool.source_files(component, root)
+            before = tool.fingerprint(paths, root)
+            (root / "runbook.md").write_text("Changed recovery instructions")
+            self.assertNotEqual(before, tool.fingerprint(paths, root))
+            self.assertIn("guide.md", paths)
+
+    def test_missing_watch_path_fails_instead_of_silently_losing_coverage(self):
+        with tempfile.TemporaryDirectory() as directory, patch.object(tool.subprocess, "check_output", return_value=""):
+            with self.assertRaisesRegex(ValueError, "matches no files"):
+                tool.source_files({"id": "fixture", "watch": ["missing/src/*"]}, Path(directory))
+
+    def test_duplicate_and_unowned_guide_coverage_is_rejected(self):
+        data = tool.catalog()
+        data["components"].append(data["components"][0])
+        with self.assertRaisesRegex(ValueError, "Duplicate component"):
+            tool.check_catalog(data)
+        data = tool.catalog()
+        data["components"][0]["pages"] = []
+        with self.assertRaisesRegex(ValueError, "Guide coverage"):
+            tool.check_catalog(data)
+
+    def test_reference_links_work_from_nested_guides_and_reject_typos(self):
+        text = tool.rewrite_links("[DNS](wiki-reference:network#local-records)", "wiki/content/media/access.md", "media/access.md", {}, "HEAD")
+        self.assertEqual(text, "[DNS](../reference/network.md#local-records)")
+        with self.assertRaisesRegex(ValueError, "Unknown generated reference"):
+            tool.rewrite_links("[Bad](wiki-reference:typo)", "wiki/content/index.md", "index.md", {}, "HEAD")
+
+    def test_generated_reference_preserves_mappings_states_and_runbook_navigation(self):
+        model = {"devices": [], "controls": [], "scenes": [
+            {"id": "fixture_high", "name": "Fixture high", "script": "script.fast_scene_fixture_high",
+             "targets": [{"device": "fixture_light", "entity": "light.fixture", "state": {"state": "on", "brightness": 128}}],
+             "omitted": ["fixture_excluded"]}]}
+        with tempfile.TemporaryDirectory() as directory, patch.object(tool, "run"):
+            root = Path(directory)
+            (root / "model.json").write_text(json.dumps(model))
+            stage = root / "docs"
+            (stage / "runbooks").mkdir(parents=True)
+            with patch.object(tool, "BUILD", root):
+                tool.export_reference(stage, tool.catalog(), "HEAD")
+            services = (stage / "reference/services.md").read_text()
+            self.assertIn("27017 → 27017", services)
+            self.assertIn("disabled / retained", services)
+            scenes = (stage / "reference/scenes.md").read_text()
+            self.assertIn("light.fixture", scenes)
+            self.assertIn("128", scenes)
+            self.assertIn("fixture_excluded", scenes)
+            runbooks = (stage / "runbooks/index.md").read_text()
+            for source in tool.catalog()["imports"]:
+                self.assertIn(f"]({source})", runbooks)
+
     def test_changed_source_changes_review_fingerprint(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

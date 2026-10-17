@@ -8,6 +8,12 @@ Guidance for humans and agents working in this repository.
 - Runtimes are pinned by `.nvmrc` (Node) and `.python-version` (Python); use the self-contained nvm/pyenv installed by `just setup`.
 - “Prepare to commit” means: stage your changes (with permission), run `just test`, and drop the proposed commit message in `./msg` without staging that file.
 
+## Media privacy
+- Never commit specific movie/show/episode/song/program titles, artists, albums, release names, media filenames, artwork URLs, or identifying catalog links/IDs from live content. This applies across the repository, including wiki sources, code examples, fixtures, receipts, filenames, and commit messages.
+- Use neutral aliases (`media-001`) for operational evidence and clearly synthetic metadata (`Synthetic Track`, `Fixture Artist`) in tests. Preserve parser syntax and relationships without copying real content. Exact operational names and replacement maps belong only in ignored private evidence.
+- Configured radio stations and music favorites are an explicit exception: preserve the exact names/identifiers needed to select playback sources. This exception does not extend to incidental now-playing metadata or live response dumps.
+- Before committing, inspect the complete staged diff, added/renamed paths, and proposed commit message for content identifiers. Secret scanning alone does not establish media privacy. For a history audit, inspect all branches/tags and commit messages, including deleted files; cleaning the current tree alone is insufficient. Rewrites must also account for remote refs, stashes/reflogs, and old backup clones without changing immutable private recovery snapshots.
+
 ## Root workflows (Justfile-aligned)
 - Bootstrap everything: `just setup` (installs pinned Node/Python, builds `talos` if needed).
 - Create the ignored, repository-local Home Assistant SSH key with `just ha-ssh-key-create`. A human installs it on Home Assistant once with `just ha-ssh-key-copy`; agents must not run the copy recipe.
@@ -31,7 +37,7 @@ Guidance for humans and agents working in this repository.
 - `sonos-api` (port 5006) — Custom Sonos proxy. See `sonos-api/AGENTS.md`.
 - `node-sonos-http-api` (port 5005) — Upstream Sonos service plus local patches. See `node-sonos-http-api/AGENTS.md`.
 - `printer` (port 8099) — Label printer service. See `printer/AGENTS.md`.
-- `snapshot-service` (port 4010) — Camera snapshot helper. See `snapshot-service/AGENTS.md`.
+- `snapshot-service` (port 4010) — Fixture daily print summaries and receipt checkbox analysis. See `snapshot-service/AGENTS.md`.
 - `tinyurl-service` (port 4100) — URL shortener backed by MongoDB. See `tinyurl-service/AGENTS.md`.
 - `mongodb` — MongoDB add-on; local dev uses Homebrew for the daemon. See `mongodb/AGENTS.md`.
 

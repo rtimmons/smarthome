@@ -71,9 +71,11 @@ subsequent off-host checkpoint and any remaining acceptance gaps.
 The same four verified archives (Filex server, Filex bootstrap, NAS settings and
 Plex settings) were uploaded as ciphertext to the existing Storage Box under
 `catalog/.backups/closure-20260922`. Every remote readback matches the exact
-archive independently restored on the Mac. This is also a one-time off-host NAS
-settings checkpoint; the recurring NAS off-host schedule and original-file scope
-remain open. The daily Filex bundle continues through the normal cloud schedule.
+archive independently restored on the Mac. That September 22 checkpoint was
+one-time evidence. Recurring off-host NAS settings coverage was subsequently
+accepted; see [scheduled backups](scheduled-backups.md). Original media remains
+outside the backup scope. The daily Filex bundle continues through the normal
+cloud schedule.
 
 The final outer archive `cloud-20260922T215403Z.tar.age` passed remote readback
 and independent restore, including a second independent restore of both nested

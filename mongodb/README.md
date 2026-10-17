@@ -4,7 +4,7 @@ MongoDB Community Edition 8.x database server for Home Assistant add-ons.
 
 ## Features
 
-- **MongoDB Community Edition 8.x** - Latest major version with full-text and vector search
+- **MongoDB Community Edition** - Repository-pinned database image; see `Dockerfile`
 - **Persistent storage** - Data stored in `/data` and included in Home Assistant backups
 - **Network accessible** - Available to other add-ons via `local-mongodb:27017`
 - **FCV-compatible image** - The add-on pins MongoDB 8.2 because the persistent database uses feature compatibility version 8.2; do not deploy an 8.0 binary against it
@@ -17,7 +17,7 @@ MongoDB Community Edition 8.x database server for Home Assistant add-ons.
 Build and deploy the add-on to Home Assistant:
 
 ```bash
-# From project root or mongodb directory
+# From project root
 just deploy mongodb
 
 # Or from mongodb directory
@@ -53,7 +53,7 @@ The local MongoDB instance:
 
 - **Port**: 27017
 - **Initial database**: smarthome
-- **Data directory**: `/data/db` (mapped to add-on data storage)
+- **Data directory**: `/data` (mapped to add-on data storage)
 - **Bind address**: All interfaces (0.0.0.0 in container, localhost in local dev)
 
 ## Usage from Other Add-ons
@@ -77,17 +77,17 @@ The connection string will automatically be converted to `mongodb://localhost:27
 
 ## Data Persistence & Backups
 
-- **Container**: Data is stored in `/data/db` which is mapped to the add-on's data directory
+- **Container**: `run.sh` starts MongoDB with `--dbpath /data`, which is mapped to the add-on's data directory
 - **Home Assistant**: Automatically includes MongoDB data in backups via the `map: data` configuration
 - **Local dev**: Data is stored in `mongodb/data/` directory (not committed to git)
 
 ## MongoDB Version
 
-This add-on uses **MongoDB Community Edition 8.x**, the latest major version that includes:
-
-- Full-text search capabilities
-- Vector search support
-- Source-available under Server Side Public License (SSPL)
+The production image is pinned in `Dockerfile` on the 8.2 line to match the
+persistent database’s feature compatibility version. The local Homebrew setup
+uses a separate 8.0 development database. Do not point that older local binary
+at restored production data. The `mongodb_version` option does not override the
+custom Dockerfile’s image pin.
 
 To verify the MongoDB version in your container:
 
@@ -125,8 +125,8 @@ mongosh mongodb://localhost:27017/
 When running `just start`, you'll see several warnings that are **normal and expected**:
 
 1. **"Access control is not enabled"** (W 22120)
-   - ✅ Expected for local dev and internal Home Assistant use
-   - MongoDB runs on an isolated network accessible only to other add-ons
+   - The local recipe binds to loopback, but the add-on manifest maps host port 27017.
+   - Do not assume add-on-only isolation: inspect Supervisor port settings and network rules before relying on an unauthenticated listener.
 
 2. **"Soft rlimits for open file descriptors too low"** (W 22184)
    - ✅ Normal macOS behavior (256 vs recommended 64000)

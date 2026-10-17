@@ -4,7 +4,8 @@ This directory contains project-specific documentation for the smarthome reposit
 
 The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built from
 `wiki/` and selected runbooks here. See [wiki operations](operations/wiki.md),
-[DNS operations](operations/home-dns.md), and the [expansion plan](../wiki-plan.md).
+[DNS operations](operations/home-dns.md), the [wiki assessment](operations/wiki-audit.md),
+and the [expansion plan](../wiki-plan.md).
 
 ## Quick Start
 

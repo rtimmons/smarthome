@@ -184,8 +184,9 @@ migrations may not reverse. Stop the portal, preserve the current database and
 receipts, restore the reviewed portal-only state/pin, and repeat acceptance.
 There is no automatic database rollback.
 
-Portal state is outside the existing cloud backup allowlist. This deployment
-does not replace the independent checks in [Filex recovery](filex-recovery.md).
+Portal state is captured by its own encrypted bundle, which the ordinary cloud
+backup includes and checks for freshness. Staging payloads remain excluded.
+Follow the independent restore checks in [Filex recovery](filex-recovery.md).
 
 ## Acceptance evidence
 

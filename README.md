@@ -6,16 +6,16 @@ Smart home system packaged as Home Assistant add-ons (UI, Sonos control, printer
 ## Stack overview
 - **grid-dashboard** — Main dashboard UI (`grid-dashboard`)
 - **sonos-api** — Custom Sonos proxy (`sonos-api`)
-- **node-sonos-http-api** — Upstream Sonos service with local patches (`node-sonos-http-api`)
+- **node-sonos-http-api** — Disabled legacy Sonos backend retained for explicit rollback (`node-sonos-http-api`)
 - **printer** — Kitchen label printer service (`printer`)
-- **snapshot-service** — Camera snapshot helper (`snapshot-service`)
+- **snapshot-service** — Fixture daily print summaries and receipt checkbox analysis (`snapshot-service`)
 - **tinyurl-service** — URL shortener backed by MongoDB (`tinyurl-service`)
 - **mongodb** — MongoDB add-on used by utilities (`mongodb`)
 - **Home Assistant config** — Generated + curated config (`new-hass-configs`)
 
 ## Getting started
 - Install dependencies and build the toolchain: `just setup` (uses repo-local nvm/pyenv).
-- Run everything locally: `just dev`; if a port is busy run `just kill` and retry. Services listen on localhost: 3000 (grid-dashboard), 5006 (sonos-api), 5005 (node-sonos-http-api), 8099 (printer), 4010 (snapshot-service), 4100 (tinyurl-service).
+- Run everything locally: `just dev`; if a port is busy run `just kill` and retry. Services listen on localhost: 3000 (grid-dashboard), 5006 (sonos-api), 8099 (printer), 4010 (snapshot-service), 4100 (tinyurl-service).
 - See available recipes: `just --list` or `just addons` to view discovered add-ons.
 
 ## Deploying to Home Assistant

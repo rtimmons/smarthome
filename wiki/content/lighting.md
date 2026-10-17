@@ -4,7 +4,7 @@ Room controls select desired lighting states. The repository’s TypeScript mode
 
 ## Everyday use
 
-Use the room controls in the dashboard or normal wall switches. Room requests can coexist when they control different targets. For overlapping targets the newest request wins; whole-home all-off overrides every scope.
+Use the room controls in the dashboard or normal wall switches. The [generated control map](wiki-reference:controls) lists configured switch gestures and their scenes; [scene details](wiki-reference:scenes) show the effective targets and desired states. Room requests can coexist when they control different targets. For overlapping targets the newest request wins; whole-home all-off overrides every scope.
 
 Operational automation must call `script.fast_scene_<scene_id>`. Native `scene.turn_on` bypasses the repository’s dispatch protections.
 
@@ -26,7 +26,7 @@ The Sonoff USB dongle currently serves Zigbee only. Thread and Matter are parked
 
 The device registry owns logical names and entity mappings. Scene definitions own desired states; automation definitions connect triggers to those scenes. Generated scripts are deployment output, not a second source of truth.
 
-Read the generated device table before assuming a missing light is a new fault: temporarily removed and scene-excluded devices are intentional configuration. Do not clear those markers without the required repair evidence.
+Read the [generated device table](wiki-reference:devices) before assuming a missing light is a new fault: temporarily removed and scene-excluded devices are intentional configuration. Do not clear those markers without the required repair evidence.
 
 Begin with `just ha-state <entity_id>` and the documented inventory/health commands. Record which targets changed and which did not. Never expand a command across diagnostic endpoints or remove a Z-Wave node simply to retry a scene.
 

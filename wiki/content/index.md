@@ -8,11 +8,22 @@ Use this guide to understand the house, find the right application, and decide w
 | --- | --- |
 | Change a room’s lighting | [Dashboard and controls](dashboard.md), then [lighting](lighting.md) |
 | Play music or change speaker groups | [Audio](audio.md) |
-| Check temperature or a camera snapshot | [Climate and cameras](integrations.md) |
+| Check temperature or heat-pump fans | [Climate and fans](integrations.md) |
 | Print a label | [Printing](printing.md) |
 | Request or watch something | [Media and storage](media/usenet.md) |
 | Troubleshoot a name or connection | [Network](network.md) |
 | Deploy, back up, or recover a component | [Maintenance](maintenance.md) |
+
+## When something stops working
+
+| Symptom | First check | Next guide |
+| --- | --- | --- |
+| Wiki name fails | Try [numeric access](http://192.168.1.66/) on the home network | [Network](network.md) |
+| Dashboard fails | Open Home Assistant; check whether the whole app or one control fails | [Dashboard](dashboard.md) |
+| One light misses a scene | Check the [configured exclusions](wiki-reference:devices) before retrying | [Lighting](lighting.md) |
+| Music plays in the wrong room | Inspect the selected room and group before another grouping request | [Audio](audio.md) |
+| Download, import or copy stalls | Identify the stuck step and preserve its current state | [Media troubleshooting](media/usenet.md#troubleshooting) |
+| A label may have printed | Check the physical printer before resubmitting | [Printing](printing.md) |
 
 ## Open the right application
 
@@ -30,7 +41,9 @@ Room controls / Grid Dashboard
     ├── Home Assistant → lighting, Z-Wave, ESPHome, Nest
     ├── Sonos API → Home Assistant Sonos integration → speakers
     ├── Printer service → label printer
-    └── Snapshot / TinyURL services → cameras and utility links
+    └── TinyURL service → utility links
+
+Snapshot service → fixture daily print summaries / receipt checkbox analysis
 
 Seerr → Radarr / Sonarr → SABnzbd → canonical Storage Box
                                       ├── Plex Remote playback

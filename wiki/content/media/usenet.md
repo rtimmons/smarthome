@@ -97,7 +97,7 @@ Choose a release
 1. Open the movie or episode in its Arr application and run an interactive search.
 2. Choose an accepted release within the 100 GiB download limit. Let the owning app send it to SAB.
 3. Wait for import and completed-source cleanup before requesting the next large item.
-4. If a release fails, inspect the reason. Failed records stay retained; automatic redownload is disabled.
+4. If a release fails, inspect the reason. Failed records and payloads stay retained. Manually selected releases require a manual retry; automatically selected releases use Arr’s alternative-release search.
 5. The three historical held requests were discarded on September 22; preserve their journals rather than replaying them.
 
 Direct NZBGeek/NZBFinder cart intake, Prowlarr direct downloading, and the old cart workers are retired. New downloads use native Arr checks and cleanup.

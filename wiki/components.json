@@ -9,7 +9,8 @@
       "addons": [],
       "watch": [
         "README.md"
-      ]
+      ],
+      "runbooks": []
     },
     {
       "id": "dashboard",
@@ -24,11 +25,11 @@
         "grid-dashboard/addon.yaml",
         "grid-dashboard/ExpressServer/src/*",
         "new-hass-configs/packages/led_grid_wall.yaml",
-        "grid-dashboard/package.json",
-        "grid-dashboard/package-lock.json",
-        "grid-dashboard/Dockerfile",
-        "grid-dashboard/Justfile"
-      ]
+        "grid-dashboard/Justfile",
+        "grid-dashboard/ExpressServer/package.json",
+        "grid-dashboard/ExpressServer/package-lock.json"
+      ],
+      "runbooks": []
     },
     {
       "id": "lighting",
@@ -45,7 +46,15 @@
         "new-hass-configs/zwave-driver-plugins/*",
         "new-hass-configs/sync-tools/deploy-zwave-driver-hotfix.sh",
         "new-hass-configs/zwave-route-preferences.json",
-        "new-hass-configs/sync-tools/zwave-*.cjs"
+        "new-hass-configs/sync-tools/zwave-*.cjs",
+        "new-hass-configs/config-generator/tsconfig.json",
+        "new-hass-configs/config-generator/package.json",
+        "new-hass-configs/config-generator/package-lock.json"
+      ],
+      "runbooks": [
+        "docs/operations/sonoff-zigbee-thread.md",
+        "docs/operations/zwave-scene-ops.md",
+        "new-hass-configs/config-generator/README.md"
       ]
     },
     {
@@ -66,32 +75,30 @@
         "docs/sonos/*",
         "sonos-api/package.json",
         "sonos-api/package-lock.json",
-        "sonos-api/Dockerfile",
         "sonos-api/Justfile",
         "node-sonos-http-api/package.json",
-        "node-sonos-http-api/package-lock.json",
-        "node-sonos-http-api/Dockerfile",
-        "node-sonos-http-api/Justfile"
+        "node-sonos-http-api/Justfile",
+        "node-sonos-http-api/dependency-lock/*"
+      ],
+      "runbooks": [
+        "docs/sonos/overview.md",
+        "docs/sonos/routing-guide.md",
+        "docs/sonos/ha-migration-validation.md"
       ]
     },
     {
       "id": "integrations",
-      "title": "Climate and cameras",
+      "title": "Climate and fans",
       "pages": [
         "wiki/content/integrations.md"
       ],
-      "addons": [
-        "snapshot-service"
-      ],
+      "addons": [],
       "watch": [
-        "snapshot-service/addon.yaml",
-        "snapshot-service/*.js",
+        "new-hass-configs/manual/automations.yaml"
+      ],
+      "runbooks": [
         "docs/operations/nest-integration.md",
-        "docs/operations/esphome-fancontrollers.md",
-        "snapshot-service/package.json",
-        "snapshot-service/package-lock.json",
-        "snapshot-service/Dockerfile",
-        "snapshot-service/Justfile"
+        "docs/operations/esphome-fancontrollers.md"
       ]
     },
     {
@@ -101,15 +108,25 @@
         "wiki/content/printing.md"
       ],
       "addons": [
-        "printer"
+        "printer",
+        "snapshot-service"
       ],
       "watch": [
         "printer/addon.yaml",
         "printer/src/*",
-        "printer/package.json",
-        "printer/package-lock.json",
-        "printer/Dockerfile",
-        "printer/Justfile"
+        "printer/Justfile",
+        "printer/pyproject.toml",
+        "printer/uv.lock",
+        "snapshot-service/addon.yaml",
+        "snapshot-service/src/*",
+        "snapshot-service/package.json",
+        "snapshot-service/package-lock.json",
+        "snapshot-service/Justfile"
+      ],
+      "runbooks": [
+        "printer/README.md",
+        "printer/docs/ql810w-troubleshooting.md",
+        "snapshot-service/README.md"
       ]
     },
     {
@@ -128,12 +145,14 @@
         "mongodb/addon.yaml",
         "tinyurl-service/package.json",
         "tinyurl-service/package-lock.json",
-        "tinyurl-service/Dockerfile",
         "tinyurl-service/Justfile",
         "mongodb/package.json",
-        "mongodb/package-lock.json",
         "mongodb/Dockerfile",
         "mongodb/Justfile"
+      ],
+      "runbooks": [
+        "tinyurl-service/README.md",
+        "mongodb/README.md"
       ]
     },
     {
@@ -147,17 +166,10 @@
       "watch": [
         "usenet-infra/compose/*",
         "usenet-infra/ansible/roles/*",
-        "usenet-infra/docs/native-media.md",
-        "usenet-infra/docs/nas-plex-layout.md",
-        "usenet-infra/docs/operations.md",
-        "usenet-infra/docs/validation.md",
         "usenet-infra/scripts/backup-qnap.py",
         "usenet-infra/scripts/sab-buffered.py",
         "usenet-infra/ansible/sab-buffered.yml",
         "usenet-infra/docs/lan-ui.md",
-        "usenet-infra/docs/seerr.md",
-        "usenet-infra/docs/filex.md",
-        "usenet-infra/docs/account-setup.md",
         "usenet-infra/scripts/seerr-recovery*.py",
         "usenet-infra/ansible/seerr-recovery.yml",
         "usenet-infra/config/usenet-seerr-recovery.*",
@@ -174,6 +186,16 @@
         "usenet-infra/config/usenet-recyclarr.*",
         "usenet-infra/tests/test_seerr_safety.py",
         "usenet-infra/tests/cleanuparr_replay.py"
+      ],
+      "runbooks": [
+        "usenet-infra/docs/native-media.md",
+        "usenet-infra/docs/seerr.md",
+        "usenet-infra/docs/nas-plex-layout.md",
+        "usenet-infra/docs/filex.md",
+        "usenet-infra/docs/account-setup.md",
+        "usenet-infra/docs/repair-spool.md",
+        "usenet-infra/docs/operations.md",
+        "usenet-infra/docs/validation.md"
       ]
     },
     {
@@ -184,8 +206,13 @@
       ],
       "addons": [],
       "watch": [
-        "docs/operations/unifi-network-setup.md",
         "network-infra/dns/*"
+      ],
+      "runbooks": [
+        "docs/operations/unifi-network-setup.md",
+        "docs/operations/unifi-apple-tv-remote.md",
+        "docs/operations/home-dns.md",
+        "usenet-infra/docs/lan-ui.md"
       ]
     },
     {
@@ -209,147 +236,20 @@
         "wiki/theme/*",
         "wiki/assets/*",
         "wiki/pyproject.toml",
-        "wiki/uv.lock"
-      ]
-    }
-  ],
-  "imports": {
-    "docs/operations/sonoff-zigbee-thread.md": "runbooks/docs/operations/sonoff-zigbee-thread.md",
-    "docs/operations/zwave-scene-ops.md": "runbooks/docs/operations/zwave-scene-ops.md",
-    "new-hass-configs/config-generator/README.md": "runbooks/new-hass-configs/config-generator/README.md",
-    "docs/sonos/overview.md": "runbooks/docs/sonos/overview.md",
-    "docs/sonos/routing-guide.md": "runbooks/docs/sonos/routing-guide.md",
-    "docs/sonos/ha-migration-validation.md": "runbooks/docs/sonos/ha-migration-validation.md",
-    "docs/operations/nest-integration.md": "runbooks/docs/operations/nest-integration.md",
-    "docs/operations/esphome-fancontrollers.md": "runbooks/docs/operations/esphome-fancontrollers.md",
-    "snapshot-service/README.md": "runbooks/snapshot-service/README.md",
-    "printer/README.md": "runbooks/printer/README.md",
-    "printer/docs/ql810w-troubleshooting.md": "runbooks/printer/docs/ql810w-troubleshooting.md",
-    "tinyurl-service/README.md": "runbooks/tinyurl-service/README.md",
-    "mongodb/README.md": "runbooks/mongodb/README.md",
-    "docs/operations/unifi-network-setup.md": "runbooks/docs/operations/unifi-network-setup.md",
-    "docs/operations/unifi-apple-tv-remote.md": "runbooks/docs/operations/unifi-apple-tv-remote.md",
-    "docs/operations/addon-state-backups.md": "runbooks/docs/operations/addon-state-backups.md",
-    "usenet-infra/docs/scheduled-backups.md": "runbooks/usenet-infra/docs/scheduled-backups.md",
-    "usenet-infra/docs/native-media.md": "runbooks/usenet-infra/docs/native-media.md",
-    "usenet-infra/docs/seerr.md": "runbooks/usenet-infra/docs/seerr.md",
-    "usenet-infra/docs/nas-plex-layout.md": "runbooks/usenet-infra/docs/nas-plex-layout.md",
-    "docs/operations/wiki.md": "runbooks/docs/operations/wiki.md",
-    "docs/operations/home-dns.md": "runbooks/docs/operations/home-dns.md",
-    "wiki-plan.md": "runbooks/wiki-plan.md"
-  },
-  "nav": [
-    {
-      "Start here": "index.md"
-    },
-    {
-      "Dashboard and controls": "dashboard.md"
-    },
-    {
-      "Lighting and automation": "lighting.md"
-    },
-    {
-      "Audio": "audio.md"
-    },
-    {
-      "Climate and cameras": "integrations.md"
-    },
-    {
-      "Printing": "printing.md"
-    },
-    {
-      "Utilities": "utilities.md"
-    },
-    {
-      "Media and storage": [
-        {
-          "Overview": "media/usenet.md"
-        },
-        {
-          "Pages and logins": "media/access.md"
-        }
-      ]
-    },
-    {
-      "Network": "network.md"
-    },
-    {
-      "Maintenance and recovery": "maintenance.md"
-    },
-    {
-      "Configuration reference": "reference/index.md"
-    },
-    {
-      "Deployment evidence": "reference/deployments.md"
-    },
-    {
-      "Technical runbooks": [
-        {
-          "Sonoff Zigbee and Thread": "runbooks/docs/operations/sonoff-zigbee-thread.md"
-        },
-        {
-          "Z-Wave scene operations": "runbooks/docs/operations/zwave-scene-ops.md"
-        },
-        {
-          "Configuration generator": "runbooks/new-hass-configs/config-generator/README.md"
-        },
-        {
-          "Sonos overview": "runbooks/docs/sonos/overview.md"
-        },
-        {
-          "Sonos routing": "runbooks/docs/sonos/routing-guide.md"
-        },
-        {
-          "Sonos migration evidence": "runbooks/docs/sonos/ha-migration-validation.md"
-        },
-        {
-          "Nest integration": "runbooks/docs/operations/nest-integration.md"
-        },
-        {
-          "ESPHome fan controllers": "runbooks/docs/operations/esphome-fancontrollers.md"
-        },
-        {
-          "Camera snapshot service": "runbooks/snapshot-service/README.md"
-        },
-        {
-          "Label printer service": "runbooks/printer/README.md"
-        },
-        {
-          "Brother printer troubleshooting": "runbooks/printer/docs/ql810w-troubleshooting.md"
-        },
-        {
-          "TinyURL service": "runbooks/tinyurl-service/README.md"
-        },
-        {
-          "MongoDB service": "runbooks/mongodb/README.md"
-        },
-        {
-          "UniFi network": "runbooks/docs/operations/unifi-network-setup.md"
-        },
-        {
-          "Apple TV discovery": "runbooks/docs/operations/unifi-apple-tv-remote.md"
-        },
-        {
-          "Add-on state backups": "runbooks/docs/operations/addon-state-backups.md"
-        },
-        {
-          "Scheduled backups": "runbooks/usenet-infra/docs/scheduled-backups.md"
-        },
-        {
-          "Native media services": "runbooks/usenet-infra/docs/native-media.md"
-        },
-        {
-          "NAS and Plex storage": "runbooks/usenet-infra/docs/nas-plex-layout.md"
-        },
-        {
-          "Wiki maintenance": "runbooks/docs/operations/wiki.md"
-        },
-        {
-          "Household DNS": "runbooks/docs/operations/home-dns.md"
-        },
-        {
-          "Wiki rollout record": "runbooks/wiki-plan.md"
-        }
+        "wiki/uv.lock",
+        ".nvmrc",
+        ".python-version"
+      ],
+      "runbooks": [
+        "docs/operations/addon-state-backups.md",
+        "usenet-infra/docs/scheduled-backups.md",
+        "docs/operations/wiki.md",
+        "wiki-plan.md",
+        "usenet-infra/docs/checkout-recovery.md",
+        "usenet-infra/docs/recovery.md",
+        "usenet-infra/docs/secrets-recovery.md",
+        "usenet-infra/docs/filex-recovery.md",
+        "docs/operations/wiki-audit.md"
       ]
     }
   ]

@@ -1,52 +1,52 @@
 {
   "audio": {
-    "fingerprint": "03b6925f1eb6fe74608d1ab02d1c37b118e3a34d82833d66b5f5a0cd77801f29",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "fba5ee61c76167e3ae9f69e87210970a3d994cd56fd3396ff6fab7fdc21253a2",
+    "reason": "Reviewed the active Home Assistant backend, disabled legacy manifest, routing and migration records; canonical Sonos runbooks now participate in review fingerprints.",
+    "reviewed_at": "2026-10-16"
   },
   "dashboard": {
-    "fingerprint": "89684927f1f9580e35dae5415c458e2e279c87501d1bdf2d5f878059770b6976",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "e5be034772472f8bc493e8eb6d60e5d219af2f080fda49a42de6c0238cbdbf08",
+    "reason": "Verified fast-scene and Sonos forwarding plus LED wall configuration; repaired package watch paths and included the household guide in review coverage.",
+    "reviewed_at": "2026-10-16"
   },
   "home": {
-    "fingerprint": "51313352bc0c6538c9482050933e0c121250a673ffa1070ae11f57d89a6d75c6",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "3c872182c7dfc7ccbc66e1ff902e5baf2218e2dce5f96fbbbae6546057dd7ff6",
+    "reason": "Corrected snapshot and disabled Sonos descriptions against manifests and server code; added symptom-based entry points and reviewed the household architecture.",
+    "reviewed_at": "2026-10-16"
   },
   "integrations": {
-    "fingerprint": "d8e6a91ba4d6b18f3ac201ba42551164b2399c9654df3e32733996e9b89a1c34",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "e46d195288d1ff279573965ae97993f4571d6be55d25c67e221386d3dfdcd980",
+    "reason": "Verified Nest and manual fan automation sources; removed the incorrect camera-helper claim and assigned the print snapshot service to printing.",
+    "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "e0cc7228be12ec68e1f6d73c67b4a08f158a3660925faaebde2a9b7fc1bf8042",
-    "reason": "Reviewed the retained node-44 desk-lamp route and guide against the recorded recovery evidence; documented the Sonoff restore workaround, preserved eight Zigbee pairings, parked Thread/Matter, and verified SOPS recovery.",
+    "fingerprint": "de98973ffcd36fa97d149069a6c5f06754819a437d6fc1f897b96b4505ed7f20",
+    "reason": "Compared exported scene targets, all-off membership and automation modes with production generator functions; added control links while retaining dated radio evidence and exclusions.",
     "reviewed_at": "2026-10-16"
   },
   "maintenance": {
-    "fingerprint": "53aeade0f79364a340e6fec437bd03d7d20a38ca04db8b3a626291367b97bfb1",
-    "reason": "Document settings-only Recyclarr rollout commands and disposable Cleanuparr replay; retain report-only recovery and existing backup guidance.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "d22836c7a1cc9fe231be19a0e8bf508369077ea4e5a7260897c38fcf136a1083",
+    "reason": "Completed the wiki assessment and browser checks; reviewed generated references, single-owner runbook catalog, recovery boundaries and corrected historical backup wording.",
+    "reviewed_at": "2026-10-17"
   },
   "media": {
-    "fingerprint": "dc1ebf32178ce7b6e80b7a41a68605928852af6fc24e303465a5305123571c3c",
-    "reason": "Reviewed the complete media recovery rollout for commit, including preservation guards and private evidence boundaries; normalized service whitespace and made all safety tests runnable directly.",
+    "fingerprint": "739b66a62fa7a64627fb8d53653649102a243b189b94f2c0d31aaa7326dd09d3",
+    "reason": "Reconciled automatic versus manually selected failed-release behavior with native media policy; imported access, Filex, storage and operational runbooks and corrected nested backup coverage.",
     "reviewed_at": "2026-10-16"
   },
   "network": {
-    "fingerprint": "f87eeb374351c46fb399b8a46a40bef916ae2ff5201a02c36a1a812b475d7cd9",
-    "reason": "Record the October 16 UCG-Max-NS US order and estimated October 23\u201330 arrival; preserve the active USG/Cloud Key baseline, defer live changes until Ryan requests migration, and distinguish direct AdGuard checks from the failing gateway DNS client path.",
+    "fingerprint": "6ff97ce3dc047aeac9b14c70896bfbcd2ef2b80bdd8cfc5b891531b76d57ccfd",
+    "reason": "Generated resolver, record and filter tables from DNS policy while retaining dated gateway and DHCP acceptance limits; imported the private LAN access runbook.",
     "reviewed_at": "2026-10-16"
   },
   "printing": {
-    "fingerprint": "9b004461a2bce554494a738f15f68fe62b6a9d3efd65d4bf0f9a647009ac8e30",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "3614ace3dd4e9e36021dee7b3a16e555cb4b2b7351eb570982dc4f5076ea230e",
+    "reason": "Verified snapshot and receipt routes and printer instructions; replaced proposed snapshot features with implemented behavior and corrected Python and TypeScript source watches.",
+    "reviewed_at": "2026-10-16"
   },
   "utilities": {
-    "fingerprint": "94893f532ff102330ba8cd26060a817fb63e2ba8b2523927df7678e0ca3f5564",
-    "reason": "Reviewed the component guide against current sources and runtime/dependency ownership; generated references preserve desired status and exclusions. Wiki expansion adds documentation and DNS without changing component operations.",
-    "reviewed_at": "2026-10-09"
+    "fingerprint": "685a67e7b4a40d6422dc10ca66bee15d947a547dd61fed6cd14adae06c547281",
+    "reason": "Checked MongoDB entrypoint, image pin and host port declaration; corrected data path and isolation claims and retained TinyURL database recovery guidance.",
+    "reviewed_at": "2026-10-16"
   }
 }

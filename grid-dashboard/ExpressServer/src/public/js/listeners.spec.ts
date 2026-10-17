@@ -105,8 +105,8 @@ describe('listeners banner formatting', () => {
             Event: {
                 State: {
                     currentTrack: {
-                        title: 'Teardrop',
-                        artist: 'Massive Attack',
+                        title: 'Synthetic Track',
+                        artist: 'Fixture Artist',
                         absoluteAlbumArtUri: './sonos/Kitchen/artwork',
                     },
                 },
@@ -127,7 +127,7 @@ describe('listeners banner formatting', () => {
         expect(calls).to.deep.equal([
             ['freshness', 'stale'],
             ['art', './sonos/Kitchen/artwork'],
-            ['track', 'Teardrop — Massive Attack (stale 3s)'],
+            ['track', 'Synthetic Track — Fixture Artist (stale 3s)'],
             ['freshness', 'unknown'],
             ['art', ''],
             ['track', ''],
@@ -176,12 +176,12 @@ describe('listeners banner formatting', () => {
 
     it('formats standard tracks with em dash separator', () => {
         const banner = listeners.formatBannerText({
-            title: 'Teardrop',
-            artist: 'Massive Attack',
+            title: 'Synthetic Track',
+            artist: 'Fixture Artist',
             stationName: '',
         });
 
-        expect(banner).to.equal('Teardrop — Massive Attack');
+        expect(banner).to.equal('Synthetic Track — Fixture Artist');
     });
 
     it('parses SiriusXM metadata embedded in the title', () => {
@@ -197,12 +197,12 @@ describe('listeners banner formatting', () => {
 
     it('falls back to the station name when artist is unavailable', () => {
         const banner = listeners.formatBannerText({
-            title: 'Morning Edition',
+            title: 'Synthetic News Program',
             artist: '',
             stationName: 'NPR',
         });
 
-        expect(banner).to.equal('Morning Edition — NPR');
+        expect(banner).to.equal('Synthetic News Program — NPR');
     });
 
     it('prefers the active intent banner over recent intent', () => {

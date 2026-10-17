@@ -1,5 +1,5 @@
 # Snapshot Service Addon Justfile
-# Camera snapshot helper service
+# Daily print summary and receipt analysis service
 
 # Import shared libraries
 import "../talos/just/common.just"

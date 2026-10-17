@@ -18,11 +18,23 @@ The preview listens only on localhost port 8765. Python dependencies are locked
 under `wiki/`; the wrapper selects the repository's pinned Python. Model export
 uses the existing pinned Node/TypeScript toolchain.
 
-Household explanations live in `wiki/content`. `wiki/components.json` explicitly
-lists imported canonical runbooks, component ownership, and watched source paths.
+Household explanations live in `wiki/content`. `wiki/components.json` assigns
+household pages, imported canonical runbooks,
+add-ons and watched source paths to a single component owner. Build-time navigation
+and the runbook directory use those assignments and each page’s first heading;
+there is no separate import or runbook navigation list to keep synchronized.
 The build stages only these sources and reviewed assets, never the whole checkout.
 Links to imported runbooks become local links; other tracked source references
 remain links to the repository. Private/ignored file links fail validation.
+
+Keep specific media titles, artists, albums, release filenames, artwork links,
+and identifying catalog links/IDs out of wiki prose, examples, and imported
+receipts. Use neutral aliases for operational evidence and synthetic test data.
+Configured radio stations and favorites may retain the exact names needed for
+playback; incidental now-playing metadata must stay private. Review the full
+staged diff and commit message as well as the rendered pages: a secret scan or
+successful wiki build does not establish media privacy. See the repository
+[media privacy rules](../../AGENTS.md#media-privacy).
 
 After reviewing an affected guide, run
 `just wiki-review <component> '<specific reason>'`. This records the current source
@@ -31,8 +43,27 @@ reason. The checker enforces that review happened, not that the explanation is
 correct. Update source and narrative together; do not acknowledge an unfamiliar
 change simply to make a check green.
 
-Generated reference tables show desired configuration. Temporarily removed and
-excluded devices, and disabled add-ons, remain visible. Do not treat source
+Generated reference pages show desired configuration. Services include ingress,
+network mode, declared host mappings and dependencies from add-on manifests.
+Device all-off membership and scene targets use the same functions as deployment,
+including exclusions, blocklists and entity deduplication. Controls show generated
+automation modes without webhook IDs or action payloads. DNS records, resolvers
+and filter states come from `network-infra/dns/policy.json`; runtime versions come
+from the pinned version files. The coverage page lists ownership and review reasons.
+
+Guide and imported-runbook contents participate in their owner’s fingerprint.
+The checker rejects duplicate ownership, unowned guides/add-ons, and watch patterns
+that match no files. It also validates rendered links, anchors and local assets.
+New source files in a watched directory participate before staging.
+
+Keep explanations, recovery decisions and dated observations authored. Never
+generate live availability from desired state, and never ingest `.storage`,
+private environment files, media listings or credential-bearing runtime dumps.
+The control reference covers the TypeScript registry only; manual YAML, package
+and UI-owned automations remain in their canonical runbooks.
+
+Temporarily removed and excluded devices, and disabled add-ons, remain visible.
+Do not treat source
 configuration as a claim that a device is online. Runbook observations keep their
 own dates; a new build does not refresh those dates.
 

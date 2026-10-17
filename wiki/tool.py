@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+from collections import Counter
 from datetime import datetime, timezone
 import hashlib
 from html import escape
@@ -56,11 +57,11 @@ def source_files(component, root=ROOT):
     # from becoming review inputs. Explicit new source paths can be reviewed pre-commit.
     known = set(subprocess.check_output(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"], text=True).splitlines())
     import fnmatch
-    matched = set()
+    matched = set(component.get("pages", []) + component.get("runbooks", []))
     for pattern in component["watch"]:
         matches = {p for p in known if fnmatch.fnmatchcase(p, pattern) and (root / p).is_file()}
-        if not any(c in pattern for c in "*?[") and (root / pattern).is_file():
-            matches.add(pattern)
+        if not matches:
+            raise ValueError(f"{component['id']}: watched source matches no files: {pattern}")
         matched.update(matches)
     return sorted(matched)
 
@@ -71,7 +72,27 @@ def fingerprint(paths, root=ROOT):
 
 
 def catalog():
-    return json.loads(CATALOG.read_text())
+    data = json.loads(CATALOG.read_text())
+    data["imports"] = {source: "runbooks/" + source for c in data["components"] for source in c.get("runbooks", [])}
+    return data
+
+
+def check_catalog(data):
+    components = data["components"]
+    for label, values in (
+        ("component", [c["id"] for c in components]),
+        ("page", [p for c in components for p in c["pages"] + c.get("runbooks", [])]),
+        ("add-on", [a for c in components for a in c.get("addons", [])]),
+    ):
+        duplicates = sorted(key for key, count in Counter(values).items() if count > 1)
+        if duplicates:
+            raise ValueError(f"Duplicate {label} ownership: {duplicates}")
+    expected = {str(p.relative_to(ROOT)) for p in (PROJECT / "content").rglob("*.md")}
+    actual = {p for c in components for p in c["pages"]}
+    if expected != actual:
+        raise ValueError(f"Guide coverage differs: {sorted(expected ^ actual)}")
+    for source in [p for c in components for p in c["pages"] + c.get("runbooks", [])]:
+        safe_file(source)
 
 
 def check_reviews():
@@ -92,6 +113,7 @@ def check_reviews():
         errors.append(f"Add-on coverage differs: {sorted(manifests ^ covered)}")
     if errors:
         raise ValueError("Documentation review required:\n" + "\n".join(errors))
+    check_catalog(data)
 
 
 def review(component_id, reason):
@@ -117,30 +139,121 @@ def table(headers, rows):
                       *["| " + " | ".join(cell(x) for x in row) + " |" for row in rows]]) + "\n"
 
 
-def export_reference(stage):
+REFERENCE_PAGES = {
+    "Overview": "index.md", "Services": "services.md", "Devices": "devices.md",
+    "Scenes": "scenes.md", "Controls and automations": "controls.md", "DNS policy": "network.md",
+    "Documentation coverage": "coverage.md", "Deployment evidence": "deployments.md",
+}
+
+
+def page_title(source):
+    match = re.search(r"^# (.+)$", safe_file(source).read_text(), re.M)
+    if not match:
+        raise ValueError(f"Page needs a title: {source}")
+    return match[1].strip()
+
+
+def navigation(data):
+    def guides(component):
+        return [{page_title(p): str(Path(p).relative_to("wiki/content"))} for p in component["pages"]]
+    by_id = {c["id"]: c for c in data["components"]}
+    return [{"Start here": "index.md"},
+            {"Household": [item for key in ("dashboard", "lighting", "audio", "integrations", "printing", "utilities")
+                           for item in guides(by_id[key])]},
+            {"Media": guides(by_id["media"])}, {"Network": "network.md"},
+            {"Maintenance": "maintenance.md"},
+            {"Reference": [{title: "reference/" + path} for title, path in REFERENCE_PAGES.items()]},
+            {"Runbooks": "runbooks/index.md"}]
+
+
+def export_reference(stage, data, revision):
     # Execute the model in its existing pinned Node/TypeScript environment.
     run(["just", "wiki-model-export"], cwd=ROOT)
     model = json.loads((BUILD / "model.json").read_text())
+    def source_link(source):
+        return f"[{source}]({source_url(source, revision)})"
+
+    def generated(name, title, sources, body):
+        target = stage / "reference" / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(f"# {title}\n\nGenerated at build time from {', '.join(source_link(s) for s in sources)}. "
+                          "This is repository configuration, not live state or deployment evidence.\n\n" + body)
+
     services = []
     for path in sorted(ROOT.glob("*/addon.yaml")):
         addon = yaml.safe_load(path.read_text())
         services.append([addon["name"], path.parent.name,
                          "disabled / retained" if addon.get("disabled") else "enabled",
-                         ", ".join(str(p) for p in addon.get("ports", {})),
+                         "yes" if addon.get("ingress") else "no",
+                         "host" if addon.get("host_network") else "container",
+                         ", ".join(f"{p} → {host if host is not None else 'unmapped'}" for p, host in addon.get("ports", {}).items()) or "—",
                          ", ".join(addon.get("depends_on", [])) or "—"])
-    target = stage / "reference"
-    target.mkdir(parents=True)
-    (target / "index.md").write_text("# Repository configuration\n\n"
-        "These tables are generated from repository sources. They do not establish live availability, "
-        "device inclusion, or a successful deployment.\n\n## Services\n\n" +
-        table(["Service", "Source", "Desired status", "Ports", "Dependencies"], services) +
-        "\n## Devices\n\n" + table(["Logical name", "Entity", "Type", "Inventory", "Scenes", "Include in all-off", "Allow scene off"],
-        [[d["key"], d["entity"], d["type"], d["inventoryStatus"], d["sceneStatus"], d["includeInAllOff"], d["allowSceneTurnOff"]]
-         for d in model["devices"]]) + "\n## Scenes and rooms\n\n"
-        "Room labels below come from scene names; targets are declared membership, before the generator "
-        "applies exclusions and health filtering. Use fast-scene scripts for operation.\n\n" +
-        table(["Scene / room", "Operational script", "Declared targets"],
-              [[s["name"], s["script"], ", ".join(s["targets"])] for s in model["scenes"]]))
+    generated("services.md", "Services", [str(p.relative_to(ROOT)) for p in sorted(ROOT.glob("*/addon.yaml"))],
+              "Ports show container → configured host mappings. Supervisor options and firewall rules can change actual access. "
+              "A declared host mapping is not add-on-only isolation. Dependencies list manifest build/deploy ordering; "
+              "external devices and Home Assistant integrations are described in the guides.\n\n" +
+              table(["Service", "Source directory", "Desired status", "HA sidebar", "Network", "Ports", "Dependencies"], services))
+    generated("devices.md", "Devices", ["new-hass-configs/config-generator/src/devices.ts", "new-hass-configs/config-generator/src/scenes.ts"],
+              "Logical names can alias the same entity. All-off membership below comes from the actual scene generator, "
+              "including its blocklist, diagnostic-endpoint and scene-exclusion rules. An inventory removal marker alone "
+              "does not remove a declared scene target; live health filtering still runs during dispatch.\n\n" +
+              table(["Logical name", "Entity", "Type", "Inventory", "Scene status", "In generated all-off", "Scene off permitted"],
+                    [[d["key"], d["entity"], d["type"], d["inventoryStatus"], d["sceneStatus"],
+                      "yes" if d["effectiveAllOff"] else "no", "yes" if d["allowSceneTurnOff"] else "no"] for d in model["devices"]]))
+    scene_body = "Use these fast-scene scripts for operation. Targets and desired states use the same generator as deployment, "
+    scene_body += "after static exclusions and entity deduplication, before live health/mismatch filtering. Brightness is 0–255.\n\n"
+    scene_body += "\n".join(f"- [{s['name']}](#{s['id'].replace('_', '-')})" for s in model["scenes"]) + "\n\n"
+    for scene in model["scenes"]:
+        scene_body += f"## {scene['name']} {{#{scene['id'].replace('_', '-')}}}\n\n`{scene['script']}`\n\n"
+        scene_body += table(["Logical name", "Entity", "Desired state"],
+                            [[t["device"], t["entity"], json.dumps(t["state"], sort_keys=True)] for t in scene["targets"]])
+        if scene["omitted"]:
+            scene_body += "\nDeclared names omitted by exclusion or entity deduplication: " + ", ".join(f"`{s}`" for s in scene["omitted"]) + ".\n"
+        scene_body += "\n"
+    generated("scenes.md", "Scenes and rooms", ["new-hass-configs/config-generator/src/scenes.ts", "new-hass-configs/config-generator/src/scene-generation.ts"], scene_body)
+    generated("controls.md", "Controls and automations", ["new-hass-configs/config-generator/src/automations.ts", "new-hass-configs/config-generator/src/automation-generation.ts"],
+              "This table covers the TypeScript registry. Webhook identifiers and action payloads are deliberately omitted. "
+              "Mode is the generated mode: interactive scene callers use restart even when a definition says single. "
+              "Manual YAML, package and UI-owned automations are outside this table; see the climate and maintenance guides.\n\n" +
+              table(["Control", "Trigger", "Action", "Conditions", "Effective mode"],
+                    [[a["name"], "; ".join(a["triggers"]), "; ".join(a["actions"]),
+                      "see source" if a["conditional"] else "none", a["mode"]] for a in model["controls"]]))
+    policy = json.loads(safe_file("network-infra/dns/policy.json").read_text())
+    generated("network.md", "DNS policy", ["network-infra/dns/policy.json"],
+              "Client DHCP adoption and gateway migration remain dated operational decisions in the [network guide](../network.md). "
+              "This policy does not establish which resolvers a client is using.\n\n" +
+              table(["Setting", "Configured value"], [["Local zone", policy["zone"]], ["Resolvers", ", ".join(policy["resolvers"])],
+                    ["Upstreams", ", ".join(policy["upstream_dns"])], ["Fallbacks", ", ".join(policy["fallback_dns"]) or "none"]]) +
+              "\n## Local records\n\n" + table(["Name", "Address"], sorted(policy["records"].items())) +
+              "\n## Filter policy\n\n" + table(["Filter", "Enabled"], [[f["name"], f["enabled"]] for f in policy["filters"]]))
+    reviews = json.loads(REVIEWS.read_text())
+    coverage = "Every guide and imported runbook has one component owner. Changes to either, or to its watched sources, require review. "
+    coverage += "A review records a human/agent assessment of documentation; it is not a hardware acceptance test.\n\n"
+    runbooks = "# Technical runbooks\n\nCanonical repository guides, copied into this site at build time. "
+    runbooks += "Dated observations retain their original limits. [Household tasks](../index.md) are the starting point for everyday use.\n\n"
+    for component in data["components"]:
+        coverage += f"## {component['title']}\n\n"
+        for source in component["pages"]:
+            coverage += f"- [{page_title(source)}](../{Path(source).relative_to('wiki/content')})\n"
+        record = reviews[component["id"]]
+        coverage += f"\nReviewed: {record['reviewed_at']}. Reason: {escape(record['reason'])}\n\n"
+        coverage += f"{len(source_files(component))} source files; {len(component.get('runbooks', []))} imported runbooks.\n\n"
+        coverage += "Watched sources: " + ", ".join(f"`{p}`" for p in component["watch"]) + ".\n\n"
+        if component.get("runbooks"):
+            runbooks += f"## {component['title']}\n\n"
+            for source in component["runbooks"]:
+                runbooks += f"- [{page_title(source)}]({source})\n"
+            runbooks += "\n"
+    generated("coverage.md", "Documentation coverage", ["wiki/components.json", "wiki/reviews.json"], coverage)
+    (stage / "runbooks/index.md").write_text(runbooks)
+    generated("index.md", "Repository configuration", ["wiki/components.json"],
+              f"{len(services)} add-ons · {len(model['devices'])} logical device entries · {len(model['scenes'])} scenes · "
+              f"{len(model['controls'])} generated automations · {len(data['imports'])} imported runbooks.\n\n" +
+              "\n".join(f"- [{title}]({path})" for title, path in REFERENCE_PAGES.items() if path != "index.md") +
+              "\n\n## Services\n\n[Service settings and dependencies](services.md).\n\n## Devices\n\n[Device inventory and all-off membership](devices.md).\n\n"
+              "## Scenes and rooms\n\n[Effective scene targets](scenes.md) and [controls](controls.md).\n\n"
+              "## Build runtimes\n\n" + table(["Runtime", "Repository pin"], [["Node", safe_file(".nvmrc").read_text().strip()],
+                                                                           ["Python", safe_file(".python-version").read_text().strip()]]))
 
 
 def publication_inputs():
@@ -157,9 +270,13 @@ def publication_inputs():
 def rewrite_links(text, source, destination, mapping, revision):
     def replace(match):
         prefix, reference, suffix = match.groups()
-        if reference == "wiki-reference:inventory":
-            return prefix + os.path.relpath("reference/index.md", Path(destination).parent) + suffix
         parsed = urlsplit(reference)
+        if parsed.scheme == "wiki-reference":
+            filename = "index.md" if parsed.path == "inventory" else parsed.path + ".md"
+            if filename not in REFERENCE_PAGES.values():
+                raise ValueError(f"Unknown generated reference: {reference}")
+            result = os.path.relpath("reference/" + filename, Path(destination).parent)
+            return prefix + result + ("#" + parsed.fragment if parsed.fragment else "") + suffix
         if parsed.scheme or parsed.netloc or not parsed.path:
             return match.group(0)
         resolved = (ROOT / source).parent.joinpath(unquote(parsed.path)).resolve()
@@ -275,7 +392,7 @@ def build(receipts=None):
         body = safe_file(source).read_text()
         asset_mapping = {str(p.relative_to(ROOT)): "assets/" + p.name for p in (PROJECT / "assets").iterdir() if p.is_file()}
         body = rewrite_links(body, source, destination, {**mapping, **asset_mapping}, revision)
-        owner = next((c for c in data["components"] if source in c["pages"]), None)
+        owner = next((c for c in data["components"] if source in c["pages"] + c.get("runbooks", [])), None)
         reviewed = reviews[owner["id"]]["reviewed_at"] if owner else "See the dated observations in this runbook"
         committed = subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e", f"{revision}:{source}"],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
@@ -288,13 +405,18 @@ def build(receipts=None):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(body)
     shutil.copytree(PROJECT / "assets", stage / "assets")
-    export_reference(stage)
+    export_reference(stage, data, revision)
     deployment_page = "# Deployment evidence\n\nOnly successful wrapped deployments create these receipts. "
     deployment_page += "An absent component is unverified, not unavailable. Historical observations remain in the runbooks.\n\n"
     deployment_page += table(["Scope", "Completed at (UTC)", "Source revision", "Working tree", "Evidence limit"],
                             [[name, r["completed_at"], r["revision"][:12], r["dirty"], "Deployment command succeeded"]
                              for name, r in sorted(receipts.items())])
     (stage / "reference/deployments.md").write_text(deployment_page)
+    for path in [*(stage / "reference").glob("*.md"), stage / "runbooks/index.md"]:
+        with path.open("a") as page:
+            page.write(f"\n\n---\n\nSource revision: `{revision[:12]}`"
+                       f"{' + working-tree changes' if dirty else ''}. Built: {built_at}. "
+                       "Build time is not a live verification time.\n")
     config = {
         "site_name": "Smarthome field guide", "site_url": "http://wiki.home.arpa/",
         "docs_dir": str(stage), "site_dir": str(output / "site"),
@@ -302,8 +424,8 @@ def build(receipts=None):
                   "color_mode": "light", "user_color_mode_toggle": False, "analytics": None,
                   "highlightjs": False, "navigation_depth": 3},
         "plugins": [{"search": {"prebuild_index": False}}],
-        "markdown_extensions": ["attr_list", "tables", "fenced_code", "toc"],
-        "extra_css": ["assets/wiki.css"], "nav": data["nav"],
+        "markdown_extensions": ["attr_list", "tables", "fenced_code", "toc", "def_list"],
+        "extra_css": ["assets/wiki.css"], "nav": navigation(data),
         "validation": {"links": {"not_found": "warn", "unrecognized_links": "warn", "anchors": "warn"}},
     }
     config_path = output / "mkdocs.yml"

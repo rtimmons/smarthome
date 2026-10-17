@@ -10,8 +10,9 @@ outside 1Password on September 11, 2026. No private master is installed on the N
 is still unsafe.** Published revision `6fa9174` restored 24 vault entries and 15
 NAS bundle entries, verified six keypairs, and restored zero new files on repeat.
 See the [saved report](../recovery/drills/20260911T194408Z.json).
-The Usenet prerequisite is complete; active work has returned to
-[curated discovery](discovery.md). The original inventory's external-dependency
+The September drill completed that prerequisite. Current operation and closure
+limits are in the [current handoff](../../plan.md); historical next steps below
+are not instructions to repeat setup. The original inventory's external-dependency
 statuses are an inventory-time snapshot: its `planned` master/store and
 `local-backup-only` archive labels predate the verified NAS retrieval and clone
 drill. The vault cryptographically binds the entire inventory. Preserve that
@@ -315,7 +316,7 @@ inspection; no application or Terraform process is started automatically.
 
 ## Full clone drill and remaining acceptance
 
-The recovery implementation is published on `origin/usenet`. Inject the master
+Current recovery drills use published `master` by default. Inject the master
 into one process and run:
 
 ```sh
