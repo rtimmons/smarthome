@@ -212,14 +212,6 @@
           "entityId": "light.light_living_cornerspot"
         },
         {
-          "deviceKey": "living_palm",
-          "entityId": "light.light_living_palm",
-          "formerNodeId": 2,
-          "status": "temporarily_removed",
-          "removedAt": "2026-08-21",
-          "note": "Removed from the failed-node list and Home Assistant registries; preserve this desired entity identity for a later re-inclusion."
-        },
-        {
           "deviceKey": "outdoor_cafe",
           "entityId": "light.light_outdoor_cafe",
           "formerNodeId": 16,

@@ -162,12 +162,6 @@ export const devices: DeviceRegistry = {
       type: "zwave_switch_light",
       capabilities: ["on_off"]
     },
-    living_palm: {
-      entity: "light.light_living_palm",
-      type: "zwave_switch_light",
-      inventoryStatus: "temporarily_removed",
-      capabilities: ["on_off"]
-    },
     living_abovetv: {
       entity: "light.light_living_abovetv",
       type: "zwave_zen31_rgbw",

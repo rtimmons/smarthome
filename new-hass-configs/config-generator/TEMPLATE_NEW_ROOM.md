@@ -170,9 +170,6 @@ export const scenes: SceneRegistry = {
       // Accent lights - medium even in high mode
       { device: "living_windowsillleft", state: "on", brightness: 180 },
       { device: "living_windowsillright", state: "on", brightness: 180 },
-
-      // Decorative lights - on but dim
-      { device: "living_palm", state: "on", brightness: 150 },
     ],
     switches: {
       living_ledwall: "on"
@@ -187,7 +184,6 @@ export const scenes: SceneRegistry = {
       // Accent lights off in medium mode
       { device: "living_windowsillleft", state: "off" },
       { device: "living_windowsillright", state: "off" },
-      { device: "living_palm", state: "off" },
     ],
     switches: {
       living_ledwall: "off"
@@ -212,7 +208,6 @@ export const scenes: SceneRegistry = {
       { device: "living_nook", state: "off" },
       { device: "living_windowsillleft", state: "off" },
       { device: "living_windowsillright", state: "off" },
-      { device: "living_palm", state: "off" },
     ],
     switches: {
       living_ledwall: "off"

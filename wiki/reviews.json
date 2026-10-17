@@ -20,8 +20,8 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "32b7104107401e40a23c5e2d559cfc90b15d2e95c363cad2e60214682e33a968",
-    "reason": "Zero-second transitions now cover all dimmable scene platforms and manual Home Assistant controls through a transition-only light profile; documented supported hardware minimums, offline verification limits, and preserved radio pacing.",
+    "fingerprint": "757d38acb9eecf835d9a0b5f59c37f854158a3ab9449333799b46f596e1e45c8",
+    "reason": "Permanently retired the dead living palm light: removed its device entry, living-room and all-off targets, and catalog reservation; updated existing test expectations and retained the outdoor cafe temporary-removal workflow.",
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {

@@ -444,11 +444,6 @@ export const scenes: SceneRegistry = {
         brightness: 255
       },
       {
-        device: "living_palm",
-        state: "on",
-        brightness: 255
-      },
-      {
         device: "living_abovetv",
         state: "on",
         brightness: 255,
@@ -514,10 +509,6 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_sliderring",
-        state: "off"
-      },
-      {
-        device: "living_palm",
         state: "off"
       },
       {
@@ -596,10 +587,6 @@ export const scenes: SceneRegistry = {
       },
       {
         device: "living_sliderring",
-        state: "off"
-      },
-      {
-        device: "living_palm",
         state: "off"
       },
       {

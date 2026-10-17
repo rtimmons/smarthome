@@ -28,7 +28,7 @@ describe("wiki model", () => {
 
   it("keeps intentionally absent inventory visible without inventing a static exclusion", () => {
     const model = buildWikiModel();
-    const absent = model.devices.find((device) => device.key === "living_palm")!;
+    const absent = model.devices.find((device) => device.key === "outdoor_cafe")!;
     expect(absent.inventoryStatus).toBe("temporarily_removed");
     expect(model.scenes.some((scene) => scene.targets.some((target) => target.entity === absent.entity))).toBe(true);
   });

@@ -77,12 +77,14 @@ Private controller backups exist before repair and after secure inclusion. The i
 
 Before removing a failed node, save a Z-Wave JS NVM backup. Submit one failed-node removal request and wait for the controller response. If the request is accepted but the WebSocket completion event times out, do not submit a duplicate removal: inspect the persistent Z-Wave log and controller state first. When a later operation reports `node_not_found`, restart only the Z-Wave JS add-on once to reconcile its runtime with the controller NVM, then verify the node is absent from the fresh startup list and that Home Assistant removed the corresponding active device and entity registry entries.
 
-As of 2026-08-21, former nodes 2 (`living_palm`, Minoston MP22ZD) and 16 (`outdoor_cafe`, Minoston MP22ZD) are intentionally absent. Their desired entity IDs remain in `devices.ts` with `inventoryStatus: "temporarily_removed"`; inventory reports them separately and does not count their expected absence as registry drift. The post-removal controller baseline is 31 nodes, all Alive and ready, with zero unhealthy Z-Wave nodes.
+Former nodes 2 (`living_palm`, Minoston MP22ZD) and 16 (`outdoor_cafe`, Minoston MP22ZD) were intentionally removed on 2026-08-21. That day's post-removal controller baseline was 31 nodes, all Alive and ready, with zero unhealthy Z-Wave nodes.
 
-To re-add either plug later:
+On 2026-10-16, Ryan permanently retired the dead living palm light. Its device entry, scene targets, and product-catalog reference have been removed; do not reserve or restore `light.light_living_palm`. Only `outdoor_cafe` retains its desired entity ID in `devices.ts` with `inventoryStatus: "temporarily_removed"`; inventory reports that expected absence separately from registry drift.
+
+To re-add the outdoor cafe plug later:
 
 1. Exclude or factory-reset the plug as needed, then include it normally.
-2. Restore its desired entity ID (`light.light_living_palm` or `light.light_outdoor_cafe`).
+2. Restore its desired entity ID (`light.light_outdoor_cafe`).
 3. Remove `inventoryStatus: "temporarily_removed"` from `devices.ts`.
 4. Run `just zwave-inventory`; the entity must be active, healthy, and free of registry drift before relying on scenes.
 

@@ -304,7 +304,7 @@ describe("Scene Generation", () => {
 
       const calls = generateFastCalls(scenes.living_room_high);
 
-      expect(calls).toHaveLength(13);
+      expect(calls).toHaveLength(12);
       expect(
         calls.flatMap((call: any) => call.target.entity_id)
       ).not.toContain("switch.light_living_sillleftpower");

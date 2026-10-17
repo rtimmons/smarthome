@@ -75,16 +75,11 @@ describe("Z-Wave inventory audit", () => {
     ).toBe(false);
   });
 
-  it("keeps the desired identities for temporarily removed nodes 2 and 16", () => {
+  it("keeps the desired identity for temporarily removed node 16", () => {
     const configured = flattenConfiguredDevices();
 
     expect(configured).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({
-          name: "living_palm",
-          entityId: "light.light_living_palm",
-          inventoryStatus: "temporarily_removed",
-        }),
         expect.objectContaining({
           name: "outdoor_cafe",
           entityId: "light.light_outdoor_cafe",
