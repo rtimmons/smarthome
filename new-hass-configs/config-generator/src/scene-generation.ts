@@ -19,6 +19,7 @@ export interface HAServiceCall {
 
 export interface HAScript {
   alias: string;
+  description?: string;
   mode: "single" | "restart" | "queued" | "parallel";
   max?: number;
   fields?: Record<string, any>;
@@ -937,6 +938,57 @@ function generateFastSceneSequence(
   return sequence;
 }
 
+function getFastSceneVoiceMetadata(sceneId: string, scene: Scene) {
+  const dispatchGuidance =
+    "Use this script for the lighting request. Call without origin_entity_id for voice requests.";
+  if (sceneId === "all_off") {
+    return {
+      alias: "All lights off",
+      description: `Turn off all scene-controlled lighting throughout the house while keeping smart-light power outlets on. Phrases: \"all lights off\", \"turn all the lights off\", \"whole house off\". ${dispatchGuidance}`,
+    };
+  }
+  if (sceneId === "led_grid_wall_ten_percent") {
+    return {
+      alias: "LED wall ten percent",
+      description: `Set the LED wall master brightness to ten percent, preserving its selected animation. Phrases: \"LED wall ten percent\", \"set the wall to ten percent\". ${dispatchGuidance}`,
+    };
+  }
+
+  const preset = sceneId.match(/_(high|medium|low|off)$/)?.[1];
+  const room = scene.name.replace(/\s+-\s+(High|Medium(?:\s+\([^)]*\))?|Low|Off)$/, "");
+  const spokenRoom = room.toLowerCase();
+  const presets: Record<string, { label: string; action: string; phrases: string[] }> = {
+    high: {
+      label: "bright",
+      action: `Set ${spokenRoom} lighting to the bright (high) preset`,
+      phrases: [`${spokenRoom} bright`, `${spokenRoom} high`, `make the ${spokenRoom} bright`],
+    },
+    medium: {
+      label: "medium",
+      action: `Set ${spokenRoom} lighting to the medium preset`,
+      phrases: [`${spokenRoom} medium`, `set the ${spokenRoom} to medium`, `${spokenRoom} moderate lighting`],
+    },
+    low: {
+      label: "dim",
+      action: `Set ${spokenRoom} lighting to the dim (low) preset`,
+      phrases: [`${spokenRoom} dim`, `${spokenRoom} low`, `dim the ${spokenRoom}`],
+    },
+    off: {
+      label: "off",
+      action: `Turn off the scene-controlled lighting in the ${spokenRoom}`,
+      phrases: [`${spokenRoom} off`, `turn off the ${spokenRoom} lights`],
+    },
+  };
+  const voice = preset ? presets[preset] : undefined;
+  return voice ? {
+    alias: `${room} ${voice.label}`,
+    description: `${voice.action}. Phrases: ${voice.phrases.map(phrase => JSON.stringify(phrase)).join(", ")}. ${dispatchGuidance}`,
+  } : {
+    alias: scene.name.replace(/\s+-\s+/g, " "),
+    description: `Activate the ${scene.name} lighting preset. ${dispatchGuidance}`,
+  };
+}
+
 export function generateFastScriptsFromRegistry(
   sceneRegistry: Record<string, Scene>,
   options: FastSceneGenerationOptions = {}
@@ -967,7 +1019,7 @@ export function generateFastScriptsFromRegistry(
     Object.entries(sceneRegistry).map(([sceneId, scene]) => [
       getFastSceneScriptId(sceneId),
       {
-        alias: `Fast Scene - ${scene.name}`,
+        ...getFastSceneVoiceMetadata(sceneId, scene),
         mode: "restart",
         fields: wrapperFields,
         sequence: [

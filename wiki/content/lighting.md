@@ -12,6 +12,49 @@ Lighting commands request an immediate change: generated dimmable-light scenes e
 
 The LED wall follows the living room presets: **High** sets master brightness to 100% and keeps the selected animation; **Medium** selects **Lava Lamp** at 100%. **Living Room Off** and **All Off** set master brightness to exactly zero, preserving playback and animation. Its protected power outlet stays on. Wall commands run once per request; the other lights retain their normal mismatch correction. A newer wall or room request cancels unsent work for the same wall.
 
+## Pebble Index 01 voice control
+
+The ring sends a spoken request through the Pebble iPhone app to Home Assistant's
+MCP server. A Home MCP sandbox assigned to double-click-and-hold keeps ordinary
+hold-and-talk available for notes. Pebble's MCP agent uses its cloud model; the
+phone reaches Home Assistant on the home network at
+`http://homeassistant.local:8123/api/mcp/assist` using Streamable HTTP.
+
+Assist exposes the 36 named `fast_scene` lighting scripts, including the room
+presets and all-off. Spoken names are short: "Living room bright," "Living room
+medium," "Living room dim," "Living room off," and "All lights off." High maps to
+bright and low maps to dim. Each script describes only its own preset and provides
+matching example phrases. Voice requests omit the physical-switch origin. The
+internal entity IDs remain stable, and the older "Fast Scene" names remain voice
+aliases in the live entity registry.
+Existing Assist exposures are preserved. Restricting direct lighting controls to
+the reliable scene scripts remains pending approval because Assist exposure is
+shared with other voice clients. Prefer the named room preset when speaking. Internal
+dispatcher scripts are not exposed. Alexa and Google Assistant exposure settings
+are separate.
+
+The MCP integration serves only the Assist API. Pebble uses a dedicated local-only,
+non-administrator account and a token valid for 90 days. The token is stored in a
+Git-ignored, owner-readable file
+at the repository root; it is never included in the wiki. Configure the Pebble
+app with that file's complete Authorization value. This local URL works while
+the phone can reach the home network. A future remote-access setup must be
+configured separately.
+
+MCP configuration, tokens, and Assist exposure are live Home Assistant settings;
+regenerating YAML does not recreate them. The generated script descriptions do
+persist in the repository. See the [Pebble MCP guide](https://developer.repebble.com/index-01/mcp/)
+for the phone settings.
+
+If a command creates a note, check the recording details in Pebble to distinguish
+the transcription from the action taken. In Ring Button settings, verify that
+double-click-and-hold uses the Home MCP sandbox. That group should use the Default
+cloud model and contain the Home Assistant server with the Assist prompt enabled.
+A group dedicated to Home Assistant does not need note-taking tools. Changing
+Home Assistant names cannot repair a recording routed to another group or an
+unavailable MCP connection. The app caches tool metadata, so allow it to refresh
+after a server-side naming change before testing again.
+
 ## Why a scene can take time
 
 Z-Wave commands share a paced queue. Health filtering skips unavailable targets; later passes reconcile mismatches. Switch-originated requests suppress the already-operated local load initially and briefly allow the radio network to settle. Non-Z-Wave work starts alongside the Z-Wave branch.

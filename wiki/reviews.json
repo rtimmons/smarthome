@@ -20,8 +20,8 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "757d38acb9eecf835d9a0b5f59c37f854158a3ab9449333799b46f596e1e45c8",
-    "reason": "Permanently retired the dead living palm light: removed its device entry, living-room and all-off targets, and catalog reservation; updated existing test expectations and retained the outdoor cafe temporary-removal workflow.",
+    "fingerprint": "89b9a47189df5aeaccb456258f3966dbe6bef76d3116b9dcdd671f944888ce11",
+    "reason": "Documented Pebble MCP setup and natural lighting phrases; reviewed script aliases and preset-specific descriptions while preserving stable IDs and lighting dispatch behavior.",
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {
