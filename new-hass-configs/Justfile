@@ -2,7 +2,7 @@ set shell := ["bash", "-eu", "-o", "pipefail", "-c"]
 tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
-rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .cache/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***'"
+rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .cache/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***' --filter='protect backups/***' --filter='protect .recovery-*/***' --filter='protect blueprints/template/***'"
 local_repo_excludes := "--exclude 'config-generator/***' --exclude 'backups/***' --exclude 'inventory_snapshots/***'"
 ha_ssh_identity := justfile_directory() + "/../.ssh/id_ed25519_codex_smarthome"
 ha_ssh_command := "ssh -i " + ha_ssh_identity + " -o IdentitiesOnly=yes -p 22"

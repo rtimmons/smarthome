@@ -24,6 +24,9 @@ RSYNC_PROTECT_FILTERS=(
   "--filter=protect deps/***"
   "--filter=protect tts/***"
   "--filter=protect esphome/***"
+  "--filter=protect backups/***"
+  "--filter=protect .recovery-*/***"
+  "--filter=protect blueprints/template/***"
 )
 
 LOCAL_REPO_EXCLUDES=(

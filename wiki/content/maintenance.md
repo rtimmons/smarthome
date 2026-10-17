@@ -6,6 +6,8 @@ Use `just setup` for the pinned runtimes and `just dev` for local development. V
 
 Before changing a system, read its current runbook, inspect health, preserve unrelated local edits, and retain rollback information. Scene operations, printing, media requests, and speaker writes can affect the household; do not use them as generic smoke tests.
 
+Home Assistant configuration checks and deployments preserve remote-only backups, hidden recovery directories, and installed template blueprints during synchronization. These files may not exist in the checkout and must not be deleted just because they are absent locally.
+
 ## Keep explanations with changes
 
 Update the corresponding guide or runbook when behavior changes. The component catalog connects source files to their explanations. `just wiki-check` rejects unreviewed source fingerprints. After reviewing, record a specific explanation with `just wiki-review <component> '<reason>'`; a no-documentation-impact decision must explain why.

@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-16"
   },
   "maintenance": {
-    "fingerprint": "d22836c7a1cc9fe231be19a0e8bf508369077ea4e5a7260897c38fcf136a1083",
-    "reason": "Completed the wiki assessment and browser checks; reviewed generated references, single-owner runbook catalog, recovery boundaries and corrected historical backup wording.",
+    "fingerprint": "369a8100a15e5f4e1dea11f6cb445fb40a487f860f521162f84b7df301a1d980",
+    "reason": "Protect remote-only Home Assistant recovery snapshots and template blueprints from configuration sync deletion; verified both sync filter sets with synthetic files.",
     "reviewed_at": "2026-10-17"
   },
   "media": {
