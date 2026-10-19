@@ -73,3 +73,12 @@ just test
 For local Home Assistant mode, supply non-committed `HOME_ASSISTANT_REST_URL`, `HOME_ASSISTANT_WEBSOCKET_URL`, and `HOME_ASSISTANT_TOKEN` values. Supervisor provides `SUPERVISOR_TOKEN` automatically in the deployed add-on.
 
 Live evidence, rollback artifacts, operational deadlines, and rollout status are recorded in [Home Assistant Sonos migration validation](ha-migration-validation.md).
+
+Unconfigured Sonos speakers do not invalidate all dashboard groups. When an
+unconfigured speaker is a follower, group and room-state reads show the configured
+members using the real configured coordinator. When the coordinator itself is
+unconfigured, affected configured rooms are marked unavailable and omitted from
+group reads; independent groups remain visible. No follower is promoted to an
+invented coordinator. Group-changing commands still validate full membership and
+reject groups containing unconfigured speakers. Adding a speaker to the dashboard
+remains an explicit room-catalog change.

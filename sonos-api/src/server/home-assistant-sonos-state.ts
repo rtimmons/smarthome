@@ -232,16 +232,21 @@ export const projectCanonicalSonosTopology = (
     if (!unique(members) || !members.includes(entityId)) {
       throw new SonosProjectionError(`Invalid group membership for ${entityId}`);
     }
-    for (const member of members) {
-      if (!roomForSonosEntity(member)) {
-        throw new SonosProjectionError(`Unknown entity ${member} in Sonos group`);
+    // An unconfigured follower must not hide every configured room. Keep
+    // the actual coordinator: never promote a follower when it is external.
+    if (!roomForSonosEntity(members[0])) {
+      for (const member of members) {
+        const room = roomForSonosEntity(member);
+        if (room) unknownRooms.add(room);
       }
+      continue;
     }
 
     // Home Assistant can retain an unavailable player in the reachable
     // speakers' group_members list. Project the reachable subset so one
     // offline room does not make every healthy zone unusable.
-    const reachableMembers = members.filter(member => !unknownEntityIds.has(member));
+    const reachableMembers = members.filter(member =>
+      roomForSonosEntity(member) && !unknownEntityIds.has(member));
     const coordinatorId = reachableMembers[0];
     const sortedSet = [...reachableMembers].sort();
     const key = sortedSet.join('|');
@@ -251,6 +256,23 @@ export const projectCanonicalSonosTopology = (
     }
     groups.set(key, {coordinatorId, memberIds: sortedSet});
   }
+
+  // Another member may still report an older group during a transition.
+  // Omit any group touching an externally coordinated room until it settles.
+  let removedGroup: boolean;
+  do {
+    removedGroup = false;
+    for (const [key, group] of groups) {
+      if (group.memberIds.some(member =>
+        unknownRooms.has(roomForSonosEntity(member) as SonosRoomName))) {
+        for (const member of group.memberIds) {
+          unknownRooms.add(roomForSonosEntity(member) as SonosRoomName);
+        }
+        groups.delete(key);
+        removedGroup = true;
+      }
+    }
+  } while (removedGroup);
 
   const claimedMembers = new Map<string, string>();
   for (const [key, group] of groups) {
@@ -340,9 +362,6 @@ export const projectRoomState = (
   }
   if (!unique(members) || !members.includes(entityId)) {
     throw new SonosProjectionError(`Invalid group membership for ${entityId}`);
-  }
-  if (members.some(member => !roomForSonosEntity(member))) {
-    throw new SonosProjectionError(`Unknown entity in Sonos group for ${roomName}`);
   }
   const coordinatorState = snapshot.entities.get(members[0]);
   if (

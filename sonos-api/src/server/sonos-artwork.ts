@@ -118,8 +118,7 @@ export const resolveSonosArtworkOwner = (
     members.length === 0 ||
     members.some(member => typeof member !== 'string') ||
     !members.includes(requestedEntityId) ||
-    new Set(members).size !== members.length ||
-    members.some(member => typeof member === 'string' && !roomForSonosEntity(member))
+    new Set(members).size !== members.length
   ) {
     throw new SonosBackendError(
       'invalid_topology',

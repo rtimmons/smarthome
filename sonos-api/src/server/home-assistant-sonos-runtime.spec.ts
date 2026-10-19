@@ -1126,3 +1126,22 @@ test('preset convergence consumes the operation acceptance deadline and times ou
   assert.equal(calls.length, 3, 'deadline observation never resubmits a preset service call');
   runtime.stop();
 });
+
+
+test('external followers preserve routed zones, room state, and coordinator artwork', async () => {
+  const {runtime, stateStore} = fixture();
+  for (const state of stateStore.entities.values()) {
+    (state.attributes.group_members as string[]).push('media_player.external_fixture');
+  }
+  await withServer(runtime, async baseUrl => {
+    const response = await fetch(`${baseUrl}/sonos/zones`);
+    assert.equal(response.status, 200);
+    const zones = await response.json() as Array<{members: Array<{roomName: string}>}>;
+    assert.equal(zones.length, 1);
+    assert.equal(zones[0].members.length, SONOS_ROOM_NAMES.length);
+    const state = await fetch(`${baseUrl}/sonos/Living%20Room/state`);
+    assert.equal(state.status, 200);
+    const artwork = await fetch(`${baseUrl}/sonos/Living%20Room/artwork`);
+    assert.equal(artwork.status, 200);
+  });
+});

@@ -528,19 +528,45 @@ const run = (): void => {
     );
   }
 
-  const malformedKitchen = haState('Kitchen');
-  malformedKitchen.attributes.group_members = [
-    'media_player.kitchen',
-    'media_player.maker_room',
+  const externalFollower = haState('Kitchen');
+  externalFollower.attributes.group_members = [
+    'media_player.kitchen', 'media_player.external_fixture',
   ];
-  assert.throws(
-    () => projectCanonicalSonosTopology(haSnapshot([
-      malformedKitchen,
-      ...SONOS_ROOM_NAMES.filter(room => room !== 'Kitchen').map(room => haState(room)),
-    ])),
-    (error: unknown) => error instanceof SonosProjectionError &&
-      error.message.includes('media_player.maker_room')
-  );
+  const externalSnapshot = haSnapshot([
+    externalFollower,
+    ...SONOS_ROOM_NAMES.filter(room => room !== 'Kitchen').map(room => haState(room)),
+  ]);
+  const externalTopology = projectCanonicalSonosTopology(externalSnapshot);
+  assert.equal(externalTopology.zones.length, SONOS_ROOM_NAMES.length);
+  assert.deepEqual(externalTopology.zones.find(zone =>
+    zone.coordinator.roomName === 'Kitchen')?.members.map(member => member.roomName),
+  ['Kitchen']);
+  assert.deepEqual(externalTopology.unknownRooms, []);
+  assert.doesNotThrow(() => projectRoomState(externalSnapshot, 'Kitchen'));
+
+  externalFollower.attributes.group_members = [
+    'media_player.external_fixture', 'media_player.kitchen',
+  ];
+  const externalCoordinator = projectCanonicalSonosTopology(externalSnapshot);
+  assert.equal(externalCoordinator.zones.length, SONOS_ROOM_NAMES.length - 1);
+  assert.deepEqual(externalCoordinator.unknownRooms, ['Kitchen']);
+  assert.equal(externalCoordinator.zones.some(zone =>
+    zone.members.some(member => member.roomName === 'Kitchen')), false);
+  assert.throws(() => projectRoomState(externalSnapshot, 'Kitchen'),
+    /Missing coordinator state/);
+
+  const transitioningKitchen = haState('Kitchen', {members: ['Kitchen', 'Bedroom']});
+  const transitioningBedroom = haState('Bedroom');
+  transitioningBedroom.attributes.group_members = [
+    'media_player.external_fixture', 'media_player.bedroom',
+  ];
+  const transitioning = projectCanonicalSonosTopology(haSnapshot([
+    transitioningKitchen, transitioningBedroom,
+    ...SONOS_ROOM_NAMES.filter(room => room !== 'Kitchen' && room !== 'Bedroom')
+      .map(room => haState(room)),
+  ]));
+  assert.deepEqual(transitioning.unknownRooms, ['Bedroom', 'Kitchen']);
+  assert.equal(transitioning.zones.length, SONOS_ROOM_NAMES.length - 2);
 
   assert.deepEqual(sonosFreshnessHeaders({...snapshot, freshness: 'stale', ageMs: 1250}), {
     'X-Sonos-Response-Source': 'home_assistant',

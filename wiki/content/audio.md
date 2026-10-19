@@ -21,3 +21,12 @@ If all audio controls fail, check Sonos API readiness and Home Assistant connect
 Preserve playback, volume, and groups during diagnosis. Restore saved configuration through the deployment and backup workflows; selecting the retained Node backend requires a deliberate rollback, not merely starting the old container.
 
 Read the [architecture](../../docs/sonos/overview.md), [routing contract](../../docs/sonos/routing-guide.md), and [dated migration evidence](../../docs/sonos/ha-migration-validation.md).
+
+Unconfigured Sonos speakers do not invalidate all dashboard groups. When an
+unconfigured speaker is a follower, group and room-state reads show the configured
+members using the real configured coordinator. When the coordinator itself is
+unconfigured, affected configured rooms are marked unavailable and omitted from
+group reads; independent groups remain visible. No follower is promoted to an
+invented coordinator. Group-changing commands still validate full membership and
+reject groups containing unconfigured speakers. Adding a speaker to the dashboard
+remains an explicit room-catalog change.

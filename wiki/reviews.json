@@ -1,8 +1,8 @@
 {
   "audio": {
-    "fingerprint": "bd3035f81c23535358539020eae03f645a11f5a5d16c7b3ae00f3e87e6255a42",
-    "reason": "Renamed the allowlisted Move display name to Patio while preserving media_player.move and playback policies; updated current routing guidance and annotated historical evidence",
-    "reviewed_at": "2026-10-17"
+    "fingerprint": "203618532d2e29c2256fc1b603d5c5054f0b9a093c47e61075cbedc9817cfb8e",
+    "reason": "Reviewed tolerant external follower artwork ownership and routed zones/state/artwork regression coverage for deployment readiness.",
+    "reviewed_at": "2026-10-19"
   },
   "dashboard": {
     "fingerprint": "e236ffc845ac986c76f772c43ce415bfcfc4428a3657c1d25879c94803b481ca",

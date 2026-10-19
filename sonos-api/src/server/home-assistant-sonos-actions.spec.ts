@@ -50,6 +50,18 @@ type Call = {service: string; data: Record<string, unknown>};
 
 const run = async (): Promise<void> => {
   {
+    const kitchen = haState('Kitchen');
+    kitchen.attributes.group_members = ['media_player.kitchen', 'media_player.external_fixture'];
+    let calls = 0;
+    const actions = new HomeAssistantSonosActions({
+      stateStore: new FakeStore([kitchen]),
+      client: {async callService() { calls += 1; return {}; }},
+    });
+    await assert.rejects(actions.groupVolume('Kitchen', 20), /unknown entity/);
+    assert.equal(calls, 0, 'tolerant reads do not authorize writes to an external group');
+  }
+
+  {
     const calls: Call[] = [];
     const store = new FakeStore([haState('Kitchen', {
       attributes: {source_list: ['Zero 7 Radio']},
