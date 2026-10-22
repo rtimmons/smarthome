@@ -50,8 +50,12 @@ over UDP/TCP: exact wiki A, empty AAAA, unknown names/subdomains, NXDOMAIN at
 the apex and public resolution. A fresh synthetic unknown query sent through
 the gateway appeared in HA AdGuard as a local `RewriteRule` with no upstream.
 The returned fresh Mac wireless lease advertises gateway DNS, and ordinary
-wiki-by-name HTTP returns 200. This is one client's acceptance, not every VLAN
-or browser encrypted-DNS override.
+wiki-by-name HTTP returns 200. A later check from Home Assistant as a second
+trusted host queried the gateway directly: the wiki A answer matched, and the
+apex SOA and a fresh unknown local name returned `NXDOMAIN`. That used the
+host's ordinary DNS client; the full UDP/TCP matrix remains the separate
+repository check. These observations do not establish every VLAN or browser
+encrypted-DNS override.
 
 Default's native Ad Block remains enabled, with categories Off and Safe Search
 disabled. `doubleclick.net` returns `0.0.0.0` through the gateway over UDP/TCP.

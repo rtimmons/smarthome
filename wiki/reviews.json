@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "6b5782fbc4d61dc4b4b64cc9ec33feeeb4665259a706eed00825b1206ad90af7",
-    "reason": "Recorded final live DNS/VPN/login-gate evidence and passing validation with the two known historical RSA findings kept separate",
+    "fingerprint": "b40f4fecc10dd6ccd4448cab9701093f6ebd892cfb0f2d1be10ac3b8c8a2b6bc",
+    "reason": "Accept the physical restricted print, awake same-AP phone isolation, live Bonjour wire replies, native printer capture and second trusted DNS client; record current SSH host-trust prerequisites.",
     "reviewed_at": "2026-10-22"
   },
   "printing": {

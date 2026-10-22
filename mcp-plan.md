@@ -18,7 +18,8 @@
 - The DNS forwarding-only hybrid passes the unchanged UDP/TCP contract after
   pausing the duplicate native A record. Associated printer-client allow/deny
   checks and cloud SHA-256 reconnect/PFS rekey passed. See the canonical
-  follow-up for remaining peer/wired/remote-host acceptance.
+  follow-up for the accepted physical print, same-AP phone peer and fresh
+  wire-level discovery checks, and remaining wired/remote-host acceptance.
 
 Preserve unrelated work and every private backup. Do not stage, commit or take
 a Git lock without permission. Keep credential values and raw private responses
@@ -49,7 +50,9 @@ Native tool exposure, Max/site identity and live network/client/Wi-Fi/WAN reads
 are accepted as dated October 22 evidence. Synthetic launcher tests and wiki
 checks must remain current. The broader remaining work is in
 `docs/operations/unifi-post-migration.md`; Site Magic awaits a Lehigh test host,
-and zones await a second printer peer and rule-counter baseline.
+and zones await the rule-counter baseline. Restricted printing and the same-AP
+phone peer now pass; keep cellular data off during an iPhone's local-only test
+and restore it afterward.
 
 Updated documentation was published through `just wiki-deploy` on October 22
 at 16:37 Eastern. Safari opened the live network guide; publication metadata

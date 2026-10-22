@@ -84,6 +84,14 @@ ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ubnt@192.1
 For transient discovery failures, preserve the failure before reprovisioning;
 continue with [Bonjour/Apple TV troubleshooting](unifi-apple-tv-remote.md).
 
+The October 22 follow-up found no verified entries for the three adopted-device
+addresses in this Mac's `known_hosts`. A U7 connection stopped at host-key
+verification before authentication. This is a host-trust prerequisite, not a
+failed agent credential. Verify each fingerprint over an independently trusted
+administrative path before adding an exact entry; never blindly accept a scan
+or disable checking. Native Max packet capture remains available without
+enabling console SSH.
+
 ## Troubleshooting
 
 - **Operation not permitted before connection:** executor restrictions; do not

@@ -12,12 +12,12 @@ The wiki is plain HTTP on the trusted network, without a separate login. Applica
 
 The **Cloud Gateway Max NS (US Version), UCG-Max-NS**, took over routing and UniFi Network management on **October 22, 2026**. A fresh Network-only backup restored the existing configuration after the full console backup failed. Ryan confirmed the retained switch and both access points online in the Max's controller.
 
-Checks from the Mac passed for gateway reachability, public DNS, Internet HTTPS, Home Assistant, and the wiki's numeric address. Both site-to-site VPNs were repaired after the WAN address changed and showed Established. Lehigh's gateway and the private Usenet application endpoints were reachable. The resumed Mac checks verified fresh wireless leases, all seven infrastructure reservations, printer-network allow/deny paths and Bonjour advertised TCP reachability. Fresh wired DHCP, a second isolated printer peer, an actual print job and packet-level discovery remain separate checks. A fresh full Max System export is now encrypted off-device and decryption-verified. Ryan confirmed the USG and Cloud Key retired from active service; retain their disconnected configurations for rollback.
+Checks from the Mac passed for gateway reachability, public DNS, Internet HTTPS, Home Assistant, and the wiki's numeric address. Both site-to-site VPNs were repaired after the WAN address changed and showed Established. Lehigh's gateway and the private Usenet application endpoints were reachable. The resumed checks verified fresh wireless leases, all seven infrastructure reservations, printer-network restrictions and an isolated phone peer on the same AP. Ryan confirmed the single test label printed correctly. Fresh Bonjour wire replies and all 27 advertised Companion, AirPlay and Sonos TCP endpoints passed. Fresh wired DHCP and interactive Remote/playback checks remain separate. A fresh full Max System export is encrypted off-device and decryption-verified. Ryan confirmed the USG and Cloud Key retired from active service; retain their disconnected configurations for rollback.
 
 Ryan authorized a native DNS/ad-blocking pilot, Site Magic for Lehigh, cloud VPN
 modernization and tooling cleanup. The forwarding-only DNS hybrid, cloud SHA-256 reconnect/PFS rekey and
 native read-only MCP are accepted. Site Magic awaits a Lehigh test host; zones
-await a second printer peer and rule-counter baseline. The [post-migration checklist](../../docs/operations/unifi-post-migration.md)
+await the rule-counter baseline. The [post-migration checklist](../../docs/operations/unifi-post-migration.md)
 records status and acceptance; the [migration record](../../docs/operations/unifi-network-setup.md#cloud-gateway-max-migration)
 records the completed cutover.
 
@@ -45,6 +45,12 @@ addresses must be advertised together by trusted-LAN DHCP after rollout checks
 pass. A public fallback cannot answer private names.
 
 ## Troubleshooting and recovery
+
+The restricted printer Wi-Fi intentionally has no Internet access. An iPhone
+may switch a local request to cellular data even while it shows that Wi-Fi
+connected. If the permitted print endpoint fails to load, temporarily turn
+cellular data off, retry the explicit local HTTP address, then restore cellular
+data. This passed on October 22; it does not require widening the firewall.
 
 If the numeric wiki address works but the name fails, inspect the client’s actual DNS servers, lease age, and any browser encrypted-DNS override. Ask each resolver directly before restarting anything. A cached answer alone does not establish failover.
 

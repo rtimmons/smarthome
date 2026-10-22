@@ -88,6 +88,15 @@ hostapd_cli -i <ssid-interface> status
 
 ## Capture Discovery End to End
 
+For routed-interface evidence on the Max, open **UniFi Devices > Max > Packet
+Capture**, select the intended network and a bounded duration, then download
+the completed archive. On October 22 a 60-second printer-network capture
+verified live mDNS and the restricted print path without enabling console SSH.
+Keep the archive and extracted PCAP private; inspect saved files offline with
+`tcpdump -nn -r <capture.pcap>`. A gateway capture cannot show every same-VLAN
+exchange or each AP bridge hop. Use the AP procedure below to locate a discovery
+failure between radios or clients.
+
 Capture on the Apple TV's serving AP before attempting the Remote connection. If the phone is on a different AP, capture there too before concluding that an absent packet originated at the phone. Substitute the current addresses:
 
 ```bash

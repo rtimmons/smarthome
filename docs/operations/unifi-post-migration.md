@@ -11,13 +11,13 @@ source preparation is distinct from live deployment.
 
 | Work | Prepared | Live acceptance still required |
 | --- | --- | --- |
-| Baseline and backup | Max/Lehigh System exports and cloud VPN archives encrypted and decryption-verified; seven infrastructure reservations read back | Fresh wired lease, requested print job and packet-level discovery |
-| Native DNS/ad blocking | Forwarding-only hybrid passes exact UDP/TCP contract and local-rewrite evidence; fresh Mac Wi-Fi lease uses gateway DNS; native wiki A paused | Second-client and forwarder-outage acceptance; retain both AdGuards |
+| Baseline and backup | Max/Lehigh System exports and cloud VPN archives encrypted and decryption-verified; seven reservations, restricted print and fresh wire-level discovery accepted | Fresh wired lease and interactive application checks |
+| Native DNS/ad blocking | Forwarding-only hybrid passes exact UDP/TCP contract and local-rewrite evidence; fresh Mac lease uses gateway DNS; second trusted host's A/local-negative checks pass; native wiki A paused | Forwarder-outage acceptance; retain both AdGuards |
 | Lehigh Site Magic | Native form previewed with exact LAN-only scope; both full System exports encrypted and verified | Route cutover and bidirectional host/isolation checks, then retire superseded IPsec |
 | Cloud VPN SHA-256 | Paired Max/cloud deployment, actual SAs, reconnect, CHILD-SA rekey/PFS14 and encrypted backup accepted | New interactive login remains separate from transport/login-gate checks |
 | WAN recovery | Private inputs, provider firewall, fresh cloud SSH, UFW and negotiated SA preflight pass | Repeat after a WAN change |
 | UniFi MCP | Native 0.6.1 tools and live Max/site reads accepted; read-only controls preserved | Rotate existing key before November 22 expiry |
-| Firewall and IDS/IPS | Default/Notify retained; routed Mac performance and alerts reviewed; associated printer-client allow/deny tests pass | Second printer peer and rule counters before zone migration |
+| Firewall and IDS/IPS | Default/Notify retained; routed Mac performance and alerts reviewed; associated printer-client allow/deny and same-AP peer checks pass | Rule-counter baseline before zone migration |
 | Access/docs | Native API works; Max SSH is off and TCP/22 refuses connections | Console SSH requires a separate reviewed access change |
 
 The initial implementation session could not open terminal network connections
@@ -52,17 +52,43 @@ GUI terminal, MCP mutation or unrestricted executor configuration was needed.
 The Mac joined `sintheta-printer` and received a fresh lease from `192.168.6.1`.
 `homeassistant.local` resolved; HA TCP/8099 opened. Probes bound to that client
 address confirmed HA TCP/8123, NAS TCP/80, gateway TCP/443 and TCP/53, public
-TCP/443 and cloud-private TCP/15055 blocked. No print was sent. The Mac then
+TCP/443 and cloud-private TCP/15055 blocked. The Mac then
 returned to `sintheta` with gateway/DNS `192.168.1.1`; its newly added printer
-Wi-Fi preference was removed. A second printer peer was unavailable, so peer
-isolation remains saved configuration rather than a tested path. No wired
-adapter was connected for a fresh wired-lease check.
+Wi-Fi preference was removed. A later repeat sent exactly one idempotent
+`NETWORK CHECK` label at 17:03 Eastern; the service returned HTTP 200, `sent`
+and print count one, and Ryan confirmed the physical label printed correctly.
+No wired adapter was connected for a fresh wired-lease check.
+
+Ryan then connected an awake phone to `sintheta-printer`. Its first numeric
+HTTP check failed while cellular data was enabled; with cellular data off,
+Ryan confirmed the permitted HA TCP/8099 health endpoint loaded. While both
+clients were on the same AP, the Mac could still reach that endpoint but
+could not resolve the phone's direct neighbor address, ping it or open the
+two tested TCP ports. This accepts peer isolation for the tested pair, with
+the phone's working Wi-Fi endpoint as the active-client control. Closed phone
+TCP ports alone were not treated as proof. The Mac was restored automatically
+and its temporary printer Wi-Fi preference removed after each test. Restore
+the phone's cellular setting after testing.
 
 Bonjour browsing found five Companion, nine AirPlay and thirteen Sonos
-instances. Advertised TCP ports opened for all five Companion, all nine AirPlay
-and the twelve Sonos instances tested. These are browse/connection checks,
-not live packet captures or interactive Remote/playback acceptance. Private
-evidence is under ignored `build/unifi-followup-20261022/`.
+instances. A subsequent ordinary UDP socket sent fresh multicast PTR questions
+with distinct transaction IDs and retained matching wire replies from UDP/5353:
+five Companion, nine AirPlay and thirteen Sonos instances. All 27 advertised
+TCP endpoints opened. These fresh replies establish live client discovery,
+independently of the system Bonjour cache. They do not show AP bridge ingress
+and egress or establish interactive Remote/playback acceptance. Private evidence
+is under ignored `build/unifi-followup-20261022/` and
+`build/unifi-remaining-20261022/`.
+
+The Max's native **UniFi Devices > Max > Packet Capture** also completed a
+60-second capture scoped to `sintheta-printer`. Its downloaded tar archive
+contained one PCAP with 1,496 packets. Offline inspection found both directions
+of the allowed HA TCP/8099 exchange, the matching fresh `homeassistant.local`
+mDNS question/answer, blocked-path requests with no replies, and five phone
+neighbor requests with no replies. The read-only health URL returned HTTP 200.
+The Mac again restored trusted Wi-Fi automatically. This is routed-interface
+packet evidence, not an AP bridge trace or per-rule hit-counter baseline.
+Capture archives, packet bytes and raw summaries remain private and ignored.
 
 ## Acceptance and backup
 
@@ -126,6 +152,11 @@ unknown query through the gateway appeared in HA AdGuard as `RewriteRule` with
 no upstream. Both AdGuards passed directly; `doubleclick.net` returned `0.0.0.0`
 through the gateway over UDP/TCP. The returned fresh trusted Wi-Fi lease used
 gateway DNS, and normal wiki-by-name HTTP returned 200.
+A separate check over the dedicated Home Assistant SSH path queried the gateway
+from that second trusted host: the wiki A answer was `192.168.1.66`, and both
+the zone-apex SOA query and a fresh unknown local name returned `NXDOMAIN`.
+This second-host check used its ordinary DNS client; the full UDP/TCP contract
+remains the separately accepted repository check above.
 
 Keep the native A policy paused for rollback. AdGuard owns local records;
 the trusted-client gateway resolver forwards `home.arpa` to HA. This
@@ -252,7 +283,8 @@ The five custom printer rules retain their order: LAN In TCP/8099 allow at
 20000 then all-other drop at 20001; LAN Local mDNS/DHCP allows at 20000/20001
 then gateway drop at 20002. The zone upgrade remains unapplied. The legacy UI
 does not expose packet counters and Max SSH remains off. Preserve generated
-rules pending counter/effect evidence and a second-printer-peer check.
+rules pending counter/effect evidence. The same-AP second-printer-peer check
+now passes for the Mac/awake-phone pair described above.
 Two UPnP mappings were observed (HA UDP and NAS/Plex TCP); neither was removed.
 
 Capture the actual rules and their hit counters. Validate the five restricted
@@ -272,9 +304,11 @@ Site Magic remains unapplied: Ryan confirmed no Lehigh test host is available
 for the required bidirectional host tests. The existing manual tunnel remains
 Established and its gateway TCP/443 reachable. Do not create competing mesh
 routes or retire it before the documented host/isolation checks can run.
-Zone migration awaits a second printer peer and the rule-counter baseline.
-Fresh wired DHCP, a requested print job, packet-level discovery, forwarder-outage
-behavior and new interactive application logins remain distinct checks.
+Zone migration awaits the rule-counter baseline; restricted printing, a
+same-AP printer peer and fresh client wire-level discovery are accepted.
+Fresh wired DHCP, AP bridge captures when diagnosing a discovery failure,
+forwarder-outage behavior and new interactive application logins remain
+distinct checks.
 
 The native local API-key form has no read-only scope selector. The owner-approved
 **Codex UniFi MCP - 300 Newark** key expires **November 22, 2026**; its initial
