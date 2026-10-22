@@ -62,11 +62,25 @@ test and restore it afterward. Owner-approved read-only native Debug provided
 the counters; console SSH and MCP mutations remain off.
 
 Updated documentation was published through `just wiki-deploy` on October 22
-at 16:37 Eastern. Safari opened the live network guide; publication metadata
-matched the reviewed checkout fingerprint and retained 13 deployment receipts.
-All 549 infrastructure tests, wiki/DNS/launcher tests and syntax checks passed.
-The full history scan retains only the two documented historical RSA findings;
-the separate current-source/index scan passed.
+at 17:50 Eastern from clean commit `61af10e`. Safari opened the live guide by
+name; live metadata matched the reviewed source fingerprint, with 92 static
+files and all 13 prior deployment receipts retained. The publication used an
+isolated checkout to exclude concurrent lighting/automation implementation
+edits in the main worktree. Six existing checkout-specific runbook links were
+made repository-relative; their review covered only those link corrections.
+The isolated wiki check passed 26 wiki tests and six DNS tests. Current-source/
+index secret scanning passed. The earlier prepared infrastructure changes
+passed all 549 unit tests and their syntax/launcher checks; the full history
+scan retains the two documented historical RSA findings. No history was
+rewritten or scan exception added.
+
+The main worktree's unrelated Z-Wave runbook, HA client and manual automation
+edits remain unstaged. Their component reviews belong to their own work;
+do not acknowledge them solely to clear a whole-worktree wiki check. Private
+publication metadata/logs are preserved under
+`build/unifi-remaining-20261022/published-wiki/`. Every encrypted backup remains
+in the original ignored backup directory. Both AdGuards stay running because
+automatic local-zone failover and forwarder-outage acceptance remain open.
 
 Do not test controls using a real mutation or bypass restrictions with a GUI
 terminal. Key rotation before November 22 remains routine upkeep.
