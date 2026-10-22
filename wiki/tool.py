@@ -233,7 +233,7 @@ def export_reference(stage, data, revision):
               "This policy does not establish which resolvers a client is using.\n\n" +
               table(["Setting", "Configured value"], [["Local zone", policy["zone"]], ["Resolvers", ", ".join(policy["resolvers"])],
                     ["Local record owner", policy["record_owner"]], ["Trusted-client resolver", policy["client_resolver"]],
-                    ["Gateway domain forwarding", policy["gateway_forwarding"]["zone"] + " → " + policy["gateway_forwarding"]["resolver"]],
+                    ["Gateway domain forwarding", policy["gateway_forwarding"]["zone"] + " → " + ", ".join(policy["gateway_forwarding"]["resolvers"])],
                     ["Duplicate native wiki A enabled", policy["gateway_forwarding"]["native_wiki_a_enabled"]],
                     ["Upstreams", ", ".join(policy["upstream_dns"])], ["Fallbacks", ", ".join(policy["fallback_dns"]) or "none"]]) +
               "\n## Local records\n\n" + table(["Name", "Address"], sorted(policy["records"].items())) +

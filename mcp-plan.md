@@ -16,7 +16,10 @@
   executor path; no broad security setting change or alternate credential is
   required. The earlier missing native tool forwarding is resolved.
 - The DNS forwarding-only hybrid passes the unchanged UDP/TCP contract after
-  pausing the duplicate native A record. Associated printer-client allow/deny
+  pausing the duplicate native A record. Two native `home.arpa` forwarders now
+  select the surviving AdGuard automatically. Each backend outage, both-down
+  containment and automatic recovery passed, with both services running and
+  original access lists restored. Associated printer-client allow/deny
   checks and cloud SHA-256 reconnect/PFS rekey passed. See the canonical
   follow-up for the accepted physical print, same-AP phone peer and fresh
   wire-level discovery checks and observed fresh HA Ethernet lease. Ryan
@@ -79,8 +82,15 @@ edits remain unstaged. Their component reviews belong to their own work;
 do not acknowledge them solely to clear a whole-worktree wiki check. Private
 publication metadata/logs are preserved under
 `build/unifi-remaining-20261022/published-wiki/`. Every encrypted backup remains
-in the original ignored backup directory. Both AdGuards stay running because
-automatic local-zone failover and forwarder-outage acceptance remain open.
+in the original ignored backup directory. Automatic local-zone failover is now
+accepted: both native forwarders remain active, with unchanged gateway DHCP DNS
+and native ad blocking. The Mac passed cold local answers, UDP/TCP negatives,
+public resolution, ad blocking and wiki-by-name HTTP during either backend
+outage. Both-unavailable local queries failed closed, the WAN trace contained
+no private-zone DNS, and normal access recovered after exact ACL restoration.
+An independent watchdog completed cleanly. Both AdGuards remain running and
+required for this redundant design. Private drill evidence is under
+`build/unifi-dns-failover-20261022/`.
 
 Do not test controls using a real mutation or bypass restrictions with a GUI
 terminal. Key rotation before November 22 remains routine upkeep.

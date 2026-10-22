@@ -12,7 +12,7 @@ source preparation is distinct from live deployment.
 | Work | Prepared | Live acceptance still required |
 | --- | --- | --- |
 | Baseline and backup | Max/Lehigh System exports and cloud VPN archives encrypted and decryption-verified; leases, reservations, restricted print, live discovery and owner-confirmed application controls accepted | Retain recovery copies |
-| Native DNS/ad blocking | Forwarding-only hybrid passes exact UDP/TCP contract and local-rewrite evidence; fresh Mac lease uses gateway DNS; second trusted host's A/local-negative checks pass; native wiki A paused | Forwarder-outage acceptance; retain both AdGuards |
+| Native DNS/ad blocking | Dual native domain forwarders pass each backend outage, both-unavailable containment and automatic recovery; exact UDP/TCP and wiki-by-name checks pass; native wiki A paused | Both AdGuards remain required for redundancy |
 | Lehigh Site Magic | LAN-only mesh created; UniFi reports both gateways Connected; both manual IPsec definitions paused for rollback | Owner accepted UniFi status without a Lehigh host; retain rollback definitions/backups |
 | Cloud VPN SHA-256 | Paired deployment, actual SAs, reconnect, PFS14 rekey, encrypted backup and owner-confirmed LAN application sign-ins accepted | Preserve coordinated rollback |
 | WAN recovery | Private inputs, provider firewall, fresh cloud SSH, UFW and negotiated SA preflight pass | Repeat after a WAN change |
@@ -164,9 +164,18 @@ This second-host check used its ordinary DNS client; the full UDP/TCP contract
 remains the separately accepted repository check above.
 
 Keep the native A policy paused for rollback. AdGuard owns local records;
-the trusted-client gateway resolver forwards `home.arpa` to HA. This
-single-forwarder hybrid has no accepted automatic local-zone failover. Both
-AdGuards stay running; no DHCP settings changed and no test was weakened.
+the trusted-client gateway resolver initially forwarded `home.arpa` only to HA.
+The later authorized failover work added a second native Forward Domain policy
+for NAS `192.168.1.66`. Both single-backend outages, both-unavailable containment
+and automatic recovery passed, with both AdGuards running throughout. Cold
+wiki answers, client UDP/TCP, local negative answers, public DNS, ad blocking
+and ordinary wiki-by-name HTTP were tested. LAN capture proved the survivor
+answered while the denied endpoint did not; WAN capture showed no private-zone
+queries and observed the synthetic public DNS control. Exact original access
+lists were restored, with an independent watchdog. See the
+[DNS failover acceptance](home-dns.md#automatic-local-zone-failover-october-22).
+Both AdGuards remain required; DHCP, filter/upstream rules and printer
+restrictions were preserved, and no response contract was weakened.
 The reviewed policy and generated wiki reference describe this arrangement.
 Recovery includes both AdGuard configurations and the Max's forwarding and
 paused-policy System export.
@@ -176,11 +185,12 @@ After the accepted DNS and SHA-256 changes, a new full Max System export
 All earlier Max, Lehigh and cloud VPN archives remain intact. The native
 plaintext download was preserved in the owner's Downloads directory.
 
-After acceptance, update `network-infra/dns/policy.json`, its generated wiki
-reference and backup scope to describe the accepted owner, then stop only the
-resolver services no longer in any client lease or upstream path. Preserve
-configuration/backups. Rollback restores the captured Max policy and DHCP
-settings with both AdGuards still available.
+`network-infra/dns/policy.json`, its generated wiki reference and backup scope
+describe the accepted AdGuard pair and dual native forwarding policies. Both
+resolvers remain in the gateway's upstream path and are required for redundancy.
+Do not retire either merely because the checks pass. Rollback of the second
+forwarder pauses only the NAS-targeting policy, preserving the HA policy,
+paused native A and both running resolvers; DHCP remains unchanged.
 
 ## Lehigh Site Magic mesh
 
@@ -402,8 +412,8 @@ Zone migration and the bounded reversible duplicate cleanup are complete;
 restricted printing, a same-AP printer peer and fresh wire-level discovery
 are accepted.
 Fresh wired/wireless DHCP and owner-verified application controls/sign-ins are
-accepted. HA-forwarder outage behavior and automatic local-zone failover remain
-unverified; preserve both AdGuards and the accepted hybrid. AP bridge captures are
+accepted. Automatic local-zone failover, both-unavailable containment and recovery
+are now accepted; preserve both AdGuards and the dual-forwarder hybrid. AP bridge captures are
 the diagnostic next step if a future discovery failure needs localization;
 the current client wire-level discovery and endpoint checks pass.
 

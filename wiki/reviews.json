@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-22"
   },
   "maintenance": {
-    "fingerprint": "9bb1b7292ad78ec5abb31dec4b617790ef5f643f56df06fb07fa77bbf9ac8ccc",
-    "reason": "Reviewed DNS ownership/forwarding fields in generated reference and existing network command forwarding plus portable YAML validation changes",
+    "fingerprint": "1a4f8d4f2ee5fe83b56a14f7fcfa8255650f093d51599cb76c257bbca85ac889",
+    "reason": "Generated DNS reference now renders both native forwarding targets from the reviewed resolver array; publication confinement, local assets and deployment behavior are unchanged.",
     "reviewed_at": "2026-10-22"
   },
   "media": {
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "0e706a4dc0d9d9c2a864620f72ab150a28b77763d0e024095b1cb38acd9d5543",
-    "reason": "Reviewed accepted zone conversion, printer counters and reversible cleanup, owner-confirmed controls and sign-ins, wired DHCP, LAN-only Site Magic Connected status under revised owner acceptance, printer exclusions and verified encrypted backups.",
+    "fingerprint": "4ac305f2d75203befe92d043a25ab9cd06a225b5a672f26581bf19bbd4356fc7",
+    "reason": "Reviewed two native home.arpa forwarders, each AdGuard outage with both daemons running, cold UDP/TCP and real-client wiki checks, dual-outage fail-closed WAN evidence, exact access restoration/watchdog, recovery and encrypted System export.",
     "reviewed_at": "2026-10-22"
   },
   "printing": {

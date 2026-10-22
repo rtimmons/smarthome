@@ -59,25 +59,82 @@ encrypted-DNS override.
 
 Default's native Ad Block remains enabled, with categories Off and Safe Search
 disabled. `doubleclick.net` returns `0.0.0.0` through the gateway over UDP/TCP.
-No DHCP settings or AdGuard filter/upstream rules changed. This accepted hybrid
-uses the gateway as trusted-client resolver and **one** local-zone forwarder;
-HA-forwarder outage and automatic local-zone failover are not accepted.
-Do not stop either AdGuard. The NAS resolver remains independently available
-for recovery and direct checks; the gateway does not automatically fail over
-to it for this domain.
+No DHCP settings or AdGuard filter/upstream rules changed. This initial hybrid
+used the gateway as trusted-client resolver and **one** local-zone forwarder.
+The subsequent dual-forwarder acceptance below replaces that single-forwarder
+limitation. Both AdGuards remain required and running.
 
 `network-infra/dns/policy.json` and the generated wiki reference now record
-the client resolver, AdGuard record ownership, forwarding target and paused
+the client resolver, AdGuard record ownership, forwarding targets and paused
 native A policy. The native settings remain UI-owned. Preserve both AdGuard
 backups and the accepted Max System export, including the forwarding policy.
-To undo the last DNS change, resume only the saved native A policy; that
-restores the initial pilot, including its known apex mismatch. Preserve domain
-forwarding and both resolvers throughout recovery.
+Keep the paused native A as historical pilot rollback material. Resuming it
+reproduces the known apex mismatch; normal recovery keeps it paused and
+preserves domain forwarding and both resolvers.
 
 `just dns-check --resolver 192.168.1.1` checks the gateway without an AdGuard
 administration session. Repeat `--resolver` for multiple candidates; the default
 command still checks both AdGuards. DNS replies alone do not prove containment;
 retain the separate synthetic-query evidence described above.
+
+### Automatic local-zone failover — October 22
+
+The Max now has **two active Forward Domain policies for `home.arpa`**, one
+targeting HA `192.168.1.163` and one targeting NAS `192.168.1.66`. The supported
+native UI accepted both policies for the same zone. The duplicate native wiki
+A remains paused. Trusted DHCP still advertises only the gateway `192.168.1.1`;
+native ad blocking and the printer restrictions are unchanged. This is native
+gateway resolver selection, with no new monitoring daemon or public fallback.
+The list order does not promise a preferred server or immediate failback.
+
+The associated Mac exercised each resolver outage without stopping either
+AdGuard. Each service's existing access lists were captured privately, then
+only the gateway's `192.168.1.1` DNS requests were temporarily denied at one
+resolver. The other resolver remained available, and both services reported
+running throughout. Exact original access lists were restored in `finally`,
+with an independent restoration watchdog. The NAS administration API used its
+existing pinned SSH command path; SSH port forwarding remained prohibited.
+
+With either resolver unavailable to the gateway, all fourteen client DNS checks
+passed over UDP/TCP: exact wiki A, empty AAAA, fresh unknown local names and
+subdomains, apex NXDOMAIN, public A and an ad-domain block. Cold positive checks
+waited beyond the observed ten-second rewrite TTL. The Mac's ordinary system
+resolver and HTTP client reached `http://wiki.home.arpa/` at `192.168.1.66`
+with HTTP 200 in each outage. Native LAN capture confirmed requests from the
+gateway to the denied resolver received no answer, while the surviving resolver
+answered the fresh synthetic names and the wiki A/AAAA questions. Backend wire
+queries used UDP; both client transports were tested separately.
+
+With both backends denied to the gateway, fresh local names failed closed:
+the UDP probe timed out after six seconds and TCP returned `REFUSED`. Neither
+was accepted as a successful local DNS answer. Public resolution and ad blocking
+still passed. The WAN capture contained zero `home.arpa` DNS packets while a
+fresh public-zone control below `iana.org` produced three outbound questions
+and three answers. The public control proves the capture could observe DNS
+egress during this test. After exact access-list restoration, the full contract
+and ordinary wiki-by-name HTTP 200 passed automatically, with no client resolver
+or DHCP changes. Both AdGuards reported running after every phase and at closure.
+The drill covered fifty accepted DNS questions plus application checks; raw
+captures, prior attempts and restoration receipts remain private.
+The final full Max System export (167,744 bytes) was encrypted off-device and
+authenticated-decryption verified. Preserve it and all earlier exports; the
+AdGuard protection, upstreams, local rules and original access lists were
+verified unchanged after the drill.
+
+Both resolver access lists and services must be healthy after a drill. For a
+future repeat, preserve `/control/access/list`, temporarily add only the gateway
+to `disallowed_clients` using `/control/access/set`, and restore the exact
+captured lists with a deadline/watchdog. Refuse conflicting pre-existing
+allowlists or concurrent changes rather than overwriting them. Keep protection,
+filtering, upstreams and both daemons unchanged. Store raw captures and API
+snapshots privately; publish only scoped synthetic-query evidence.
+
+To roll back this change, inspect the target address and pause only the new
+NAS-targeting `home.arpa` policy in the native UI. Retain the HA policy and
+paused native A. This restores the former single-forwarder limitation. If both
+backends are unavailable, use numeric recovery addresses and repair a backend;
+never add a public fallback for the private zone. Both AdGuards remain necessary
+for this accepted redundant design and must not be retired.
 
 ## Configuration ownership
 

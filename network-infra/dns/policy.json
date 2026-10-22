@@ -7,7 +7,7 @@
   "client_resolver": "192.168.1.1",
   "gateway_forwarding": {
     "zone": "home.arpa",
-    "resolver": "192.168.1.163",
+    "resolvers": ["192.168.1.163", "192.168.1.66"],
     "native_wiki_a_enabled": false
   },
   "upstream_dns": ["https://dns10.quad9.net/dns-query"],

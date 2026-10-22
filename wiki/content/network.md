@@ -42,12 +42,14 @@ A duplicate-address warning after cutover identified Prusa Alpha and “Nest I t
 
 The [generated DNS policy](wiki-reference:network) lists the configured resolvers, local records, upstreams and filter settings directly from the repository. The resolvers use independent upstream access, and unknown names below the local zone stay local.
 
-The native gateway forwards `home.arpa` to HA AdGuard. Its duplicate wiki A
+The native gateway has two `home.arpa` forwarding policies, targeting HA and NAS
+AdGuard. Its duplicate wiki A
 record is paused because it caused the apex-response mismatch. Default's pre-existing native ad blocking remains enabled, with
 content categories and Safe Search off. Exact UDP/TCP answers, a synthetic local rewrite without an upstream,
 fresh Mac wireless resolution and an ad-domain block passed. Keep both AdGuards
-running: this single-forwarder hybrid has no accepted automatic local-zone
-failover. If direct AdGuard client DNS is selected, both
+running: the native dual-forwarder design passed each backend outage from the
+Mac, including ordinary wiki-by-name HTTP access, while both services remained
+running. The gateway automatically selected the surviving resolver. If direct AdGuard client DNS is selected, both
 addresses must be advertised together by trusted-LAN DHCP after rollout checks
 pass. A public fallback cannot answer private names.
 
