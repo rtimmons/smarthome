@@ -163,6 +163,24 @@ These dedicated writable areas hold manual transfers and recoverable trash. They
 
 Encrypted scheduled archives cover configuration, databases, controller state and integrity receipts. Filex configuration, database and verification receipts now have encrypted recovery coverage; staging and media remain excluded. The archives do not duplicate the whole media library or establish whole-NAS disaster recovery. The native state passed an independent restore on September 22. Seerr configuration and its database are included in new cloud archives.
 
+The encrypted settings schedule also captures native QTS settings and HBS backup
+configuration as of October 17. Its first archive passed off-host readback,
+decryption, payload checksums and database integrity checks. Replacement-NAS boot
+and HBS credential recovery on another device remain untested.
+
+The separate Backblaze B2 job was corrected on October 17 to include selected
+private originals, two Public folders, both Time Machine shares and the encrypted
+settings archives, while excluding replaceable media and caches. The expanded
+selection was narrowed on October 19 to keep only `SpaceBlackTimeMachine` for
+the current laptop; the retired SpaceGray share was removed from future backups
+and its local share/data deletion verified. Existing B2 versions were not manually
+purged. The expanded
+upload completed on October 18; the October 19 run succeeded and its quick
+integrity check reported Good. B2 restore verification remains pending. On
+October 19, the upload rate was capped at 10 MB/s, always on, all seven days,
+to reduce contention with Plex. Playback during a capped backup remains untested.
+See [NAS backup coverage and verification limits](../../../usenet-infra/docs/scheduled-backups.md).
+
 The approved September 20 expansion retained the CX43 server and added $32.01/month at the confirmed account rates: $9 for the Storage Box upgrade and $23.01 for the repair volume. These are dated rates, not a live invoice. The original incomplete spool remains retained for recovery.
 
 **Storage Box snapshots are not independent backups.** They share the same storage system and consume its capacity. Treat the canonical library and configuration backup scopes separately.
@@ -190,7 +208,7 @@ Deployed / observed
 
 Scope limits
 
-- NAS backups cover settings only by choice; original media and whole-NAS recovery are excluded
+- Repository-owned archives cover settings only. B2 has a separately selected originals/Mac-backup scope; expanded uploads succeeded, but restore verification remains pending. Whole-NAS recovery is not established.
 - The replacement drill used empty read-only library fixtures; live provider, NAS and VPN integration were excluded
 - Archive expansion beyond the measured limits; current queue and reserve controls remain in place
 
@@ -287,7 +305,11 @@ Canonical
 
 Sonarr and Radarr give future imports readable names using their existing
 formats. Recyclarr maintains those settings and keeps automatic upgrades off.
-Existing filenames and quality choices are preserved. Recovery remains report-only.
+Existing filenames and quality choices are preserved. Future movie and TV
+selections reject releases labelled AV1, which can force slow conversion on older
+TV players. H.264 and HEVC remain eligible. This checks release names, so playback
+still depends on the actual video, audio and subtitle formats. Existing copies
+are replaced only when explicitly requested. Recovery remains report-only.
 
 A five-minute report-only check follows approved Seerr requests through native
 media processing. It checks for existing files first, holds active downloads,

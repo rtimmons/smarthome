@@ -1,5 +1,7 @@
 import importlib.util
+from contextlib import closing
 import json
+import os
 from pathlib import Path
 import sqlite3
 import tempfile
@@ -13,6 +15,70 @@ spec.loader.exec_module(backup)
 
 
 class ScheduledBackupTests(unittest.TestCase):
+    def test_native_settings_snapshot_captures_committed_wal_and_latest_qts_backup(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            qts, hbs = root / 'qts', root / 'hbs'
+            qts.mkdir()
+            hbs.mkdir()
+            old = qts / '1_20261007_0304.bak'
+            old.write_bytes(b'previous synthetic settings')
+            os.utime(old, (time.time() - 7 * 86400,) * 2)
+            (qts / '0_20261014_0304.bak').write_bytes(b'current synthetic settings')
+            (qts / 'unrelated.bin').write_bytes(b'exclude')
+            (hbs / 'media.mkv').write_bytes(b'exclude')
+            connections = []
+            try:
+                for name in ('cc3_config.db', 'hbs.db'):
+                    db = sqlite3.connect(hbs / name)
+                    connections.append(db)
+                    db.execute('PRAGMA journal_mode=WAL')
+                    db.execute('CREATE TABLE settings(value TEXT)')
+                    db.execute("INSERT INTO settings VALUES ('committed synthetic setting')")
+                    db.commit()
+                    db.execute("INSERT INTO settings VALUES ('uncommitted')")
+                manifest, contents = backup.nas_system_snapshot(qts, hbs)
+                self.assertEqual(set(contents), {'qts/settings.bak', 'hbs/cc3_config.db', 'hbs/hbs.db'})
+                self.assertEqual(contents['qts/settings.bak'], b'current synthetic settings')
+                self.assertEqual(manifest['scope'], 'nas-system-config')
+                for entry in manifest['entries']:
+                    restored = root / Path(entry['path']).name
+                    restored.write_bytes(contents[entry['path']])
+                    self.assertEqual(backup.digest(restored), entry['sha256'])
+                    if restored.suffix == '.db':
+                        with closing(sqlite3.connect(restored)) as db:
+                            self.assertEqual(db.execute('PRAGMA integrity_check').fetchone(), ('ok',))
+                            self.assertEqual(db.execute('SELECT * FROM settings').fetchall(),
+                                             [('committed synthetic setting',)])
+            finally:
+                for db in connections:
+                    db.close()
+
+    def test_native_settings_refuse_missing_stale_and_symlink_sources(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            qts, hbs = root / 'qts', root / 'hbs'
+            qts.mkdir()
+            hbs.mkdir()
+            with self.assertRaisesRegex(RuntimeError, 'missing'):
+                backup.nas_system_snapshot(qts, hbs)
+            path = qts / '0_20261014_0304.bak'
+            path.write_bytes(b'synthetic')
+            os.utime(path, (time.time() - 15 * 86400,) * 2)
+            with self.assertRaisesRegex(RuntimeError, 'stale'):
+                backup.nas_system_snapshot(qts, hbs)
+            path.unlink()
+            outside = root / 'outside'
+            outside.write_bytes(b'do not capture')
+            path.symlink_to(outside)
+            with self.assertRaisesRegex(RuntimeError, 'unsafe'):
+                backup.nas_system_snapshot(qts, hbs)
+            path.unlink()
+            path.write_bytes(b'synthetic settings')
+            (hbs / 'cc3_config.db').symlink_to(outside)
+            with self.assertRaisesRegex(RuntimeError, 'unsafe HBS'):
+                backup.nas_system_snapshot(qts, hbs)
+
     def test_offhost_requires_config_when_enabled(self):
         with patch.object(backup, 'NAS_OFFHOST_CONFIG', Path('/nonexistent/backup-config')), patch.dict(backup.os.environ, {'NAS_OFFHOST_REQUIRED': 'true'}):
             with self.assertRaisesRegex(RuntimeError, 'configuration missing'):

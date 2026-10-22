@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """One-shot settings migration and verification; never search or alter media.
 
-Recyclarr owns naming/upgrade settings. This helper only supplies its secrets,
+Recyclarr owns naming/upgrade/codec settings. This helper only supplies its secrets,
 records preservation evidence, and reconciles Seerr tags/monitoring through the
 native APIs. It is not scheduled and contains no recovery executor.
 """
@@ -17,7 +17,7 @@ ROOT = Path('/srv/usenet')
 TAG = 'seerr-approved'
 BASE = ROOT / 'config/catalog/settings-rollout'
 ROUTES = ('config/naming', 'config/mediamanagement', 'config/indexer',
-          'config/downloadclient', 'qualityprofile', 'downloadclient', 'tag')
+          'config/downloadclient', 'qualityprofile', 'customformat', 'downloadclient', 'tag')
 
 
 def require(value, reason):
@@ -95,6 +95,47 @@ def item_map(snapshot):
     return {f'{app}:{i["id"]}': i for app, a in snapshot['apps'].items() for i in a['items']}
 
 
+def same_media_files(before, after):
+    # Arr recalculates these presentation fields when a custom format changes.
+    # File IDs, paths, MediaInfo and every other field remain preservation checks;
+    # capture's independent inode/size/mtime inventory is also compared below.
+    computed = {'customFormats', 'customFormatScore'}
+    def stable(files):
+        return [{k: v for k, v in f.items() if k not in computed} for f in files]
+    return stable(before) == stable(after)
+
+
+def verify_codec_policy(before, after):
+    """Allow only the reviewed AV1 rejection; preserve every other profile field."""
+    old_formats, new_formats = before['customformat'], after['customformat']
+    av1 = [f for f in new_formats if f['name'] == 'AV1']
+    require(len(av1) == 1, 'av1_format_missing_or_duplicate')
+    rule = av1[0]
+    specs = rule.get('specifications', [])
+    require(not rule.get('includeCustomFormatWhenRenaming') and len(specs) == 1,
+            'av1_format_definition_changed')
+    spec = specs[0]
+    fields = {f['name']: f.get('value') for f in spec.get('fields', [])}
+    require(spec.get('implementation') == 'ReleaseTitleSpecification'
+            and spec.get('negate') is False and spec.get('required') is True
+            and fields.get('value') == r'\bAV1\b', 'av1_format_definition_changed')
+    require([f for f in old_formats if f['name'] != 'AV1'] ==
+            [f for f in new_formats if f['name'] != 'AV1'], 'unrelated_custom_format_changed')
+    old = {p['id']: p for p in before['qualityprofile']}
+    require(set(old) == {p['id'] for p in after['qualityprofile']}, 'quality_profiles_changed')
+    old_av1_ids = {f['id'] for f in old_formats if f['name'] == 'AV1'}
+    for profile in after['qualityprofile']:
+        scores = [f for f in profile['formatItems'] if f['format'] == rule['id']]
+        require(len(scores) == 1 and scores[0]['score'] == -10000
+                and profile['minFormatScore'] == 0, 'av1_rejection_score_missing')
+        previous = dict(old[profile['id']])
+        current = dict(profile)
+        previous['formatItems'] = [f for f in previous['formatItems'] if f['format'] not in old_av1_ids]
+        current['formatItems'] = [f for f in current['formatItems'] if f['format'] != rule['id']]
+        previous['minFormatScore'] = 0
+        require(current == previous, 'unrelated_quality_policy_changed')
+
+
 def seerr_update(r, app, server):
     req = urllib.request.Request(f'http://127.0.0.1:5055/api/v1/settings/{app}/{server["id"]}',
         method='PUT', data=json.dumps({k: v for k, v in server.items() if k != 'id'}).encode(), headers={'Content-Type': 'application/json',
@@ -149,10 +190,11 @@ def main(action):
     require(action == 'verify', 'unsupported_action')
     for app in ('radarr','sonarr'):
         a, b = current['apps'][app], before['apps'][app]
-        require(a['files'] == b['files'] and a['stats'] == b['stats'], 'existing_media_changed')
+        require(same_media_files(b['files'], a['files']) and a['stats'] == b['stats'], 'existing_media_changed')
         require(a['commands'] == b['commands'], 'unexpected_media_command')
-        for route in ('config/indexer','config/downloadclient','downloadclient','qualityprofile'):
+        for route in ('config/indexer','config/downloadclient','downloadclient'):
             require(a[route] == b[route], 'acquisition_or_quality_policy_changed')
+        verify_codec_policy(b, a)
         expected_naming = dict(b['config/naming'], **{'renameEpisodes' if app == 'sonarr' else 'renameMovies': True})
         require(a['config/naming'] == expected_naming, 'naming_readback_failed')
         require(a['config/mediamanagement'] == dict(b['config/mediamanagement'], downloadPropersAndRepacks='doNotPrefer'), 'media_management_readback_failed')

@@ -1,4 +1,91 @@
-# Scheduled configuration backups
+# Scheduled configuration and NAS backups
+
+## Backblaze B2 coverage
+
+On October 17, 2026, the user confirmed that B2 should protect irreplaceable
+files and configuration, initially including both Mac Time Machine shares, while
+excluding replaceable media. On October 19, the user retired the SpaceGray backup.
+The QNAP HBS 3 job `Backup 1` now selects exactly:
+
+- `FromDrobo/loljk`
+- `Public/RyMongo Backups`
+- `Public/Saved Downloads`
+- `Usenet/Backups`
+- `SpaceBlackTimeMachine`
+
+On October 19, `SpaceGrayTimeMachineShare` was removed from the job's future
+source selection and its QNAP share/data were deleted through Control Panel.
+Read-only verification confirmed both the share and underlying directory absent
+after background deletion completed (about 411 GiB removed). The current laptop
+(`SpaceBlack M4 Max`) uses `SpaceBlackTimeMachine`,
+which remains selected and intact. Existing B2 versions were not manually purged.
+
+The former whole-`FromDrobo` selection included replaceable movies/TV, remote
+mounts and caches. Those paths are no longer selected. Source files are never
+deleted by the job, and no existing B2 versions were manually purged. Retention
+remains the latest 30 versions, with backups daily at 02:00 NAS local time
+(America/New_York). Snapshots remain enabled; preservation of ACLs and extended
+attributes is enabled for recovery of the newly included data. Quick integrity
+checks run Mondays at 06:00; full content checks run on the first of each month
+at 06:00. Full content checks download data and consume bandwidth; account
+egress allowances must be considered separately from storage charges.
+
+On October 19, the user-requested upload cap was saved through HBS as **10 MB/s**,
+with **Always on** and all seven days selected. Read-only configuration verification
+confirmed 10,485,760 bytes/second (HBS uses binary megabytes). Download remains
+unlimited. Select Saturday and Sunday explicitly: choosing Always on alone retains
+the dialog's weekday selection. The job was idle when changed; no backup was
+interrupted or manually started. This reduces backup traffic during Plex use,
+but playback under a capped backup has not yet been verified.
+
+The October 17 audit verified 30 consecutive successful runs of the **previous
+selection**, most recently at 02:20 Eastern. The first expanded run completed
+successfully on October 18 at 14:15 Eastern, transferring about 1.85 decimal TB.
+The October 19 run also succeeded, finishing at 04:42 after transferring about
+355 GB; its selected source size was 4.845 decimal TB. HBS reported the October 19
+06:00 quick integrity check as `Good`. These are job and integrity-check results;
+a B2 sample restore remains unverified. Do not equate a successful upload or a
+quick integrity result with demonstrated recovery of the selected sources.
+
+Client-side encryption is disabled, and HBS does not allow it to be enabled
+on this existing job. Any encrypted replacement needs its own reviewed recovery
+password, destination, migration and retention plan. B2 bucket privacy,
+server-side encryption, application-key permissions and lifecycle policy were
+verified in the signed-in account: `RynapQNAP` is private, new uploads receive
+SSE-B2 encryption, and the `RynapQNAPHbs3` application key is restricted to that
+bucket. The bucket keeps all file versions; HBS separately retains 30 backup
+versions. Object Lock is disabled. Do not change lifecycle or Object Lock rules
+without checking compatibility with HBS version management.
+
+The account audit reported 5,688.4 GB in the bucket, more than the selected current-copy
+size. The roughly $34/month estimate for 4.83 TB excludes retained versions and
+existing backup data. At the audit's published $6.95/TB/month rate, the bucket
+alone was roughly $40/month before the expanded upload and future version growth.
+No old cloud data was purged to reduce that figure. B2 storage and download
+caps are unset, so no configured cap currently blocks the expanded upload.
+
+The job's failure trigger is enabled. The Notification Center HBS email rule is
+now enabled for Warning and Error across all six HBS categories, including
+Custom Job Event and Job Status, to the existing recipient. The user completed
+Gmail reauthorization and QNAP cleared its expired-account warning, but the
+authorized test email failed at 10:48 Eastern. QNAP logged its generic
+`error(401) msg(sendmail fail)`; this does not identify a Google authentication
+failure. TLS connections to Gmail on ports 465 and 587 passed from the NAS backup
+container. Alert delivery remains unverified until a test succeeds.
+The user then ran QNAP's documented Notification Center stop/start workaround;
+one authorized retry at 10:57 also failed with the same generic error. The rule
+is enabled, but must not be represented as working email delivery. Notification
+Center is 1.10.0.3331 on QTS 5.2.10. Further repair requires resolving this SMTP
+service failure or setting up a separately approved delivery account.
+
+Manage HBS jobs through QNAP's interface; database inspection is read-only.
+Use the dedicated NAS identity and pinned hostname from private inputs. Do not
+print account credentials, raw configuration databases or private media names.
+Inspect selected source roots, run counts/status, saved schedules and sanitized
+receipts. Recovery should first use a small file restored into a separate test
+directory, never overwrite live source data.
+
+## Repository-owned encrypted settings archives
 
 **October 8: recurring off-host NAS settings coverage is deployed and verified.**
 Final `cloud-20261008T192037Z.tar.age` also passed off-host readback and
@@ -9,7 +96,8 @@ QNAP and Plex settings to a separate Storage Box subaccount confined to
 `catalog/.backups/nas-settings`. Every upload is downloaded again and its
 SHA-256 compared before success is recorded. Independent restores passed for
 66 QNAP settings files and three Plex files; both Plex database snapshots opened.
-NAS originals, artwork and installation binaries are excluded by choice.
+NAS originals, artwork and installation binaries are excluded from these
+settings archives. The separate B2 scope above does include selected originals.
 Media and staging are excluded from this settings-only scope.
 
 
@@ -21,7 +109,7 @@ Plex installation binaries. Media remains on the canonical Storage Box.
 | Host | Schedule | Protected state | Destination |
 | --- | --- | --- | --- |
 | Cloud | systemd `usenet-backup.timer`, hourly retry; skip when a success is less than 23 hours old | SAB, Prowlarr, Radarr, Sonarr, catalog state, deployment scripts/configuration | Encrypted locally, copied to `catalog/.backups/cloud` on the existing Storage Box, independently downloaded and compared |
-| NAS | `usenet-backups` container cron at minute 7 each hour; same daily freshness gate | QNAP Usenet configuration and Plex preferences plus two databases | `/share/Usenet/Backups/automatic` plus independently verified encrypted off-host copies |
+| NAS | `usenet-backups` container cron at minute 7 each hour; same daily freshness gate | QNAP Usenet configuration, Plex preferences/databases, and native QTS/HBS settings | `/share/Usenet/Backups/automatic` plus independently verified encrypted off-host copies |
 | NAS | Part of the NAS job | Already encrypted cloud archives | Pulled with the existing server-enforced read-only account into `automatic/cloud` and checked against SHA-256 receipts |
 
 The recurring NAS schedule uploads Plex and QNAP configuration to the confined
@@ -29,6 +117,26 @@ backup account. The canonical media reader remains server-enforced read-only. En
 uses the existing public `qnap-admin` or `cloud-admin` recipients. Their private
 keys are already recoverable from the original SOPS vault. No private recovery
 master or administrator key is installed on either host for the schedule.
+
+The October 17 native-settings extension is deployed and adds a
+`nas-system` encrypted archive. It includes the newest QTS automatic settings
+backup from `/.@backup_config` on the system volume, plus online SQLite snapshots
+of HBS's `cc3_config.db` and `hbs.db`. The QTS snapshot must be nonempty, no more
+than 64 MiB and less than 14 days old; missing, stale, linked or oversized inputs
+fail capture. HBS databases are checked for integrity before encryption. Native
+settings source directories are mounted read-only, and plaintext exists only in
+memory or the backup container's temporary filesystem. QTS settings reflect the
+native weekly snapshot's timestamp, while HBS configuration is captured daily.
+This does not establish replacement-NAS boot or cross-device HBS credential
+recovery. Keep the existing administrator decryption identity recoverable.
+
+The first three-scope capture completed at 14:50:19 UTC on October 17. All three
+encrypted settings archives passed off-host upload/readback, and the new native
+archive was separately retrieved and decrypted on the workstation. Its three
+payloads matched their manifest hashes and both HBS SQLite snapshots passed
+integrity checks. The included native QTS snapshot dates from October 14.
+The sanitized verification receipt is
+`usenet-infra/recovery/drills/nas-system-config-20261017.json` in the checkout.
 
 Cloud backups require an idle or fully paused SAB queue and no post-processing.
 They never resume or delete queued jobs to satisfy that condition. An active
@@ -114,7 +222,9 @@ connection files; no administrator private key is installed on the NAS.
 Preserve `qnap_backup_offhost_required: true` in private inventory and redeploy
 only `ansible/qnap-backups.yml` when needed. It sets `NAS_OFFHOST_REQUIRED=true`;
 missing connection settings or a failed upload/readback makes the job fail.
-The freshness check requires two remotely verified settings archives.
+The updated freshness check requires all three distinct settings scopes to have
+remotely verified archives; an older two-archive receipt cannot establish health
+after the extension is deployed.
 The backup account can list only its confined backup directory, and a parent
 path probe to the canonical library was refused. It cannot replace the separate
 read-only media credential. Remote retention is currently indefinite; local

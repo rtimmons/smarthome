@@ -66,7 +66,13 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   Whole-machine replacement drills remain separate. Scheduled backups allow an
   idle or fully paused SAB queue but reject post-processing. Never delete/resume
   jobs just to satisfy backup checks. NAS settings-only coverage is deployed with required recurring off-host readback.
-  Original media is excluded by the user’s choice; never infer originals coverage.
+  These repository-owned archives exclude media. The separate HBS/B2 job was
+  scoped by the user on October 17 to selected originals, two Public folders,
+  the current laptop's `SpaceBlackTimeMachine` share and encrypted settings
+  archives. On October 19 the user retired `SpaceGrayTimeMachineShare` and removed
+  it from future HBS backups; do not restore that selection. See
+  [scheduled backups](docs/scheduled-backups.md). A saved selection is not proof
+  that the first upload or a restore has completed.
 
 - Checkout-local preservation and independent restore passed at the checkpoint
   recorded in the recovery ledger. Follow

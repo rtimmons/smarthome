@@ -32,6 +32,8 @@ services:
     volumes:
       - '${QNAP_BACKUP_ROOT:?Configure NAS backup root}:/backups'
       - '${QNAP_PLEX_ROOT:?Configure actual Plex application support path}:/source/plex:ro'
+      - '${QNAP_SYSTEM_BACKUP_ROOT:?Configure native QTS settings backup path}:/source/qts-backups:ro'
+      - '${QNAP_HBS_CONFIG_ROOT:?Configure HBS configuration path}:/source/hbs:ro'
       - /share/Container/usenet:/source/usenet:ro
       - /share/Container/usenet/scripts:/opt/usenet/scripts:ro
       - /share/Container/usenet/bin:/opt/usenet/bin:ro

@@ -1,5 +1,41 @@
 # Private LAN access to the cloud interfaces
 
+## Cloud Gateway Max cutover — October 22, 2026
+
+The Cloud Gateway Max NS now owns this connection. Both it and Lehigh report
+their respective tunnels **Established** after the gateway migration.
+The restored Usenet connection was disabled, kept the old manual WAN address,
+and selected ESP AES-128 while the cloud required AES-256. The Max now binds
+to WAN1's current address and uses policy-based IKEv2, AES-256 for both IKE and
+ESP, SHA1-HMAC, DH14/PFS, local `192.168.1.0/24` and remote `10.77.0.0/30`.
+Only that LAN is selected; the printer and Lehigh networks remain excluded.
+The legacy override described below belongs to the retired USG and must not be
+copied to the Max. SHA-256 modernization remains separate from this repair;
+the existing credential and cloud proposals were preserved.
+
+The WAN change required matching updates to the cloud peer address and
+authentication identities, the exact IPsec source policy, and both Hetzner and
+UFW restrictions. Only TCP 22 and UDP 500/4500 are allowed from the current
+home WAN `/32`; obsolete source rules were removed. Private Terraform and
+Ansible inputs were updated, and a full Terraform plan reported no changes.
+SSH had been blocked by UFW's old source restriction, so Ryan signed into the
+Hetzner server console to recover access. No host or application reboot was
+performed. For a future address change that blocks SSH, use that console to
+replace the trusted SSH source first, then reconcile the peer, identities and
+firewalls; do not disable UFW or allow all Internet sources.
+
+Verification established the actual cloud IKEv2 peer and exact selectors,
+successful reconnection, and a fresh CHILD-SA rekey with MODP-2048/PFS.
+After those checks, LAN requests returned HTTP 401 at SABnzbd/Prowlarr and
+HTTP 307 at Seerr; direct backend ports 8080/9696 remained blocked. These prove
+transport and login gating, not a new interactive application-login test.
+The separate Lehigh gateway answered all LAN probes. Cloud application health
+passed before and after the repair. An encrypted cloud VPN/proxy backup was captured and
+authenticated-decryption verified; its private receipt and archive remain
+under the ignored operational backup directories.
+
+## Historical USG setup
+
 The private LAN connection is live as of September 11, 2026. Tunnel negotiation,
 rekeying, automatic recovery, anonymous denial, and user logins to both SABnzbd
 and Prowlarr have passed.

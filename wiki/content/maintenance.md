@@ -28,7 +28,7 @@ The deployment wrapper checks access to the existing wiki before changing servic
 
 Use `just wiki-rollback` to restore the retained previous release. Inspect deployment receipts for scope and revision; these record successful deployment commands, not continuous health monitoring.
 
-The [wiki operations guide](../../docs/operations/wiki.md) owns publication details. Read [add-on state backups](../../docs/operations/addon-state-backups.md) and [media configuration backups](../../usenet-infra/docs/scheduled-backups.md) for the state each system protects. NAS media is excluded from the settings-only backup scope.
+The [wiki operations guide](../../docs/operations/wiki.md) owns publication details. Read [add-on state backups](../../docs/operations/addon-state-backups.md) and [NAS backup coverage](../../usenet-infra/docs/scheduled-backups.md) for the state each system protects. NAS media is excluded from the repository-owned settings archives. The separate HBS/B2 job selects irreplaceable files, the current laptop's `SpaceBlackTimeMachine` share and those settings archives. The retired SpaceGray share was removed from future backups on October 19. Its expanded uploads succeeded on October 18–19; a sample restore remains unverified. Its upload rate is capped at 10 MB/s every day to reduce contention with Plex.
 
 The scoped media recovery deployment installs only reporting and Home Assistant notifications, validates the HA package, and publishes this guide after success. See the [media recovery runbook](../../usenet-infra/docs/native-media.md#seerr-recovery-reporting); promotion to automatic repairs is a separate change.
 

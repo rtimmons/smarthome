@@ -25,19 +25,19 @@
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {
-    "fingerprint": "78e2c1b8797893319e5d698f02e41cc043d3056b1fd0180d97ff162266dd22c8",
-    "reason": "Generated wiki renders explicit speaker-area name exceptions and independently checked names and areas",
-    "reviewed_at": "2026-10-17"
+    "fingerprint": "aa525f6fac98609cad18f2a2fe19b23897687a272c716abe3906db4c0147a77d",
+    "reason": "Reviewed native QTS/HBS encrypted backup capture and receipt, B2 source selection, retired Mac share removal, upload cap and dated recovery limits",
+    "reviewed_at": "2026-10-22"
   },
   "media": {
-    "fingerprint": "739b66a62fa7a64627fb8d53653649102a243b189b94f2c0d31aaa7326dd09d3",
-    "reason": "Reconciled automatic versus manually selected failed-release behavior with native media policy; imported access, Filex, storage and operational runbooks and corrected nested backup coverage.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "8d166367a0cd9a496f79da686d9dc72f86ed28807c39969e32e3b7ec0ab6d5d2",
+    "reason": "Reviewed NAS backup scope, AV1-only Recyclarr rejection and preservation checks, plus the documented Max VPN repair and saved evidence",
+    "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "6ff97ce3dc047aeac9b14c70896bfbcd2ef2b80bdd8cfc5b891531b76d57ccfd",
-    "reason": "Generated resolver, record and filter tables from DNS policy while retaining dated gateway and DHCP acceptance limits; imported the private LAN access runbook.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "53cb9d2150f56bfeec5f6db07d9eb1c42ca1bb6c9aeb5d786b6ef0d2885c3881",
+    "reason": "Reviewed Max cutover, VPN recovery and separate Prusa/Nest reservations; removed stale USG SSH and pre-arrival DNS guidance",
+    "reviewed_at": "2026-10-22"
   },
   "printing": {
     "fingerprint": "3614ace3dd4e9e36021dee7b3a16e555cb4b2b7351eb570982dc4f5076ea230e",

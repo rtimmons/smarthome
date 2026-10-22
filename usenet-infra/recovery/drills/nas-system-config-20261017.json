@@ -1,0 +1,11 @@
+{
+  "status": "verified",
+  "scope": "nas-system-config",
+  "archive": "nas-system-20261017T144847Z.tar.age",
+  "ciphertext_sha256": "f8cb5dc2b2067af7666ab8f85dc4d042f401e8da367d9d65fc10129a1458c085",
+  "payloads_verified": 3,
+  "sqlite_integrity_checks": 2,
+  "qts_snapshot_created_at": 1791961453,
+  "offhost_readback_verified": true,
+  "settings_capture_last_success": 1792248619
+}

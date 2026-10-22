@@ -28,6 +28,7 @@ RETENTION_DAYS = 90
 NAS_OFFHOST_CONFIG = Path('/source/usenet/config/backup/offhost/rclone.conf')
 PLEX_FILES = ('Preferences.xml', 'Plug-in Support/Databases/com.plexapp.plugins.library.db',
               'Plug-in Support/Databases/com.plexapp.plugins.library.blobs.db')
+NAS_SCOPES = {'qnap-config', 'plex-config', 'nas-system-config'}
 
 
 def module(name):
@@ -123,6 +124,55 @@ def plex_snapshot(source):
             'entries': entries}, contents
 
 
+def nas_system_snapshot(qts_source, hbs_source):
+    """Capture native settings only; plaintext stays in memory or temporary storage."""
+    limit = 64 * 1024**2
+    candidates = [p for p in qts_source.iterdir()
+                  if re.fullmatch(r'\d+_\d{8}_\d{4}\.bak', p.name)]
+    if not candidates:
+        raise RuntimeError('native QTS settings backup missing')
+    source = max(candidates, key=lambda p: p.lstat().st_mtime_ns)
+    if source.is_symlink() or not source.is_file():
+        raise RuntimeError('unsafe native QTS settings backup')
+    before = source.stat()
+    if not 0 < before.st_size <= limit or not 0 <= time.time() - before.st_mtime < 14 * 86400:
+        raise RuntimeError('native QTS settings backup stale or oversized')
+    fingerprint = lambda s: (s.st_dev, s.st_ino, s.st_size, s.st_mtime_ns, s.st_ctime_ns)
+    with os.fdopen(os.open(source, os.O_RDONLY | os.O_NOFOLLOW), 'rb') as stream:
+        if fingerprint(os.fstat(stream.fileno())) != fingerprint(before):
+            raise RuntimeError('native QTS settings backup changed during capture')
+        data = stream.read(limit + 1)
+        unchanged = fingerprint(os.fstat(stream.fileno())) == fingerprint(before)
+    if not unchanged or fingerprint(source.stat()) != fingerprint(before) or len(data) != before.st_size:
+        raise RuntimeError('native QTS settings backup changed during capture')
+    contents = {'qts/settings.bak': data}
+    with tempfile.TemporaryDirectory(prefix='nas-system-backup-') as scratch:
+        for name in ('cc3_config.db', 'hbs.db'):
+            source = hbs_source / name
+            if source.is_symlink() or not source.is_file() or not 0 < source.stat().st_size <= limit:
+                raise RuntimeError('unsafe HBS configuration database')
+            destination = Path(scratch) / name
+            with closing(sqlite3.connect(source.as_uri() + '?mode=ro', uri=True, timeout=30)) as db:
+                with closing(sqlite3.connect(destination)) as target:
+                    deadline = time.monotonic() + 90
+                    def progress(*_):
+                        if time.monotonic() > deadline:
+                            raise RuntimeError('HBS configuration snapshot timed out')
+                    db.backup(target, pages=128, progress=progress, sleep=0.05)
+                    target.execute('PRAGMA journal_mode=DELETE')
+                    if target.execute('PRAGMA quick_check').fetchall() != [('ok',)]:
+                        raise RuntimeError('HBS configuration snapshot invalid')
+            if destination.stat().st_size > limit:
+                raise RuntimeError('HBS configuration snapshot oversized')
+            contents['hbs/' + name] = destination.read_bytes()
+    entries = [{'path': name, 'size': len(data), 'sha256': hashlib.sha256(data).hexdigest(),
+                'source_mode': 0o600} for name, data in sorted(contents.items())]
+    return {'schema_version': 1, 'scope': 'nas-system-config', 'created_at': int(time.time()),
+            'qts_snapshot_created_at': int(before.st_mtime),
+            'consistency': 'Latest native QTS settings archive; HBS SQLite online backups; no media',
+            'entries': entries}, contents
+
+
 def prune_local(scope, root=None):
     # Only this scheduler's receipts authorize deletion, after a fresh success.
     # Keep at least seven generations regardless of age. Never touch master bundles.
@@ -186,6 +236,8 @@ def nas(stamp):
     receipts = [encrypt_contents('qnap-' + stamp + '.tar.age', manifest, contents, recipient)]
     manifest, contents = plex_snapshot(Path('/source/plex'))
     receipts.append(encrypt_contents('plex-' + stamp + '.tar.age', manifest, contents, recipient))
+    manifest, contents = nas_system_snapshot(Path('/source/qts-backups'), Path('/source/hbs'))
+    receipts.append(encrypt_contents('nas-system-' + stamp + '.tar.age', manifest, contents, recipient))
     # Existing read-only Storage Box access mirrors encrypted cloud backups.
     mirror = OUTPUT / 'cloud'
     mirror.mkdir(mode=0o750, exist_ok=True)
@@ -202,7 +254,7 @@ def nas(stamp):
         if archive.is_symlink() or digest(archive) != value['sha256']:
             raise RuntimeError('NAS cloud replica verification failed')
     replicate_nas_settings(receipts)
-    for scope in ('qnap', 'plex'):
+    for scope in ('qnap', 'plex', 'nas-system'):
         prune_local(scope)
     prune_local('cloud', mirror)
     return receipts
@@ -221,7 +273,7 @@ def replicate_nas_settings(receipts):
             '--transfers', '1', '--checkers', '1']
     for receipt in receipts:
         name = receipt['file']
-        if not re.fullmatch(r'(qnap|plex)-\d{8}T\d{6}Z\.tar\.age', name):
+        if not re.fullmatch(r'(qnap|plex|nas-system)-\d{8}T\d{6}Z\.tar\.age', name):
             raise RuntimeError('unexpected NAS backup filename')
         source = OUTPUT / name
         if source.is_symlink() or not source.is_file() or digest(source) != receipt['sha256']:
@@ -260,7 +312,8 @@ def main():
     if args.check:
         healthy = previous.get('status') == 'ok' and time.time() - last_success < 36 * 3600
         if args.host == 'nas' and os.environ.get('NAS_OFFHOST_REQUIRED') == 'true':
-            healthy = healthy and len(previous.get('archives', [])) == 2 and all(
+            healthy = healthy and len(previous.get('archives', [])) == len(NAS_SCOPES) and {
+                r.get('scope') for r in previous.get('archives', [])} == NAS_SCOPES and all(
                 r.get('remote_ciphertext_verified') is True for r in previous['archives'])
         print(json.dumps({'host': args.host, 'healthy': healthy, 'last_success': last_success}))
         return 0 if healthy else 1

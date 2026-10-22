@@ -1,5 +1,6 @@
-# Settings only: no searches, renames of existing files, quality reordering,
-# custom-format imports, or template updates. Unspecified settings are retained.
+# Settings only: no searches, renames of existing files or quality reordering.
+# Reject AV1 for clients that cannot direct play it; retain H.264 and HEVC.
+# Unspecified settings are retained; no broad guide templates are imported.
 radarr:
   seerr_movies:
     base_url: http://127.0.0.1:7878/radarr
@@ -11,17 +12,32 @@ radarr:
         rename: true
     quality_profiles: &no_upgrades
       - name: Any
+        min_format_score: 0
         upgrade: {allowed: false}
       - name: SD
+        min_format_score: 0
         upgrade: {allowed: false}
       - name: HD-720p
+        min_format_score: 0
         upgrade: {allowed: false}
       - name: HD-1080p
+        min_format_score: 0
         upgrade: {allowed: false}
       - name: Ultra-HD
+        min_format_score: 0
         upgrade: {allowed: false}
       - name: HD - 720p/1080p
+        min_format_score: 0
         upgrade: {allowed: false}
+    custom_formats:
+      - trash_ids: [cae4ca30163749b891686f95532519bd] # AV1
+        assign_scores_to: &reject_av1
+          - {name: Any, score: -10000}
+          - {name: SD, score: -10000}
+          - {name: HD-720p, score: -10000}
+          - {name: HD-1080p, score: -10000}
+          - {name: Ultra-HD, score: -10000}
+          - {name: HD - 720p/1080p, score: -10000}
 sonarr:
   seerr_tv:
     base_url: http://127.0.0.1:8989/sonarr
@@ -32,3 +48,6 @@ sonarr:
       episodes:
         rename: true
     quality_profiles: *no_upgrades
+    custom_formats:
+      - trash_ids: [15a05bc7c1a36e2b57fd628f8977e2fc] # AV1
+        assign_scores_to: *reject_av1

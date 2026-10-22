@@ -57,6 +57,51 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(request.method, 'PUT')
         self.assertEqual(json.loads(request.data), {'tags': [7], 'monitorNewItems': 'none'})
 
+class CodecPolicyTests(unittest.TestCase):
+    def test_recalculated_scores_do_not_hide_file_changes(self):
+        before = [{'id': 1, 'path': '/synthetic.mkv', 'size': 100,
+                   'customFormats': [], 'customFormatScore': 0}]
+        after = [dict(before[0], customFormats=[{'id': 9}], customFormatScore=-10000)]
+        self.assertTrue(s.same_media_files(before, after))
+        for field, value in [('id', 2), ('path', '/other.mkv'), ('size', 101)]:
+            changed = [dict(after[0], **{field: value})]
+            self.assertFalse(s.same_media_files(before, changed))
+
+    def fixture(self):
+        before = {'customformat': [], 'qualityprofile': [
+            {'id': 4, 'name': 'HD-1080p', 'minFormatScore': 0,
+             'upgradeAllowed': False, 'items': [{'allowed': True}], 'formatItems': []}]}
+        after = copy.deepcopy(before)
+        after['customformat'] = [{'id': 9, 'name': 'AV1', 'includeCustomFormatWhenRenaming': False,
+            'specifications': [{'implementation': 'ReleaseTitleSpecification', 'negate': False,
+                'required': True, 'fields': [{'name': 'value', 'value': r'\bAV1\b'}]}]}]
+        after['qualityprofile'][0]['formatItems'] = [{'format': 9, 'name': 'AV1', 'score': -10000}]
+        return before, after
+
+    def test_codec_rejection_and_idempotent_readback(self):
+        before, after = self.fixture()
+        s.verify_codec_policy(before, after)
+        s.verify_codec_policy(after, after)
+
+    def test_other_profile_changes_are_refused(self):
+        for field, value in [('upgradeAllowed', True), ('items', []), ('minFormatScore', -10000)]:
+            before, after = self.fixture()
+            after['qualityprofile'][0][field] = value
+            with self.assertRaises(RuntimeError):
+                s.verify_codec_policy(before, after)
+
+    def test_disabled_or_broadened_codec_filter_is_refused(self):
+        for patch in ['score', 'regex', 'negate']:
+            before, after = self.fixture()
+            if patch == 'score':
+                after['qualityprofile'][0]['formatItems'][0]['score'] = 0
+            elif patch == 'regex':
+                after['customformat'][0]['specifications'][0]['fields'][0]['value'] = '.*'
+            else:
+                after['customformat'][0]['specifications'][0]['negate'] = True
+            with self.assertRaises(RuntimeError):
+                s.verify_codec_policy(before, after)
+
 
 if __name__ == '__main__':
     unittest.main()

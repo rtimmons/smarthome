@@ -209,7 +209,7 @@ Recyclarr 8.8.0 is the settings owner. Its official image is pinned by digest in
 no media mounts. `config/recyclarr.yml` explicitly enables future-import naming,
 disables Proper/Repack preference and keeps upgrades disabled in all six existing
 profiles. Existing naming formats, profile quality order, allowed resolutions,
-custom formats and per-item profiles are retained. The request portal validates
+unrelated custom formats and per-item profiles are retained. The request portal validates
 Ultra-HD's 2160p preference and 1080p fallback rather than rewriting the profile.
 The existing movie-specific lower-resolution exception remains unchanged.
 
@@ -221,6 +221,19 @@ management settings are not synchronized, as documented by Recyclarr's
 references. The [quality-profile reference](https://recyclarr.dev/reference/configuration/quality-profiles/)
 describes the upgrade flag. Disabled upgrades are this household's preservation
 policy, not a claim that every TRaSH recommendation disables upgrades.
+
+The October 21 codec policy rejects release names marked AV1 in both Sonarr
+and Radarr. Recyclarr installs only the guide's AV1 custom format, assigns
+`-10000` to all six existing profiles, and sets their minimum custom-format
+score to `0`. H.264 and HEVC remain eligible; quality ordering, resolution
+preferences and disabled automatic upgrades remain unchanged. Different seasons
+can otherwise be selected from different encodes even at the same resolution.
+
+This is a release-name filter, not a guarantee of every TV's codec, audio or
+subtitle compatibility. Unlabelled/mislabelled releases can evade it, and a
+manual grab can override rejections. Check imported MediaInfo and actual Plex
+playback for replacements. Existing files are never deleted or searched by the
+settings sync; replacements require an explicitly scoped native operation.
 
 `usenet-recyclarr.timer` runs settings synchronization daily at 05:35 UTC with
 up to 15 minutes of jitter. Service output uses the bounded system journal;
