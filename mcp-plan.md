@@ -64,9 +64,10 @@ same-AP phone peer passed; keep cellular data off during an iPhone's local-only
 test and restore it afterward. Owner-approved read-only native Debug provided
 the counters; console SSH and MCP mutations remain off.
 
-Updated documentation was published through `just wiki-deploy` on October 22
-at 17:50 Eastern from clean commit `61af10e`. Safari opened the live guide by
-name; live metadata matched the reviewed source fingerprint, with 92 static
+Updated documentation, including automatic DNS failover, was published through
+`just wiki-deploy` on October 22 at 18:11 Eastern from clean commit `83d1865`.
+Safari opened the live guide by name; the generated reference lists both
+forwarders and live metadata matched the reviewed source fingerprint, with 92 static
 files and all 13 prior deployment receipts retained. The publication used an
 isolated checkout to exclude concurrent lighting/automation implementation
 edits in the main worktree. Six existing checkout-specific runbook links were
@@ -80,8 +81,9 @@ rewritten or scan exception added.
 The main worktree's unrelated Z-Wave runbook, HA client and manual automation
 edits remain unstaged. Their component reviews belong to their own work;
 do not acknowledge them solely to clear a whole-worktree wiki check. Private
-publication metadata/logs are preserved under
-`build/unifi-remaining-20261022/published-wiki/`. Every encrypted backup remains
+publication metadata/logs for the DNS follow-up are preserved under
+`build/unifi-dns-failover-20261022/published-wiki/`; prior migration evidence
+remains under `build/unifi-remaining-20261022/`. Every encrypted backup remains
 in the original ignored backup directory. Automatic local-zone failover is now
 accepted: both native forwarders remain active, with unchanged gateway DHCP DNS
 and native ad blocking. The Mac passed cold local answers, UDP/TCP negatives,
