@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "4ac305f2d75203befe92d043a25ab9cd06a225b5a672f26581bf19bbd4356fc7",
-    "reason": "Reviewed two native home.arpa forwarders, each AdGuard outage with both daemons running, cold UDP/TCP and real-client wiki checks, dual-outage fail-closed WAN evidence, exact access restoration/watchdog, recovery and encrypted System export.",
+    "fingerprint": "9e7488e2e310c2aa03206da7fa1ea91f143d6cc08cadcf699fdd26837d18f0df",
+    "reason": "Accepted Max/AP/switch SSH using the existing owner identity and verified host pins; tested printer and WAN denial, preserved recovery access, verified encrypted post-change backup and documented rollback.",
     "reviewed_at": "2026-10-22"
   },
   "printing": {

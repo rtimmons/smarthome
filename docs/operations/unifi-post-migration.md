@@ -18,7 +18,7 @@ source preparation is distinct from live deployment.
 | WAN recovery | Private inputs, provider firewall, fresh cloud SSH, UFW and negotiated SA preflight pass | Repeat after a WAN change |
 | UniFi MCP | Native 0.6.1 tools and live Max/site reads accepted; read-only controls preserved | Rotate existing key before November 22 expiry |
 | Firewall and IDS/IPS | Zones converted after counter/peer acceptance; eight custom policies active and three unreachable allow copies paused; Default/Notify retained | Preserve rollback copies and review future policy hits before further cleanup |
-| Access/docs | Native API works; Max SSH is off and TCP/22 refuses connections | Console SSH requires a separate reviewed access change |
+| Access/docs | Max, both APs and switch pass existing-key SSH with verified host pins; printer and external WAN SSH blocks accepted | Retest after OS updates/restores; retain local trust files and owner recovery credential |
 
 The initial implementation session could not open terminal network connections
 (`Operation not permitted`), and Firefox repeatedly closed in settings.
@@ -27,7 +27,8 @@ settings. Network is `10.6.106`, UniFi OS `5.1.33`. The Max's fresh full export
 (all applications and settings, 156,272 bytes) was encrypted off-device with
 the existing recovery identity and authenticated decryption matched its hash.
 Private archive and verification receipts are ignored. Automatic backups are
-enabled; console SSH is off. No new SSH access was enabled.
+enabled. Console SSH was initially off; the separately authorized access
+completion below enabled and verified it.
 Lehigh's fresh full System export (185,360 bytes) was separately encrypted and
 authenticated-decryption checked before any proposed mesh cutover.
 A second Max export after the DNS/Notify-only changes (157,184 bytes) was also
@@ -94,6 +95,39 @@ neighbor requests with no replies. The read-only health URL returned HTTP 200.
 The Mac again restored trusted Wi-Fi automatically. This is routed-interface
 packet evidence, not an AP bridge trace or per-rule hit-counter baseline.
 Capture archives, packet bytes and raw summaries remain private and ignored.
+
+## SSH access completion — October 22
+
+Ryan authorized completing SSH and separately approved persistent Max root
+access for the existing owner key. He accepted the native enablement notice,
+completed password entry privately and installed the single approved public
+key through the Max Debug console. Its source restriction permits only
+`192.168.1.0/24`; root-owned directory/file modes are `700`/`600`.
+
+Fresh Mac SSH processes authenticated with that exact 1Password identity to
+Max `root@192.168.1.1`, AP Bedroom `ubnt@192.168.1.128`, U7
+`ubnt@192.168.1.67` and switch `ubnt@192.168.1.158`. Host checking remained
+strict, using ignored `.ssh/unifi_known_hosts` and the public identity selector
+`.ssh/unifi-owner.pub`. Trusted native Debug supplied Max/AP fingerprints;
+the switch key matched the controller's recorded fingerprint read through the
+verified Max SSH channel, then the switch's own fingerprint and MAC matched.
+No legacy SHA-1 algorithm exception or private-key export was needed.
+
+An associated printer-network Mac could not open SSH to any of the four
+devices, including both Max gateway addresses, while HA TCP/8099 health
+returned 200 and fresh mDNS worked. Other restricted paths stayed blocked.
+The independent watchdog completed and trusted Wi-Fi/preference state was
+restored. An external cloud-host probe had a working public HTTPS control
+and could not open Max WAN TCP/22. No firewall, routing, radio or AP/switch
+credential setting changed, and MCP remains read-only without mutations/debug.
+
+See [SSH operations](unifi-ssh-access.md) for verified fingerprints, exact
+commands, rollback and update/restore checks. This accepts current key access;
+it does not claim owner-password login, reboot/update persistence or a
+replacement-console recovery drill. Private evidence is preserved under
+ignored `build/unifi-ssh-20261022/`. A fresh full post-SSH Max System export
+(167,888 bytes) was encrypted off-device and authenticated-decryption verified;
+earlier backups and the native download remain intact.
 
 ## Acceptance and backup
 
@@ -319,7 +353,7 @@ attribute a performance change to IDS. Keep Notify mode.
 Before conversion, the five custom printer rules retained their order: LAN In TCP/8099 allow at
 20000 then all-other drop at 20001; LAN Local mDNS/DHCP allows at 20000/20001
 then gateway drop at 20002. The legacy UI did not expose packet counters;
-Max SSH remains off. The same-AP second-printer-peer check passed for the
+Max SSH was still off at that baseline. The same-AP second-printer-peer check passed for the
 Mac/awake-phone pair described above.
 Two UPnP mappings were observed (HA UDP and NAS/Plex TCP); neither was removed.
 

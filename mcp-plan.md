@@ -52,6 +52,13 @@ underlying key's privileges.
 
 ## Validation and remaining work
 
+The remaining SSH access work is accepted as October 22 evidence: the owner
+enabled Max console SSH and installed the approved existing key, limited to
+the trusted LAN. All four device logins passed with verified host identities.
+Printer-network and external IPv4 WAN TCP/22 were blocked, with positive
+controls. Keep the private local trust/public-identity files; retest after
+UniFi OS updates or restoration. No MCP setting or credential changed.
+
 Native tool exposure, Max/site identity and live network/client/Wi-Fi/WAN reads
 are accepted as dated October 22 evidence. Synthetic launcher tests and wiki
 checks must remain current. The broader remaining work is in
@@ -62,7 +69,10 @@ policies are active; three unreachable duplicate HA allow copies are paused,
 with every drop and DHCP/mDNS policy retained. Restricted printing and the
 same-AP phone peer passed; keep cellular data off during an iPhone's local-only
 test and restore it afterward. Owner-approved read-only native Debug provided
-the counters; console SSH and MCP mutations remain off.
+the counters while console SSH was off. The later owner-approved SSH
+completion enabled Max SSH and verified the existing owner key on the Max,
+both APs and switch, with strict host pins and printer/WAN deny checks. See
+`docs/operations/unifi-ssh-access.md`. MCP mutations and debug remain off.
 
 Updated documentation, including automatic DNS failover, was published through
 `just wiki-deploy` on October 22 at 18:11 Eastern from clean commit `83d1865`.

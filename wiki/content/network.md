@@ -38,6 +38,12 @@ current security log view showed no detections. Keep Notify mode.
 
 A duplicate-address warning after cutover identified Prusa Alpha and “Nest I think” at `192.168.1.118`. Both now have separate reservations: the printer keeps `.118`, and the Nest uses `192.168.1.19`. The Nest reconnected successfully, and both devices passed reachability checks. A historical conflict event is not proof of a current conflict; compare the current client addresses before changing them again.
 
+Direct diagnostic SSH access is verified on the Max, both access points and
+the switch using the existing owner key. The Max key is limited to the trusted
+home LAN. Checks from printer Wi-Fi and an external host confirmed SSH stayed
+blocked on those paths. See [SSH access and recovery](../../docs/operations/unifi-ssh-access.md)
+for host verification and rollback. The read-only MCP settings are unchanged.
+
 ## DNS design
 
 The [generated DNS policy](wiki-reference:network) lists the configured resolvers, local records, upstreams and filter settings directly from the repository. The resolvers use independent upstream access, and unknown names below the local zone stay local.

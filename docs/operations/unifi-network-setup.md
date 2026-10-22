@@ -331,7 +331,7 @@ The recommendation is not permission to change live state. Answer the question i
 | Medium | IoT segmentation | `sintheta-iot` shares trusted `Default` | Inventory dependencies and migrate small device groups to a real restricted VLAN with explicit Home Assistant and discovery exceptions | Which Sonos, AirPlay, Chromecast, printer, cloud, and phone-to-device flows must cross the boundary? |
 | Medium | mDNS proxy | All services across all eligible networks | Move toward custom networks/services only after a test proves raw `homeassistant.local` A-record resolution still works for print clients | Which cross-VLAN services are actually required, and can UniFi's custom service model preserve hostname-only lookup? |
 | Medium | Backups | 14 daily controller-local Network backups; cloud backup off | Maintain an encrypted off-device System Config backup and test that the intended replacement hardware can restore it | Is UI cloud backup acceptable, or where will offline exports be stored and how often will restoration be tested? |
-| Medium | Management access and logs | August 31 baseline: one recorded owner, device password auth enabled, NetFlow/syslog off; Max access policy not yet rechecked | Verify MFA/recovery, a break-glass path and dedicated Max SSH access before considering key-only device SSH; choose a log destination if forensic history matters | Who must recover the site if the owner account or Max fails, and what event retention/privacy budget is appropriate? |
+| Medium | Management access and logs | August 31 baseline: one recorded owner, device password auth enabled, NetFlow/syslog off; October 22: existing-key SSH verified on Max/APs/switch, Max key restricted to trusted LAN; printer/WAN SSH blocked | Preserve verified host trust and owner recovery credentials; separately verify MFA/recovery before considering key-only device SSH; choose a log destination if forensic history matters | Who must recover the site if the owner account or Max fails, and what event retention/privacy budget is appropriate? |
 | Medium | Hidden/test WLANs | Element Adoption and `sintheta-6-test` enabled | Disable each only when its owner confirms it is unused; verify AP generated state afterward | Are any AutoLink/Element devices still present, and what experiment/expiry date owns `sintheta-6-test`? |
 | Medium | STP | Classic STP, sole switch priority 4096 | Document the intended root and consider RSTP during a maintenance window; set edge/BPDU behavior only after mapping downstream switches | Is `Switch Server Closet` the permanent root, and which ports lead to switches or bridges rather than endpoints? |
 | High | DNS/filtering | October 16: both AdGuard resolvers passed direct checks; the Mac received `NXDOMAIN` for `wiki.home.arpa`. October 22: public DNS through the new gateway passed; local-name cutover remains unverified | Finish migrated baseline checks before selecting DNS ownership and testing client cutover | Use native UCG-Max DNS/ad blocking or retain dual AdGuard? Which client names should be assigned under `home.arpa`? |
@@ -353,7 +353,10 @@ See the [launcher runbook](../../network-infra/unifi-mcp/README.md) and
 Use the Max's version-specific **Integrations** documentation where an API
 covers the desired read. Keep direct AP/switch effective-state checks for
 provisioning and transient failures. No active workflow requires reconnecting
-the Cloud Key or writing controller MongoDB.
+the Cloud Key or writing controller MongoDB. The October 22 access completion
+verified existing-key SSH to the Max, both APs and switch with independently
+verified host pins. Printer-network and external WAN SSH checks remained
+blocked; see [SSH operations](unifi-ssh-access.md).
 
 ## Safe Change Workflow
 
@@ -371,7 +374,7 @@ Never update UniFi configuration through its MongoDB database. The database is a
 - SSID settings: **Network > Settings > WiFi**
 - Client reservations: **Network > Client Devices > select client > Settings > IP Settings > Fixed IP Address**
 - Per-AP radios and meshing: **Network > UniFi Devices > select AP > Settings gear > Radios**
-- Controller SSH: **Control Plane > Console > SSH**
+- Max console SSH (Network 10.6.106): **Settings > Management > General > SSH**; see [verified access and rollback](unifi-ssh-access.md)
 - Adopted-device SSH: search Network settings for **Device SSH Authentication**
 - Pending retired hardware: **Network > UniFi Devices**, filtered to **Pending Adoption**
 
