@@ -19,7 +19,10 @@
   pausing the duplicate native A record. Associated printer-client allow/deny
   checks and cloud SHA-256 reconnect/PFS rekey passed. See the canonical
   follow-up for the accepted physical print, same-AP phone peer and fresh
-  wire-level discovery checks, and remaining wired/remote-host acceptance.
+  wire-level discovery checks and observed fresh HA Ethernet lease. Ryan
+  accepted UniFi's Connected status for Site Magic without a Lehigh host.
+  Both old manual peers are paused. Ryan confirmed Remote/AirPlay/Sonos controls and
+  cloud-application sign-ins from the home LAN.
 
 Preserve unrelated work and every private backup. Do not stage, commit or take
 a Git lock without permission. Keep credential values and raw private responses
@@ -49,10 +52,14 @@ underlying key's privileges.
 Native tool exposure, Max/site identity and live network/client/Wi-Fi/WAN reads
 are accepted as dated October 22 evidence. Synthetic launcher tests and wiki
 checks must remain current. The broader remaining work is in
-`docs/operations/unifi-post-migration.md`; Site Magic awaits a Lehigh test host,
-and zones await the rule-counter baseline. Restricted printing and the same-AP
-phone peer now pass; keep cellular data off during an iPhone's local-only test
-and restore it afterward.
+`docs/operations/unifi-post-migration.md`. The LAN-only Site Magic mesh is live,
+with both gateways Connected; no bidirectional host test is claimed.
+The zone upgrade is live after the accepted counter/peer baseline. Eight custom
+policies are active; three unreachable duplicate HA allow copies are paused,
+with every drop and DHCP/mDNS policy retained. Restricted printing and the
+same-AP phone peer passed; keep cellular data off during an iPhone's local-only
+test and restore it afterward. Owner-approved read-only native Debug provided
+the counters; console SSH and MCP mutations remain off.
 
 Updated documentation was published through `just wiki-deploy` on October 22
 at 16:37 Eastern. Safari opened the live network guide; publication metadata

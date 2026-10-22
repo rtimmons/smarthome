@@ -92,6 +92,12 @@ administrative path before adding an exact entry; never blindly accept a scan
 or disable checking. Native Max packet capture remains available without
 enabling console SSH.
 
+Ryan approved the existing native **UniFi Devices > Max > Settings > Debug**
+console for read-only firewall inspection and its displayed terms notice.
+That session read effective rule counters without enabling SSH, installing a
+key or changing credentials. After the zone upgrade, the native policy table
+also exposes hit counts. This approval did not enable MCP debug/mutation tools.
+
 ## Troubleshooting
 
 - **Operation not permitted before connection:** executor restrictions; do not

@@ -9,8 +9,10 @@ The whole-site configuration baseline in this file was observed read-only on **2
 Ryan authorized the [post-migration improvements](unifi-post-migration.md) on
 October 22. The forwarding-only DNS hybrid, associated printer-client allow/deny tests,
 cloud SHA-256 reconnect/PFS rekey and native read-only MCP now pass their dated
-checks. Site Magic and zone migration await the specific remaining client
-evidence in that checklist.
+checks. Zone migration and reversible policy cleanup are accepted. Site Magic
+now shares only the two Default LANs, with both gateways Connected; Ryan
+accepted the UniFi status without a Lehigh test host. The old manual IPsec
+definitions remain paused for rollback. See the checklist for evidence limits.
 
 ## Design Goals
 
@@ -494,9 +496,9 @@ Do not raise AP transmit power solely to hide poor client RSSI; asymmetric links
 
 ### Next controlled iterations
 
-1. Complete the `sintheta-printer` end-to-end client validation in the decision register.
+1. Preserve the accepted `sintheta-printer` print, routed restriction and same-AP peer checks in the post-migration checklist.
 2. Inventory live UPnP mappings and decide whether each one is still required before disabling UPnP.
-3. Complete the authorized Site Magic and cloud IPsec modernization in the [post-migration checklist](unifi-post-migration.md).
+3. Monitor the accepted Site Magic mesh and SHA-256 cloud IPsec connection; retain their separate rollback configurations in the [post-migration checklist](unifi-post-migration.md).
 4. Resolve the purpose of Element Adoption and `sintheta-6-test` before retaining or removing them.
 5. Move documented IoT clients in small groups only after defining a real segmentation policy and required flows.
 6. Compare 2.4 GHz utilization and retries after migration.

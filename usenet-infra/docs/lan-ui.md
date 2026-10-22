@@ -59,6 +59,37 @@ to SHA1 and deploy that explicit cloud profile together, then verify actual
 negotiation and paths. Keep pre-change archives unchanged. Do not revert only
 one peer or install the historical USG override on the Max.
 
+After the subsequent zone-firewall conversion, the SHA-256 preflight and LAN
+transport/login-gate checks passed again. Ryan separately confirmed cloud-app
+sign-ins working from the home LAN. Preserve the distinction between those
+owner-verified sign-ins and the agent's anonymous network probes.
+
+## Current operation
+
+The Max uses native policy-based IKEv2 with AES-256, SHA-256, DH14/PFS and the
+exact Default-LAN/service selectors above. The cloud's accepted profile is
+`sha256`; the USG provisioning override is inactive historical recovery material.
+
+| Interface | Private address |
+| --- | --- |
+| Seerr | `http://10.77.0.1:15055/` |
+| SABnzbd proxy | `http://10.77.0.1:18080/` |
+| Prowlarr proxy | `http://10.77.0.1:19696/` |
+| Filex (existing pinned SSH tunnel) | `http://127.0.0.1:15213/` |
+
+Open Filex with `just usenet-filex-ui` and follow the [Filex operator workflow](filex.md).
+Keep its pinned SSH tunnel and host trust policy. Use the existing application
+authentication; changing the gateway or VPN does not change those credentials. Proxy login gates and
+blocked backend ports are transport checks, separate from an interactive login.
+
+Before changing the peer or WAN restrictions, read the Max's actual WAN1 IPv4
+and run `just usenet-vpn-peer-check <verified-WAN-IPv4> --require-sha256`.
+Follow the [coordinated WAN recovery workflow](../../docs/operations/unifi-post-migration.md#cloud-vpn-and-wan-recovery)
+for provider/UFW restrictions, private inputs, paired deployment and rollback.
+The existing scoped `just usenet-configure-cloud-lan-ui` workflow owns the
+cloud VPN/proxy; preserve unrelated media services and transfers. Capture and
+verify the separate encrypted VPN archive after an accepted change.
+
 ## Historical USG setup
 
 This section records the retired gateway and its provisioning override. Current
@@ -89,7 +120,7 @@ the new access path does not change either password. Home Assistant may link to 
 or show SABnzbd status; it does not carry the VPN connection. QNAP handles the
 catalog and local cache.
 
-## Scope and compatibility
+### Historical scope and compatibility
 
 Verified on September 10, 2026: Cloud Key Gen2 Plus, UniFi OS 5.1.31, Network
 10.6.101, USG 3P firmware 4.4.57.5578372; cloud Ubuntu 26.04.
@@ -118,7 +149,7 @@ UDP 500/4500 are restricted to the verified home WAN address in both Hetzner's
 firewall and UFW. Host policy also requires the matching IPsec peer and blocks
 plaintext fallback. Exact same-address loopback health probes are permitted.
 
-## Deployment and recovery
+### Historical deployment and recovery
 
 `just usenet-configure-cloud-lan-ui` installs only the new VPN and proxy. Their
 roles are also included in a full cloud rebuild when `cloud_lan_ui_enabled` is

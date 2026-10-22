@@ -12,12 +12,19 @@ The wiki is plain HTTP on the trusted network, without a separate login. Applica
 
 The **Cloud Gateway Max NS (US Version), UCG-Max-NS**, took over routing and UniFi Network management on **October 22, 2026**. A fresh Network-only backup restored the existing configuration after the full console backup failed. Ryan confirmed the retained switch and both access points online in the Max's controller.
 
-Checks from the Mac passed for gateway reachability, public DNS, Internet HTTPS, Home Assistant, and the wiki's numeric address. Both site-to-site VPNs were repaired after the WAN address changed and showed Established. Lehigh's gateway and the private Usenet application endpoints were reachable. The resumed checks verified fresh wireless leases, all seven infrastructure reservations, printer-network restrictions and an isolated phone peer on the same AP. Ryan confirmed the single test label printed correctly. Fresh Bonjour wire replies and all 27 advertised Companion, AirPlay and Sonos TCP endpoints passed. Fresh wired DHCP and interactive Remote/playback checks remain separate. A fresh full Max System export is encrypted off-device and decryption-verified. Ryan confirmed the USG and Cloud Key retired from active service; retain their disconnected configurations for rollback.
+Checks from the Mac passed for gateway reachability, public DNS, Internet HTTPS, Home Assistant, and the wiki's numeric address. Both site-to-site VPNs were repaired after the WAN address changed and showed Established. Lehigh's gateway and the private Usenet application endpoints were reachable. The resumed checks verified fresh Mac wireless leases, a new Home Assistant Ethernet lease after cutover, all seven infrastructure reservations, printer-network restrictions and an isolated phone peer on the same AP. Ryan confirmed the single test label printed correctly. Fresh Bonjour wire replies and all 27 advertised Companion, AirPlay and Sonos TCP endpoints passed. Ryan also confirmed Apple TV Remote, AirPlay and Sonos controls, plus cloud-app sign-ins from home. A fresh full Max System export is encrypted off-device and decryption-verified. Ryan confirmed the USG and Cloud Key retired from active service; retain their disconnected configurations for rollback.
 
 Ryan authorized a native DNS/ad-blocking pilot, Site Magic for Lehigh, cloud VPN
 modernization and tooling cleanup. The forwarding-only DNS hybrid, cloud SHA-256 reconnect/PFS rekey and
-native read-only MCP are accepted. Site Magic awaits a Lehigh test host; zones
-await the rule-counter baseline. The [post-migration checklist](../../docs/operations/unifi-post-migration.md)
+native read-only MCP are accepted. The zone firewall is now active: it retains
+the printer's network-specific restrictions, with eight active custom policies
+and three redundant HA allow copies paused for easy recovery. Default and the
+printer VLAN both remain in Internal. The `Newark-Lehigh` Site Magic mesh now
+reports both gateways Connected and shares only Newark `192.168.1.0/24` and
+Lehigh `192.168.8.0/24`. Printer and cloud VPN networks are excluded. Both old
+manual IPsec definitions are paused for rollback. Ryan accepted UniFi's status
+without a Lehigh test host; bidirectional host application tests were not run.
+The [post-migration checklist](../../docs/operations/unifi-post-migration.md)
 records status and acceptance; the [migration record](../../docs/operations/unifi-network-setup.md#cloud-gateway-max-migration)
 records the completed cutover.
 

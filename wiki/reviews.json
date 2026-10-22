@@ -20,9 +20,9 @@
     "reviewed_at": "2026-10-16"
   },
   "lighting": {
-    "fingerprint": "e86b063a48d1ada611de0cc7b9b72db93e1ab311a386244b7fca4d4ac00fb505",
-    "reason": "Reviewed the placement contract for Move in the renamed Patio area; lighting device identities, area IDs and scene targets remain unchanged",
-    "reviewed_at": "2026-10-17"
+    "fingerprint": "b18786fad5ae5268312d2ba70f66877a8f29fcade30a7d6fbb0d6831dd428e99",
+    "reason": "Reviewed only the six existing Z-Wave runbook source links changed from one Mac checkout path to repository-relative paths; no lighting behavior or concurrent working-tree implementation changes are included.",
+    "reviewed_at": "2026-10-22"
   },
   "maintenance": {
     "fingerprint": "9bb1b7292ad78ec5abb31dec4b617790ef5f643f56df06fb07fa77bbf9ac8ccc",
@@ -30,13 +30,13 @@
     "reviewed_at": "2026-10-22"
   },
   "media": {
-    "fingerprint": "5b1fdf9f23e07815ee88bbf11e37f438ed569d1443b7bbe9092a17cbe2594f9e",
-    "reason": "Reviewed scoped SHA-256 cloud VPN profile and rollback template, selector/credential preservation test, and accepted cloud transport and encrypted backup evidence",
+    "fingerprint": "1904484c383c77b5212cef5a1bf989d09e20cd6dddb904c1797f37456997cff3",
+    "reason": "Reviewed current Max SHA-256 VPN operation, coordinated WAN recovery and owner-confirmed LAN sign-ins; preserved Filex pinned SSH tunnel and host trust policy.",
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "b40f4fecc10dd6ccd4448cab9701093f6ebd892cfb0f2d1be10ac3b8c8a2b6bc",
-    "reason": "Accept the physical restricted print, awake same-AP phone isolation, live Bonjour wire replies, native printer capture and second trusted DNS client; record current SSH host-trust prerequisites.",
+    "fingerprint": "0e706a4dc0d9d9c2a864620f72ab150a28b77763d0e024095b1cb38acd9d5543",
+    "reason": "Reviewed accepted zone conversion, printer counters and reversible cleanup, owner-confirmed controls and sign-ins, wired DHCP, LAN-only Site Magic Connected status under revised owner acceptance, printer exclusions and verified encrypted backups.",
     "reviewed_at": "2026-10-22"
   },
   "printing": {
