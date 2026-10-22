@@ -259,7 +259,6 @@
         "docs/operations/addon-state-backups.md",
         "usenet-infra/docs/scheduled-backups.md",
         "docs/operations/wiki.md",
-        "wiki-plan.md",
         "usenet-infra/docs/checkout-recovery.md",
         "usenet-infra/docs/recovery.md",
         "usenet-infra/docs/secrets-recovery.md",

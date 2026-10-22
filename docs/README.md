@@ -4,8 +4,7 @@ This directory contains project-specific documentation for the smarthome reposit
 
 The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built from
 `wiki/` and selected runbooks here. See [wiki operations](operations/wiki.md),
-[DNS operations](operations/home-dns.md), the [wiki assessment](operations/wiki-audit.md),
-and the [expansion plan](../wiki-plan.md).
+[DNS operations](operations/home-dns.md) and the [wiki assessment](operations/wiki-audit.md).
 
 ## Quick Start
 
@@ -52,7 +51,7 @@ and the [expansion plan](../wiki-plan.md).
 - [**sonoff-zigbee-thread.md**](operations/sonoff-zigbee-thread.md) — Shared Sonoff Zigbee and Thread configuration, restore fix, and recovery
 - [**esphome-fancontrollers.md**](operations/esphome-fancontrollers.md) — ESPHome fan controller inventory and setup workflow
 - [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
-- [**Usenet plan and handoff**](../plan.md) — Current deployment and accepted recovery limits
+- [**Usenet acceptance**](../usenet-infra/docs/validation.md) — Current deployment and accepted recovery limits
 - [**Native media**](../usenet-infra/docs/native-media.md) — Arr imports, canonical storage and remote Plex playback
 - [**Repair volume**](../usenet-infra/docs/repair-spool.md) — Current mount definitions and existing-volume recovery
 - [**Scheduled backups**](../usenet-infra/docs/scheduled-backups.md) — Host-owned schedules, freshness, scope and retention

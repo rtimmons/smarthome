@@ -146,8 +146,8 @@ Do not paste credentials into chat, source files, diagnostics, or screenshots.
 The UI requires a human to enter and submit the new credential.
 
 Before deployment, a fresh encrypted cloud backup and both UniFi Network and
-full System backups were verified. Their archive paths and evidence are recorded
-in `plan.md` and the ignored `build/unifi-*-backup-*.json` files. Backup encryption
+full System backups were verified. Archive paths and evidence remain in the
+ignored `build/unifi-*-backup-*.json` receipts. Backup encryption
 uses the existing dedicated cloud-administrator key; no 1Password private key
 is exported. New root-owned VPN/proxy settings require their separate encrypted
 VPN backup in addition to ordinary cloud application backups.
@@ -175,4 +175,5 @@ credentials, and direct backend ports 8080/9696 timed out. The existing site VPN
 configuration and workstation default route were preserved. Repeat cloud
 deployment reported zero changes. Encrypted, authenticated-decryption-verified
 post-change backup includes the actual gateway configuration, saved UniFi VPN
-record, and installed override; see `plan.md` for its path and checksum.
+record, and installed override; its path/checksum remain in the ignored backup
+receipts.

@@ -25,18 +25,18 @@
     "reviewed_at": "2026-10-22"
   },
   "maintenance": {
-    "fingerprint": "1129262e40a218c9770ef442e4d86b309920ba937d94b25a800bc968b952d111",
-    "reason": "Replaced superseded wiki installation/DHCP handoff with current publication, DNS and recovery ownership; deployment implementation and confinement unchanged.",
+    "fingerprint": "e85f6d1ee228a14e1c3798612e6509c4ff5ef229a62de617042c2e94b05c4474",
+    "reason": "Removed the completed wiki plan from the runbook catalog and redirected recovery/wiki references to maintained operational and acceptance documents; immutable recovery records and tooling remain unchanged.",
     "reviewed_at": "2026-10-22"
   },
   "media": {
-    "fingerprint": "b935dc9486bb8648f276b902ec4ccd2b4154a60405c065ace43156a7923a2c2f",
-    "reason": "Condensed obsolete initial SHA1 cloud cutover narrative to accepted SHA256 and Site Magic status; historical USG rollback and service behavior unchanged.",
+    "fingerprint": "ae7aca0364644f71e247b5bf582019c3799c666c67b559dc8eb24716e5477b1d",
+    "reason": "Moved the completed plan closure and discard safeguards into validation and pointed Filex acceptance at dated immutable receipts; no runtime or acquisition behavior changed.",
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "bb6520d92cadf8203ac370e37b09c05093a2bdb2fe77ec57bdd4ebf5c506ee23",
-    "reason": "Consolidated accepted gateway/DNS/SSH/VPN state and rollback; removed obsolete pending claims and duplicated migration chronology while preserving host pins, exact DNS contract and evidence limits.",
+    "fingerprint": "30277e6f565f7d6928d144df2bb4dc238ee3530850c690dde12577bec1f2afc8",
+    "reason": "Removed the duplicate MCP handoff, retained its completed-setup/credential safeguards in the canonical launcher runbook, and replaced obsolete plan references in VPN recovery documentation.",
     "reviewed_at": "2026-10-22"
   },
   "printing": {

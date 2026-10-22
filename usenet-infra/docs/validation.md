@@ -10,7 +10,9 @@ Offline checks do not establish live deployment or media acceptance.
 ## Recorded operational acceptance
 
 The approved plan completed October 8, 2026. These are dated observations, not
-promises about future health. Preserve the immutable records in `recovery/`.
+promises about future health. No operational acceptance work remains from that
+plan. The three old held requests were deliberately discarded; preserve their
+disposition records and all 44 journals alongside the immutable `recovery/` records.
 
 | Area | Evidence and limit |
 | --- | --- |

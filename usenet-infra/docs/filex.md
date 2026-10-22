@@ -190,9 +190,10 @@ Follow the independent restore checks in [Filex recovery](filex-recovery.md).
 
 ## Acceptance evidence
 
-Sanitized outcomes belong in `recovery/drills/filex-pilot-20260919.json` and the
-current `../plan.md`. Exact credentials, operational names, hashes, API responses
-and transfer receipts stay in private ignored evidence. Use synthetic fixtures
+Keep the original `recovery/drills/filex-pilot-20260919.json` receipt unchanged.
+Record new sanitized outcomes in a new dated recovery receipt and summarize
+current acceptance in [validation](validation.md). Exact credentials, operational
+names, hashes, API responses and transfer receipts stay in private ignored evidence. Use synthetic fixtures
 for browse/sort/download, restore, transfer, interruption and confinement checks.
 Live coexistence passed during both native SAB postprocessing and importer
 source hashing. The running image matches the reviewed patch/build receipt, and

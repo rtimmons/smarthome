@@ -10,6 +10,9 @@ environments stay under ignored `build/unifi-mcp/`.
 
 ## Current status — October 22, 2026
 
+Setup and live acceptance are complete. Preserve the existing launcher and
+credential; do not reinstall, recreate keys or restore credential fallbacks.
+
 Ryan added **UBIQUITI_API_KEY** to UniFi's environment variables in the ChatGPT
 MCP settings and explicitly selected that credential path. The launcher now
 requires that variable, maps it to upstream's `UNIFI_API_KEY`, then removes the
@@ -49,8 +52,8 @@ underlying credential is not constrained by the MCP server's read-only mode.
 The launcher enforces the `network` profile, `UNIFI_READ_ONLY=true`, dry-run
 mode and the `viewer` stdio role. Debug requests, cloud tools, external
 telemetry and network transport are disabled. TLS verification is initially
-disabled for this LAN appliance's certificate, as recorded in the deployment
-handoff; a verified appliance CA remains a separate reviewed change.
+disabled for this LAN appliance's certificate; a verified appliance CA remains
+a separate reviewed change.
 
 To rotate, replace the settings-provided value with a new dedicated key,
 verify live reads with a new process, then revoke the old key in UniFi. To

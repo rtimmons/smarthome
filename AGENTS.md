@@ -53,7 +53,7 @@ Guidance for humans and agents working in this repository.
 
 ## Docs map
 - The smarthome wiki is built from `wiki/` and explicitly imported canonical runbooks. For behavioral changes, update the corresponding explanation and run `just wiki-check`. Review changed component fingerprints with `just wiki-review <component> '<specific reason>'`; do not acknowledge unfamiliar changes merely to bypass the check. Supported deployments publish once after success; use `just wiki-deploy` for documentation-only changes. See `docs/operations/wiki.md` and `docs/operations/home-dns.md`.
-- Usenet, QNAP storage, Plex and their recovery workflow: read `usenet-infra/AGENTS.md` and the current handoff at the top of `plan.md` before operating them.
+- Usenet, QNAP storage, Plex and their recovery workflow: read `usenet-infra/AGENTS.md` and `usenet-infra/docs/validation.md` for accepted scope and recovery limits before operating them.
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
 - Container runtime details: `docs/addon-development/container-runtime.md`.
 - UniFi access and Apple TV/Bonjour troubleshooting: `docs/operations/unifi-ssh-access.md`, `docs/operations/unifi-apple-tv-remote.md`.

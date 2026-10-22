@@ -11,7 +11,7 @@ is still unsafe.** Published revision `6fa9174` restored 24 vault entries and 15
 NAS bundle entries, verified six keypairs, and restored zero new files on repeat.
 See the [saved report](../recovery/drills/20260911T194408Z.json).
 The September drill completed that prerequisite. Current operation and closure
-limits are in the [current handoff](../../plan.md); historical next steps below
+limits are in the [validation summary](validation.md); historical next steps below
 are not instructions to repeat setup. The original inventory's external-dependency
 statuses are an inventory-time snapshot: its `planned` master/store and
 `local-backup-only` archive labels predate the verified NAS retrieval and clone
@@ -342,8 +342,9 @@ Application startup was not repeated; deletion safety remains false.
 
 Before deleting the original checkout, preserve unrelated user work and all
 other inventoried/external prerequisites, and resolve the HA and remaining
-application/machine recovery gaps. Record actual results in `plan.md`; inventory success alone must
-never be treated as deletion approval. Capture freshness, new archive inventory,
+application/machine recovery gaps. Record actual results in a new dated recovery
+receipt and update [validation](validation.md); inventory success alone must never
+be treated as deletion approval. Capture freshness, new archive inventory,
 and current backup freshness remain ongoing maintenance work; see
 [scheduled backups](scheduled-backups.md) for the deployed schedules and retention. New files in bounded discovery roots require inventory review;
 changing inventory policy also requires re-encrypting the small vault.

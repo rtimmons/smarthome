@@ -7,7 +7,7 @@ The old HTML is retained only as a test fixture for compatibility anchors.
 Use `http://wiki.home.arpa/` or numeric recovery at `http://192.168.1.66/`.
 The existing `http://192.168.1.66:8090/` entrance redirects to the media guide and
 preserves URL fragments. DNS/DHCP acceptance is recorded in
-[`../../wiki-plan.md`](../../wiki-plan.md).
+[DNS operations](../../docs/operations/home-dns.md).
 
 Run `just wiki-check`, `just wiki-preview`, `just wiki-deploy`, or
 `just wiki-rollback` at repository root. `just usenet-wiki-deploy` remains an

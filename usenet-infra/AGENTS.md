@@ -1,9 +1,8 @@
 # Usenet, NAS and Plex agent guide
 
-Read the [current plan and closure criteria](../plan.md), then [native media](docs/native-media.md),
+Read the [accepted scope and recovery limits](docs/validation.md), then [native media](docs/native-media.md),
 [NAS/Plex layout](docs/nas-plex-layout.md) and [scheduled backups](docs/scheduled-backups.md).
-Use [operations](docs/operations.md) for additional commands and
-[validation](docs/validation.md) for accepted behavior and its evidence limits.
+Use [operations](docs/operations.md) for additional commands.
 
 ## Media privacy in commits
 
@@ -117,12 +116,13 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   SSH tunnel. Keep host trust policy unchanged: no CA installation or TLS bypass.
   Preserve its reviewed image, verified transfers, quarantine and disabled purge.
   Canonical roots are read-only; staging is excluded from configuration backups.
-- The static private wiki is deployed at `http://192.168.1.66:8090/`. Edit repository-root `wiki/` or its imported runbooks and publish through
+- The static private wiki is at `http://wiki.home.arpa/`, with numeric recovery at
+  `http://192.168.1.66/`. Edit repository-root `wiki/` or its imported runbooks and publish through
   `just wiki-deploy` (`just usenet-wiki-deploy` remains an alias). It must not gain credentials,
   live APIs, media listings, Docker access or public exposure.
 - Before live changes, use the read-only health commands in the README. Do not
   restart services, inspect private media or enqueue requests merely to audit.
-- October 8 closure and its limits are recorded in `plan.md` and
+- October 8 closure and its limits are recorded in `docs/validation.md` and
   `recovery/drills/closure-20261008.json`. Dated recovery records are evidence,
   not instructions to replay. Preserve original SOPS-bound snapshots unchanged.
 - No PRs. Ask before taking a Git lock, as required by the root guide. Preserve
