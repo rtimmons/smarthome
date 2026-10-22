@@ -57,7 +57,9 @@ Sonos API no longer declares it as a deployment dependency. The live backend is
 `home_assistant`; dormant node/shadow configuration is retained until the user
 requests final removal after at least 24 hours. Do not re-enable it automatically.
 
-Every live test must restore the frozen household state before its stage can pass: one Bathroom-coordinated group containing all eight configured rooms, volume 20 and mute false on every member, playing `CH 735 - Steve Aoki's Remix Radio`. Home Assistant, direct node while retained, Sonos API, Grid Dashboard, and the Sonos app must agree, with no pending operation. See the validation record for the complete checkpoint.
+Every live test must capture and restore the current household state, with no
+pending operation. Follow the [restoration checkpoint](routing-guide.md#live-restoration-checkpoint);
+the dated August baseline does not override newer intentional household changes.
 
 ## Development and validation
 

@@ -87,7 +87,8 @@
       "runbooks": [
         "docs/sonos/overview.md",
         "docs/sonos/routing-guide.md",
-        "docs/sonos/ha-migration-validation.md"
+        "docs/sonos/ha-migration-validation.md",
+        "docs/plan-replace-sonos-node-api.md"
       ]
     },
     {
@@ -256,6 +257,7 @@
         "wiki/areas.py"
       ],
       "runbooks": [
+        "docs/plan-hardening.md",
         "docs/operations/addon-state-backups.md",
         "usenet-infra/docs/scheduled-backups.md",
         "docs/operations/wiki.md",

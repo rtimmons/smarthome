@@ -1,8 +1,8 @@
 {
   "audio": {
-    "fingerprint": "203618532d2e29c2256fc1b603d5c5054f0b9a093c47e61075cbedc9817cfb8e",
-    "reason": "Reviewed tolerant external follower artwork ownership and routed zones/state/artwork regression coverage for deployment readiness.",
-    "reviewed_at": "2026-10-19"
+    "fingerprint": "46d11618226feada4ac3dc0b422c5b6393dab3f4e0fab3ddc6fe4fda0f5b45df",
+    "reason": "Reconciled deployed HA-backed Sonos and disabled legacy state with October acceptance; replaced stale implementation/merge tasks with remaining retirement gates and moved rollback into the routing runbook while preserving current household state and the final root-test gate.",
+    "reviewed_at": "2026-10-22"
   },
   "dashboard": {
     "fingerprint": "e236ffc845ac986c76f772c43ce415bfcfc4428a3657c1d25879c94803b481ca",
@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-22"
   },
   "maintenance": {
-    "fingerprint": "e85f6d1ee228a14e1c3798612e6509c4ff5ef229a62de617042c2e94b05c4474",
-    "reason": "Removed the completed wiki plan from the runbook catalog and redirected recovery/wiki references to maintained operational and acceptance documents; immutable recovery records and tooling remain unchanged.",
+    "fingerprint": "01565b73db6a5e0b3600835768cc3ebbd353380725702a47bc616f1c376a218b",
+    "reason": "Reduced the dated HA hardening checklist to unresolved containment, recovery, rollback, hardware, access and monitoring checks; preserved separate port/credential/privilege changes and linked scoped backup/radio evidence without claiming full recovery.",
     "reviewed_at": "2026-10-22"
   },
   "media": {

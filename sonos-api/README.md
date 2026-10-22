@@ -53,7 +53,7 @@ The add-on accepts the following configuration options:
 
 `shadow` serves and writes through node while comparing Home Assistant reads. It never mirrors a write to Home Assistant. `home_assistant` requires the add-on's `homeassistant_api` permission and a live snapshot containing every configured room and source.
 
-Backend rollback is an option change followed by a separate add-on restart; no rebuild is required. Use the exact Supervisor POST, restart, restart-evidence, health, topology, action, and household-restoration procedure in [`docs/plan-replace-sonos-node-api.md`](../docs/plan-replace-sonos-node-api.md#rollback). Do not treat Supervisor's unchanged `started` state alone as proof that the new mode launched.
+With the retained packages available, backend rollback deliberately re-enables the old service, changes the option, then separately restarts Sonos API. Use the exact Supervisor POST, restart-evidence, health, topology, action and household-restoration procedure in [backend rollback](../docs/sonos/routing-guide.md#backend-rollback). Supervisor's unchanged `started` state alone is not proof that the new mode launched.
 
 ## API Routes
 

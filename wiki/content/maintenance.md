@@ -14,6 +14,8 @@ The configuration deployment also includes the root `light_profiles.csv`, which 
 
 Room organization has separate, explicit maintenance commands: `just rooms-generate` and `just rooms-check` manage the shared dashboard/Sonos definitions; `just rooms-audit` inspects Home Assistant areas; `just rooms-apply` aligns known names while preserving stable IDs and voice aliases. Optional legacy-area cleanup only removes audited empty, unreferenced areas and saves private recovery metadata first. Follow the [dashboard guide](dashboard.md) for scope and deployment.
 
+Open Home Assistant database containment, full recovery, deployment rollback, hardware and device-security checks are tracked in the [hardening checklist](../../docs/plan-hardening.md). Verified scoped backups and radio recovery do not establish a full-machine restore.
+
 ## Keep explanations with changes
 
 Update the corresponding guide or runbook when behavior changes. The component catalog connects source files to their explanations. `just wiki-check` rejects unreviewed source fingerprints. After reviewing, record a specific explanation with `just wiki-review <component> '<reason>'`; a no-documentation-impact decision must explain why.

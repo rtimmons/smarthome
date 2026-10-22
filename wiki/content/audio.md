@@ -10,7 +10,7 @@ Choose a room or group before adjusting volume. A grouping action can remain pen
 
 The October 9, 2026 deployment record reports Home Assistant-backed Sonos API healthy and the legacy Node service persistently disabled. The legacy source and installed add-on remain for rollback; they are not an active dependency or an instruction to restart it. The generated service table reflects the manifest’s disabled status.
 
-Earlier migration sections describe staged tests and unresolved acceptance windows. Read the newest dated record before interpreting those historical tables as current service state.
+Normal Sonos controls were confirmed after the October 22 gateway changes. Final legacy removal still needs the acceptance, observation and reinstall safeguards in the [remaining-work checklist](../../docs/plan-replace-sonos-node-api.md). Calendar time since disablement alone does not prove those checks passed.
 
 ## Configuration, diagnosis, and recovery
 

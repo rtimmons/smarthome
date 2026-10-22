@@ -6,7 +6,23 @@ On October 17, 2026, Ryan renamed the speaker formerly called Move to **Patio**.
 The stable Home Assistant entity remains `media_player.move`. Dated evidence below
 retains the room name observed at that time; current controls use Patio.
 
-## Candidate and baseline
+## Current status — reconciled October 22, 2026
+
+The candidate is merged and the Home Assistant backend is deployed. The newest
+runtime-retirement checkpoint is [October 9](#retirement-check-2026-10-09): node
+is retained but disabled, with manual boot, watchdog off and port 5005 closed.
+The user also confirmed normal Sonos controls after the October 22 gateway work;
+see [network acceptance](../operations/unifi-post-migration.md). That confirmation
+covers normal use, not the complete migration matrix or monitored windows.
+
+The [remaining-work list](../plan-replace-sonos-node-api.md) is the current backlog.
+Missing parity approvals, reproducible final test/package evidence, live matrix/
+rollback checks, observation evidence and reinstall proof still block final
+retirement. No new live audit or acceptance waiver occurred in this reconciliation.
+Earlier diagnostic tables below describe their dated checkpoints, not current
+backend state or instructions to repeat deployment.
+
+## Candidate and baseline (historical checkpoints)
 
 | Item | Value |
 | --- | --- |
@@ -18,7 +34,7 @@ retains the room name observed at that time; current controls use Patio.
 | Baseline Sonos API add-on | 1.0.0, node backend via `http://local-node-sonos-http-api:5005` |
 | Baseline Node Sonos HTTP API add-on | 1.0.2 |
 | Prepared Sonos API / Grid Dashboard source version | 1.1.1 / 1.1.1 |
-| Currently deployed Sonos API / Grid Dashboard | 1.1.1 / 1.1.1, deployed from the merged candidate; Sonos API backend is explicitly `home_assistant` |
+| August 29 deployed Sonos API / Grid Dashboard | 1.1.1 / 1.1.1, deployed from the merged candidate; Sonos API backend is explicitly `home_assistant` |
 | Deployed MongoDB metadata package | 0.0.1; metadata-only version activation explicitly approved on 2026-08-28 |
 | Home Assistant Supervisor | 2026.08.0, healthy and supported |
 | Baseline capture | 2026-08-28, before deployment or speaker mutation |
@@ -212,17 +228,14 @@ Only a command run from the clean, committed runtime candidate revision can clos
 
 ## Acceptance traceability
 
-An unchecked plan criterion remains a blocker. A green root command alone does not advance a phase.
-
-| Gate | Status | Current evidence | Remaining blocker |
-| --- | --- | --- | --- |
-| Phase 0 contract freeze | In progress | Room map, backend modes, numeric protocol/operation/artwork limits, baseline topology/volume/preset inventory, discovery-based test runner, sanitized fixtures, complete retained-route/caller/disposition inventory, and named automated traceability are recorded. | Immutable candidate SHA/package digests, final clean-SHA reruns, external-caller observation, and explicit approval for the five HA-only deprecated responses. |
-| HA transport and state lifecycle | In progress | Pre-commit authenticated REST/WebSocket, stale/unknown, reconnect, snapshot/event race, deadline, and shutdown tests exist. | Commit the immutable candidate and rerun the final full suite at that SHA. |
-| State, artwork, and Dashboard presentation | In progress | Pre-commit coordinator-owned artwork, binary/size/security, stale/unknown/pending, operation correlation, alternating-generation, ingress-relative, and Safari regressions exist. | Tie the complete two-layer route matrix and final rerun to the immutable candidate SHA. |
-| Actions, topology, volume, and presets | In progress | Pre-commit exact service mappings, no duplicate topology writes, group-volume parity, `/same` skipping/partial failure, preset ordering/supersession/convergence, and terminal operation tests exist. | Tie complete Phase 3 scenario traceability to the immutable SHA, then collect structured live operation evidence. |
-| Packaging, repository, and backup | In progress | The verified private Supervisor backup remains valid; pre-commit package, root, and worktree-transport results are superseded. | Clean immutable candidate root/container/transport reruns, package digests, and later retirement/clean-install gates. |
-| Live shadow | Diagnostic only | Shadow health, latency sample, RSS ceiling, metadata/playback discoveries, and a restored pause/play check are recorded. | Corrected immutable redeploy, measured node RSS baseline, rollback/reconnect/caller exercises, and a new uninterrupted 24-hour window. |
-| HA pilot / whole-house / stopped-node | Pending | None; no HA-backed speaker write has occurred. | Prior gates and the required 24/24/48/24-hour windows. |
+| Area | Current recorded disposition |
+| --- | --- |
+| Implementation and merge | HA transport, state/actions, artwork and Dashboard integration are deployed; candidate merge is complete. Do not retain the old commit/redeploy/merge gates as new work. |
+| Backup implementation | The August 29 verified Supervisor export includes node state and all seven local add-ons plus `/share`. Current durable reinstall artifacts/rehearsal remain unproven. |
+| Automated acceptance | October 9 scoped Sonos checks/package validation passed. That root run stopped on unrelated printer visual baselines. Final source/package-linked full acceptance evidence remains open; a failing root run blocks completion. |
+| Runtime retirement | October 9 persistent disablement and closed-port/healthy-HA checks passed. Supervisor reported node `error`, not a clean stopped observation. Installed data/code remain for rollback. |
+| Live acceptance | Normal controls confirmed October 22. Structured panel/parity, reconnect/artwork, rollback and uninterrupted 24/24/48/24-hour evidence remain incomplete; elapsed time alone does not close them. |
+| Route disposition and final removal | Five HA-only `410` responses still lack recorded parity approval. Final uninstall/code deletion remains a separate authorized step after acceptance and reinstall safeguards. |
 
 ## Live rollout evidence
 
@@ -272,6 +285,9 @@ checks do not satisfy them or claim repository retirement is complete.
 
 The merged 1.1.1 candidate is deployed and the live Sonos API is explicitly configured in `home_assistant` mode. The node add-on remains installed for rollback, but it was not used for the final restoration writes. The required long observation windows are still pending, so this evidence does not claim migration completion.
 
+The following August 29 stage table predates the October 9 disablement above;
+its missing acceptance evidence remains open where the current checklist says so.
+
 | Stage | Status | Evidence |
 | --- | --- | --- |
 | Shadow comparison | Diagnostic; restart required | Shadow began at 2026-08-29T02:59:39Z. Health is ready with node and HA both ready, all eight rooms present, and no unavailable rooms or missing favorite/preset sources. The first live comparison exposed the characterized structured live-radio metadata envelope and that node reports paused live radio as `STOPPED` while HA reports `paused`. Semantic metadata normalization and media-aware playback projection now have regressions, but this dirty-build window is invalid; redeploying an immutable candidate starts a new 24-hour clock. |
@@ -315,7 +331,7 @@ by a reachable group remains a tested fail-closed condition.
 
 ### Configuration rollback rehearsal evidence
 
-The authoritative command sequence is in the plan's **Rollback** section. The rehearsal does not pass merely because Supervisor again reports `started`. Record all of the following in this file when it is run:
+The authoritative command sequence is in [backend rollback](routing-guide.md#backend-rollback). The rehearsal does not pass merely because Supervisor again reports `started`. Record all of the following in this file when it is run:
 
 - UTC option-POST start, restart start, first new startup-log marker, first ready/node health, and completion timestamps, with total RTO under 10 minutes.
 - Before/after `docker inspect addon_local_sonos_api` `.RestartCount` and `.State.StartedAt`, distinguishing the one planned restart from any unexpected restart.
@@ -323,15 +339,14 @@ The authoritative command sequence is in the plan's **Rollback** section. The re
 - Exact full restoration observations for group/coordinator/member set, all eight volume/mute pairs, playback, station, verification surfaces, and zero pending operations.
 - Trigger or rehearsal purpose, command results, failures, and whether the shadow clock was invalidated. Switching back to shadow starts a new clock only after parsed node+HA readiness, state restoration, and a comparison clean beyond the 5-second grace.
 
-### Final merge-to-main status
+### Retirement closeout
 
-| Gate | Status | Required evidence |
-| --- | --- | --- |
-| Automated and live acceptance complete | Pending | Final immutable test/package evidence plus completed 24-hour shadow, 24-hour pilot, 48-hour whole-house, and 24-hour stopped-node windows; explicit behavior acceptance and node-uninstall approval. |
-| Candidate provenance | Pending | Final candidate SHA, package digests, deployed versions, observation timestamps, retirement/clean-install evidence, and clean candidate worktree. |
-| Preserve existing main work | Pending | Before/after main dirty-path status and patch/hash inventory proving the merge did not stash, reset, restore, clean, overwrite, stage, or commit unrelated user changes. |
-| Merge result | Pending | Reviewed candidate commit range in main, merge/fast-forward SHA, post-merge checks, and unchanged pre-existing main dirty state. |
+The candidate merge is complete; it is not an outstanding gate. Before final
+removal, record source/package provenance, completed or explicitly dispositioned
+acceptance gates, reinstall/retention evidence and the user's final authorization.
+Preserve unrelated work and private backups throughout. The current checklist is
+in [the remaining-work plan](../plan-replace-sonos-node-api.md).
 
 ## Acceptance exceptions and parity approvals
 
-No exception has been granted. Explicit user approval for the five HA-mode-only `410` responses (`/pause`, `/play`, `/tv`, `/07`, `/quiet`) is still pending; until it is recorded here, Phase 0 and a new shadow observation clock remain blocked.
+No exception has been granted. Explicit user approval for the five HA-mode-only `410` responses (`/pause`, `/play`, `/tv`, `/07`, `/quiet`) is still pending; resolve that disposition before final retirement. Do not re-enable the disabled node service merely to recreate an old shadow window.

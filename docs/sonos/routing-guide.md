@@ -72,8 +72,79 @@ In `node` or `shadow` mode, `curl http://local-node-sonos-http-api:5005/zones` i
 - A stale response indicates a lost WebSocket liveness signal. Wait for authenticated reconnect and resnapshot; do not retry topology writes against unknown state.
 - A `502` from the Grid proxy means its request to `sonos-api` failed or artwork violated the binary safety contract.
 - Add-on hostnames use the `local-` prefix: `local-grid-dashboard`, `local-sonos-api`, and, while retained, `local-node-sonos-http-api`.
-- Roll back with the exact Supervisor options POST and separate Sonos API restart in [the migration plan](../plan-replace-sonos-node-api.md#rollback). A passing rehearsal requires a new node-backend startup-log marker, parsed ready/node health, direct-node/API/Grid topology agreement, one room-state route, one low-risk playback action, full household-state restoration, and completion within 10 minutes. Record the required timestamps and restart evidence in [the migration validation record](ha-migration-validation.md).
+- Use [backend rollback](#backend-rollback) only when deliberately requested; preserve the captured household state and record results in [migration validation](ha-migration-validation.md).
 
 ## Live restoration checkpoint
 
-Before and after any live action, capture the private current state. Unless a newer intentional household change was recorded before the test, completion requires exactly one Bathroom-coordinated group containing Bathroom, Closet, Bedroom, Patio, Kitchen, Living Room, Guest Bathroom, and Office; volume 20 and mute false in every room; playback `playing`; station `735 - Steve Aoki's Remix Radio` / `CH 735 - Steve Aoki's Remix Radio`; agreement across HA, node while retained, Sonos API, Grid, and the Sonos app; and zero pending operations. Track metadata may advance naturally without failing restoration.
+Capture the household's current group/coordinator, source, playback, volumes and
+mute values privately before any live action, and restore them afterward. Verify
+agreement across HA, Sonos API, Grid and the Sonos app, with zero pending operations.
+Compare direct node only when deliberately enabled for rollback. The August
+eight-room/volume-20 radio checkpoint in the validation record is dated evidence,
+not a reason to overwrite newer intentional household state. Track metadata may
+advance naturally without failing restoration.
+
+## Backend rollback
+
+Use this procedure only for an explicitly requested rollback or rehearsal. The
+legacy service is disabled. First verify retained package/data availability,
+record its existing options, and deliberately re-enable the retained node add-on;
+confirm its `/zones` responds before selecting node mode. Ordinary deployments
+must keep the legacy service disabled. After uninstall, reinstall the retained
+prior node package/configuration before proceeding.
+
+Run from the repository host with the dedicated Home Assistant identity and
+`homeassistant.local`; follow the root guide's missing-key, authentication and
+hostname stop rules. Capture the UTC start time, current private household state,
+Sonos API/Grid/node versions, options, resource stats and startup-log marker before
+the POST. Do not print tokens or private response bodies.
+
+```bash
+ssh -i /Users/rtimmons/Projects/smarthome/.ssh/id_ed25519_codex_smarthome \
+  -o IdentitiesOnly=yes root@homeassistant.local \
+  'test -n "$SUPERVISOR_TOKEN" && curl -fsS \
+    -H "Authorization: Bearer $SUPERVISOR_TOKEN" \
+    -H "Content-Type: application/json" \
+    -X POST \
+    -d "{\"options\":{\"backend_mode\":\"node\",\"sonos_base_url\":\"http://local-node-sonos-http-api:5005\"}}" \
+    http://supervisor/addons/local_sonos_api/options | jq -e ".result == \"ok\""'
+```
+
+Only after that POST passes, restart Sonos API as a separate step:
+
+```bash
+ssh -i /Users/rtimmons/Projects/smarthome/.ssh/id_ed25519_codex_smarthome \
+  -o IdentitiesOnly=yes root@homeassistant.local \
+  'ha apps restart local_sonos_api'
+```
+
+Then verify, in order:
+
+1. Supervisor app info reports `state: started`, the expected installed version, and `options.backend_mode: node`.
+2. The new Sonos API startup log appears after the recorded restart start time and identifies backend `node`. Record the before/after startup marker and the established unexpected-restart evidence source; a merely unchanged Supervisor `started` state is not restart proof.
+3. `/health` returns `200` with `ready: true`, `backendMode: node`, and node readiness true. Record the first ready timestamp and elapsed rollback time.
+4. Direct node `/zones`, Sonos API `/sonos/zones`, Grid Dashboard `/sonos/zones`, and one room-state route agree with authoritative Home Assistant/Sonos-app topology.
+5. One low-risk Dashboard playback command succeeds. Prefer idempotent Bathroom play when it is already playing; if pause/play is used, restore play immediately.
+6. Restore the captured pre-test household state using the [restoration checkpoint](#live-restoration-checkpoint). Confirm no open operation or HA write remains in flight and rollback finished within 10 minutes.
+7. Revert Grid Dashboard only if its compatibility contract changed; otherwise keep it on the same routes. Record the trigger, failed operation, deployed versions, option POST result, planned restart evidence, health/zones/state/action results, restoration result, and RTO duration before any additional mutation.
+
+If the retained Sonos API no longer supports node mode, restore its matching prior package/configuration and verify health before issuing actions. Do not attempt a partial reimplementation during an outage.
+
+Immediate rollback triggers:
+
+- Any credential or signed-artwork token exposure.
+- Any UI membership that contradicts the latest authoritative topology.
+- A duplicate write or late result that lets an older request overwrite a newer one.
+- Missing or incorrect coordinator behavior in a TV preset.
+- An add-on crash loop or loss of both direct and ingress panel control.
+
+Threshold rollback triggers use the [recorded operational limits](ha-migration-validation.md#frozen-operational-limits-and-rollout-policy): topology timeouts, subscription loss while Home Assistant itself is healthy, unexpected restarts, pending-deadline violations, error rate, p95 control latency, and memory growth. Reaching any threshold triggers rollback rather than an improvised live fix.
+
+Use `docker inspect addon_local_sonos_api` fields `.RestartCount` and `.State.StartedAt` as the restart/startup identity source. During an authorized observation window, sample `/sonos/zones`, health, stats, restart identity and recent logs every 5 minutes; retain sanitized topology/state summaries privately. That request triggers comparison only when explicitly running shadow mode. Keep node disabled during HA-only observation.
+
+Rollback acceptance criteria:
+
+- [ ] Rollback completes within the frozen RTO using the retained versioned package and configuration.
+- [ ] Node mode `/health`, `/sonos/zones`, one room-state route, and one low-risk playback command pass.
+- [ ] Dashboard, Home Assistant, and the Sonos app show the same topology after rollback, with no open operation or HA write still in flight.
+- [ ] Deployed versions, trigger, failure evidence, rollback duration, verification results, and any restored live state are recorded in the validation record.
