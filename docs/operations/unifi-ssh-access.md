@@ -1,161 +1,102 @@
-# UniFi SSH Access
+# UniFi SSH access
 
-Use this runbook to configure or troubleshoot SSH access to the **Cloud Key Gen2 Plus** console and the UniFi devices it manages. These are two independent SSH configurations.
+The **Cloud Gateway Max** at `192.168.1.1` is the active console and router.
+The USG 3P and Cloud Key Gen2 Plus at the former `192.168.1.180` are retired
+from active service. Do not reconnect them to obtain diagnostic data.
+Use [Network setup](unifi-network-setup.md) for topology and the
+[post-migration checklist](unifi-post-migration.md) for deployment status.
 
-For the current controller, AP, radio, and SSID baseline, see [UniFi Network Setup and Tuning](unifi-network-setup.md).
+## Access matrix
 
-For Bonjour, AirPlay, or Apple TV Remote failures after AP changes, continue with [UniFi and Apple TV Remote Troubleshooting](unifi-apple-tv-remote.md) after verifying access here.
+| Target | Address | User | Verification |
+| --- | --- | --- | --- |
+| Cloud Gateway Max console | `192.168.1.1` | `root` | Native Management SSH off; resumed TCP/22 check refused; no new access enabled |
+| AP Bedroom, U6+ | `192.168.1.128` | `ubnt` | Agent-key login passed August 31, 2026; recheck after migration |
+| U7 Pro XG | `192.168.1.67` | `ubnt` | Agent-key login passed August 31, 2026; recheck after migration |
+| Switch Server Closet | `192.168.1.158` | `ubnt` | Agent-key login passed August 31, 2026; recheck after migration |
 
-## Current Configuration
+The first Max SSH probe was blocked by the command sandbox. The resumed
+approved network-capable probe reached the Max and received connection refused
+on TCP/22, matching the native Management page's SSH-off state. Native MCP/API
+reads now work. Enabling console SSH remains a separate reviewed access change;
+no alternate credentials or retired hardware are needed for supported reads.
 
-The following matrix was verified on **2026-08-31**. A controller setting is not proof that every legacy device accepted the key, so keep per-device results here.
+## Prefer the supported control plane
 
-| Target | Address | User | Key result | Notes |
-| --- | --- | --- | --- | --- |
-| Cloud Key Gen2 Plus | `192.168.1.180` | `root` | Works | Host SSH is independent of adopted-device SSH |
-| AP Bedroom | `192.168.1.128` | `ubnt` | Works | U6+ |
-| U7 Pro XG | `192.168.1.67` | `ubnt` | Works | — |
-| Switch Server Closet | `192.168.1.158` | `ubnt` | Works | US 24 PoE 250W |
-| Security Gateway | `192.168.1.1` | `ubnt` | **Public-key authentication failed** | USG 3P is a legacy-device exception; do not claim adopted-device SSH is fully verified until fixed |
+Use the Max's Network UI and version-specific **Integrations** API for saved
+configuration, client records, events and audit activity. The existing
+[read-only MCP launcher](../../network-infra/unifi-mcp/README.md) now provides
+verified native reads against Max/site `default`. Use SSH to corroborate effective device state.
 
-### Cloud Key OS
+Console SSH and **Device SSH Authentication** are separate configurations.
+Restoring a Network backup does not establish that a console's host SSH keys or
+authorized keys moved to the Max. Do not transplant the Cloud Key's database
+port or filesystem assumptions onto the new console.
 
-- Console: **Cloud Key Gen2 Plus**
-- Current LAN IP: `192.168.1.180`
-- SSH: enabled under **Control Plane > Console**
-- SSH username: `root`
-- Authentication: the 1Password-agent `id_rsa` public key is installed in `/root/.ssh/authorized_keys`
-- Verified permissions: `/root/.ssh` is `700`; `authorized_keys` is `600`
+## Max console SSH
 
-Key-only login was verified with:
+In UniFi Site Manager, select **300 Newark Cloud Gateway Max**, then inspect
+**Network > Settings > Management > General > SSH** (observed Network 10.6.106).
+The checkbox was off on October 22. Record its actual current state before
+changing it. Use the existing console credential if configured; a new password
+must be entered by the owner directly and kept in the password manager.
 
-```bash
-ssh -o BatchMode=yes root@192.168.1.180 exit
+The console uses `root`, independently of the adopted AP/switch username.
+Confirm the single intended agent public key before installing it in
+`/root/.ssh/authorized_keys`; do not blindly append every key in an agent.
+Verify directory/file permissions `700`/`600`. Host key installation and
+successful key authentication remain acceptance work, not completed setup.
+
+After host trust and authorization are established:
+
+```sh
+ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=5 root@192.168.1.1 exit
 ```
 
-### Adopted Network Devices
+The Max replaces a different appliance at the same address. Compare its
+fingerprint through a trusted console path before replacing an exact stale
+`known_hosts` entry. Never disable host-key checking globally. Console SSH
+should remain reachable only over the intended LAN/VPN path.
 
-- Device SSH authentication: enabled in the Network application
-- SSH username: `ubnt`
-- Registered key label: **Ryan Timmons - 1Password id_rsa**
+## Adopted AP and switch access
 
-The Network application's **Device SSH Authentication** setting is intended to apply to adopted APs, switches, and gateways. Live verification succeeded on both APs and the switch but not the USG 3P. It does not enable SSH or install the key on the Cloud Key operating system.
+The Network configuration historically used username `ubnt` and the public
+key labelled **Ryan Timmons - 1Password id_rsa**. Inspect the Max's current
+**Device SSH Authentication** settings and verify each device separately before
+changing password access. No full public-key blob belongs in this runbook.
 
-The controller reports adopted-device password authentication enabled in addition to the registered key. Do not disable password authentication until key access is verified on every device that must remain supportable, especially the USG. Store any required password only in the approved password manager.
-
-## Local SSH Agent
-
-The workstation SSH configuration uses the 1Password agent socket:
+The workstation historically selected the 1Password agent:
 
 ```sshconfig
 Host *
     IdentityAgent ~/Library/Group\ Containers/2BUA8C4S2C.com.1password/t/agent.sock
 ```
 
-Confirm that the expected identity is available without copying or exporting private-key material:
+Use `ssh-add -l` to confirm the intended identity is available. Find the actual
+device address in **UniFi Devices**, then verify the specific target:
 
-```bash
-ssh-add -l
-ssh-add -L
+```sh
+ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ubnt@192.168.1.128 exit
+ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ubnt@192.168.1.67 exit
+ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=5 ubnt@192.168.1.158 exit
 ```
 
-The public key registered in UniFi and installed on the Cloud Key is the agent identity named `id_rsa`. Do not commit the full public-key blob; read the active value from the agent when it needs to be compared or replaced.
-
-## Cloud Key Host SSH
-
-Ubiquiti documents console SSH and adopted-device SSH as independent settings. UniFi Console SSH uses `root`; see [Connecting to UniFi with Debug Tools & SSH](https://help.ui.com/hc/en-us/articles/204909374-Connecting-to-UniFi-with-Debug-Tools-SSH).
-
-### Enable the SSH service
-
-In [UniFi Site Manager](https://unifi.ui.com/):
-
-1. Open **Cloud Key Gen2 Plus**, not the 2117 Lehigh console.
-2. Go to **Settings > Control Plane > Console**.
-3. Enable **SSH**, accept the warning, and set a strong console SSH password.
-4. Store the password in the approved password manager; never commit it to this repository.
-
-Enabling this control opens port 22 on the Cloud Key's reachable network interfaces. It does not create a WAN firewall rule or port forward.
-
-### Install the public key
-
-The console UI enables SSH and sets its password but does not expose a host public-key field. From a trusted workstation, use the password once to install the public keys currently exposed by the 1Password agent:
-
-```bash
-ssh-add -L | ssh root@192.168.1.180 '
-  umask 077
-  mkdir -p /root/.ssh
-  touch /root/.ssh/authorized_keys
-  while IFS= read -r key; do
-    grep -qxF "$key" /root/.ssh/authorized_keys ||
-      printf "%s\n" "$key" >> /root/.ssh/authorized_keys
-  done
-  chmod 700 /root/.ssh
-  chmod 600 /root/.ssh/authorized_keys
-'
-```
-
-This command is idempotent for keys already present. It never transmits private-key material.
-
-Because the host key is installed directly in the Cloud Key OS rather than through a UniFi console setting, verify it again after UniFi OS upgrades or recovery operations.
-
-### Connect and verify
-
-```bash
-ssh root@192.168.1.180
-```
-
-For a non-interactive authentication and permissions check:
-
-```bash
-ssh -o BatchMode=yes -o ConnectTimeout=5 root@192.168.1.180 \
-  'id -un; stat -c "%a %U:%G %n" /root/.ssh /root/.ssh/authorized_keys'
-```
-
-Expected output begins with `root`, followed by permissions `700` and `600`.
-
-## Adopted-Device SSH
-
-In [UniFi Site Manager](https://unifi.ui.com/):
-
-1. Open **Cloud Key Gen2 Plus** and the **Network** application.
-2. Go to **Settings** and search for `SSH`.
-3. Open **Device SSH Authentication**, then expand **Device SSH Settings**.
-4. Confirm the username is `ubnt` and **Ryan Timmons - 1Password id_rsa** is listed under **SSH Keys**.
-
-Find the current device IP in **Network > UniFi Devices**, then connect with:
-
-```bash
-ssh ubnt@<device-ip>
-```
-
-For the gateway, use its LAN address `192.168.1.1`; the controller's generic device `ip` field currently contains the public WAN address and is not the management target.
-
-## Network Reachability
-
-The client must already have network reachability to the Cloud Key or adopted device through the local LAN or an approved VPN/site-to-site route. Key installation does not expose SSH to the public internet. Do not publish port 22 directly; prefer VPN access.
+For transient discovery failures, preserve the failure before reprovisioning;
+continue with [Bonjour/Apple TV troubleshooting](unifi-apple-tv-remote.md).
 
 ## Troubleshooting
 
-### The agent has no identities
+- **Operation not permitted before connection:** executor restrictions; do not
+  diagnose credentials or change live SSH settings from this result.
+- **Connection refused:** inspect the relevant console/device SSH setting.
+- **Timeout:** check the selected LAN address, route and intended firewall path.
+- **Permission denied:** check the correct console/device user and intended
+  authorized key. Do not cycle through unrelated identities.
+- **Changed host key:** verify appliance identity and fingerprint, then update
+  only that stale host entry.
 
-1. Open and unlock 1Password.
-2. Confirm the SSH key is enabled for the 1Password SSH agent.
-3. Run `ssh-add -l` again.
+Home Assistant uses its separate repository-local SSH identity and hostname
+procedure in [AGENTS.md](../../AGENTS.md). The UniFi agent settings above do not
+apply to Home Assistant.
 
-### Permission is denied
-
-1. Use `root` for the Cloud Key OS and `ubnt` for adopted Network devices.
-2. Use `ssh -v <user>@<device-ip>` to inspect which identity the client offers.
-3. For the Cloud Key, verify `/root/.ssh/authorized_keys` and its permissions using the console password or another authorized key.
-4. For adopted devices, confirm the key label is still listed under **Device SSH Settings**.
-5. Compare the installed public key with `ssh-add -L`.
-6. For the USG 3P, treat public-key denial as the known 2026-08-31 exception. Check whether the legacy gateway received the current Device SSH Authentication configuration; do not retry many identities, do not use its WAN address, and do not weaken host-key checking.
-
-### The host key changed
-
-An AP, switch, or gateway replacement, reset, or firmware recovery may legitimately rotate its SSH host key. It may also indicate the address now belongs to another device. Before removing a `known_hosts` entry, compare the target's current MAC/model/address in UniFi and obtain the new fingerprint through a trusted path. Remove only that exact stale host entry, reconnect with strict checking, and record the reason. Never globally disable `StrictHostKeyChecking`.
-
-### The connection times out or is refused
-
-- **Refused**: confirm host SSH is enabled under **Control Plane > Console** for the Cloud Key.
-- **Timeout**: confirm the current IP, LAN/VPN routing, and any policy between the client and the management network.
+[Ubiquiti SSH documentation](https://help.ui.com/hc/en-us/articles/204909374-Connecting-to-UniFi-with-Debug-Tools-SSH).

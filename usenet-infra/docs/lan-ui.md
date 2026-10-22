@@ -10,8 +10,8 @@ to WAN1's current address and uses policy-based IKEv2, AES-256 for both IKE and
 ESP, SHA1-HMAC, DH14/PFS, local `192.168.1.0/24` and remote `10.77.0.0/30`.
 Only that LAN is selected; the printer and Lehigh networks remain excluded.
 The legacy override described below belongs to the retired USG and must not be
-copied to the Max. SHA-256 modernization remains separate from this repair;
-the existing credential and cloud proposals were preserved.
+copied to the Max. The initial repair preserved its credential and legacy proposals. The
+subsequent authorized SHA-256 modernization is recorded below.
 
 The WAN change required matching updates to the cloud peer address and
 authentication identities, the exact IPsec source policy, and both Hetzner and
@@ -34,7 +34,38 @@ passed before and after the repair. An encrypted cloud VPN/proxy backup was capt
 authenticated-decryption verified; its private receipt and archive remain
 under the ignored operational backup directories.
 
+### Accepted SHA-256 modernization — October 22
+
+The resumed session verified the current WAN in the Max and passed
+`just usenet-vpn-peer-check <verified-WAN-IPv4>` for private inputs, provider
+firewall, fresh dedicated cloud SSH, UFW and installed peer/selectors. A fresh
+cloud VPN/proxy archive was encrypted and authenticated-decryption checked.
+Safari then changed only the Max's IKE and ESP hashes to SHA256, paired with
+the existing scoped cloud-LAN playbook's `sha256` profile. IKEv2, AES-256,
+DH14/PFS, credentials, identities and LAN-only selectors were preserved.
+
+Actual tunnel disconnection/reconnection and an explicit CHILD-SA rekey passed.
+After the transient rekey state settled, the installed SA confirmed AES-256,
+HMAC-SHA256, PRF-SHA256 and MODP2048/PFS14, exact selectors and no SHA-1.
+The final `--require-sha256` preflight and application health passed. Anonymous
+LAN login gates and denied backend ports were rechecked separately; a new
+interactive application login was not claimed. No media service restarted.
+A fresh encrypted/decryption-verified cloud VPN archive and full Max System
+export preserve the accepted peer configurations.
+
+Both the repository default and ignored inventory now select `sha256`.
+`legacy_sha1` remains only for coordinated rollback: restore both Max hashes
+to SHA1 and deploy that explicit cloud profile together, then verify actual
+negotiation and paths. Keep pre-change archives unchanged. Do not revert only
+one peer or install the historical USG override on the Max.
+
 ## Historical USG setup
+
+This section records the retired gateway and its provisioning override. Current
+operations use the Max's native VPN settings. The `sha256` crypto profile and
+`just usenet-vpn-peer-check <verified-WAN-IPv4>` are deployed and accepted in
+the [authorized follow-up](../../docs/operations/unifi-post-migration.md#cloud-vpn-and-wan-recovery). Do not install the old
+override on the Max or repeat old service restarts as a migration step.
 
 The private LAN connection is live as of September 11, 2026. Tunnel negotiation,
 rekeying, automatic recovery, anonymous denial, and user logins to both SABnzbd

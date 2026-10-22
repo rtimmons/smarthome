@@ -30,10 +30,50 @@ both APs online. The Mac's public DNS query through `192.168.1.1`, Internet HTTP
 Home Assistant, and numeric wiki access passed. Local-name resolution and the
 DNS/filtering design were not changed or accepted during that cutover.
 The [migration record](unifi-network-setup.md#cloud-gateway-max-migration)
-lists the remaining baseline checks. Then select native UniFi DNS/ad blocking
-or the existing dual-AdGuard design. The procedures below remain the AdGuard
-option and its rollback. Keep both existing resolvers and their policy intact
-pending that decision.
+lists the remaining baseline checks. The later forwarding-only hybrid acceptance below keeps AdGuard record
+ownership and both resolvers running. The direct-AdGuard DHCP procedure below
+remains an alternative requiring its own rollout and rollback checks.
+
+### Accepted gateway-forwarding hybrid — October 22
+
+The resumed Mac session verified the native pilot through Safari and direct
+DNS checks. The duplicate native `wiki.home.arpa` A record caused the gateway
+to return empty `NOERROR` for the zone apex instead of the required `NXDOMAIN`.
+Pausing that record corrected the response without weakening the tests. The
+policy remains saved but **paused**, available for rollback.
+
+The active native **Forward Domain** policy sends `home.arpa` to HA AdGuard
+at `192.168.1.163`. AdGuard remains the owner of `wiki.home.arpa` →
+`192.168.1.66` and local negative answers. Both AdGuards remain running and
+passed their exact direct checks. The gateway passes the same full contract
+over UDP/TCP: exact wiki A, empty AAAA, unknown names/subdomains, NXDOMAIN at
+the apex and public resolution. A fresh synthetic unknown query sent through
+the gateway appeared in HA AdGuard as a local `RewriteRule` with no upstream.
+The returned fresh Mac wireless lease advertises gateway DNS, and ordinary
+wiki-by-name HTTP returns 200. This is one client's acceptance, not every VLAN
+or browser encrypted-DNS override.
+
+Default's native Ad Block remains enabled, with categories Off and Safe Search
+disabled. `doubleclick.net` returns `0.0.0.0` through the gateway over UDP/TCP.
+No DHCP settings or AdGuard filter/upstream rules changed. This accepted hybrid
+uses the gateway as trusted-client resolver and **one** local-zone forwarder;
+HA-forwarder outage and automatic local-zone failover are not accepted.
+Do not stop either AdGuard. The NAS resolver remains independently available
+for recovery and direct checks; the gateway does not automatically fail over
+to it for this domain.
+
+`network-infra/dns/policy.json` and the generated wiki reference now record
+the client resolver, AdGuard record ownership, forwarding target and paused
+native A policy. The native settings remain UI-owned. Preserve both AdGuard
+backups and the accepted Max System export, including the forwarding policy.
+To undo the last DNS change, resume only the saved native A policy; that
+restores the initial pilot, including its known apex mismatch. Preserve domain
+forwarding and both resolvers throughout recovery.
+
+`just dns-check --resolver 192.168.1.1` checks the gateway without an AdGuard
+administration session. Repeat `--resolver` for multiple candidates; the default
+command still checks both AdGuards. DNS replies alone do not prove containment;
+retain the separate synthetic-query evidence described above.
 
 ## Configuration ownership
 
@@ -104,8 +144,9 @@ recorded local `RewriteRule` handling with no upstream. This also demonstrates
 that the tested controller path was not transparently replaced by gateway DNS.
 It does not establish that every client or VLAN follows the same path.
 
-The DNS-server DHCP cutover remains unaccepted after the October 22 gateway
-migration and awaits the DNS/settings decision described above. Default-network
+Direct-AdGuard DHCP cutover remains an unselected alternative after the accepted
+gateway-forwarding hybrid. Do not run the following optional cutover merely
+to complete the historical plan. Default-network
 DHCP previously used automatic/gateway DNS (`dhcpd_dns_enabled: false`), with
 `192.168.1.163` stored in the first disabled manual field. Before saving, capture
 the current form and all manual fields privately. Set only this network's DNS

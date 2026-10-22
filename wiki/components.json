@@ -210,12 +210,18 @@
       ],
       "addons": [],
       "watch": [
-        "network-infra/dns/*"
+        "network-infra/dns/*",
+        "network-infra/unifi-mcp/*",
+        "usenet-infra/scripts/vpn-peer-check.py",
+        "usenet-infra/tests/test_vpn_peer_check.py"
       ],
       "runbooks": [
         "docs/operations/unifi-network-setup.md",
+        "docs/operations/unifi-ssh-access.md",
+        "docs/operations/unifi-post-migration.md",
         "docs/operations/unifi-apple-tv-remote.md",
         "docs/operations/home-dns.md",
+        "network-infra/unifi-mcp/README.md",
         "usenet-infra/docs/lan-ui.md"
       ]
     },

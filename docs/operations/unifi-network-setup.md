@@ -6,6 +6,12 @@ The whole-site configuration baseline in this file was observed read-only on **2
 
 **2026-10-22 migration update:** The **Cloud Gateway Max NS (US Version), UCG-Max-NS**, now provides routing and UniFi Network management. Ryan confirmed the switch and both APs online in its controller. Gateway, public DNS, Internet HTTPS, Home Assistant, and numeric wiki checks passed from the Mac. See [migration status](#cloud-gateway-max-migration) for the restore path and remaining acceptance checks. Other dated configuration observations below remain historical until rechecked.
 
+Ryan authorized the [post-migration improvements](unifi-post-migration.md) on
+October 22. The forwarding-only DNS hybrid, associated printer-client allow/deny tests,
+cloud SHA-256 reconnect/PFS rekey and native read-only MCP now pass their dated
+checks. Site Magic and zone migration await the specific remaining client
+evidence in that checklist.
+
 ## Design Goals
 
 - Keep the two wired APs because the condo utility wall weakens coverage into the bedroom wing and primary bathroom.
@@ -21,7 +27,7 @@ The whole-site configuration baseline in this file was observed read-only on **2
 | Role | Device | Address | Wired uplink | Notes |
 | --- | --- | --- | --- | --- |
 | Gateway and controller | Cloud Gateway Max NS (`300 Newark Cloud Gateway Max`) | LAN gateway `192.168.1.1` | ONT to WAN; existing switch uplink to a Max LAN port | Network `10.6.106` on both source and destination before restore; Max UniFi OS `5.1.33` observed during setup |
-| Retained rollback hardware | USG 3P and Cloud Key Gen2 Plus | Former Cloud Key reservation `192.168.1.180` | Disconnected during cutover | Keep configurations and backups intact; Cloud Key other-application requirements still need review |
+| Retired active hardware / rollback | USG 3P and Cloud Key Gen2 Plus | Former Cloud Key reservation `192.168.1.180` | Disconnected during cutover | Ryan confirmed retirement from active service; preserve configurations and backups for rollback |
 | Core switch | US 24 PoE 250W (`Switch Server Closet`) | `192.168.1.158` | Port 23 to gateway | Firmware `7.4.1.16850`; powers both active APs |
 | Main AP | U7 Pro XG | `192.168.1.67` | Switch port 16, GbE | Main living-area capacity AP; Wi-Fi 7 and 6 GHz |
 | Bedroom-wing AP | U6+ (`AP Bedroom`) | `192.168.1.128` | Switch port 10, GbE | Retained for coverage through the utility wall |
@@ -60,9 +66,16 @@ successful gateway pings, public A resolution through that gateway, Internet
 HTTPS 200, Home Assistant HTTP 200 at `192.168.1.163:8123`, and wiki HTTP 200 at
 `192.168.1.66`. These establish basic connectivity, not complete acceptance.
 Fresh wired/wireless DHCP leases and reservations, printer VLAN isolation,
-printing, Sonos/AirPlay/Apple TV discovery, Cloud Key other
-applications, and a post-cutover Max System Config backup remain unverified.
-No new DNS/ad-blocking design was applied in this session.
+printing, Sonos/AirPlay/Apple TV discovery and Cloud Key other applications remain
+unverified. Later that day, a fresh full Max System export was encrypted
+off-device and authenticated-decryption checked. Safari saved the native wiki A
+record and `home.arpa` forwarding to HA AdGuard, then opened the wiki by name.
+The existing ad-only Default policy was inspected and preserved. The resumed session paused the duplicate native A record so forwarding alone
+passes the exact UDP/TCP contract and synthetic local-rewrite evidence. It also
+verified a fresh Mac wireless lease, seven reservations, printer-client paths
+and Bonjour advertised TCP reachability. Wired, second-peer, printing and live
+packet evidence remain separate. See the
+[follow-up record](unifi-post-migration.md) for exact settings and pending checks.
 
 The WAN address changed during cutover. On October 22, the Lehigh endpoint of
 `300Newarkto2117Lehigh` still targeted an old Newark WAN address. Updating that
@@ -73,7 +86,9 @@ separate Usenet tunnel retained its old local address, was disabled, and had an
 ESP AES-128 setting that mismatched the cloud's AES-256 requirement. It now uses
 WAN1's current address, AES-256 for both IKE/ESP, and the existing IKEv2,
 SHA1-HMAC, DH14/PFS and policy-based LAN-only selectors. Both tunnels show
-**Established**. See the [Usenet VPN recovery record](../../usenet-infra/docs/lan-ui.md)
+**Established**. The resumed authorized follow-up then changed the cloud tunnel
+to matching SHA-256 IKE/ESP on both peers and verified actual reconnection and
+CHILD-SA rekey/PFS14. See the [Usenet VPN recovery record](../../usenet-infra/docs/lan-ui.md)
 for the cloud firewall/identity repair and data-path checks.
 
 ### Ordered hardware inventory — 2026-10-16
@@ -88,7 +103,7 @@ for the cloud firewall/identity repair and data-path checks.
 | Role | Replaces the USG 3P as router/gateway and this site's Cloud Key Network management |
 | Storage | NS / no storage model; no NVR-storage purchase or Protect migration selected |
 | Retained network hardware | US 24 PoE 250W switch, U7 Pro XG, and U6+ |
-| Old hardware | Keep USG and Cloud Key available for rollback; Cloud Key retirement depends on checking its other applications/sites |
+| Old hardware | USG and Cloud Key retired from active service; keep disconnected configurations available for rollback |
 
 The completed gateway cutover does not choose between native UniFi DNS/ad
 blocking and the existing dual-AdGuard design. Defer those changes until the
@@ -253,7 +268,12 @@ Restricted print-client SSID created on 2026-08-31:
 
 The print API uses unencrypted HTTP and the deliberately weak Wi-Fi credential is only an association barrier. The VLAN, client isolation, no-Internet setting, and ordered firewall rules are the security boundary. If Home Assistant's reservation changes, update the TCP/8099 destination rule at the same time.
 
-Controller state and both APs' generated configurations were verified. An actual client has not yet joined this SSID, so DHCP, cross-VLAN mDNS, positive TCP/8099 access, and negative Internet/LAN tests remain required before treating the path as operational.
+Controller state and both APs' generated configurations were verified in August.
+On October 22 this Mac joined the SSID, received a fresh printer-network lease,
+resolved `homeassistant.local`, reached HA TCP/8099 and confirmed the tested
+Internet, other LAN/gateway and cloud-private ports blocked. It returned to
+`sintheta` afterward. A second associated peer and an actual print job remain
+untested; see the [acceptance record](unifi-post-migration.md).
 
 ### `sintheta-6-test`
 
@@ -315,15 +335,23 @@ The recommendation is not permission to change live state. Answer the question i
 | High | DNS/filtering | October 16: both AdGuard resolvers passed direct checks; the Mac received `NXDOMAIN` for `wiki.home.arpa`. October 22: public DNS through the new gateway passed; local-name cutover remains unverified | Finish migrated baseline checks before selecting DNS ownership and testing client cutover | Use native UCG-Max DNS/ad blocking or retain dual AdGuard? Which client names should be assigned under `home.arpa`? |
 | Low | Smart Queues and IPv6 | Smart Queues off; IPv6 protocol disabled | Leave off unless a measured latency or IPv6 requirement justifies an end-to-end design and gateway-capacity test | What are sustained WAN rates, bufferbloat under load, ISP IPv6 support, and VPN/firewall requirements? |
 
-### Optional audit automation
+### API and MCP diagnostics
 
-No UniFi/Ubiquiti skill was present in OpenAI's curated skill catalog on 2026-08-31. The strongest public candidates found were:
+The selected integration is [enuno/unifi-mcp-server](https://github.com/enuno/unifi-mcp-server),
+pinned to `0.6.1`, with the existing local stdio launcher, read-only `network`
+profile and settings-provided credential (`UBIQUITI_API_KEY`). The resumed Mac
+session exposes 26 native tools without controller mutations/debug and has
+successfully read Max/site `default`, current clients, networks/Wi-Fi, WAN,
+DNS filters and all seven infrastructure reservations. Ordinary sandbox TCP
+remains denied, while the same TLS check succeeds through approved
+`require_escalated` execution. No credential or launcher change was needed.
+See the [launcher runbook](../../network-infra/unifi-mcp/README.md) and
+[post-migration work](unifi-post-migration.md).
 
-- [`thathaneydude/unifi`](https://github.com/thathaneydude/unifi) — best fit for repeatable read-only assessment. Its `unifi-security-assessment` orchestrates network security, segmentation/Wi-Fi, asset inventory, and Protect domain skills, and its repository tests reject mutating operations in those skills. It currently targets a Network `10.3.58` Integration API specification, so validate it against this `10.6.101` controller and retain the controller-specific checks in this runbook.
-- [`sirkirby/unifi-mcp`](https://github.com/sirkirby/unifi-mcp) — best fit for broader health, firewall-audit, and eventual control workflows. It ships a Codex-compatible plugin, snapshot/preview-before-confirm patterns, and a large MCP tool surface. It also introduces a live mutation path and authenticates with a local admin/service account, so create a dedicated least-privilege identity and approve source review, secret storage, rollback, and legacy-USG coverage before installation.
-- [`garymike/unifi-security-advisor`](https://github.com/garymike/unifi-security-advisor) — a promising standalone, local, read-only advisor that asks intent questions and can audit through the official API or an offline backup. It is not a Codex skill and is pre-1.0; use it only after source review in an isolated environment.
-
-Choose tooling based on the intended authority: a recurring report should use a read-only API key and produce an evidence/coverage record; live control should use a dedicated account, explicit preview/confirmation, automatic snapshots, and tested rollback. No third-party tool replaces AP/switch effective-state checks or the legacy-USG-specific fields documented here.
+Use the Max's version-specific **Integrations** documentation where an API
+covers the desired read. Keep direct AP/switch effective-state checks for
+provisioning and transient failures. No active workflow requires reconnecting
+the Cloud Key or writing controller MongoDB.
 
 ## Safe Change Workflow
 
@@ -347,86 +375,31 @@ Never update UniFi configuration through its MongoDB database. The database is a
 
 ## Verification Commands
 
-### Controller WLAN state
+### Controller configuration and reservations
 
-This query intentionally excludes passphrases:
+Use the active Max's supported Network UI or its version-specific Integrations
+API. The earlier direct MongoDB queries against the retired Cloud Key have been
+removed from this operational path.
 
-```bash
-ssh root@192.168.1.180 "mongo --quiet --port 27117 ace --eval '
-db.wlanconf.find(
-  {name:{\$in:[
-    \"sintheta\", \"sintheta-iot\", \"sintheta-printer\",
-    \"sintheta-6-test\", \"element-1d1546a132bac87b\"
-  ]}},
-  {
-    _id:0, name:1, enabled:1, networkconf_id:1, wlan_bands:1,
-    security:1, wpa_mode:1, pmf_mode:1, hide_ssid:1,
-    element_adopt:1, iapp_enabled:1,
-    roaming_assistant_na_enabled:1, minrate_ng_enabled:1,
-    minrate_ng_data_rate_kbps:1, dtim_mode:1, dtim_ng:1,
-    ap_group_mode:1
-  }
-).forEach(printjson)
-'"
+- **WiFi:** compare the intended WLAN names, network assignments, enabled bands,
+  security/PMF, roaming and isolation settings with the dated baseline above.
+- **Networks / Internet:** verify `Default`, `sintheta-printer` and WAN1 against
+  the accepted topology. Do not recreate retired VLAN `esp` or WAN2.
+- **Client Devices:** compare all seven [infrastructure mappings](#infrastructure-address-inventory),
+  including the October 22 printer/Nest repair. A saved reservation does not
+  establish the client's current lease or local-name resolution.
+- **UniFi Devices:** confirm the switch and both APs online, wired uplinks,
+  channels 1/11 on 2.4 GHz, and Mesh Parent/Connect disabled.
+
+For a native DNS pilot, run:
+
+```sh
+just dns-check --resolver 192.168.1.1
 ```
 
-The named WLAN inventory should contain exactly `sintheta`, `sintheta-iot`,
-`sintheta-printer`, and `sintheta-6-test`, plus the controller-owned hidden
-Element adoption WLAN while that feature remains enabled. There should be no
-WLAN named `esp`; the retired `esp` object was a routed network, not an SSID.
-
-### Controller network and WAN state
-
-In **Network > Settings > Overview**, verify that the Networks table contains
-only `Default` and `sintheta-printer`, and that the Internet table contains only
-`FiOS` on WAN1. The Internet section should offer **Add Secondary Internet
-Connection** instead of listing WAN2. This supported-UI check is authoritative
-for the intended configuration; do not attempt to recreate or delete these
-objects through MongoDB.
-
-### Infrastructure fixed-IP reservations
-
-Verify the five intended mappings without printing unrelated client data:
-
-```bash
-ssh root@192.168.1.180 "mongo --quiet --port 27117 ace --eval '
-db.user.find(
-  {mac:{\$in:[
-    \"00:c0:08:97:1a:8d\", \"24:5e:be:5f:d6:ae\",
-    \"34:9f:7b:a4:69:e0\", \"88:a2:9e:36:1b:dc\",
-    \"ac:f2:3c:32:13:c4\"
-  ]}},
-  {_id:0, hostname:1, mac:1, use_fixedip:1, fixed_ip:1, local_dns_record:1}
-).sort({mac:1}).forEach(printjson)
-'"
-```
-
-The result must match [Infrastructure Address Inventory](#infrastructure-address-inventory), with `use_fixedip:true` for every row. An empty `local_dns_record` is expected on the current USG and is not evidence that the hostname resolves through ordinary DNS. Use the supported client UI to change a reservation; never write controller MongoDB.
-
-### Controller AP state
-
-```bash
-ssh root@192.168.1.180 "mongo --quiet --port 27117 ace --eval '
-db.device.find({type:\"uap\"}).forEach(function(d) {
-  printjson({
-    name:d.name,
-    model:d.model,
-    ip:d.ip,
-    mesh_sta_vap_enabled:d.mesh_sta_vap_enabled,
-    radio_table:(d.radio_table || []).map(function(r) {
-      return {
-        radio:r.radio,
-        channel:r.channel,
-        ht:r.ht,
-        tx_power_mode:r.tx_power_mode
-      }
-    })
-  })
-})
-'"
-```
-
-The 2.4 GHz result should show channel 1 for `AP Bedroom` and channel 11 for `U7 Pro XG`. The controller field `mesh_sta_vap_enabled:false` confirms that wireless mesh connection is disabled; also confirm in the UI that both **Mesh Parent** and **Mesh Connect** are off.
+This checks exact response semantics over UDP/TCP. Local handling without
+upstream leakage and a fresh client's actual resolver path require the
+additional [DNS acceptance checks](unifi-post-migration.md#native-dns-pilot).
 
 ### Effective AP configuration
 
@@ -523,7 +496,7 @@ Do not raise AP transmit power solely to hide poor client RSSI; asymmetric links
 
 1. Complete the `sintheta-printer` end-to-end client validation in the decision register.
 2. Inventory live UPnP mappings and decide whether each one is still required before disabling UPnP.
-3. Plan the legacy USG replacement and coordinated IPsec modernization.
+3. Complete the authorized Site Magic and cloud IPsec modernization in the [post-migration checklist](unifi-post-migration.md).
 4. Resolve the purpose of Element Adoption and `sintheta-6-test` before retaining or removing them.
 5. Move documented IoT clients in small groups only after defining a real segmentation policy and required flows.
 6. Compare 2.4 GHz utilization and retries after migration.

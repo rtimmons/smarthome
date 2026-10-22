@@ -17,6 +17,16 @@ cloud_vpn_lan_cidr: "192.168.1.0/24"
 cloud_vpn_peer_ip: ""
 cloud_vpn_local_ip: ""
 cloud_vpn_psk_source: ""
+# Max and cloud SHA-256 reconnect/PFS rekey accepted October 22, 2026.
+# legacy_sha1 remains available only for a coordinated peer rollback.
+cloud_vpn_crypto_profile: sha256
+cloud_vpn_crypto_profiles:
+  legacy_sha1:
+    ike: aes256-sha1-prfsha1-modp2048
+    esp: aes256-sha1-modp2048
+  sha256:
+    ike: aes256-sha256-prfsha256-modp2048
+    esp: aes256-sha256-modp2048
 cloud_ui_auth_source: ""
 # Intentionally empty: the firewall role refuses to run until trusted source
 # CIDRs are supplied in inventory.yml or an ignored vars/vault file.

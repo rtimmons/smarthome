@@ -40,13 +40,16 @@ In UniFi Network, or through a read-only controller query, establish:
 - Whether the Apple TV has roamed to another AP.
 - Whether the phone is repeatedly moving between 5 GHz, 6 GHz, or neighboring APs.
 
-The Cloud Key is the source for controller configuration, retained events, statistics, and audit activity:
+The active **Cloud Gateway Max** is the source for controller configuration,
+events, statistics and audit activity. Use its Network UI or version-specific
+**Integrations** API. The [MCP launcher](../../network-infra/unifi-mcp/README.md)
+now provides verified native reads against the Max/site `default`.
 
-```bash
-ssh root@192.168.1.180
-```
-
-UniFi Network currently stores its local data in MongoDB on port `27117`, principally in the `ace` and `ace_stat` databases. Direct database access is an internal, version-dependent diagnostic interface: make only read operations, inspect the live schema instead of assuming field names, and never update controller data through MongoDB.
+The old Cloud Key is retired. Do not reconnect it or assume its MongoDB port
+and filesystem layout describe the Max. Console SSH at `root@192.168.1.1`
+still needs its own host-trust and key-access verification; see the access
+runbook. Direct AP inspection below remains useful without controller database
+access. Never update controller configuration through MongoDB.
 
 ## Inspect Live Wi-Fi Stations
 

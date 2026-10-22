@@ -10,7 +10,8 @@
       - cloud_vpn_peer_ip | default('') | length > 0
       - cloud_vpn_local_ip | default('') | length > 0
       - cloud_vpn_psk_source | default('') | length > 0
-    fail_msg: Configure the reviewed IPv4 selectors, endpoints, and private PSK source first.
+      - cloud_vpn_crypto_profile in ['legacy_sha1', 'sha256']
+    fail_msg: Configure the reviewed IPv4 selectors, endpoints, private PSK source and approved crypto profile first.
 
 - name: Inspect the private PSK source on the controller
   ansible.builtin.stat:

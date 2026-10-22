@@ -11,6 +11,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import shlex
 import subprocess
@@ -113,20 +114,43 @@ def secondary_config(password_hash):
     }
 
 
+def validate_answer(output, name, kind, expected):
+    """Check the response header and answer records, never comments/additionals."""
+    status = re.search(r'^;; ->>HEADER<<-.*\bstatus: ([A-Z]+),', output, re.MULTILINE)
+    if status is None or status[1] != expected['status']:
+        raise ValueError(f'DNS response status differs: {name} {kind}')
+    records = []
+    for line in output.splitlines():
+        if not line or line.startswith(';'):
+            continue
+        fields = line.split()
+        if len(fields) < 5 or fields[2] != 'IN':
+            raise ValueError(f'Malformed DNS answer: {name} {kind}')
+        records.append((fields[0].rstrip('.').lower(), fields[3], ' '.join(fields[4:])))
+    if 'address' in expected:
+        if records != [(name.lower(), kind, expected['address'])]:
+            raise ValueError(f'DNS answer differs: {name} {kind}')
+    elif expected.get('empty'):
+        if records:
+            raise ValueError(f'Expected an empty DNS answer: {name} {kind}')
+    elif not any(record[1] == kind for record in records):
+        raise ValueError(f'DNS answer is missing: {name} {kind}')
+
+
 def check(addresses=None):
     for address in addresses or POLICY['resolvers']:
         for transport in ('+notcp', '+tcp'):
-            for name, kind, expected in [('wiki.home.arpa', 'A', '192.168.1.66'),
-                                          ('wiki.home.arpa', 'AAAA', 'status: NOERROR'),
-                                          ('unknown-wiki-check.home.arpa', 'A', 'status: NXDOMAIN'),
-                                          ('unknown.wiki.home.arpa', 'A', 'status: NXDOMAIN'),
-                                          ('home.arpa', 'SOA', 'status: NXDOMAIN'),
-                                          ('example.com', 'A', 'status: NOERROR')]:
-                result = subprocess.run(['dig', '@' + address, name, kind, transport, '+time=3', '+tries=1'],
-                                        capture_output=True, text=True, check=True)
-                if expected not in result.stdout or (name == 'example.com' and 'ANSWER: 0' in result.stdout):
-                    raise ValueError(f'DNS check failed: {address} {transport} {name} {kind}')
-        print(f'{address}: wiki, local negative answers and independent public DNS pass over UDP/TCP')
+            for name, kind, expected in [('wiki.home.arpa', 'A', {'status': 'NOERROR', 'address': '192.168.1.66'}),
+                                          ('wiki.home.arpa', 'AAAA', {'status': 'NOERROR', 'empty': True}),
+                                          ('unknown-wiki-check.home.arpa', 'A', {'status': 'NXDOMAIN', 'empty': True}),
+                                          ('unknown.wiki.home.arpa', 'A', {'status': 'NXDOMAIN', 'empty': True}),
+                                          ('home.arpa', 'SOA', {'status': 'NXDOMAIN', 'empty': True}),
+                                          ('example.com', 'A', {'status': 'NOERROR'})]:
+                result = subprocess.run(['dig', '@' + address, name, kind, transport, '+time=3', '+tries=1',
+                                         '+noall', '+comments', '+answer'],
+                                        capture_output=True, text=True, check=True, timeout=6)
+                validate_answer(result.stdout, name, kind, expected)
+        print(f'{address}: exact wiki and negative answers plus public resolution pass over UDP/TCP; verify local handling/upstream independence separately')
 
 
 def deploy():
@@ -236,15 +260,19 @@ def rollback(snapshot_path):
 def main():
     p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary'])
     p.add_argument('--snapshot', type=Path)
+    p.add_argument('--resolver', action='append', help='Check this resolver instead of the configured pair; repeatable')
     args = p.parse_args()
+    if args.resolver and args.action != 'check': p.error('--resolver is only supported for check')
     if args.action == 'deploy': deploy()
-    elif args.action == 'check': check()
+    elif args.action == 'check': check(args.resolver)
     elif args.snapshot: rollback(args.snapshot)
     else: p.error('--snapshot is required for rollback-primary')
 
 
 if __name__ == '__main__':
     try: main()
+    except subprocess.TimeoutExpired:
+        raise SystemExit('DNS check timed out; no DNS settings changed.') from None
     except subprocess.CalledProcessError as error:
         # Captured stderr may contain configuration or credentials; keep it private.
         PRIVATE.mkdir(parents=True, exist_ok=True)

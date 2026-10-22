@@ -9,6 +9,8 @@ import subprocess
 import tempfile
 import unittest
 from unittest import mock
+import yaml
+from jinja2 import Environment, StrictUndefined
 
 ROLE = Path(__file__).parents[1] / "ansible/roles/cloud_vpn"
 SPEC = importlib.util.spec_from_file_location("vpn_network", ROLE / "files/vpn-network.py")
@@ -75,6 +77,26 @@ def incoming(**changes):
 
 
 class CloudVpnTests(unittest.TestCase):
+    def test_sha256_cutover_preserves_selectors_and_credential(self):
+        variables = yaml.safe_load((ROLE.parents[1] / 'group_vars/all.yml').read_text())
+        variables.update(cloud_vpn_local_ip='203.0.113.10', cloud_vpn_peer_ip='198.51.100.25',
+                         cloud_vpn_psk_source='synthetic-private-path')
+        variables['lookup'] = lambda *args: 'a' * 64
+        template = Environment(undefined=StrictUndefined).from_string(
+            (ROLE / 'templates/swanctl.conf.j2').read_text())
+        self.assertEqual(variables['cloud_vpn_crypto_profile'], 'sha256')
+        current = template.render(**{**variables, 'cloud_vpn_crypto_profile': 'legacy_sha1'})
+        modern = template.render(**variables)
+        self.assertIn('proposals = aes256-sha256-prfsha256-modp2048', modern)
+        self.assertIn('esp_proposals = aes256-sha256-modp2048', modern)
+        self.assertNotIn('aes256-sha1', modern)
+        self.assertIn('proposals = aes256-sha1-prfsha1-modp2048', current)
+        for content in (current, modern):
+            self.assertIn('local_ts = 10.77.0.0/30', content)
+            self.assertIn('remote_ts = 192.168.1.0/24', content)
+            self.assertIn('secret = "' + 'a' * 64 + '"', content)
+            self.assertNotIn('192.168.6.0', content)
+
     def test_plex_route_uses_existing_gateway_and_exact_host_only(self):
         config = {**CONFIG, 'seerr_nas_ip': '192.168.1.66'}
         def result(value):

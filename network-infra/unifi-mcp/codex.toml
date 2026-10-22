@@ -1,0 +1,6 @@
+# Merge this table into the existing user configuration; preserve other servers.
+# Preserve UBIQUITI_API_KEY supplied through the owner's MCP environment settings.
+[mcp_servers.unifi]
+command = "/Users/rtimmons/Projects/smarthome/network-infra/unifi-mcp/run.sh"
+args = []
+startup_timeout_sec = 120

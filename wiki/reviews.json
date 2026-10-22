@@ -25,18 +25,18 @@
     "reviewed_at": "2026-10-17"
   },
   "maintenance": {
-    "fingerprint": "aa525f6fac98609cad18f2a2fe19b23897687a272c716abe3906db4c0147a77d",
-    "reason": "Reviewed native QTS/HBS encrypted backup capture and receipt, B2 source selection, retired Mac share removal, upload cap and dated recovery limits",
+    "fingerprint": "9bb1b7292ad78ec5abb31dec4b617790ef5f643f56df06fb07fa77bbf9ac8ccc",
+    "reason": "Reviewed DNS ownership/forwarding fields in generated reference and existing network command forwarding plus portable YAML validation changes",
     "reviewed_at": "2026-10-22"
   },
   "media": {
-    "fingerprint": "8d166367a0cd9a496f79da686d9dc72f86ed28807c39969e32e3b7ec0ab6d5d2",
-    "reason": "Reviewed NAS backup scope, AV1-only Recyclarr rejection and preservation checks, plus the documented Max VPN repair and saved evidence",
+    "fingerprint": "5b1fdf9f23e07815ee88bbf11e37f438ed569d1443b7bbe9092a17cbe2594f9e",
+    "reason": "Reviewed scoped SHA-256 cloud VPN profile and rollback template, selector/credential preservation test, and accepted cloud transport and encrypted backup evidence",
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "53cb9d2150f56bfeec5f6db07d9eb1c42ca1bb6c9aeb5d786b6ef0d2885c3881",
-    "reason": "Reviewed Max cutover, VPN recovery and separate Prusa/Nest reservations; removed stale USG SSH and pre-arrival DNS guidance",
+    "fingerprint": "6b5782fbc4d61dc4b4b64cc9ec33feeeb4665259a706eed00825b1206ad90af7",
+    "reason": "Recorded final live DNS/VPN/login-gate evidence and passing validation with the two known historical RSA findings kept separate",
     "reviewed_at": "2026-10-22"
   },
   "printing": {

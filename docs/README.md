@@ -43,7 +43,9 @@ and the [expansion plan](../wiki-plan.md).
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
 - [**unifi-network-setup.md**](operations/unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
-- [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — Cloud Key host and adopted-device SSH access through the 1Password agent
+- [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — Cloud Gateway Max console and retained AP/switch SSH access
+- [**unifi-post-migration.md**](operations/unifi-post-migration.md) — Native DNS pilot, Site Magic, VPN modernization, backup and firewall acceptance
+- [**UniFi MCP**](../network-infra/unifi-mcp/README.md) — Pinned read-only launcher using the MCP settings environment
 - [**unifi-apple-tv-remote.md**](operations/unifi-apple-tv-remote.md) — Evidence-first UniFi, Bonjour, and Apple TV Remote troubleshooting
 - [**nest-integration.md**](operations/nest-integration.md) — Google Nest OAuth, Device Access, Pub/Sub, entity naming, and verification
 - [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow

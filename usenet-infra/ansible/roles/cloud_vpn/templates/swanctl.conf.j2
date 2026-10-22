@@ -1,15 +1,15 @@
 # Managed private site-to-site VPN. This file contains a PSK: root:root 0600.
-# USG 3P firmware 4.4.57 exposes SHA1/MD5 only. This deliberate legacy
-# compatibility uses SHA1 exclusively as HMAC for IKE/ESP; never MD5.
+# Crypto profile: {{ cloud_vpn_crypto_profile }}. SHA-256 is the accepted Max
+# profile; legacy_sha1 is retained only for coordinated peer rollback.
 # https://docs.strongswan.org/docs/6.0/howtos/securityRecommendations.html
-# Migrate to SHA256 or stronger with a supporting gateway; SHA1 retirement:
+# SHA1 retirement:
 # https://www.nist.gov/news-events/news/2022/12/nist-transitioning-away-sha-1-all-applications
 connections {
     usenet-ui {
         version = 2
         local_addrs = {{ cloud_vpn_local_ip }}
         remote_addrs = {{ cloud_vpn_peer_ip }}
-        proposals = aes256-sha1-prfsha1-modp2048
+        proposals = {{ cloud_vpn_crypto_profiles[cloud_vpn_crypto_profile].ike }}
         encap = yes
         mobike = no
         dpd_delay = 30s
@@ -31,7 +31,7 @@ connections {
                 mode = tunnel
                 local_ts = {{ cloud_vpn_service_cidr }}
                 remote_ts = {{ cloud_vpn_lan_cidr }}
-                esp_proposals = aes256-sha1-modp2048
+                esp_proposals = {{ cloud_vpn_crypto_profiles[cloud_vpn_crypto_profile].esp }}
                 rekey_time = 50m
                 life_time = 1h
                 rand_time = 5m

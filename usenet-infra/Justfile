@@ -28,7 +28,7 @@ test: ansible-setup
 	shellcheck scripts/backup-qnap
 	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
 	shellcheck compose/qnap/catalog-run scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/filex-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
-	@ruby -e 'require "yaml"; ARGV.each { |f| YAML.load_file(f) }' $(find ansible compose -path 'ansible/.collections' -prune -o -type f \( -name '*.yml' -o -name '*.yaml' \) -print)
+	@python3 -c 'from pathlib import Path; import yaml; [list(yaml.compose_all(p.read_text())) for root in ("ansible", "compose") for p in Path(root).rglob("*") if p.suffix in (".yml", ".yaml") and p.is_file() and not p.is_symlink() and ".collections" not in p.parts]'
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml site.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml backup.yml --syntax-check
 	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-lan-ui.yml --syntax-check
@@ -325,6 +325,17 @@ configure-cloud: age-bootstrap ansible-setup
 [group: 'ansible']
 configure-cloud-lan-ui: ansible-setup
 	cd ansible && ../../wiki/run with-deployment --scope media-cloud-lan-ui -- uv run --with 'ansible-core==2.21.4' ansible-playbook cloud-lan-ui.yml
+
+# Check WAN inputs and live source restrictions without changing them.
+[group: 'network']
+[positional-arguments]
+vpn-peer-check peer *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd ..
+    export UV_CACHE_DIR="$PWD/build/wiki/uv-cache"
+    export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
+    exec uv run --project wiki --python "$(cat .python-version)" --frozen python usenet-infra/scripts/vpn-peer-check.py "$@"
 
 # Cache the exact verified age binaries for this workstation and cloud VM.
 [group: 'setup']

@@ -903,8 +903,23 @@ usenet-filex-ui:
 	just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-ui
 
 [group: 'network']
-dns-check:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns check
+[positional-arguments]
+dns-check *args:
+    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns check "$@"
+
+[group: 'network']
+unifi-mcp:
+    @./network-infra/unifi-mcp/run.sh
+
+# Check the same credential lookup and pinned package import without a gateway read.
+[group: 'network']
+unifi-mcp-check:
+    @./network-infra/unifi-mcp/run.sh --check
+
+[group: 'network']
+[positional-arguments]
+usenet-vpn-peer-check peer *args:
+    @just --justfile usenet-infra/Justfile --working-directory usenet-infra vpn-peer-check "$@"
 
 [group: 'network']
 dns-deploy:

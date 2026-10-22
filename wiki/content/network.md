@@ -4,7 +4,7 @@ UniFi connects the trusted household network, Home Assistant, the NAS, and the d
 
 ## Find this guide
 
-The stable name is `http://wiki.home.arpa/`. On October 16, both AdGuard resolvers answered it, but the checked Mac still used the USG for DNS and received “name not found.” Client cutover remains pending; use the numeric address until your client's DNS path is verified. If DNS is unavailable, use [the NAS address](http://192.168.1.66/). The old [Usenet address](http://192.168.1.66:8090/) remains a compatibility entrance.
+The stable name is `http://wiki.home.arpa/`. On October 22, the Max’s forwarding-only hybrid passed the exact DNS checks and a fresh Mac Wi-Fi lease used gateway DNS. The duplicate native wiki record is saved but paused; AdGuard owns the local answers. If DNS is unavailable, use [the NAS address](http://192.168.1.66/). The old [Usenet address](http://192.168.1.66:8090/) remains a compatibility entrance.
 
 The wiki is plain HTTP on the trusted network, without a separate login. Application links still require their own authentication. There is no public wiki listener or certificate installation.
 
@@ -12,9 +12,22 @@ The wiki is plain HTTP on the trusted network, without a separate login. Applica
 
 The **Cloud Gateway Max NS (US Version), UCG-Max-NS**, took over routing and UniFi Network management on **October 22, 2026**. A fresh Network-only backup restored the existing configuration after the full console backup failed. Ryan confirmed the retained switch and both access points online in the Max's controller.
 
-Checks from the Mac passed for gateway reachability, public DNS, Internet HTTPS, Home Assistant, and the wiki's numeric address. Both site-to-site VPNs were repaired after the WAN address changed and now show Established. Lehigh's gateway and the private Usenet application endpoints are reachable. Fresh DHCP leases, reservations, printer isolation and printing, and media-device discovery still need explicit acceptance. Save a post-cutover Max System Config backup. Retain the disconnected USG and Cloud Key with their configurations intact, and check the Cloud Key's other applications/sites before retiring it.
+Checks from the Mac passed for gateway reachability, public DNS, Internet HTTPS, Home Assistant, and the wiki's numeric address. Both site-to-site VPNs were repaired after the WAN address changed and showed Established. Lehigh's gateway and the private Usenet application endpoints were reachable. The resumed Mac checks verified fresh wireless leases, all seven infrastructure reservations, printer-network allow/deny paths and Bonjour advertised TCP reachability. Fresh wired DHCP, a second isolated printer peer, an actual print job and packet-level discovery remain separate checks. A fresh full Max System export is now encrypted off-device and decryption-verified. Ryan confirmed the USG and Cloud Key retired from active service; retain their disconnected configurations for rollback.
 
-DNS and ad blocking remain a separate decision after baseline acceptance. Choose between native UniFi DNS/ad blocking and the existing AdGuard pair. The [migration record and hardware inventory](../../docs/operations/unifi-network-setup.md#cloud-gateway-max-migration) record the cutover, checks, and rollback requirements.
+Ryan authorized a native DNS/ad-blocking pilot, Site Magic for Lehigh, cloud VPN
+modernization and tooling cleanup. The forwarding-only DNS hybrid, cloud SHA-256 reconnect/PFS rekey and
+native read-only MCP are accepted. Site Magic awaits a Lehigh test host; zones
+await a second printer peer and rule-counter baseline. The [post-migration checklist](../../docs/operations/unifi-post-migration.md)
+records status and acceptance; the [migration record](../../docs/operations/unifi-network-setup.md#cloud-gateway-max-migration)
+records the completed cutover.
+
+The free intrusion-detection pilot is now on for Default in **Notify** mode;
+it reports detections without blocking traffic. The gateway's own speed tests
+were 942/951 Mbps before and 929/923 afterward (download/upload). Those samples
+do not establish client throughput or a sustained performance change. Printer
+network isolation and existing VPN routes were preserved. The later routed Mac Wi-Fi sample measured about 622/80 Mbps; without a
+comparable pre-IDS client baseline it cannot attribute a change to IDS. The
+current security log view showed no detections. Keep Notify mode.
 
 A duplicate-address warning after cutover identified Prusa Alpha and “Nest I think” at `192.168.1.118`. Both now have separate reservations: the printer keeps `.118`, and the Nest uses `192.168.1.19`. The Nest reconnected successfully, and both devices passed reachability checks. A historical conflict event is not proof of a current conflict; compare the current client addresses before changing them again.
 
@@ -22,7 +35,14 @@ A duplicate-address warning after cutover identified Prusa Alpha and “Nest I t
 
 The [generated DNS policy](wiki-reference:network) lists the configured resolvers, local records, upstreams and filter settings directly from the repository. The resolvers use independent upstream access, and unknown names below the local zone stay local.
 
-If the AdGuard design is retained, both addresses must be advertised together by trusted-LAN DHCP after the rollout checks pass. A public resolver is not a suitable fallback because it cannot answer private names. Keep the resolvers intact while the final DNS design remains pending.
+The native gateway forwards `home.arpa` to HA AdGuard. Its duplicate wiki A
+record is paused because it caused the apex-response mismatch. Default's pre-existing native ad blocking remains enabled, with
+content categories and Safe Search off. Exact UDP/TCP answers, a synthetic local rewrite without an upstream,
+fresh Mac wireless resolution and an ad-domain block passed. Keep both AdGuards
+running: this single-forwarder hybrid has no accepted automatic local-zone
+failover. If direct AdGuard client DNS is selected, both
+addresses must be advertised together by trusted-LAN DHCP after rollout checks
+pass. A public fallback cannot answer private names.
 
 ## Troubleshooting and recovery
 
@@ -32,4 +52,4 @@ If internet DNS fails, check each resolver and its upstream route separately. Ke
 
 Use [DNS operations](../../docs/operations/home-dns.md) for deployment and recovery and [the UniFi baseline](../../docs/operations/unifi-network-setup.md) for topology. Use the [Bonjour runbook](../../docs/operations/unifi-apple-tv-remote.md) for discovery failures; `.local` mDNS and `home.arpa` unicast DNS are different mechanisms.
 
-The October 22 VPN repair corrected Lehigh's stale remote address and restored the disabled Usenet tunnel, including its encryption setting and the cloud's peer identities and source restrictions. The [Usenet VPN runbook](../../usenet-infra/docs/lan-ui.md) records the verified scope and recovery procedure. Named access over a VPN additionally requires that client's DNS routing to reach the household resolvers; do not infer that from LAN verification.
+The October 22 VPN repair corrected Lehigh's stale remote address and restored the disabled Usenet tunnel, including its encryption setting and the cloud's peer identities and source restrictions. The later paired change verified SHA-256, reconnect and PFS rekey on the cloud tunnel. The [Usenet VPN runbook](../../usenet-infra/docs/lan-ui.md) records the verified scope and recovery procedure. Named access over a VPN additionally requires that client's DNS routing to reach the household resolvers; do not infer that from LAN verification.
