@@ -1,68 +1,13 @@
 # Private LAN access to the cloud interfaces
 
-## Cloud Gateway Max cutover — October 22, 2026
+## Accepted status — October 22, 2026
 
-The Cloud Gateway Max NS now owns this connection. Both it and Lehigh report
-their respective tunnels **Established** after the gateway migration.
-The restored Usenet connection was disabled, kept the old manual WAN address,
-and selected ESP AES-128 while the cloud required AES-256. The Max now binds
-to WAN1's current address and uses policy-based IKEv2, AES-256 for both IKE and
-ESP, SHA1-HMAC, DH14/PFS, local `192.168.1.0/24` and remote `10.77.0.0/30`.
-Only that LAN is selected; the printer and Lehigh networks remain excluded.
-The legacy override described below belongs to the retired USG and must not be
-copied to the Max. The initial repair preserved its credential and legacy proposals. The
-subsequent authorized SHA-256 modernization is recorded below.
-
-The WAN change required matching updates to the cloud peer address and
-authentication identities, the exact IPsec source policy, and both Hetzner and
-UFW restrictions. Only TCP 22 and UDP 500/4500 are allowed from the current
-home WAN `/32`; obsolete source rules were removed. Private Terraform and
-Ansible inputs were updated, and a full Terraform plan reported no changes.
-SSH had been blocked by UFW's old source restriction, so Ryan signed into the
-Hetzner server console to recover access. No host or application reboot was
-performed. For a future address change that blocks SSH, use that console to
-replace the trusted SSH source first, then reconcile the peer, identities and
-firewalls; do not disable UFW or allow all Internet sources.
-
-Verification established the actual cloud IKEv2 peer and exact selectors,
-successful reconnection, and a fresh CHILD-SA rekey with MODP-2048/PFS.
-After those checks, LAN requests returned HTTP 401 at SABnzbd/Prowlarr and
-HTTP 307 at Seerr; direct backend ports 8080/9696 remained blocked. These prove
-transport and login gating, not a new interactive application-login test.
-The separate Lehigh gateway answered all LAN probes. Cloud application health
-passed before and after the repair. An encrypted cloud VPN/proxy backup was captured and
-authenticated-decryption verified; its private receipt and archive remain
-under the ignored operational backup directories.
-
-### Accepted SHA-256 modernization — October 22
-
-The resumed session verified the current WAN in the Max and passed
-`just usenet-vpn-peer-check <verified-WAN-IPv4>` for private inputs, provider
-firewall, fresh dedicated cloud SSH, UFW and installed peer/selectors. A fresh
-cloud VPN/proxy archive was encrypted and authenticated-decryption checked.
-Safari then changed only the Max's IKE and ESP hashes to SHA256, paired with
-the existing scoped cloud-LAN playbook's `sha256` profile. IKEv2, AES-256,
-DH14/PFS, credentials, identities and LAN-only selectors were preserved.
-
-Actual tunnel disconnection/reconnection and an explicit CHILD-SA rekey passed.
-After the transient rekey state settled, the installed SA confirmed AES-256,
-HMAC-SHA256, PRF-SHA256 and MODP2048/PFS14, exact selectors and no SHA-1.
-The final `--require-sha256` preflight and application health passed. Anonymous
-LAN login gates and denied backend ports were rechecked separately; a new
-interactive application login was not claimed. No media service restarted.
-A fresh encrypted/decryption-verified cloud VPN archive and full Max System
-export preserve the accepted peer configurations.
-
-Both the repository default and ignored inventory now select `sha256`.
-`legacy_sha1` remains only for coordinated rollback: restore both Max hashes
-to SHA1 and deploy that explicit cloud profile together, then verify actual
-negotiation and paths. Keep pre-change archives unchanged. Do not revert only
-one peer or install the historical USG override on the Max.
-
-After the subsequent zone-firewall conversion, the SHA-256 preflight and LAN
-transport/login-gate checks passed again. Ryan separately confirmed cloud-app
-sign-ins working from the home LAN. Preserve the distinction between those
-owner-verified sign-ins and the agent's anonymous network probes.
+The Cloud Gateway Max owns the cloud IPsec connection. Paired SHA-256
+deployment, actual SAs, reconnect/PFS14 rekey, authentication gates and denied
+backend checks passed. Ryan separately confirmed cloud-app sign-ins from home.
+Encrypted cloud VPN and Max System exports passed authenticated-decryption
+verification. Lehigh now uses Site Magic separately, with both manual peers
+paused; printer and Lehigh networks remain outside the cloud selectors.
 
 ## Current operation
 

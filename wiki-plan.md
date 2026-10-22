@@ -1,162 +1,36 @@
-# Smarthome wiki expansion
+# Smarthome wiki handoff
 
-## Current handoff — 2026-10-16
+## Current state — October 22, 2026
 
-Ryan ordered **Cloud Gateway Max NS (US Version), UCG-Max-NS**, on October 16.
-Arrival is estimated for **October 23–30**; it has not been installed. The device
-will replace the USG gateway and take over this site's Network controller role
-from the Cloud Key. Hardware inventory and the future cutover sequence are in
-the [UniFi migration plan](docs/operations/unifi-network-setup.md#planned-cloud-gateway-max-migration).
+The household wiki is deployed at **http://wiki.home.arpa/** on the QNAP.
+Numeric recovery is **http://192.168.1.66/**; the original port-8090 entrance
+and legacy fragment redirects are retained. The Max migration, gateway DNS
+forwarding, automatic AdGuard failover and SSH access are accepted in the
+[network follow-up](docs/operations/unifi-post-migration.md).
 
-Ryan will ask for controller migration and settings work after arrival. Defer
-live cutover, DHCP/DNS, filtering, and other network changes until that request.
-The original dual-AdGuard design below remains implemented at the resolver level;
-native UCG-Max DNS/ad blocking versus retaining AdGuard is still an open decision.
-Do not treat the older DHCP-cutover instructions as immediate work or remove
-either resolver while deciding.
+Both AdGuards remain required. Clients use gateway DNS; direct-AdGuard DHCP
+is an unselected alternative, not pending rollout work. See
+[DNS operations](docs/operations/home-dns.md) for failure drills and recovery.
 
-October 16 read-only checks passed against both AdGuard resolvers over UDP/TCP.
-This Mac still used `192.168.1.1` with search domain `localdomain`, and its normal
-`wiki.home.arpa` lookup returned `NXDOMAIN`. These checks do not establish fresh
-DHCP lease delivery, other-client behavior, or failover acceptance.
+## Ownership and publishing
 
-## Approved design
+- Household explanations live in `wiki/content`; imported operational runbooks
+  remain canonical. `wiki/components.json` owns coverage and review fingerprints.
+- Generated references describe repository configuration. Dated acceptance and
+  deployment receipts do not imply continuous service health.
+- Keep the site static, with local assets/search, non-root execution, read-only
+  mounts, exact LAN bindings and checksummed releases. Never add credentials,
+  private inventory, media identities, live APIs, Docker access or public exposure.
+- Review affected components with `just wiki-review`, run `just wiki-check`, then
+  publish once with `just wiki-deploy`. Preserve existing receipts. Unrelated
+  working-tree changes need their own review and must not enter publication.
 
-Expand the Usenet guide into a household and maintenance wiki at
-**http://wiki.home.arpa**, hosted on the existing QNAP. Keep numeric recovery at
-http://192.168.1.66/ and the original http://192.168.1.66:8090/ Usenet entrance,
-including fragment links. Use HTTP without a wiki login; existing application
-shortcuts retain their authentication. No WAN publication or new VPN.
+[Wiki operations](docs/operations/wiki.md) owns the build, deployment, rollback
+and backup procedure. `just wiki-rollback` restores the retained prior release;
+failed candidates roll back automatically. A publication failure after successful
+service deployment requires a wiki retry, not reversal of healthy services.
 
-### Content and ownership
-
-Use a root `wiki/` MkDocs project with Markdown, a customized built-in theme,
-local assets and offline-capable search. Cover start-here tasks, dashboard and
-LED wall, lighting and automation, Sonos, climate/cameras/integrations, printing,
-TinyURL/MongoDB, media/storage, networking, and maintenance/recovery.
-
-Keep operational runbooks canonical and import only selected sources. Convert the
-Usenet HTML explanations and diagrams to Markdown, retaining anchors. Each guide
-explains purpose, dependencies, configuration ownership, usage, troubleshooting,
-and recovery, distinguishing desired configuration and dated live evidence.
-
-A component catalog owns pages and watched configuration paths. Generate service
-facts from add-on manifests and devices/scenes/room groupings from the TypeScript
-model. Preserve removed devices, scene exclusions and disabled services. These
-are **repository configuration**, never an assertion of live availability.
-
-Publish only allowlisted documents/fields. Exclude credentials, private inventory,
-logs, media identities and raw state. Show source revision, working-tree status,
-build time and separate review dates; rebuilding does not renew verification.
-The website remains static and cannot call operational APIs.
-
-### Hosting and DNS
-
-Retain the `usenet-wiki` Compose project and `/share/Container/usenet/wiki` root.
-Publish NAS `192.168.1.66:80` to an unprivileged container port, retaining 8090.
-Leave existing HTTPS untouched. Retain non-root execution, read-only mounts,
-resource limits, checksummed releases, health checks and automatic rollback.
-
-Use existing AdGuard Home at `192.168.1.163` and independent NAS AdGuard at
-`192.168.1.66`, TCP and UDP 53 bound specifically to the NAS LAN address. Maintain
-matching local records, filtering and independent upstream policy. Resolve
-`wiki.home.arpa` to the NAS and answer unknown `home.arpa` names locally.
-Separate DNS configuration/data from the wiki and keep credentials private.
-
-Test both resolvers before using the supported UniFi interface to advertise both
-through Default-network DHCP. Do not advertise public fallback DNS. Preserve the
-restricted printer network. Pilot a client; unresolved gateway DNS interception
-blocks DHCP cutover. Preserve existing VPN reachability; document split DNS and
-verify it separately. Keep rollback copies of prior DHCP and resolver settings.
-
-### Freshness and publication
-
-Require explanatory-document review or an explicit no-impact acknowledgement
-against each changed source fingerprint. Generate mechanical facts automatically.
-Run coverage, review, static-build, link and boundary checks locally,
-without household credentials. Contributor and agent completion includes this
-review. Direct device-interface changes still require intentional source updates;
-checks cannot prove prose is semantically correct.
-
-Provide `wiki-check`, `wiki-build`, `wiki-preview`, `wiki-deploy`, and
-`wiki-rollback` root recipes. Keep `usenet-wiki-deploy` as an alias. DNS deployment
-remains separate. Supported HA/add-on, standalone HA configuration and Usenet
-deployments validate/build first, deploy components, record sanitized receipts,
-then publish once after enclosing success. Nested commands and dry runs never
-publish repeatedly or create misleading evidence. Retain unrelated receipts.
-
-A wiki failure after service success is reported separately and retains the
-previous site. Retry with `just wiki-deploy`; do not roll back healthy services.
-No background publisher or scheduled AI maintenance is included.
-
-## Delivery and acceptance
-
-1. Catalog, Markdown build, generated references, checks and preview.
-2. Migrate Usenet and write component guides; reconcile dated documentation.
-3. Versioned static deployment, LAN port 80 and legacy entrance.
-4. Independent DNS resolvers, validation, pilot and supported DHCP cutover.
-5. Deployment hooks, backups and recovery instructions.
-6. Record evidence here and link maintenance from the documentation index.
-
-Acceptance covers all managed components; generated exclusions; a changed-source
-freshness failure; local links/assets/search and legacy anchors; desktop/mobile;
-no private inputs or API calls; DNS UDP/TCP, unknown-zone and public resolution;
-either-resolver failover; fresh laptop/phone leases; numeric access; deployment
-success/failure/dry-run/nesting; invalid-candidate rollback and idempotence;
-printer isolation and no WAN exposure; relevant repository tests. Report known
-historical secret-scan findings separately. Back up DNS and wiki configuration
-and document numeric-address recovery.
-
-## Implementation evidence
-
-Implemented on 2026-10-09:
-
-- MkDocs guides for all seven add-ons and the wider ecosystem, imported canonical
-  runbooks, generated device/scene/service reference, local assets/search, review
-  fingerprints, local validation and deployment transaction hooks.
-- Live QNAP port-80 wiki; legacy `8090/#storage` redirects to the correct preserved
-  anchor. Desktop and 390-pixel phone layout, mobile menu and local search passed.
-- Two AdGuard resolvers pass UDP/TCP wiki A, empty AAAA, unknown local names and
-  public-name tests. Primary synthetic-query evidence confirms local rewriting
-  without an upstream. DNS rollback was exercised while fixing startup validation.
-- Backup inventory includes wiki runtime/pointers and private DNS configuration,
-  including current primary policy; generated site and query history are excluded.
-- Wiki unit checks and the configuration generator's 86 tests pass. Infrastructure
-  suite: 476 tests pass, 9 skipped; syntax/shell checks pass. Its full scan reports
-  the two already-documented historical RSA keys; no suppression was added.
-- Root `just test`: Talos 121 tests and dashboard 102 tests pass. It stops at the
-  two existing printer visual baselines (`bluey_meter_mode` and its long-text
-  variant); 223 other printer tests pass. Later container checks were not reached.
-
-Pending acceptance:
-
-- Post-arrival UCG-Max controller/gateway migration, then a DNS ownership decision
-  and supported client cutover when Ryan requests it. The original dual-AdGuard
-  DHCP rollout is deferred; no DHCP, printer-network, WAN-forward or VPN setting
-  was changed for this DNS rollout. The hostname works through either resolver,
-  but the October 16 Mac check still uses gateway DNS and fails to resolve it.
-- Fresh laptop/phone leases, client failover with either resolver unavailable if
-  retaining dual AdGuard, independent VPN/split-DNS access, and a physical phone
-  check. Phone-sized browser testing is not a substitute for those network checks.
-Completed recovery checks:
-
-- Repeating the accepted wiki deployment reported zero changes. UniFi’s stored
-  port-forward collection was empty at verification; no WAN-forward changes were made.
-- A deliberately rejected live wiki candidate restored the exact previous
-  `publication.json` checksum and healthy port-80 service automatically.
-- A fresh encrypted NAS configuration archive was captured and decrypted only in
-  memory for verification. Required wiki/DNS configuration entries were present;
-  generated site content and DNS history were absent. The scheduled NAS backup
-  helper was updated without restarting household services.
-- Final receipt audit found and removed a help-only test receipt. Help/version
-  invocations now bypass all build/publication work, with regression coverage.
-- Existing source evidence is not a claim of household service redeployment; no
-  unrelated component receipt is renewed.
-
-## References
-
-- [MkDocs configuration](https://www.mkdocs.org/user-guide/configuration/)
-- [Residential home.arpa namespace, RFC 8375](https://www.rfc-editor.org/info/rfc8375/)
-- [UniFi DNS guidance](https://help.ui.com/hc/en-us/articles/15179064940439-UniFi-DNS-Records-and-Local-Hostnames)
-- [Wiki maintenance](docs/operations/wiki.md)
-- [Household DNS operations](docs/operations/home-dns.md)
+Configuration backups include wiki runtime/release pointers and private DNS
+configuration, excluding generated HTML and DNS query history. Rebuild and
+publish after replacement-host recovery; pointers alone cannot restore the site.
+Keep original encrypted snapshots and private acceptance evidence unchanged.

@@ -1,491 +1,173 @@
 # Cloud Gateway Max follow-up
 
-Ryan authorized the post-migration improvements on October 22, 2026. The Max is
-the active router/controller; the USG and Cloud Key are retired from active
-service. Preserve their disconnected configurations as rollback material.
-The [migration record](unifi-network-setup.md#cloud-gateway-max-migration)
-contains the accepted cutover checks. This page tracks the remaining work;
-source preparation is distinct from live deployment.
+The October 22, 2026 migration and authorized follow-up are accepted with the
+limits below. The Max at `192.168.1.1` runs Network `10.6.106` and UniFi OS
+`5.1.33`. The USG and Cloud Key are disconnected; preserve their configurations
+and every private backup. See [topology](unifi-network-setup.md).
 
 ## Current progress
 
-| Work | Prepared | Live acceptance still required |
+| Work | Accepted state | Ongoing requirement |
 | --- | --- | --- |
-| Baseline and backup | Max/Lehigh System exports and cloud VPN archives encrypted and decryption-verified; leases, reservations, restricted print, live discovery and owner-confirmed application controls accepted | Retain recovery copies |
-| Native DNS/ad blocking | Dual native domain forwarders pass each backend outage, both-unavailable containment and automatic recovery; exact UDP/TCP and wiki-by-name checks pass; native wiki A paused | Both AdGuards remain required for redundancy |
-| Lehigh Site Magic | LAN-only mesh created; UniFi reports both gateways Connected; both manual IPsec definitions paused for rollback | Owner accepted UniFi status without a Lehigh host; retain rollback definitions/backups |
-| Cloud VPN SHA-256 | Paired deployment, actual SAs, reconnect, PFS14 rekey, encrypted backup and owner-confirmed LAN application sign-ins accepted | Preserve coordinated rollback |
-| WAN recovery | Private inputs, provider firewall, fresh cloud SSH, UFW and negotiated SA preflight pass | Repeat after a WAN change |
-| UniFi MCP | Native 0.6.1 tools and live Max/site reads accepted; read-only controls preserved | Rotate existing key before November 22 expiry |
-| Firewall and IDS/IPS | Zones converted after counter/peer acceptance; eight custom policies active and three unreachable allow copies paused; Default/Notify retained | Preserve rollback copies and review future policy hits before further cleanup |
-| Access/docs | Max, both APs and switch pass existing-key SSH with verified host pins; printer and external WAN SSH blocks accepted | Retest after OS updates/restores; retain local trust files and owner recovery credential |
-
-The initial implementation session could not open terminal network connections
-(`Operation not permitted`), and Firefox repeatedly closed in settings.
-Ryan requested Safari; its authenticated session successfully opened the native
-settings. Network is `10.6.106`, UniFi OS `5.1.33`. The Max's fresh full export
-(all applications and settings, 156,272 bytes) was encrypted off-device with
-the existing recovery identity and authenticated decryption matched its hash.
-Private archive and verification receipts are ignored. Automatic backups are
-enabled. Console SSH was initially off; the separately authorized access
-completion below enabled and verified it.
-Lehigh's fresh full System export (185,360 bytes) was separately encrypted and
-authenticated-decryption checked before any proposed mesh cutover.
-A second Max export after the DNS/Notify-only changes (157,184 bytes) was also
-encrypted and decryption-verified. Preserve both pre-change and post-change
-archives. Plain native downloads remain in the owner's Downloads directory;
-they were not modified or removed by the executor.
-
-### Resumed Mac acceptance — October 22
-
-This session runs on Darwin on the owner's Mac. Native MCP exposes 26 tools
-with no controller mutation/debug entries. It read the local Max, site
-`default`, 38 active clients, four intended WLANs, network/WAN definitions,
-DNS-filter settings and all seven expected infrastructure reservations.
-The API also lists a restored inactive `Internet 2` definition; the supported
-overview shows only FiOS/WAN1 active. Do not remove it solely from that listing.
-
-Ordinary sandbox TCP/443 still returns `PermissionError`, errno 1. The same
-TCP/TLS probe succeeds with `require_escalated`, and the subsequent DNS,
-dedicated SSH and wiki operations use that approved path. No credential setup,
-GUI-terminal bypass, MCP mutation or unrestricted executor configuration was needed.
-
-The Mac joined `sintheta-printer` and received a fresh lease from `192.168.6.1`.
-`homeassistant.local` resolved; HA TCP/8099 opened. Probes bound to that client
-address confirmed HA TCP/8123, NAS TCP/80, gateway TCP/443 and TCP/53, public
-TCP/443 and cloud-private TCP/15055 blocked. The Mac then
-returned to `sintheta` with gateway/DNS `192.168.1.1`; its newly added printer
-Wi-Fi preference was removed. A later repeat sent exactly one idempotent
-`NETWORK CHECK` label at 17:03 Eastern; the service returned HTTP 200, `sent`
-and print count one, and Ryan confirmed the physical label printed correctly.
-The Mac had no wired adapter. Home Assistant's existing wired connection
-provided a separate acceptance path: NetworkManager recorded a new `enp4s0`
-lease at 14:37:27 Eastern after Max cutover. The current connected Ethernet
-interface is automatic DHCP at `192.168.1.163/24`, with gateway and DNS
-`192.168.1.1`. This was an observed renewal; no host or network restart was
-performed for the check.
-
-Ryan then connected an awake phone to `sintheta-printer`. Its first numeric
-HTTP check failed while cellular data was enabled; with cellular data off,
-Ryan confirmed the permitted HA TCP/8099 health endpoint loaded. While both
-clients were on the same AP, the Mac could still reach that endpoint but
-could not resolve the phone's direct neighbor address, ping it or open the
-two tested TCP ports. This accepts peer isolation for the tested pair, with
-the phone's working Wi-Fi endpoint as the active-client control. Closed phone
-TCP ports alone were not treated as proof. The Mac was restored automatically
-and its temporary printer Wi-Fi preference removed after each test. Restore
-the phone's cellular setting after testing.
-
-Bonjour browsing found five Companion, nine AirPlay and thirteen Sonos
-instances. A subsequent ordinary UDP socket sent fresh multicast PTR questions
-with distinct transaction IDs and retained matching wire replies from UDP/5353:
-five Companion, nine AirPlay and thirteen Sonos instances. All 27 advertised
-TCP endpoints opened. These fresh replies establish live client discovery,
-independently of the system Bonjour cache. They do not show AP bridge ingress
-and egress or establish interactive Remote/playback acceptance. Private evidence
-is under ignored `build/unifi-followup-20261022/` and
-`build/unifi-remaining-20261022/`.
-
-The Max's native **UniFi Devices > Max > Packet Capture** also completed a
-60-second capture scoped to `sintheta-printer`. Its downloaded tar archive
-contained one PCAP with 1,496 packets. Offline inspection found both directions
-of the allowed HA TCP/8099 exchange, the matching fresh `homeassistant.local`
-mDNS question/answer, blocked-path requests with no replies, and five phone
-neighbor requests with no replies. The read-only health URL returned HTTP 200.
-The Mac again restored trusted Wi-Fi automatically. This is routed-interface
-packet evidence, not an AP bridge trace or per-rule hit-counter baseline.
-Capture archives, packet bytes and raw summaries remain private and ignored.
-
-## SSH access completion — October 22
-
-Ryan authorized completing SSH and separately approved persistent Max root
-access for the existing owner key. He accepted the native enablement notice,
-completed password entry privately and installed the single approved public
-key through the Max Debug console. Its source restriction permits only
-`192.168.1.0/24`; root-owned directory/file modes are `700`/`600`.
-
-Fresh Mac SSH processes authenticated with that exact 1Password identity to
-Max `root@192.168.1.1`, AP Bedroom `ubnt@192.168.1.128`, U7
-`ubnt@192.168.1.67` and switch `ubnt@192.168.1.158`. Host checking remained
-strict, using ignored `.ssh/unifi_known_hosts` and the public identity selector
-`.ssh/unifi-owner.pub`. Trusted native Debug supplied Max/AP fingerprints;
-the switch key matched the controller's recorded fingerprint read through the
-verified Max SSH channel, then the switch's own fingerprint and MAC matched.
-No legacy SHA-1 algorithm exception or private-key export was needed.
-
-An associated printer-network Mac could not open SSH to any of the four
-devices, including both Max gateway addresses, while HA TCP/8099 health
-returned 200 and fresh mDNS worked. Other restricted paths stayed blocked.
-The independent watchdog completed and trusted Wi-Fi/preference state was
-restored. An external cloud-host probe had a working public HTTPS control
-and could not open Max WAN TCP/22. No firewall, routing, radio or AP/switch
-credential setting changed, and MCP remains read-only without mutations/debug.
-
-See [SSH operations](unifi-ssh-access.md) for verified fingerprints, exact
-commands, rollback and update/restore checks. This accepts current key access;
-it does not claim owner-password login, reboot/update persistence or a
-replacement-console recovery drill. Private evidence is preserved under
-ignored `build/unifi-ssh-20261022/`. A fresh full post-SSH Max System export
-(167,888 bytes) was encrypted off-device and authenticated-decryption verified;
-earlier backups and the native download remain intact.
+| DNS/ad blocking | Two native `home.arpa` forwarders; either-backend failover, both-down containment and recovery passed | Keep both AdGuards running and native wiki A paused |
+| Site Magic | `Newark-Lehigh`, Connected (2), only the two Default LANs shared | Keep old manual IPsec definitions paused for rollback |
+| Cloud VPN | Paired SHA-256 deployment, reconnect/PFS rekey and LAN sign-ins passed | Coordinate both peers and WAN firewall restrictions |
+| Firewall | Zones active; eight custom policies active, three redundant HA allow copies paused | Preserve DHCP/mDNS and every drop policy |
+| IDS | Default only, Notify; printer excluded | Blocking mode needs a separate evaluation |
+| MCP/API | 26 native read-only tools and live Max/site reads passed | Preserve launcher controls; rotate key before November 22 |
+| SSH | Max, both APs and switch pass existing-key login with verified host pins | Retest after OS updates or restoration |
+| Recovery | Fresh Max/Lehigh System and cloud VPN exports encrypted and decryption-verified | Retain pre-change copies and native downloads |
 
 ## Acceptance and backup
 
-Check each path separately and retain dated, private evidence:
+October 22 acceptance covered:
 
-- A fresh wired and wireless DHCP lease, intended gateway/DNS and existing
-  infrastructure reservations. Renew one test client at a time.
-- Home Assistant, NAS/wiki and the label printer endpoint, without changing
-  reservations or initiating an unsolicited print.
-- A client actually associated with `sintheta-printer`: DHCP, hostname discovery
-  and HA TCP/8099 must work; Internet, unrelated LAN/gateway ports and peer-client
-  access must remain blocked. A trusted-LAN probe does not establish this.
-- Live Sonos, AirPlay and Apple TV Companion advertisements and reachability.
-  Preserve playback, groups and current radio settings during the checks.
-- Native **System Config** export from the Max, stored encrypted off-device
-  and authenticated-decryption checked. Do not treat a Cloud Key export as a
-  current Max backup or repeat the failed full-console restore.
+- Fresh Mac Wi-Fi leases and an observed post-cutover HA Ethernet DHCP lease;
+  gateway/DNS `192.168.1.1` and all seven infrastructure reservations matched.
+- An associated `sintheta-printer` Mac reached HA TCP/8099 and fresh
+  `homeassistant.local` mDNS. Unrelated LAN/gateway, Internet, cloud and Lehigh
+  paths stayed blocked. Ryan confirmed the single `NETWORK CHECK` label printed.
+- Same-AP Mac/phone peer isolation passed with the awake phone's permitted HA
+  endpoint working. Turn cellular data off for an iPhone's local-only control,
+  then restore it. The peer test preceded zone conversion; AP isolation was
+  unchanged. Post-conversion routed checks passed separately.
+- Fresh wire replies found five Companion, nine AirPlay and thirteen Sonos
+  instances; all 27 advertised TCP endpoints opened. Ryan confirmed Apple TV
+  Remote, AirPlay, Sonos controls and cloud-application LAN sign-ins working.
+- Native packet captures corroborated printer allow/deny paths and mDNS.
+  These checks do not claim every client, codec or playback-duration combination.
+
+The latest full Max System export after SSH setup was **167,888 bytes**;
+post-mesh Lehigh was **185,824 bytes**. Both were encrypted off-device and
+authenticated-decryption verified. Preserve all earlier archives,
+particularly the **99,632-byte pre-zone Network-only export**. Readback does not
+prove a replacement-hardware restore or restoration of console authorized keys.
 
 ## Native DNS pilot
 
-On October 22, Safari saved these policies through **Policy Engine > Policy
-Table > DNS Records**:
+Trusted DHCP advertises gateway DNS `192.168.1.1`. Two native **Forward Domain**
+policies send `home.arpa` to HA AdGuard `192.168.1.163` and NAS AdGuard
+`192.168.1.66`. AdGuard owns the local records and negative answers. The native
+`wiki.home.arpa` A policy is saved but paused because enabling it changed the
+zone apex from required `NXDOMAIN` to empty `NOERROR`.
 
-| Domain | Type | Value |
-| --- | --- | --- |
-| `wiki.home.arpa` | Host (A), automatic TTL — **now paused** | `192.168.1.66` |
-| `home.arpa` | Forward Domain | `192.168.1.163` |
+Exact UDP/TCP answers, ordinary wiki-by-name HTTP, ad blocking, each backend
+outage, both-down containment and automatic recovery passed. WAN capture showed
+no private-zone DNS during both-down testing, with a working public DNS control.
+Both AdGuards stayed running and their exact access lists were restored.
+Default's existing native Ad Block remains on; categories and Safe Search are off.
 
-Safari then opened `http://wiki.home.arpa/` and displayed the field guide.
-The forwarding form accepts one DNS-server address, so this hybrid pilot
-depends on HA AdGuard for local-zone negative answers; it is not a native-only
-or dual-forwarder acceptance. Both AdGuards and their repository policy remain
-intact. No DHCP fields changed.
-
-The existing **CyberSecure > Content Filter > Default** policy already has
-Ad Block on, filtering Off, all three Safe Search options off, and an Always
-schedule. It was inspected and preserved, not newly enabled.
-
-Keep both AdGuards running during the pilot. Use the existing local-zone policy
-as the acceptance contract: exact wiki A, empty AAAA, unknown local names and
-unknown subdomains rejected locally, plus public resolution over UDP and TCP.
-
-Run `just dns-check --resolver 192.168.1.1`, then verify a newly leased client's
-actual DNS path. A negative response alone does not prove it stayed local;
-check gateway forwarding configuration and synthetic query/packet evidence.
-The zone apex's current policy is NXDOMAIN. Review a native SOA alternative
-explicitly rather than weakening tests to accept an unexplained response.
-
-Verify the existing UniFi ad blocking from a test client. Keep content categories
-Off and Safe Search disabled, preserving the existing policy. Native filtering
-redirects DNS; configure local records/domain forwarding before enabling it.
-Verify ordinary browsing, local names and a known ad-domain block. If native
-zone behavior cannot meet the contract, keep AdGuard ownership and use supported
-domain forwarding where appropriate. See [DNS operations](home-dns.md).
-
-The resumed gateway check initially failed: the apex SOA query returned empty
-`NOERROR` instead of the policy's `NXDOMAIN`. Pausing only the duplicate native
-wiki A policy in the supported UI corrected this mismatch. With forwarding
-retained, the unchanged full check passed over UDP and TCP. A new synthetic
-unknown query through the gateway appeared in HA AdGuard as `RewriteRule` with
-no upstream. Both AdGuards passed directly; `doubleclick.net` returned `0.0.0.0`
-through the gateway over UDP/TCP. The returned fresh trusted Wi-Fi lease used
-gateway DNS, and normal wiki-by-name HTTP returned 200.
-A separate check over the dedicated Home Assistant SSH path queried the gateway
-from that second trusted host: the wiki A answer was `192.168.1.66`, and both
-the zone-apex SOA query and a fresh unknown local name returned `NXDOMAIN`.
-This second-host check used its ordinary DNS client; the full UDP/TCP contract
-remains the separately accepted repository check above.
-
-Keep the native A policy paused for rollback. AdGuard owns local records;
-the trusted-client gateway resolver initially forwarded `home.arpa` only to HA.
-The later authorized failover work added a second native Forward Domain policy
-for NAS `192.168.1.66`. Both single-backend outages, both-unavailable containment
-and automatic recovery passed, with both AdGuards running throughout. Cold
-wiki answers, client UDP/TCP, local negative answers, public DNS, ad blocking
-and ordinary wiki-by-name HTTP were tested. LAN capture proved the survivor
-answered while the denied endpoint did not; WAN capture showed no private-zone
-queries and observed the synthetic public DNS control. Exact original access
-lists were restored, with an independent watchdog. See the
-[DNS failover acceptance](home-dns.md#automatic-local-zone-failover-october-22).
-Both AdGuards remain required; DHCP, filter/upstream rules and printer
-restrictions were preserved, and no response contract was weakened.
-The reviewed policy and generated wiki reference describe this arrangement.
-Recovery includes both AdGuard configurations and the Max's forwarding and
-paused-policy System export.
-
-After the accepted DNS and SHA-256 changes, a new full Max System export
-(158,336 bytes) was encrypted off-device and authenticated-decryption verified.
-All earlier Max, Lehigh and cloud VPN archives remain intact. The native
-plaintext download was preserved in the owner's Downloads directory.
-
-`network-infra/dns/policy.json`, its generated wiki reference and backup scope
-describe the accepted AdGuard pair and dual native forwarding policies. Both
-resolvers remain in the gateway's upstream path and are required for redundancy.
-Do not retire either merely because the checks pass. Rollback of the second
-forwarder pauses only the NAS-targeting policy, preserving the HA policy,
-paused native A and both running resolvers; DHCP remains unchanged.
+Use [DNS operations](home-dns.md) for the contract, repeatable drill and recovery.
+Rollback of the second forwarder pauses only the NAS-targeting policy; retain
+HA forwarding, the paused native A and both resolvers. Do not retire AdGuard or
+add public fallback DNS for the private zone.
 
 ## Lehigh Site Magic mesh
 
-The first native preview was closed without applying it. Later on October 22,
-Ryan explicitly authorized proceeding without a Lehigh test host and accepting
-UniFi's success status. The supported **SD-WAN > Mesh** workflow then created
-`Newark-Lehigh` under the existing owning account. UniFi's Status filter reports
-**Connected (2)** and both gateways show green, with exactly one Default LAN
-advertised by each site. This is the owner-approved acceptance criterion;
-bidirectional LAN-host application tests were not performed.
+Site Manager **Settings > SD-WAN > Mesh > Newark-Lehigh** reports Connected (2).
+Advertisements are exactly Newark `192.168.1.0/24` and Lehigh `192.168.8.0/24`.
+Printer `192.168.6.0/24`, cloud `10.77.0.0/30`, Teleport and WAN are excluded.
+Both superseded `300Newarkto2117Lehigh` manual IPsec definitions are paused.
 
-Use Site Manager **Settings > SD-WAN > Mesh** with the same owning UI account
-for both gateways. Share only Newark `192.168.1.0/24` and Lehigh
-`192.168.8.0/24`. Keep `192.168.6.0/24` and cloud `10.77.0.0/30` out of this
-mesh. Site Magic is for the two UniFi gateways; the third-party cloud VPN
-remains separate. The gateway handles WAN-address changes automatically.
+Ryan explicitly accepted UniFi's success status without a Lehigh test host.
+Trusted-LAN access to Lehigh's gateway passed; printer access stayed blocked.
+No bidirectional LAN-host application test is claimed.
 
-Before creation, both native `300Newarkto2117Lehigh` manual IPsec definitions
-were reviewed and **paused**, preserving their credentials and settings rather
-than deleting them. Their route-based selectors were the opposite site's
-Default /24; they used IKEv1/AES-128/SHA1, DH14/PFS. The Max configuration was
-also captured privately; the encrypted full exports cover both consoles.
-Pausing both peers first prevented active competing routes during the cutover.
-The separate cloud IPsec definition was preserved.
-
-After connection, Lehigh's gateway TCP/443 was reachable from the trusted Mac.
-Gateway DNS and the separate cloud application path passed. A fresh associated
-printer-client check passed all eight allow/deny expectations, including denied
-Lehigh gateway access, while HA TCP/8099 health and a fresh HA mDNS wire reply
-worked. The Mac returned to its trusted Wi-Fi afterward; no label was printed
-again and no phone-peer retest is claimed.
-
-Fresh full System exports from both consoles after the mesh cutover were
-encrypted and authenticated-decryption verified: Max 167,632 bytes and Lehigh
-185,824 bytes. All pre-change exports and their private receipts remain intact.
-
-For rollback, open **SD-WAN > Newark-Lehigh > Configure**, uncheck both Default
-LAN advertisements and apply, then verify their routes have withdrawn before
-resuming the preserved manual definitions on both consoles. This zero-network
-form was previewed with Apply enabled, then cancelled; withdrawal itself was
-not exercised. Do not leave mesh routes active while resuming the old peer.
-If the product instead requires irreversible mesh removal, obtain its required
-confirmation at that time. Verify the manual tunnel Established and Lehigh
-gateway access after rollback. Retain pre-change exports and native downloads.
+For rollback, open **Configure**, uncheck both Default LAN advertisements and
+apply. Verify routes have withdrawn before resuming the preserved manual
+definitions on both consoles; never leave competing mesh/manual routes active.
+The zero-network form was previewed, but withdrawal was not exercised. If the
+product requires irreversible mesh removal, obtain confirmation at that time.
+Verify the manual tunnel Established and Lehigh gateway access afterward.
 
 ## Cloud VPN and WAN recovery
 
-The accepted checked-in default `sha256` selects IKEv2
-AES-256/HMAC-SHA256/PRF-SHA256 and ESP
-AES-256/HMAC-SHA256, with MODP2048/PFS and the existing exact selectors. Deploy
-the Max's matching native settings and the cloud profile together. Persist
-`cloud_vpn_crypto_profile: sha256` in the ignored inventory after acceptance;
-do not deploy the stronger cloud proposal alone against an unchanged peer.
+Both peers use IKEv2 AES-256/HMAC-SHA256/PRF-SHA256, ESP AES-256/HMAC-SHA256 and
+MODP2048/PFS14. Exact selectors remain `192.168.1.0/24` ↔ `10.77.0.0/30`.
+Actual SAs, reconnect, CHILD-SA rekey, authentication gates, denied backend
+ports and owner-confirmed LAN sign-ins passed. The default and private inventory
+select `cloud_vpn_crypto_profile: sha256`. See [cloud VPN operation](../../usenet-infra/docs/lan-ui.md).
 
-The resumed current-WAN preflight passed for private inputs, Terraform,
-Hetzner ingress, fresh dedicated cloud SSH, UFW and installed peer/selectors.
-After a fresh encrypted/decryption-verified rollback backup, Safari changed
-only the Max's IKE/ESP hashes to SHA256 and the scoped cloud-LAN playbook
-applied its matching profile. No media service restarted. Explicit tunnel
-reconnection and CHILD-SA rekey verified the settled installed SA with AES-256,
-HMAC-SHA256, PRF-SHA256, MODP2048/PFS14, exact LAN-only selectors and no SHA-1.
-Immediate post-rekey output was transitional; settled verification passed.
-The ignored inventory now explicitly retains `cloud_vpn_crypto_profile: sha256`.
-The `--require-sha256` preflight and application health passed. A fresh encrypted
-cloud VPN/proxy archive passed authenticated decryption.
-
-Keep `legacy_sha1` only for coordinated rollback: restore both Max hashes to
-SHA1 and deploy that explicit cloud profile together, then recheck negotiation
-and paths. Preserve the pre-change encrypted archive; never change only one peer.
-
-For a WAN change, use this workflow:
+After a WAN change:
 
 1. Read WAN1's actual IPv4 in the Max. Run
    `just usenet-vpn-peer-check <verified-WAN-IPv4> --local-only`, then the full
-   command. It checks private inventory and Terraform inputs, the recorded
-   Hetzner firewall, fresh dedicated cloud SSH, UFW, installed selectors and
-   negotiated SAs. It performs no changes and never prints raw replies.
-2. If new-WAN SSH is blocked, use the existing Hetzner console to restore only
-   that WAN `/32` for TCP/22 before resuming. A DNS hostname does not update
-   Hetzner or UFW restrictions. Preserve every other authorized admin source.
-3. Capture the encrypted VPN backup and private prior firewall/configuration.
-   Reconcile `cloud_vpn_peer_ip`, `cloud_ssh_allowed_cidrs`, Terraform
-   `vpn_peer_ipv4`/`admin_ssh_cidrs` and the Max's native peer identities. Preview
-   Terraform; apply only the expected cloud-firewall rule changes, then deploy
-   the existing scoped cloud-LAN playbook. Remove obsolete managed `/32`
-   restrictions only after a fresh connection from the new source succeeds.
-4. Re-run the preflight, adding `--require-sha256` after crypto modernization.
-   Separately test LAN application authentication gates, blocked backend ports,
-   reconnect and explicit CHILD-SA rekey. Take and verify the new encrypted VPN
-   backup. The preflight never claims to verify the Max UI or LAN data path.
+   command with `--require-sha256`. It checks private inputs, Terraform, Hetzner,
+   fresh dedicated cloud SSH, UFW, installed selectors and negotiated SAs.
+2. If SSH is blocked, use the existing Hetzner console to restore only the new
+   WAN `/32` for TCP/22. Preserve other authorized admin sources. DDNS does not
+   update Hetzner or UFW source restrictions.
+3. Capture an encrypted VPN backup and prior firewall/configuration. Reconcile
+   `cloud_vpn_peer_ip`, `cloud_ssh_allowed_cidrs`, Terraform
+   `vpn_peer_ipv4`/`admin_ssh_cidrs` and Max peer identities. Preview Terraform;
+   apply only expected firewall changes, then the existing scoped cloud-LAN
+   playbook. Remove obsolete managed `/32` rules only after fresh SSH succeeds.
+4. Repeat preflight, LAN authentication/denied-backend checks, reconnect and
+   explicit CHILD-SA rekey; capture and verify a fresh encrypted VPN backup.
 
-Do not install the historical USG `config.gateway.json` on the Max. Retain its
-tracked copy solely as historical rollback evidence until the old-hardware
-rollback window closes. Never print `ip xfrm state` or raw credential files.
+This is a repeatable procedure, not automatic WAN repair. Preflight alone does
+not verify the Max UI or LAN data path. For coordinated crypto rollback, restore
+both Max hashes to SHA1 and deploy the explicit cloud `legacy_sha1` profile
+together, then verify negotiation and paths. Never change only one peer or
+install the historical USG `config.gateway.json` on the Max. Do not print
+`ip xfrm state` or credential files.
 
 ## Firewall and IDS/IPS
 
-On October 22 the native page offered a detection-engine update. **Update now >
-Proceed** returned “Intrusion Prevention update started”; the update-required
-banner was subsequently absent. The free profile displayed 26,656 signatures.
-The pilot was saved as **On**, selected network **Default** only, detection mode
-**Notify**. Printer was removed from the pilot's selected-network field before
-saving; no firewall rule or network isolation was changed. **Notify and Block**
-was not selected. No subscription or client certificate was installed.
+Default and printer remain in **Internal**, with network-specific printer
+restrictions. Lehigh is in VPN; cloud IPsec retains its generated handling.
+The IoT SSID shares Default. A restored inactive Internet 2 record does not
+provide WAN failover.
 
-Before the pilot, the Max's own ISP test measured 942 Mbps down / 951 Mbps up;
-the post-save test measured 929 / 923 Mbps. Dashboard reachability samples were
-10/8/4 ms before and 14/4/4 ms afterward (Microsoft/Google/Cloudflare).
-One pair of gateway-origin measurements cannot establish a performance change
-or routed-client throughput. Reopening settings confirmed Default/Notify
-persisted. Safari still opened the wiki by name and reached the private Seerr
-login page at `10.77.0.1:15055/login`; this was not an authenticated application
-test. Both VPNs remained Established in the native overview.
-Complete client/application checks and review actual alerts before considering
-blocking mode. Rollback of this pilot is **CyberSecure > Threat Management >
-Intrusion Prevention > Off > Apply Changes**; leave the existing ad policy and
-local DNS records intact.
+Before conversion, read-only effective rule counters and the associated-peer
+test established the baseline. After conversion, policy hits and associated
+client checks passed. Three unreachable HA allow copies targeting Hotspot,
+External and VPN were paused because their fixed destination is connected to
+Internal and they had no hits. Eight custom policies remain active; DHCP,
+mDNS and every drop were preserved. Resume only those three copies to reverse
+this cleanup. Further removal needs fresh route/counter evidence.
 
-The resumed UI showed 33,225 signatures, Default only and Notify retained,
-with zero security detections in its current month view. Sequential macOS
-`networkQuality` over Wi-Fi measured about 622 Mbps down / 80 Mbps up, with
-1177/144 RPM download/upload responsiveness. This routed-client sample has no
-comparable pre-IDS client baseline and ran near deployment work; it cannot
-attribute a performance change to IDS. Keep Notify mode.
+Zone rollback uses **Management > General > Restore from Backup**, selecting
+the preserved pre-zone Network-only export on this Max/version. **Withdraw mesh
+LAN advertisements first** if the backup enables the superseded manual peer;
+coordinate both consoles. Recheck DNS, VPNs and every printer path after restore.
+Do not substitute a Cloud Key backup or CLI ruleset rewrite.
 
-Before conversion, the five custom printer rules retained their order: LAN In TCP/8099 allow at
-20000 then all-other drop at 20001; LAN Local mDNS/DHCP allows at 20000/20001
-then gateway drop at 20002. The legacy UI did not expose packet counters;
-Max SSH was still off at that baseline. The same-AP second-printer-peer check passed for the
-Mac/awake-phone pair described above.
-Two UPnP mappings were observed (HA UDP and NAS/Plex TCP); neither was removed.
+IDS remains **Default / Notify**, excluding printer. Gateway speed samples were
+942/951 Mbps before and 929/923 afterward; the later Mac Wi-Fi sample was about
+622/80 Mbps, without a comparable pre-IDS client baseline. These do not establish
+an IDS performance effect. The observed monthly security view had zero detections.
+Rollback is **CyberSecure > Threat Management > Intrusion Prevention > Off >
+Apply Changes**, preserving DNS/ad blocking. Blocking IPS remains unevaluated.
 
-Ryan subsequently approved read-only use of the existing native Debug console
-and its displayed terms notice. With console SSH still off, exact counters
-from `UBIOS_LAN_IN_USER` and `UBIOS_LAN_LOCAL_USER` established this baseline:
+## SSH access completion — October 22
 
-| Printer rule | Packets | Bytes |
-| --- | ---: | ---: |
-| HA TCP/8099 allow | 47 | 3,797 |
-| Other routed traffic drop | 1,565 | 222,747 |
-| Gateway mDNS allow | 38,547 | 15,075,693 |
-| Gateway DHCP allow | 0 | 0 |
-| Other gateway traffic drop | 6,091 | 365,976 |
+Ryan enabled Max SSH and installed the existing owner key, restricted to
+`192.168.1.0/24`. Fresh strict-host-checking logins passed to the Max, both APs
+and switch. Printer-network SSH to all four devices and Max external IPv4 WAN
+SSH were blocked, with working positive controls. DNS and wiki access still
+passed. [SSH operations](unifi-ssh-access.md) owns fingerprints, commands,
+permissions, rollback and update/restore checks. MCP remains read-only.
 
-These are cumulative counters, not isolated probe deltas. The zero DHCP count
-does not prove the rule is redundant: initial DHCP can use earlier system
-handling. Keep every translated rule until its lack of effect is established.
-The private counter receipt records the observation method and timestamp.
+<a id="remaining-acceptance"></a>
 
-Before the zone upgrade, a fresh **Network-only** export (99,632 bytes) was
-downloaded, encrypted with the existing recovery identity and authenticated-
-decryption verified. Preserve it and the accepted full System exports. Rollback
-of an unsuccessful zone conversion is **Management > General > Restore from
-Backup**, selecting that pre-zone Network export on this same Max/version;
-retain the original native download for that path. Recheck DNS, both VPNs and
-every printer allow/deny path after restoration. Do not use the retired Cloud
-Key export or a CLI ruleset rewrite as the rollback.
-After the later Site Magic cutover, withdraw the mesh LAN advertisements first
-before restoring a pre-zone backup that enables the superseded manual peer.
-Coordinate both consoles to avoid restoring competing routes.
+## Maintenance and evidence limits
 
-Safari then completed the supported zone upgrade. Default and the printer VLAN
-both mapped to **Internal**, retaining network-specific printer constraints;
-this did not create a new Printer zone. The cloud policy-based IPsec connection
-retains its generated policy handling; Lehigh appears in VPN. The restored
-inactive Internet 2 definition remains listed in External without an active
-secondary WAN. No VLAN, SSID, peer or radio settings changed.
+Required migration checks are accepted under the criteria above. Keep both
+AdGuards, paused rollback policies and encrypted backups. Retest access after
+updates/restores; rotate the existing MCP key before **November 22, 2026**.
+Site Magic host testing was waived; blocking IPS, a matched client throughput
+benchmark and replacement-hardware recovery were not performed. For future
+discovery failures, use the [Bonjour capture workflow](unifi-apple-tv-remote.md)
+before changing radio or Sonos settings.
 
-The conversion produced eleven custom policies. Associated-client testing then
-recorded hits on the Internal HA allow (11), mDNS allow (553), Internal drop
-(28), External drop (17), VPN drop (4) and Gateway drop (376). Three generated
-HA allow copies targeted Hotspot, External and VPN despite their fixed
-`192.168.1.163` destination being connected to Internal. Their predicates cannot
-match that current destination route, and all three showed no hits. Only those
-copies were **paused** through the native UI, leaving eight active custom
-policies and three recoverable copies. UniFi labels removal irreversible, so
-no policy was deleted. The DHCP allow and every drop policy remain active.
-To reverse this cleanup, show Paused policies and resume only those three HA
-allow copies. Further cleanup needs new route and counter/effect evidence.
+The prepared infrastructure changes passed 549 unit tests, syntax/YAML/ShellCheck,
+26 wiki tests, six DNS tests and five launcher tests. The separate current-source/
+index scan passes; the full history scan retains the two documented
+[historical RSA findings](../../usenet-infra/docs/security-findings.md).
+No history rewrite or scan exception was added.
 
-After conversion, the complete gateway DNS contract passed over UDP/TCP;
-native MCP reads and the cloud `--require-sha256` preflight passed. Lehigh's
-gateway TCP/443 remained reachable, Seerr returned HTTP 307, both private
-proxies returned HTTP 401 and the tested direct backend stayed blocked.
-From the associated printer client, HA health returned HTTP 200 and a fresh
-mDNS wire answer; unrelated LAN, gateway, Internet and cloud paths remained
-blocked. The phone had left the printer SSID, so post-conversion negative phone
-probes were not counted as another peer test. The accepted same-AP peer test
-predates conversion; AP isolation settings were unchanged.
-The IoT SSID still shares Default and is not a separate security zone.
-
-After the reversible cleanup, the printer health and fresh mDNS checks passed
-again with all seven routed allow/deny expectations intact. Fresh Companion,
-AirPlay and Sonos wire replies again yielded 27 reachable advertised TCP
-endpoints. Network IDs, addressing, VLAN and DHCP/DNS fields matched the
-pre-conversion snapshot; trusted gateway DNS, Internet and wiki access worked,
-and the other direct backend TCP/9696 stayed blocked. The final full System
-export (166,688 bytes) includes the zone framework and paused copies; it was
-encrypted and authenticated-decryption verified. Preserve it alongside the
-pre-zone Network-only export and every earlier archive.
-
-Ryan then confirmed Apple TV Remote, AirPlay and Sonos controls working and
-cloud-application sign-ins working from the home LAN. These are owner-verified
-interactive checks, distinct from the agent's packet/transport evidence and
-not a new codec, playback-duration or every-client test matrix.
-
-Record a throughput/latency baseline, then pilot available native IDS/IPS and
-check application operation and alerts. No paid subscription was selected.
-Keep category filtering, IPv6, UPnP, STP and radio tuning as separately measured
-decisions; a zone migration does not authorize unrelated behavior changes.
-
-## Remaining acceptance
-
-Site Magic is accepted against Ryan's explicitly revised criterion: UniFi
-reports both gateways Connected with the intended LAN-only advertisements.
-No Lehigh test host is available, so no bidirectional host test is claimed.
-Both superseded manual definitions remain paused for rollback.
-Zone migration and the bounded reversible duplicate cleanup are complete;
-restricted printing, a same-AP printer peer and fresh wire-level discovery
-are accepted.
-Fresh wired/wireless DHCP and owner-verified application controls/sign-ins are
-accepted. Automatic local-zone failover, both-unavailable containment and recovery
-are now accepted; preserve both AdGuards and the dual-forwarder hybrid. AP bridge captures are
-the diagnostic next step if a future discovery failure needs localization;
-the current client wire-level discovery and endpoint checks pass.
-
-The native local API-key form has no read-only scope selector. The owner-approved
-**Codex UniFi MCP - 300 Newark** key expires **November 22, 2026**; its initial
-unused value was revoked and replaced before storage. Ryan now supplies
-`UBIQUITI_API_KEY` through ChatGPT's MCP environment settings. The launcher uses
-only that variable, maps it to upstream's `UNIFI_API_KEY`, and no longer invokes
-1Password or Keychain. The owner's existing environment setting must be
-preserved when editing server registration.
-
-The exact GitHub `0.6.1` source commit
-`12b4c6e964f920806e2604ab8554e98a4b92536f` is installed/cached. A direct MCP
-session with the settings-provided key initialized and exposed 26 tools.
-The earlier session's first live read failed under executor restrictions.
-The resumed native MCP reads and approved external-to-sandbox TCP/TLS checks
-now pass. No credential or package change was needed. Do not repeat key creation,
-1Password setup or installation. Five synthetic launcher tests cover environment
-mapping, invalid/missing values, protocol input, tracing privacy and forced
-read-only settings. See the [MCP runbook](../../network-infra/unifi-mcp/README.md).
-
-## Validation — October 22
-
-All 549 infrastructure unit tests, deployment syntax/YAML/ShellCheck checks,
-26 wiki tests, six DNS tests and five launcher tests passed. The required full
-infrastructure recipe exits nonzero only at the two previously documented
-[historical RSA-key findings](../../usenet-infra/docs/security-findings.md).
-The separate current-source/index secret scan passes; no history was rewritten
-or exception added. The unchanged live DNS contract passes against all three
-resolvers. After the VPN rekey, LAN requests returned wiki HTTP 200, SAB/Prowlarr
-HTTP 401 and Seerr HTTP 307; backend TCP/8080 and TCP/9696 remained blocked.
-Those probes establish reachability and authentication gates. Ryan subsequently
-confirmed interactive LAN sign-ins separately, as recorded above.
-
-## Sources
-
-- [UniFi DNS and local hostnames](https://help.ui.com/hc/en-us/articles/15179064940439-UniFi-DNS-Records-and-Local-Hostnames)
-- [UniFi content filtering](https://help.ui.com/hc/en-us/articles/12568927589143-Content-and-Domain-Filtering-in-UniFi)
-- [UniFi SD-WAN mesh](https://help.ui.com/hc/en-us/articles/16750417515159-UniFi-Gateway-Setting-Up-SD-WAN-with-UniFi-Site-Manager-and-Fabrics)
-- [Zone firewall migration](https://help.ui.com/hc/en-us/articles/28223082254743-Migrating-to-Zone-Based-Firewalls-in-UniFi)
-- [MCP launcher](../../network-infra/unifi-mcp/README.md)
+Private evidence remains under ignored `build/unifi-followup-20261022/`,
+`build/unifi-remaining-20261022/`, `build/unifi-dns-failover-20261022/` and
+`build/unifi-ssh-20261022/`. Native downloads and encrypted archives are retained;
+session chronology is also recoverable from Git history.

@@ -6,10 +6,11 @@ remain stable even though its coverage now includes the whole house.
 
 ## Addresses and evidence
 
-The intended canonical URL is `http://wiki.home.arpa/`; the DNS-independent URL
+The canonical URL is `http://wiki.home.arpa/`; the DNS-independent URL
 is `http://192.168.1.66/`. Port 8090 preserves the original Usenet entrance.
-Read the rollout record in [wiki-plan.md](../../wiki-plan.md) before assuming DNS or DHCP cutover
-has been verified. Build metadata and deployment evidence are not live health.
+[DNS operations](home-dns.md) records the accepted gateway-forwarding and
+failover design. Build metadata and deployment receipts are not continuous
+service health.
 
 ## Author and review
 
@@ -136,8 +137,9 @@ Use numeric addresses during a DNS failure. See [DNS operations](home-dns.md).
 ## Initial expansion acceptance (2026-10-09)
 
 Numeric port-80 access, local search, phone-width navigation and the original
-`8090/#storage` redirect were checked in a browser. Both DNS resolvers pass the
-local-name checks; network-wide DHCP acceptance is tracked in the DNS runbook.
+`8090/#storage` redirect were checked in a browser. Both resolvers passed direct
+local-name checks. The October 22 gateway DNS forwarding/failover acceptance is
+in the DNS runbook.
 New, uncommitted source files are labeled as working-tree sources rather than
 linked to a revision that does not contain them. Commit/push is a separate step.
 

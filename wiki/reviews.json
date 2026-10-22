@@ -25,18 +25,18 @@
     "reviewed_at": "2026-10-22"
   },
   "maintenance": {
-    "fingerprint": "1a4f8d4f2ee5fe83b56a14f7fcfa8255650f093d51599cb76c257bbca85ac889",
-    "reason": "Generated DNS reference now renders both native forwarding targets from the reviewed resolver array; publication confinement, local assets and deployment behavior are unchanged.",
+    "fingerprint": "1129262e40a218c9770ef442e4d86b309920ba937d94b25a800bc968b952d111",
+    "reason": "Replaced superseded wiki installation/DHCP handoff with current publication, DNS and recovery ownership; deployment implementation and confinement unchanged.",
     "reviewed_at": "2026-10-22"
   },
   "media": {
-    "fingerprint": "1904484c383c77b5212cef5a1bf989d09e20cd6dddb904c1797f37456997cff3",
-    "reason": "Reviewed current Max SHA-256 VPN operation, coordinated WAN recovery and owner-confirmed LAN sign-ins; preserved Filex pinned SSH tunnel and host trust policy.",
+    "fingerprint": "b935dc9486bb8648f276b902ec4ccd2b4154a60405c065ace43156a7923a2c2f",
+    "reason": "Condensed obsolete initial SHA1 cloud cutover narrative to accepted SHA256 and Site Magic status; historical USG rollback and service behavior unchanged.",
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "9e7488e2e310c2aa03206da7fa1ea91f143d6cc08cadcf699fdd26837d18f0df",
-    "reason": "Accepted Max/AP/switch SSH using the existing owner identity and verified host pins; tested printer and WAN denial, preserved recovery access, verified encrypted post-change backup and documented rollback.",
+    "fingerprint": "bb6520d92cadf8203ac370e37b09c05093a2bdb2fe77ec57bdd4ebf5c506ee23",
+    "reason": "Consolidated accepted gateway/DNS/SSH/VPN state and rollback; removed obsolete pending claims and duplicated migration chronology while preserving host pins, exact DNS contract and evidence limits.",
     "reviewed_at": "2026-10-22"
   },
   "printing": {
