@@ -57,7 +57,7 @@
   description: "Automatically control closet lighting based on human presence detection"
   triggers:
     - trigger: state
-      entity_id: binary_sensor.human_sensor_presence
+      entity_id: binary_sensor.closet_presence
       from: "off"
       to: "on"
   conditions:
@@ -74,7 +74,7 @@
     - alias: "Wait until no presence detected for 37.5 seconds"
       wait_for_trigger:
         - trigger: state
-          entity_id: binary_sensor.human_sensor_presence
+          entity_id: binary_sensor.closet_presence
           to: "off"
           for:
             seconds: 37

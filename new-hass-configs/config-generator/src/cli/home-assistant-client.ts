@@ -307,13 +307,16 @@ export function callService(
   service: string,
   data: Record<string, any>
 ): JsonObject[] {
+  // Blocking scene wrappers can outlast Zigbee's response/retry window.
+  // A ten-second HTTP deadline reports failure while Core is still running
+  // the accepted service call (observed: Bathroom Off completed in 31 seconds).
   return JSON.parse(
     runCommand(
       "curl",
       [
         "-sS",
         "--max-time",
-        "10",
+        "60",
         "-X",
         "POST",
         `${options.server}/api/services/${domain}/${service}`,

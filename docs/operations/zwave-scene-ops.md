@@ -11,6 +11,20 @@ Reference workflow for diagnosing and fixing slow Home Assistant scenes that are
 
 ## Primary Commands
 
+`just ha-call` waits up to 60 seconds for a blocking service response. An HTTP
+timeout does not cancel the service in Core or establish that a target failed.
+On 2026-10-22, Bathroom Off spent 29 seconds in ZHA's grouped light-off action
+and completed after 31 seconds; the previous ten-second client limit reported
+failure prematurely. Check the script trace, dispatcher idle state, and direct
+device state before retrying an accepted operation.
+
+For the bathroom Sengled bulbs, coordinator-side RSSI/LQI is not the parent-link
+measurement. The refreshed topology on 2026-10-22 listed Edison-bottom as a child
+of vanity-right with LQI 255; its route records confirmed vanity-right then
+vanity-left as relays. Edison-top was a child of above-sauna. These observations
+do not establish the cause of earlier unavailable periods or prove that an
+intermittent device fault is repaired.
+
 From the repo root:
 
 ```bash
