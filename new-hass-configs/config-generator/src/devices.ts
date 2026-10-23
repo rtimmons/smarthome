@@ -331,8 +331,10 @@ export const devices: DeviceRegistry = {
     bedroom_flamingo: {
       entity: "light.bedroom_light_flamingo",
       areaId: "bedroom",
-      type: "color_light",
-      capabilities: ["brightness", "color_temp", "rgb_color"]
+      type: "dimmer_light",
+      protocol: "zigbee",
+      // Live supported_color_modes is brightness-only; do not send color controls.
+      capabilities: ["brightness"]
     },
     bedroom_sconces: {
       entity: "light.light_bedroom_sconces",

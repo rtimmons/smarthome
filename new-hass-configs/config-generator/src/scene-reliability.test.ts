@@ -74,6 +74,42 @@ function intentHelpersForWrapper(script: Record<string, any>): string[] {
 }
 
 describe("Fast scene reliability contract", () => {
+  it("makes every Low preset complete and limits it to dim navigation lights", () => {
+    for (const [id, high] of Object.entries(scenes)) {
+      if (!id.endsWith("_high")) continue;
+      const lowId = id.replace(/_high$/, "_low");
+      expect(scenes[lowId], lowId).toBeDefined();
+      const lowTargets = generateSceneTargets(scenes[lowId]);
+      const lowLights = new Map(lowTargets.filter(t => t.domain === "light")
+        .map(t => [t.entityId, t]));
+      for (const target of generateSceneTargets(high).filter(t => t.domain === "light")) {
+        expect(lowLights.has(target.entityId), `${lowId}: ${target.entityId} must not retain High`).toBe(true);
+      }
+      for (const target of lowTargets.filter(t => t.entityState.state === "on")) {
+        expect(target.device.capabilities, target.entityId).toContain("brightness");
+        expect(target.entityState.brightness, target.entityId).toBeGreaterThan(0);
+        expect(target.entityState.brightness, target.entityId).toBeLessThanOrEqual(26);
+      }
+    }
+  });
+
+  it("resets tunable bulbs to warm white and keeps RGBW color channels dark", () => {
+    for (const [id, scene] of Object.entries(scenes)) {
+      if (!/_(high|medium|low)$/.test(id)) continue;
+      for (const target of generateSceneTargets(scene)) {
+        const state = target.entityState;
+        if (state.state !== "on") continue;
+        expect(state.rgb_color, `${id}: ${target.entityId}`).toBeUndefined();
+        if (target.device.capabilities?.includes("color_temp")) {
+          expect(state.color_temp_kelvin, `${id}: ${target.entityId}`).toBe(2700);
+        }
+        if (target.device.capabilities?.includes("rgbw_color")) {
+          expect(state.rgbw_color).toEqual([0, 0, 0, state.brightness]);
+        }
+      }
+    }
+  });
+
   it("requests zero-duration on and off transitions for every dimmable light platform", () => {
     for (const scene of Object.values(scenes)) {
       for (const target of generateSceneTargets(scene)) {
@@ -89,24 +125,22 @@ describe("Fast scene reliability contract", () => {
     }
   });
 
-  it("uses exact wall brightness without stopping playback or selecting an animation for High", () => {
+  it("keeps the wall dark in warm-white room presets without stopping playback", () => {
     const wallCall = (sceneId: string) => generateFastSceneCalls(scenes[sceneId])
       .find(call => call.target.entity_id.includes("light.led_grid_wall"));
-    for (const sceneId of ["all_off", "living_room_off"]) {
+    for (const sceneId of ["all_off", "living_room_off", "living_room_high", "living_room_medium", "living_room_low"]) {
       expect(wallCall(sceneId)).toMatchObject({
         action: "script.led_grid_wall_scene", data: { brightness: 0 },
       });
       expect(wallCall(sceneId)!.data).not.toHaveProperty("power");
       expect(wallCall(sceneId)!.data).not.toHaveProperty("animation");
       expect(generateFastSceneCalls(scenes[sceneId]).some(call =>
+        call.action === "switch.turn_off" &&
         call.target.entity_id.includes("switch.light_living_ledwall"))).toBe(false);
     }
-    expect(wallCall("living_room_high")!.data).toEqual({ brightness: 255, power: true });
-    expect(wallCall("living_room_medium")!.data).toEqual({
-      brightness: 255, power: true, animation: "animation:python:lava_lamp:v1",
-    });
+    expect(wallCall("living_room_medium")!.data).toEqual({ brightness: 0 });
     const scripts = generateFastScriptsFromRegistry(scenes);
-    for (const sceneId of ["all_off", "living_room_off", "living_room_high", "living_room_medium"]) {
+    for (const sceneId of ["all_off", "living_room_off", "living_room_high", "living_room_medium", "living_room_low"]) {
       const sequence = getSceneWorkerSequence(scripts, sceneId);
       const wallActions = collectObjects(sequence, candidate => candidate.action === "script.led_grid_wall_scene");
       expect(wallActions).toHaveLength(1);

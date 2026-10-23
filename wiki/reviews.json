@@ -15,14 +15,14 @@
     "reviewed_at": "2026-10-17"
   },
   "integrations": {
-    "fingerprint": "e46d195288d1ff279573965ae97993f4571d6be55d25c67e221386d3dfdcd980",
-    "reason": "Verified Nest and manual fan automation sources; removed the incorrect camera-helper claim and assigned the print snapshot service to printing.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "a25558e8168ae88596069b2f8bd7345a1d35893660d05755eb63db21a5a8a730",
+    "reason": "Reviewed the committed manual-automation rename from human_sensor_presence to closet_presence; it changes the closet lighting trigger only, with no change to the documented HVAC or fan behavior.",
+    "reviewed_at": "2026-10-23"
   },
   "lighting": {
-    "fingerprint": "b18786fad5ae5268312d2ba70f66877a8f29fcade30a7d6fbb0d6831dd428e99",
-    "reason": "Reviewed only the six existing Z-Wave runbook source links changed from one Mac checkout path to repository-relative paths; no lighting behavior or concurrent working-tree implementation changes are included.",
-    "reviewed_at": "2026-10-22"
+    "fingerprint": "6ddd64b110712536c6fbfa7c2a334907aca016aad73113959b060633ebcdba1d",
+    "reason": "Raise Living Room Medium above-TV and behind-TV white strips to 20 percent and explicitly turn off dining-table light",
+    "reviewed_at": "2026-10-23"
   },
   "maintenance": {
     "fingerprint": "01565b73db6a5e0b3600835768cc3ebbd353380725702a47bc616f1c376a218b",

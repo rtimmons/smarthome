@@ -10,7 +10,13 @@ Operational automation must call `script.fast_scene_<scene_id>`. Native `scene.t
 
 Lighting commands request an immediate change: generated dimmable-light scenes explicitly use zero-second transitions, and the Home Assistant default light profile applies the same setting to manual on/off, toggle, and brightness/color controls. The profile sets no color or brightness of its own. Device parameters use instant operation where supported, otherwise the fastest documented rate. Some dimmer hardware still fades at its minimum setting; the Minoston desk-lamp plug has an observed fade of about one second. Radio queue spacing is separate from fading and remains necessary for reliable Z-Wave delivery.
 
-The LED wall follows the living room presets: **High** sets master brightness to 100% and keeps the selected animation; **Medium** selects **Lava Lamp** at 100%. **Living Room Off** and **All Off** set master brightness to exactly zero, preserving playback and animation. Its protected power outlet stays on. Wall commands run once per request; the other lights retain their normal mismatch correction. A newer wall or room request cancels unsent work for the same wall.
+**High** is bright task lighting, **Medium** is relaxed evening lighting, and **Low** is dim navigation. Tunable bulbs explicitly use 2700 K so a previous color does not carry into a preset. RGBW strips use only their installed white channel; fixed-white lamps retain their hardware color temperature. The Flamingo bulb supports brightness only.
+
+Most Medium dimmers use 35%. Living Room Medium is tuned for TV: floor lamp 15%, entry nook 10%, and above-TV and behind-TV white strips 20%; curtains, windowsills and the other living-room lights are off. It turns off the dining-table light, kitchen hanging light, and dining nook. Kitchen Medium uses its upper/lower strips and dining nook at 35%, with the full-output ring, hanging and dining-table fixtures off. Office Medium leaves the piano task light off; Bathroom Medium leaves the above-sauna bulb off.
+
+Every Low preset explicitly sets all of its room's scene-controlled lights, so selecting Low after High cannot leave omitted lights bright. Living Room Low uses the floor lamp and entry nook at 5%; Office uses the side table at 8%; Bathroom uses only the lower Edison bulb at 8%; Kitchen uses the lower strip and dining nook at 8%; Maker Room uses only the undershelf strip at 8%; Bedroom uses sconces at 8%; Closet and Patio use their main light/sconces at 8%; Guest Bathroom uses its sconce at 8%. Existing exclusions still suppress traffic to defective devices, including the guest-bath overhead. These percentages are starting settings, not measured illumination; physical low-end dimming varies by fixture.
+
+The LED wall is dark in Living Room High, Medium, Low, Off and All Off to keep the lighting presets free of color and animation. Those requests set master brightness to exactly zero, preserving playback and the selected animation for separate wall controls. Its protected power outlet stays on. Wall commands run once per request; the other lights retain their normal mismatch correction. A newer wall or room request cancels unsent work for the same wall.
 
 ## Pebble Index 01 voice control
 
@@ -20,7 +26,7 @@ hold-and-talk available for notes. Pebble's MCP agent uses its cloud model; the
 phone reaches Home Assistant on the home network at
 `http://homeassistant.local:8123/api/mcp/assist` using Streamable HTTP.
 
-Assist exposes the 36 named `fast_scene` lighting scripts, including the room
+Assist exposes named `fast_scene` lighting scripts, including the room
 presets and all-off. Spoken names are short: "Living room bright," "Living room
 medium," "Living room dim," "Living room off," and "All lights off." High maps to
 bright and low maps to dim. Each script describes only its own preset and provides

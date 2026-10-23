@@ -58,7 +58,7 @@ describe("Scene Generation", () => {
       expect(medium.entities["light.light_outdoor_cafe"]).toMatchObject({ state: "on" });
       expect(medium.entities["light.light_outdoor_sconces"]).toMatchObject({
         state: "on",
-        brightness: 180,
+        brightness: 89,
       });
       expect(off.entities["light.light_outdoor_cafe"]).toMatchObject({ state: "off" });
       expect(off.entities["light.light_outdoor_sconces"]).toMatchObject({ state: "off" });
@@ -373,7 +373,7 @@ describe("Scene Generation", () => {
           data: {
             command_class: 38,
             property: "targetValue",
-            value: 50,
+            value: 35,
             options: { transitionDuration: "0s" },
             wait_for_result: false,
           },
@@ -381,23 +381,28 @@ describe("Scene Generation", () => {
       }
     });
 
-    it("should group all bathroom Zigbee lights into one fast call", () => {
+    it("should group bathroom Zigbee lights by their supported warm-white payload", () => {
 
       const calls = generateFastCalls(scenes.bathroom_high);
 
-      expect(calls).toHaveLength(1);
+      expect(calls).toHaveLength(2);
       expect(
         calls.find(
           (call: any) =>
             call.data?.brightness === 254 &&
-            call.target.entity_id.length === 5 &&
-            call.target.entity_id.includes("light.light_bathroom_edison_bottom") &&
-            call.target.entity_id.includes("light.light_bathroom_edison_top") &&
+            call.data?.color_temp_kelvin === 2700 &&
+            call.target.entity_id.length === 3 &&
             call.target.entity_id.includes("light.light_bathroom_vanity_left") &&
             call.target.entity_id.includes("light.light_bathroom_vanity_right") &&
             call.target.entity_id.includes("light.light_bathroom_abovesauna")
         )
       ).toBeDefined();
+      expect(calls.find((call: any) => call.target.entity_id.includes("light.light_bathroom_edison_bottom")))
+        .toMatchObject({ data: { brightness: 254, transition: 0 }, target: {
+          entity_id: ["light.light_bathroom_edison_bottom", "light.light_bathroom_edison_top"],
+        } });
+      expect(calls.find((call: any) => call.target.entity_id.includes("light.light_bathroom_edison_bottom"))!.data)
+        .not.toHaveProperty("color_temp_kelvin");
     });
 
     it("should generate the current bathroom medium, low, and off behavior", () => {
@@ -407,17 +412,24 @@ describe("Scene Generation", () => {
 
       expect(mediumCalls).toEqual([
         {
+          action: "light.turn_off",
+          target: { entity_id: ["light.light_bathroom_abovesauna"] },
+          data: { transition: 0 },
+        },
+        {
           action: "light.turn_on",
           target: {
             entity_id: [
-              "light.light_bathroom_abovesauna",
-              "light.light_bathroom_edison_bottom",
-              "light.light_bathroom_edison_top",
               "light.light_bathroom_vanity_left",
               "light.light_bathroom_vanity_right",
             ],
           },
-          data: { brightness: 155, transition: 0 },
+          data: { brightness: 89, color_temp_kelvin: 2700, transition: 0 },
+        },
+        {
+          action: "light.turn_on",
+          target: { entity_id: ["light.light_bathroom_edison_bottom", "light.light_bathroom_edison_top"] },
+          data: { brightness: 89, transition: 0 },
         },
       ]);
       expect(lowCalls).toHaveLength(2);
@@ -425,7 +437,7 @@ describe("Scene Generation", () => {
         expect.arrayContaining([
           {
             action: "light.turn_off",
-            target: { entity_id: ["light.light_bathroom_abovesauna"] },
+            target: { entity_id: ["light.light_bathroom_abovesauna", "light.light_bathroom_edison_top", "light.light_bathroom_vanity_left", "light.light_bathroom_vanity_right"] },
             data: { transition: 0 },
           },
           {
@@ -433,12 +445,9 @@ describe("Scene Generation", () => {
             target: {
               entity_id: [
                 "light.light_bathroom_edison_bottom",
-                "light.light_bathroom_edison_top",
-                "light.light_bathroom_vanity_left",
-                "light.light_bathroom_vanity_right",
               ],
             },
-            data: { brightness: 50, transition: 0 },
+            data: { brightness: 20, transition: 0 },
           },
         ])
       );
