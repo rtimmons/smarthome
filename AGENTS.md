@@ -5,6 +5,7 @@ Guidance for humans and agents working in this repository.
 ## Ground rules
 - Default to `just` recipes and the provided env wrappers (`.venv`, `nvm`) instead of ad-hoc commands.
 - You start in a sandbox; ask before taking the git lock (`git add`, etc.).
+- Agent commits must use the dedicated, Git-ignored SSH signing key `.ssh/id_ed25519_codex_git_signing`, never Ryan's personal signing identity or SSH agent. From the repository root, use `git -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c user.signingkey="$PWD/.ssh/id_ed25519_codex_git_signing" -c commit.gpgsign=true commit ...` (apply the same overrides to other operations that create signed commits). Preserve the user's normal Git configuration and author metadata. If this key is missing, create a dedicated Ed25519 signing key there; never fall back to a personal key or reuse infrastructure access keys. Keep its private key untracked.
 - Runtimes are pinned by `.nvmrc` (Node) and `.python-version` (Python); use the self-contained nvm/pyenv installed by `just setup`.
 - “Prepare to commit” means: stage your changes (with permission), run `just test`, and drop the proposed commit message in `./msg` without staging that file.
 
