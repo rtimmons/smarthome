@@ -35,7 +35,9 @@
     "sonos-5caafdf5abe4.home.arpa": "192.168.1.195",
     "x00300gas46a.home.arpa": "192.168.1.69",
     "x02800wdhnvl.home.arpa": "192.168.1.23",
-    "grid-dashboard.home.arpa": "192.168.1.163"
+    "grid-dashboard.home.arpa": "192.168.1.163",
+    "git.home.arpa": "192.168.1.163",
+    "git-ssh.home.arpa": "192.168.1.66"
   },
   "resolvers": [
     "192.168.1.163",
@@ -142,7 +144,11 @@
     "@@|x02800wdhnvl.home.arpa|$dnsrewrite=NXDOMAIN;;",
     "|x02800wdhnvl.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.23",
     "@@|grid-dashboard.home.arpa|$dnsrewrite=NXDOMAIN;;",
-    "|grid-dashboard.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163"
+    "|grid-dashboard.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|git.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|git.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|git-ssh.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|git-ssh.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66"
   ],
   "mdns_records": {
     "001788613749.home.arpa": {

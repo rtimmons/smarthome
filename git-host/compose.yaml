@@ -1,0 +1,49 @@
+name: home-git
+services:
+  forgejo:
+    image: codeberg.org/forgejo/forgejo:15.0.10-rootless
+    user: "1004:100"
+    restart: unless-stopped
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 256
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    environment:
+      USER_UID: "1004"
+      USER_GID: "100"
+      FORGEJO__database__DB_TYPE: sqlite3
+      FORGEJO__server__DOMAIN: git.home.arpa
+      FORGEJO__server__ROOT_URL: http://git.home.arpa/
+      FORGEJO__server__SSH_DOMAIN: git-ssh.home.arpa
+      FORGEJO__server__SSH_PORT: "2222"
+      FORGEJO__server__SSH_LISTEN_PORT: "2222"
+      FORGEJO__server__START_SSH_SERVER: "true"
+      FORGEJO__security__INSTALL_LOCK: "true"
+      FORGEJO__ssh.minimum_key_sizes__RSA: "2048"
+      FORGEJO__service__DISABLE_REGISTRATION: "true"
+      FORGEJO__service__REQUIRE_SIGNIN_VIEW: "true"
+      FORGEJO__repository__DEFAULT_PRIVATE: private
+      FORGEJO__actions__ENABLED: "false"
+      FORGEJO__packages__ENABLED: "false"
+      FORGEJO__mailer__ENABLED: "false"
+      FORGEJO__openid__ENABLE_OPENID_SIGNIN: "false"
+      FORGEJO__openid__ENABLE_OPENID_SIGNUP: "false"
+    ports:
+      - "192.168.1.66:3003:3000"
+      - "192.168.1.66:2222:2222"
+    volumes:
+      - ./data:/var/lib/gitea
+      - ./config:/etc/gitea
+      - /etc/localtime:/etc/localtime:ro
+    healthcheck:
+      test: [CMD, wget, --quiet, --spider, http://127.0.0.1:3000/api/healthz]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "7412d9217c6988cb393d92e96b233c1f5991b76a240e1a942669ce175de102bf",
-    "reason": "Reviewed current HA store refresh command, proxy dependency ordering and backup health coverage without widening LAN access",
+    "fingerprint": "6bb31a4b5e5d7a9790b02db6195167b37376c9373fa07e69abda84dea05c882c",
+    "reason": "Reviewed Forgejo LAN hosting, approved RSA key policy, encrypted off-host backups and verified restore",
     "reviewed_at": "2026-10-24"
   },
   "media": {
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "8e2387d7377993d519b675648bfcd0c7f3e957067237ab9d44194ad7a7f1f6fa",
-    "reason": "Reviewed LAN-bound pilot, recoverable exact DNS aliases and live service inventory; additional service mappings remain proposals",
+    "fingerprint": "03877bafd4b1774309e16fa61ce13ae2664b0d64468fd83618eadd80361a7fdd",
+    "reason": "Reviewed only the Forgejo HTTP route and two explicit Git aliases, preserving the existing dashboard pilot",
     "reviewed_at": "2026-10-24"
   },
   "printing": {

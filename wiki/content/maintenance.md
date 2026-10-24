@@ -54,6 +54,15 @@ media mounts and is removed after testing. See the [settings rollout runbook](..
 
 ## Choose the recovery scope
 
+The NAS also hosts [Forgejo](../../git-host/README.md) for private Git repositories,
+issues and pull requests. Open `http://git.home.arpa/` on the LAN and run
+`just git-host status` for health. It uses one resource-limited container with
+SQLite; registration and CI runners are disabled. Its application state is
+separate from media services. Its encrypted backup workflow captures the stopped
+service and verifies off-host readback in the existing confined Storage Box backup
+account. Run `just git-host backup-status` to check freshness, and follow the
+runbook's dated acceptance evidence and restore procedure before upgrading.
+
 | What was lost | Recovery guide | What it can recover |
 | --- | --- | --- |
 | An add-on’s saved state | [Add-on backups](../../docs/operations/addon-state-backups.md) | The selected application state; verify the archive scope |

@@ -262,6 +262,8 @@ MCP controller currently exposes Newark only.
 The separate `home-proxy` Home Assistant add-on binds only that IPv4 address
 on port 80. Its Caddyfile accepts source addresses in `192.168.1.0/24`; the pilot
 route matches `grid-dashboard.home.arpa` and proxies to `http://hass.home.arpa:3000`.
+Additional explicit routes are maintained alongside it; the Git-host route is
+documented separately in the [Git hosting guide](../../git-host/README.md).
 Other sources receive 403; unknown hostnames receive 404. Forwarded client-IP
 headers are not trusted for the source check. No wildcard DNS, HTTPS listener,
 WAN forwarding or service-name discovery is introduced. Cabin/VPN clients are

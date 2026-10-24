@@ -14,6 +14,10 @@ http://:80 {
 	handle @dashboard {
 		reverse_proxy http://hass.home.arpa:3000
 	}
+	@git host git.home.arpa
+	handle @git {
+		reverse_proxy http://192.168.1.66:3003
+	}
 	handle {
 		respond "Unknown service" 404
 	}

@@ -265,7 +265,8 @@
         "wiki/areas.py",
         "talos/src/talos/addon_backup.py",
         "talos/tests/test_addon_backup.py",
-        "talos/tests/test_addon_manifest.py"
+        "talos/tests/test_addon_manifest.py",
+        "git-host/*"
       ],
       "runbooks": [
         "docs/plan-hardening.md",
@@ -276,7 +277,8 @@
         "usenet-infra/docs/recovery.md",
         "usenet-infra/docs/secrets-recovery.md",
         "usenet-infra/docs/filex-recovery.md",
-        "docs/operations/wiki-audit.md"
+        "docs/operations/wiki-audit.md",
+        "git-host/README.md"
       ]
     }
   ]

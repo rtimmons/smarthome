@@ -438,6 +438,20 @@ deploy-force *args="":
 # USENET CATALOG
 # ============================================================================
 
+# Manage the isolated NAS Git host with the existing dedicated NAS environment.
+[group: 'git-host']
+git-host action='status':
+	@if [ {{quote(action)}} = deploy ]; then ./wiki/run with-deployment --scope git-host -- just _git-host {{quote(action)}}; else just _git-host {{quote(action)}}; fi
+
+[private]
+_git-host action:
+	@UV_CACHE_DIR="$PWD/build/wiki/uv-cache" UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv" just --justfile usenet-infra/Justfile --working-directory usenet-infra --command uv run --project ../wiki --python "$(cat .python-version)" --frozen python ../git-host/manage.py {{quote(action)}}
+
+[group: 'git-host']
+git-host-test:
+	@UV_CACHE_DIR="$PWD/build/wiki/uv-cache" UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv" uv run --project wiki --python "$(cat .python-version)" --frozen python -m unittest discover -s git-host -p 'test_*.py' -v
+	@shellcheck git-host/backup.sh
+
 # Run any infrastructure recipe without maintaining a second command list.
 # Use `just usenet --list`; offline recovery also requires root --no-dotenv.
 [group: 'usenet']

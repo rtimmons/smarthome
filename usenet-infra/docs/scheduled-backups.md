@@ -205,6 +205,14 @@ immutable, and ordinary freshness checks still apply.
 
 ## Confined NAS backup account recovery
 
+Forgejo uses the same existing confined NAS backup account with a separate
+`archives/forgejo/` directory and its own QNAP cron entry. It captures a stopped
+Forgejo instance, encrypts repositories/database/configuration with the existing
+NAS recipient, restarts Forgejo before upload, and requires off-host readback.
+It does not change the three-scope NAS/Plex settings health contract above.
+See the [Git-host runbook](../../git-host/README.md) for schedule, retention,
+freshness checks, dated validation and restore limits.
+
 The separate `terraform/nas-backup` root manages only the backup subaccount,
 with `prevent_destroy`; never use the canonical storage root to recreate it.
 Its local state and private inputs are ignored. Existing account ID 331416 is

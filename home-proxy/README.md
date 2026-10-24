@@ -1,10 +1,11 @@
 # Home HTTP proxy
 
-A small Caddy add-on with an explicit mapping:
+A small Caddy add-on with explicit mappings:
 
 | Browser URL | Upstream |
 | --- | --- |
 | `http://grid-dashboard.home.arpa/` | `http://hass.home.arpa:3000/` |
+| `http://git.home.arpa/` | `http://192.168.1.66:3003/` |
 
 It binds only Home Assistant's LAN address, `192.168.1.163:80`, and accepts
 clients from `192.168.1.0/24`. Unknown hosts return 404; other sources return
