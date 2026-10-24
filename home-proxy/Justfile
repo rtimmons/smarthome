@@ -8,7 +8,7 @@ deploy: ensure-talos validate-addon
     @{{talos_bin}} addon deploy home-proxy
 
 container-test: ha-addon
-    @echo "Caddy configuration is validated during the Supervisor image build."
+    @echo "Caddy syntax is checked during the image build; runtime TLS is checked during startup."
 
 test: ha-addon
     @echo "Add-on packaging passed; run the deployed HTTP acceptance checks before publishing DNS."

@@ -247,8 +247,19 @@ def _preflight_remote_storage(transport: Transport) -> int:
 
 def _health_command(repo_key: str, hostname: str) -> str:
     host = shlex.quote(hostname)
+    if repo_key in {"authelia", "home-acme", "directory-route"}:
+        # These apps deliberately expose no endpoint on the Supervisor bridge.
+        # The backup gate checks their post-backup process state; authenticated
+        # LDAPS/SSO and certificate renewal have separate controller checks.
+        app_id = {"authelia": "local_authelia", "home-acme": "local_home_acme",
+                  "directory-route": "local_directory_route"}[repo_key]
+        return f"ha apps info {app_id} --raw-json | jq -e '.data.state == \"started\"' >/dev/null"
     if repo_key == "mongodb":
         return f"nc -z -w 5 {host} 27017"
+    if repo_key == "directory":
+        # Confirms the preserved maintenance listener. Authenticated AD and
+        # SYSVOL restore checks remain a separate migration acceptance gate.
+        return f"nc -z -w 5 {host} 22"
     if repo_key == "home-proxy":
         # The SSH add-on is on the internal bridge, outside this listener's LAN
         # allowlist. Verify its deliberate rejection instead of bypassing it.

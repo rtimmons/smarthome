@@ -67,16 +67,20 @@ def discover():
     return found
 
 
-def rules(records):
+def rules(records, delegated_zones=None):
     result = ['! Repository-owned home.arpa zone. Keep unknown names local.',
               '||home.arpa^$dnsrewrite=NXDOMAIN;;']
+    for zone, address in (delegated_zones or {}).items():
+        if zone != 'ad.home.arpa' or address != '192.168.1.10':
+            raise ValueError('Unreviewed delegated DNS zone or destination')
+        result.append(f'@@||{zone}^$dnsrewrite=NXDOMAIN;;')
     for name, address in records.items():
         result.extend([f'@@|{name}|$dnsrewrite=NXDOMAIN;;', f'|{name}|$dnsrewrite=NOERROR;A;{address}'])
     return result
 
 
 def reconcile(policy, found, now=None):
-    if policy['user_rules'] != rules(policy['records']):
+    if policy['user_rules'] != rules(policy['records'], policy.get('delegated_zones')):
         raise ValueError('Policy has custom rules beyond exact records; review before importing Bonjour names')
     now = time.time() if now is None else now
     result = copy.deepcopy(policy)
@@ -109,5 +113,5 @@ def reconcile(policy, found, now=None):
         if now - metadata['last_seen'] > GRACE:
             records.pop(name, None)
             del owned[name]
-    result['user_rules'] = rules(records)
+    result['user_rules'] = rules(records, result.get('delegated_zones'))
     return result, skipped

@@ -47,6 +47,10 @@ test "$("$docker" inspect --format '{{.State.Running}}' usenet-backups-backups-1
 "$docker" stats --no-stream --format '{{.Name}} CPU={{.CPUPerc}} memory={{.MemUsage}}' home-git-forgejo-1
 "$docker" exec home-git-forgejo-1 wget -qO- http://127.0.0.1:3000/api/healthz
 '''
+    if action == 'auth-status':
+        return PRELUDE + '''"$docker" exec home-git-forgejo-1 forgejo --config /var/lib/gitea/custom/conf/app.ini admin user list
+"$docker" exec home-git-forgejo-1 forgejo --config /var/lib/gitea/custom/conf/app.ini admin auth list
+'''
     if action == 'credentials':
         return PRELUDE + 'cat "$root/admin-login.txt"\n'
     if action == 'bootstrap':
@@ -84,7 +88,7 @@ compose up -d --wait --wait-timeout 180
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('deploy', 'status', 'bootstrap', 'credentials',
+    parser.add_argument('action', choices=('deploy', 'status', 'auth-status', 'bootstrap', 'credentials',
                                          'backup', 'backup-status', 'backup-deploy', 'backup-schedule', 'backup-update',
                                          'backup-verify'))
     action = parser.parse_args().action

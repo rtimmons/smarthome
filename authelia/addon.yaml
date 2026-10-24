@@ -1,0 +1,31 @@
+slug: authelia
+name: Household sign-in
+description: Private household SSO backed by the household Active Directory.
+url: https://github.com/rtimmons/smarthome
+custom_dockerfile: true
+copy:
+  - run.sh
+homeassistant_min: "2024.6.0"
+startup: services
+backup: cold
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: true
+ports: {}
+map:
+  - type: addon_config
+    read_only: false
+  - type: ssl
+    read_only: true
+environment: {}
+docs:
+  readme: >
+    Authelia authenticates against the isolated HA AD directory over verified LDAPS.
+    The existing HA proxy terminates publicly trusted HTTPS at auth.home.rytim.com.
+  docs: >
+    The server listens only on loopback port 9091. Private configuration lives in
+    the persistent add-on configuration directory; SQLite and MFA state live in
+    /data and require a cold backup. No CA signing key is deployed to this host.
+  access: >
+    https://auth.home.rytim.com/ uses Let's Encrypt and requires no new client root CA.

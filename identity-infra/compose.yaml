@@ -1,0 +1,41 @@
+name: home-identity
+services:
+  dc:
+    image: smarthome-samba-ad:20261024
+    hostname: dc1
+    domainname: ad.home.arpa
+    restart: unless-stopped
+    mem_limit: 768m
+    cpus: 1.0
+    pids_limit: 256
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /run/identity-tls:rw,noexec,nosuid,size=1m,mode=0700
+    volumes:
+      - ./dc-state:/data
+      - ./tls:/tls:ro
+      - ./secrets/domain-admin:/run/secrets/domain-admin:ro
+    networks:
+      directory:
+        ipv4_address: 192.168.1.10
+    dns:
+      - 127.0.0.1
+    healthcheck:
+      test: [CMD-SHELL, 'dig @127.0.0.1 +short SRV _ldap._tcp.ad.home.arpa | grep -q dc1.ad.home.arpa']
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 300s
+networks:
+  directory:
+    driver: qnet
+    driver_opts:
+      iface: eth0
+    ipam:
+      driver: qnet
+      options:
+        iface: eth0
+      config:
+        - subnet: 192.168.1.0/24
+          gateway: 192.168.1.1

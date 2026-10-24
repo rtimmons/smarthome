@@ -1,0 +1,53 @@
+slug: directory
+name: Household directory
+description: Preserved SMARTHOME Active Directory with a dedicated routed LAN address.
+url: https://github.com/rtimmons/smarthome
+custom_dockerfile: true
+copy:
+  - run.py
+  - ../identity-infra/directory_state.py
+homeassistant_min: "2024.6.0"
+startup: services
+backup: cold
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: false
+privileged:
+  - NET_ADMIN
+apparmor_extra: |
+  network,
+  capability net_admin,
+  capability net_raw,
+  capability setuid,
+  capability setgid,
+  capability chown,
+  capability dac_override,
+  capability fowner,
+  capability sys_chroot,
+  capability kill,
+  capability audit_write,
+  capability fsetid,
+  /usr/sbin/** ix,
+  /sbin/** ix,
+  /usr/lib/** ix,
+ports:
+  22: null
+ports_description:
+  22: Private directory maintenance; no host port mapping is required.
+map:
+  - type: addon_config
+    read_only: false
+  - type: ssl
+    read_only: true
+environment: {}
+docs:
+  readme: >
+    The existing AD domain runs in an isolated network namespace on HA.
+    A separate route app gives it its dedicated LAN address.
+  docs: >
+    Directory databases, SYSVOL, TLS and SSH identities persist in /data.
+    Initialization imports an existing directory; it never provisions a new one.
+    During preparation only the pinned maintenance SSH service runs.
+  access: >
+    SMB credentials belong to SMARTHOME. Browser sign-in uses Authelia.

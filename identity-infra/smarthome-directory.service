@@ -1,0 +1,21 @@
+[Unit]
+Description=Smarthome Active Directory (preserved domain)
+Wants=network-online.target
+After=network-online.target
+ConditionPathExists=/data/identity.json
+ConditionPathExists=/data/private/sam.ldb
+
+[Service]
+Type=simple
+UMask=0077
+ExecStartPre=/usr/bin/test -s /tls/dc.key
+ExecStart=/usr/sbin/samba --foreground --no-process-group --configfile=/data/etc/smb.conf
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=60
+TasksMax=256
+MemoryMax=512M
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

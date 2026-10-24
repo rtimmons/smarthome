@@ -35,6 +35,13 @@ the external state directory, separate age master for 1Password, authenticated
 restore drill and remaining controller prerequisites. The older SOPS recovery
 package stays unchanged. Preserve both recovery masters and their ciphertext.
 
+The [household directory and SSO runbook](../../docs/operations/household-identity.md)
+adds separate AD, Authelia and ACME state. `just usenet identity backup` verifies
+an isolated directory restore before encrypting its archive off the NAS;
+`just usenet identity seal` captures controller configuration and private CA
+material. HA add-on backups must also preserve MFA enrollments and certificate
+account keys. Rebuilding a checkout alone cannot recover later server state.
+
 ## Keep explanations with changes
 
 Update the corresponding guide or runbook when behavior changes. The component catalog connects source files to their explanations. `just wiki-check` rejects unreviewed source fingerprints. After reviewing, record a specific explanation with `just wiki-review <component> '<reason>'`; a no-documentation-impact decision must explain why.

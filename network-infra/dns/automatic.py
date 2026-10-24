@@ -121,6 +121,13 @@ def verify_once(policy, previous):
     cases.extend([('home.arpa', 'SOA', 'NXDOMAIN', []),
                   ('unknown-autodns-check.home.arpa', 'A', 'NXDOMAIN', []),
                   ('example.com', 'A', 'NOERROR', None)])
+    if policy.get('delegated_zones'):
+        cases.extend([
+            ('dc1.ad.home.arpa', 'A', 'NOERROR', ['192.168.1.10']),
+            ('_ldap._tcp.ad.home.arpa', 'SRV', 'NOERROR', ['0 100 389 dc1.ad.home.arpa.']),
+            ('_kerberos._tcp.ad.home.arpa', 'SRV', 'NOERROR', ['0 100 88 dc1.ad.home.arpa.']),
+            ('unknown-autodns-check.ad.home.arpa', 'A', 'NXDOMAIN', []),
+        ])
     for address in [*policy['resolvers'], policy['client_resolver']]:
         for send in (dns.query.udp, dns.query.tcp):
             for name, kind, status, expected in cases:
@@ -149,8 +156,15 @@ def verify(policy, previous):
 
 
 def cycle():
+    if (STATE / 'delegation-pending.json').exists():
+        raise RuntimeError('An interrupted AD delegation needs recovery before discovery resumes')
     current = json.loads((STATE / 'policy.json').read_text())
     apis = clients()
+    if current.get('delegated_zones'):
+        for api in apis:
+            info = api.api('dns_info')
+            if info['upstream_dns'] != current['upstream_dns'] or info['fallback_dns']:
+                raise RuntimeError('Delegated upstream policy drift; retaining existing records')
     if (STATE / 'pending.json').exists():
         # Recover a known generation before discovering anything new.
         converge(apis, current, current, STATE, verify)

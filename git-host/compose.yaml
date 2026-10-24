@@ -13,8 +13,8 @@ services:
       USER_UID: "1004"
       USER_GID: "100"
       FORGEJO__database__DB_TYPE: sqlite3
-      FORGEJO__server__DOMAIN: git.home.arpa
-      FORGEJO__server__ROOT_URL: http://git.home.arpa/
+      FORGEJO__server__DOMAIN: git.home.rytim.com
+      FORGEJO__server__ROOT_URL: https://git.home.rytim.com/
       FORGEJO__server__SSH_DOMAIN: git-ssh.home.arpa
       FORGEJO__server__SSH_PORT: "2222"
       FORGEJO__server__SSH_LISTEN_PORT: "2222"
@@ -29,6 +29,8 @@ services:
       FORGEJO__mailer__ENABLED: "false"
       FORGEJO__openid__ENABLE_OPENID_SIGNIN: "false"
       FORGEJO__openid__ENABLE_OPENID_SIGNUP: "false"
+      FORGEJO__oauth2_client__ENABLE_AUTO_REGISTRATION: "false"
+      FORGEJO__oauth2_client__ACCOUNT_LINKING: login
     ports:
       - "192.168.1.66:3003:3000"
       - "192.168.1.66:2222:2222"

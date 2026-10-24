@@ -26,6 +26,23 @@ def test_build_context_reads_runtime_versions():
     assert "python_version" in addon and addon["python_version"]
 
 
+@pytest.mark.parametrize("invalid", ["NET_ADMIN", [True], ["NET_ADMIN\nfull_access: true"]])
+def test_capabilities_reject_invalid_manifest_values(invalid):
+    addons = addon_builder.discover_addons()
+    addons["directory"] = {**addons["directory"], "privileged": invalid}
+    with pytest.raises(Exception, match="Invalid privileged"):
+        addon_builder.build_context("directory", addons)
+
+
+def test_directory_keeps_host_network_isolation_and_only_network_capability():
+    context = addon_builder.build_context("directory", addon_builder.discover_addons())
+    assert context["addon"]["host_network"] is False
+    assert context["addon"]["privileged"] == ["NET_ADMIN"]
+    rendered = addon_builder.render_template(addon_builder.jinja_env(), "config.yaml.j2", context)
+    assert "NET_ADMIN" in rendered
+    assert "full_access" not in rendered
+
+
 def test_build_context_supports_per_addon_node_version():
     addons = addon_builder.discover_addons()
     ctx = addon_builder.build_context("node-sonos-http-api", addons)

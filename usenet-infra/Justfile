@@ -8,6 +8,16 @@ ansible := "uv run --with ansible-core==2.21.4"
 default:
 	@just --list
 
+# Isolated NAS Active Directory; uses dedicated NAS access and external secrets.
+[group: 'identity']
+[positional-arguments]
+identity *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	cd ..
+	export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
+	exec uv run --project wiki --python "$(cat .python-version)" --frozen python identity-infra/manage.py "$@"
+
 # Preview first; apply only reviewed settings, never media/recovery actions.
 [group: 'setup']
 configure-seerr-safety apply="false": ansible-setup

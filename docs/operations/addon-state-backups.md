@@ -1,6 +1,6 @@
 # Add-on state backups
 
-Talos creates a native Home Assistant Supervisor partial backup containing all add-ons discovered from the repository plus the complete `/share` folder (eight add-ons with the HTTP proxy pilot). This preserves private add-on `/data` directories, including MongoDB and Node Sonos state, without duplicating Supervisor's backup format. The proxy has no application state; its health check expects HTTP 403 from the internal SSH add-on network, preserving its LAN-only boundary. Dashboard health is checked separately.
+Talos creates a native Home Assistant Supervisor partial backup containing all add-ons discovered from the repository plus the complete `/share` folder (twelve add-ons including the household directory, route, Authelia and home-acme). This preserves private add-on `/data` directories, including MongoDB and Node Sonos state, without duplicating Supervisor's backup format. The proxy has no application state; its health check expects HTTP 403 from the internal SSH add-on network, preserving its LAN-only boundary. Dashboard health is checked separately.
 
 ## Create a backup
 
@@ -24,7 +24,7 @@ Use `--output-root PATH` on the Talos command, or pass the same option to the re
 
 The current state is approximately 1.28 GiB, so allow materially more than that on both Home Assistant's `/backup` volume and the local destination. Talos currently requires at least 2 GiB free remotely. No automatic pruning occurs.
 
-MongoDB uses a Supervisor cold backup. Supervisor briefly stops MongoDB while copying its private data and starts it again afterward. Talos polls every add-on that was originally running and fails loudly unless application-level health recovers. Printer's `/health/mongo` and TinyURL's database-backed `/api/urls` endpoint must work both before and after backup creation.
+MongoDB and the four household identity apps use Supervisor cold backups. Supervisor briefly stops each while copying its private data and starts it again afterward. Talos polls every add-on that was originally running and fails unless its health gate recovers. Printer's `/health/mongo` and TinyURL's database-backed `/api/urls` endpoint must work both before and after backup creation. Authelia, home-acme and directory-route expose no endpoint on the internal SSH network, so their backup gates verify Supervisor's running state. The directory gate checks its internal maintenance SSH port; portable SYSVOL ACLs are saved during clean shutdown for restoration onto new inodes. These gates do not prove LDAP authentication, browser SSO or successful certificate renewal; use the separate [identity checks and encrypted recovery workflow](household-identity.md). The identity-specific backup also includes `/ssl`; this general backup includes only `/share` and the add-ons.
 
 The backup is intentionally unencrypted. It may contain sensitive add-on data and everything under `/share`. Talos sets the local directory to mode `0700`, all local files to `0600`, and the remote archive to `0600`. Protect both machines and their storage accordingly.
 

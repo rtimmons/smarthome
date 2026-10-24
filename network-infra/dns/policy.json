@@ -48,7 +48,11 @@
     "sabnzbd.home.arpa": "192.168.1.163",
     "catalog.home.arpa": "192.168.1.163",
     "printer.home.arpa": "192.168.1.163",
-    "tinyurl.home.arpa": "192.168.1.163"
+    "tinyurl.home.arpa": "192.168.1.163",
+    "auth.apps.home.arpa": "192.168.1.163",
+    "auth.home.arpa": "192.168.1.163",
+    "auth.home.rytim.com": "192.168.1.163",
+    "git.home.rytim.com": "192.168.1.163"
   },
   "resolvers": [
     "192.168.1.163",
@@ -62,10 +66,14 @@
       "192.168.1.163",
       "192.168.1.66"
     ],
-    "native_wiki_a_enabled": false
+    "native_wiki_a_enabled": false,
+    "additional_zones": [
+      "home.rytim.com"
+    ]
   },
   "upstream_dns": [
-    "https://dns10.quad9.net/dns-query"
+    "https://dns10.quad9.net/dns-query",
+    "[/ad.home.arpa/]192.168.1.10"
   ],
   "bootstrap_dns": [
     "1.1.1.1:53"
@@ -88,6 +96,7 @@
   "user_rules": [
     "! Repository-owned home.arpa zone. Keep unknown names local.",
     "||home.arpa^$dnsrewrite=NXDOMAIN;;",
+    "@@||ad.home.arpa^$dnsrewrite=NXDOMAIN;;",
     "@@|wiki.home.arpa|$dnsrewrite=NXDOMAIN;;",
     "|wiki.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66",
     "@@|hass.home.arpa|$dnsrewrite=NXDOMAIN;;",
@@ -181,7 +190,15 @@
     "@@|printer.home.arpa|$dnsrewrite=NXDOMAIN;;",
     "|printer.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
     "@@|tinyurl.home.arpa|$dnsrewrite=NXDOMAIN;;",
-    "|tinyurl.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163"
+    "|tinyurl.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|auth.apps.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|auth.apps.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|auth.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|auth.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|auth.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|auth.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|git.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|git.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163"
   ],
   "mdns_records": {
     "001788613749.home.arpa": {
@@ -313,5 +330,8 @@
     "host": "NAS",
     "interval_seconds": 60,
     "runtime_policy": "/share/Container/usenet/dns/backups/automatic-state/policy.json"
+  },
+  "delegated_zones": {
+    "ad.home.arpa": "192.168.1.10"
   }
 }

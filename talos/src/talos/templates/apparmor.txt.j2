@@ -24,4 +24,7 @@ profile {{ addon.slug }} flags=(attach_disconnected,mediate_deleted) {
   /usr/bin/node ix,
   /usr/bin/npm ix,
   {{ addon.container_workdir }}/** rwix,
+{% if addon.apparmor_extra %}
+{{ addon.apparmor_extra | indent(2, true) }}
+{% endif %}
 }

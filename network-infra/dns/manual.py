@@ -14,19 +14,19 @@ import time
 
 def with_record(policy, name, address):
     from discovery import rules
-    if not re.fullmatch(r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.home\.arpa', name):
-        raise ValueError('Expected one explicit hostname beneath home.arpa')
+    if not re.fullmatch(r'[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.(?:(?:apps\.)?home\.arpa|home\.rytim\.com)', name):
+        raise ValueError('Expected one explicit hostname beneath home.arpa, apps.home.arpa or home.rytim.com')
     ip = ipaddress.IPv4Address(address)
     lan = ipaddress.IPv4Network('192.168.1.0/24')
     if ip not in lan or ip in (lan.network_address, lan.broadcast_address):
         raise ValueError('Manual destination must be a Newark LAN address')
-    if policy['user_rules'] != rules(policy['records']):
+    if policy['user_rules'] != rules(policy['records'], policy.get('delegated_zones')):
         raise ValueError('Unexpected custom rules; reconcile before editing')
     if name in policy.get('mdns_records', {}):
         raise ValueError('Name is discovery-owned; choose an unused service alias')
     result = copy.deepcopy(policy)
     result['records'][name] = str(ip)
-    result['user_rules'] = rules(result['records'])
+    result['user_rules'] = rules(result['records'], result.get('delegated_zones'))
     return result
 
 

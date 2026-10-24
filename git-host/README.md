@@ -2,10 +2,12 @@
 
 Forgejo 15.0.10 LTS runs as the isolated `home-git` Compose project on the QNAP.
 It uses SQLite and one non-root container limited to 512 MiB and one CPU.
-The web interface is `http://git.home.arpa/`, through the household LAN proxy;
+The web interface is `https://git.home.rytim.com/`, through the household LAN proxy;
 numeric recovery is `http://192.168.1.66:3003/`. Git SSH connects directly to
 `git-ssh.home.arpa` on port 2222. No router forwarding or public DNS is configured.
-HTTP is appropriate only on the trusted LAN; use an SSH tunnel on untrusted networks.
+The old `http://git.home.arpa/` alias redirects to HTTPS. The certificate is
+publicly trusted and requires no private root on clients. Numeric HTTP recovery
+is appropriate only on the trusted LAN; use an SSH tunnel on untrusted networks.
 
 Repository browsing requires login. Registration, Actions, packages, OpenID and
 email delivery are disabled. New repositories default to private. Issues and pull
@@ -13,6 +15,11 @@ requests are available. The RSA minimum is explicitly 2048 bits for the user's
 existing 1Password key; other key-size checks retain Forgejo defaults.
 The administrator is `ryan`, initially with the local-only
 placeholder email `ryan@home.invalid`; update it in account settings if desired.
+The household AD/Authelia rollout preserves this account and its user ID. The
+HTTPS route is preparation for OIDC; registration stays closed, and existing
+local authentication remains until the existing account is explicitly linked
+and browser sign-in is verified. See the
+[identity rollout](../docs/operations/household-identity.md).
 
 From the repository root, run `just git-host status` to check service health.
 `just git-host deploy` reconciles only this service. `just git-host bootstrap`

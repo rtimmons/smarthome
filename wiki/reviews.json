@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "e742fe196e8e70e999288606bd37ae874cdec6838f076012f5cf47b511b0e865",
-    "reason": "Verify clean-checkout recovery and materialize linked YAML for macOS checksum comparison.",
+    "fingerprint": "13c88695301c894d757952a1acc935fdb0e5778b828f7e06f2e40d214e340286",
+    "reason": "Reviewed encrypted identity backups, verified MFA restore and native HA persistent state recovery",
     "reviewed_at": "2026-10-24"
   },
   "media": {
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "73606dd9e6a24c08e176ae9fbc84d5677373d597c73e2fbdc24ce346a9a22523",
-    "reason": "Reviewed eleven deployed LAN-only routes and verified exact DNS aliases, authentication gates, direct ports, media WebSockets/assets and deferred HA; preserved the existing Git route",
+    "fingerprint": "31f99af1666c81f09356445df8a418691750d223ab5da3215bbceb8f44733f49",
+    "reason": "Reviewed preserved AD identity, private DNS and deployed Forgejo HTTPS, MFA recovery and missing-secret renewal guard",
     "reviewed_at": "2026-10-24"
   },
   "printing": {

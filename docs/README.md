@@ -42,6 +42,7 @@ The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built fr
 - [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — NAS storage/ACL inventory, writable Hetzner access, identity options and migration checklist
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
+- [**household-identity.md**](operations/household-identity.md) — AD, unified SMB credentials, browser SSO, certificate trust and rollout checkpoints
 - [**unifi-network-setup.md**](operations/unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
 - [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — Cloud Gateway Max console and retained AP/switch SSH access
 - [**unifi-post-migration.md**](operations/unifi-post-migration.md) — Native DNS pilot, Site Magic, VPN modernization, backup and firewall acceptance

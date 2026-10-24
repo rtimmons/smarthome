@@ -410,10 +410,32 @@ def auto_status():
         raise RuntimeError('Automatic DNS discovery is unhealthy; retained records have not been cleared')
 
 
+def delegate_ad():
+    from delegation import candidate_policy
+    candidate_seed = candidate_policy(POLICY)
+    if not POLICY.get('automatic_discovery'):
+        raise ValueError('AD delegation requires the existing automatic DNS owner')
+    transcript = PRIVATE / ('dns-ad-delegation-' + str(time.time_ns()) + '.log')
+    script = '''
+mkdir "$root/.automatic-deploy-lock"
+auto_compose() { "$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" "$@"; }
+test "$(auto_compose ps --format '{{.State}}' scanner)" = running || { rmdir "$root/.automatic-deploy-lock"; exit 1; }
+cleanup() { auto_compose start scanner; rmdir "$root/.automatic-deploy-lock"; }
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+auto_compose stop -t 10 scanner
+auto_compose run --rm -T --no-deps scanner python -
+'''
+    print('AD DNS transaction log: ' + str(transcript.relative_to(ROOT)), flush=True)
+    remote(script, (HERE / 'delegation.py').read_bytes(), transcript=transcript)
+    (HERE / 'policy.json').write_text(json.dumps(candidate_seed, indent=2) + '\n')
+    print('AD zone forwarding verified; both household DNS resolvers stayed running.')
+
+
 def main():
     global POLICY
-    p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary', 'discover', 'auto-deploy', 'auto-status', 'auto-stop', 'set-record'])
-    p.add_argument('--name', help='Exact manual home.arpa alias for set-record')
+    p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary', 'discover', 'auto-deploy', 'auto-status', 'auto-stop', 'set-record', 'delegate-ad'])
+    p.add_argument('--name', help='Exact manual home.arpa or home.rytim.com alias for set-record')
     p.add_argument('--address', help='Newark LAN IPv4 address for set-record')
     p.add_argument('--apply', action='store_true', help='Deploy discovered records; otherwise preview only')
     p.add_argument('--snapshot', type=Path)
@@ -428,6 +450,7 @@ def main():
         set_record(args.name, args.address)
     elif args.action == 'auto-deploy': auto_deploy()
     elif args.action == 'auto-status': auto_status()
+    elif args.action == 'delegate-ad': delegate_ad()
     elif args.action == 'auto-stop':
         remote('"$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" stop scanner')
         print('Automatic discovery stopped. Both resolvers and their accepted records remain running.')

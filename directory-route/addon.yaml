@@ -1,0 +1,39 @@
+slug: directory_route
+name: Household directory LAN route
+description: A pinned directory backend with one narrowly scoped LAN route.
+url: https://github.com/rtimmons/smarthome
+custom_dockerfile: true
+copy:
+  - route.py
+startup: services
+backup: cold
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: true
+privileged:
+  - NET_ADMIN
+  - NET_RAW
+apparmor_extra: |
+  network,
+  capability net_admin,
+  capability net_raw,
+  /usr/sbin/** ix,
+  /sbin/** ix,
+  /usr/lib/** ix,
+map:
+  - type: ssl
+    read_only: true
+options:
+  address: 192.168.1.11
+schema:
+  address: list(192.168.1.11|192.168.1.10)
+depends_on:
+  - directory
+docs:
+  readme: >
+    Routes a dedicated household directory address to its pinned HA app.
+  docs: >
+    Checks the preserved SSH public identity before adding one route and proxy
+    ARP entry. Owns only its scoped firewall chain. Leaves HA addresses, DNS,
+    default routing and unrelated firewall rules unchanged.

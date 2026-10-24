@@ -38,6 +38,26 @@ it does not add Internet access or automatic service discovery.
 
 See [proxy operation and recovery](../../docs/operations/home-dns.md#http-service-pilot).
 
+## Household sign-in rollout
+
+The `SMARTHOME` AD directory runs on Home Assistant at `192.168.1.10` and uses
+`ad.home.arpa`. Both household resolvers forward that subtree to the directory.
+The gateway also forwards `home.rytim.com` to both resolvers for private browser
+addresses. These names use Let's Encrypt certificates; client devices do not
+need a new root certificate. `.home.arpa` remains the local discovery namespace.
+
+Authelia runs on Home Assistant at
+[the sign-in portal](https://auth.home.rytim.com), with verified public HTTPS.
+QNAP has joined the directory; household share grants passed encrypted SMB read,
+write and denial checks. Gmail SMTP delivered the enrollment email, and Ryan
+confirmed OTP enrollment. Forgejo linking and application SSO checks remain.
+The directory moved from the NAS to HA with its existing identity;
+QNAP's machine trust and both household logins passed. Forgejo and Arr follow after
+each service's access checks pass. Existing service sign-ins stay authoritative
+until their migration is verified. Follow the dated
+[identity rollout and recovery record](../../docs/operations/household-identity.md)
+for current status and the separate human enrollment steps.
+
 The [service hostname inventory](../../docs/operations/service-hostnames.md)
 lists explicit routes for [Jellyfin](http://jellyfin.home.arpa/),
 [Moonfin](http://moonfin.home.arpa/), [Plex](http://plex.home.arpa/),

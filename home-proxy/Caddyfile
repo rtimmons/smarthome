@@ -1,5 +1,6 @@
 {
-	admin off
+	# Only this container can reach the certificate-reload socket.
+	admin unix//run/caddy-private/admin.sock
 	auto_https off
 	persist_config off
 	# Request URLs can contain media credentials. No access logging; suppress
@@ -15,13 +16,17 @@ http://:80 {
 	handle @outside {
 		respond "LAN access only" 403
 	}
+	@auth host auth.home.arpa auth.apps.home.arpa auth.home.rytim.com
+	handle @auth {
+		redir https://auth.home.rytim.com{uri} 308
+	}
 	@dashboard host grid-dashboard.home.arpa
 	handle @dashboard {
 		reverse_proxy http://hass.home.arpa:3000
 	}
-	@git host git.home.arpa
+	@git host git.home.arpa git.home.rytim.com
 	handle @git {
-		reverse_proxy http://192.168.1.66:3003
+		redir https://git.home.rytim.com{uri} 308
 	}
 	@jellyfin host jellyfin.home.arpa
 	handle @jellyfin {
@@ -94,5 +99,29 @@ http://:80 {
 	}
 	handle {
 		respond "Unknown service" 404
+	}
+}
+
+https://auth.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		reverse_proxy http://127.0.0.1:9091
+	}
+}
+
+https://git.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		reverse_proxy http://192.168.1.66:3003
 	}
 }

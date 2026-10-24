@@ -1,0 +1,33 @@
+slug: home_acme
+name: Household HTTPS certificates
+description: Automatic Let's Encrypt DNS validation and renewal for home.rytim.com.
+url: https://github.com/rtimmons/smarthome
+custom_dockerfile: true
+copy:
+  - run.py
+homeassistant_min: "2024.6.0"
+startup: services
+backup: cold
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: false
+ports: {}
+map:
+  - type: addon_config
+    read_only: false
+  - type: ssl
+    read_only: false
+environment: {}
+docs:
+  readme: >
+    Obtains and renews a publicly trusted wildcard certificate for
+    *.home.rytim.com using DreamHost DNS-01. No inbound ports are required.
+  docs: >
+    The DNS credential lives in persistent add-on configuration. ACME accounts,
+    private keys and certificate history live in /data. A staging issuance must
+    pass before production issuance. Only verified production certificates are
+    published atomically under /ssl/smarthome/acme/current for the LAN proxy.
+  access: >
+    This add-on has no web interface. Back up its persistent configuration and
+    data using a cold Home Assistant backup; keep that backup encrypted off-host.

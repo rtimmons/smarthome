@@ -1,0 +1,21 @@
+import "../talos/just/common.just"
+
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build home-acme
+
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy home-acme
+
+test: ha-addon
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # macOS's bundled LibreSSL lacks hostname verification. Exercise the same
+    # OpenSSL API used by the Alpine runtime, without weakening verification.
+    if command -v brew >/dev/null 2>&1; then
+        openssl_prefix=$(brew --prefix openssl@3)
+        export PATH="$openssl_prefix/bin:$PATH"
+    fi
+    export UV_PROJECT_ENVIRONMENT="{{repo_root}}/build/wiki/venv"
+    exec uv run --project "{{repo_root}}/wiki" --python "$(cat '{{repo_root}}/.python-version')" --frozen python -m unittest discover -p 'test_*.py'
+
+container-test: test

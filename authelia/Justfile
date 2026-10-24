@@ -1,0 +1,12 @@
+import "../talos/just/common.just"
+
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build authelia
+
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy authelia
+
+test: ha-addon
+    @bash -n run.sh
+
+container-test: test

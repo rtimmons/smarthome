@@ -1,0 +1,12 @@
+import "../talos/just/common.just"
+
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build directory-route
+
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy directory-route
+
+test: ha-addon
+    @uv run --project ../wiki --python 3.14.6 --frozen python -m unittest discover -p 'test_*.py'
+
+container-test: test

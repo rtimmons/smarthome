@@ -213,9 +213,14 @@
       "pages": [
         "wiki/content/network.md"
       ],
-      "addons": ["home-proxy"],
+      "addons": ["home-proxy", "authelia", "home-acme", "directory", "directory-route"],
       "watch": [
         "home-proxy/*",
+        "authelia/*",
+        "home-acme/*",
+        "identity-infra/*",
+        "directory/*",
+        "directory-route/*",
         "network-infra/dns/*",
         "network-infra/unifi-mcp/*",
         "usenet-infra/scripts/vpn-peer-check.py",
@@ -227,6 +232,7 @@
         "docs/operations/unifi-post-migration.md",
         "docs/operations/unifi-apple-tv-remote.md",
         "docs/operations/home-dns.md",
+        "docs/operations/household-identity.md",
         "docs/operations/service-hostnames.md",
         "network-infra/unifi-mcp/README.md",
         "usenet-infra/docs/lan-ui.md"

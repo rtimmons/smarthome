@@ -1,0 +1,12 @@
+import "../talos/just/common.just"
+
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build directory
+
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy directory
+
+test: ha-addon
+    @uv run --project ../wiki --python 3.14.6 --frozen python -c 'import ast; ast.parse(open("run.py").read())'
+
+container-test: test

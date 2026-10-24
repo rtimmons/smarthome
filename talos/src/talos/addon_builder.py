@@ -482,6 +482,16 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
         version = read_package_version(version_from) if version_from.exists() else "0.0.0"
 
     ports = raw.get("ports") or {}
+    capabilities = raw.get("privileged", [])
+    allowed_capabilities = {"AUDIT_WRITE", "BPF", "CHECKPOINT_RESTORE", "DAC_READ_SEARCH", "IPC_LOCK",
+                            "MKNOD", "SETFCAP", "NET_ADMIN", "NET_RAW",
+                            "PERFMON", "SYS_ADMIN", "SYS_MODULE", "SYS_NICE", "SYS_PTRACE",
+                            "SYS_RAWIO", "SYS_RESOURCE", "SYS_TIME"}
+    if (not isinstance(capabilities, list)
+            or any(not isinstance(value, str) or value not in allowed_capabilities for value in capabilities)):
+        raise click.ClickException(f"Invalid privileged capabilities for '{addon_key}'.")
+    if not isinstance(raw.get("apparmor_extra", ""), str):
+        raise click.ClickException(f"Invalid apparmor_extra for '{addon_key}'; expected profile text.")
     port = int(next(iter(ports.keys()))) if ports else None
     deploy_health_path = raw.get("deploy_health_path")
     if deploy_health_path is not None:
@@ -528,6 +538,8 @@ def build_context(addon_key: str, manifest: Dict[str, Any]) -> Dict[str, Any]:
             "homeassistant_api": raw.get("homeassistant_api", False),
             "auth_api": raw.get("auth_api", False),
             "host_network": raw.get("host_network", False),
+            "privileged": raw.get("privileged", []),
+            "apparmor_extra": raw.get("apparmor_extra", ""),
             "ports": ports,
             "ports_description": raw.get("ports_description", {}),
             "environment": raw.get("environment", {}),

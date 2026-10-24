@@ -615,3 +615,25 @@ def test_proxy_health_gate_preserves_lan_only_boundary(tmp_path: Path):
     command = addon_backup._health_command("home-proxy", "unused-internal-host")
     assert command.endswith('= 403')
     assert "X-Forwarded-For" not in command
+
+
+@pytest.mark.parametrize("repo_key,app_id", [("authelia", "local_authelia"), ("home-acme", "local_home_acme")])
+def test_private_identity_app_must_still_be_running_after_backup(tmp_path: Path, repo_key: str, app_id: str):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    original = fake.ssh
+    checks = 0
+
+    def stops_after_backup(command: str, *, check: bool = True):
+        nonlocal checks
+        if command.startswith("ha apps info "+app_id) and "jq -e" in command:
+            checks += 1
+            if checks > 1:
+                return subprocess.CompletedProcess(command, 1, "", "")
+        return original(command, check=check)
+
+    fake.ssh = stops_after_backup
+    with pytest.raises(Exception, match=repo_key):
+        create_with_fake(tmp_path, fake)
+    assert any(command.startswith("ha backups new") for command in fake.commands)

@@ -256,9 +256,17 @@ deploy-dry-run-verbose addon="all": checkout-prepare
 
 # Run fast tests for addons (excludes slow integration tests)
 [group: 'test']
+identity-test:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
+	exec uv run --project wiki --python "$(cat .python-version)" --frozen python -m unittest discover -s identity-infra -p 'test_*.py'
+
+[group: 'test']
 test addon="all":
 		@just wiki-check
 		@just checkout-test
+		@just identity-test
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "⚡ Running fast tests (excluding slow integration tests)..."; \
@@ -280,6 +288,7 @@ test addon="all":
 # Run all tests including slow integration tests
 [group: 'test']
 test-all addon="all":
+		@just identity-test
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "🧪 Running all tests (including slow integration tests)..."; \
