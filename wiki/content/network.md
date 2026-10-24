@@ -15,9 +15,12 @@ sign-ins. There is no public wiki listener.
 
 Clients use the gateway for DNS. It automatically forwards `home.arpa` to either
 Home Assistant or NAS AdGuard; both remain running and required. AdGuard owns
-`wiki.home.arpa` and answers unknown local names locally. The duplicate native
+`wiki.home.arpa` and `hass.home.arpa` and answers unknown local names locally. The duplicate native
 wiki record stays paused. Native ad blocking remains enabled, with category
 filtering and Safe Search off.
+
+Open Home Assistant at [hass.home.arpa:8123](http://hass.home.arpa:8123/).
+The name resolves to its LAN address, `192.168.1.163`.
 
 October 22 checks passed during either resolver outage and after recovery.
 With both unavailable, private names failed closed without appearing in the

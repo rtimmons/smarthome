@@ -7,7 +7,8 @@ The Max has two active native **Forward Domain** policies for `home.arpa`,
 targeting HA AdGuard `192.168.1.163` and NAS AdGuard `192.168.1.66`. Both
 resolvers remain running and required, with independent public upstreams.
 
-AdGuard owns `wiki.home.arpa` → `192.168.1.66` and local negative answers.
+AdGuard owns `wiki.home.arpa` → `192.168.1.66`,
+`hass.home.arpa` → `192.168.1.163`, and local negative answers.
 Unknown local names stay local; arbitrary device records have not been added.
 The native wiki A policy is saved but **paused**: enabling it caused empty
 `NOERROR` at the zone apex instead of required `NXDOMAIN`. Keep it paused.
@@ -61,6 +62,14 @@ then updates primary custom rules. It refuses unreviewed primary upstream/filter
 drift and uses HA's authenticated Supervisor ingress with tokens in memory.
 Keep credentials, full configuration and rollback copies outside Git; never
 publish query history or client browsing data.
+
+For a record change, retain the reviewed previous `policy.json` in ignored
+`build/` before editing, then deploy with
+`just usenet dns deploy --previous-policy /absolute/path/to/previous-policy.json`.
+This permits replacement of that exact previous custom-rule list while retaining
+the upstream/filter drift checks. Checks cover every configured name's A and
+empty AAAA answers and reject unknown subdomains. Home Assistant is available at
+`http://hass.home.arpa:8123/`; DNS does not change its listening port.
 
 The NAS resolver has separate configuration/state directories under the NAS
 application root. Its non-root image listens internally on 1053, publishing

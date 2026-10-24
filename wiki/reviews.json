@@ -35,9 +35,9 @@
     "reviewed_at": "2026-10-22"
   },
   "network": {
-    "fingerprint": "30277e6f565f7d6928d144df2bb4dc238ee3530850c690dde12577bec1f2afc8",
-    "reason": "Removed the duplicate MCP handoff, retained its completed-setup/credential safeguards in the canonical launcher runbook, and replaced obsolete plan references in VPN recovery documentation.",
-    "reviewed_at": "2026-10-22"
+    "fingerprint": "9716028eb5e4c9cbfe3e297728b7dba13e5bbe66622c54ced56eea0b35daf100",
+    "reason": "Added hass.home.arpa for Home Assistant at 192.168.1.163, documented port 8123 and exact prior-policy migration, and expanded DNS verification to all configured records; reviewed concurrent command-wrapper documentation edits.",
+    "reviewed_at": "2026-10-23"
   },
   "printing": {
     "fingerprint": "3614ace3dd4e9e36021dee7b3a16e555cb4b2b7351eb570982dc4f5076ea230e",

@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "zone": "home.arpa",
-  "records": {"wiki.home.arpa": "192.168.1.66"},
+  "records": {"wiki.home.arpa": "192.168.1.66", "hass.home.arpa": "192.168.1.163"},
   "resolvers": ["192.168.1.163", "192.168.1.66"],
   "record_owner": "AdGuard pair",
   "client_resolver": "192.168.1.1",
@@ -21,6 +21,8 @@
     "! Repository-owned home.arpa zone. Keep unknown names local.",
     "||home.arpa^$dnsrewrite=NXDOMAIN;;",
     "@@|wiki.home.arpa|$dnsrewrite=NXDOMAIN;;",
-    "|wiki.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66"
+    "|wiki.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66",
+    "@@|hass.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|hass.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163"
   ]
 }

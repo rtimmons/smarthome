@@ -73,7 +73,7 @@ def save_private(path, data):
     path.chmod(0o600)
 
 
-def validate_primary(snapshot):
+def validate_primary(snapshot, previous_policy=None):
     # Refuse silent divergence or loss of existing custom policy. Adjust the
     # reviewed policy explicitly before changing an installation that has drifted.
     for key in ('upstream_dns', 'bootstrap_dns', 'fallback_dns'):
@@ -82,7 +82,10 @@ def validate_primary(snapshot):
     actual = [{k: f[k] for k in ('enabled', 'url', 'name', 'id')} for f in snapshot['filtering/status']['filters']]
     if actual != POLICY['filters'] or not snapshot['filtering/status']['enabled']:
         raise ValueError('Primary filter policy differs; review before deployment')
-    if snapshot['filtering/status'].get('user_rules', []) not in ([], POLICY['user_rules']):
+    accepted_rules = [[], POLICY['user_rules']]
+    if previous_policy is not None:
+        accepted_rules.append(previous_policy['user_rules'])
+    if snapshot['filtering/status'].get('user_rules', []) not in accepted_rules:
         raise ValueError('Primary has additional custom rules; preserve and review them first')
     if snapshot['rewrite/list']:
         raise ValueError('Primary has additional rewrites; review secondary parity first')
@@ -138,25 +141,28 @@ def validate_answer(output, name, kind, expected):
 
 
 def check(addresses=None):
+    cases = []
+    for name, ip in POLICY['records'].items():
+        cases.extend([(name, 'A', {'status': 'NOERROR', 'address': ip}),
+                      (name, 'AAAA', {'status': 'NOERROR', 'empty': True}),
+                      ('unknown.' + name, 'A', {'status': 'NXDOMAIN', 'empty': True})])
+    cases.extend([('unknown-wiki-check.home.arpa', 'A', {'status': 'NXDOMAIN', 'empty': True}),
+                  ('home.arpa', 'SOA', {'status': 'NXDOMAIN', 'empty': True}),
+                  ('example.com', 'A', {'status': 'NOERROR'})])
     for address in addresses or POLICY['resolvers']:
         for transport in ('+notcp', '+tcp'):
-            for name, kind, expected in [('wiki.home.arpa', 'A', {'status': 'NOERROR', 'address': '192.168.1.66'}),
-                                          ('wiki.home.arpa', 'AAAA', {'status': 'NOERROR', 'empty': True}),
-                                          ('unknown-wiki-check.home.arpa', 'A', {'status': 'NXDOMAIN', 'empty': True}),
-                                          ('unknown.wiki.home.arpa', 'A', {'status': 'NXDOMAIN', 'empty': True}),
-                                          ('home.arpa', 'SOA', {'status': 'NXDOMAIN', 'empty': True}),
-                                          ('example.com', 'A', {'status': 'NOERROR'})]:
+            for name, kind, expected in cases:
                 result = subprocess.run(['dig', '@' + address, name, kind, transport, '+time=3', '+tries=1',
                                          '+noall', '+comments', '+answer'],
                                         capture_output=True, text=True, check=True, timeout=6)
                 validate_answer(result.stdout, name, kind, expected)
-        print(f'{address}: exact wiki and negative answers plus public resolution pass over UDP/TCP; verify local handling/upstream independence separately')
+        print(f'{address}: exact local records and negative answers plus public resolution pass over UDP/TCP; verify local handling/upstream independence separately')
 
 
-def deploy():
+def deploy(previous_policy=None):
     primary = Primary()
     snapshot = primary.snapshot()
-    validate_primary(snapshot)
+    validate_primary(snapshot, previous_policy)
     stamp = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
     backup = PRIVATE / ('dns-before-' + stamp + '.json')
     save_private(backup, snapshot)
@@ -260,10 +266,12 @@ def rollback(snapshot_path):
 def main():
     p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary'])
     p.add_argument('--snapshot', type=Path)
+    p.add_argument('--previous-policy', type=Path, help='Reviewed previous policy whose exact custom rules may be replaced')
     p.add_argument('--resolver', action='append', help='Check this resolver instead of the configured pair; repeatable')
     args = p.parse_args()
     if args.resolver and args.action != 'check': p.error('--resolver is only supported for check')
-    if args.action == 'deploy': deploy()
+    if args.previous_policy and args.action != 'deploy': p.error('--previous-policy is only supported for deploy')
+    if args.action == 'deploy': deploy(json.loads(args.previous_policy.read_text()) if args.previous_policy else None)
     elif args.action == 'check': check(args.resolver)
     elif args.snapshot: rollback(args.snapshot)
     else: p.error('--snapshot is required for rollback-primary')
