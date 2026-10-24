@@ -1,0 +1,30 @@
+name: home-dns-discovery
+services:
+  scanner:
+    image: home-dns-discovery:1
+    build:
+      context: .
+      dockerfile: Dockerfile.automatic
+    user: "${DNS_UID:?}:${DNS_GID:?}"
+    network_mode: host
+    restart: unless-stopped
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    volumes:
+      - "${DNS_ROOT:?}/config/automatic:/config:ro"
+      - "${DNS_ROOT:?}/backups/automatic-state:/state"
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,nodev,size=16m,mode=1777
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    healthcheck:
+      test: [CMD, python, automatic.py, health]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 300s
+    logging:
+      driver: local
+      options: {max-size: 1m, max-file: "2"}

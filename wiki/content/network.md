@@ -13,9 +13,9 @@ sign-ins. There is no public wiki listener.
 
 ## DNS design
 
-Clients use the gateway for DNS. It automatically forwards `home.arpa` to either
+Newark clients use the gateway for DNS. It automatically forwards `home.arpa` to either
 Home Assistant or NAS AdGuard; both remain running and required. AdGuard owns
-`wiki.home.arpa` and `hass.home.arpa` and answers unknown local names locally. The duplicate native
+`wiki.home.arpa`, `hass.home.arpa`, and imported Bonjour hostnames, and answers unknown local names locally. The duplicate native
 wiki record stays paused. Native ad blocking remains enabled, with category
 filtering and Safe Search off.
 
@@ -47,3 +47,23 @@ For help, use [network setup](../../docs/operations/unifi-network-setup.md),
 [accepted changes and rollback](../../docs/operations/unifi-post-migration.md).
 SSH is verified on the Max, both APs and switch; printer and external WAN access
 remain blocked. The acceptance record lists test limits and recovery steps.
+
+## Discover device names
+
+The NAS discovers Bonjour hostnames automatically about once a minute and
+maintains matching `.home.arpa` names on both resolvers, even while the Mac is
+off. New names normally appear within one or two minutes. Existing manual
+aliases win over discovered names; learned names missing for seven days expire.
+Only unambiguous Newark trusted-LAN IPv4 addresses are imported.
+
+Cabin / Lehigh discovery is not yet enabled. A Newark-side check reached the
+Lehigh gateway and received the expected wiki DNS answer on October 24, but
+resolution and application access from cabin clients still need verification.
+See [Lehigh coverage and remaining checks](../../docs/operations/home-dns.md#cabin-lehigh-coverage-pending-acceptance).
+
+`just dns-auto-status` reports the last scan. `just dns-check` validates the
+live inventory. `just dns-auto-deploy` installs/updates the scanner and
+`just dns-auto-stop` pauses discovery without stopping DNS. Updates use the
+resolver APIs without restarts. See
+[automatic NAS discovery](../../docs/operations/home-dns.md#automatic-nas-discovery)
+for ownership, recovery and credentials.

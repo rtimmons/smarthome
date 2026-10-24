@@ -25,9 +25,9 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "60e36f436e822ec31e0385e3cdfa2fa708cd5e0dd35644b2102fe61de9633a5a",
-    "reason": "Consolidated HA artifact deployment and infrastructure command dispatch; documented external watchdog preservation, shared SSH identity, retained recovery entry points, and single Ansible pin.",
-    "reviewed_at": "2026-10-23"
+    "fingerprint": "66717da608b0807adebbebf92d9fff23b152f1bb015c9cb120070e04656ba52a",
+    "reason": "Reviewed DNS discovery, status, stop and deployment recipes; NAS ownership and recovery commands are documented in the DNS runbook.",
+    "reviewed_at": "2026-10-24"
   },
   "media": {
     "fingerprint": "7d508dc66e357d73c2dc85e7aa47488c32b904f81edcb989f49141775992873c",
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-23"
   },
   "network": {
-    "fingerprint": "d99fb0d16660d83afe5f1360150bc2b67c76d6c0755989eecb1c7a74a28f65d4",
-    "reason": "Migrated infrastructure command examples to the usenet dispatcher, preserving the usenet-cloud-ui UniFi service identifier and the committed hass.home.arpa DNS policy and recovery guidance.",
+    "fingerprint": "93bc989a520e992c55f7faafcd1bb0d4d571324716955efafc6faa30a4df10d7",
+    "reason": "Document NAS discovery ownership and acceptance, correct DNS inventory description, and distinguish Newark-to-Lehigh probes from pending cabin-side DNS, routing and discovery acceptance",
     "reviewed_at": "2026-10-24"
   },
   "printing": {

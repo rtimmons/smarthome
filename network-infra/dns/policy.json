@@ -1,21 +1,75 @@
 {
   "schema": 1,
   "zone": "home.arpa",
-  "records": {"wiki.home.arpa": "192.168.1.66", "hass.home.arpa": "192.168.1.163"},
-  "resolvers": ["192.168.1.163", "192.168.1.66"],
+  "records": {
+    "wiki.home.arpa": "192.168.1.66",
+    "hass.home.arpa": "192.168.1.163",
+    "001788613749.home.arpa": "192.168.1.183",
+    "bedroom-192.home.arpa": "192.168.1.228",
+    "bedsidestreamdeck-main-m027aso1s5-local-viam-cloud.home.arpa": "192.168.1.176",
+    "bedsidestreamdeck-main-m027aso1s5-viam-cloud.home.arpa": "192.168.1.176",
+    "bedsidestreamdeck.home.arpa": "192.168.1.176",
+    "brwacf23c3213c4.home.arpa": "192.168.1.192",
+    "canona469e0.home.arpa": "192.168.1.150",
+    "d31baa8c063546739892f56d3681e1cd-hap.home.arpa": "192.168.1.163",
+    "d31baa8c063546739892f56d3681e1cd.home.arpa": "192.168.1.163",
+    "esphome-builder-8qtedkx5.home.arpa": "192.168.1.163",
+    "human-sensor.home.arpa": "192.168.1.22",
+    "ipad-entryway.home.arpa": "192.168.1.201",
+    "ipad-kitchen.home.arpa": "192.168.1.185",
+    "ipad-office.home.arpa": "192.168.1.139",
+    "rynapqnap.home.arpa": "192.168.1.66",
+    "ryphone-17-pro-max.home.arpa": "192.168.1.215",
+    "sonos-347e5c01dd1b.home.arpa": "192.168.1.173",
+    "sonos-347e5c08bbff.home.arpa": "192.168.1.37",
+    "sonos-347e5c7978a8.home.arpa": "192.168.1.207",
+    "sonos-347e5c9c39ba.home.arpa": "192.168.1.188",
+    "sonos-347e5cca82ca.home.arpa": "192.168.1.226",
+    "sonos-347e5cca83fa.home.arpa": "192.168.1.193",
+    "sonos-347e5cca845c.home.arpa": "192.168.1.199",
+    "sonos-347e5cca847a.home.arpa": "192.168.1.194",
+    "sonos-347e5ccd4896.home.arpa": "192.168.1.205",
+    "sonos-48a6b83955d1.home.arpa": "192.168.1.102",
+    "sonos-48a6b8e4c35e.home.arpa": "192.168.1.73",
+    "sonos-5caafd5938f0.home.arpa": "192.168.1.196",
+    "sonos-5caafdf5abe4.home.arpa": "192.168.1.195",
+    "x00300gas46a.home.arpa": "192.168.1.69",
+    "x02800wdhnvl.home.arpa": "192.168.1.23"
+  },
+  "resolvers": [
+    "192.168.1.163",
+    "192.168.1.66"
+  ],
   "record_owner": "AdGuard pair",
   "client_resolver": "192.168.1.1",
   "gateway_forwarding": {
     "zone": "home.arpa",
-    "resolvers": ["192.168.1.163", "192.168.1.66"],
+    "resolvers": [
+      "192.168.1.163",
+      "192.168.1.66"
+    ],
     "native_wiki_a_enabled": false
   },
-  "upstream_dns": ["https://dns10.quad9.net/dns-query"],
-  "bootstrap_dns": ["1.1.1.1:53"],
+  "upstream_dns": [
+    "https://dns10.quad9.net/dns-query"
+  ],
+  "bootstrap_dns": [
+    "1.1.1.1:53"
+  ],
   "fallback_dns": [],
   "filters": [
-    {"enabled": true, "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt", "name": "AdGuard DNS filter", "id": 1},
-    {"enabled": false, "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt", "name": "AdAway Default Blocklist", "id": 2}
+    {
+      "enabled": true,
+      "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt",
+      "name": "AdGuard DNS filter",
+      "id": 1
+    },
+    {
+      "enabled": false,
+      "url": "https://adguardteam.github.io/HostlistsRegistry/assets/filter_2.txt",
+      "name": "AdAway Default Blocklist",
+      "id": 2
+    }
   ],
   "user_rules": [
     "! Repository-owned home.arpa zone. Keep unknown names local.",
@@ -23,6 +77,199 @@
     "@@|wiki.home.arpa|$dnsrewrite=NXDOMAIN;;",
     "|wiki.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66",
     "@@|hass.home.arpa|$dnsrewrite=NXDOMAIN;;",
-    "|hass.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163"
-  ]
+    "|hass.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|001788613749.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|001788613749.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.183",
+    "@@|bedroom-192.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|bedroom-192.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.228",
+    "@@|bedsidestreamdeck-main-m027aso1s5-local-viam-cloud.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|bedsidestreamdeck-main-m027aso1s5-local-viam-cloud.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.176",
+    "@@|bedsidestreamdeck-main-m027aso1s5-viam-cloud.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|bedsidestreamdeck-main-m027aso1s5-viam-cloud.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.176",
+    "@@|bedsidestreamdeck.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|bedsidestreamdeck.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.176",
+    "@@|brwacf23c3213c4.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|brwacf23c3213c4.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.192",
+    "@@|canona469e0.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|canona469e0.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.150",
+    "@@|d31baa8c063546739892f56d3681e1cd-hap.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|d31baa8c063546739892f56d3681e1cd-hap.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|d31baa8c063546739892f56d3681e1cd.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|d31baa8c063546739892f56d3681e1cd.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|esphome-builder-8qtedkx5.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|esphome-builder-8qtedkx5.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|human-sensor.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|human-sensor.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.22",
+    "@@|ipad-entryway.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|ipad-entryway.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.201",
+    "@@|ipad-kitchen.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|ipad-kitchen.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.185",
+    "@@|ipad-office.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|ipad-office.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.139",
+    "@@|rynapqnap.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|rynapqnap.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.66",
+    "@@|ryphone-17-pro-max.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|ryphone-17-pro-max.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.215",
+    "@@|sonos-347e5c01dd1b.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5c01dd1b.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.173",
+    "@@|sonos-347e5c08bbff.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5c08bbff.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.37",
+    "@@|sonos-347e5c7978a8.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5c7978a8.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.207",
+    "@@|sonos-347e5c9c39ba.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5c9c39ba.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.188",
+    "@@|sonos-347e5cca82ca.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5cca82ca.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.226",
+    "@@|sonos-347e5cca83fa.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5cca83fa.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.193",
+    "@@|sonos-347e5cca845c.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5cca845c.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.199",
+    "@@|sonos-347e5cca847a.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5cca847a.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.194",
+    "@@|sonos-347e5ccd4896.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-347e5ccd4896.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.205",
+    "@@|sonos-48a6b83955d1.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-48a6b83955d1.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.102",
+    "@@|sonos-48a6b8e4c35e.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-48a6b8e4c35e.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.73",
+    "@@|sonos-5caafd5938f0.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-5caafd5938f0.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.196",
+    "@@|sonos-5caafdf5abe4.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|sonos-5caafdf5abe4.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.195",
+    "@@|x00300gas46a.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|x00300gas46a.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.69",
+    "@@|x02800wdhnvl.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|x02800wdhnvl.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.23"
+  ],
+  "mdns_records": {
+    "001788613749.home.arpa": {
+      "source": "001788613749.local",
+      "last_seen": 1792849983.971831
+    },
+    "bedroom-192.home.arpa": {
+      "source": "bedroom-192.local",
+      "last_seen": 1792849983.971831
+    },
+    "bedsidestreamdeck-main-m027aso1s5-local-viam-cloud.home.arpa": {
+      "source": "bedsidestreamdeck-main-m027aso1s5-local-viam-cloud.local",
+      "last_seen": 1792849983.971831
+    },
+    "bedsidestreamdeck-main-m027aso1s5-viam-cloud.home.arpa": {
+      "source": "bedsidestreamdeck-main-m027aso1s5-viam-cloud.local",
+      "last_seen": 1792849983.971831
+    },
+    "bedsidestreamdeck.home.arpa": {
+      "source": "bedsidestreamdeck.local",
+      "last_seen": 1792849983.971831
+    },
+    "brwacf23c3213c4.home.arpa": {
+      "source": "brwacf23c3213c4.local",
+      "last_seen": 1792849983.971831
+    },
+    "canona469e0.home.arpa": {
+      "source": "canona469e0.local",
+      "last_seen": 1792849983.971831
+    },
+    "d31baa8c063546739892f56d3681e1cd-hap.home.arpa": {
+      "source": "d31baa8c063546739892f56d3681e1cd-hap.local",
+      "last_seen": 1792849983.971831
+    },
+    "d31baa8c063546739892f56d3681e1cd.home.arpa": {
+      "source": "d31baa8c063546739892f56d3681e1cd.local",
+      "last_seen": 1792849983.971831
+    },
+    "esphome-builder-8qtedkx5.home.arpa": {
+      "source": "esphome-builder-8qtedkx5.local",
+      "last_seen": 1792849983.971831
+    },
+    "human-sensor.home.arpa": {
+      "source": "human-sensor.local",
+      "last_seen": 1792849983.971831
+    },
+    "ipad-entryway.home.arpa": {
+      "source": "ipad-entryway.local",
+      "last_seen": 1792849983.971831
+    },
+    "ipad-kitchen.home.arpa": {
+      "source": "ipad-kitchen.local",
+      "last_seen": 1792849983.971831
+    },
+    "ipad-office.home.arpa": {
+      "source": "ipad-office.local",
+      "last_seen": 1792849983.971831
+    },
+    "rynapqnap.home.arpa": {
+      "source": "rynapqnap.local",
+      "last_seen": 1792849983.971831
+    },
+    "ryphone-17-pro-max.home.arpa": {
+      "source": "ryphone-17-pro-max.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5c01dd1b.home.arpa": {
+      "source": "sonos-347e5c01dd1b.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5c08bbff.home.arpa": {
+      "source": "sonos-347e5c08bbff.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5c7978a8.home.arpa": {
+      "source": "sonos-347e5c7978a8.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5c9c39ba.home.arpa": {
+      "source": "sonos-347e5c9c39ba.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5cca82ca.home.arpa": {
+      "source": "sonos-347e5cca82ca.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5cca83fa.home.arpa": {
+      "source": "sonos-347e5cca83fa.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5cca845c.home.arpa": {
+      "source": "sonos-347e5cca845c.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5cca847a.home.arpa": {
+      "source": "sonos-347e5cca847a.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-347e5ccd4896.home.arpa": {
+      "source": "sonos-347e5ccd4896.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-48a6b83955d1.home.arpa": {
+      "source": "sonos-48a6b83955d1.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-48a6b8e4c35e.home.arpa": {
+      "source": "sonos-48a6b8e4c35e.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-5caafd5938f0.home.arpa": {
+      "source": "sonos-5caafd5938f0.local",
+      "last_seen": 1792849983.971831
+    },
+    "sonos-5caafdf5abe4.home.arpa": {
+      "source": "sonos-5caafdf5abe4.local",
+      "last_seen": 1792849983.971831
+    },
+    "x00300gas46a.home.arpa": {
+      "source": "x00300gas46a.local",
+      "last_seen": 1792849983.971831
+    },
+    "x02800wdhnvl.home.arpa": {
+      "source": "x02800wdhnvl.local",
+      "last_seen": 1792849983.971831
+    }
+  },
+  "automatic_discovery": {
+    "host": "NAS",
+    "interval_seconds": 60,
+    "runtime_policy": "/share/Container/usenet/dns/backups/automatic-state/policy.json"
+  }
 }

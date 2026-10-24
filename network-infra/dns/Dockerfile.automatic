@@ -1,0 +1,14 @@
+FROM python:3.14.6-slim-bookworm
+RUN pip install --no-cache-dir zeroconf==0.151.5 ifaddr==0.2.0 websocket-client==1.9.2 dnspython==2.9.0
+WORKDIR /app
+COPY automatic.py discovery.py reconciler.py ./
+# QNAP build-context files carry ACLs that can deny the runtime UID even after
+# chmod. Recreate bytes inside the image instead of retaining source ACLs.
+RUN chmod 0755 /app \
+    && for source in /app/*.py; do \
+         cat "$source" > "$source.clean" \
+         && chmod 0444 "$source.clean" \
+         && mv "$source.clean" "$source"; \
+       done
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+CMD ["python", "automatic.py"]

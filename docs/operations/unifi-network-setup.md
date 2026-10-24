@@ -80,8 +80,10 @@ the Nest previously collided at `.118`; moving the Nest to unused `.19` and
 reserving both addresses resolved the conflict. Remove a reservation only after
 checking current address ownership; do not blindly return the Nest to `.118`.
 
-Use reserved numeric addresses for embedded clients. Ordinary DNS assigns only
-`wiki.home.arpa` today; `.local` is mDNS. See [DNS ownership](home-dns.md).
+Use reserved numeric addresses for embedded clients. Ordinary DNS provides
+`wiki.home.arpa`, `hass.home.arpa`, and automatically discovered Newark Bonjour
+hostnames under `.home.arpa`; `.local` remains mDNS. Lehigh discovery and
+cabin-side access verification are pending. See [DNS ownership](home-dns.md).
 
 ### WAN, VPN, and exposure baseline
 

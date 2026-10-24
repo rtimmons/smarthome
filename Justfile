@@ -731,6 +731,28 @@ usenet-filex-ui:
 dns-check *args:
     @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns check "$@"
 
+# Discover Bonjour hostnames; preview by default, --apply deploys to both resolvers.
+[group: 'network']
+[positional-arguments]
+dns-discover *args:
+    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns discover "$@"
+
+[group: 'network']
+dns-auto-deploy:
+    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns auto-deploy
+
+[group: 'network']
+dns-auto-status:
+    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns auto-status
+
+[group: 'network']
+dns-auto-stop:
+    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns auto-stop
+
+[group: 'network']
+dns-test:
+    @UV_CACHE_DIR="$PWD/build/wiki/uv-cache" UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv" uv run --project wiki --python "$(cat .python-version)" --frozen python -m unittest discover -s network-infra/dns -v
+
 [group: 'network']
 unifi-mcp:
     @./network-infra/unifi-mcp/run.sh
