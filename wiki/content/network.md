@@ -33,14 +33,21 @@ Open [Grid Dashboard](http://grid-dashboard.home.arpa/) on the Newark trusted
 LAN. Its explicit DNS alias points to Home Assistant, where the Home HTTP Proxy
 forwards requests to `hass.home.arpa:3000`. The browser keeps the friendly name.
 The [direct dashboard address](http://hass.home.arpa:3000/) and Home Assistant
-sidebar remain available. This HTTP pilot accepts only Newark LAN clients;
+sidebar remain available. This HTTP proxy accepts only Newark LAN clients;
 it does not add Internet access or automatic service discovery.
 
 See [proxy operation and recovery](../../docs/operations/home-dns.md#http-service-pilot).
 
-The [web service inventory and proposed hostnames](../../docs/operations/service-hostnames.md)
-lists the next explicit mappings, including Jellyfin/Moonfin and the active cloud
-Arr services. These additional routes are proposals, not deployed aliases.
+The [service hostname inventory](../../docs/operations/service-hostnames.md)
+lists explicit routes for [Jellyfin](http://jellyfin.home.arpa/),
+[Moonfin](http://moonfin.home.arpa/), [Plex](http://plex.home.arpa/),
+[Seerr](http://seerr.home.arpa/), [Radarr](http://radarr.home.arpa/),
+[Sonarr](http://sonarr.home.arpa/), [Prowlarr](http://prowlarr.home.arpa/),
+[SABnzbd](http://sabnzbd.home.arpa/), [catalog](http://catalog.home.arpa/),
+[printer](http://printer.home.arpa/) and [TinyURL](http://tinyurl.home.arpa/).
+Existing sign-ins and direct ports remain available. The Arr names reach the
+active cloud stack; Moonfin uses the same Jellyfin server. `ha.home.arpa` is
+still deferred.
 
 ## Restricted printing and recovery
 

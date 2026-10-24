@@ -18,8 +18,8 @@ ports: {}
 environment: {}
 docs:
   readme: >
-    Explicit LAN HTTP reverse proxy. The grid-dashboard.home.arpa route forwards
-    to hass.home.arpa:3000. Existing direct dashboard access remains available.
+    Explicit LAN HTTP reverse proxy for dashboard, media, acquisition and utility
+    services. Existing direct host-and-port access and authentication remain available.
   docs: >
     Caddy binds only 192.168.1.163:80 and accepts only 192.168.1.0/24 clients.
     Unknown hosts return 404. No TLS, public forwarding, discovery, credentials,

@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "03877bafd4b1774309e16fa61ce13ae2664b0d64468fd83618eadd80361a7fdd",
-    "reason": "Reviewed only the Forgejo HTTP route and two explicit Git aliases, preserving the existing dashboard pilot",
+    "fingerprint": "73606dd9e6a24c08e176ae9fbc84d5677373d597c73e2fbdc24ce346a9a22523",
+    "reason": "Reviewed eleven deployed LAN-only routes and verified exact DNS aliases, authentication gates, direct ports, media WebSockets/assets and deferred HA; preserved the existing Git route",
     "reviewed_at": "2026-10-24"
   },
   "printing": {

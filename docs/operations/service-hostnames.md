@@ -1,18 +1,17 @@
-# Web service inventory and proposed hostnames
+# Web service hostnames
 
-Inventory: October 24, 2026, Newark LAN. **Proposal only:** the additional names
-below have not been deployed by this inventory. Keep direct host-and-port access.
-The existing HTTP proxy binds `192.168.1.163:80` and permits only
-`192.168.1.0/24` clients. No new WAN access, wildcard DNS, automatic discovery,
-application restarts, acquisition requests or playback actions are proposed here.
+Deployed October 24, 2026, Newark LAN. Direct host-and-port access remains
+available. The HTTP proxy binds `192.168.1.163:80` and permits only
+`192.168.1.0/24` clients. No WAN forwarding or wildcard DNS was added.
+`ha.home.arpa` remains deferred; use `hass.home.arpa:8123` for Home Assistant.
 
-## Recommended explicit mappings
+## Explicit mappings
 
-For new proxied names, add exact A records pointing to **192.168.1.163**, even
+The proxied names have exact A records pointing to **192.168.1.163**, even
 when the upstream is on the NAS or cloud VPN. `wiki.home.arpa` keeps its existing
 NAS address and isolated static server. `hass.home.arpa` remains the host alias.
 
-| Proposed browser hostname | Upstream reachable from home | Entry path / routing requirement | Inventory evidence |
+| Browser hostname | Upstream reachable from home | Entry path / routing requirement | Inventory evidence |
 | --- | --- | --- | --- |
 | `jellyfin.home.arpa` | `http://192.168.1.66:8096` | Preserve all paths; stock web client | NAS container running/healthy; `/` returned 302 |
 | `moonfin.home.arpa` | `http://192.168.1.66:8096` | Redirect only `/` to `/Moonfin/Web/` on the same hostname; proxy every other path unchanged | Moonfin Web returned 200; same Jellyfin container |
@@ -25,17 +24,12 @@ NAS address and isolated static server. `hass.home.arpa` remains the host alias.
 | `catalog.home.arpa` | `http://192.168.1.66:1337` | NAS selective-copy dashboard; preserve paths and authentication | NAS container healthy; HTTP 200 |
 | `printer.home.arpa` | `http://hass.home.arpa:8099` | Preserve `/bb` entry redirect and all service paths | HA add-on started; root returned 302 to `/bb` |
 | `tinyurl.home.arpa` | `http://hass.home.arpa:4100` | Preserve UI and short-link paths | HA add-on started; HTTP 200 |
-| `ha.home.arpa` | `http://hass.home.arpa:8123` | Core UI/API; configure the exact trusted proxy source before rollout | HA Core HTTP 200; proxy trust not changed |
 
-The first group to implement should be Jellyfin/Moonfin, Plex, Seerr, the active
-Arr services, SABnzbd, catalog, printer and TinyURL. Home Assistant itself needs
-an explicit trusted-proxy configuration change and login/WebSocket verification.
-
-The Arr gateway's 401 responses are the expected unauthenticated Basic Auth
-challenge, not proof of a successful application login. Preserve that gate and
-the applications' own authentication. The Home Assistant SSH environment also
-reached the private cloud endpoints: Seerr returned 307 and SAB/Radarr/Sonarr
-returned 401. Verify again from the actual proxy during rollout.
+Home Assistant itself needs a separate trusted-proxy change and acceptance.
+The Arr gateway's 401 responses are its existing Basic Auth gate. Invalid
+credentials still receive a challenge; application authentication is unchanged.
+Seerr retains its login and API-key restrictions. Its numeric upstream Host must
+be preserved because the existing cloud gateway matches `10.77.0.1:15055`.
 
 ## Two distinctions that affect the names
 
@@ -49,7 +43,7 @@ if it still needs a separate bookmark. The unqualified `radarr` name should go
 to the active cloud acquisition service.
 
 **Moonfin Web is a Jellyfin plugin/client entry point.** It is not another
-container or port. Both proposed names reach the same Jellyfin account system;
+container or port. Both names reach the same Jellyfin account system;
 browsers may keep separate sessions for the two origins. For a single-origin
 alternative, use `jellyfin.home.arpa/Moonfin/Web/` and make the `moonfin` name a
 redirect to that canonical URL. Native Moonfin clients should use the Jellyfin
@@ -88,7 +82,7 @@ inventory does not mark them complete or modify them.
 No running Lidarr, Readarr or Bazarr container/add-on was found on the inventoried
 NAS, HA or cloud host. Do not create aliases to assumed default ports.
 
-## Rollout details and acceptance
+## Routing and recovery requirements
 
 1. Add one explicit hostname route and test with `curl --resolve` before DNS.
    Use Caddy's host/port upstream plus explicit path matchers; a table entry with
@@ -97,9 +91,9 @@ NAS, HA or cloud host. Do not create aliases to assumed default ports.
    entry URLs will show those paths after the root redirect. Removing the paths
    is a separate application/base-URL and cloud-gateway migration; blindly
    prepending or stripping prefixes can break assets, API requests and redirects.
-3. For Jellyfin/Moonfin, configure the exact proxy address as a known proxy and
-   preserve WebSockets, streaming/range requests and original paths. Disable
-   URL-bearing access/error logs on the media proxy: Jellyfin can put credentials
+3. For Jellyfin/Moonfin, retain `192.168.1.163` as the exact known proxy and
+   preserve WebSockets, streaming/range requests and original paths. Keep
+   URL-bearing access/error logs disabled on the media proxy: Jellyfin can put credentials
    in query strings. Do not copy media responses or playback URLs into Git.
 4. For Home Assistant, enable forwarded-client handling and trust only the
    verified proxy source address. Do not trust an entire LAN just for this alias.
@@ -128,3 +122,32 @@ References: [DNS and proxy operations](home-dns.md),
 [Jellyfin reverse proxy requirements](https://jellyfin.org/docs/general/post-install/networking/reverse-proxy/),
 [HA HTTP proxy requirements](https://www.home-assistant.io/integrations/http/),
 [Radarr URL Base](https://wiki.servarr.com/radarr/settings).
+
+## October 24 rollout acceptance
+
+- Eleven exact DNS aliases were accepted through the paired-resolver transaction.
+  Every retained name, empty AAAA, local negative and public control passed over
+  UDP/TCP through both AdGuards and the gateway. Resolver services stayed running.
+  `ha.home.arpa` returned NXDOMAIN from all three DNS paths.
+- The proxy image validated its Caddyfile during build. All 30 route checks
+  passed before DNS publication, including unchanged dashboard/Git routes,
+  unknown/deferred-host 404s, redirects, public client pages and login gates.
+- Every new route rejected the SSH add-on's non-LAN source with 403, including
+  a forged LAN `X-Forwarded-For` header. The listener remains bound to the exact
+  LAN IPv4 address; no firewall or WAN forwarding changes were made.
+- All twelve tested direct endpoints retained their prior responses. Arr
+  sibling-path requests returned 404. Invalid Basic Auth remained rejected.
+  Seerr's unauthenticated user endpoint returned 401 and API-key headers 403.
+  Its existing request-only local account logged in with unchanged permissions;
+  logout invalidated the test session (403 on reuse). Plex OAuth was not repeated.
+- Jellyfin/Moonfin login, authenticated profile lookup and logout passed.
+  Only the exact proxy address was added to Jellyfin KnownProxies; remote
+  access and automatic port mapping stayed disabled. Public web bytes matched
+  direct access, including each upstream's range behavior. Authenticated
+  WebSocket upgrades passed through both Jellyfin and Moonfin hostnames. Three
+  Jellyfin and one Moonfin referenced JS/CSS assets were byte-identical through
+  normal DNS and direct access.
+
+Private operational evidence is in ignored `build/service-rollout/`. No content
+catalogs, downloads, printing or playback were invoked. This does not establish
+a full browser login matrix, media transcoding or playback for every client.

@@ -12,3 +12,13 @@ container-test: ha-addon
 
 test: ha-addon
     @echo "Add-on packaging passed; run the deployed HTTP acceptance checks before publishing DNS."
+
+# Read-only route checks; pass --dns after publishing the exact aliases.
+[positional-arguments]
+verify *args:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    cd ..
+    export UV_CACHE_DIR="$PWD/build/wiki/uv-cache"
+    export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
+    exec uv run --project wiki --python "$(cat .python-version)" --frozen python home-proxy/verify.py "$@"

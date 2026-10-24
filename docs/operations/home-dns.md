@@ -329,3 +329,14 @@ with HTTP 200. An in-flight scanner journal was recovered through the existing
 reconciler before the alias was added; learned names were retained. Discovery
 was resumed, and neither resolver restarted. Private transaction evidence is in
 `build/wiki-private/dns-manual-1792863833727302000.log`.
+
+### Additional service routes
+
+The [service hostname inventory](service-hostnames.md) records the October 24
+expansion to eleven web-service aliases. All point to the same LAN-only proxy;
+NAS and cloud upstreams keep their existing listeners and authentication.
+`ha.home.arpa` is deliberately absent. Run `home-proxy/verify.py` using the
+repository Python runtime, then repeat with `--dns` after publishing aliases.
+For a route-specific rollback, remove only its Caddy handle and rebuild the
+proxy; leave other service handles and the live DNS inventory intact. The
+original host-and-port address remains the recovery path.

@@ -2,6 +2,11 @@
 	admin off
 	auto_https off
 	persist_config off
+	# Request URLs can contain media credentials. No access logging; suppress
+	# HTTP error request dumps while retaining startup/configuration diagnostics.
+	log default {
+		exclude http.log.error
+	}
 }
 
 http://:80 {
@@ -17,6 +22,75 @@ http://:80 {
 	@git host git.home.arpa
 	handle @git {
 		reverse_proxy http://192.168.1.66:3003
+	}
+	@jellyfin host jellyfin.home.arpa
+	handle @jellyfin {
+		reverse_proxy http://192.168.1.66:8096
+	}
+	@moonfin host moonfin.home.arpa
+	handle @moonfin {
+		redir / /Moonfin/Web/ 302
+		reverse_proxy http://192.168.1.66:8096
+	}
+	@plex host plex.home.arpa
+	handle @plex {
+		redir / /web/ 302
+		reverse_proxy http://192.168.1.66:32400
+	}
+	@seerr host seerr.home.arpa
+	handle @seerr {
+		reverse_proxy http://10.77.0.1:15055 {
+			# The private gateway matches its existing numeric Host.
+			header_up Host 10.77.0.1:15055
+		}
+	}
+	@sabnzbd host sabnzbd.home.arpa
+	handle @sabnzbd {
+		reverse_proxy http://10.77.0.1:18080
+	}
+	@catalog host catalog.home.arpa
+	handle @catalog {
+		reverse_proxy http://192.168.1.66:1337
+	}
+	@printer host printer.home.arpa
+	handle @printer {
+		reverse_proxy http://hass.home.arpa:8099
+	}
+	@tinyurl host tinyurl.home.arpa
+	handle @tinyurl {
+		reverse_proxy http://hass.home.arpa:4100
+	}
+	@radarr host radarr.home.arpa
+	handle @radarr {
+		redir / /radarr/ 302
+		@radarr_path path /radarr /radarr/*
+		handle @radarr_path {
+			reverse_proxy http://10.77.0.1:19696
+		}
+		handle {
+			respond "Unknown service path" 404
+		}
+	}
+	@sonarr host sonarr.home.arpa
+	handle @sonarr {
+		redir / /sonarr/ 302
+		@sonarr_path path /sonarr /sonarr/*
+		handle @sonarr_path {
+			reverse_proxy http://10.77.0.1:19696
+		}
+		handle {
+			respond "Unknown service path" 404
+		}
+	}
+	@prowlarr host prowlarr.home.arpa
+	handle @prowlarr {
+		@sibling path /radarr /radarr/* /sonarr /sonarr/*
+		handle @sibling {
+			respond "Unknown service path" 404
+		}
+		handle {
+			reverse_proxy http://10.77.0.1:19696
+		}
 	}
 	handle {
 		respond "Unknown service" 404
