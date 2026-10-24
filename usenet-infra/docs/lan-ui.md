@@ -28,10 +28,10 @@ authentication; changing the gateway or VPN does not change those credentials. P
 blocked backend ports are transport checks, separate from an interactive login.
 
 Before changing the peer or WAN restrictions, read the Max's actual WAN1 IPv4
-and run `just usenet-vpn-peer-check <verified-WAN-IPv4> --require-sha256`.
+and run `just usenet vpn-peer-check <verified-WAN-IPv4> --require-sha256`.
 Follow the [coordinated WAN recovery workflow](../../docs/operations/unifi-post-migration.md#cloud-vpn-and-wan-recovery)
 for provider/UFW restrictions, private inputs, paired deployment and rollback.
-The existing scoped `just usenet-configure-cloud-lan-ui` workflow owns the
+The existing scoped `just usenet configure-cloud-lan-ui` workflow owns the
 cloud VPN/proxy; preserve unrelated media services and transfers. Capture and
 verify the separate encrypted VPN archive after an accepted change.
 
@@ -39,7 +39,7 @@ verify the separate encrypted VPN archive after an accepted change.
 
 This section records the retired gateway and its provisioning override. Current
 operations use the Max's native VPN settings. The `sha256` crypto profile and
-`just usenet-vpn-peer-check <verified-WAN-IPv4>` are deployed and accepted in
+`just usenet vpn-peer-check <verified-WAN-IPv4>` are deployed and accepted in
 the [authorized follow-up](../../docs/operations/unifi-post-migration.md#cloud-vpn-and-wan-recovery). Do not install the old
 override on the Max or repeat old service restarts as a migration step.
 
@@ -96,7 +96,7 @@ plaintext fallback. Exact same-address loopback health probes are permitted.
 
 ### Historical deployment and recovery
 
-`just usenet-configure-cloud-lan-ui` installs only the new VPN and proxy. Their
+`just usenet configure-cloud-lan-ui` installs only the new VPN and proxy. Their
 roles are also included in a full cloud rebuild when `cloud_lan_ui_enabled` is
 explicitly enabled in the ignored deployment inventory. The root-owned
 configuration lives under `/etc/usenet-vpn` and `/etc/usenet-cloud-ui`; root-run

@@ -91,7 +91,7 @@ select `cloud_vpn_crypto_profile: sha256`. See [cloud VPN operation](../../usene
 After a WAN change:
 
 1. Read WAN1's actual IPv4 in the Max. Run
-   `just usenet-vpn-peer-check <verified-WAN-IPv4> --local-only`, then the full
+   `just usenet vpn-peer-check <verified-WAN-IPv4> --local-only`, then the full
    command with `--require-sha256`. It checks private inputs, Terraform, Hetzner,
    fresh dedicated cloud SSH, UFW, installed selectors and negotiated SAs.
 2. If SSH is blocked, use the existing Hetzner console to restore only the new

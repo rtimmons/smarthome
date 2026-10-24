@@ -20,7 +20,7 @@ Arr containers. See [native media](native-media.md) and [repair storage](repair-
 
 ```sh
 just usenet-discovery-health
-just usenet-native-ownership-status
+just usenet native-ownership-status
 just usenet-cloud-health
 ```
 
@@ -30,9 +30,9 @@ warnings/errors. The old setup configurator was removed because it represented
 the superseded acquisition policy. Restore accepted configuration from backups;
 do not reconstruct it by replaying historical setup commands.
 
-`usenet-configure-discovery` deploys pinned applications and verifies restored
+`usenet configure-discovery` deploys pinned applications and verifies restored
 settings. It requires existing native ownership and reconstructed storage units.
-`usenet-configure-native-ownership` refreshes health helpers without restarting
+`usenet configure-native-ownership` refreshes health helpers without restarting
 applications or migrating data. Keep private backend ports, proxy authentication
 and mount-dependent startup. Stop only `usenet-discovery.service` for Arr
 maintenance; do not prune configuration volumes.

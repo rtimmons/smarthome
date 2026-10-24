@@ -4,6 +4,8 @@
 
 Use `just setup` for the pinned runtimes and `just dev` for local development. Validate the affected component with `just test <addon>` and use the documented deployment recipes. A backup of source does not replace backups of application state.
 
+Infrastructure commands use `just usenet <recipe> [args...]`; list them with `just usenet --list`. Common health/test and offline recovery shortcuts remain. See [operations](../../usenet-infra/docs/operations.md) for the command migration and recovery environment handling.
+
 Before changing a system, read its current runbook, inspect health, preserve unrelated local edits, and retain rollback information. Scene operations, printing, media requests, and speaker writes can affect the household; do not use them as generic smoke tests.
 
 Standard local add-on deployment detects the actual source mount in the SSH environment: `/local_apps` on current Home Assistant, or a mounted `/addons` on older versions. It refuses to stop or replace an add-on if neither mount is present. An ordinary leftover `/addons` directory is not a valid destination: uploading there can produce an apparently successful rebuild of old source. Verify served assets or behavior after deployment, in addition to service readiness.
@@ -34,14 +36,14 @@ The [wiki operations guide](../../docs/operations/wiki.md) owns publication deta
 
 The scoped media recovery deployment installs only reporting and Home Assistant notifications, validates the HA package, and publishes this guide after success. See the [media recovery runbook](../../usenet-infra/docs/native-media.md#seerr-recovery-reporting); promotion to automatic repairs is a separate change.
 
-`just usenet-configure-seerr-sync` repairs only the Plex destination route and read-only sync checks. It preserves the default route and does not restart media services.
+`just usenet configure-seerr-sync` repairs only the Plex destination route and read-only sync checks. It preserves the default route and does not restart media services.
 
 The [Sonoff recovery guide](../../docs/operations/sonoff-zigbee-thread.md) covers the preserved Zigbee network and the disabled Thread/Matter services. Its separate SOPS supplement stores the saved Thread credentials and encrypted-backup passwords; decryption with the existing recovery key was verified on October 16. Keep the actual Home Assistant and app backups as well. Enabling Thread later uses Home Assistant's retained credentials and does not require decrypting the supplement.
 
-`just usenet-configure-seerr-safety` stages a private Recyclarr preview; adding
+`just usenet configure-seerr-safety` stages a private Recyclarr preview; adding
 `true` applies only the reviewed settings and request-monitoring scope. The daily
 Recyclarr timer maintains settings, while recovery stays report-only. The
-separate `just usenet-cleanuparr-replay` lab has no production credentials or
+separate `just usenet cleanuparr-replay` lab has no production credentials or
 media mounts and is removed after testing. See the [settings rollout runbook](../../usenet-infra/docs/native-media.md#settings-ownership-and-offline-recovery-qualification).
 
 ## Choose the recovery scope

@@ -25,19 +25,19 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "01565b73db6a5e0b3600835768cc3ebbd353380725702a47bc616f1c376a218b",
-    "reason": "Reduced the dated HA hardening checklist to unresolved containment, recovery, rollback, hardware, access and monitoring checks; preserved separate port/credential/privilege changes and linked scoped backup/radio evidence without claiming full recovery.",
-    "reviewed_at": "2026-10-22"
+    "fingerprint": "60e36f436e822ec31e0385e3cdfa2fa708cd5e0dd35644b2102fe61de9633a5a",
+    "reason": "Consolidated HA artifact deployment and infrastructure command dispatch; documented external watchdog preservation, shared SSH identity, retained recovery entry points, and single Ansible pin.",
+    "reviewed_at": "2026-10-23"
   },
   "media": {
-    "fingerprint": "ae7aca0364644f71e247b5bf582019c3799c666c67b559dc8eb24716e5477b1d",
-    "reason": "Moved the completed plan closure and discard safeguards into validation and pointed Filex acceptance at dated immutable receipts; no runtime or acquisition behavior changed.",
-    "reviewed_at": "2026-10-22"
+    "fingerprint": "7d508dc66e357d73c2dc85e7aa47488c32b904f81edcb989f49141775992873c",
+    "reason": "Migrated infrastructure command examples to the usenet dispatcher while retaining the UniFi service identifier; playbooks, media ownership, storage policy and deployment scopes are unchanged.",
+    "reviewed_at": "2026-10-23"
   },
   "network": {
-    "fingerprint": "9716028eb5e4c9cbfe3e297728b7dba13e5bbe66622c54ced56eea0b35daf100",
-    "reason": "Added hass.home.arpa for Home Assistant at 192.168.1.163, documented port 8123 and exact prior-policy migration, and expanded DNS verification to all configured records; reviewed concurrent command-wrapper documentation edits.",
-    "reviewed_at": "2026-10-23"
+    "fingerprint": "d99fb0d16660d83afe5f1360150bc2b67c76d6c0755989eecb1c7a74a28f65d4",
+    "reason": "Migrated infrastructure command examples to the usenet dispatcher, preserving the usenet-cloud-ui UniFi service identifier and the committed hass.home.arpa DNS policy and recovery guidance.",
+    "reviewed_at": "2026-10-24"
   },
   "printing": {
     "fingerprint": "3614ace3dd4e9e36021dee7b3a16e555cb4b2b7351eb570982dc4f5076ea230e",

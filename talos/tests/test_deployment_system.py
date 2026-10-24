@@ -245,3 +245,39 @@ class TestBasicFunctionality:
         for class_name in required_classes:
             assert hasattr(ab, class_name), f"Missing class: {class_name}"
             assert isinstance(getattr(ab, class_name), type), f"Not a class: {class_name}"
+
+
+@pytest.mark.parametrize("failure", ["scp", "ssh"])
+def test_artifact_failure_stops_and_reports_phase(monkeypatch, tmp_path, failure):
+    calls = []
+    monkeypatch.setenv("HASS_SSH_IDENTITY", "/tmp/fixture-ha-key")
+    def run(argv, **kwargs):
+        calls.append(argv[0])
+        if argv[0] == failure:
+            raise subprocess.CalledProcessError(1, argv, output="", stderr="fixture failure")
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+    logs = Mock(return_value="fixture logs")
+    monkeypatch.setattr(addon_builder, "run_cmd", run)
+    monkeypatch.setattr(addon_builder, "get_addon_logs", logs)
+    with pytest.raises(DeploymentError) as error:
+        addon_builder.deploy_artifact(tmp_path / "fixture.tar.gz", "fixture", "fixture.local", 22, "root")
+    assert error.value.error_type == ("UPLOAD_FAILED" if failure == "scp" else "REMOTE_DEPLOYMENT_FAILED")
+    assert calls == (["scp"] if failure == "scp" else ["scp", "ssh"])
+    assert logs.call_count == (0 if failure == "scp" else 1)
+
+
+def test_internal_deploy_carries_manifest_policy_into_shared_engine(monkeypatch, tmp_path):
+    monkeypatch.setattr(addon_builder, "load_manifest", lambda: {})
+    monkeypatch.setattr(addon_builder, "build_context", lambda *a: {
+        "addon": {"slug": "fixture", "port": 3000, "deploy_health_path": "/ready", "disabled": True},
+        "paths": {"remote_home": "/root", "remote_addons": "/addons"},
+    })
+    monkeypatch.setattr(addon_builder, "build_addon", lambda *a, **k: tmp_path / "fixture.tar.gz")
+    monkeypatch.setenv("HASS_SSH_IDENTITY", "/tmp/fixture-ha-key")
+    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout="", stderr=""))
+    monkeypatch.setattr(addon_builder, "run_cmd", run)
+    addon_builder.deploy_addon("fixture", "fixture.local", 22, "root", False, validate_prereqs=False)
+    assert run.call_args_list[0].args[0][-1] == "root@fixture.local:/root/fixture.tar.gz"
+    script = run.call_args_list[1].args[0][-1]
+    assert "HEALTH_PORT=3000" in script and "HEALTH_PATH=/ready" in script
+    assert "DISABLED=true" in script

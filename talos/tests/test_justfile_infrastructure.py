@@ -293,3 +293,30 @@ class TestJustfileTemplateSystem:
             
         finally:
             os.unlink(temp_path)
+
+
+@pytest.mark.parametrize("recipe,args,expected", [
+    ("usenet", ["filex-validate", "fixture with spaces;$(false).json"], ["filex-validate", "fixture with spaces;$(false).json"]),
+    ("usenet", ["--no-dotenv", "recovery-verify", "--help"], ["recovery-verify", "--help"]),
+    ("usenet-crypto-bootstrap", [], ["crypto-bootstrap"]),
+    ("setup-secrets", ["--help"], ["--help"]),
+    ("usenet-recovery-master-init", ["second-copy-planned"], ["second-copy-planned"]),
+])
+def test_infrastructure_dispatch_preserves_arguments_and_recovery_environment(tmp_path, recipe, args, expected):
+    import json
+    import shutil
+    import sys
+    root = Path(__file__).resolve().parents[2]
+    # Run the actual root recipe, replacing only its child just process.
+    spy = tmp_path / "just"
+    spy.write_text(f"#!{sys.executable}\nimport json,sys\nprint(json.dumps(sys.argv[1:]))\n")
+    spy.chmod(0o755)
+    result = subprocess.run([
+        shutil.which("just"), "--no-dotenv", "--justfile", str(root / "Justfile"),
+        "--shell", "bash", "--clear-shell-args", "--shell-arg", "-c", recipe, *args,
+    ], env={**os.environ, "PATH": str(tmp_path) + os.pathsep + os.environ["PATH"]}, capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
+    forwarded = json.loads(result.stdout)
+    assert forwarded[-len(expected):] == expected
+    assert forwarded[forwarded.index("--working-directory") + 1] == "usenet-infra"
+    assert ("--no-dotenv" in forwarded) == (recipe != "usenet" or "--no-dotenv" in args)

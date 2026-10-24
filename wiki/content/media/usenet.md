@@ -141,7 +141,7 @@ The authoritative Movies and TV files live on the BX21 Storage Box, with 5 TiB t
 
 ### Temporary scratch · repair volume
 
-A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves and the 100 GiB release limit remains. The October 15 policy allows downloading during postprocessing and trials four-file parallel verification (`-T4`); direct unpack stays off. Apply this policy between processing jobs with `just usenet-configure-post-processing`. It preserves manual pauses. Allow one large request to finish import and cleanup before the next: queued downloads, archive expansion and retained failures can still consume extra space. The reserve stops intake at low space but does not guarantee room for every repair.
+A dedicated 300 GB volume holds downloads and repairs. Completed output is staged on the 5 TiB Storage Box before Arr imports it. SAB and both Arr applications retain 30 GiB free-space reserves and the 100 GiB release limit remains. The October 15 policy allows downloading during postprocessing and trials four-file parallel verification (`-T4`); direct unpack stays off. Apply this policy between processing jobs with `just usenet configure-post-processing`. It preserves manual pauses. Allow one large request to finish import and cleanup before the next: queued downloads, archive expansion and retained failures can still consume extra space. The reserve stops intake at low space but does not guarantee room for every repair.
 
 The buffered-copy update targets SAB's completed-file transfer to the Storage
 Box. Isolated tests measured about 93 MiB/s versus 41 MiB/s with the original
@@ -246,9 +246,9 @@ Run these from the repository root. They inspect current state and should be the
 `just usenet-discovery-health`
 `just usenet-cloud-health`
 `just usenet-qnap-health`
-`just usenet-native-ownership-status`
+`just usenet native-ownership-status`
 `just usenet-native-cutover-preflight`
-`just usenet-filex-status`
+`just usenet filex-status`
 `just native-status`
 
 The native preflight reads current ownership, preserved holds and mounted free space. It does not change the system. A read-only capture can report that the earlier cutover is accepted and active.
@@ -326,7 +326,7 @@ check verifies that Seerr can reach the expected Plex server through the VPN.
 For repaired files, refresh the affected Plex folders and sync Seerr instead of
 requesting the episodes again.
 
-Use `just usenet-seerr-recovery-status` for a private summary. The
+Use `just usenet seerr-recovery-status` for a private summary. The
 [native media runbook](../../../usenet-infra/docs/native-media.md#seerr-recovery-reporting)
 explains matching rules, reports, deployment and how to pause monitoring.
 

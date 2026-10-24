@@ -71,7 +71,7 @@ binary. Its shell stops on any failed step. The runtime image starts from
 has no shell or package manager. Self-updates and executable plugins are disabled.
 
 ```sh
-just usenet-filex-build
+just usenet filex-build
 ```
 
 The build needs Go 1.27.1 on PATH and uses repository-pinned Node 24.18.0 with
@@ -159,9 +159,9 @@ private configuration; never regenerate credentials as a status check.
 ```sh
 just --justfile usenet-infra/Justfile --working-directory usenet-infra \
   filex-validate /absolute/path/to/private/inputs.json
-just usenet-configure-filex
-just usenet-filex-status
-just usenet-filex-disable
+just usenet configure-filex
+just usenet filex-status
+just usenet filex-disable
 ```
 
 The isolated playbook prepares the dedicated NAS endpoint, then the cloud

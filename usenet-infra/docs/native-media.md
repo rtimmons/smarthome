@@ -11,7 +11,7 @@ The user accepted native Arr cleanup; it does not perform the retired importer's
 independent SHA-256-before-delete gate. Failed jobs remain for explicit review.
 Their payloads are not automatically deleted, even when Arr selects a replacement;
 retained failures can consume repair-spool space. Apply the retry policy with
-`just usenet-configure-failed-downloads`; it updates both apps without a restart
+`just usenet configure-failed-downloads`; it updates both apps without a restart
 or explicit search command. Already processed historical failures are not replayed
 by this helper. Pending failures can be handled on the next normal Arr poll.
 
@@ -47,7 +47,7 @@ These controls do not guarantee arbitrary archive expansion is safe.
 The October 15 processing policy uses `par_option: -T4` to allow four files to
 be hashed in parallel. This is a tuning trial, not a measured speedup; repair
 calculation keeps the tool's default CPU-thread selection. Apply with
-`just usenet-configure-post-processing` after current postprocessing finishes.
+`just usenet configure-post-processing` after current postprocessing finishes.
 The command refuses active postprocessing, persists only these two settings,
 verifies the unchanged reserves and disabled direct unpack, and never resumes
 a manual pause. The ownership health check detects drift from this policy.
@@ -78,8 +78,8 @@ image integration tests cover copy failures, metadata, renames, collisions,
 symlinks and source preservation; additional deployment tests cover integrity,
 idle gating and rollback.
 
-Use `just usenet-sab-buffered-build` to build and test without restarting SAB.
-`just usenet-sab-buffered-deploy` refuses queued downloads, any postprocessing,
+Use `just usenet sab-buffered-build` to build and test without restarting SAB.
+`just usenet sab-buffered-deploy` refuses queued downloads, any postprocessing,
 active Arr commands, missing mounts, low reserves or stale/unverified backups.
 It retains a rollback tag and checksummed image archive under
 `/srv/usenet/images/sab-buffered`, with the original Compose definition. A brief
@@ -99,11 +99,11 @@ saved settings and API configuration pass, then its prior service state returns.
 When SAB preserves pauses, the helper saves the original pause flag through its
 supported API after resuming its own maintenance pause; resuming alone updates
 only memory. The original saved-file checksum must still match exactly.
-`just usenet-sab-buffered-rollback` performs the same idle checks and restores
+`just usenet sab-buffered-rollback` performs the same idle checks and restores
 the retained image/configuration. It does not move media or change storage.
 
-`just usenet-sab-buffered-status` reports deployment state.
-`just usenet-sab-buffered-verify-import` tracks the next naturally requested
+`just usenet sab-buffered-status` reports deployment state.
+`just usenet sab-buffered-verify-import` tracks the next naturally requested
 Arr-owned SAB job by its ID, checks successful SAB completion, matching Arr
 import events and nonempty canonical files, then confirms native source cleanup.
 It never enqueues a release or retries/deletes a job. Exact IDs remain in the
@@ -143,7 +143,7 @@ See [validation](validation.md) for accepted cases and their limits, and
 
 ## Seerr recovery reporting
 
-`just usenet-configure-seerr-recovery` installs a separate five-minute report-only
+`just usenet configure-seerr-recovery` installs a separate five-minute report-only
 service and the Home Assistant notification package. It checks native ownership,
 validates HA configuration, reloads automations, runs one report, then enables the
 timer. It does not restart media services. Private HA setup uses the repository's
@@ -180,8 +180,8 @@ for a later reviewed promotion. That promotion must revalidate scope, library,
 queue and release overlap immediately before any native action and enforce a
 persistent bounded retry budget. Native Arr handling remains unchanged.
 
-`just usenet-seerr-recovery-status` returns a sanitized summary and report age.
-`just usenet-seerr-recovery-run` requests an extra report through the same locked
+`just usenet seerr-recovery-status` returns a sanitized summary and report age.
+`just usenet seerr-recovery-run` requests an extra report through the same locked
 service. Exact evidence lives in mode-0600 `snapshot.json` and `report.json` under
 `/srv/usenet/config/catalog/seerr-recovery` (mode 0700), covered by configuration
 backups. No requester emails or media identifiers are sent to HA or stdout.
@@ -243,11 +243,11 @@ imports or existing-file renames in this configuration. RSS remains off. Native
 completed-download and failed-download handling retain their existing settings.
 
 ```sh
-just usenet-configure-seerr-safety         # stage a private preview
-just usenet-configure-seerr-safety true    # apply reviewed settings and verify
-just usenet-recyclarr-preview             # preview the currently deployed policy
-just usenet-seerr-recovery-status
-just usenet-cleanuparr-replay              # disposable offline compatibility test
+just usenet configure-seerr-safety         # stage a private preview
+just usenet configure-seerr-safety true    # apply reviewed settings and verify
+just usenet recyclarr-preview             # preview the currently deployed policy
+just usenet seerr-recovery-status
+just usenet cleanuparr-replay              # disposable offline compatibility test
 ```
 
 The installer stores preview policy separately from the timer's active policy.

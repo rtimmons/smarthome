@@ -438,6 +438,12 @@ deploy-force *args="":
 # USENET CATALOG
 # ============================================================================
 
+# Run any infrastructure recipe without maintaining a second command list.
+# Use `just usenet --list`; offline recovery also requires root --no-dotenv.
+[group: 'usenet']
+usenet *args:
+	@just --justfile usenet-infra/Justfile --working-directory usenet-infra "$@"
+
 # Check repository-wide recovery inventory metadata without reading secrets.
 [group: 'backup']
 [positional-arguments]
@@ -446,10 +452,10 @@ secrets-check *args:
 	set -euo pipefail
 	exec python3 usenet-infra/scripts/secrets-check.py "$@"
 
-# Cache reviewed recovery tools; does not create a recovery identity or vault.
+# Cache reviewed recovery tools without loading infrastructure dotenv inputs.
 [group: 'backup']
 usenet-crypto-bootstrap:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra crypto-bootstrap
+	@just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra crypto-bootstrap
 
 # Record the public SOPS recipient from the one-process SOPS_AGE_KEY environment value.
 [group: 'backup']
@@ -568,47 +574,8 @@ usenet-test:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra test
 
 [group: 'usenet']
-usenet-configure-discovery:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-discovery
-
-[group: 'usenet']
 usenet-discovery-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra discovery-health
-
-# Securely store a Hetzner API token without putting it in chat or shell history
-[group: 'usenet']
-usenet-store-hcloud-token:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra store-hcloud-token
-
-# Create or validate the purpose-specific Usenet infrastructure SSH keys
-[group: 'usenet']
-usenet-generate-ssh-keys:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra generate-ssh-keys
-
-# Generate ignored Terraform inputs using the dedicated keys and current public IP
-[group: 'usenet']
-usenet-prepare-terraform-vars:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra prepare-terraform-vars
-
-# Produce read-only Terraform plans for cloud and canonical storage
-[group: 'usenet']
-usenet-terraform-plan:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra terraform-plan
-
-# Configure or converge the Usenet cloud host
-[group: 'usenet']
-usenet-configure-cloud:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cloud
-
-# Configure the private UniFi-to-cloud UI connection.
-[group: 'usenet']
-usenet-configure-cloud-lan-ui:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-cloud-lan-ui
-
-# Reconnoiter, configure, and converge the QNAP after its dedicated SSH account is ready
-[group: 'usenet']
-usenet-configure-qnap:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-qnap
 
 # Deploy only the private, static NAS Usenet wiki.
 [group: 'usenet']
@@ -652,153 +619,10 @@ wiki-model-export:
 	npm run build >&2
 	node dist/wiki-export.js > "{{repo_root}}/build/wiki/model.json"
 
-# Verify the NAS reader cannot alter a disposable remote test file.
-[group: 'usenet']
-usenet-verify-reader-access:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra verify-reader-access
-
 # Check cloud applications, Storage Box access, failures, and scratch space
 [group: 'usenet']
 usenet-cloud-health:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
-
-[group: 'usenet']
-usenet-configure-seerr:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr
-
-[group: 'usenet']
-usenet-seerr-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra seerr-status
-
-[group: 'usenet']
-usenet-filex-build *args:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-build {{args}}
-
-[group: 'usenet']
-usenet-configure-filex:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-filex
-
-[group: 'usenet']
-usenet-filex-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-status
-
-[group: 'usenet']
-usenet-filex-disable:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-disable
-
-[group: 'usenet']
-usenet-native-ownership-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-ownership-status
-
-[group: 'usenet']
-usenet-configure-native-ownership:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-native-ownership
-
-[group: 'usenet']
-usenet-configure-post-processing:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-post-processing
-
-[group: 'usenet']
-usenet-configure-failed-downloads:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-failed-downloads
-
-[group: 'usenet']
-usenet-sab-buffered-build:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-build
-
-[group: 'usenet']
-usenet-sab-buffered-deploy:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-deploy
-
-[group: 'usenet']
-usenet-sab-buffered-rollback:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-rollback
-
-[group: 'usenet']
-usenet-sab-buffered-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-status
-
-[group: 'usenet']
-usenet-sab-buffered-verify-import:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-buffered-verify-import
-
-# Read NAS versions, resource headroom, and share metadata through dedicated SSH.
-[group: 'usenet']
-usenet-qnap-recon:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra qnap-recon
-
-# Open private SABnzbd and Prowlarr access through the dedicated SSH identity.
-[group: 'usenet']
-usenet-cloud-ui:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-ui
-
-# Inspect, prepare, enable, or test NZBGeek without returning its saved API key.
-[group: 'usenet']
-[positional-arguments]
-usenet-prowlarr-indexer command='inspect' indexer='nzbgeek':
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra prowlarr-indexer "$1" "$2"
-
-# Inspect, configure, or test Eweka using only saved credentials on the cloud host.
-[group: 'usenet']
-[positional-arguments]
-usenet-sab-provider command='inspect':
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra sab-provider "$1"
-
-# Encrypt cloud application configuration and verify its off-VM backup.
-[group: 'usenet']
-usenet-backup-cloud:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-cloud
-
-# Back up the root-owned VPN and private cloud UI settings.
-[group: 'usenet']
-usenet-backup-vpn:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-vpn
-
-[group: 'usenet']
-[positional-arguments]
-usenet-backup-vpn-verify archive:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-vpn-verify "$1"
-
-# Encrypt the NAS dashboard, catalog state, and private configuration.
-[group: 'usenet']
-usenet-backup-qnap:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-qnap
-
-[group: 'usenet']
-[positional-arguments]
-usenet-backup-qnap-verify archive:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-qnap-verify "$1"
-
-[group: 'usenet']
-[positional-arguments]
-usenet-backup-qnap-restore archive destination:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-qnap-restore "$1" "$2"
-
-# Decrypt and validate a backup without retaining plaintext.
-[group: 'usenet']
-[positional-arguments]
-usenet-backup-verify archive:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-verify "$1"
-
-# Restore verified configuration into a new private directory for recovery.
-[group: 'usenet']
-[positional-arguments]
-usenet-backup-restore archive destination:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra backup-restore "$1" "$2"
 
 # Check Storage Box access, transfer failures, and QNAP cache capacity
 [group: 'usenet']
@@ -917,11 +741,6 @@ unifi-mcp-check:
     @./network-infra/unifi-mcp/run.sh --check
 
 [group: 'network']
-[positional-arguments]
-usenet-vpn-peer-check peer *args:
-    @just --justfile usenet-infra/Justfile --working-directory usenet-infra vpn-peer-check "$@"
-
-[group: 'network']
 dns-deploy:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns deploy
 
@@ -929,32 +748,3 @@ dns-deploy:
 [positional-arguments]
 dns-rollback-primary snapshot:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns rollback-primary --snapshot "$1"
-
-# Report-only recovery for approved Seerr requests, with Home Assistant alerts.
-[group: 'usenet']
-usenet-configure-seerr-recovery:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr-recovery
-
-[group: 'usenet']
-usenet-seerr-recovery-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra seerr-recovery-status
-
-[group: 'usenet']
-usenet-seerr-recovery-run:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra seerr-recovery-run
-
-[group: 'usenet']
-usenet-configure-seerr-sync:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr-sync
-
-[group: 'usenet']
-usenet-configure-seerr-safety apply="false":
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra configure-seerr-safety {{apply}}
-
-[group: 'usenet']
-usenet-recyclarr-preview:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra recyclarr-preview
-
-[group: 'usenet']
-usenet-cleanuparr-replay:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cleanuparr-replay

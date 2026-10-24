@@ -104,22 +104,18 @@ talos addon build grid-dashboard
 talos addon deploy <name> [options]
 ```
 
-Deploys an add-on to Home Assistant:
-1. Builds the add-on (if not already built)
-2. SCPs tarball to Home Assistant host
-3. Extracts to `/addons/<slug>/`
-4. Stops running instance (if exists)
-5. Runs `ha addons reload`
-6. Rebuilds or installs the add-on
-7. Starts the add-on
+Internal builds and `talos addon deploy-external` package sources differently,
+then use the same artifact deployment engine. Both transports explicitly select
+the repository's dedicated SSH identity. Deployment stops the running add-on,
+replaces source in the actual Supervisor mount (`/local_apps`, or mounted legacy
+`/addons`), reloads, rebuilds/installs, starts, and waits for Supervisor readiness.
+Missing source mounts fail closed; existing application data is not uninstalled.
 
-Deploys use `ha addons rebuild` when the add-on already exists so persistent data
-in `/data/addons/data/<slug>/` stays intact (no uninstall). If the add-on is not
-yet installed—or if a rebuild fails—it falls back to `ha addons install` to
-stay idempotent for first-time deploys. After deploy, if a primary port is
-defined (first entry in `ports`), deploy will ensure the host port mapping is
-present using the Supervisor API (`ha addons info` + `curl` POST to
-`/addons/<id>/options`, requires `jq` and `SUPERVISOR_TOKEN` on the Supervisor host).
+Internal manifests retain their optional service readiness probe and disabled
+add-on policy. External deployments preserve existing watchdog settings and
+verify Supervisor started state without inventing a service health endpoint.
+Both paths share upload/remote error reporting; external failures now use
+`UPLOAD_FAILED` or `REMOTE_DEPLOYMENT_FAILED`. Dry runs neither package nor connect.
 
 **Options:**
 - `--ha-host <host>` - Home Assistant hostname (default: `homeassistant.local`)

@@ -18,10 +18,10 @@ binaries. NAS originals and replacement NAS boot are outside the chosen scope.
 From the repository root, using the existing dedicated decryption identities:
 
 ```sh
-just usenet-backup-verify /absolute/archive.tar.age
-just usenet-backup-restore /absolute/archive.tar.age /absolute/new/cloud-restore
-just usenet-backup-qnap-verify /absolute/qnap.tar.age
-just usenet-backup-qnap-restore /absolute/qnap.tar.age /absolute/new/qnap-restore
+just usenet backup-verify /absolute/archive.tar.age
+just usenet backup-restore /absolute/archive.tar.age /absolute/new/cloud-restore
+just usenet backup-qnap-verify /absolute/qnap.tar.age
+just usenet backup-qnap-restore /absolute/qnap.tar.age /absolute/new/qnap-restore
 ```
 
 Use a new private destination, never running state. Cloud and QNAP archives have

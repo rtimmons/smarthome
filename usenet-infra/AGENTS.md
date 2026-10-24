@@ -23,7 +23,7 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## Access and validation
 
-- Use root `just usenet-*` recipes or `just --justfile usenet-infra/Justfile
+- Use root `just usenet <recipe> [args...]` (list with `just usenet --list`) or `just --justfile usenet-infra/Justfile
   --working-directory usenet-infra ...`. Native/catalog recipes retain their
   unprefixed names at the root (`just native-status`, `just native-pull`).
   The private `.env` and ignored Ansible

@@ -79,3 +79,48 @@ def test_package_external_cli(tmp_path: Path):
     assert result.exit_code == 0, result.output
     assert (tmp_path / "out" / "test_app.tar.gz").exists()
 
+
+
+def test_external_deploy_uses_shared_transport_and_preserves_watchdog(tmp_path, monkeypatch):
+    import subprocess
+    from talos import addon_builder, external_addon
+
+    _write_minimal_app(tmp_path)
+    calls = []
+    monkeypatch.setenv("HASS_SSH_IDENTITY", "/tmp/fixture-ha-key")
+    monkeypatch.setattr(external_addon, "validate_deployment_prerequisites", lambda *a, **k: None)
+    def run(argv, **kwargs):
+        calls.append(argv)
+        return subprocess.CompletedProcess(argv, 0, stdout="", stderr="")
+    monkeypatch.setattr(addon_builder, "run_cmd", run)
+    external_addon.deploy_external_addon(tmp_path, tmp_path / "ha-addon", "fixture.local", 2222, "root")
+    assert [c[0] for c in calls] == ["scp", "ssh"]
+    for command in calls:
+        assert command[1:5] == ["-i", "/tmp/fixture-ha-key", "-o", "IdentitiesOnly=yes"]
+        assert "2222" in command
+    script = calls[-1][-1]
+    assert 'resolve_addons_dir' in script and 'wait_for_started' in script
+    # Execute only the option-update section: external deployments must not enable watchdog.
+    section = script.split('log_info "Configuring add-on options..."')[1].split('log_info "Starting add-on')[0]
+    result = subprocess.run(["bash", "-c", 'SUPERVISOR_TOKEN=fixture\nrun_metric() { exit 99; }\nmonotonic_ms() { echo 1; }\nemit_metric() { :; }\n' + section], capture_output=True)
+    assert result.returncode == 0
+
+
+def test_external_dry_run_never_packages_or_connects(tmp_path, monkeypatch):
+    from talos import external_addon
+    _write_minimal_app(tmp_path)
+    def forbidden(*args, **kwargs):
+        raise AssertionError("dry run attempted deployment")
+    for name in ("validate_deployment_prerequisites", "package_external_addon", "deploy_artifact"):
+        monkeypatch.setattr(external_addon, name, forbidden)
+    external_addon.deploy_external_addon(tmp_path, tmp_path / "ha-addon", "fixture.local", 22, "root", dry_run=True)
+
+
+def test_external_cli_reports_shared_deployment_error(monkeypatch):
+    from talos import addon_builder, external_addon
+    def fail(*args, **kwargs):
+        raise addon_builder.DeploymentError("fixture upload failed", error_type="UPLOAD_FAILED")
+    monkeypatch.setattr(external_addon, "deploy_external_addon", fail)
+    result = CliRunner().invoke(app, ["addon", "deploy-external"])
+    assert result.exit_code == 1
+    assert "UPLOAD_FAILED" in result.output and "Deployment failed" in result.output

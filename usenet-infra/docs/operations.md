@@ -5,15 +5,27 @@ from ignored `.env` and Ansible inventory. Recover missing credentials through
 [secrets recovery](secrets-recovery.md); do not repeat account setup or purchases.
 Application addresses are in the [README](../README.md).
 
+Use `just usenet <recipe> [args...]` for infrastructure commands; `just usenet
+--list` lists the module's recipes. Most former `just usenet-<recipe>` wrappers
+have been removed. Health/test, Filex UI, wiki and recovery shortcuts remain,
+as do `native-*` and `catalog-*`. Arguments are forwarded without shell expansion.
+Ansible's version is defined once in the infrastructure Justfile; playbooks,
+prerequisites and wiki publication scopes remain explicit per operation.
+
+For offline recovery, keep the root `just --no-dotenv recovery-*`,
+`setup-secrets`, `secrets-encrypt`, and `usenet-recovery-master-init` entry points.
+If invoking those through the generic dispatcher instead, disable dotenv at
+both levels: `just --no-dotenv usenet --no-dotenv <recipe> [args...]`.
+
 ## Health and requests
 
 ```sh
-just usenet-native-ownership-status
+just usenet native-ownership-status
 just usenet-discovery-health
 just usenet-cloud-health
 just usenet-qnap-health
-just usenet-filex-status
-just usenet-seerr-status
+just usenet filex-status
+just usenet seerr-status
 ```
 
 Start explicit requests in Seerr or Arr. RSS and direct carts stay disabled.
@@ -58,24 +70,24 @@ never restart Plex, the NAS or unrelated services for a Usenet refresh.
 
 | Root recipe | Scope |
 | --- | --- |
-| `usenet-configure-seerr-sync` | Repair the exact Plex-host VPN source route and install connection/scan-freshness checks; no media-service restart |
-| `usenet-configure-seerr-recovery` | Install five-minute report-only checks for approved Seerr requests and Home Assistant persistent alerts; no acquisition writes |
-| `usenet-seerr-recovery-status` / `usenet-seerr-recovery-run` | Read report age or request another report-only pass |
-| `usenet-configure-native-ownership` | Refresh current native health helpers and verify existing ownership; no migration or application restart |
-| `usenet-configure-failed-downloads` | Enable automatic alternative-release searches after failure in both Arr apps; retain manual-selection behavior and failed payloads |
-| `usenet-configure-post-processing` | Between processing jobs, persist concurrent downloading and `-T4`; verify reserves and direct unpack off without resuming manual pauses or restarting services |
-| `usenet-sab-buffered-build` | Build the pinned buffered-copy image and run isolated integration tests; no application restart |
-| `usenet-sab-buffered-deploy` | With SAB/Arr idle, retain the current image and Compose definition, switch SAB and restore its pause state; automatically roll back an unhealthy candidate |
-| `usenet-sab-buffered-rollback` | With SAB/Arr idle, restore the retained image and Compose definition |
-| `usenet-sab-buffered-status` / `usenet-sab-buffered-verify-import` | Read deployment state and verify the next naturally requested download's native import and source cleanup |
-| `usenet-configure-discovery` | Deploy pinned Arr applications and verify restored explicit-request policy |
-| `usenet-configure-download-status` | Refresh existing NAS transfer backend/presentation; refuses active transfers |
+| `usenet configure-seerr-sync` | Repair the exact Plex-host VPN source route and install connection/scan-freshness checks; no media-service restart |
+| `usenet configure-seerr-recovery` | Install five-minute report-only checks for approved Seerr requests and Home Assistant persistent alerts; no acquisition writes |
+| `usenet seerr-recovery-status` / `usenet seerr-recovery-run` | Read report age or request another report-only pass |
+| `usenet configure-native-ownership` | Refresh current native health helpers and verify existing ownership; no migration or application restart |
+| `usenet configure-failed-downloads` | Enable automatic alternative-release searches after failure in both Arr apps; retain manual-selection behavior and failed payloads |
+| `usenet configure-post-processing` | Between processing jobs, persist concurrent downloading and `-T4`; verify reserves and direct unpack off without resuming manual pauses or restarting services |
+| `usenet sab-buffered-build` | Build the pinned buffered-copy image and run isolated integration tests; no application restart |
+| `usenet sab-buffered-deploy` | With SAB/Arr idle, retain the current image and Compose definition, switch SAB and restore its pause state; automatically roll back an unhealthy candidate |
+| `usenet sab-buffered-rollback` | With SAB/Arr idle, restore the retained image and Compose definition |
+| `usenet sab-buffered-status` / `usenet sab-buffered-verify-import` | Read deployment state and verify the next naturally requested download's native import and source cleanup |
+| `usenet configure-discovery` | Deploy pinned Arr applications and verify restored explicit-request policy |
+| `usenet configure-download-status` | Refresh existing NAS transfer backend/presentation; refuses active transfers |
 | `usenet-wiki-deploy` | Static private field guide, with retained-release rollback |
-| `usenet-configure-filex` | Reviewed private Filex portal |
-| `usenet-configure-seerr` | Private Plex-authenticated request portal |
-| `usenet-configure-scheduled-backups` | Cloud and NAS configuration backup schedules |
+| `usenet configure-filex` | Reviewed private Filex portal |
+| `usenet configure-seerr` | Private Plex-authenticated request portal |
+| `usenet configure-scheduled-backups` | Cloud and NAS configuration backup schedules |
 
-Use `just --list` for exact recipe arguments and component bootstrap commands.
+Use `just usenet --list` for exact recipe arguments and component bootstrap commands.
 Historical cart, publisher and storage migration recipes were removed. Recover
 the current layout from verified state and current mount definitions instead of
 replaying the branch's development sequence. Old encrypted archives may contain

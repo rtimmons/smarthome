@@ -50,7 +50,7 @@ and only the tiny existing `iperf3-1` container. The selected LAN interface is
 The new QTS `Usenet` shared folder and application directory are prepared,
 protected inventory/environment settings are populated, and the user-created
 Argon2id dashboard credential file was verified with mode `0600`. Deployment
-started through `just usenet-configure-qnap`; authenticated dashboard login
+started through `just usenet configure-qnap`; authenticated dashboard login
 works at `http://192.168.1.66:1337`. Both services run as 1004:100 with a
 read-only root filesystem, all capabilities dropped, no new privileges, no
 privileged mode, and no Docker socket. The dashboard process has only group
@@ -140,7 +140,7 @@ non-secret acceptance evidence in [validation.md](validation.md):
 | Dashboard private address, authentication and SSH/private access path | `http://192.168.1.66:1337`; authenticated login passed, exact private listener verified. Argon2id credential file privately created and verified mode 0600. Dashboard/CLI transfer and eviction, restart persistence, and isolated restore passed. September 14 direct external TCP/1337 acceptance passed; alternate static forwarding/proxy paths remain unaudited |
 | HybridMount version, modes, license availability and cache support | HybridMount 1.17.5691 (QPKG `CacheMount`); File Cloud Gateway and WebDAV Cloud/Server available in inspected wizard; free-license availability unverified. Password-only WebDAV form observed, closed without credentials/mount/cache creation; route not adopted |
 
-From the repository root, `just usenet-qnap-recon` reads NAS versions, resource
+From the repository root, `just usenet qnap-recon` reads NAS versions, resource
 headroom, container metadata, network details, and share capacity through the
 dedicated pinned SSH connection; it does not inspect personal files or mutate
 the NAS. From `usenet-infra/`, use `just qnap-recon`. Noninteractive QNAP SSH
@@ -216,7 +216,7 @@ QNAP application roles. Use the checked-in Compose and OliveTin configuration,
 ignored runtime authentication material, and pinned image versions. Follow the
 [QNAP Compose runbook](../compose/qnap/README.md) for the exact build, startup,
 private address, and login-secret setup. Do not use a sample credential.
-The repository-root equivalent, `just usenet-configure-qnap`, is currently
+The repository-root equivalent, `just usenet configure-qnap`, is currently
 used against this NAS. Runtime security and authenticated login are verified;
 the acceptance matrix records completed transfer/recovery checks and the
 dated direct external TCP/1337 acceptance.

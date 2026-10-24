@@ -3,7 +3,6 @@ from __future__ import annotations
 import fnmatch
 import os
 import shutil
-import subprocess
 import tarfile
 import tempfile
 from pathlib import Path
@@ -14,9 +13,7 @@ import yaml
 from rich.console import Console
 
 from .addon_builder import (
-    DeploymentError,
-    get_addon_logs,
-    run_cmd,
+    deploy_artifact,
     validate_deployment_prerequisites,
 )
 
@@ -191,8 +188,6 @@ def deploy_external_addon(
     slug = config["slug"]
     addon_id = f"local_{slug}"
     remote_tar = f"/tmp/{slug}.tar.gz"
-    remote_addons_dir = "/addons"
-    remote_addon_dir = f"{remote_addons_dir}/{slug}"
 
     if dry_run:
         console.print(f"[bold]External Add-on Deployment Plan[/bold]")
@@ -204,117 +199,20 @@ def deploy_external_addon(
         console.print("[dim]Operations that would be performed:[/dim]")
         console.print("  1. Package external app as a local add-on")
         console.print(f"  2. Upload archive to {ha_host}:{remote_tar}")
-        console.print(f"  3. Replace {remote_addon_dir}")
+        console.print("  3. Replace source in the mounted local app directory")
         console.print(f"  4. Reload, rebuild/install, start, and verify {addon_id}")
         console.print("")
         console.print("[yellow]This is a dry run - no changes would be made[/yellow]")
         return
 
-    try:
-        if validate_prereqs:
-            validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
+    if validate_prereqs:
+        validate_deployment_prerequisites(ha_host, ha_port, ha_user, verbose=verbose)
 
-        archive = package_external_addon(app_dir, addon_dir, output_dir=output_dir, verbose=verbose)
-        run_cmd(["scp", "-P", str(ha_port), str(archive), f"{ha_user}@{ha_host}:{remote_tar}"], verbose=verbose)
-
-        verbose_flag = "true" if verbose else "false"
-        remote_script = f"""#!/bin/bash
-set -euo pipefail
-
-ADDON_SLUG="{slug}"
-ADDON_ID="{addon_id}"
-REMOTE_TAR="{remote_tar}"
-REMOTE_ADDON_DIR="{remote_addon_dir}"
-REMOTE_ADDONS_DIR="{remote_addons_dir}"
-VERBOSE="{verbose_flag}"
-
-log_info() {{
-  if [ "$VERBOSE" = "true" ]; then
-    echo "[$(date '+%Y-%m-%d %H:%M:%S')] INFO: $1"
-  fi
-}}
-
-log_error() {{
-  echo "[$(date '+%Y-%m-%d %H:%M:%S')] ERROR: $1" >&2
-}}
-
-run_quiet() {{
-  if [ "$VERBOSE" = "true" ]; then
-    "$@"
-  else
-    "$@" >/dev/null 2>&1
-  fi
-}}
-
-if ! command -v ha >/dev/null 2>&1; then
-  log_error "Home Assistant CLI not found on remote host"
-  exit 1
-fi
-
-log_info "Checking Home Assistant supervisor"
-run_quiet ha supervisor info
-
-if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-  ADDON_STATE="$(ha addons info "$ADDON_ID" --raw-json 2>/dev/null | jq -r '.data.state // "unknown"' || echo "unknown")"
-  if [ "$ADDON_STATE" = "started" ]; then
-    log_info "Stopping $ADDON_ID"
-    run_quiet ha addons stop "$ADDON_ID"
-  fi
-fi
-
-log_info "Replacing local add-on files at $REMOTE_ADDON_DIR"
-rm -rf "$REMOTE_ADDON_DIR"
-mkdir -p "$REMOTE_ADDONS_DIR"
-tar -xzf "$REMOTE_TAR" -C "$REMOTE_ADDONS_DIR"
-rm -f "$REMOTE_TAR"
-
-log_info "Reloading add-ons"
-run_quiet ha addons reload
-sleep 2
-
-if ha addons info "$ADDON_ID" >/dev/null 2>&1; then
-  log_info "Rebuilding $ADDON_ID"
-  if ! run_quiet ha addons rebuild "$ADDON_ID"; then
-    log_info "Rebuild failed; trying install"
-    run_quiet ha addons install "$ADDON_ID"
-  fi
-else
-  log_info "Installing $ADDON_ID"
-  run_quiet ha addons install "$ADDON_ID"
-fi
-
-log_info "Starting $ADDON_ID"
-run_quiet ha addons start "$ADDON_ID"
-sleep 3
-
-if ha addons info "$ADDON_ID" --raw-json | jq -e '.data.state == "started"' >/dev/null; then
-  log_info "$ADDON_ID is started"
-else
-  log_error "$ADDON_ID did not reach started state"
-  ha addons logs "$ADDON_ID" --lines 80 >&2 || true
-  exit 1
-fi
-"""
-
-        run_cmd(["ssh", "-p", str(ha_port), f"{ha_user}@{ha_host}", remote_script], verbose=verbose)
-        console.print(f"[green]Deployed[/green] {addon_id} to {ha_host}")
-    except subprocess.CalledProcessError as e:
-        recent_logs = get_addon_logs(ha_host, ha_port, ha_user, addon_id, lines=20)
-        raise DeploymentError(
-            f"Failed to deploy external add-on {addon_id}",
-            error_type="EXTERNAL_ADDON_DEPLOY_FAILED",
-            context={
-                "addon_id": addon_id,
-                "host": ha_host,
-                "exit_code": e.returncode,
-                "recent_logs": recent_logs,
-            },
-            troubleshooting_steps=[
-                f"Check add-on logs: ssh -p {ha_port} {ha_user}@{ha_host} ha addons logs {addon_id}",
-                f"Check add-on info: ssh -p {ha_port} {ha_user}@{ha_host} ha addons info {addon_id}",
-                "Run the deploy again with --verbose",
-            ],
-        ) from e
+    archive = package_external_addon(app_dir, addon_dir, output_dir=output_dir, verbose=verbose)
+    deploy_artifact(
+        archive, slug, ha_host, ha_port, ha_user,
+        configure_watchdog=False, verbose=verbose,
+    )
 
 
 def package_external_to_temp(app_dir: str | Path, addon_dir: str | Path, verbose: bool = False) -> Path:

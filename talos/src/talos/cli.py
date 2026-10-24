@@ -130,7 +130,7 @@ def addon_deploy_external(
             dry_run=dry_run,
             verbose=verbose,
         )
-    except external_addon.DeploymentError as e:
+    except addon_builder.DeploymentError as e:
         e.display_error()
         raise click.ClickException("Deployment failed")
 

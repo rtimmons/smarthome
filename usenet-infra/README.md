@@ -28,12 +28,12 @@ change host trust policy. See [agent rules](AGENTS.md).
 Run from the repository root:
 
 ```sh
-just usenet-native-ownership-status
+just usenet native-ownership-status
 just usenet-discovery-health
 just usenet-cloud-health
 just usenet-qnap-health
-just usenet-filex-status
-just usenet-seerr-status
+just usenet filex-status
+just usenet seerr-status
 just native-list
 just native-status
 ```

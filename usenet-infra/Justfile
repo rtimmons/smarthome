@@ -1,17 +1,19 @@
 set dotenv-load
 
+ansible := "uv run --with ansible-core==2.21.4"
+
 default:
 	@just --list
 
 # Preview first; apply only reviewed settings, never media/recovery actions.
 [group: 'setup']
 configure-seerr-safety apply="false": ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook seerr-safety.yml -e seerr_safety_apply={{apply}}
+	cd ansible && {{ansible}} ansible-playbook seerr-safety.yml -e seerr_safety_apply={{apply}}
 
 # A fresh private lab is required; reruns retain evidence and fail closed.
 [group: 'validation']
 cleanuparr-replay: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook cleanuparr-replay.yml
+	cd ansible && {{ansible}} ansible-playbook cleanuparr-replay.yml
 
 [group: 'health']
 recyclarr-preview:
@@ -29,27 +31,14 @@ test: ansible-setup
 	python3 -c 'import json; json.load(open("config/catalog.schema.json")); json.load(open("config/examples/catalog-item.json"))'
 	shellcheck compose/qnap/catalog-run scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/filex-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
 	@python3 -c 'from pathlib import Path; import yaml; [list(yaml.compose_all(p.read_text())) for root in ("ansible", "compose") for p in Path(root).rglob("*") if p.suffix in (".yml", ".yaml") and p.is_file() and not p.is_symlink() and ".collections" not in p.parts]'
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml site.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml backup.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-lan-ui.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml discovery.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml dashboard-refresh.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml scheduled-backups.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-backups.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cloud-library.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-remote-media.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml native-cutover.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml sab-buffered.yml -e sab_buffered_action=build --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr-recovery.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr-sync.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml seerr-safety.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml cleanuparr-replay.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml filex-backups.yml --syntax-check
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml restore-storage.yml --syntax-check
+	cd ansible && {{ansible}} ansible-playbook -i inventory.example.yml --syntax-check \
+	    site.yml backup.yml cloud-lan-ui.yml discovery.yml \
+	    dashboard-refresh.yml scheduled-backups.yml qnap-backups.yml cloud-library.yml \
+	    qnap-remote-media.yml native-cutover.yml filex.yml seerr.yml \
+	    seerr-recovery.yml seerr-sync.yml seerr-safety.yml cleanuparr-replay.yml \
+	    filex-backups.yml restore-storage.yml qnap-wiki.yml
+	cd ansible && {{ansible}} ansible-playbook -i inventory.example.yml sab-buffered.yml -e sab_buffered_action=build --syntax-check
 	shellcheck config/arr-shared-library-init
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook -i inventory.example.yml qnap-wiki.yml --syntax-check
 	./scripts/secret-scan
 
 # Install only report-only recovery and the scoped Home Assistant notification package.
@@ -65,7 +54,7 @@ _deploy-seerr-recovery:
 	just --justfile ../new-hass-configs/Justfile --working-directory ../new-hass-configs home-assistant-build
 	python3 scripts/seerr-recovery-ha.py
 	cd ansible
-	uv run --with 'ansible-core==2.21.4' ansible-playbook seerr-recovery.yml
+	{{ansible}} ansible-playbook seerr-recovery.yml
 
 [group: 'health']
 seerr-recovery-status:
@@ -79,12 +68,12 @@ seerr-recovery-run:
 # Repair only Seerr's exact-host Plex route and read-only sync health checks.
 [group: 'setup']
 configure-seerr-sync: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-seerr-sync -- uv run --with 'ansible-core==2.21.4' ansible-playbook seerr-sync.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-seerr-sync -- {{ansible}} ansible-playbook seerr-sync.yml
 
 # Add the private browsing/request portal with native Arr ownership.
 [group: 'setup']
 configure-seerr: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-seerr -- uv run --with 'ansible-core==2.21.4' ansible-playbook seerr.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-seerr -- {{ansible}} ansible-playbook seerr.yml
 
 [group: 'health']
 seerr-status:
@@ -183,7 +172,7 @@ cloud-health:
 # Deploy only the isolated portal with its reviewed private configuration.
 [group: 'setup']
 configure-filex: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-filex -- uv run --with 'ansible-core==2.21.4' ansible-playbook filex.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-filex -- {{ansible}} ansible-playbook filex.yml
 
 # Read service state without exposing storage credentials or media names.
 [group: 'health']
@@ -211,25 +200,25 @@ native-ownership-status:
 # Refresh native health helpers and verify the restored ownership policy.
 [group: 'setup']
 configure-native-ownership: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- {{ansible}} ansible-playbook native-cutover.yml
 
 # Enable concurrent downloads and four-file PAR verification between processing jobs.
 [group: 'setup']
 configure-post-processing: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml -e native_configure_processing=true
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- {{ansible}} ansible-playbook native-cutover.yml -e native_configure_processing=true
 
 [group: 'setup']
 configure-failed-downloads: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- uv run --with 'ansible-core==2.21.4' ansible-playbook native-cutover.yml -e native_configure_failed_downloads=true
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- {{ansible}} ansible-playbook native-cutover.yml -e native_configure_failed_downloads=true
 
 # Build and test without restarting production services.
 [group: 'setup']
 sab-buffered-build: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook sab-buffered.yml -e sab_buffered_action=build
+	cd ansible && {{ansible}} ansible-playbook sab-buffered.yml -e sab_buffered_action=build
 
 [group: 'setup']
 sab-buffered-deploy: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-sab-buffered -- uv run --with 'ansible-core==2.21.4' ansible-playbook sab-buffered.yml -e sab_buffered_action=deploy
+	cd ansible && ../../wiki/run with-deployment --scope media-sab-buffered -- {{ansible}} ansible-playbook sab-buffered.yml -e sab_buffered_action=deploy
 
 [group: 'setup']
 sab-buffered-rollback:
@@ -246,7 +235,7 @@ sab-buffered-verify-import:
 # Install and verify the selected Radarr/Sonarr integration.
 [group: 'setup']
 configure-discovery: age-bootstrap ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-discovery -- uv run --with 'ansible-core==2.21.4' ansible-playbook discovery.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-discovery -- {{ansible}} ansible-playbook discovery.yml
 
 # Read back all acquisition controls without searching or downloading.
 [group: 'health']
@@ -314,17 +303,17 @@ terraform-plan:
 # Install the pinned Ansible collections into the ignored local directory.
 [group: 'ansible']
 ansible-setup:
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-galaxy collection install -r requirements.yml -p .collections
+	cd ansible && {{ansible}} ansible-galaxy collection install -r requirements.yml -p .collections
 
 # Apply host configuration after inventory and secret files exist.
 [group: 'ansible']
 configure-cloud: age-bootstrap ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-cloud -- uv run --with 'ansible-core==2.21.4' ansible-playbook cloud.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-cloud -- {{ansible}} ansible-playbook cloud.yml
 
 # Configure the scoped UniFi VPN and authenticated cloud UI proxy.
 [group: 'ansible']
 configure-cloud-lan-ui: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-cloud-lan-ui -- uv run --with 'ansible-core==2.21.4' ansible-playbook cloud-lan-ui.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-cloud-lan-ui -- {{ansible}} ansible-playbook cloud-lan-ui.yml
 
 # Check WAN inputs and live source restrictions without changing them.
 [group: 'network']
@@ -417,7 +406,7 @@ recovery-drill *args:
 # Install only backup support; does not restart or reconfigure applications.
 [group: 'ansible']
 configure-backup: age-bootstrap ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-backup -- uv run --with 'ansible-core==2.21.4' ansible-playbook backup.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-backup -- {{ansible}} ansible-playbook backup.yml
 
 # Capture on the cloud, encrypt there, transfer, decrypt and verify locally.
 [group: 'backup']
@@ -475,7 +464,7 @@ backup-restore archive destination: age-bootstrap
 
 [group: 'ansible']
 configure-qnap: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-qnap -- uv run --with 'ansible-core==2.21.4' ansible-playbook qnap.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-qnap -- {{ansible}} ansible-playbook qnap.yml
 
 # Publish only the static private wiki with retained-release rollback.
 [group: 'ansible']
@@ -484,21 +473,21 @@ wiki-deploy: ansible-setup
 
 [private]
 wiki-publish vars: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-wiki.yml --extra-vars @{{quote(vars)}}
+	cd ansible && {{ansible}} ansible-playbook qnap-wiki.yml --extra-vars @{{quote(vars)}}
 
 [group: 'setup']
 wiki-rollback: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-wiki.yml --extra-vars '{"qnap_wiki_action":"rollback"}'
+	cd ansible && {{ansible}} ansible-playbook qnap-wiki.yml --extra-vars '{"qnap_wiki_action":"rollback"}'
 
 # Capture root-owned Filex state as ciphertext for the scheduled cloud backup.
 [group: 'backup']
 configure-filex-backups: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-filex-backups -- uv run --with 'ansible-core==2.21.4' ansible-playbook filex-backups.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-filex-backups -- {{ansible}} ansible-playbook filex-backups.yml
 
 # Host-owned daily encrypted backups with hourly retry; no Mac scheduler required.
 [group: 'backup']
 configure-scheduled-backups: age-bootstrap ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-scheduled-backups -- uv run --with 'ansible-core==2.21.4' ansible-playbook scheduled-backups.yml qnap-backups.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-scheduled-backups -- {{ansible}} ansible-playbook scheduled-backups.yml qnap-backups.yml
 
 # Preserve ignored/local work in an additive encrypted NAS snapshot.
 [group: 'backup']
@@ -511,7 +500,7 @@ checkout-backup *args:
 # Mount remote media read-only for the existing QNAP Plex server.
 [group: 'setup']
 configure-remote-media: ansible-setup
-	cd ansible && ../../wiki/run with-deployment --scope media-remote-media -- uv run --with 'ansible-core==2.21.4' ansible-playbook qnap-remote-media.yml
+	cd ansible && ../../wiki/run with-deployment --scope media-remote-media -- {{ansible}} ansible-playbook qnap-remote-media.yml
 
 # Open the bounded Filex operator route through encrypted SSH; no CA install.
 [group: 'operations']
@@ -521,7 +510,7 @@ filex-ui:
 # Restore current mount definitions from an existing, verified volume identity.
 [group: 'recovery']
 restore-storage: ansible-setup
-	cd ansible && uv run --with 'ansible-core==2.21.4' ansible-playbook restore-storage.yml
+	cd ansible && {{ansible}} ansible-playbook restore-storage.yml
 
 # DNS deployment is intentionally independent of wiki/service publication.
 [group: 'network']

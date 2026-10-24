@@ -44,9 +44,9 @@ No media storage is mounted into Seerr. The service runs as the existing
 unprivileged identity with a read-only image and bounded temporary/cache space.
 
 ```sh
-just usenet-configure-seerr
-just usenet-seerr-status
-just usenet-native-ownership-status
+just usenet configure-seerr
+just usenet seerr-status
+just usenet native-ownership-status
 ```
 
 Bootstrap privately derives the existing owner token from Plex preferences;
@@ -111,8 +111,8 @@ It refuses unrelated exact-host routes and leaves the default route unchanged.
 Existing firewall rules still require IPsec and approved ports. The address
 service restores this route on boot; normal VPN and Seerr deployments reconcile it.
 
-`just usenet-configure-seerr-sync` installs that repair and read-only checks
-without restarting Plex, Seerr, SAB or Arr. `just usenet-seerr-status` now checks
+`just usenet configure-seerr-sync` installs that repair and read-only checks
+without restarting Plex, Seerr, SAB or Arr. `just usenet seerr-status` now checks
 an ordinary connection against Plex's saved server identity. The report-only
 recovery monitor also alerts and holds proposals if any selected general
 library's Seerr scan timestamp is missing or more than 20 minutes old. The

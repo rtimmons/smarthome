@@ -799,6 +799,7 @@ def render_remote_deploy_script(
     health_port: int | None = None,
     health_path: str | None = None,
     disabled: bool = False,
+    configure_watchdog: bool = True,
 ) -> str:
     verbose_flag = "true" if verbose else "false"
     health_port_value = shlex.quote(str(health_port)) if health_port is not None else "''"
@@ -1021,7 +1022,7 @@ fi
 
 log_info "Configuring add-on options..."
 SUPERVISOR_TOKEN="${{SUPERVISOR_TOKEN:-}}"
-if [ -n "$SUPERVISOR_TOKEN" ]; then
+if [ "{"true" if configure_watchdog else "false"}" = "true" ] && [ -n "$SUPERVISOR_TOKEN" ]; then
     OPTIONS_JSON='{{"watchdog": true}}'
     if ! run_metric "remote.configure" curl -sSf \\
         -o /dev/null \\
@@ -1099,6 +1100,114 @@ def _record_remote_metrics(output: str, addon_key: str, timer: DeployTimer) -> s
     return "\n".join(visible_lines)
 
 
+def deploy_artifact(
+    archive: Path, slug: str, ha_host: str, ha_port: int, ha_user: str, *,
+    addon_key: str | None = None, remote_home: str = "/tmp",
+    remote_addons_dir: str = "/addons", port: int | None = None,
+    health_path: str | None = None, disabled: bool = False,
+    configure_watchdog: bool = True, verbose: bool = False,
+    show_success: bool = True, timer: DeployTimer | None = None,
+) -> None:
+    """Upload and deploy either kind of packaged HA add-on through one engine."""
+    addon_key = addon_key or slug
+    timer = timer or DeployTimer(console, enabled=False)
+    remote_tar = f"{remote_home}/{slug}.tar.gz"
+    remote_addon_dir = f"{remote_addons_dir}/{slug}"
+
+    if verbose:
+        console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
+
+    # Upload addon tarball
+    scp_cmd = [
+        "scp", *scp_transport_args(ha_port), str(archive),
+        f"{ha_user}@{ha_host}:{remote_tar}",
+    ]
+    try:
+        with timer.phase("addon.upload", addon=addon_key):
+            run_cmd(scp_cmd, verbose=verbose)
+        if verbose:
+            console.print(f"  ✓ Uploaded {addon_key} tarball")
+    except subprocess.CalledProcessError as e:
+        raise DeploymentError(
+            f"Failed to upload {addon_key} to {ha_host}",
+            error_type="UPLOAD_FAILED",
+            context={
+                "addon": addon_key,
+                "host": ha_host,
+                "exit_code": e.returncode
+            },
+            troubleshooting_steps=[
+                f"Check SSH connectivity: {ssh_command(ha_host, ha_port, ha_user)}",
+                "Verify disk space on target system",
+                "Check file permissions"
+            ]
+        )
+
+    remote_script = render_remote_deploy_script(
+        slug=slug,
+        remote_tar=remote_tar,
+        remote_addon_dir=remote_addon_dir,
+        remote_addons_dir=remote_addons_dir,
+        verbose=verbose,
+        health_port=port,
+        health_path=health_path,
+        disabled=disabled,
+        configure_watchdog=configure_watchdog,
+    )
+
+    # Execute remote deployment script
+    ssh_cmd = [
+        "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}", remote_script,
+    ]
+    try:
+        with timer.phase("addon.remote_deploy", addon=addon_key):
+            remote_result = run_cmd(
+                ssh_cmd,
+                verbose=verbose,
+                capture_output=True,
+                report_failure=False,
+            )
+        visible_output = _record_remote_metrics(
+            remote_result.stdout or "", addon_key, timer
+        )
+        if verbose and visible_output:
+            console.print(visible_output, markup=False)
+        if verbose and remote_result.stderr:
+            console.print(remote_result.stderr.rstrip(), style="dim", markup=False)
+        if verbose:
+            console.print(f"  ✅ [green]{addon_key} deployed successfully[/green]")
+    except subprocess.CalledProcessError as e:
+        _record_remote_metrics(e.stdout or "", addon_key, timer)
+        # Capture logs for troubleshooting
+        with timer.phase("addon.fetch_logs", addon=addon_key):
+            addon_logs = get_addon_logs(ha_host, ha_port, ha_user, f"local_{slug}", lines=20)
+
+        raise DeploymentError(
+            f"Failed to deploy {addon_key} on remote system",
+            error_type="REMOTE_DEPLOYMENT_FAILED",
+            context={
+                "addon": addon_key,
+                "host": ha_host,
+                "exit_code": e.returncode,
+                "recent_logs": addon_logs
+            },
+            troubleshooting_steps=[
+                f"Check add-on logs: ha addons logs local_{slug}",
+                f"Check add-on info: ha addons info local_{slug}",
+                "Check supervisor logs: ha supervisor logs",
+                "Rebuild the packaged add-on and retry deployment",
+                "Check Home Assistant system health"
+            ]
+        )
+
+    # Always show deployment success, but with different detail levels
+    if show_success:
+        if verbose:
+            console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
+        else:
+            console.print(f"✅ [green]{addon_key} deployed successfully[/green]")
+
+
 def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_run: bool,
                  verbose: bool = False, validate_prereqs: bool = True, show_success: bool = True,
                  timer: DeployTimer | None = None) -> None:
@@ -1150,101 +1259,14 @@ def deploy_addon(addon_key: str, ha_host: str, ha_port: int, ha_user: str, dry_r
         with timer.phase("addon.build", addon=addon_key):
             archive = build_addon(addon_key, verbose=verbose, timer=timer)
 
-        remote_tar = f"{paths['remote_home']}/{slug}.tar.gz"
-        remote_addon_dir = f"{paths['remote_addons']}/{slug}"
-
-        if verbose:
-            console.print(f"📦 [bold]Deploying {addon_key} to {ha_host}...[/bold]")
-
-        # Upload addon tarball
-        scp_cmd = [
-            "scp", *scp_transport_args(ha_port), str(archive),
-            f"{ha_user}@{ha_host}:{remote_tar}",
-        ]
-        try:
-            with timer.phase("addon.upload", addon=addon_key):
-                run_cmd(scp_cmd, dry_run=dry_run, verbose=verbose)
-            if verbose:
-                console.print(f"  ✓ Uploaded {addon_key} tarball")
-        except subprocess.CalledProcessError as e:
-            raise DeploymentError(
-                f"Failed to upload {addon_key} to {ha_host}",
-                error_type="UPLOAD_FAILED",
-                context={
-                    "addon": addon_key,
-                    "host": ha_host,
-                    "exit_code": e.returncode
-                },
-                troubleshooting_steps=[
-                    f"Check SSH connectivity: {ssh_command(ha_host, ha_port, ha_user)}",
-                    "Verify disk space on target system",
-                    "Check file permissions"
-                ]
-            )
-
-        remote_script = render_remote_deploy_script(
-            slug=slug,
-            remote_tar=remote_tar,
-            remote_addon_dir=remote_addon_dir,
-            remote_addons_dir=paths["remote_addons"],
-            verbose=verbose,
-            health_port=port,
+        deploy_artifact(
+            archive, slug, ha_host, ha_port, ha_user,
+            addon_key=addon_key, remote_home=paths["remote_home"],
+            remote_addons_dir=paths["remote_addons"], port=port,
             health_path=addon.get("deploy_health_path"),
-            disabled=addon.get("disabled", False),
+            disabled=addon.get("disabled", False), verbose=verbose,
+            show_success=show_success, timer=timer,
         )
-
-        # Execute remote deployment script
-        ssh_cmd = [
-            "ssh", *ssh_transport_args(ha_port), f"{ha_user}@{ha_host}", remote_script,
-        ]
-        try:
-            with timer.phase("addon.remote_deploy", addon=addon_key):
-                remote_result = run_cmd(
-                    ssh_cmd,
-                    dry_run=dry_run,
-                    verbose=verbose,
-                    capture_output=True,
-                    report_failure=False,
-                )
-            visible_output = _record_remote_metrics(
-                remote_result.stdout or "", addon_key, timer
-            )
-            if verbose and visible_output:
-                console.print(visible_output, markup=False)
-            if verbose and remote_result.stderr:
-                console.print(remote_result.stderr.rstrip(), style="dim", markup=False)
-            if not dry_run and verbose:
-                console.print(f"  ✅ [green]{addon_key} deployed successfully[/green]")
-        except subprocess.CalledProcessError as e:
-            _record_remote_metrics(e.stdout or "", addon_key, timer)
-            # Capture logs for troubleshooting
-            with timer.phase("addon.fetch_logs", addon=addon_key):
-                addon_logs = get_addon_logs(ha_host, ha_port, ha_user, f"local_{slug}", lines=20)
-
-            raise DeploymentError(
-                f"Failed to deploy {addon_key} on remote system",
-                error_type="REMOTE_DEPLOYMENT_FAILED",
-                context={
-                    "addon": addon_key,
-                    "host": ha_host,
-                    "exit_code": e.returncode,
-                    "recent_logs": addon_logs
-                },
-                troubleshooting_steps=[
-                    f"Check add-on logs: ha addons logs local_{slug}",
-                    f"Check add-on info: ha addons info local_{slug}",
-                    "Check supervisor logs: ha supervisor logs",
-                    f"Rebuild add-on: just ha-addon {addon_key}",
-                    "Check Home Assistant system health"
-                ]
-            )
-
-        # Always show deployment success, but with different detail levels
-        if show_success:
-            if verbose:
-                console.print(f"✅ [green]Successfully deployed {addon_key} to {ha_host}[/green]")
-            else:
-                console.print(f"✅ [green]{addon_key} deployed successfully[/green]")
 
     except DeploymentError:
         # Re-raise deployment errors to preserve context

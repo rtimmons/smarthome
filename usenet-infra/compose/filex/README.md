@@ -1,7 +1,7 @@
 # filex deployment boundary
 
 An isolated read-only pilot, deployed only by `ansible/filex.yml` through
-`just usenet-configure-filex`. It is absent from normal cloud startup.
+`just usenet configure-filex`. It is absent from normal cloud startup.
 
 The image is pinned to a reviewed version **and digest**. It starts directly as
 its dedicated non-root identity with all capabilities dropped. Host-prepared
@@ -24,6 +24,6 @@ pilot therefore relies on kernel/server restrictions and does not enable write,
 delete or move. These are documented acceptance gaps, not accepted substitutes
 for the plan's verification and deletion rules.
 
-Use `just usenet-filex-disable` to stop/disable only this portal. Preserve
+Use `just usenet filex-disable` to stop/disable only this portal. Preserve
 `/srv/usenet-filex/data`, its configuration and staging during review; rollback
 must consider database compatibility as well as the image pin.
