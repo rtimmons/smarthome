@@ -3,7 +3,7 @@ tmp_dir := "/tmp/new-hass-configs"
 ha_container := "homeassistant"
 backup_dir := "backups"
 rsync_protect_filters := "--filter='protect .storage/***' --filter='protect .cloud/***' --filter='protect .cache/***' --filter='protect .ssh/***' --filter='protect ssh/***' --filter='protect ssl/***' --filter='protect addons/***' --filter='protect addon_configs/***' --filter='protect share/***' --filter='protect media/***' --filter='protect www/***' --filter='protect custom_components/***' --filter='protect deps/***' --filter='protect tts/***' --filter='protect esphome/***' --filter='protect backups/***' --filter='protect .recovery-*/***' --filter='protect blueprints/template/***'"
-local_repo_excludes := "--exclude 'config-generator/***' --exclude 'backups/***' --exclude 'inventory_snapshots/***'"
+local_repo_excludes := "--exclude 'build/***' --exclude 'config-generator/***' --exclude 'backups/***' --exclude 'inventory_snapshots/***'"
 ha_ssh_identity := justfile_directory() + "/../.ssh/id_ed25519_codex_smarthome"
 ha_ssh_command := "ssh -i " + ha_ssh_identity + " -o IdentitiesOnly=yes -p 22"
 
@@ -142,6 +142,7 @@ fetch: preflight
 		--filter='protect backups/' \
 		--filter='protect inventory_snapshots/***' \
 		--filter='protect .git/***' \
+		--exclude '/automations.yaml' \
 		--include '*/' \
 		--include '/light_profiles.csv' \
 		--include '*.yaml' \
@@ -164,14 +165,18 @@ fetch: preflight
 		-e "{{ha_ssh_command}}" \
 		root@homeassistant.local:/config/ .
 
+	@# Write through the external UI-state target even though rsync replaces files atomically.
+	rsync -av -e "{{ha_ssh_command}}" root@homeassistant.local:/config/automations.yaml "$(python3 -c 'from pathlib import Path; print(Path("automations.yaml").resolve())')"
+
 # Validate the current config on Home Assistant and show what would change (no apply).
 check: preflight
 	{{ha_ssh_command}} root@homeassistant.local "rm -rf \"{{tmp_dir}}\" && mkdir -p \"{{tmp_dir}}\""
-	rsync -av \
+	rsync -av --copy-links \
 		--delete \
 		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		{{local_repo_excludes}} \
+		--exclude 'secrets.yaml' \
 		--include '*/' \
 		--include '/light_profiles.csv' \
 		--include '*.yaml' \
@@ -183,7 +188,6 @@ check: preflight
 		--exclude '.storage/' \
 		--exclude 'deps/' \
 		--exclude 'tts/' \
-		--exclude 'secrets.yaml' \
 		--exclude '*.db*' \
 		--exclude '*.log' \
 		--exclude '*.pickle' \
@@ -202,6 +206,7 @@ check: preflight
 		rsync -a --delete /config/ \"\${backup_dir}\"/  && \
 		rsync -av --delete --prune-empty-dirs \
 			{{rsync_protect_filters}} \
+			--exclude 'secrets.yaml' \
 			--include '*/' \
 			--include '/light_profiles.csv' \
 			--include '*.yaml' \
@@ -213,7 +218,6 @@ check: preflight
 			--exclude '.storage/' \
 			--exclude 'deps/' \
 			--exclude 'tts/' \
-			--exclude 'secrets.yaml' \
 			--exclude '*.db*' \
 			--exclude '*.log' \
 			--exclude '*.pickle' \
@@ -231,10 +235,11 @@ check: preflight
 			exit 1; \
 		fi"
 	echo "Diff against /config (dry-run):"
-	rsync -av --delete --itemize-changes --dry-run \
+	rsync -av --copy-links --delete --itemize-changes --dry-run \
 		{{rsync_protect_filters}} \
 		--prune-empty-dirs \
 		{{local_repo_excludes}} \
+		--exclude 'secrets.yaml' \
 		--include '*/' \
 		--include '/light_profiles.csv' \
 		--include '*.yaml' \
@@ -246,7 +251,6 @@ check: preflight
 		--exclude '.storage/' \
 		--exclude 'deps/' \
 		--exclude 'tts/' \
-		--exclude 'secrets.yaml' \
 		--exclude '*.db*' \
 		--exclude '*.log' \
 		--exclude '*.pickle' \

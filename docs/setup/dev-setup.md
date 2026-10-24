@@ -230,3 +230,8 @@ just kill
 This command scans every add-on port defined in `*/addon.yaml` files and terminates whatever is
 currently bound to them. Then re-run `just dev`. If you prefer to inspect manually, you can still use
 `lsof -i :<port>` and `kill <pid>`.
+
+## Disposable controller checkout
+
+After initial provisioning, follow [disposable checkout and recovery](disposable-checkout.md)
+for external credentials/state, encrypted recovery and `git clean -dfx && just deploy`.

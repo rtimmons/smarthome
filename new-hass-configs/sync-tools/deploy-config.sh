@@ -30,18 +30,13 @@ RSYNC_PROTECT_FILTERS=(
 )
 
 LOCAL_REPO_EXCLUDES=(
+  "--exclude=build/***"
   "--exclude=config-generator/***"
   "--exclude=backups/***"
   "--exclude=inventory_snapshots/***"
 )
 
 DEPLOY_FILTERS=(
-  "--include=*/"
-  "--include=/light_profiles.csv"
-  "--include=*.yaml"
-  "--include=*.yml"
-  "--include=*.json"
-  "--include=*.sh"
   "--exclude=.git/"
   "--exclude=.cloud/"
   "--exclude=.storage/"
@@ -55,6 +50,12 @@ DEPLOY_FILTERS=(
   "--exclude=*~"
   "--exclude=*.pyc"
   "--exclude=__pycache__/"
+  "--include=*/"
+  "--include=/light_profiles.csv"
+  "--include=*.yaml"
+  "--include=*.yml"
+  "--include=*.json"
+  "--include=*.sh"
   "--exclude=*"
 )
 
@@ -89,7 +90,8 @@ require_tools() {
 }
 
 rsync_config() {
-  rsync "$@" \
+  # Upload configuration contents, never workstation-only link targets.
+  rsync --copy-links "$@" \
     "${RSYNC_PROTECT_FILTERS[@]}" \
     --prune-empty-dirs \
     "${LOCAL_REPO_EXCLUDES[@]}" \
@@ -108,11 +110,23 @@ precheck() {
   echo "Config deployment precheck passed"
 }
 
+compare_config() (
+  # macOS openrsync cannot checksum a dereferenced source symlink. Materialize
+  # only the filtered deployment files before comparing their actual contents.
+  cd "$CONFIG_DIR"
+  umask 077
+  local comparison_dir
+  comparison_dir="$(mktemp -d)"
+  trap 'rm -rf "$comparison_dir"' EXIT
+  rsync_config -a . "$comparison_dir/"
+  rsync_config -anic --delete -e "${HA_RSYNC_SHELL}" "$comparison_dir/" "$1"
+)
+
 needed() {
   cd "$CONFIG_DIR"
   local raw_changes
   raw_changes="$(run_metric "config.rsync_dry_run" \
-    rsync_config -anic --delete -e "${HA_RSYNC_SHELL}" . "${REMOTE}:${REMOTE_CONFIG}/")"
+    compare_config "${REMOTE}:${REMOTE_CONFIG}/")"
 
   if printf '%s\n' "$raw_changes" | awk 'NF && !($2 == "./" && substr($1, 1, 2) == ".d") && $1 !~ /^[.]f[.][.]t/ { found = 1 } END { exit found ? 0 : 1 }'; then
     printf 'true\n'
@@ -175,4 +189,4 @@ main() {
   esac
 }
 
-main "$@"
+if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then main "$@"; fi

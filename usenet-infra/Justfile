@@ -1,4 +1,7 @@
 set dotenv-load
+# .env is a compatibility link created by just checkout-prepare.
+
+export ANSIBLE_INVENTORY := env_var_or_default("SMARTHOME_STATE_DIR", env_var("HOME") + "/.local/share/smarthome") + "/tree/usenet-infra/ansible/inventory.yml"
 
 ansible := "uv run --with ansible-core==2.21.4"
 

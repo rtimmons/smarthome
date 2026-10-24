@@ -23,4 +23,4 @@ set +a
 # Constrain newly created local artifacts even if the caller's shell is permissive.
 umask 077
 
-exec "${TERRAFORM_BIN:-terraform}" "$@"
+exec python3 "${project_root}/../tools/checkout/terraform.py" "$@"

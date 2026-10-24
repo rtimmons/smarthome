@@ -32,3 +32,19 @@ node-sonos-http-api/node-sonos-http-api/
 *.iws
 *.iml.bak
 *.idea_modules/
+
+# External-state compatibility links (directory-only rules do not ignore symlinks).
+/.agents/skills
+/.ssh
+/build
+/mongodb/data
+/new-hass-configs/backups
+/new-hass-configs/build
+/new-hass-configs/inventory_snapshots
+/node-sonos-http-api/node-sonos-http-api
+/printer/label-output
+/usenet-infra/ansible/files
+/usenet-infra/backups
+/usenet-infra/build
+/usenet-infra/config/runtime
+/usenet-infra/secrets

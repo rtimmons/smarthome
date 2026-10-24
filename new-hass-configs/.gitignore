@@ -10,10 +10,12 @@ device_inventory.json
 entity_inventory.json
 inventory_snapshots/
 
-# Merged output files (created from generated/ + manual/)
+# Merged/generated deployment output
 scenes.yaml
-automations.yaml
 scripts.yaml
+
+# Persistent UI-created automations: external state, never a rebuildable cache
+automations.yaml
 
 # Secrets (never commit)
 secrets.yaml

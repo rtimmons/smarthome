@@ -175,8 +175,10 @@ def main(argv=None) -> int:
     parser.add_argument('--offline', action='store_true', help='Use only verified releases already in ignored build/.')
     args = parser.parse_args(argv)
     try:
-        if not INSTALL_ROOT.resolve().is_relative_to(REPO_ROOT):
-            raise BootstrapError('SOPS installation must remain inside the repository build directory.')
+        external = Path(os.environ.get('SMARTHOME_STATE_DIR', Path.home() / '.local/share/smarthome')).expanduser().resolve()
+        expected = external / 'tree/build/tools' / INSTALL_ROOT.name
+        if not INSTALL_ROOT.resolve().is_relative_to(REPO_ROOT) and INSTALL_ROOT.resolve() != expected:
+            raise BootstrapError('SOPS installation must remain in the checkout or its configured external tool directory.')
         import json
         print(json.dumps({'binaries': bootstrap(offline=args.offline)}, indent=2, sort_keys=True))
         return 0

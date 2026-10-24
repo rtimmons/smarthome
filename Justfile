@@ -64,6 +64,20 @@ ha-ssh-key-copy: ha-ssh-key-create
 	ssh -i "${KEY_PATH}" -o IdentitiesOnly=yes -o BatchMode=yes "{{ha_ssh_target}}" exit
 	echo "Verified repository-local SSH authentication to {{ha_ssh_target}}."
 
+# Recreate compatibility links from owner-only state outside the checkout.
+[group: 'setup']
+checkout-prepare:
+	@python3 tools/checkout/state.py prepare
+
+[group: 'backup']
+[positional-arguments]
+checkout-state action="status" *args:
+	@python3 tools/checkout/state.py "$1" "${@:2}"
+
+[group: 'test']
+checkout-test:
+	@python3 -m unittest discover -s tools/checkout -p 'test_*.py'
+
 # Validate deployment prerequisites
 [group: 'validation']
 deploy-preflight:
@@ -78,6 +92,8 @@ deploy-preflight:
 		echo "Missing .python-version; cannot select Python runtime." >&2
 		exit 1
 	fi
+	# Rebuild the pinned Python runtime when necessary after a clean.
+	source "$REPO_ROOT/talos/scripts/python_use.sh"
 	# Ensure pyenv is available
 	if ! command -v pyenv >/dev/null 2>&1; then
 		echo "pyenv is required but not available. Run 'just setup' first." >&2
@@ -202,7 +218,7 @@ talos-deploy mode addon *args:
 
 # Deploy addons and Home Assistant configs
 [group: 'deploy']
-deploy addon="all" *args="":
+deploy addon="all" *args="": checkout-prepare
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
 	@./wiki/run with-deployment --scope home-assistant -- just talos-deploy normal "{{addon}}" {{args}}
@@ -210,7 +226,7 @@ deploy addon="all" *args="":
 
 # Deploy with verbose output for troubleshooting
 [group: 'deploy']
-deploy-verbose addon="all" *args="":
+deploy-verbose addon="all" *args="": checkout-prepare
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
 	@./wiki/run with-deployment --scope home-assistant -- just talos-deploy verbose "{{addon}}" {{args}}
@@ -218,7 +234,7 @@ deploy-verbose addon="all" *args="":
 
 # Dry run deployment to see what would be deployed
 [group: 'deploy']
-deploy-dry-run addon="all":
+deploy-dry-run addon="all": checkout-prepare
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
 	@echo "🔍 Dry run deployment preview..."
@@ -227,7 +243,7 @@ deploy-dry-run addon="all":
 
 # Detailed dry run with verbose output for troubleshooting
 [group: 'deploy']
-deploy-dry-run-verbose addon="all":
+deploy-dry-run-verbose addon="all": checkout-prepare
 	@just deploy-preflight >/dev/null 2>&1
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh >/dev/null 2>&1; fi
 	@echo "🔍 Detailed dry run deployment preview..."
@@ -242,6 +258,7 @@ deploy-dry-run-verbose addon="all":
 [group: 'test']
 test addon="all":
 		@just wiki-check
+		@just checkout-test
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
 		echo "⚡ Running fast tests (excluding slow integration tests)..."; \
@@ -630,6 +647,7 @@ wiki-model-export:
 	{{nvm_use}}
 	mkdir -p "{{repo_root}}/build/wiki"
 	cd "{{repo_root}}/new-hass-configs/config-generator"
+	if [ ! -f node_modules/.package-lock.json ] || [ package-lock.json -nt node_modules/.package-lock.json ]; then npm ci >&2; fi
 	npm run build >&2
 	node dist/wiki-export.js > "{{repo_root}}/build/wiki/model.json"
 

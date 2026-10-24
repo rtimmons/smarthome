@@ -264,7 +264,8 @@
         ".nvmrc",
         ".python-version",
         "wiki/areas.py",
-        "git-host/*"
+        "git-host/*",
+        "tools/checkout/*"
       ],
       "runbooks": [
         "docs/plan-hardening.md",
@@ -276,7 +277,8 @@
         "usenet-infra/docs/secrets-recovery.md",
         "usenet-infra/docs/filex-recovery.md",
         "docs/operations/wiki-audit.md",
-        "git-host/README.md"
+        "git-host/README.md",
+        "docs/setup/disposable-checkout.md"
       ]
     }
   ]

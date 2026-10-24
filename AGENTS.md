@@ -3,6 +3,12 @@
 Guidance for humans and agents working in this repository.
 
 ## Ground rules
+- Durable controller inputs now live outside Git at `~/.local/share/smarthome/tree/`.
+  Run `just checkout-prepare` on a fresh/clean checkout before standalone tools;
+  deployment does this automatically. Existing `.ssh/` and infrastructure paths
+  are compatibility links to those same dedicated keys, not new identities.
+  Preserve the separate master `~/.config/smarthome/recovery.agekey`; see
+  `docs/setup/disposable-checkout.md`. Never clean the external state directory.
 - Default to `just` recipes and the provided env wrappers (`.venv`, `nvm`) instead of ad-hoc commands.
 - You start in a sandbox; ask before taking the git lock (`git add`, etc.).
 - Agent commits must use the dedicated, Git-ignored SSH signing key `.ssh/id_ed25519_codex_git_signing`, never Ryan's personal signing identity or SSH agent. From the repository root, use `git -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen -c user.signingkey="$PWD/.ssh/id_ed25519_codex_git_signing" -c commit.gpgsign=true commit ...` (apply the same overrides to other operations that create signed commits). Preserve the user's normal Git configuration and author metadata. If this key is missing, create a dedicated Ed25519 signing key there; never fall back to a personal key or reuse infrastructure access keys. Keep its private key untracked.

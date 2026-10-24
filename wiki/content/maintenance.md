@@ -24,6 +24,17 @@ Room organization has separate, explicit maintenance commands: `just rooms-gener
 
 Open Home Assistant database containment, full recovery, deployment rollback, hardware and device-security checks are tracked in the [hardening checklist](../../docs/plan-hardening.md). Verified scoped backups and radio recovery do not establish a full-machine restore.
 
+## Disposable workstation checkout
+
+Durable controller credentials, recovery evidence and local database state live
+outside the repository. `just deploy` recreates compatibility links before
+rebuilding missing runtimes, so a provisioned controller can run
+`git clean -dfx && just deploy`. New source files must already be tracked.
+The [workstation recovery guide](../../docs/setup/disposable-checkout.md) explains
+the external state directory, separate age master for 1Password, authenticated
+restore drill and remaining controller prerequisites. The older SOPS recovery
+package stays unchanged. Preserve both recovery masters and their ciphertext.
+
 ## Keep explanations with changes
 
 Update the corresponding guide or runbook when behavior changes. The component catalog connects source files to their explanations. `just wiki-check` rejects unreviewed source fingerprints. After reviewing, record a specific explanation with `just wiki-review <component> '<reason>'`; a no-documentation-impact decision must explain why.

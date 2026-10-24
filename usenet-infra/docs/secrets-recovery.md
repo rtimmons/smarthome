@@ -1,5 +1,12 @@
 # Secrets and state recovery
 
+Current controller inputs are managed outside the checkout by the additive
+[disposable-checkout workflow](../../docs/setup/disposable-checkout.md). Its new
+age snapshot/master does not replace this historical SOPS vault or its bound
+inventory. The original metadata checker deliberately rejects the compatibility
+symlinks; use `just checkout-state status` for the new layout, and restore historical
+packages only into separate destinations.
+
 The committed SOPS vault restores the small secrets/configuration inputs. The
 native-age recovery package preserves both Terraform states and all retained
 archives. The user selected the QNAP as the off-checkout ciphertext store and
