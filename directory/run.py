@@ -82,6 +82,11 @@ if activation.exists():
     from directory_state import recover_checkpoint
     recover_checkpoint()
     shutil.copyfile('/data/private/krb5.conf', '/etc/krb5.conf')
+    # Docker recreates this container-local file. AD must resolve its own zone
+    # through Samba after every rebuild, independent of Supervisor DNS policy.
+    # This changes only the isolated directory namespace, never the HA host.
+    Path('/etc/resolv.conf').write_text(
+        'nameserver 127.0.0.1\nsearch ad.home.arpa\noptions timeout:2 attempts:2\n')
     children.append(subprocess.Popen(['/usr/sbin/samba', '--foreground', '--no-process-group',
                                      '--configfile=/data/etc/smb.conf']))
     print('Preserved household directory started.', flush=True)

@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "870d3f3eaa54e50692b56903a517462e6ffe9c78566a9130eb18e365e6445f00",
-    "reason": "Record verified Forgejo account linking and fix the observed clean-deploy LDAP startup race with route health gating",
+    "fingerprint": "b78187fdea7d2f9b2965794a3580e074dac41fd9359e8baad75188caf06844e3",
+    "reason": "Restore the directory containers own DNS resolver at every startup after clean-deploy validation exposed regenerated Docker DNS settings",
     "reviewed_at": "2026-10-24"
   },
   "printing": {

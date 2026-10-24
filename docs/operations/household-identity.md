@@ -132,6 +132,9 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   and the directory route. Authelia now depends on the route, whose health check
   requires the production virtual address to answer LDAPS. The runtime retry
   loop remains enabled for HA boot ordering and temporary directory outages.
+  Recreated directory containers also restore their own resolver to Samba on
+  loopback, so AD hostname and Kerberos discovery survive Docker's regenerated
+  resolver file. The HA host and other apps retain their existing DNS settings.
 
 ## Recovery and operations
 
