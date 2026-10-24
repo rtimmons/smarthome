@@ -213,9 +213,7 @@
       "pages": [
         "wiki/content/network.md"
       ],
-      "addons": [
-        "home-proxy"
-      ],
+      "addons": ["home-proxy"],
       "watch": [
         "home-proxy/*",
         "network-infra/dns/*",
@@ -229,9 +227,9 @@
         "docs/operations/unifi-post-migration.md",
         "docs/operations/unifi-apple-tv-remote.md",
         "docs/operations/home-dns.md",
+        "docs/operations/service-hostnames.md",
         "network-infra/unifi-mcp/README.md",
-        "usenet-infra/docs/lan-ui.md",
-        "docs/operations/service-hostnames.md"
+        "usenet-infra/docs/lan-ui.md"
       ]
     },
     {
@@ -245,6 +243,9 @@
         "wiki/tool.py",
         "talos/src/talos/addon_builder.py",
         "talos/tests/test_addon_builder.py",
+        "talos/src/talos/addon_backup.py",
+        "talos/tests/test_addon_backup.py",
+        "talos/tests/test_addon_manifest.py",
         "wiki/components.json",
         "usenet-infra/wiki/Caddyfile",
         "usenet-infra/wiki/compose.yaml",
@@ -263,9 +264,6 @@
         ".nvmrc",
         ".python-version",
         "wiki/areas.py",
-        "talos/src/talos/addon_backup.py",
-        "talos/tests/test_addon_backup.py",
-        "talos/tests/test_addon_manifest.py",
         "git-host/*"
       ],
       "runbooks": [

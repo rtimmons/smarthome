@@ -6,7 +6,7 @@
   },
   "dashboard": {
     "fingerprint": "2a344a02157cb0adacdf229a9f01477d7aafb2bea0798518fe82fb864bc283b9",
-    "reason": "Reviewed friendly dashboard access and unchanged direct port-3000 and HA ingress recovery paths",
+    "reason": "Documented the explicit LAN HTTP dashboard URL and retained direct port-3000 and HA ingress recovery paths",
     "reviewed_at": "2026-10-24"
   },
   "home": {
@@ -25,7 +25,7 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "b3d34e2f2249eb7f0b03fa837e4d342e03688ede927b13c063758d8e369855d6",
+    "fingerprint": "30f00fbc9613b2a2322abd840fec9d898bb9c4762811c956f184fd4430fb683b",
     "reason": "Reviewed DNS reference inclusion of the canonical service-hostname runbook, nested headings and local runbook links; preserve dated acceptance separately from generated DNS policy",
     "reviewed_at": "2026-10-24"
   },
