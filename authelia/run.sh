@@ -15,7 +15,7 @@ if test -f /ssl/smarthome/authelia-seed/configuration.json; then
 fi
 test -s /config/configuration.json
 authelia validate-config --config /config/configuration.json
-# The directory is on a separate host and may boot later than HA. Retain all
+# The directory route may become ready later during HA boot. Retain all
 # startup checks, but recover when LDAP returns instead of exhausting Supervisor's
 # rapid restart limit and requiring a manual start.
 child=

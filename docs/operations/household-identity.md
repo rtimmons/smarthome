@@ -123,10 +123,15 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   login-page checks. Its exact private DNS alias passed the paired resolver and
   gateway transaction. The canonical HTTPS URL is deployed, and the old HTTP
   alias returns a verified 308 redirect;
-  OIDC account linking remains pending. The existing administrator is still
-  user ID 1, and a fresh pre-migration backup passed off-host verification.
-  Forgejo and Arr retain their existing authentication until each cutover is
-  verified.
+  OIDC account linking and a fresh sign-out/sign-in cycle passed. The existing
+  administrator remains user ID 1 with its original repository and SSH key.
+  A post-link backup passed off-host download, SQLite integrity and Git-object
+  verification; its restored database contains one explicit OIDC link to ID 1.
+  Forgejo retains local recovery login. Arr still uses its existing authentication.
+* The full clean-checkout deployment exposed a startup race between Authelia
+  and the directory route. Authelia now depends on the route, whose health check
+  requires the production virtual address to answer LDAPS. The runtime retry
+  loop remains enabled for HA boot ordering and temporary directory outages.
 
 ## Recovery and operations
 

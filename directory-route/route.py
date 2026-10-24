@@ -7,6 +7,7 @@ from pathlib import Path
 import signal
 import socket
 import subprocess
+import sys
 import time
 
 import paramiko
@@ -136,6 +137,20 @@ def install(address, target, firewall):
     return owned
 
 
+def check_health(options=Path('/data/options.json')):
+    """Gate dependents on the routed LDAPS endpoint, not just a live process."""
+    address = approved_address(json.loads(options.read_text())['address'])
+    owned = json.loads(STATE.read_text())
+    if owned['address'] != address:
+        raise RuntimeError('Directory route has not reached the configured address')
+    target = approved_backend(owned['backend'])
+    # Preparation has only maintenance SSH; production must answer through the
+    # actual virtual address used by Authelia, after the route is installed.
+    endpoint = (address, 636) if address == '192.168.1.10' else (target, 22)
+    with socket.create_connection(endpoint, timeout=2):
+        pass
+
+
 def main():
     os.umask(0o077)
     public_path = Path('/data/ssh-host-key.pub')
@@ -175,4 +190,9 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    if sys.argv[1:] == ['--health']:
+        check_health()
+    elif len(sys.argv) == 1:
+        main()
+    else:
+        raise SystemExit('Unsupported directory route command')

@@ -7,6 +7,8 @@ copy:
   - run.sh
 homeassistant_min: "2024.6.0"
 startup: services
+depends_on:
+  - directory-route
 backup: cold
 ingress: false
 homeassistant_api: false

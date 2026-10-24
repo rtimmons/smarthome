@@ -2,8 +2,10 @@ import importlib.util
 from pathlib import Path
 import sys
 import types
+import json
+import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 # Plan and refusal tests need no live network or crypto dependency.
 sys.modules.setdefault('paramiko', types.ModuleType('paramiko'))
@@ -13,6 +15,24 @@ spec.loader.exec_module(route)
 
 
 class RouteTests(unittest.TestCase):
+    def test_production_readiness_requires_routed_ldaps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            options = Path(directory)/'options.json'
+            state = Path(directory)/'route-owner.json'
+            options.write_text(json.dumps({'address': '192.168.1.10'}))
+            state.write_text(json.dumps({'address': '192.168.1.10', 'backend': '172.30.33.14'}))
+            with patch.object(route, 'STATE', state), patch.object(route.socket, 'create_connection', return_value=MagicMock()) as connect:
+                route.check_health(options)
+                connect.assert_called_once_with(('192.168.1.10', 636), timeout=2)
+            with patch.object(route, 'STATE', state), patch.object(route.socket, 'create_connection', side_effect=OSError):
+                with self.assertRaises(OSError):
+                    route.check_health(options)
+            state.write_text(json.dumps({'address': '192.168.1.11', 'backend': '172.30.33.14'}))
+            with patch.object(route, 'STATE', state), patch.object(route.socket, 'create_connection') as connect:
+                with self.assertRaises(RuntimeError):
+                    route.check_health(options)
+                connect.assert_not_called()
+
     def test_address_scope_cannot_expand(self):
         for value in ('0.0.0.0/0', '192.168.1.163', '192.168.1.66', '192.168.1.1', '127.0.0.1'):
             with self.assertRaises(ValueError):

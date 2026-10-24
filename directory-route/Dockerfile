@@ -6,4 +6,5 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y --no-install-recommends python3 python3-paramiko iproute2 iptables iputils-arping tini \
     && rm -rf /var/lib/apt/lists/*
 COPY app/route.py /usr/local/libexec/directory-route.py
+HEALTHCHECK --interval=2s --timeout=4s --start-period=10s --retries=15 CMD ["python3", "/usr/local/libexec/directory-route.py", "--health"]
 ENTRYPOINT ["/usr/bin/tini", "--", "/usr/bin/python3", "/usr/local/libexec/directory-route.py"]

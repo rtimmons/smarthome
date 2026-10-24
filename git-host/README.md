@@ -15,10 +15,12 @@ requests are available. The RSA minimum is explicitly 2048 bits for the user's
 existing 1Password key; other key-size checks retain Forgejo defaults.
 The administrator is `ryan`, initially with the local-only
 placeholder email `ryan@home.invalid`; update it in account settings if desired.
-The household AD/Authelia rollout preserves this account and its user ID. The
-HTTPS route is preparation for OIDC; registration stays closed, and existing
-local authentication remains until the existing account is explicitly linked
-and browser sign-in is verified. See the
+The household AD/Authelia rollout preserves this account and its user ID.
+“Sign in with authelia” uses the linked `ryantimmons` AD identity with MFA and
+the `git-users` group. Explicit account linking and a fresh browser sign-in
+passed; registration stays closed and local recovery login remains available.
+The post-link encrypted backup restored the same user, repository, SSH key and
+one OIDC link. SSH Git access continues to use the existing SSH key. See the
 [identity rollout](../docs/operations/household-identity.md).
 
 From the repository root, run `just git-host status` to check service health.

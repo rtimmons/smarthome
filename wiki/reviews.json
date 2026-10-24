@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "13c88695301c894d757952a1acc935fdb0e5778b828f7e06f2e40d214e340286",
-    "reason": "Reviewed encrypted identity backups, verified MFA restore and native HA persistent state recovery",
+    "fingerprint": "790a46de3a55b31646d5a8eb49058e2b46a6606ebe457166245dab8330e6cd97",
+    "reason": "Record independently restored post-link Forgejo backup preserving account, repository and SSH identity",
     "reviewed_at": "2026-10-24"
   },
   "media": {
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "31f99af1666c81f09356445df8a418691750d223ab5da3215bbceb8f44733f49",
-    "reason": "Reviewed preserved AD identity, private DNS and deployed Forgejo HTTPS, MFA recovery and missing-secret renewal guard",
+    "fingerprint": "870d3f3eaa54e50692b56903a517462e6ffe9c78566a9130eb18e365e6445f00",
+    "reason": "Record verified Forgejo account linking and fix the observed clean-deploy LDAP startup race with route health gating",
     "reviewed_at": "2026-10-24"
   },
   "printing": {
