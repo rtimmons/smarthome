@@ -39,6 +39,7 @@ The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built fr
 *System maintenance, verification, and strategic planning*
 
 - [**plan-dashboard-upgrade.md**](plan-dashboard-upgrade.md) — Proposed compatibility-first upgrade plan for the iPad Grid Dashboard
+- [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — NAS storage/ACL inventory, writable Hetzner access, identity options and migration checklist
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
 - [**unifi-network-setup.md**](operations/unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
