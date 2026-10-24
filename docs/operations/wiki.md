@@ -58,6 +58,14 @@ automation modes without webhook IDs or action payloads. DNS records, resolvers
 and filter states come from `network-infra/dns/policy.json`; runtime versions come
 from the pinned version files. The coverage page lists ownership and review reasons.
 
+The DNS-policy reference also includes the canonical service-hostname runbook:
+explicit HTTP destinations, path handling, authentication boundaries, deferred
+services, recovery instructions and dated acceptance. Edit
+`docs/operations/service-hostnames.md` to maintain that explanation; the build
+includes it on the reference page and rewrites its links to local runbooks.
+DNS tables remain generated from policy, while acceptance retains its authored
+date and limits. A rebuild does not perform fresh service verification.
+
 Guide and imported-runbook contents participate in their owner’s fingerprint.
 The checker rejects duplicate ownership, unowned guides/add-ons, and watch patterns
 that match no files. It also validates rendered links, anchors and local assets.

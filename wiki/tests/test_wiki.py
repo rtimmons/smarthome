@@ -90,6 +90,13 @@ class ContentTests(unittest.TestCase):
             self.assertIn("light.fixture", scenes)
             self.assertIn("128", scenes)
             self.assertIn("fixture_excluded", scenes)
+            network = (stage / "reference/network.md").read_text()
+            self.assertIn("## HTTP service routing", network)
+            self.assertIn("### Explicit mappings", network)
+            self.assertIn("`moonfin.home.arpa`", network)
+            self.assertIn("`ha.home.arpa` remains deferred", network)
+            self.assertIn("../runbooks/docs/operations/home-dns.md", network)
+            self.assertIn("### October 24 rollout acceptance", network)
             runbooks = (stage / "runbooks/index.md").read_text()
             for source in tool.catalog()["imports"]:
                 self.assertIn(f"]({source})", runbooks)

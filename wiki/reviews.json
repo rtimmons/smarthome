@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "6bb31a4b5e5d7a9790b02db6195167b37376c9373fa07e69abda84dea05c882c",
-    "reason": "Reviewed Forgejo LAN hosting, approved RSA key policy, encrypted off-host backups and verified restore",
+    "fingerprint": "b3d34e2f2249eb7f0b03fa837e4d342e03688ede927b13c063758d8e369855d6",
+    "reason": "Reviewed DNS reference inclusion of the canonical service-hostname runbook, nested headings and local runbook links; preserve dated acceptance separately from generated DNS policy",
     "reviewed_at": "2026-10-24"
   },
   "media": {

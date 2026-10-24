@@ -228,7 +228,13 @@ def export_reference(stage, data, revision):
                     [[a["name"], "; ".join(a["triggers"]), "; ".join(a["actions"]),
                       "see source" if a["conditional"] else "none", a["mode"]] for a in model["controls"]]))
     policy = json.loads(safe_file("network-infra/dns/policy.json").read_text())
-    generated("network.md", "DNS policy", ["network-infra/dns/policy.json"],
+    service_source = "docs/operations/service-hostnames.md"
+    service_body = safe_file(service_source).read_text().split("\n", 1)[1].lstrip()
+    service_body = rewrite_links(service_body, service_source, "reference/network.md", data["imports"], revision)
+    # Include the canonical authored explanation and dated evidence without a
+    # second route inventory to maintain. Nest its sections under this page.
+    service_body = re.sub(r"^(#{2,5}) ", r"#\1 ", service_body, flags=re.M)
+    generated("network.md", "DNS policy", ["network-infra/dns/policy.json", service_source],
               "Client DHCP adoption and gateway migration remain dated operational decisions in the [network guide](../network.md). "
               "This policy does not establish which resolvers a client is using.\n\n" +
               table(["Setting", "Configured value"], [["Local zone", policy["zone"]], ["Resolvers", ", ".join(policy["resolvers"])],
@@ -236,6 +242,10 @@ def export_reference(stage, data, revision):
                     ["Gateway domain forwarding", policy["gateway_forwarding"]["zone"] + " → " + ", ".join(policy["gateway_forwarding"]["resolvers"])],
                     ["Duplicate native wiki A enabled", policy["gateway_forwarding"]["native_wiki_a_enabled"]],
                     ["Upstreams", ", ".join(policy["upstream_dns"])], ["Fallbacks", ", ".join(policy["fallback_dns"]) or "none"]]) +
+              "\n## HTTP service routing\n\n"
+              "The following explanation and dated acceptance come from the "
+              "[service hostname runbook](../runbooks/docs/operations/service-hostnames.md). "
+              "Rebuilding this page does not refresh those observations.\n\n" + service_body +
               "\n## Local records\n\n" + table(["Name", "Address"], sorted(policy["records"].items())) +
               "\n## Filter policy\n\n" + table(["Filter", "Enabled"], [[f["name"], f["enabled"]] for f in policy["filters"]]))
     reviews = json.loads(REVIEWS.read_text())
