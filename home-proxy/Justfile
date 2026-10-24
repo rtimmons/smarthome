@@ -1,0 +1,14 @@
+import "../talos/just/common.just"
+
+ha-addon: ensure-talos validate-addon
+    @{{talos_bin}} addon build home-proxy
+
+# Scope deployment to this add-on; no other add-ons or HA configuration reload.
+deploy: ensure-talos validate-addon
+    @{{talos_bin}} addon deploy home-proxy
+
+container-test: ha-addon
+    @echo "Caddy configuration is validated during the Supervisor image build."
+
+test: ha-addon
+    @echo "Add-on packaging passed; run the deployed HTTP acceptance checks before publishing DNS."

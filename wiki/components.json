@@ -213,8 +213,11 @@
       "pages": [
         "wiki/content/network.md"
       ],
-      "addons": [],
+      "addons": [
+        "home-proxy"
+      ],
       "watch": [
+        "home-proxy/*",
         "network-infra/dns/*",
         "network-infra/unifi-mcp/*",
         "usenet-infra/scripts/vpn-peer-check.py",
@@ -227,7 +230,8 @@
         "docs/operations/unifi-apple-tv-remote.md",
         "docs/operations/home-dns.md",
         "network-infra/unifi-mcp/README.md",
-        "usenet-infra/docs/lan-ui.md"
+        "usenet-infra/docs/lan-ui.md",
+        "docs/operations/service-hostnames.md"
       ]
     },
     {
@@ -258,7 +262,10 @@
         "wiki/uv.lock",
         ".nvmrc",
         ".python-version",
-        "wiki/areas.py"
+        "wiki/areas.py",
+        "talos/src/talos/addon_backup.py",
+        "talos/tests/test_addon_backup.py",
+        "talos/tests/test_addon_manifest.py"
       ],
       "runbooks": [
         "docs/plan-hardening.md",

@@ -10,6 +10,12 @@ Before changing a system, read its current runbook, inspect health, preserve unr
 
 Standard local add-on deployment detects the actual source mount in the SSH environment: `/local_apps` on current Home Assistant, or a mounted `/addons` on older versions. It refuses to stop or replace an add-on if neither mount is present. An ordinary leftover `/addons` directory is not a valid destination: uploading there can produce an apparently successful rebuild of old source. Verify served assets or behavior after deployment, in addition to service readiness.
 
+New local add-ons are registered with `ha store reload`. On the current CLI,
+`ha apps reload` only lists installed apps and does not discover new source.
+The [HTTP proxy](network.md#named-web-services) binds an explicit LAN address
+using host networking, so its acceptance checks target that address rather
+than the Supervisor's internal bridge address.
+
 Home Assistant configuration checks and deployments preserve remote-only backups, hidden recovery directories, and installed template blueprints during synchronization. These files may not exist in the checkout and must not be deleted just because they are absent locally.
 
 The configuration deployment also includes the root `light_profiles.csv`, which supplies the household's zero-second default light transition. It is an explicit deployment include; unrelated CSV files are not deployed.

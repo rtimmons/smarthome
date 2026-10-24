@@ -4,6 +4,12 @@ The [room and device catalog](wiki-reference:rooms) shows physical areas, Sonos 
 
 The Grid Dashboard is the household interface for room lighting, Sonos shortcuts, and the LED Grid Wall. Open it from Home Assistant’s sidebar so Home Assistant manages the session.
 
+On the Newark trusted LAN, you can also open
+[grid-dashboard.home.arpa](http://grid-dashboard.home.arpa/). The HTTP proxy
+keeps that address in the browser and forwards to the existing dashboard.
+[Direct host-and-port access](http://hass.home.arpa:3000/) remains available
+for recovery. See [network access](network.md#named-web-services).
+
 ## What happens when you press a control
 
 The browser talks to the Grid Dashboard server. Lighting requests go through Home Assistant and the generated fast-scene scripts. Sonos requests go through the separate Sonos API. The wall uses its dedicated LEDGrid endpoint at the reserved address `192.168.1.98:5000`.

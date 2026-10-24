@@ -249,6 +249,14 @@ def _health_command(repo_key: str, hostname: str) -> str:
     host = shlex.quote(hostname)
     if repo_key == "mongodb":
         return f"nc -z -w 5 {host} 27017"
+    if repo_key == "home-proxy":
+        # The SSH add-on is on the internal bridge, outside this listener's LAN
+        # allowlist. Verify its deliberate rejection instead of bypassing it.
+        return (
+            'test "$(curl --noproxy \'*\' -sS --max-time 5 -o /dev/null '
+            '-w \'%{http_code}\' -H \'Host: grid-dashboard.home.arpa\' '
+            'http://192.168.1.163:80/)" = 403'
+        )
     if repo_key == "printer":
         return (
             f"payload=\"$(curl -fsS --max-time 5 http://{host}:8099/health/mongo)\" && "

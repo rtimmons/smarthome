@@ -896,7 +896,7 @@ reload_addons() {{
     for attempt in $(seq 1 100); do
         if mkdir /tmp/talos-addon-reload.lock 2>/dev/null; then
             RELOAD_LOCK_HELD="true"
-            run_quiet ha apps reload
+            run_quiet ha store reload
             exit_code=$?
             rmdir /tmp/talos-addon-reload.lock 2>/dev/null || true
             RELOAD_LOCK_HELD="false"

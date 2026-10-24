@@ -371,6 +371,34 @@ auto_compose up -d --wait --wait-timeout 420 scanner
     auto_status()
 
 
+def set_record(name, address):
+    """Pause only discovery, transact against live inventory, and resume it."""
+    from manual import with_record
+    if not POLICY.get('automatic_discovery'):
+        raise ValueError('set-record requires the existing NAS automatic owner')
+    candidate_seed = with_record(POLICY, name, address)
+    transcript = PRIVATE / ('dns-manual-' + str(time.time_ns()) + '.log')
+    # The trap resumes discovery on failures too. The existing reconciler keeps
+    # a durable recovery journal if a paired write cannot be rolled back.
+    script = '''
+mkdir "$root/.automatic-deploy-lock"
+auto_compose() { "$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" "$@"; }
+test "$(auto_compose ps --format '{{.State}}' scanner)" = running || { rmdir "$root/.automatic-deploy-lock"; exit 1; }
+cleanup() { auto_compose start scanner; rmdir "$root/.automatic-deploy-lock"; }
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+auto_compose stop -t 10 scanner
+auto_compose run --rm -T --no-deps scanner python - NAME ADDRESS
+'''.replace('NAME ADDRESS', shlex.quote(name) + ' ' + shlex.quote(address))
+    print('Manual DNS transaction log: ' + str(transcript.relative_to(ROOT)), flush=True)
+    remote(script, (HERE / 'manual.py').read_bytes(), transcript=transcript)
+    # Retain only the explicit seed edit locally, never replay the old seed over
+    # the NAS's current learned records. The live update has already verified all
+    # names through both resolvers and the gateway over UDP and TCP.
+    (HERE / 'policy.json').write_text(json.dumps(candidate_seed, indent=2) + '\n')
+    print('Manual alias verified; discovery resumed; both resolvers stayed running.')
+
+
 def auto_status():
     value = remote('cat "$root/backups/automatic-state/health.json"')
     health = json.loads(value)
@@ -384,7 +412,9 @@ def auto_status():
 
 def main():
     global POLICY
-    p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary', 'discover', 'auto-deploy', 'auto-status', 'auto-stop'])
+    p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary', 'discover', 'auto-deploy', 'auto-status', 'auto-stop', 'set-record'])
+    p.add_argument('--name', help='Exact manual home.arpa alias for set-record')
+    p.add_argument('--address', help='Newark LAN IPv4 address for set-record')
     p.add_argument('--apply', action='store_true', help='Deploy discovered records; otherwise preview only')
     p.add_argument('--snapshot', type=Path)
     p.add_argument('--previous-policy', type=Path, help='Reviewed previous policy whose exact custom rules may be replaced')
@@ -393,7 +423,10 @@ def main():
     if args.apply and args.action != 'discover': p.error('--apply is only supported for discover')
     if args.resolver and args.action != 'check': p.error('--resolver is only supported for check')
     if args.previous_policy and args.action != 'deploy': p.error('--previous-policy is only supported for deploy')
-    if args.action == 'auto-deploy': auto_deploy()
+    if args.action == 'set-record':
+        if not args.name or not args.address: p.error('set-record requires --name and --address')
+        set_record(args.name, args.address)
+    elif args.action == 'auto-deploy': auto_deploy()
     elif args.action == 'auto-status': auto_status()
     elif args.action == 'auto-stop':
         remote('"$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" stop scanner')

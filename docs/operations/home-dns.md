@@ -114,7 +114,7 @@ same restoration. Do not stop an advertised resolver to clean up snapshots.
 NAS settings backups include secondary configuration/runtime and private primary
 policy snapshots, excluding query/statistics data. A complete HA primary restore
 also needs a native HA backup explicitly containing `a0d7b954_adguard`; the
-seven repository-add-on partial backup does not include it. Capture and verify
+repository-add-on partial backup does not include it. Capture and verify
 fresh configuration archives after accepted changes. Readback is not proof of
 a replacement-host restore.
 
@@ -255,3 +255,75 @@ Lehigh hostname and its removal through the automatic discovery workflow.
 Keep the superseded manual VPN peers paused and printer-network restrictions
 intact. Browser inspection was blocked by the locked Mac; the connected UniFi
 MCP controller currently exposes Newark only.
+
+## HTTP service pilot
+
+`grid-dashboard.home.arpa` is an explicit manual alias to `192.168.1.163`.
+The separate `home-proxy` Home Assistant add-on binds only that IPv4 address
+on port 80. Its Caddyfile accepts source addresses in `192.168.1.0/24`; the pilot
+route matches `grid-dashboard.home.arpa` and proxies to `http://hass.home.arpa:3000`.
+Other sources receive 403; unknown hostnames receive 404. Forwarded client-IP
+headers are not trusted for the source check. No wildcard DNS, HTTPS listener,
+WAN forwarding or service-name discovery is introduced. Cabin/VPN clients are
+outside this pilot's allowed subnet.
+
+The original `http://hass.home.arpa:3000/` and HA ingress are unchanged. The NAS
+wiki retains its separate static-only container and port-80 listener. No API
+credentials or Docker access are granted to the proxy. Caddy forwards ordinary
+HTTP and WebSocket upgrades; each future application's URL/redirect behavior
+still requires acceptance testing.
+
+Build and deploy only this proxy with:
+
+```sh
+just --justfile home-proxy/Justfile --working-directory home-proxy ha-addon
+just --justfile home-proxy/Justfile --working-directory home-proxy deploy
+```
+
+The image build validates Caddy configuration. The current HA CLI discovers
+new local add-ons through `ha store reload`; `ha apps reload` only lists apps.
+Before DNS publication, test the hostname route using curl `--resolve`, then
+check the normal URL, representative static assets, direct port-3000 access,
+unknown-host rejection, and a request from outside the permitted subnet.
+
+To add an explicit alias while preserving the current automatic inventory:
+
+```sh
+just usenet dns set-record --name grid-dashboard.home.arpa --address 192.168.1.163
+```
+
+This command pauses only the scanner, locks its worker state, recovers any known
+pending transaction, refuses unreviewed rule drift, and saves `manual-before-*.json` under
+its private state directory. It preserves all runtime learned records and
+updates both resolvers through the existing transactional reconciler. Every
+name, local negative and public control is checked over UDP/TCP through both
+resolvers and the gateway before accepting the generation. The scanner resumes
+on success or failure; neither resolver restarts. The explicit seed edit is
+saved locally only after remote success. A discovered name cannot be silently
+converted to a manual alias. Retain the transaction log under `build/wiki-private/`.
+
+Rollback can simply stop `local_home_proxy` through the HA add-on UI and use
+port 3000; a retained DNS alias then points at a closed port. To remove an alias,
+pause discovery and reconcile only that record against the current runtime
+policy and both rule lists, retaining learned names and pending recovery state.
+Do not restore the old seed or an entire older runtime policy over newer names.
+The proxy has no mutable application state: rebuild it from source after HA
+replacement. The repository add-on backup now includes it automatically; include
+it explicitly when manually selecting add-ons for native HA backups.
+
+October 24 HTTP acceptance: the proxy returned 200 for dashboard HTML, all 25
+referenced CSS/JavaScript assets and a read-only thermostat request. HTML and
+static asset bytes matched direct port-3000 access, including query strings.
+An unknown hostname returned 404. The SSH add-on's internal-bridge request
+returned 403 even with a forged LAN `X-Forwarded-For` header. Supervisor reported
+the proxy started with automatic boot; NAS wiki HTTP access remained healthy.
+No lighting, playback, printing or thermostat writes were used as smoke tests.
+These checks do not establish cabin/VPN access or an external WAN probe.
+
+The explicit alias transaction passed every retained record, empty AAAA, local
+negative and public control over UDP/TCP through both AdGuards and the gateway.
+Ordinary Mac DNS resolution then opened `http://grid-dashboard.home.arpa/`
+with HTTP 200. An in-flight scanner journal was recovered through the existing
+reconciler before the alias was added; learned names were retained. Discovery
+was resumed, and neither resolver restarted. Private transaction evidence is in
+`build/wiki-private/dns-manual-1792863833727302000.log`.

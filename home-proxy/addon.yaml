@@ -1,0 +1,29 @@
+slug: home_proxy
+name: Home HTTP Proxy
+description: LAN-only explicit HTTP hostname routes for household web services.
+url: https://github.com/rtimmons/smarthome
+depends_on:
+  - grid-dashboard
+custom_dockerfile: true
+copy:
+  - Caddyfile
+homeassistant_min: "2024.6.0"
+ingress: false
+homeassistant_api: false
+auth_api: false
+host_network: true
+# Host networking binds the exact LAN IP in Caddyfile. Do not declare a Docker
+# port mapping: generic Supervisor-IP probes target a different interface.
+ports: {}
+environment: {}
+docs:
+  readme: >
+    Explicit LAN HTTP reverse proxy. The grid-dashboard.home.arpa route forwards
+    to hass.home.arpa:3000. Existing direct dashboard access remains available.
+  docs: >
+    Caddy binds only 192.168.1.163:80 and accepts only 192.168.1.0/24 clients.
+    Unknown hosts return 404. No TLS, public forwarding, discovery, credentials,
+    Home Assistant API permission or Docker socket is required.
+  access: >
+    Open http://grid-dashboard.home.arpa/ on the Newark trusted LAN.
+    Recovery: http://hass.home.arpa:3000/.

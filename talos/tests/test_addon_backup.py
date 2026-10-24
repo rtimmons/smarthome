@@ -195,7 +195,7 @@ def test_backup_publishes_verified_private_artifacts_without_secrets(tmp_path: P
     assert "never-serialize-me" not in manifest_text
     assert "mongodb://" not in manifest_text
     create_command = next(command for command in fake.commands if command.startswith("ha backups new"))
-    assert create_command.count("--app") == 7
+    assert create_command.count("--app") == len(expected_ids())
     assert "--folders share" in create_command
     assert "--password" not in create_command
     assert "--uncompressed" not in create_command
@@ -602,3 +602,16 @@ def test_scp_hostname_failure_preserves_mdns_hostname_workflow(tmp_path: Path):
         create_with_fake(tmp_path, fake)
 
     assert "do not substitute an IP address" in str(error.value)
+
+
+def test_proxy_health_gate_preserves_lan_only_boundary(tmp_path: Path):
+    source = tmp_path / "source.tar"
+    make_archive(source)
+    fake = FakeTransport(source)
+    fake.health_failure = "192.168.1.163:80"
+    with pytest.raises(Exception, match="home-proxy"):
+        create_with_fake(tmp_path, fake)
+    assert not any(command.startswith("ha backups new") for command in fake.commands)
+    command = addon_backup._health_command("home-proxy", "unused-internal-host")
+    assert command.endswith('= 403')
+    assert "X-Forwarded-For" not in command

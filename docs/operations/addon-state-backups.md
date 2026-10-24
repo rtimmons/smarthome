@@ -1,6 +1,6 @@
 # Add-on state backups
 
-Talos creates a native Home Assistant Supervisor partial backup containing all seven add-ons discovered from the repository plus the complete `/share` folder. This preserves private add-on `/data` directories, including MongoDB and Node Sonos state, without duplicating Supervisor's backup format.
+Talos creates a native Home Assistant Supervisor partial backup containing all add-ons discovered from the repository plus the complete `/share` folder (eight add-ons with the HTTP proxy pilot). This preserves private add-on `/data` directories, including MongoDB and Node Sonos state, without duplicating Supervisor's backup format. The proxy has no application state; its health check expects HTTP 403 from the internal SSH add-on network, preserving its LAN-only boundary. Dashboard health is checked separately.
 
 ## Create a backup
 
@@ -55,7 +55,7 @@ The external manifest contains no add-on options, tokens, passwords, MongoDB URI
 
 ## Restore contract
 
-No restore command is included yet. The manifest is the contract for a future `talos backup restore-addon-state` workflow. That command will verify this metadata and checksum, create a safety backup, upload/reload the native archive when necessary, restore only `/share` and these seven add-ons in dependency order, preserve their recorded states, and run the same health checks.
+No restore command is included yet. The manifest is the contract for a future `talos backup restore-addon-state` workflow. That command will verify this metadata and checksum, create a safety backup, upload/reload the native archive when necessary, restore only `/share` and the recorded add-ons in dependency order, preserve their recorded states, and run the same health checks.
 
 Partial Supervisor backups must be restored with an explicit component selection. This matches [Supervisor maintainer guidance for partial CLI restores](https://github.com/home-assistant/supervisor/issues/5637) and is why the manifest records the exact add-on IDs and `/share` rather than relying on an implicit full restore. Also size the restore target from the installed system's disk use, not only the compressed archive size; restore requires working space beyond the `.tar` file.
 

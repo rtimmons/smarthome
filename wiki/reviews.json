@@ -5,9 +5,9 @@
     "reviewed_at": "2026-10-22"
   },
   "dashboard": {
-    "fingerprint": "e236ffc845ac986c76f772c43ce415bfcfc4428a3657c1d25879c94803b481ca",
-    "reason": "Patio now names the speaker, HA player/device, area and dashboard tile; preserved stable IDs and added shared-catalog migration for saved Move selections",
-    "reviewed_at": "2026-10-17"
+    "fingerprint": "2a344a02157cb0adacdf229a9f01477d7aafb2bea0798518fe82fb864bc283b9",
+    "reason": "Reviewed friendly dashboard access and unchanged direct port-3000 and HA ingress recovery paths",
+    "reviewed_at": "2026-10-24"
   },
   "home": {
     "fingerprint": "3fcfd96708cb626ecda63f8af4ef6a67a13c9298867b55b2b39b64681faa4aaf",
@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "1f2a0ad019c43140f527417d3244628c731f86eeb7f1004bb747a9d6b19c9a39",
-    "reason": "Reviewed Moonfin reconnect recipe and media runbook registration; existing DNS command additions have no Moonfin behavior impact",
+    "fingerprint": "7412d9217c6988cb393d92e96b233c1f5991b76a240e1a942669ce175de102bf",
+    "reason": "Reviewed current HA store refresh command, proxy dependency ordering and backup health coverage without widening LAN access",
     "reviewed_at": "2026-10-24"
   },
   "media": {
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "93bc989a520e992c55f7faafcd1bb0d4d571324716955efafc6faa30a4df10d7",
-    "reason": "Document NAS discovery ownership and acceptance, correct DNS inventory description, and distinguish Newark-to-Lehigh probes from pending cabin-side DNS, routing and discovery acceptance",
+    "fingerprint": "8e2387d7377993d519b675648bfcd0c7f3e957067237ab9d44194ad7a7f1f6fa",
+    "reason": "Reviewed LAN-bound pilot, recoverable exact DNS aliases and live service inventory; additional service mappings remain proposals",
     "reviewed_at": "2026-10-24"
   },
   "printing": {

@@ -1,0 +1,20 @@
+{
+	admin off
+	auto_https off
+	persist_config off
+}
+
+http://:80 {
+	bind 192.168.1.163
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	@dashboard host grid-dashboard.home.arpa
+	handle @dashboard {
+		reverse_proxy http://hass.home.arpa:3000
+	}
+	handle {
+		respond "Unknown service" 404
+	}
+}
