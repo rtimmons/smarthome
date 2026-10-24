@@ -46,7 +46,7 @@ class SeerrTests(unittest.TestCase):
 
     def test_uninitialized_or_open_registration_cannot_be_exposed(self):
         for section, field, value in (('public', 'initialized', False), ('main', 'newPlexLogin', True),
-                                      ('main', 'localLogin', True)):
+                                      ('main', 'localLogin', False)):
             settings = self.settings()
             settings[section][field] = value
             with self.subTest(field=field), self.assertRaises(RuntimeError):

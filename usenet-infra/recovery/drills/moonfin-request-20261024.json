@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-24",
+  "media_alias": "media-001",
+  "scope": "One public-domain first season; later seasons unmonitored",
+  "moonbase_version": "2.4.0.0",
+  "dedicated_seerr_account": {
+    "local_login_user_approved": true,
+    "permission_mask": 160,
+    "admin": false,
+    "plex_login_preserved": true,
+    "registration_disabled": true,
+    "session_metadata_reconciled_against_authenticated_user": true
+  },
+  "pipeline": {
+    "request_via_moonbase_proxy": true,
+    "request_visible_in_moonfin_web": true,
+    "requested_season_available": true,
+    "request_fulfilled": true,
+    "native_imports": 36,
+    "canonical_files_verified": 36,
+    "canonical_sizes_match_native_records": true,
+    "plex_episodes_indexed": 36,
+    "jellyfin_episodes_with_media_sources": 36,
+    "both_series_identities_correct": true,
+    "jellyfin_season_episode_numbers_verified": true,
+    "browser_playback_seconds": 9.944877,
+    "browser_playback_width": 1280
+  },
+  "profile": {
+    "test_series_only": "existing HD-720p",
+    "global_default_unchanged": true,
+    "later_seasons_unmonitored": true
+  },
+  "limitations": [
+    "Initial candidate had no indexer results; empty request and series removed without deleting files",
+    "Roku setup and on-device playback deferred by user",
+    "Representative browser playback, not playback of every episode",
+    "Broader Jellyfin scan still running at 96 percent after all test episodes indexed",
+    "Jellyfin recurring off-host backup coverage remains unconfigured"
+  ],
+  "validation": {
+    "infrastructure_tests": 550,
+    "skipped": 9,
+    "unit_tests": "passed",
+    "current_source_and_index_secret_scan": "passed",
+    "full_history_secret_scan": "two previously documented historical RSA findings"
+  }
+}

@@ -15,7 +15,7 @@ ROOT = Path('/srv/usenet')
 URL = 'http://10.77.0.1:15055'
 LIBRARIES = {'2', '3', '4', '5'}
 MAIN = {'applicationTitle': 'Seerr', 'applicationUrl': URL, 'newPlexLogin': False,
-        'localLogin': False, 'mediaServerLogin': True, 'defaultPermissions': 32,
+        'localLogin': True, 'mediaServerLogin': True, 'defaultPermissions': 32,
         'discoverRegion': 'US', 'streamingRegion': 'US', 'locale': 'en'}
 
 

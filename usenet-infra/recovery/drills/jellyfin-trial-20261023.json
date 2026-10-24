@@ -1,0 +1,94 @@
+{
+  "Plex": {
+    "movie": {
+      "expected": 59,
+      "indexed": 59,
+      "correct_identity": 59
+    },
+    "episode": {
+      "expected": 502,
+      "indexed": 502,
+      "correct_identity": 502
+    },
+    "physical_paths_indexed": 568
+  },
+  "Jellyfin": {
+    "movie": {
+      "expected": 59,
+      "indexed": 59,
+      "correct_identity": 59
+    },
+    "episode": {
+      "expected": 502,
+      "indexed": 502,
+      "correct_identity": 502
+    },
+    "physical_paths_indexed": 568
+  },
+  "library_counts": {
+    "plex": {
+      "2-1": 3,
+      "3-2": 1,
+      "3-4": 1,
+      "4-1": 59,
+      "5-2": 9,
+      "5-4": 502
+    },
+    "jellyfin": {
+      "Episode": 501,
+      "Movie": 62,
+      "Series": 10
+    }
+  },
+  "exact_physical_path_sets_equal": true,
+  "local_identity_matches": 4,
+  "movie_metadata_corrections": 7,
+  "duplicate_pairs_grouped": 5,
+  "initial_unidentified_movies_by_scope": {
+    "legacy_remote": 5,
+    "nas": 2
+  },
+  "scan_completed": true,
+  "playback": {
+    "1080p_browser": "passed; currentTime advanced beyond seven seconds",
+    "synthetic_1080p_vaapi_encode": "passed",
+    "4k_sdr_hevc_browser": "stalled during bounded playback test; not accepted",
+    "apple_tv_roku": "not tested",
+    "4k_diagnostics": {
+      "decode": "vaapi",
+      "encode": "h264_vaapi",
+      "observed_speed_range": "0.10\u20130.24x",
+      "memory_kills": 0,
+      "limits": "one CPU and 1 GiB; bottleneck not isolated"
+    }
+  },
+  "backup": {
+    "encrypted_bytes": 11659165,
+    "sha256": "c3917a71973038e684b35d4954da204cd74392aeec6632ef957e5e40b427c961",
+    "databases_checked": 1,
+    "integrity": "ok",
+    "operator_credentials_restored": true,
+    "scope": "one-time Jellyfin settings/database checkpoint; excludes artwork, logs and cache; not scheduled off-host coverage"
+  },
+  "integration": {
+    "seerr_primary": "Plex unchanged",
+    "arr_native_jellyfin_compatible_connector": "MediaBrowser verified in installed schema; not enabled",
+    "jellyfin_discovery": "hourly native scan",
+    "cloud_to_plex": "ordinary connection timed out; explicit VPN source succeeded",
+    "cloud_to_jellyfin": "timed out even with VPN source; existing firewall does not permit 8096"
+  },
+  "date": "2026-10-23",
+  "private_library": "not mounted or indexed",
+  "limitations": [
+    "Fresh Jellyfin versus an established Plex catalog, not a clean-room parser benchmark",
+    "No new request/download/import was submitted for testing",
+    "One-time local encrypted checkpoint; recurring off-host Jellyfin backups not configured"
+  ],
+  "validation": {
+    "unit_tests_run": 549,
+    "unit_tests_skipped": 9,
+    "unit_tests_result": "passed",
+    "current_source_secret_scan": "passed",
+    "full_recipe_and_wiki_publication": "blocked by concurrent network/maintenance documentation reviews"
+  }
+}

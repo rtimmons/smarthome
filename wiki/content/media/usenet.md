@@ -64,6 +64,9 @@ Private addresses work on the home network or its existing VPN route. Each appli
 [**NAS copies**Select local copies and follow transfers](http://192.168.1.66:1337/)
 [**Filex**Browse staging files · SSH tunnel required](http://127.0.0.1:15213/)
 [**Plex**Choose a NAS or Remote library](http://192.168.1.66:32400/web)
+[**Jellyfin trial**Try the same general libraries](http://192.168.1.66:8096/)
+
+The [Jellyfin trial](../../../usenet-infra/docs/jellyfin-trial.md) runs alongside Plex on the NAS. Seerr still uses Plex for sign-in and availability; Jellyfin reads the same imported files and scans hourly.
 
 ### Provider and indexer accounts
 

@@ -1,0 +1,65 @@
+name: usenet-jellyfin-trial
+services:
+  jellyfin:
+    image: jellyfin/jellyfin:12.3@sha256:2038fe038ab3876a80f6e7b7e0aef6607b032c7dc0c9b3ad3296d0b2eba3bbb5
+    # QTS renderD128 is root-only. No host permissions or other services change.
+    user: '0:100'
+    read_only: true
+    restart: unless-stopped
+    cpus: 1.0
+    mem_limit: 1g
+    pids_limit: 512
+    cap_drop: [ALL]
+    # QNAP ACLs require read/search override even for root; media stays read-only.
+    cap_add: [DAC_READ_SEARCH]
+    security_opt: ['no-new-privileges:true']
+    ports:
+      - '${JELLYFIN_BIND_ADDRESS:-127.0.0.1}:8096:8096'
+    devices:
+      - /dev/dri/renderD128:/dev/dri/renderD128
+    environment:
+      TZ: America/New_York
+    volumes:
+      - type: bind
+        source: /share/Container/usenet/jellyfin-trial/web-config.json
+        target: /jellyfin/jellyfin-web/config.json
+        read_only: true
+        bind: {create_host_path: false}
+      - /share/Container/usenet/jellyfin-trial/config:/config
+      - /share/Container/usenet/jellyfin-trial/cache:/cache
+      - type: bind
+        source: /share/FromDrobo/Movies/video
+        target: /media/movies-nas
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /share/FromDrobo/TV Shows/library
+        target: /media/tv-nas
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /share/FromDrobo/Remote/files/library/Movies
+        target: /media/movies-remote
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /share/FromDrobo/Remote/files/objects/video
+        target: /media/movies-legacy
+        read_only: true
+        bind: {create_host_path: false}
+      - type: bind
+        source: /share/FromDrobo/Remote/files/library/TV
+        target: /media/tv-remote
+        read_only: true
+        bind: {create_host_path: false}
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=128m,mode=1777
+    logging:
+      driver: json-file
+      options: {max-size: 10m, max-file: '2'}
+    healthcheck:
+      test: [CMD, curl, -fsS, http://127.0.0.1:8096/health]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 90s

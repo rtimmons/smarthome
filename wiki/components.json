@@ -190,7 +190,10 @@
         "usenet-infra/config/recyclarr.yml",
         "usenet-infra/config/usenet-recyclarr.*",
         "usenet-infra/tests/test_seerr_safety.py",
-        "usenet-infra/tests/cleanuparr_replay.py"
+        "usenet-infra/tests/cleanuparr_replay.py",
+        "usenet-infra/scripts/jellyfin-trial.py",
+        "usenet-infra/scripts/moonfin-login.py",
+        "usenet-infra/tests/test_moonfin.py"
       ],
       "runbooks": [
         "usenet-infra/docs/native-media.md",
@@ -200,7 +203,8 @@
         "usenet-infra/docs/account-setup.md",
         "usenet-infra/docs/repair-spool.md",
         "usenet-infra/docs/operations.md",
-        "usenet-infra/docs/validation.md"
+        "usenet-infra/docs/validation.md",
+        "usenet-infra/docs/jellyfin-trial.md"
       ]
     },
     {

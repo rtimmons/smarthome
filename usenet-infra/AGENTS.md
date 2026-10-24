@@ -99,8 +99,10 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 ## Current operation
 
 - Seerr at `http://10.77.0.1:15055/` uses Plex sign-in and only libraries 2/3/4/5.
-  Keep local login, registration, watchlist acquisition, RSS polling and direct
-  carts disabled. Ultra-HD prefers 2160p with 1080p fallback; no automatic upgrades.
+  Local login is enabled by the October 23 user-approved Moonfin exception;
+  preserve the dedicated non-admin request account and existing Plex sign-in.
+  Keep registration, watchlist acquisition, RSS polling and direct carts disabled.
+  Ultra-HD prefers 2160p with 1080p fallback; no automatic upgrades.
 - Radarr/Sonarr own new downloads, imports and completed-source cleanup. The
   publisher, cart importer, capacity admission and incomplete maintenance workers
   are retired. Their source and migration commands have been removed; never

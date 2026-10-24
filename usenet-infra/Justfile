@@ -522,3 +522,23 @@ dns action *args:
 	export UV_CACHE_DIR="$PWD/build/wiki/uv-cache"
 	export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
 	exec uv run --project wiki --python "$(cat .python-version)" --frozen python network-infra/dns/manage.py "$@"
+
+# Read only the isolated Jellyfin trial's service health.
+[group: 'health']
+jellyfin-status:
+	@python3 scripts/jellyfin-trial.py status
+
+# Reconcile only an already-initialized trial; preserve users, libraries and media.
+[group: 'setup']
+configure-jellyfin:
+	@../wiki/run with-deployment --scope media-jellyfin -- python3 scripts/jellyfin-trial.py deploy
+
+# Retain all Jellyfin state and leave Plex/Arr running.
+[group: 'operations']
+jellyfin-stop:
+	@python3 scripts/jellyfin-trial.py stop
+
+# Reconnect the private request account and verify Moonbase's cached permissions.
+[group: 'operations']
+moonfin-login:
+	@python3 scripts/moonfin-login.py

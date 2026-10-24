@@ -2,7 +2,11 @@
 
 Open [Seerr](http://10.77.0.1:15055/) on the home network or existing VPN route
 and **sign in with the existing Plex owner account**. There is no new password.
-Other Plex accounts cannot automatically enroll; local-password login is off.
+Other Plex accounts cannot automatically enroll. Local-password login is enabled
+for the user-approved Moonfin integration; the dedicated account can request
+and auto-approve explicit requests but has no administration, advanced routing,
+watchlist acquisition or separate-4K-copy permissions. Its credentials are stored
+privately, never in the web configuration. Existing Plex sign-in remains enabled.
 Browse trending/popular movies and TV, filter by genre, or search. Request a
 movie or selected TV seasons; use Sonarr directly for individual episodes.
 The default quality is Ultra-HD: prefer 2160p / 4K, with 1080p fallback when
