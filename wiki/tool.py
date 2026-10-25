@@ -440,7 +440,7 @@ def build(receipts=None):
                        f"{' + working-tree changes' if dirty else ''}. Built: {built_at}. "
                        "Build time is not a live verification time.\n")
     config = {
-        "site_name": "Smarthome field guide", "site_url": "http://wiki.home.arpa/",
+        "site_name": "Smarthome field guide", "site_url": "https://wiki.home.rytim.com/",
         "docs_dir": str(stage), "site_dir": str(output / "site"),
         "theme": {"name": "mkdocs", "custom_dir": str(PROJECT / "theme"), "locale": "en",
                   "color_mode": "light", "user_color_mode_toggle": False, "analytics": None,

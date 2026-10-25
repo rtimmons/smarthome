@@ -6,8 +6,11 @@ remain stable even though its coverage now includes the whole house.
 
 ## Addresses and evidence
 
-The canonical URL is `http://wiki.home.arpa/`; the DNS-independent URL
-is `http://192.168.1.66/`. Port 8090 preserves the original Usenet entrance.
+The preferred browser and canonical metadata URL is `https://wiki.home.rytim.com/`,
+protected by Ryan’s Authelia MFA. `http://wiki.home.arpa/` and the DNS-independent
+`http://192.168.1.66/` remain unauthenticated LAN compatibility/recovery entrances.
+Port 8090 preserves the original Usenet entrance. Publication probes continue to
+use the direct NAS address so recovery does not depend on the SSO proxy.
 [DNS operations](home-dns.md) records the accepted gateway-forwarding and
 failover design. Build metadata and deployment receipts are not continuous
 service health.

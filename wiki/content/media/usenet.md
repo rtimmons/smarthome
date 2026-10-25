@@ -50,21 +50,21 @@ Start in Seerr for discovery and requests. Arr owns the request from search to c
 
 ## Shortcuts
 
-See [Usenet pages and logins](access.md) for which account to use at each service, including the shared browser popup and separate application logins.
+See [Usenet pages and logins](access.md) for which account to use at each service, including Authelia MFA, AD-backed Jellyfin and the separate native Plex/Seerr logins.
 
-Private addresses work on the home network or its existing VPN route. Each application keeps its own login; this page does not bypass one.
+Private addresses work on the home network or its existing VPN route. Browser entrances use the authentication described in the access guide; native clients retain their existing routes.
 
 ### Home stack
 
-[**Seerr**Browse trending movies and TV · sign in with Plex](http://10.77.0.1:15055/)
-[**SABnzbd**Queue, speed, repair and unpack](http://10.77.0.1:18080/)
-[**Prowlarr**Indexer connections and status](http://10.77.0.1:19696/)
-[**Radarr**Movies and their import history](http://10.77.0.1:19696/radarr/)
-[**Sonarr**TV series, episodes and calendar](http://10.77.0.1:19696/sonarr/)
-[**NAS copies**Select local copies and follow transfers](http://192.168.1.66:1337/)
+[**Seerr**Browse trending movies and TV · sign in with Plex](http://seerr.home.arpa/)
+[**SABnzbd**Queue, speed, repair and unpack](https://sabnzbd.home.rytim.com/)
+[**Prowlarr**Indexer connections and status](https://prowlarr.home.rytim.com/)
+[**Radarr**Movies and their import history](https://radarr.home.rytim.com/radarr/)
+[**Sonarr**TV series, episodes and calendar](https://sonarr.home.rytim.com/sonarr/)
+[**NAS copies**Select local copies and follow transfers](https://catalog.home.rytim.com/)
 [**Filex**Browse staging files · SSH tunnel required](http://127.0.0.1:15213/)
-[**Plex**Choose a NAS or Remote library](http://192.168.1.66:32400/web)
-[**Jellyfin trial**Try the same general libraries](http://192.168.1.66:8096/)
+[**Plex**Choose a NAS or Remote library](http://plex.home.arpa/web/)
+[**Jellyfin trial**Try the same general libraries](https://jellyfin.home.rytim.com/)
 
 The [Jellyfin trial](../../../usenet-infra/docs/jellyfin-trial.md) runs alongside Plex on the NAS. Seerr still uses Plex for sign-in and availability; Jellyfin reads the same imported files and scans hourly.
 

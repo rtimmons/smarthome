@@ -8,22 +8,28 @@ route. Filex additionally needs a tunnel running on the computer opening it.
 
 | Page | What it is for | Login to use |
 | --- | --- | --- |
-| [Seerr](http://10.77.0.1:15055/) | Browse and request movies or TV | **Sign in with Plex**, using the existing owner account. The dedicated Moonfin local login is also enabled; automatic registration remains disabled. |
-| [Plex](http://192.168.1.66:32400/web) | Watch the NAS and Remote libraries | Your existing **Plex account**. For ordinary household viewing, select the **Movies & TV** profile after signing in; its profile/PIN choice is separate from the account login. |
-| [Jellyfin trial](http://192.168.1.66:8096/) | Try the four general libraries alongside Plex | Separate **Jellyfin account**; private login is in `usenet-infra/secrets/jellyfin/operator.json` on the maintainer’s checkout. |
-| [Moonfin](http://192.168.1.66:8096/Moonfin/Web/) | Jellyfin playback and integrated Seerr requests | Use the Jellyfin account. Its dedicated request session is configured server-side; Roku app setup remains a user step. See the [Moonfin runbook](../../../usenet-infra/docs/jellyfin-trial.md#moonfin-requests). |
-| [NAS copies / catalog dashboard](http://192.168.1.66:1337/) | Select local copies and follow transfers | The existing **catalog dashboard username and password**. This is not the QNAP administration account. |
-| [SABnzbd](http://10.77.0.1:18080/) | Download queue, speed, repair and unpacking | At the browser authentication popup, use the **same catalog dashboard login as NAS copies**. These are not the Eweka provider credentials. |
-| [Prowlarr](http://10.77.0.1:19696/) | Indexer connections and search status | First use the **catalog dashboard login** at the browser popup, then the existing **Prowlarr account** on its application login page. These are two separate checks. |
-| [Radarr](http://10.77.0.1:19696/radarr/) | Movie requests, release selection and import history | The **catalog dashboard login** at the browser popup. If an additional application sign-in appears, use the existing **Radarr account**, not a guessed default; its account name is not recorded in the public runbook. |
-| [Sonarr](http://10.77.0.1:19696/sonarr/) | TV series, episodes and import history | The **catalog dashboard login** at the browser popup. If an additional application sign-in appears, use the existing **Sonarr account**, not a guessed default; its account name is not recorded in the public runbook. |
+| [Seerr](http://seerr.home.arpa/) | Browse and request movies or TV | **Sign in with Plex**, using the existing owner account. The dedicated Moonfin local login is also enabled; automatic registration remains disabled. Seerr does not yet use Authelia OIDC. |
+| [Plex](http://plex.home.arpa/web/) | Watch the NAS and Remote libraries | Your existing **Plex account**. For ordinary household viewing, select the **Movies & TV** profile after signing in; its profile/PIN choice is separate from the account login. |
+| [Jellyfin](https://jellyfin.home.rytim.com/) | Watch the general libraries alongside Plex | **Household AD password**, with `ryantimmons` or the existing `ryan` alias. This preserves Ryan's existing profile; it is not Authelia browser MFA. |
+| [Moonfin](https://jellyfin.home.rytim.com/Moonfin/Web/) | Jellyfin playback and integrated Seerr requests | Use the same **AD-backed Jellyfin login**. Its separate request session is configured server-side; Roku app setup remains a user step. See the [Moonfin runbook](../../../usenet-infra/docs/jellyfin-trial.md#moonfin-requests). |
+| [NAS copies / catalog dashboard](https://catalog.home.rytim.com/) | Select local copies and follow transfers | **Authelia MFA**, then Catalog's native OAuth sign-in using the same household identity. Only Ryan's mapped identity receives operator actions. The local catalog login is retained for recovery. |
+| [SABnzbd](https://sabnzbd.home.rytim.com/) | Download queue, speed, repair and unpacking | **Authelia sign-in and MFA**. Provider credentials and the native API key are separate. |
+| [Prowlarr](https://prowlarr.home.rytim.com/) | Indexer connections and search status | **Authelia sign-in and MFA** at the proxy; Prowlarr uses External authentication, not native OAuth. Existing API clients retain their API keys. |
+| [Radarr](https://radarr.home.rytim.com/radarr/) | Movie requests, release selection and import history | **Authelia sign-in and MFA** at the proxy. Native API clients keep their existing API keys. |
+| [Sonarr](https://sonarr.home.rytim.com/sonarr/) | TV series, episodes and import history | **Authelia sign-in and MFA** at the proxy. Native API clients keep their existing API keys. |
 | [Filex](http://127.0.0.1:15213/) | Browse staging files and perform reviewed file operations | The saved **Filex operator account**, not its bootstrap administrator. First run `just usenet-filex-ui` from the repository root and leave it running. The link works only on that computer. |
-| [QNAP administration](https://rynapqnap.local/cgi-bin/) | NAS settings and maintenance | The documented **`usenet-deploy`** administration account. This is separate from NAS copies; use it only for maintenance. Preserve the existing browser trust setup. |
+| [QNAP administration](http://192.168.1.66:8080/cgi-bin/) | NAS settings and maintenance | The existing **local QTS administrator** for maintenance and recovery. QTS is not behind Authelia; AD-backed SMB share access is separate from the administration login. |
 
-**Why can there be two login prompts?** The browser popup protects the private
-cloud entrance. It shares the NAS copies credential. An application login form
-belongs to that application and can require a different account. A password
-accepted by the popup does not imply it will work in the form.
+The protected browser entrances use publicly trusted HTTPS and the household
+[Authelia portal](https://auth.home.rytim.com/). The older numeric cloud entrances
+retain their separate recovery authentication; do not use them as the normal
+browser bookmarks. Native API clients and saved playback addresses retain their
+existing access paths. No browser SSO redirect is added to playback APIs.
+
+The [identity runbook](../../../docs/operations/household-identity.md) records the
+exact boundaries and dated acceptance. Authenticated Arr and Catalog browser
+acceptance remains unverified; configured routes and successful anonymous denial
+checks do not establish a completed human sign-in.
 
 ## Roku: browse, request and watch with Moonfin
 
@@ -35,9 +41,9 @@ and on-device playback remain unverified; the user deferred that device setup.
 1. On Roku, search for **Moonfin** and install it from the Channel Store.
 2. Open Moonfin and choose **Enter Server URL**. Enter
    `http://192.168.1.66:8096` while connected to the home network.
-3. Sign in to Jellyfin as **`ryan`**, using the current private password from
-   `usenet-infra/secrets/jellyfin/operator.json` on the maintainer's checkout.
-   This is the Jellyfin login, not the dedicated Seerr login.
+3. Sign in to Jellyfin as **`ryantimmons`** (or the existing **`ryan`** alias),
+   using your **household AD password**. This is the Jellyfin login, not the
+   dedicated Seerr login.
 4. Alternatively, select **Quick Connect**. In a phone/computer browser already
    signed into that Jellyfin server, select **user icon → Quick Connect**, enter
    the Roku's displayed code and approve. The phone is only needed for this
@@ -64,13 +70,13 @@ and [Seerr controls](https://github.com/Moonfin-Client/Roku/wiki/Seerr-Setup).
 
 ### Authentication troubleshooting
 
-Check the server address first, then distinguish the initial Jellyfin login from
-Seerr's separate account screen. On October 24 the user reported failures in both
-Roku and the web browser. At the user's request, the Jellyfin password was changed
-and a fresh API login with the replacement succeeded. Both local credential files
-were updated. Subsequent user web/Roku sign-in has not yet been confirmed; the
-original failure's cause was not established. Use the current private credential
-file, not a password copied from an older message or recovery checkpoint.
+Check the server address first, then distinguish the AD-backed Jellyfin login
+from Seerr's separate account screen. The October 24 directory migration replaced
+Ryan's local Jellyfin password with AD authentication while preserving the account
+ID and request linkage. An older saved local password no longer authenticates
+that profile; sign in again with the household AD password. The hidden local
+recovery administrator is for maintenance, not normal playback. Server-side
+login checks passed; Roku sign-in and playback still need user confirmation.
 Passwords must never be published in this wiki or its repository.
 
 If Jellyfin login works but Seerr request controls remain disabled, a maintainer
@@ -99,7 +105,7 @@ for indexing quality, playback limitations and backup scope.
 | --- | --- | --- |
 | [NZBGeek](https://nzbgeek.info/dashboard.php?mycart) | The existing **NZBGeek website account** | The API key stored by Prowlarr; cart auto-download remains off. |
 | [NZBFinder](https://nzbfinder.ws/cart) | The existing **NZBFinder website account** | The API key stored by Prowlarr; cart auto-download remains off. |
-| [My Eweka](https://www.eweka.nl/en/myeweka) | The existing **Eweka account** for provider account management | The catalog dashboard login used to open SABnzbd. SAB's provider connection credentials are stored in its private configuration. |
+| [My Eweka](https://www.eweka.nl/en/myeweka) | The existing **Eweka account** for provider account management | The household Authelia login used for SABnzbd browser access. SAB's provider connection credentials are stored in its private configuration. |
 | [Hetzner Console](https://console.hetzner.com/) | The existing **Hetzner account** owning the cloud server and Storage Box | Cloud API tokens, server SSH keys, and Storage Box service/subaccount credentials. None is a console password. |
 
 ## Where to find the saved login
@@ -107,12 +113,16 @@ for indexing quality, playback limitations and backup scope.
 Use the existing saved credentials for the named service. This page intentionally
 contains account roles and known non-secret account names, not passwords, API keys,
 Plex PINs, personal email addresses or recovery keys: its source lives in a public
-repository and the wiki itself has no login.
+repository and the retained LAN wiki entrances are unauthenticated. The preferred
+HTTPS entrance requires Authelia MFA; neither entrance may publish secrets.
 
 - **Filex:** the private operator login is saved at
   `usenet-infra/secrets/filex/operator-login.txt` on the maintainer's checkout.
   This is a local file location, not a downloadable wiki link.
-- **Catalog dashboard / cloud browser popup:** deployment material is in
+- **Household SSO and Jellyfin:** use your AD identity and password; browser MFA
+  applies at Authelia-protected entrances. SMB uses the same directory password,
+  independently of browser sign-in.
+- **Legacy catalog / numeric cloud recovery login:** deployment material is in
   `usenet-infra/secrets/dashboard-auth.json`. It contains an Argon2id **hash**, not
   a readable password. Use the saved original login; do not paste the hash into a
   password prompt.
@@ -126,6 +136,7 @@ repository and the wiki itself has no login.
 
 - [Media and storage overview](usenet.md): how requests, downloads, libraries and NAS copies connect.
 - [Seerr requests and login policy](../../../usenet-infra/docs/seerr.md).
+- [Household directory, browser SSO and native-client boundaries](../../../docs/operations/household-identity.md).
 - [Private cloud access and browser authentication](../../../usenet-infra/docs/lan-ui.md).
 - [Filex access and operator restrictions](../../../usenet-infra/docs/filex.md).
 - [NAS and Plex library layout](../../../usenet-infra/docs/nas-plex-layout.md).

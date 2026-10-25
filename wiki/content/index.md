@@ -29,11 +29,11 @@ Use this guide to understand the house, find the right application, and decide w
 ## Open the right application
 
 - [Home Assistant](http://192.168.1.163:8123/) — use its sidebar for the dashboard and installed apps.
-- [Seerr](http://10.77.0.1:15055/) — explicit movie and TV requests, using Plex sign-in.
-- [Plex](http://192.168.1.66:32400/web) — choose the appropriate NAS or Remote library.
-- [NAS copies](http://192.168.1.66:1337/) — selectively copy canonical media to local storage.
+- [Seerr](http://seerr.home.arpa/) — explicit movie and TV requests, using Plex sign-in.
+- [Plex](http://plex.home.arpa/web/) — choose the appropriate NAS or Remote library.
+- [NAS copies](https://catalog.home.rytim.com/) — selectively copy canonical media to local storage.
 
-These links retain the applications’ own access controls. A Home Assistant ingress address contains a session identifier: obtain it through the sidebar rather than bookmarking or publishing it here.
+Catalog uses Authelia MFA and native OAuth; Plex and Seerr retain their native account flows. See [pages and logins](media/access.md) for the complete access directory. A Home Assistant ingress address contains a session identifier: obtain it through the sidebar rather than bookmarking or publishing it here.
 
 ## How the pieces connect
 

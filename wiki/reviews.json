@@ -10,9 +10,9 @@
     "reviewed_at": "2026-10-25"
   },
   "home": {
-    "fingerprint": "3fcfd96708cb626ecda63f8af4ef6a67a13c9298867b55b2b39b64681faa4aaf",
-    "reason": "Added the room and device mapping entry point to household tasks",
-    "reviewed_at": "2026-10-17"
+    "fingerprint": "317e0197dd1046ad810b39b5542117d066de77e5acca3b73c014bade0c9b2ae8",
+    "reason": "Cold review: use current Catalog SSO and named native media entrances",
+    "reviewed_at": "2026-10-25"
   },
   "integrations": {
     "fingerprint": "a25558e8168ae88596069b2f8bd7345a1d35893660d05755eb63db21a5a8a730",
@@ -25,18 +25,18 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "ec9a321f01c6546e81e8f4f1237875fe258500122011e32ed1a3d407d95b25d7",
-    "reason": "Reviewed expanded history scanning and private backup evidence ownership; recovery scopes and immutable archives remain unchanged",
+    "fingerprint": "11666ad180f8a93eafa4a0bb89da5e9a754097e52d0d3f86bf8f399d66bfb91e",
+    "reason": "Cold review: document authenticated wiki canonical URL and retained direct recovery probes",
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "31bec38370a4e06e1cec7e94cb2e1c6d1a94e2c5148bd6a444ec823b3b6a2d6b",
-    "reason": "Reviewed stable Seerr security update, account preservation, verified pre/post-update backups and unapplied history cleanup",
+    "fingerprint": "d8466f1277ef0fc8532de9dc2fc6559b5ef5061d399d679112db98d4c9396d10",
+    "reason": "Cold review and rereview: correct SSO and AD access instructions, native exceptions and unauthenticated recovery boundaries",
     "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "c3e867a6adeb04c94afb401033890666f7c3118154362d2f257341a124319039",
-    "reason": "Reviewed private migration receipt ownership and current stable Seerr support boundary",
+    "fingerprint": "68a6ab1a971f8d5056e9c738c60e715c1e6a25bdac4c04c21de53e0caa59e927",
+    "reason": "Cold review: correct Forgejo migration status, Jellyfin HTTPS routing and preferred authenticated browser entrances",
     "reviewed_at": "2026-10-25"
   },
   "printing": {

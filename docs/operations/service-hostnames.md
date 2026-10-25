@@ -19,7 +19,8 @@ NAS address and isolated static server. `hass.home.arpa` remains the host alias.
 
 | Browser hostname | Upstream reachable from home | Entry path / routing requirement | Inventory evidence |
 | --- | --- | --- | --- |
-| `jellyfin.home.arpa` | `http://192.168.1.66:8096` | Preserve all paths; stock web client | NAS container running/healthy; `/` returned 302 |
+| `jellyfin.home.rytim.com` | `http://192.168.1.66:8096` | Publicly trusted HTTPS; preserve paths and streaming APIs; Moonfin is `/Moonfin/Web/` | AD-backed Jellyfin login verified; no Authelia redirect gate on native playback APIs |
+| `jellyfin.home.arpa` | `http://192.168.1.66:8096` | Retained HTTP native-client/compatibility entrance; preserve all paths | NAS container running/healthy; `/` returned 302 |
 | `moonfin.home.arpa` | `http://192.168.1.66:8096` | Redirect only `/` to `/Moonfin/Web/` on the same hostname; proxy every other path unchanged | Moonfin Web returned 200; same Jellyfin container |
 | `plex.home.arpa` | `http://192.168.1.66:32400` | Redirect only `/` to `/web/`; preserve other paths | Native NAS listener; `/web/` returned 302 to its web client |
 | `seerr.home.arpa` | `http://10.77.0.1:15055` | Existing private Seerr proxy, with its login and API-key restrictions | Cloud container healthy; 307 to login |
@@ -52,9 +53,9 @@ to the active cloud acquisition service.
 
 **Moonfin Web is a Jellyfin plugin/client entry point.** It is not another
 container or port. Both names reach the same Jellyfin account system;
-browsers may keep separate sessions for the two origins. For a single-origin
-alternative, use `jellyfin.home.arpa/Moonfin/Web/` and make the `moonfin` name a
-redirect to that canonical URL. Native Moonfin clients should use the Jellyfin
+browsers may keep separate sessions for the two origins. For normal single-origin browser access, use
+`https://jellyfin.home.rytim.com/Moonfin/Web/`. The old HTTP names retain their
+existing compatibility routes; they have not been changed into redirects. Native Moonfin clients should use the Jellyfin
 server root, not `/Moonfin/Web/`. No Seerr authentication mode migration is needed.
 
 ## Existing names and separate work
@@ -64,11 +65,11 @@ server root, not `/Moonfin/Web/`. No Seerr authentication mode migration is need
 | `grid-dashboard.home.arpa` | Existing proxy to `hass.home.arpa:3000`; HTTP 200 |
 | `wiki.home.arpa` | Existing NAS static server on port 80; HTTP 200 |
 | `hass.home.arpa` | HA host alias; direct services retain their ports |
-| `git.home.arpa` | Separate Git-hosting rollout: explicit proxy route to NAS port 3003; backend login returned 200 |
+| `git.home.arpa` | Redirect to `https://git.home.rytim.com`, whose proxy reaches NAS port 3003; native Forgejo OIDC link and fresh sign-in passed |
 | `git-ssh.home.arpa` | Separate Git-hosting rollout: NAS SSH service on port 2222, not an HTTP proxy route |
 
-Git-host DNS acceptance and backup work belong to that separate rollout; this
-inventory does not mark them complete or modify them.
+See [household identity](household-identity.md) for dated Git sign-in acceptance
+and [Git hosting](../../git-host/README.md) for its separate backup scope.
 
 ## Defer or keep existing access
 

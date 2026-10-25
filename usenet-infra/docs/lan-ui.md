@@ -15,7 +15,7 @@ The Max uses native policy-based IKEv2 with AES-256, SHA-256, DH14/PFS and the
 exact Default-LAN/service selectors above. The cloud's accepted profile is
 `sha256`; the USG provisioning override is inactive historical recovery material.
 
-| Interface | Private address |
+| Interface | Private transport / recovery address |
 | --- | --- |
 | Seerr | `http://10.77.0.1:15055/` |
 | SABnzbd proxy | `http://10.77.0.1:18080/` |
@@ -37,6 +37,14 @@ verify the separate encrypted VPN archive after an accepted change.
 
 ## Household SSO gateway
 
+For normal browser access, use [SABnzbd](https://sabnzbd.home.rytim.com/),
+[Prowlarr](https://prowlarr.home.rytim.com/),
+[Radarr](https://radarr.home.rytim.com/radarr/) and
+[Sonarr](https://sonarr.home.rytim.com/sonarr/). These use Authelia MFA;
+Prowlarr's separate application login was replaced by External authentication.
+Native API clients retain their existing keys and routes. The numeric addresses
+above are transport/recovery endpoints, not the preferred browser bookmarks.
+
 The browser migration uses the four Arr/SAB names beneath `home.rytim.com`.
 HA checks Authelia first, then sends a dedicated machine credential over the
 existing encrypted VPN. The cloud accepts that account only from HA's actual
@@ -48,7 +56,9 @@ for credential recovery and live acceptance status.
 
 ## Historical USG setup
 
-This section records the retired gateway and its provisioning override. Current
+This section records the retired gateway and its provisioning override. Its
+two-login Prowlarr instructions are historical and superseded by the SSO gateway
+above; do not restore the old authentication setting. Current
 operations use the Max's native VPN settings. The `sha256` crypto profile and
 `just usenet vpn-peer-check <verified-WAN-IPv4>` are deployed and accepted in
 the [authorized follow-up](../../docs/operations/unifi-post-migration.md#cloud-vpn-and-wan-recovery). Do not install the old

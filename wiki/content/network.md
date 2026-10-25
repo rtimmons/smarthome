@@ -8,10 +8,13 @@ encrypted backups remain available for rollback.
 
 ## Find this guide
 
-Open **http://wiki.home.arpa/**. If DNS fails, use [the NAS address](http://192.168.1.66/).
+Open [the authenticated HTTPS wiki](https://wiki.home.rytim.com/).
+For LAN compatibility or SSO recovery, use `http://wiki.home.arpa/`.
+If DNS fails, use [the NAS address](http://192.168.1.66/).
 The [original port-8090 entrance](http://192.168.1.66:8090/) also works. The wiki
-is plain HTTP on the trusted home network; linked applications keep their own
-sign-ins. There is no public wiki listener.
+HTTP compatibility entrance is unauthenticated on the trusted home network;
+the HTTPS entrance above requires Authelia MFA. Linked services have their own
+authentication boundaries. There is no public wiki listener.
 
 ## DNS design
 
@@ -31,9 +34,10 @@ WAN DNS capture. Public DNS and ad blocking continued working. See the
 
 ## Named web services
 
-Open [Grid Dashboard](http://grid-dashboard.home.arpa/) on the Newark trusted
+Open [Grid Dashboard](https://grid-dashboard.home.rytim.com/) with Authelia MFA on the Newark trusted
 LAN. Its explicit DNS alias points to Home Assistant, where the Home HTTP Proxy
 forwards requests to `hass.home.arpa:3000`. The browser keeps the friendly name.
+The HTTPS entrance is separate from the retained HTTP kiosk route.
 The [direct dashboard address](http://hass.home.arpa:3000/) and Home Assistant
 sidebar remain available. This HTTP proxy accepts only Newark LAN clients;
 it does not add Internet access or automatic service discovery.
@@ -52,22 +56,26 @@ Authelia runs on Home Assistant at
 [the sign-in portal](https://auth.home.rytim.com), with verified public HTTPS.
 QNAP has joined the directory; household share grants passed encrypted SMB read,
 write and denial checks. Gmail SMTP delivered the enrollment email, and Ryan
-confirmed OTP enrollment. Forgejo linking and application SSO checks remain.
+confirmed OTP enrollment. Forgejo's native OIDC account link and fresh sign-in
+passed. Arr/SAB browser entrances now use the Authelia MFA proxy; Prowlarr uses
+External authentication and native API keys remain unchanged. Catalog has an
+outer MFA gate plus native OAuth. Authenticated human browser acceptance for
+Arr and Catalog remains unverified. Jellyfin uses verified AD-backed LDAPS
+with the existing account; its playback APIs have no browser MFA redirect.
 The directory moved from the NAS to HA with its existing identity;
-QNAP's machine trust and both household logins passed. Forgejo and Arr follow after
-each service's access checks pass. Existing service sign-ins stay authoritative
-until their migration is verified. Follow the dated
+QNAP's machine trust and both household logins passed. Follow the dated
 [identity rollout and recovery record](../../docs/operations/household-identity.md)
 for current status and the separate human enrollment steps.
 
 The [service hostname inventory](../../docs/operations/service-hostnames.md)
-lists explicit routes for [Jellyfin](http://jellyfin.home.arpa/),
-[Moonfin](http://moonfin.home.arpa/), [Plex](http://plex.home.arpa/),
-[Seerr](http://seerr.home.arpa/), [Radarr](http://radarr.home.arpa/),
-[Sonarr](http://sonarr.home.arpa/), [Prowlarr](http://prowlarr.home.arpa/),
-[SABnzbd](http://sabnzbd.home.arpa/), [catalog](http://catalog.home.arpa/),
-[printer](http://printer.home.arpa/) and [TinyURL](http://tinyurl.home.arpa/).
-Existing sign-ins and direct ports remain available. The Arr names reach the
+lists explicit routes for [Jellyfin](https://jellyfin.home.rytim.com/),
+[Moonfin](https://jellyfin.home.rytim.com/Moonfin/Web/), [Plex](http://plex.home.arpa/),
+[Seerr](http://seerr.home.arpa/), [Radarr](https://radarr.home.rytim.com/),
+[Sonarr](https://sonarr.home.rytim.com/), [Prowlarr](https://prowlarr.home.rytim.com/),
+[SABnzbd](https://sabnzbd.home.rytim.com/), [catalog](https://catalog.home.rytim.com/),
+[printer](https://printer.home.rytim.com/) and [TinyURL](https://tinyurl.home.rytim.com/).
+Retained HTTP, direct-port and recovery routes have separate access controls;
+these HTTPS entrances do not make SSO universal network enforcement. The Arr names reach the
 active cloud stack; Moonfin uses the same Jellyfin server. `ha.home.arpa` is
 still deferred.
 

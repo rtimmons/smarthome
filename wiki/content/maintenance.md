@@ -73,7 +73,7 @@ media mounts and is removed after testing. See the [settings rollout runbook](..
 ## Choose the recovery scope
 
 The NAS also hosts [Forgejo](../../git-host/README.md) for private Git repositories,
-issues and pull requests. Open `http://git.home.arpa/` on the LAN and run
+issues and pull requests. Open `https://git.home.rytim.com/` on the LAN and run
 `just git-host status` for health. It uses one resource-limited container with
 SQLite; registration and CI runners are disabled. Its application state is
 separate from media services. Its encrypted backup workflow captures the stopped

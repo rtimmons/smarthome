@@ -1,8 +1,12 @@
 # Jellyfin NAS trial
 
-Jellyfin runs alongside Plex at `http://192.168.1.66:8096/`. Use the separate
-Jellyfin account, whose private login is saved in
-`usenet-infra/secrets/jellyfin/operator.json` on the maintainer's checkout.
+Jellyfin runs alongside Plex. Open `https://jellyfin.home.rytim.com/` and use
+`ryantimmons` (or the existing `ryan` alias) with the household AD password.
+The native listener `http://192.168.1.66:8096/` remains for saved playback clients.
+This is AD-backed Jellyfin authentication, not Authelia browser MFA. The private
+operator copy used by maintenance helpers is retained in external controller
+state through `usenet-infra/secrets/jellyfin/operator.json`; clients should use
+the current AD password. See [directory login](../../docs/operations/household-identity.md#jellyfin-and-moonfin-directory-login-october-24-2026).
 The private library is neither mounted nor indexed. Seerr continues to use its
 existing Plex login and availability source.
 
@@ -102,7 +106,7 @@ quality policy, reserves and manual pauses remain unchanged.
 Moonbase 2.4.0.0 is installed from the official Moonfin plugin catalog, with
 the release checksum verified. The downloaded archive's SHA-256 is
 `2dadff3d8f4f797e18b394bf9825173f9bc2f49022d6a0220ef5fb6eb4fbd35b`.
-Moonfin Web is served at `http://192.168.1.66:8096/Moonfin/Web/`; clients use
+Moonfin Web is served at `https://jellyfin.home.rytim.com/Moonfin/Web/`; clients use
 the same Jellyfin account and server address as the stock client.
 Settings sync and Seerr are enabled. The plugin proxies Seerr over the existing
 private route, keeping session cookies on the NAS. No Seerr API key is sent to
