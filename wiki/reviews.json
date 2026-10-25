@@ -30,13 +30,13 @@
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "5dccc8b9a3037ba34f4ec5cdc73725b4783a34b8a9c3033dad8f02f730499d78",
-    "reason": "Retain existing API keys and recovery account while adding the tested HA-only machine account to the VPN gateway; scope deployment to proxy only",
-    "reviewed_at": "2026-10-24"
+    "fingerprint": "7922dcf8904656dfb20d23e6fda17969a3a4931cf7976db71e9590c2efff6f0a",
+    "reason": "Catalog dashboards and entity visibility retain exact owner ACL; Jellyfin native login documented",
+    "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "dc232d606706d878ed3ff77eebcf378af5a90c0dbb0e98705ade8a844535ade6",
-    "reason": "Document verified 89-file SOPS restore, NAS virtualization removal and post-uninstall AD/SMB checks with upstream guidance",
+    "fingerprint": "bd76c5cd8e84610ed21882e04fb2e63d421154e66ee1dcba0e30b7c7a37ea809",
+    "reason": "Preserve immutable pre-AD recovery checkpoint; final Catalog and Jellyfin identity paths and protocol limits reviewed",
     "reviewed_at": "2026-10-25"
   },
   "printing": {

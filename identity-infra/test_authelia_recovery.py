@@ -69,6 +69,23 @@ class AutheliaRecovery(unittest.TestCase):
                 before = target.read_bytes()
                 render_authelia.main()
                 self.assertEqual(target.read_bytes(), before)
+                catalog_path = secrets/'catalog-client.json'
+                catalog_path.write_text(json.dumps({'client_id': 'synthetic-client', 'client_secret': 'synthetic-secret'}))
+                (secrets/'catalog-client-digest').write_text('synthetic-digest')
+                render_authelia.main()
+                catalog_config = json.loads(target.read_text())
+                clients = catalog_config['identity_providers']['oidc']['clients']
+                self.assertEqual(clients[0], configured['identity_providers']['oidc']['clients'][0])
+                self.assertFalse(clients[1]['require_pkce'])
+                self.assertEqual(clients[1]['redirect_uris'], ['https://catalog.home.rytim.com/oauth/callback'])
+                self.assertEqual(catalog_config['access_control']['rules'][-1]['subject'], 'user:ryantimmons')
+                catalog_before = target.read_bytes()
+                catalog_path.unlink()
+                with self.assertRaisesRegex(RuntimeError, 'Restore the existing Catalog credential'):
+                    render_authelia.main()
+                self.assertEqual(target.read_bytes(), catalog_before)
+                catalog_path.write_text(json.dumps({'client_id': 'synthetic-client', 'client_secret': 'synthetic-secret'}))
+                before = target.read_bytes()
                 smtp_path.unlink()
                 with self.assertRaisesRegex(RuntimeError, 'Restore the existing SMTP credential'):
                     render_authelia.main()

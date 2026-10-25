@@ -207,26 +207,140 @@ When restoring an older native HA backup, run `just usenet identity arr-gateway`
 after restoring the controller identity seal. This reinstalls the same gateway
 credential into SSL state without replacing the cloud credential or any user key.
 
+## Catalog SSO — October 24, 2026
+
+Catalog uses `https://catalog.home.rytim.com`; `catalog.home.arpa` redirects
+there. The proxy requires Authelia MFA on every path, including APIs and the
+OAuth callback, and strips caller-supplied identity and authorization headers.
+OliveTin then uses its native confidential OAuth client. Only the verified
+`preferred_username` value `ryantimmons` matches the additional action ACL;
+empty identities and other users receive no action permissions. Local recovery
+credentials and the existing `catalog-operators` ACL remain unchanged. No new
+NAS share grants, media changes or acquisition settings accompany this update.
+
+[OliveTin's Authelia guide](https://docs.olivetin.app/security/oauth2_authelia.html)
+describes the integration, but the pinned 3000.19.0 implementation does not
+support PKCE or array-valued group claims. This client alone therefore uses a
+confidential authorization-code flow without PKCE, an exact HTTPS callback and
+an owner-only two-factor policy. Forgejo still requires S256 PKCE. Do not use
+`addToUsergroup`: this implementation can reach group computation after an
+unsuccessful user-info request. Match the verified username instead. The adapter
+also suppresses upstream OAuth-state log messages and redacts client secrets.
+Reassess these compatibility exceptions when upgrading OliveTin.
+
+Preparation and scoped rollout:
+
+```sh
+just usenet identity prepare-catalog
+just usenet identity render-authelia
+just credentials capture
+just credentials verify
+just usenet identity stage-authelia
+# Restart only local_authelia through the dedicated HA connection, then check health.
+just usenet identity deploy-catalog          # fresh idle preflight only
+just usenet identity deploy-catalog --apply  # repeats the check, then updates only dashboard
+```
+
+The rollout refuses active transfers and a changed recovery credential. It
+preserves the original adapter and auth file under the NAS's owner-only
+`/share/Container/usenet/secrets/catalog-pre-sso` directory. A rollback restores
+those two files with their original owner/mode and recreates only `dashboard`;
+the HTTPS MFA gate can remain. The prior Authelia configuration is retained in
+its persistent configuration directory. Do not rotate the existing OIDC signing
+key or recovery login to undo a Catalog change.
+
+Validation includes the real Caddy runtime with synthetic allow/deny/unavailable
+authorizers, spoofed identity headers and callback paths; adapter tests preserve
+the local login and deny unmapped usernames. Live checks confirm the exact OAuth
+client/callback, Secure/HttpOnly state cookie and client-secret agreement with
+Authelia. These checks do not substitute for a human completing the MFA/OAuth
+browser flow. The expanded SOPS capture verifies 96 files, including Catalog's
+new client credential and the unchanged recovery credential.
+
+## Jellyfin and Moonfin directory login — October 24, 2026
+
+Use `https://jellyfin.home.rytim.com` for Jellyfin and
+`https://jellyfin.home.rytim.com/Moonfin/Web/` for Moonfin. Existing `.home.arpa`
+URLs remain available to avoid changing saved native-client addresses. Sign in
+with `ryantimmons` (or the existing `ryan` alias) and the AD password. An existing
+client may need to sign in again. This is shared-directory authentication, not
+Authelia browser MFA; putting a redirect gate over playback APIs would break
+native clients.
+
+The official [LDAP Authentication plugin](https://github.com/jellyfin/jellyfin-plugin-ldapauth/tree/v24)
+version 24.0.0.0 supports the installed 12.3.0 server. It uses LDAPS port 636,
+validates the DC hostname and private CA inside the server, and never skips TLS
+verification. This server-only trust requires no root certificate on a Mac or
+TV. `svc-jellyfin` has no administrative/access groups or delegated password-write
+privileges, and passed encrypted SMB denial checks on all six NAS shares.
+
+The LDAP filter admits only the existing Ryan identity. AD's `uid=ryan` alias
+preserves the Jellyfin username; an explicit plugin link preserves the original
+Jellyfin user ID. Automatic account creation and LDAP-driven admin changes are
+disabled. Ryan's original admin/library policy and Moonfin's existing Seerr user
+link passed live verification. Michael's NAS account was denied Jellyfin access
+and no new profile was created. No media scan, acquisition or library move was
+part of the migration.
+
+A hidden local `smarthome-recovery` administrator was created and authenticated
+before changing Ryan's provider. Its private credential is in
+`build/identity-private/secrets/jellyfin-recovery.json` in external controller
+state and the SOPS vault. The previous local Ryan credential remains in
+`secrets/jellyfin-operator-before-ad.json`, with the original account database
+in the verified pre-AD snapshot. The controller's existing Jellyfin operator file now
+uses Ryan's AD password so the Moonfin repair helper keeps the same account ID.
+After an intentional AD password change, update that private operator copy and
+recapture SOPS; normal clients should use the new AD password directly.
+
+```sh
+just usenet identity verify-jellyfin
+just usenet identity backup-jellyfin --post-ad
+```
+
+The read-only verifier checks the original user ID/policy, TLS settings and the
+NAS-only user's denied access. The backup refuses active playback, stops only
+Jellyfin, archives settings/databases/plugins and server CA, restarts Jellyfin,
+and verifies exact decryption of the off-host age archive. It excludes media,
+artwork and playback cache. Pre-AD and post-AD snapshots have separate filenames
+and receipts. These are successful point-in-time backups, not an assertion that
+a recurring Jellyfin backup schedule exists.
+
+For repair, `just usenet identity jellyfin-directory` validates the saved bind
+identity and alias without rotating passwords; `migrate-jellyfin` validates the
+installed plugin, certificate and original account linkage before applying the
+saved configuration. It tests local recovery first and restores Ryan's previous
+policy if native AD login or Moonfin linkage fails. Install the official plugin
+and its server CA before using that migration helper. A full rollback uses the
+verified pre-AD archive and original provider/credential, preserving all user IDs.
+Never recreate Ryan's profile to resolve a login failure.
+
 ## Remaining service assessment
 
 | Service | Current authentication | Next integration boundary |
 | --- | --- | --- |
 | QNAP SMB | Verified AD accounts and preserved local recovery accounts | Keep the native domain join and share groups; browser proxy authentication cannot authenticate SMB. |
 | QNAP administration | Existing local administrator; domain membership is active | Preserve emergency administration independently of the browser identity service. |
-| Catalog / OliveTin | Local operator login, with explicit action ACLs | Evaluate its native OAuth2 user-info mapping against the installed version; retain the existing operator permissions and recovery login. |
-| Jellyfin / Moonfin | Jellyfin 12.3.0; existing `ryan` administrator uses its local provider; no auth plugin installed | Verify plugin compatibility and explicit linkage to the existing profile before enabling AD or OIDC. Preserve profile identity, library grants and native clients. |
+| Catalog / OliveTin | Native Authelia OAuth at `https://catalog.home.rytim.com`, with an outer MFA gate and existing local recovery login | Only `ryantimmons` receives the existing operator capabilities. Authenticated browser acceptance remains pending. |
+| Jellyfin / Moonfin | Jellyfin 12.3.0 with official LDAP-Auth 24.0.0.0, verified LDAPS and the existing `ryan` profile | Shared AD password on native clients; no browser redirect gate or Authelia MFA on the playback API. Local recovery administration is separate. |
 | Plex and Seerr | Native Plex login plus the explicitly approved dedicated Moonfin request account | Preserve those client and API flows; do not put browser redirects in front of native playback or the request integration. |
 | HA administration and community add-ons | Existing HA authentication and ingress | Keep HA ingress as the authenticated boundary pending a separate supported integration. |
 
-[Jellyfin's official LDAP plugin](https://jellyfin.org/docs/general/server/plugins/#ldap)
-supports directory authentication and configurable username mapping. Its native
-client compatibility makes it worth evaluating before a browser-only SSO change.
-The [Authelia Jellyfin guide](https://www.authelia.com/integration/openid-connect/clients/jellyfin/)
-documents a separate SSO plugin, with an older tested server version than this
-installation. [OliveTin's OAuth2 configuration](https://docs.olivetin.app/security/oauth2.html)
-provides username and group mapping; verify the deployed implementation before
-granting any catalog action through it. These are assessment findings, not
-completed migrations.
+The [QTS domain-security guide](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/domain-security-5933D0DB.html)
+supports directory accounts for NAS access. This does not turn QTS administration
+into an Authelia/OIDC application, or justify granting domain-wide administrative
+privileges to ordinary household users. The local administrator remains available.
+
+[Home Assistant's supported providers](https://www.home-assistant.io/docs/authentication/providers/)
+include local authentication and an external command adapter, but no built-in
+OIDC provider. An LDAP command adapter would require a maintained runtime and
+verified linkage to the existing HA owner and mobile clients. Do not replace it
+with trusted-network login bypass. Existing HA authentication and ingress remain.
+[Plex's supported federated sign-in](https://support.plex.tv/articles/use-federated-authentication-to-sign-in/)
+uses Google or Apple with a Plex account; that is not an arbitrary household
+OIDC provider. Keep Plex/Seerr's native account and the approved Moonfin request
+integration. Full universal browser SSO would require unsupported integration or
+replacing those services. API keys, SSH keys, emergency accounts and device/kiosk
+sessions also remain distinct from browser cookies.
 
 ## Upstream practice review — October 24, 2026
 

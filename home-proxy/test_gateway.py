@@ -33,7 +33,7 @@ class GatewayTests(unittest.TestCase):
         config = re.sub(r'https://([a-z.]+)', r'http://\1:18443', config)
         config = re.sub(r'^\s*tls .*$', '', config, flags=re.M)
         config = config.replace('192.168.1.163', '127.0.0.1').replace('192.168.1.0/24', '127.0.0.0/8')
-        config = config.replace('10.77.0.1', '127.0.0.1')
+        config = config.replace('10.77.0.1', '127.0.0.1').replace('192.168.1.66', '127.0.0.1')
         path = Path(cls.temporary.name)/'Caddyfile'
         path.write_text(config)
         path.chmod(0o644)
@@ -59,7 +59,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
                   'path':self.path}).encode()
   self.send_response(200); self.send_header('Content-Length',str(len(data))); self.end_headers(); self.wfile.write(data)
  def log_message(self,*args): pass
-for port in (9091,18080,19696):
+for port in (9091,18080,19696,1337):
  threading.Thread(target=http.server.ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever,daemon=True).start()
 while True: time.sleep(60)
 '''
@@ -90,7 +90,7 @@ else: raise SystemExit(1)
             raise AssertionError((logs.stdout+logs.stderr)[-2500:]) from error
 
     def test_all_browser_and_api_paths_require_authorization(self):
-        for app, base in (('radarr','/radarr'),('sonarr','/sonarr'),('prowlarr',''),('sabnzbd','')):
+        for app, base in (('radarr','/radarr'),('sonarr','/sonarr'),('prowlarr',''),('sabnzbd',''),('catalog','')):
             for suffix in ('/', '/api/v3/system/status?apikey=synthetic', '/signalr'):
                 for cookie, status in (('',401),('fixture=denied',403),('fixture=down',503)):
                     self.assertEqual(self.request(app,base+suffix,cookie)['status'],status)
@@ -100,6 +100,12 @@ else: raise SystemExit(1)
             result=self.request(app,path,'fixture=mfa')
             self.assertEqual(result['status'],200)
             self.assertEqual(json.loads(result['body']),{'gateway_authenticated':True,'identity_spoofed':False,'path':path})
+
+    def test_catalog_has_no_injected_credentials_or_spoofed_identity(self):
+        result = self.request('catalog', '/oauth/callback', 'fixture=mfa')
+        self.assertEqual(result['status'], 200)
+        self.assertEqual(json.loads(result['body']), {
+            'gateway_authenticated': False, 'identity_spoofed': False, 'path': '/oauth/callback'})
 
     def test_sibling_paths_remain_unreachable_after_authorization(self):
         for app,path in (('radarr','/sonarr/'),('sonarr','/radarr/'),('prowlarr','/radarr/')):

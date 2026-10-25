@@ -74,9 +74,9 @@ http://:80 {
 	handle @sabnzbd {
 		redir https://sabnzbd.home.rytim.com{uri} 308
 	}
-	@catalog host catalog.home.arpa
+	@catalog host catalog.home.arpa catalog.home.rytim.com
 	handle @catalog {
-		reverse_proxy http://192.168.1.66:1337
+		redir https://catalog.home.rytim.com{uri} 308
 	}
 	@printer host printer.home.arpa
 	handle @printer {
@@ -212,5 +212,34 @@ https://sabnzbd.home.rytim.com {
 				import arr_upstream
 			}
 		}
+	}
+}
+
+https://catalog.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			reverse_proxy http://192.168.1.66:1337
+		}
+	}
+}
+
+# Native Jellyfin clients authenticate directly against Jellyfin's AD provider.
+# A browser redirect gate here would break TV/mobile playback and API clients.
+https://jellyfin.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		reverse_proxy http://192.168.1.66:8096
 	}
 }

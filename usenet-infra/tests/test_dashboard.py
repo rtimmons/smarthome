@@ -196,6 +196,37 @@ class DashboardTests(unittest.TestCase):
     def test_startup_log_hashes_are_never_forwarded(self):
         self.assertIsNone(dash.sanitized_log(json.dumps({'level': 'debug', 'msg': 'hash'}), 'hash'))
         self.assertNotIn('private-hash', dash.sanitized_log('{"level":"info","msg":"private-hash"}', 'private-hash'))
+        for message in ('OAuth2 state: synthetic-cookie', 'State mismatch: synthetic-cookie', 'token-code'):
+            self.assertIsNone(dash.sanitized_log(json.dumps({'level': 'info', 'msg': message}), 'hash'))
+
+    def test_oauth_preserves_local_recovery_and_denies_unmapped_identities(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            auth = root/'auth.json'
+            saved = {'username': 'operator', 'password_hash': '$argon2id$v=19$m=65536,t=3,p=1$YWJj$YWJj',
+                     'oauth': {'client_id': 'i'*64, 'client_secret': 's'*64}}
+            auth.write_text(json.dumps(saved)); auth.chmod(0o600)
+            template = SCRIPTS.parent/'compose/qnap/olivetin/config.yaml'
+            with mock.patch.dict(os.environ, {'CATALOG_DASHBOARD_ROOT': directory,
+                    'CATALOG_DASHBOARD_AUTH_FILE': str(auth), 'CATALOG_DASHBOARD_CONFIG_TEMPLATE': str(template)}):
+                dash.publish({'items': []})
+            config = json.loads((root/'runtime/config.yaml').read_text())
+            self.assertTrue(config['authLocalUsers']['enabled'])
+            self.assertFalse(any(config['defaultPermissions'].values()))
+            owner = config['accessControlLists'][-1]
+            self.assertEqual(owner['matchUserNames'], ['ryantimmons'])
+            self.assertFalse(owner['permissions']['kill'])
+            for section in ('dashboards', 'entities'):
+                self.assertTrue(all('household-owner' in entry['acls'] for entry in config[section]))
+            provider = config['authOAuth2Providers']['authelia']
+            self.assertNotIn('addToUsergroup', provider)
+            self.assertNotIn('userGroupField', provider)
+            self.assertFalse(provider['insecureSkipVerify'])
+            self.assertNotIn('s'*64, (root/'runtime/config.yaml').read_text())
+            self.assertEqual(dash.load_auth(auth)['CATALOG_OAUTH_CLIENT_SECRET'], 's'*64)
+            saved['oauth']['client_secret'] = 'short'
+            auth.write_text(json.dumps(saved))
+            with self.assertRaises(ValueError): dash.load_auth(auth)
 
     def test_invalid_snapshot_timeout_never_launches_process(self):
         with mock.patch.dict(os.environ, {'CATALOG_DASHBOARD_SNAPSHOT_TIMEOUT': 'bad'}), \

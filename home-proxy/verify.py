@@ -15,7 +15,6 @@ CASES = [
     ('plex', '/web/index.html', 200, None),
     ('seerr', '/', 307, '/login'),
     ('seerr', '/api/v1/auth/me', 401, None),
-    ('catalog', '/', 200, None),
     ('printer', '/', 302, '/bb'),
     ('printer', '/bb', 200, None),
     ('tinyurl', '/', 200, None),
@@ -25,7 +24,7 @@ CASES = [
 ]
 
 
-ARR = ('radarr', 'sonarr', 'prowlarr', 'sabnzbd')
+ARR = ('radarr', 'sonarr', 'prowlarr', 'sabnzbd', 'catalog')
 
 
 def main():
@@ -69,6 +68,17 @@ def main():
                   and info.get('ssl_verify_result',0)==0)
             print(f'{"PASS" if ok else "FAIL"} {domain} {scheme} gate status={info.get("http_code")}')
             if not ok: failed.append(domain+path)
+    for path, expected in (('/web/index.html', 200), ('/Users/Me', 401)):
+        host = 'jellyfin.home.rytim.com'
+        command = ['curl', '--noproxy', '*', '--silent', '--show-error', '--max-time', '20',
+                   '--output', '/dev/null', '--write-out', '%{json}']
+        if not args.dns:
+            command += ['--resolve', host+':443:192.168.1.163']
+        result = subprocess.run(command+['https://'+host+path], capture_output=True, text=True)
+        info = json.loads(result.stdout or '{}')
+        ok = result.returncode == 0 and info.get('http_code') == expected and info.get('ssl_verify_result') == 0
+        print(f'{"PASS" if ok else "FAIL"} {host}{path} native authentication status={info.get("http_code")}')
+        if not ok: failed.append(host+path)
     if failed:
         raise SystemExit('Failed routes: ' + ', '.join(failed))
 

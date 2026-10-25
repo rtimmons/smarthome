@@ -265,6 +265,24 @@ def publish(data: dict, error: str | None = None) -> None:
     if template.exists():
         base = json.loads(template.read_text())
         base.update(config)
+        auth_path = Path(os.environ.get('CATALOG_DASHBOARD_AUTH_FILE', '/run/secrets/dashboard-auth.json'))
+        if auth_path.exists():
+            auth = load_auth(auth_path)
+            if 'CATALOG_OAUTH_CLIENT_ID' in auth:
+                base.update(oauth_config())
+                # Do not grant a role merely because an OAuth callback exists.
+                # In this pinned OliveTin version userinfo failures produce an
+                # empty username, and array-valued groups are unsupported.
+                base['accessControlLists'].append({
+                    'name': 'household-owner', 'matchUserNames': ['ryantimmons'],
+                    'addToEveryAction': True,
+                    'permissions': {'view': True, 'exec': True, 'logs': True, 'kill': False},
+                    'policy': {'showLogList': True, 'showDiagnostics': False},
+                })
+                for section in ('dashboards', 'entities'):
+                    for item in base.get(section, []):
+                        if 'catalog-operators' in item.get('acls', []):
+                            item['acls'].append('household-owner')
         # OliveTin watches only its primary config, not included config files.
         # Auth remains placeholders sourced from the private environment.
         atomic_write(root() / 'runtime' / 'config.yaml', json.dumps(base, indent=2) + '\n')
@@ -337,7 +355,31 @@ def load_auth(path: Path) -> dict[str, str]:
         raise ValueError('Dashboard username must be a simple 1–64 character identifier.')
     if not re.fullmatch(r'\$argon2id\$v=19\$m=\d+,t=\d+,p=\d+\$[A-Za-z0-9+/]+\$[A-Za-z0-9+/]+', password_hash):
         raise ValueError('Dashboard requires an Argon2id password hash; no plaintext passwords.')
-    return {'CATALOG_DASHBOARD_USERNAME': username, 'CATALOG_DASHBOARD_PASSWORD_HASH': password_hash}
+    result = {'CATALOG_DASHBOARD_USERNAME': username, 'CATALOG_DASHBOARD_PASSWORD_HASH': password_hash}
+    if 'oauth' in auth:
+        oauth = auth['oauth']
+        if set(oauth) != {'client_id', 'client_secret'} or any(
+                not isinstance(value, str) or not re.fullmatch(r'[A-Za-z0-9_-]{48,128}', value)
+                for value in oauth.values()):
+            raise ValueError('Invalid Catalog OAuth credential; restore the private configuration.')
+        result.update(CATALOG_OAUTH_CLIENT_ID=oauth['client_id'], CATALOG_OAUTH_CLIENT_SECRET=oauth['client_secret'])
+    return result
+
+
+def oauth_config() -> dict:
+    return {
+        'authOAuth2RedirectUrl': 'https://catalog.home.rytim.com/oauth/callback',
+        'authOAuth2Providers': {'authelia': {
+            'name': 'authelia', 'title': 'Household SSO',
+            'clientId': '${{ CATALOG_OAUTH_CLIENT_ID }}',
+            'clientSecret': '${{ CATALOG_OAUTH_CLIENT_SECRET }}',
+            'authUrl': 'https://auth.home.rytim.com/api/oidc/authorization',
+            'tokenUrl': 'https://auth.home.rytim.com/api/oidc/token',
+            'whoamiUrl': 'https://auth.home.rytim.com/api/oidc/userinfo',
+            'scopes': ['openid', 'profile'], 'usernameField': 'preferred_username',
+            'insecureSkipVerify': False,
+        }},
+    }
 
 
 def healthcheck() -> int:
@@ -352,6 +394,9 @@ def healthcheck() -> int:
 
 
 def sanitized_log(line: str, password_hash: str) -> str | None:
+    # Upstream logs the OAuth state cookie at INFO, including on failures.
+    if any(marker in line for marker in ('OAuth2 state:', 'State mismatch:', 'token-code')):
+        return None
     try:
         if json.loads(line).get('level', '').lower() in ('debug', 'trace'):
             return None
@@ -400,6 +445,9 @@ def serve() -> int:
         for line in process.stdout:
             safe = sanitized_log(line, auth['CATALOG_DASHBOARD_PASSWORD_HASH'])
             if safe is not None:
+                for key in ('CATALOG_OAUTH_CLIENT_ID', 'CATALOG_OAUTH_CLIENT_SECRET'):
+                    if key in auth:
+                        safe = safe.replace(auth[key], '[redacted]')
                 print(safe, end='', flush=True)
 
     threading.Thread(target=forward_logs, daemon=True).start()

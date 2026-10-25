@@ -104,6 +104,30 @@ def main():
                          'grant_types': ['authorization_code'], 'token_endpoint_auth_method': 'client_secret_basic'}],
         }},
     }
+    catalog_path = secret_dir/'catalog-client.json'
+    catalog = json.loads(catalog_path.read_text()) if catalog_path.exists() else None
+    existing_path = directory/'configuration.json'
+    if catalog is None and existing_path.exists():
+        old_clients = json.loads(existing_path.read_text()).get('identity_providers', {}).get('oidc', {}).get('clients', [])
+        if any(client.get('authorization_policy') == 'catalog' for client in old_clients):
+            raise RuntimeError('Restore the existing Catalog credential; refusing to remove its login')
+    if catalog is not None:
+        oidc = config['identity_providers']['oidc']
+        oidc['authorization_policies']['catalog'] = {'default_policy': 'deny', 'rules': [
+            {'subject': 'user:ryantimmons', 'policy': 'two_factor'}]}
+        config['access_control']['rules'].append({
+            'domain': 'catalog.home.rytim.com', 'subject': 'user:ryantimmons', 'policy': 'two_factor'})
+        oidc['clients'].append({
+            'client_id': catalog['client_id'], 'client_name': 'Household Catalog',
+            'client_secret': secret('catalog-client-digest'), 'public': False,
+            'authorization_policy': 'catalog',
+            # OliveTin 3000.19.0 does not implement PKCE. This exception is
+            # confined to its confidential client; Forgejo still requires S256.
+            'require_pkce': False,
+            'redirect_uris': ['https://catalog.home.rytim.com/oauth/callback'],
+            'scopes': ['openid', 'profile'], 'response_types': ['code'],
+            'grant_types': ['authorization_code'], 'token_endpoint_auth_method': 'client_secret_basic',
+        })
     path = directory/'configuration.json'
     rendered = json.dumps(config, indent=2)+'\n'
     if path.exists() and path.read_text() != rendered:

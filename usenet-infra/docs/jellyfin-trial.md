@@ -221,3 +221,13 @@ extraction restored the operator credentials and passed SQLite integrity checks.
 The private archive and receipt are under `usenet-infra/build/jellyfin-trial/`;
 artwork, logs and cache are excluded. This is a local recovery checkpoint, not
 recurring off-host protection or a replacement-NAS startup test.
+
+## Household directory authentication
+
+Jellyfin now uses the household AD identity through its official LDAP plugin,
+while preserving the existing profile, library policy and Moonfin account link.
+Use `https://jellyfin.home.rytim.com` with `ryantimmons` (or `ryan`) and the AD
+password. Local recovery credentials and verified pre/post migration backups
+remain separate. See the canonical [household identity runbook](../../docs/operations/household-identity.md)
+for TLS, permissions, recovery and verification commands. Native playback APIs
+are not wrapped in browser redirects.

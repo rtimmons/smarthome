@@ -346,6 +346,12 @@ def main():
              'stage-authelia':'stage_authelia.py', 'stage-web':'stage_web.py', 'backup':'backup_directory.py',
              'inventory':'inventory.py', 'dreamhost-key':'configure_dns_key.py', 'stage-acme':'stage_acme.py'}
     local['backup-ha'] = 'backup_ha.py'
+    local['prepare-catalog'] = 'prepare_catalog.py'
+    local['deploy-catalog'] = 'deploy_catalog.py'
+    local['jellyfin-directory'] = 'jellyfin_directory.py'
+    local['migrate-jellyfin'] = 'migrate_jellyfin.py'
+    local['verify-jellyfin'] = 'verify_jellyfin.py'
+    local['backup-jellyfin'] = 'backup_jellyfin.py'
     local['arr-gateway'] = 'arr_gateway.py'
     local['escrow-app-keys'] = 'capture_app_keys.py'
     local['migrate-arr'] = 'migrate_arr.py'
@@ -366,6 +372,8 @@ def main():
     parser.add_argument('action',choices=('build','address-check','provision-check','deploy','status','qnap-backup','runtime','vm-check','vm-disk','vm-app-log','vm-storage-access','vm-finish-disk','vm-inspect','vm-disk-check','vm-start-preparation','principals','resume-principals','diagnose','verify','verify-household','backup-help','backup-log','acl-check','network-check','qnap-domain-status','qnap-join-log','qnap-discovery','repair-sysvol','host-check',*local))
     parser.add_argument('--email', help='Approved email for first household-user creation')
     parser.add_argument('--host', help='Explicit temporary LAN address of the prepared VM')
+    parser.add_argument('--post-ad', action='store_true', help='Keep a separate post-migration Jellyfin snapshot')
+    parser.add_argument('--apply', action='store_true', help='Apply the prepared Catalog update after its idle check')
     args=parser.parse_args()
     if (PRIVATE/'ha-cutover.json').exists() and args.action in (
             'vm-prepare', 'vm-repair-bootstrap', 'vm-disk', 'vm-storage-access',
@@ -377,10 +385,18 @@ def main():
         parser.error('--email applies only to users')
     if bool(args.host) != (args.action == 'vm-guest-status'):
         parser.error('--host is required only for vm-guest-status')
+    if args.post_ad and args.action != 'backup-jellyfin':
+        parser.error('--post-ad applies only to backup-jellyfin')
+    if args.apply and args.action != 'deploy-catalog':
+        parser.error('--apply applies only to deploy-catalog')
     if args.action in local:
         extra = ['--email', args.email] if args.action == 'users' else []
         if args.action == 'vm-guest-status':
             extra = ['--host', args.host]
+        if args.action == 'deploy-catalog' and args.apply:
+            extra = ['--apply']
+        if args.action == 'backup-jellyfin' and args.post_ad:
+            extra = ['--post-ad']
         return subprocess.run([sys.executable, str(ROOT/'identity-infra'/local[args.action]), *extra]).returncode
     if args.action == 'qnap-backup':
         from qnap_backup import main as backup
