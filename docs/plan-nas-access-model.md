@@ -4,6 +4,8 @@
 been changed.** This is the concise authorization companion to the
 [storage and migration plan](plan-nas-storage-and-access.md). The current-state
 inventory at the end records the October 24–25 inspection and identity rollout.
+The [October 25 preflight](nas-preflight-2026-10-25.md) adds current home-folder,
+legacy-share and backup evidence; its unresolved gates still apply.
 
 Confirmed policy: **Ryan maintains the private library; Ryan and Michael both
 maintain general media.** Ordinary access follows **account → role → share**.
@@ -27,9 +29,9 @@ ordinary-user SMB-denied by default, with local service mounts and explicit ACLs
 | Share | Contents / existing source | Target storage tier | B2 policy |
 | --- | --- | --- | --- |
 | `PrivateLibrary` | Private originals under `FromDrobo`; new restricted share | Protected | Local originals |
-| `Documents` | Classified shared originals from `Public`/`Multimedia`; personal files may use owner homes; ownership still to decide | Protected | Local originals |
-| `home` (Ryan) | Ryan's personal QTS home view, backed by his directory in `homes`; enablement/location unverified | Protected | Local originals |
-| `home` (Michael) | Michael's personal QTS home view, backed by his directory in `homes`; enablement/location unverified | Protected | Local originals |
+| `Documents` | Explicitly classified shared originals; no current Public payload is assigned here | Protected | Local originals |
+| `home` (Ryan) | Canonical AD personal home; destination for both Public folders after privacy/backup pilot; homes enabled on Scratch, personal path unqualified | Protected | Local originals |
+| `home` (Michael) | Canonical AD personal home; homes enabled on Scratch, personal path and isolation unqualified | Protected | Local originals |
 | `homes` | Administrative parent of all personal homes; not a household-wide share | Protected | Local originals |
 | `MediaCache` | Replaceable local movie/TV copies under `FromDrobo` | Disposable | Rebuild |
 | `PlaybackCache` | Disposable rclone cache currently at `FromDrobo/.remote-cache`; service-only local storage | Disposable | Rebuild |
@@ -65,8 +67,14 @@ the administrative `homes` share. Ryan and Michael therefore have distinct acces
 scopes, but not separate physical shares or independent RAID policies by default.
 Local and domain identities must be mapped explicitly; matching usernames do not
 prove they resolve to the same home. Use the AD home as each person's eventual
-canonical personal space. The October 25 home-setting probe failed to connect,
-so enablement, backing volume and existing local/domain homes remain unverified.
+canonical personal space. The October 25 preflight supersedes the failed earlier
+probe: homes are enabled on Scratch, with `home=%H` and domain template
+`/share/homes/DOMAIN=%D/%U`. Only badmin and usenet-deploy local home directories
+were observed; human/domain roots were not found at the tested paths. Local
+filesystem permissions remain permissive, so owner isolation is not established.
+Preserve enabled homes and the deployment home/key: they are a documented
+[SSH recovery dependency](../usenet-infra/docs/qnap-bootstrap.md#october-25-ssh-recovery).
+Neither homes nor Multimedia is in the current HBS source list.
 [QTS home-folder behavior](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/home-folders-69AC09AA.html),
 [QTS home-folder volume selection](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/enabling-home-folders-5342F3CB.html).
 
@@ -135,7 +143,11 @@ administrative inventory and [exception protection policy](plan-nas-data-protect
 | Required package/Container paths | Existing bounded package-state roles and verified native principals; no blanket household or cross-service grant |
 | `Scratch` → `System` | Volume display alias only; creates no share, account, role or new permission |
 
-Migrate originals to owner homes, approved `Documents` scopes or `PrivateLibrary`
+The user confirmed both Public data folders are Ryan's private files: migrate
+them to his canonical AD home only after privacy and backup qualification, not
+to shared `Documents`. Video Station and Multimedia Console are unused by the
+household but remain enabled; retire them after native dependency/indexing checks.
+Migrate other originals to owner homes, approved `Documents` scopes or `PrivateLibrary`
 according to ownership; only verified replaceable media belongs in `MediaCache`.
 Give each exception an owner, exact required principals/operations and backup
 source. Do not invent a broad platform-share access group. Review existing
@@ -555,18 +567,18 @@ the [Talos backup contract](operations/addon-state-backups.md), and the
 
 ## Current state and migration delta
 
-Six real SMB data shares were inspected. The configuration also contains a
+The fresh October 25 preflight found seven path-bearing SMB shares, adding the
+enabled `homes` parent to the earlier six-share inventory. `home` is a dynamic
+owner view. The configuration also contains a
 `TMBackup` section with no path returned; it is not counted as a qualified data
 share and needs clarification before cleanup.
-The separate home-folder probe could not connect; `home`/`homes` enablement and
-contents are not established by the earlier six-share inventory.
 
 | Current share | Location / purpose | Intended replacement |
 | --- | --- | --- |
 | `FromDrobo` | Main data volume; private originals, local media, remote mount and staging mixed together | Physical data split into `PrivateLibrary`, `MediaCache`, `PlaybackCache`, `TransferStaging`; remote views relocated through a mount cutover |
-| `home` / `homes` (unverified) | Per-user views and their administrative parent, if enabled | Owner-scoped AD homes; preserve/migrate any separate local-account homes after explicit ownership mapping |
-| `Public` | System volume; mixed originals and other files | Classify/migrate all household data to owner homes or named datasets; retire household access; retain minimal required platform root |
-| `Multimedia` | System volume; content ownership not classified | Classify/migrate by owner and data class; remove through supported dependency workflow, or document a narrowly scoped required exception |
+| `home` / `homes` | Enabled on system volume; local admin/deployment homes observed; human/domain paths and effective isolation unqualified | Owner-scoped AD homes with B2 coverage; preserve deployment SSH dependency and distinct local homes |
+| `Public` | System volume; two Ryan-owned data folders, about 9.95 GiB, plus system metadata | Move both folders to Ryan's qualified AD home with backup continuity; retire household access; retain minimal required platform root |
+| `Multimedia` | System volume; Samples/system metadata; two enabled QNAP media apps confirmed unused by household | Classify remaining contents and qualify native dependencies, then retire apps/share through supported controls or document required exception |
 | `Container` | System volume; application state | Named `forgejo`, `jellyfin`, `media-control`, `filex`, `dns`, `wiki`, remote-service and `backup-control` shares; required native package paths remain |
 | `Usenet` | Main data volume; settings archives | `forgejo-backups` and `infrastructure-backups`, plus any separately inventoried remaining contents |
 | `SpaceBlackTimeMachine` | Dedicated laptop-backup volume | Keep existing share |
@@ -590,7 +602,9 @@ Preserved local grants bypass that AD-only table: local Ryan and Michael both
 have `FromDrobo` RW and `Public` R; local Ryan has Time Machine RW and Multimedia
 R; local Michael has Multimedia RW. `hass` has `FromDrobo` RW and Public/Multimedia
 R. The local administrators group includes `admin`, `badmin` and `usenet-deploy`
-and has broad grants on all six shares. These are configuration observations;
+and has broad grants on the six earlier data shares plus the `homes` parent.
+Homes' SMB administrative restriction does not establish local filesystem
+isolation. These are configuration observations;
 only the documented domain fixture tests establish tested SMB behavior.
 
 Before applying the target model, save grants/SIDs/ACLs, qualify synthetic role

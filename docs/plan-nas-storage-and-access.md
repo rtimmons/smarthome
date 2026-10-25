@@ -2,7 +2,8 @@
 
 Status: storage proposal with an **October 24, 2026 storage baseline**, revised
 on **October 25** against the deployed household identity rollout and fresh
-read-only directory, QNAP trust/share/ACL, HTTP/TLS and HA backup metadata checks.
+read-only directory, QNAP trust/share/ACL, HTTP/TLS and HA backup metadata checks,
+then the [NAS preflight](nas-preflight-2026-10-25.md) using SSH and Safari.
 These reviews changed no live configuration, credentials, shares, ACLs, media or
 disks. The requested laptop access includes **read/write access to managed media
 and support for roles with full Hetzner account filesystem access**.
@@ -37,6 +38,14 @@ Retire `FromDrobo` and household use of `Public`/`Multimedia`; remove the latter
 shares only where QNAP supports it. Relabel the existing `Scratch` volume
 `System`. Required platform roots remain explicit, restricted exceptions under
 the [legacy-share retirement phase](#legacy-share-retirement-and-system-label).
+
+The latest preflight resolves the firmware (QTS 5.2.11), home-folder enablement
+and current HBS sources. All four disks report Good, but the main data volume's
+only snapshot is from September 2024 with no schedule, the other volumes have
+none, and UPS support is disabled. These are readiness gaps, not authorization
+to start tests or change settings. Both Public data folders belong to Ryan and
+will move to his qualified private AD home. Video Station and Multimedia Console
+are unused by the household and should retire after native dependency checks.
 
 ## What is actually deployed
 
@@ -81,8 +90,8 @@ not an in-place toggle. [QTS RAID migration](https://docs.qnap.com/operating-sys
 | Application state | `/share/Container/usenet`, plus `/share/Container/home-git` | Media apps, DNS, static wiki, Filex, backup configuration and Forgejo state |
 | Native packages | Plex, HBS and Container Station on `CACHEDEV1_DATA` | Package installation paths and QTS system configuration |
 | Settings archives | `/share/Usenet/Backups/automatic` | Separate confined off-host backup credential and recurring ciphertext readback |
-| Other originals | Selected folders under `Public` | Distinguish actual originals from incidental downloads and application backups |
-| Personal home folders | QTS `home` views backed by `homes`, if enabled; October 25 home-setting connection failed | Verify actual enablement/volume and local/domain identities; preserve unique contents and owner-only access; current backup coverage unverified |
+| Other originals | Two selected folders under `Public`, confirmed Ryan-owned; about 9.95 GiB | Move to Ryan's canonical AD home only after isolation and B2 qualification; retain existing source history |
+| Personal home folders | Enabled on Scratch; `home=%H`, parent `/share/CACHEDEV1_DATA/homes`; local admin/deployment homes observed | Preserve deployment SSH recovery dependency; human AD homes and isolation unqualified; homes absent from current HBS selection |
 | Laptop backup | `SpaceBlackTimeMachine` | Existing destination identity and backup chain; do not recreate it just to rename it |
 
 At the October 24 storage inspection, eleven containers were running; containers with health checks reported healthy.
@@ -164,11 +173,12 @@ rollout's recorded evidence; no new SMB fixtures were created for this review.
 
 ### Recovery evidence and limits
 
-The October 24 NAS settings status was `ok`, with three archive scopes and last success
-at **11:09 a.m. Eastern on October 24**. Earlier independent settings restores and
-recurring off-host readback are documented in the existing recovery runbooks.
-The October 24 investigation read that status; this review did not repeat a
-backup or restore.
+The latest read-only preflight found NAS settings status `ok` at **4:16:47 p.m.
+Eastern on October 25**, with all three scopes reporting remote ciphertext
+verification. Forgejo's receipt reports success and verification at **7:28:35 p.m.
+on October 24**. These supersede the earlier status readings; no backup or restore
+was triggered by this preflight. Earlier independent settings restores remain
+separate evidence in the recovery runbooks.
 
 The identity rollout additionally passed independent AD/cold-HA restores,
 including domain/account identity, SYSVOL ACLs, password material and QNAP
@@ -207,10 +217,14 @@ distinct identity/address on a suitable independent host.
 
 The [scheduled-backup runbook](../usenet-infra/docs/scheduled-backups.md) records
 B2 coverage for the private originals, two selected Public folders, encrypted
-settings archives and the current laptop backup. It also records successful HBS
-uploads, **no demonstrated B2 sample restore**, disabled client-side encryption,
-and unverified email alert delivery. The newest HBS run and current selections
-were not revalidated here. Do not infer media protection from the settings status.
+settings archives and the current laptop backup. Fresh October 25 inspection
+confirmed those five sources, nightly 02:00/latest-30-version policy and disabled
+client-side encryption; homes and Multimedia are absent. Separate maintenance
+documented a Good HBS Quick Check, inbox-confirmed QNAP email delivery and an
+isolated B2 restore of encrypted Forgejo archives/receipts with byte comparison.
+Private-original/ACL and Time Machine restores, actual failure-event delivery
+and new per-share policies remain to qualify. Do not infer media recovery from
+a settings-file restore; see the [preflight scope and limits](nas-preflight-2026-10-25.md#backup-findings).
 
 ## Target storage and namespace
 
@@ -227,8 +241,8 @@ applications use local binds, and human Git access stays inside Forgejo.
 | Proposed share / area | Purpose | Access | Protection and placement |
 | --- | --- | --- | --- |
 | `PrivateLibrary` | Private original collection | Ryan maintains; Plex and backup services read; Michael has no private role | Protected tier; Local originals B2 policy |
-| `Documents` | Classified shared originals from Public/Multimedia; personal files may instead use their owner's home | Named household groups | Protected tier; Local originals B2 policy |
-| `home` (Ryan) | Ryan's personal space under QTS `homes` | `home-owner(ryan)` RW; scoped backup reader | Protected tier; Local originals B2 policy; one canonical source |
+| `Documents` | Explicitly classified shared originals; no current Public payload assigned here | Named household groups | Protected tier; Local originals B2 policy |
+| `home` (Ryan) | Ryan's canonical AD home, including both Public folders after qualification | `home-owner(ryan)` RW; scoped backup reader | Protected tier; Local originals B2 policy; one canonical source |
 | `home` (Michael) | Michael's personal space under QTS `homes` | `home-owner(michael)` RW; scoped backup reader | Protected tier; Local originals B2 policy; one canonical source |
 | `homes` | Administrative parent of personal home directories | Recovery administrators; backup reads selected homes; no household-wide RW | Same backing volume/tier; Local originals selection covers each home once |
 | `MediaCache` | Selective, replaceable NAS movies/TV | Ryan and Michael maintain; playback reads; copy service writes | Disposable tier eventually; Rebuild policy, no B2 media copy |
@@ -630,9 +644,10 @@ does not relocate QTS packages, AD or Time Machine as a side effect.
    acceptance and a documented retirement decision; preserve B2 history.
 
 Personal homes are a separate cutover within this phase after their inventory.
-If enabled, map local and domain homes by identity and owner before merging
-anything; use a conflict report rather than overwriting same-named files. If not
-enabled, qualify QTS's chosen volume and generated ACLs with fixtures first.
+They are enabled on Scratch and required for deployment SSH recovery. Map local
+and domain homes by identity and owner before merging anything; use a conflict
+report rather than overwriting same-named files. Qualify owner isolation and
+QTS-generated ACLs with fixtures before placing personal files in human AD homes.
 Keep unique data in old homes protected, verify each owner's AD access and the
 other user's denial, and add the canonical roots to B2 before retiring local-home
 compatibility. Do not move either person's data into a generally shared folder.
@@ -669,6 +684,16 @@ the installed firmware and application dependencies before applying that workflo
 | Required native package/Container paths | Retain supported platform locations after phase 5a extracts owned service data | Enumerate actual package requirements and protection; never remove the parent wholesale |
 | `home` / `homes` | Keep the chosen owner-scoped home service | Do not disable homes as part of default-share cleanup; preserve Time Machine separately |
 
+October 25 decisions and evidence: the two Public data folders are Ryan's private
+files, destined for his canonical AD home after privacy/backup qualification.
+Public's cached total is 9.95 GiB. Multimedia has Samples and system metadata
+(2.09 MiB cached); contents still need classification. Video Station 5.8.9 and
+Multimedia Console 2.11.2 are enabled but confirmed unused by the household.
+No container bind or host crontab reference to Public/Multimedia was found.
+Native package/indexing and client dependencies remain to check before removal.
+Homes are an evidenced platform dependency for the dedicated deployment SSH key,
+not an optional default share to disable during cleanup.
+
 Maintain an exception register with the exact share/path, platform or application
 requiring it, firmware/package version and supporting evidence, responsible owner,
 required principals/operations, data class, backing volume, B2 policy/source,
@@ -683,7 +708,7 @@ legacy grants do not become permanent merely because a root is retained.
 1. **Classify all contents and consumers.** Inventory Public/Multimedia roots,
    hidden files, recycle bins and snapshot access privately, using existing
    accounting first. Resolve ownership before selecting destinations: personal
-   originals to the owner's home, shared originals to approved `Documents`
+   originals to the owner's home (both current Public folders are Ryan's), shared originals to approved `Documents`
    scopes, private-library content to `PrivateLibrary`, and only proven replaceable
    copies to `MediaCache`. Map service state/archives to their named shares.
    If no existing dataset fits, define its owner, roles and protection before
@@ -692,8 +717,9 @@ legacy grants do not become permanent merely because a root is retained.
    root, indexing source, task, HBS selection, alias and credential consumer.
    Agree destination roles without copying broad legacy ACLs; preserve ownership
    and retain the ACL export for deliberate reconciliation. These shares currently
-   live on the system volume, so moves to the main data volume are cross-filesystem
-   copies unless device checks prove otherwise. Apply the copy/verification,
+   live on the system volume, as does the enabled homes root. Ryan's home move
+   may stay on that filesystem, but verify actual resolved AD paths and device IDs.
+   Moves to the main data volume are cross-filesystem copies. Apply the copy/verification,
    writer-pause and rollback gates above. Protect unique data before relocation;
    the two existing Public backup selections do not cover every original.
 3. **Cut over and prove recovery.** Move one classified subtree at a time, update
@@ -723,9 +749,9 @@ legacy grants do not become permanent merely because a root is retained.
 Record the existing alias, volume ID/UUID, system designation, device/mount paths,
 share bindings, snapshot schedules and package locations. Confirm `System` does
 not conflict with another volume alias. Use **Storage & Snapshots → select the
-volume → Manage → Actions → Rename Volume Alias**, after verifying the control
-on the installed release. QNAP documents this control for firmware 4.4.3; verify
-its current presentation rather than relying on that older UI screenshot.
+volume → Manage → Actions → Rename Volume Alias**. The read-only Safari inspection
+confirmed this control for Scratch on QTS 5.2.11 and found no System alias among
+the four volumes; no rename was submitted. Recheck the baseline at cutover.
 [QNAP volume-alias procedure](https://www.qnap.com/en-us/how-to/faq/article/how-do-i-rename-the-volume-alias).
 
 Change only `Scratch` to `System`, then compare the saved identifiers, bindings
@@ -751,17 +777,22 @@ later changes.
 - [x] Reconcile the completed AD/Authelia rollout, approved domain share grants, existing application links and dated identity restore evidence with the storage plan.
 - [x] Recheck HA directory database/DNS status, QNAP machine trust, share grants/private-root ACL, retired DC shutdown and all 45 HTTP/TLS route checks on October 25. No authenticated browser or new SMB-fixture acceptance is implied.
 - [x] Inspect native HA backup schedule, selected agents, latest archive component metadata and Supervisor mounts on October 25: daily local-only protected backup, Core/all apps/SSL included, no NAS backup mount; no backup or restore was triggered.
-- [ ] Read disk SMART attributes, error history, last RAID scrub, snapshot schedule/retention, pool alarms and UPS shutdown behavior. The non-root probe did not produce SMART data.
+- [x] Read all four disk-health/SMART panels, current RAID counters, pool alarms and snapshot coverage in October 25 preflight: all disks Good; disk 2 SATA counter 13; main volume one September 2024 snapshot/no schedule; other volumes none; UPS support disabled.
+- [ ] Qualify full disk error history, disk-2 counter trend, dated scrub result/schedule, needed self-test coverage, snapshot retention/reserve policy and physical UPS/shutdown behavior. Current clean counters and Good summaries do not complete these gates.
+- [x] Record cached QTS share sizes and bounded Public metadata; confirm both Public data folders belong to Ryan and QNAP media apps are unused by the household.
 - [ ] Determine used bytes by data class from existing indices/QTS accounting; do not trigger a whole-collection scan/hash merely to plan.
 - [ ] Inventory shares/aliases, NFS/AFP/WebDAV/FTP, QTS application privileges, scheduled tasks, package paths, symlinks, open sessions and every client. The SMB session probe required root and was not completed.
-- [ ] Verify QTS home-folder enablement/volume, actual `home`/`homes` exports, local/domain owner mapping, service homes and existing B2 selection. The home-specific SSH probe failed; no disabled/enabled conclusion was established.
+- [x] Verify homes enabled on Scratch, actual `home`/`homes` definitions, observed local admin/deployment homes, deployment SSH dependency and absence from HBS selection; supersede the failed earlier home probe.
+- [ ] Qualify human local/domain home mapping, generated paths and effective isolation; add canonical personal roots to B2 and prove restore before moving Ryan's files.
 - [ ] Resolve the retired laptop volume and its snapshots/hidden references. Retired share absence alone does not authorize deleting a volume.
 - [ ] Export QTS settings, share/ACL configuration, UID/GID/SID mappings, Compose and mount definitions, Plex databases/preferences and library/profile IDs, Arr/Seerr settings, copy receipts and backup selection. Store secrets privately and encrypted.
 - [ ] Verify fresh cloud/NAS settings archives and off-host readbacks. Preserve the existing local daily HA coverage of directory/directory-route, Authelia, home-acme and SSL/proxy state; add qualified recurring off-host coverage. Separately cover `/share`, controller CA, Forgejo links and Jellyfin settings/plugins/CA; retain AD SIDs/SYSVOL/trust, MFA database and original encryption/session/OIDC keys. Qualify a current isolated restore rather than repeating initial provisioning.
 - [ ] Pilot `HomeAssistantBackups` with a dedicated HA-only writer and separate replica role. Verify retention deletion, NAS/AD outage behavior, native encryption/emergency-kit recovery, last off-host upload and an isolated native restore. Keep the on-demand unencrypted Talos export and age-encrypted identity export distinguished from daily native backups.
-- [ ] Recheck live HBS source selection, exclusions, latest success and integrity status; restore a small private sample to an isolated location and verify bytes, ownership, ACLs and extended attributes without displaying content.
+- [x] Re-read live HBS sources/schedule/retention/options and existing NAS/Forgejo verification receipts; incorporate separate committed October 25 Good Quick Check, Success status and isolated B2 settings-file restore evidence.
+- [ ] Complete remaining HBS exclusion review and a private-original sample restore with byte, ownership, ACL and xattr verification; the settings-file ciphertext comparison does not establish this.
 - [ ] Restore a Time Machine sample and confirm its encryption/recovery credential. Decide whether backing up the entire Time Machine history to B2 remains worth the cost.
-- [ ] Establish working backup failure notifications. Authelia's successful Gmail enrollment delivery does not resolve QNAP HBS/Notification Center's earlier failure. Decide client-side encryption and independent deletion-resistant backup policy before introducing more writable remote data.
+- [x] Incorporate separately committed October 25 QNAP test-email and independent inbox delivery evidence; the old email-transport failure is resolved and the HBS failure rule remains enabled.
+- [ ] Qualify actual backup-failure routing during the backup pilot. Decide client-side encryption and independent deletion-resistant backup policy before introducing more writable remote data.
 - [ ] Agree acceptable data loss, service downtime and recovery time per class, including whether private originals have another independent copy.
 - [ ] Qualify the per-share B2 policy: source/checkpoint age, producer and upload schedule, encryption, retained versions, destination scope, notification delivery, integrity checks and actual restore evidence. Split policies into independent jobs where necessary; do not assume the current single HBS job already implements them.
 - [ ] Map overlapping Hetzner views to one authoritative source inventory; protect new/unclassified originals, explicitly exclude replaceable media, and avoid backing up replicas twice. Keep B2 credentials outside the full-account export and price initial/retained data before seeding new coverage.
@@ -830,8 +861,10 @@ selection and hosting are complete: use existing Samba AD/Authelia on HA and
 QNAP domain membership. Ryan maintains the private library; both Ryan and Michael
 maintain general media. Ryan's proposed general remote-file scope provides the
 requested general RW access; full-account R/RW roles additionally cover the whole
-Hetzner filesystem. Remaining choices are full-account role membership, document
-ownership, any additional general-file owners, the proposed shared staging memberships, the
+Hetzner filesystem. Both existing Public folders are Ryan-owned, and the unused
+QNAP media apps should retire after dependency checks. Remaining choices are
+full-account role membership, ownership of any newly discovered shared documents,
+additional general-file owners, the proposed shared staging memberships, the
 recovery/downtime budget, whether the NAS gateway passes writable-filesystem
 qualification and direct access is also wanted for travel/recovery, and whether
 the proposed B2 retention/cost and lower-redundancy tier gates are acceptable and

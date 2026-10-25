@@ -1,7 +1,9 @@
 # NAS share backup and redundancy policies
 
 **Proposed policy, October 25, 2026. No backup job, retention rule, RAID layout or
-data has changed.** Every share in the [access model](plan-nas-access-model.md)
+data has changed through this plan.** Current observations are recorded in the
+[October 25 read-only preflight](nas-preflight-2026-10-25.md), including separately
+documented backup maintenance. Every share in the [access model](plan-nas-access-model.md)
 has both a storage-redundancy requirement and a B2 policy below. Schedules use
 **America/New_York**. Proposed retention is a starting policy to size and qualify,
 not permission to purge existing recovery history.
@@ -15,9 +17,9 @@ according to what it contains. Share permissions are independent of these choice
 | Share | Target storage tier | B2 policy | Scope / current coverage |
 | --- | --- | --- | --- |
 | `PrivateLibrary` | Protected | Local originals | All private originals; existing HBS selection already includes the current private root |
-| `Documents` | Protected | Local originals | All classified shared originals from Public/Multimedia; personal originals may use owner homes; only two selected Public folders are currently covered, so additional originals need explicit inclusion |
-| `home` (Ryan) | Protected | Local originals | Ryan's canonical personal directory under `homes`; current existence and B2 selection unverified |
-| `home` (Michael) | Protected | Local originals | Michael's canonical personal directory under `homes`; current existence and B2 selection unverified |
+| `Documents` | Protected | Local originals | Explicitly classified shared originals; no current Public payload assigned here; new roots need explicit inclusion |
+| `home` (Ryan) | Protected | Local originals | Canonical AD home, including both Ryan-owned Public folders after cutover; personal root unqualified and homes absent from current HBS selection |
+| `home` (Michael) | Protected | Local originals | Canonical AD home; personal root unqualified and homes absent from current HBS selection |
 | `homes` | Protected | Local originals | Back up the selected canonical user directories once; the administrative parent and per-user views are not additional copies |
 | `MediaCache` | Disposable | Rebuild | No B2 copy of replaceable media; back up manifests/ownership receipts as application settings |
 | `PlaybackCache` | Disposable | Rebuild | No B2 copy of disposable rclone cache bytes; protect `remote-reader` configuration through Application recovery |
@@ -51,8 +53,10 @@ uses an originals policy regardless of which application or library displays it.
 For personal homes, Local originals means the same nightly 02:00 versioned HBS
 policy and proposed 30 daily/12 monthly recovery points below. Preserve domain
 SIDs, ACLs, ownership and extended attributes, and test restoration of one user's
-synthetic private file with the other user denied. Do not assume existing HBS
-selections include homes. Inventory local/domain duplicate homes and service
+synthetic private file with the other user denied. The October 25 HBS source list
+excludes homes. The service is enabled on Scratch and must remain enabled for
+deployment SSH recovery; human AD homes and isolation still need qualification.
+Inventory local/domain duplicate homes and service
 homes before selecting canonical roots; preserve unique files in either identity's
 old home until migration and B2 restore pass. Service-home configuration or keys
 belong in the relevant application recovery export, with plaintext kept out of backup logs.
@@ -80,6 +84,15 @@ coverage while classifying them; verify protection of newly discovered originals
 before moving or pruning anything. Do not drop the existing Public selections
 until destination protection and old/new-path restore have passed. Avoid duplicate
 backups through retained aliases; capture every authoritative source once.
+Both current Public data folders belong to Ryan. Select his qualified canonical
+home under Local originals before retiring their old sources; do not silently
+reclassify them as shared documents or replaceable downloads. Multimedia has no
+current HBS selection; classify its remaining contents before retirement.
+
+The October 25 UI showed no retained snapshots on Scratch or either laptop
+volume; GPvQNAP has one September 2024 snapshot and no schedule. Qualify recurring
+snapshot policy and current recovery points before migration; an HBS capture
+option alone does not provide retained volume rollback. UPS support is disabled.
 
 ## Storage tiers and eventual placement
 
@@ -297,13 +310,22 @@ accepted access and protection policies.
 ## Recorded baseline and implementation gates
 
 The [scheduled-backup runbook](../usenet-infra/docs/scheduled-backups.md) records
-the **October 19** HBS configuration: daily 02:00, latest 30 versions, snapshots
+the **October 19** HBS configuration, freshly re-read on **October 25** with HBS
+26.4.6.205: daily 02:00, latest 30 versions with no extra monthly retention, snapshots
 and ACL/xattr preservation, the 10 MiB/s upload cap, and the existing integrity
 schedule. Its scope is the private root, two Public folders, NAS settings archives
-and the current Time Machine share. Client-side encryption and Object Lock are
-off; the bucket keeps all object versions while HBS manages its own 30-version
-catalog. B2 sample restoration and failure-email delivery remain unverified.
-These settings were not freshly re-read for this policy update.
+and the current Time Machine share; homes and Multimedia are absent. Client-side
+encryption remains off. The runbook's dated bucket evidence says Object Lock is
+off and the bucket keeps all object versions while HBS manages its own catalog;
+bucket policy was not re-read in this preflight.
+
+Separate October 25 maintenance documented a Good HBS Quick Check, successful
+email transport independently confirmed in the inbox, and an isolated B2 restore
+of seven encrypted Forgejo archive/receipt files with byte comparison. Private
+originals with ACLs/xattrs, Time Machine recovery and actual backup-failure event
+delivery remain unqualified. The read-only preflight also found existing NAS and
+Forgejo producer receipts reporting successful remote ciphertext verification;
+it did not run a backup or restore. See the dated report for exact times and scope.
 
 The October 25 HA check established daily protected **local-only** native backups;
 it did not establish B2 delivery. The storage inspection established one RAID-5
