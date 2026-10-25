@@ -85,6 +85,29 @@ Inspect selected source roots, run counts/status, saved schedules and sanitized
 receipts. Recovery should first use a small file restored into a separate test
 directory, never overwrite live source data.
 
+## October 25 HBS update
+
+HBS was updated through the official QNAP App Center from 26.4.5.115 to
+26.4.6.205 while idle. Before updating, the existing single job showed Success
+for its October 25 11:38 backup, with the five selected source folders, daily
+02:00 schedule, existing B2 destination and upload limit intact.
+
+Both SQLite configuration databases passed integrity checks before and after.
+The complete `jobs`, `accounts`, `credentials`, `config` and `hbs_config` table
+fingerprints matched exactly across the update; only the cloud-information
+cache changed. This preserves the job selection, scheduling, retention, rate
+limit and saved destination credentials without recreating a job or account.
+Encrypted NAS settings archives verified before and after the update include
+the HBS databases; all three post-update scopes passed off-host upload and
+readback. The existing notification-delivery limitation above
+is separate and is not resolved by a successful package update.
+
+A post-update native HBS **Quick Check** against the existing B2 backup finished
+with **Good** on October 25; the job returned to **Success**. The unchanged
+scheduled job remains enabled. This verifies live destination access and HBS's
+quick integrity checks, not a new backup upload, full content check or sample
+restore. Those distinctions follow [QNAP's integrity-check documentation](https://www.qnap.com/en/how-to/tutorial/article/data-integrity-check-in-hbs-3).
+
 ## Repository-owned encrypted settings archives
 
 **October 8: recurring off-host NAS settings coverage is deployed and verified.**

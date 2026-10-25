@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "11666ad180f8a93eafa4a0bb89da5e9a754097e52d0d3f86bf8f399d66bfb91e",
-    "reason": "Cold review: document authenticated wiki canonical URL and retained direct recovery probes",
+    "fingerprint": "d45817ae734839cc2d4e0964e2efcc7f5eae4a587fc4e47beacd48e98777a002",
+    "reason": "Reviewed HBS update evidence and preservation of settings-only backup scope, rate limit and unverified sample-restore boundary",
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "263f919af3ea9858ca5e155243a0f0761cfe6f2fcfef0b653075c90699061b08",
-    "reason": "Reviewed QTS/Plex versions, original SSH key recovery, confirmed sign-ins and successful pre/post encrypted backup readback",
+    "fingerprint": "2a90332b94fc67d9c4a9c518c81b8514cc7938dac9ef24bd0ae0b97c3ecb3a83",
+    "reason": "Verified HBS 26.4.6.205 update, unchanged job and credentials, healthy databases, Good B2 Quick Check and encrypted post-update backups",
     "reviewed_at": "2026-10-25"
   },
   "network": {

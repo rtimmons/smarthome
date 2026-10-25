@@ -110,7 +110,8 @@ three-scope encrypted NAS settings backups passed both before and after
 installation, including required off-host upload and readback verification.
 
 QTS retained required app updates and automatically updated License Center to
-1.9.61. App Center still offers an HBS update; that separate package has not
-been updated as part of this firmware/Plex checkpoint. QTS also reported its
+1.9.61. HBS was subsequently updated to 26.4.6.205 with its job, account,
+credentials and configuration fingerprints preserved; see
+[HBS update verification](scheduled-backups.md#october-25-hbs-update). QTS also reported its
 firmware-policy migration to automatic quality updates at the configured time;
 no additional policy change was made by the agent.
