@@ -1,0 +1,538 @@
+# NAS shares, accounts, roles and protection
+
+**Proposed access model, October 25, 2026. No accounts, groups or permissions have
+been changed.** This is the concise authorization companion to the
+[storage and migration plan](plan-nas-storage-and-access.md). The current-state
+inventory at the end records the October 24–25 inspection and identity rollout.
+
+Confirmed policy: **Ryan maintains the private library; Ryan and Michael both
+maintain general media.** Ordinary access follows **account → role → share**.
+An unlisted grant means no access. Administrative recovery is a separate capability.
+The model also supports **full Storage Box filesystem access** through explicit
+Hetzner account roles; human membership in those broader roles is not yet selected.
+
+## 1. Shares
+
+These are logical access boundaries. The [per-share protection policy](plan-nas-data-protection.md)
+defines each tier and B2 profile, including schedule, method, retention, encryption
+and restore checks. All existing local shares still inherit one RAID-5 group;
+different redundancy requires different backing storage, not just different names.
+
+| Share | Contents / existing source | Target storage tier | B2 policy |
+| --- | --- | --- | --- |
+| `PrivateLibrary` | Private originals under `FromDrobo`; new restricted share | Protected | Local originals |
+| `Documents` | Classified originals from selected `Public` folders; ownership still to decide | Protected | Local originals |
+| `home` (Ryan) | Ryan's personal QTS home view, backed by his directory in `homes`; enablement/location unverified | Protected | Local originals |
+| `home` (Michael) | Michael's personal QTS home view, backed by his directory in `homes`; enablement/location unverified | Protected | Local originals |
+| `homes` | Administrative parent of all personal homes; not a household-wide share | Protected | Local originals |
+| `MediaCache` | Replaceable local movie/TV copies under `FromDrobo` | Disposable | Rebuild |
+| `PlaybackCache` | Disposable rclone cache currently at `FromDrobo/.remote-cache`; service-only local storage | Disposable | Rebuild |
+| `RemoteMedia` | Read-only media-only view of the existing remote mount | Provider-managed | Rebuild |
+| `RemoteManage` | Writable view of the same media; new gateway requires qualification | Provider-managed | Rebuild |
+| `RemoteFiles` | General remote files; proposed Ryan-owned scope | Provider-managed | Remote originals |
+| `Hetzner` | Entire account filesystem, including hidden directories and backups; new full-account gateway | Provider-managed | Mixed by subtree |
+| `TransferStaging` | Existing Filex staging; proposed shared temporary area | Disposable, conditional | Transient |
+| `AppData` | Existing `Container` and package state; access limited per service | Protected | Settings |
+| `BackupArchives` | Existing encrypted artifacts under `Usenet/Backups/automatic` | Replica | Settings |
+| `HomeAssistantBackups` | New dedicated native HA archive destination; currently no HA NAS backup mount | Replica | HA archives |
+| `SpaceBlackTimeMachine` | Existing laptop backup share/chain; preserve its name | Replica | Laptop history |
+
+Protected means at least one-disk fault tolerance. Disposable permits eventual
+single-disk storage. Replica permits that reduction only after source availability
+and independent B2 recovery are proven. Provider-managed means the Storage Box's
+own redundancy, with no per-share RAID switch on the NAS.
+
+### Personal homes
+
+QTS exposes a user's personal directory as `home`; the directories reside under
+the administrative `homes` share. Ryan and Michael therefore have distinct access
+scopes, but not separate physical shares or independent RAID policies by default.
+Local and domain identities must be mapped explicitly; matching usernames do not
+prove they resolve to the same home. Use the AD home as each person's eventual
+canonical personal space. The October 25 home-setting probe failed to connect,
+so enablement, backing volume and existing local/domain homes remain unverified.
+[QTS home-folder behavior](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/home-folders-69AC09AA.html),
+[QTS home-folder volume selection](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/enabling-home-folders-5342F3CB.html).
+
+`home-owner(ryan)` and `home-owner(michael)` each grant RW only to that owner's
+resolved directory. They are policy scopes enforced by QTS ownership/ACLs, not
+a shared group granting both users access to all homes. Neither grants ordinary
+access to the `homes` parent or the other person's files. Backup access is an
+explicit read exception; administrators retain their separate recovery authority.
+Do not grant media services or the deployment account an ordinary home-data role.
+If QTS creates homes for service accounts, inventory them separately from service
+application state and shell login directories; do not treat them as human data.
+Back up each canonical personal directory once through `homes`, not again through
+every `home` view. Different physical redundancy per person would require a
+separately designed storage layout, not an ACL change.
+
+### Shared and remote data
+
+`RemoteMedia` and `RemoteManage` are two views of the same data, not two copies.
+For these media roles, expose only the approved movie/TV/legacy-media subdirectories,
+not the Storage Box's `catalog` root or all of `library`: those parents also contain
+backup or acquisition-staging directories. Keep the existing internal reader
+mount available to its established consumers while qualifying the narrower views.
+`MediaCache` similarly excludes copy receipts and unpublished staging.
+
+`Hetzner` deliberately exposes the **whole account**, including those backup and
+staging trees. Full-account RW includes deleting or replacing any writable file
+there and reading any credentials stored there. It does not grant Hetzner Console
+billing/resource administration, NAS administration, or access to private files
+that exist only on the NAS. Narrower share rules do not protect a remote object
+from someone who also holds the full-account role. Off-account encryption keys
+and independent recovery copies remain separate.
+
+`AppData/<service>` below is a logical scope, not an instruction to move a QTS
+package. User-facing SMB exports and local container binds enforce the same scope
+through different mechanisms. Preserve `Public` and `Multimedia` as compatibility
+shares until their contents and replacement permissions are classified.
+
+## 2. Human users
+
+| Person | Primary identity | Existing compatibility identity |
+| --- | --- | --- |
+| Ryan Timmons | AD `SMARTHOME\ryantimmons` | QNAP-local `ryantimmons`, UID 1001 |
+| Michael Lee | AD `SMARTHOME\michaellee` | QNAP-local `michaellee`, UID 1003 |
+
+Use the AD identities for new grants. Same-named local accounts are separate
+principals; retain their existing grants only until each dependent client is
+migrated and tested. Neither person's everyday account is a NAS administrator.
+
+## 3. System accounts
+
+The names in the first column are the **target identities**. The two AD lookup
+accounts already exist; other `svc-*` names are proposals. `svc-nas-deploy` is the
+target name for the existing deployment account, subject to the migration gates
+below; adopting this policy does not rename any live account.
+
+### Service-account naming policy
+
+Use **`svc-<purpose>`**, adding a scope suffix when needed, for every managed
+non-human account whose login name we control: NAS/local runtime users, AD
+directory bind users, deployment automation, backup destination logins and
+machine-only application integrations. Use lowercase ASCII letters, digits and
+single hyphens, with a meaningful purpose after `svc-`; examples are
+`svc-nas-deploy`, `svc-ha-backup` and `svc-jellyfin-runtime`. Check each target
+system's length/character limits and case-insensitive collisions before creating
+or renaming anything. Record the realm/host as part of the account identity.
+
+- Separate independently managed purposes and credentials. An LDAP lookup
+  identity, application runtime, backup writer and deployment administrator are
+  different accounts even when they support the same application. Do not create
+  one catch-all `svc-nas` or `svc-homeassistant` with combined access.
+- Keep authorization role/group names descriptive of permissions, such as
+  `media-readers` and `nas-deployment-operator`; do not add `svc-` to those roles.
+  A host's private primary group may match its service account where required.
+  The prefix grants no rights and does not isolate processes sharing one UID.
+- Human users, personal administrator/recovery identities and Plex viewer
+  profiles keep their human identities. A shared interactive login must first
+  be classified as human or machine use; adding `svc-` does not resolve shared
+  human credentials. Noninteractive accounts get no browser/SMB/shell login
+  unless their job requires that specific protocol.
+- Preserve vendor-managed users, machine accounts, required package/root
+  identities and provider-assigned usernames when renaming is unsupported.
+  Record each exception's actual principal, purpose, effective privileges,
+  constraint, owner and review trigger. Use a `svc-*` inventory/credential label
+  where editable; never present that label as a working provider login.
+- Existing compliant names (`svc-authelia`, AD `svc-jellyfin`) stay unchanged.
+  Keys, tokens, provider resource IDs, share names and backup repositories do not
+  need renaming or rotation just to satisfy an account-name policy. Keep secrets
+  and exact credential references in the private inventory, not this document.
+
+| Target identity | Purpose | Current identity / implementation |
+| --- | --- | --- |
+| `svc-nas-deploy` (target rename) | Repository-driven NAS deployment and maintenance | Existing QNAP-local `usenet-deploy`, UID 1004/GID 100, member of `administrators`; dedicated SSH key and pinned host trust |
+| `svc-plex` | Plex playback and indexing | Native QTS package; effective runtime UID still to verify |
+| `svc-jellyfin-runtime` | Jellyfin playback and indexing | Container UID 0/GID 100 with read/search capability and read-only media binds |
+| `svc-media-copy` | Catalog actions and selective NAS copying | Catalog/rclone runtime shares UID 1004/GID 100 |
+| `svc-remote-reader` | Read-only Hetzner mount and disposable cache | Mount helper has privileged capabilities; existing provider reader credential |
+| `svc-remote-maintainer` | Writable Hetzner gateway | New runtime and provider writer credentials; not deployed |
+| `svc-hetzner-gateway` | Full-account Hetzner filesystem gateway | New runtime with a full-account backend credential; distinct from media-only writer |
+| `svc-filex` | Transfer staging | Local runtime UID 1004; SFTP login `filex-staging` is an application login, not a separate NAS UID |
+| `svc-dns` | DNS resolver | Runtime UID 1004 |
+| `svc-discovery` | DNS discovery state | Runtime UID 1004 |
+| `svc-wiki` | Serve the published static wiki | Runtime UID 1004; published site/config mounted read-only |
+| `svc-forgejo` | Git service | Runtime UID 1004 |
+| `svc-settings-backup` | Settings capture, encryption, upload and readback | Backup container UID 0/GID 100; Forgejo has a separate host-owned backup job |
+| `svc-originals-backup` | HBS originals/laptop backup | Native HBS package and existing B2 credential; effective runtime UID still to verify |
+| `svc-settings-b2` | Upload verified settings archives to B2 | Proposed distinct archive-upload job/credential, separate from the settings capture producer |
+| `svc-hetzner-backup` | Protect canonical remote originals and other non-excluded account data in B2 | Proposed cloud backup runner; excludes replaceable media and qualified duplicate replicas |
+| `svc-ha-backup` | HA writes/reads/prunes its native archives on the NAS | Proposed dedicated QNAP-local destination login; current automatic backups use HA local storage only |
+| `svc-ha-backup-replica` | Copy HA archives to an independent destination | Proposed separate replication job/credential; no off-host HA backup agent currently selected |
+| AD `svc-authelia` | Authelia directory lookups | Existing AD account; no NAS-share or directory-administration role |
+| AD `svc-jellyfin` | Jellyfin directory lookups | Existing AD account; distinct from `svc-jellyfin-runtime`; no NAS-share or directory-administration role |
+
+Runtime accounts normally belong on the host running the service. They do not
+all need AD accounts or SMB passwords. For native packages and privileged mount
+helpers, first verify supported identity controls; preserve required exceptions
+until narrower identities, mounts and capabilities pass testing. Sharing a UID
+does not provide isolation merely because two roles have different names.
+
+Administrative and compatibility principals remain explicit:
+
+| Principal | Current role | Target handling |
+| --- | --- | --- |
+| QNAP `badmin`, UID 1000 | Local administrator / recovery | Keep separate from everyday Ryan login; verify emergency access |
+| QNAP `admin`, UID 0 | Built-in administrator | Preserve recovery configuration; login enablement was not verified |
+| QNAP `hass`, UID 1002 | Legacy integration account with broad `FromDrobo` access | Identify actual consumers; replace with explicit scopes before removing access |
+| `guest`, `httpdusr`, `[sshd]` | QTS built-ins | No new data roles; guest denied on all six inspected SMB shares |
+| AD administrator and machine principals | Directory administration and NAS trust | Preserve existing identities/trust; no new household data roles |
+
+### NAS deployment identity
+
+Assign `usenet-deploy` the distinct **`nas-deployment-operator`** role now in the
+model; keep `platform-admin` for recovery administrators. QTS SSH required
+administrator membership in the [deployment bootstrap](../usenet-infra/docs/qnap-bootstrap.md).
+Thus this separation records purpose and accountability, not a claim that the
+current deployment credential cannot read data or change ACLs. Its effective
+administrative power remains broad even without household data-role membership.
+Retain a separate, tested local recovery login independent of AD/SSO.
+
+First move runtime services off UID 1004 using per-service variables and scoped
+ownership. Merely renaming the account, or changing the shared `qnap_uid` variable,
+does not separate those services. Keep the existing login working throughout.
+Then migrate to `svc-nas-deploy` through a supported QTS account change, verifying
+UID/GID/SID, memberships and effective access before and after. If preserving
+identity is unsupported, retain `usenet-deploy` as a documented exception until
+an explicit account-replacement and ownership plan passes its recovery gates.
+
+Before any rename, map ignored `QNAP_SSH_TARGET`, Ansible `ansible_user` and
+UID/GID variables, durable controller inputs, authorized-key/login-home paths,
+SSH restrictions, cron/backup jobs, numeric Compose owners, ACLs and recovery
+instructions. Test the new login with the same dedicated access key and pinned
+host key, deployment preflight and a scoped operation, then refresh encrypted
+recovery supplements. Preserve immutable snapshots and the separate Git signing
+identity. Roll back the login and references together if acceptance fails; do
+not delete/recreate the user or recursively chown data to make a name match.
+
+### Service-account migration
+
+This is a staged identity migration, separate from the FromDrobo path moves.
+The table records disposition; it does not authorize bulk renames or imply that
+every proposed account needs to be created immediately.
+
+| Existing identity / use | Target / disposition | Migration gate |
+| --- | --- | --- |
+| QNAP `usenet-deploy`, UID 1004 | `svc-nas-deploy`; retain `nas-deployment-operator` | Split runtime ownership first, then preserve identity through a supported rename; otherwise record an exception pending replacement |
+| Runtimes sharing UID 1004 | Individual `svc-media-copy`, `svc-filex`, `svc-dns`, `svc-discovery`, `svc-wiki`, `svc-forgejo` as applicable | Allocate supported non-conflicting IDs; separate shared variables; transfer only each service's enumerated state ownership and mounts |
+| QNAP `hass`, UID 1002 | Split verified consumers into `svc-ha-<purpose>` accounts; retire if unused | Inventory callers and scopes first; `svc-ha-backup` is only for native backup storage, never a rename that inherits broad FromDrobo rights |
+| Filex application login `filex-staging` | If machine-only, target `svc-filex-transfer`; if used interactively, select a human-account design | Verify actual clients and application support; keep distinct from the `svc-filex` OS runtime; do not change both layers in one cutover |
+| AD `svc-authelia`, AD `svc-jellyfin` | Keep existing names, SIDs, credentials and lookup-only roles | Already compliant; no account recreation, OIDC relinking or new NAS grants |
+| Native Plex/HBS users, privileged helpers and QTS built-ins | `svc-plex` / `svc-originals-backup` are target labels where supported; retain required vendor identities otherwise | Verify supported runtime controls; document effective UID/capabilities and exceptions rather than renaming built-ins or claiming isolation |
+| Hetzner provider users and B2 credentials | Prefix editable service credential labels; preserve provider-issued logins/IDs | Keep backend scopes, consumers and key references mapped; no provider-resource replacement solely for naming |
+| New gateway, HA archive and backup jobs | Use their listed `svc-*` identities from initial provisioning | Assign only the account's explicit source/destination roles; validate recovery independent of AD where required |
+
+1. **Inventory and checkpoint.** Record each old name, realm/host, UID/GID/SID,
+   owner, purpose, role memberships, home, protocol privileges, credential
+   references, consumers, ACLs and backup/recovery dependencies in a private
+   migration ledger. Include ignored/durable controller inputs, Compose users,
+   LDAP bind DNs, SMB mounts, application logins, scheduled jobs and provider
+   credentials. Mark each row unchanged, rename, split/replace, retire or exception.
+   Save a consistent settings export and verify independent recovery access.
+2. **Pilot names and permissions.** Check platform support and collisions with
+   synthetic accounts/data. Separate per-service UID/GID settings from the current
+   shared `qnap_uid` before assigning new runtime IDs. Validate both intended
+   access and denial, home creation, new-file inheritance, restart behavior and
+   backup capture. Keep existing compliant AD lookup identities unchanged.
+3. **Separate runtimes one at a time.** Start with a qualified low-dependency
+   service; migrate its supported identity, scoped state ACLs/ownership and mounts
+   while preserving paths and application IDs. Where a replacement is needed,
+   stage its narrow permissions first and switch only that consumer during an
+   agreed pause. Keep the prior identity and saved settings available for rollback;
+   do not run old and new writers concurrently or leave broad compatibility access
+   indefinitely. Privileged/native-package exceptions stay explicit.
+4. **Migrate integration and deployment logins.** Reconcile every `hass`/Filex
+   caller separately, then rename the deployment login after shared runtime use
+   is removed. Prefer supported identity-preserving renames, verify numeric/SID
+   identity afterward and update every name-based consumer in the same cutover.
+   If replacement is necessary, define the ACL/home/credential mapping explicitly;
+   do not silently delete/recreate an account or assume matching names/IDs restore
+   access. Preserve the independent recovery login and pinned SSH trust.
+5. **Verify and refresh recovery.** Test each affected protocol with synthetic
+   files, expected denials, one normal application/backup cycle and a scoped
+   restart. Verify fresh encrypted exports include the accepted identity map and
+   consumer settings, and restore an isolated sample using the new account
+   mapping. Preserve old backup decryption keys and historical identities needed
+   to restore ownership; update recovery supplements without rewriting snapshots.
+6. **Retire or roll back.** Once all consumers pass, revoke superseded grants and
+   credentials for replaced/retired principals, disable their old logins, and
+   verify those credentials can no longer establish new access; explicitly handle
+   existing sessions/tokens. A pure rename keeps its accepted dedicated key or
+   credential; test rejection of the old login name without revoking the key
+   still used by the renamed account.
+   Keep its data and recovery records through the agreed rollback window before
+   considering deletion or ID reuse. If a check fails, pause the affected writer,
+   restore that account's saved identity/ownership and consumer configuration,
+   reconcile any new writes, and revalidate access/backup. Do not roll back the
+   domain join, unrelated accounts or the entire NAS.
+
+Completion means every managed non-human principal has either a working `svc-*`
+identity or a documented platform exception, with consumer tests and recovery
+evidence. A changed display label or untested replacement account is insufficient.
+
+## 4. Accounts → roles
+
+Role names below describe the target policy. Shared human roles should be backed
+by AD security groups, personal homes by owner ACLs, and service roles by scoped
+host groups/ACLs and mounts. Roles do not automatically nest in one another.
+`app-state(service)` is a separate scope for
+the named service, not a shared group that opens every application's state.
+
+| Account | Target roles |
+| --- | --- |
+| AD Ryan | `home-owner(ryan)`, `private-media-maintainers`, `media-maintainers`, existing `nas-timemachine`; proposed `remote-file-maintainers(ryan)` and `transfer-users` |
+| AD Michael | `home-owner(michael)`, `media-maintainers`; proposed `transfer-users` |
+| QNAP `usenet-deploy` → target `svc-nas-deploy` | `nas-deployment-operator`; no routine playback, household-file or backup-job role |
+| `svc-plex` | `private-media-readers`, `media-readers`, `app-state(plex)` |
+| `svc-jellyfin-runtime` | `media-readers`, `app-state(jellyfin)` |
+| `svc-media-copy` | `media-copy`, `app-state(media-copy)` |
+| `svc-remote-reader` | `remote-reader`, `playback-cache-writer`, `app-state(remote-reader)` |
+| `svc-remote-maintainer` | `remote-gateway-writer`, `app-state(remote-maintainer)` |
+| `svc-hetzner-gateway` | `hetzner-account-maintainers`, `app-state(hetzner-gateway)` |
+| `svc-filex` | `transfer-users`, `app-state(filex)` |
+| `svc-dns` | `app-state(dns)` |
+| `svc-discovery` | `app-state(discovery)`, `dns-config-reader` |
+| `svc-wiki` | `app-static(wiki)` |
+| `svc-forgejo` | `app-state(forgejo)` |
+| `svc-settings-backup` | `settings-backup-reader`, `backup-archive-writer`, `app-state(settings-backup)` |
+| `svc-originals-backup` | `originals-backup-reader`, `home-backup-reader`, `b2-backup-writer(originals)`, `b2-backup-writer(laptop-history)`, `app-state(hbs)` |
+| `svc-settings-b2` | `backup-archive-readers`, `b2-backup-writer(settings)`, `app-state(settings-b2)` |
+| `svc-hetzner-backup` | `hetzner-account-readers`, `b2-backup-writer(remote-originals)`; cloud-host state, no NAS `AppData` grant |
+| `svc-ha-backup` | `ha-backup-writer` |
+| `svc-ha-backup-replica` | `ha-backup-readers`, `b2-backup-writer(home-assistant)`, `app-state(ha-backup-replica)` |
+| AD `svc-authelia`, AD `svc-jellyfin` | `directory-lookup` only |
+| Separate NAS recovery administrators | `platform-admin`; outside ordinary data grants |
+| Unassigned until ownership is decided | `document-readers(scope)`, `document-maintainers(scope)`, additional `remote-file-maintainers(scope)` memberships, `backup-operators` |
+| Human full-account membership not yet selected | `hetzner-account-readers`, `hetzner-account-maintainers` |
+
+Ryan retains `git-users` and `arr-users`; Michael retains his existing NAS
+compatibility groups. Those application groups grant no storage rights. The
+new media role does not change Catalog, Jellyfin, Plex or Seerr application access.
+Existing `nas-users` grants are temporary compatibility grants, not a parent of
+the new private or media roles. Ryan's proposed general-file scope implements
+the earlier request for general remote RW access. Shared transfer memberships
+remain a proposal separate from the confirmed private/general-media decision.
+The originals/laptop HBS jobs also receive their scoped B2 destination roles;
+source access and remote write/retention authority are listed separately in the
+[backup-job mapping](plan-nas-data-protection.md#job-owners-and-access).
+
+## 5. Roles → share permissions
+
+**R** = list/read/traverse. **RW** = R plus create, modify, rename and delete.
+RW does not itself grant permission administration; access to credentials depends
+on whether they are stored within the granted scope. **—** = no grant.
+These are additive allow rules: validate effective access across all
+memberships, local compatibility identities and alternate exports.
+
+| Data role | PrivateLibrary | MediaCache | RemoteMedia | RemoteManage | TransferStaging | Time Machine |
+| --- | --- | --- | --- | --- | --- | --- |
+| `private-media-readers` | R | — | — | — | — | — |
+| `private-media-maintainers` | RW | — | — | — | — | — |
+| `media-readers` | — | R | R | — | — | — |
+| `media-maintainers` | — | RW | R | RW | — | — |
+| `media-copy` | — | RW | R | — | — | — |
+| `remote-gateway-writer` | — | — | — | RW | — | — |
+| `transfer-users` | — | — | — | — | RW | — |
+| `nas-timemachine` | — | — | — | — | — | RW |
+| `originals-backup-reader` | R | — | — | — | — | R |
+
+The remaining shares and backend roles have explicit scopes:
+
+| Role | Share / exact scope | Permission |
+| --- | --- | --- |
+| `home-owner(person)` | That person's resolved `home` directory only | RW; no other home or aggregate `homes` browsing |
+| `home-backup-reader` | Explicit canonical personal directories under `homes` | R for backup; exclude unclassified service homes until inventoried |
+| `playback-cache-writer` | `PlaybackCache` only | RW for the remote reader; no human SMB grant |
+| `document-readers(scope)` | Assigned subtree of `Documents` | R |
+| `document-maintainers(scope)` | Assigned subtree of `Documents` | RW |
+| `remote-file-maintainers(scope)` | Assigned subtree of `RemoteFiles` | RW |
+| `hetzner-account-readers` | Entire `Hetzner` account filesystem | R, including backup/configuration files stored there |
+| `hetzner-account-maintainers` | Entire `Hetzner` account filesystem | RW, including backup/configuration files stored there |
+| `ha-backup-writer` | `HomeAssistantBackups` only | RW, including native archive readback and retention deletion |
+| `ha-backup-readers` | `HomeAssistantBackups` only | R |
+| `b2-backup-writer(scope)` | Assigned B2 job repository/prefix | Upload/readback and required bounded retention operations; no other share or B2-account administration |
+| `b2-restore-readers(scope)` | Assigned B2 recovery repository/prefix | Read/list for recovery; decryption keys held separately; no prune authority |
+| `backup-archive-readers` | Verified artifacts in `BackupArchives` | R; no configuration-source or media access |
+| `app-state(service)` | Only that service's `AppData` state/cache | RW; immutable config and credentials mounted read-only where possible |
+| `app-static(wiki)` | Published wiki site and runtime config | R |
+| `dns-config-reader` | Generated DNS configuration consumed by discovery | R |
+| `settings-backup-reader` | Enumerated application state and native QTS/Plex/HBS settings sources | R; preserve each job's existing capture method and add new identity coverage separately |
+| `backup-archive-writer` | Assigned settings/Forgejo/cloud-replica archive directories in `BackupArchives` | RW |
+| `originals-backup-reader` | Approved originals in `Documents`, plus `BackupArchives` | R; existing HBS selections only until reviewed |
+| `backup-operators` | Encrypted `BackupArchives` and `HomeAssistantBackups` | R; restore to an isolated destination, no ordinary overwrite authority on source shares |
+| `remote-reader` | Internal reader mount and its backend | R on backend; local disposable cache uses the separate `playback-cache-writer` scope |
+| `directory-lookup` | No NAS share | No share access; read-only directory lookup |
+| `nas-deployment-operator` | NAS configuration, deployed service definitions and managed state | Administrative deployment capability; current QTS administrator membership can override share ACLs, so no data-isolation guarantee |
+| `platform-admin` | NAS recovery and permission administration | Broad administrative exception, including recovery access to `homes`; no implied everyday data role |
+
+`platform-admin` can change ACLs and may take ownership or mount data. It is an
+administrative exception, not an ordinary RW role or a privacy boundary against
+the NAS administrator. The current deployment operator has this same technical
+bypass capability; its distinct role is an operational boundary. Decryption/recovery
+keys are separate from backup-read roles.
+
+Managed-media RW is filesystem permission, not a second import workflow. Both
+maintainers must preserve Arr bookkeeping, hardlinks and NAS-copy receipts, using
+native actions where possible and reconciling any direct edits as the main plan describes.
+Plex's target private-media access is read-only; its owner/restricted-profile policy still
+controls which viewers can see it. Michael's general-media role grants no private access.
+
+### Plex users, libraries and runtime identities
+
+**Five libraries do not require five Plex system accounts.** The current QNAP
+Plex server has one runtime identity, which must read all five source libraries.
+Plex accounts and managed profiles are viewer identities; library grants are
+applied inside Plex. They are separate from SMB users and AD storage roles.
+[Plex library access](https://support.plex.tv/articles/201105738-creating-and-managing-server-shares/).
+
+| Library | Source share/view | Viewer role |
+| --- | --- | --- |
+| Private library, ID 1 | `PrivateLibrary` | `plex-private-viewers` |
+| NAS movies, ID 2 | Published movies in `MediaCache` | `plex-general-viewers` |
+| NAS TV, ID 3 | Published TV in `MediaCache` | `plex-general-viewers` |
+| Remote movies, ID 4 | Movie/legacy-media paths in `RemoteMedia` | `plex-general-viewers` |
+| Remote TV, ID 5 | TV paths in `RemoteMedia` | `plex-general-viewers` |
+
+| Plex identity | Target viewer roles | Status |
+| --- | --- | --- |
+| Ryan's existing server-owner account | Private and general viewing; existing server administration | Preserve original identity |
+| Existing managed general-viewing profile | `plex-general-viewers` only | Already restricted to IDs 2/3/4/5; retain ID 1 denial |
+| Michael's selected Plex account/profile | `plex-general-viewers` only | Exact account/profile linkage still to inventory; do not invent a new account |
+| `svc-plex` | No viewer role; filesystem `private-media-readers` + `media-readers` | Proposed name for the single existing server runtime |
+
+The viewer-role names are policy labels, not a claim that Plex consumes these
+AD groups. Multiple people/profiles may have access to the same library. If the
+private and general servers must be isolated at the operating-system level,
+that needs separately managed server instances with different runtime identities
+and source mounts. It is separate migration work, not a consequence of having
+multiple libraries; preserve current IDs, metadata and watched state meanwhile.
+
+### Remote credentials are a separate authorization layer
+
+Provider account labels below identify existing resources or proposed purposes;
+they are not new AD users. Exact provider usernames/keys remain in private inputs.
+
+| Provider credential / principal | Used by | Role and allowed backend |
+| --- | --- | --- |
+| Existing `qnap-reader` | NAS reader, copy jobs and cloud-backup pull | Current R on catalog, including encrypted cloud archives; preserve while separating human exports |
+| Existing `nas-settings-backup` | Settings and Forgejo backup jobs | RW only in the existing confined NAS-settings backup tree |
+| Existing B2 backup credential | HBS | Preserve current backup destination; verify provider permissions before claiming least privilege |
+| Existing cloud acquisition writer | Cloud SAB/Arr mount and established jobs | Existing provider writer; not a NAS-share user; broader current scope requires separate review |
+| Proposed media gateway writer credential(s) | `svc-remote-maintainer` | RW only on approved canonical media roots; no backup/config/acquisition-staging grant |
+| Optional direct human media credential(s), one set per person | Ryan and Michael, if direct access is enabled | Same media-only RW scope; independent credentials and revocation |
+| Proposed general-files credential(s) | Future `RemoteFiles` gateway/owner | RW only in Ryan's assigned general-file root; additional memberships undecided |
+| Full-account backend credential | Proposed `svc-hetzner-gateway`; optional separately authorized direct clients | Full Storage Box filesystem RW; NAS roles can expose R or RW to individual users |
+| Proposed B2 destination credentials, one scope per backup job | Originals, laptop, settings, HA and remote-originals backup jobs | Only the corresponding B2 repository/prefix; separate from Hetzner data credentials; retention permissions must match the selected tool |
+
+For media-only roles with disjoint roots, use separately confined subaccounts
+rather than granting their common `catalog` parent. QNAP AD groups govern NAS SMB; they do
+not revoke direct Hetzner credentials or propagate individual ACLs through a
+shared gateway credential. Keep the server-enforced playback reader read-only.
+
+Hetzner documents complete directory access for the main user and subtree access
+for subaccounts. Plan the full-account gateway around a credential with verified
+whole-account scope; do not claim the existing confined reader can supply it.
+The current Terraform configuration disables external reachability and SMB for
+the main account. Qualify a gateway transport through the existing cloud/VPN path
+or deliberately revise network settings in its own pilot before promising a
+direct laptop/NAS root mount. No provider setting or key changed during planning.
+[Hetzner account scopes](https://docs.hetzner.com/storage/storage-box/general/).
+
+### Home Assistant and the distinct backup systems
+
+Fresh read-only metadata on **October 25** shows native HA automatic backups are
+configured **daily**, retaining **three automatic copies**, with only
+`hassio.local` selected. The latest run started at **4:57 a.m. Eastern** and
+completed at **5:09 a.m.** Its protected partial archive contains HA Core,
+all **26 installed apps** (including AD/Authelia) and `/ssl`; database inclusion
+is enabled. `/share` is absent from that archive. There is no Supervisor backup
+network mount; the sole `FromDrobo` CIFS mount is an **inactive media mount**.
+This verifies configuration/archive metadata, not decryption or an independent restore.
+
+| Backup system | Producer and contents | Destination / boundary |
+| --- | --- | --- |
+| HA native daily backup | HA Core/Supervisor; Core/database, all apps and `/ssl` in the observed archive | Currently local HA storage only; proposed `HomeAssistantBackups` plus the dedicated B2 HA-archive policy |
+| Talos `addon-state` export | Repository apps and all of `/share`; deliberately excludes HA Core and `/ssl` | On-demand native partial archive plus controller download; intentionally unencrypted, no automatic pruning; not the daily recovery backup |
+| Identity-specific HA export | Cold backups of directory, directory-route, Authelia and home-acme plus `/ssl` | Point-in-time native export encrypted with age and verified off-host; not a whole-HA or recurring schedule |
+| NAS settings and Forgejo jobs | QTS/Plex/application settings, plus the separate Forgejo stopped-state job | `BackupArchives` / confined Hetzner NAS-settings tree; does not create native HA backups |
+| Cloud settings job | SAB/Arr and cloud service state | Separate encrypted cloud-backup tree, with a NAS replica; not HA state |
+| HBS originals/laptop job | Selected private/Public originals, laptop history and encrypted settings archives | Existing B2 job; HA native archives are not proven included |
+| Time Machine | The laptop's backup process | `SpaceBlackTimeMachine`; unrelated to HA native restore |
+
+Keep a dedicated `HomeAssistantBackups` share and `svc-ha-backup` destination
+login. A QNAP-local service login is proposed so connecting to HA's recovery
+destination does not depend on the AD service hosted by HA itself. It gets no
+`FromDrobo`, private-media, `AppData` or NAS-settings-archive access. Do not reuse
+the broadly authorized legacy `hass` account. Native HA still produces the
+archives; this login only controls access to their storage destination.
+
+The replication role reads those archives and writes only its designated B2
+destination. If an additional replica is stored on Hetzner, a full account
+maintainer can also access it; a distinct prefix there does not make it independent
+of that role. Hetzner data roles do not carry B2 credentials.
+Record native encryption/emergency-kit custody, local versus off-host retention,
+last successful upload and isolated restore evidence separately. Native daily
+coverage now includes the identity apps locally; recurring off-host coverage and
+the `/share` state gap remain to qualify. Do not run a cold backup just to inspect
+configuration, because it briefly stops the affected apps.
+
+See [HA backup configuration](https://www.home-assistant.io/common-tasks/general/backups/),
+[network backup storage](https://www.home-assistant.io/common-tasks/os/#network-storage),
+the [Talos backup contract](operations/addon-state-backups.md), and the
+[identity recovery runbook](operations/household-identity.md).
+
+## Current state and migration delta
+
+Six real SMB data shares were inspected. The configuration also contains a
+`TMBackup` section with no path returned; it is not counted as a qualified data
+share and needs clarification before cleanup.
+The separate home-folder probe could not connect; `home`/`homes` enablement and
+contents are not established by the earlier six-share inventory.
+
+| Current share | Location / purpose | Intended replacement |
+| --- | --- | --- |
+| `FromDrobo` | Main data volume; private originals, local media, remote mount and staging mixed together | Physical data split into `PrivateLibrary`, `MediaCache`, `PlaybackCache`, `TransferStaging`; remote views relocated through a mount cutover |
+| `home` / `homes` (unverified) | Per-user views and their administrative parent, if enabled | Owner-scoped AD homes; preserve/migrate any separate local-account homes after explicit ownership mapping |
+| `Public` | System volume; mixed originals and other files | Classified `Documents` subtrees; retain compatibility meanwhile |
+| `Multimedia` | System volume; content ownership not classified | Retain existing access until classification; do not merge blindly into general media |
+| `Container` | System volume; application state | Per-service `AppData` scopes |
+| `Usenet` | Main data volume; settings archives | `BackupArchives` plus any separately inventoried remaining contents |
+| `SpaceBlackTimeMachine` | Dedicated laptop-backup volume | Keep existing share |
+
+Current AD memberships and share grants are already deployed:
+
+| Account | Existing roles |
+| --- | --- |
+| AD Ryan | `nas-users`, `nas-timemachine`, `git-users`, `arr-users` |
+| AD Michael | `nas-users`, `nas-multimedia-writers` |
+| AD `svc-authelia`, AD `svc-jellyfin` | Directory lookup; no NAS access roles |
+
+| Existing role | FromDrobo | Public | Multimedia | Container | Usenet | Time Machine |
+| --- | --- | --- | --- | --- | --- | --- |
+| `nas-users` | RW | R | R | — | — | — |
+| `nas-timemachine` | — | — | — | — | — | RW |
+| `nas-multimedia-writers` | — | — | RW | — | — | — |
+| `git-users`, `arr-users`, directory lookup | — | — | — | — | — | — |
+
+Preserved local grants bypass that AD-only table: local Ryan and Michael both
+have `FromDrobo` RW and `Public` R; local Ryan has Time Machine RW and Multimedia
+R; local Michael has Multimedia RW. `hass` has `FromDrobo` RW and Public/Multimedia
+R. The local administrators group includes `admin`, `badmin` and `usenet-deploy`
+and has broad grants on all six shares. These are configuration observations;
+only the documented domain fixture tests establish tested SMB behavior.
+
+Before applying the target model, save grants/SIDs/ACLs, qualify synthetic role
+tests, and remove unintended private access through **both** legacy local grants
+and the broad `FromDrobo`/`nas-users` route. Check new-object inheritance and all
+aliases, File Station, mounts, snapshots and recycle views. Retain domain trust,
+emergency access, the Time Machine chain and original Plex identities. No account
+deletion, rejoin or recursive ownership rewrite is implied by this inventory.
+The [FromDrobo data-migration phase](plan-nas-storage-and-access.md#fromdrobo-data-migration)
+defines physical destinations, consumer cutovers, verification and rollback;
+restricted aliases alone do not complete that migration.
+
+Evidence: [identity rollout](operations/household-identity.md),
+[NAS/Plex layout](../usenet-infra/docs/nas-plex-layout.md),
+[backup scopes](../usenet-infra/docs/scheduled-backups.md), repository Compose
+definitions and the dated read-only inspection summarized in the storage plan.

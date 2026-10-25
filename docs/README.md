@@ -39,7 +39,9 @@ The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built fr
 *System maintenance, verification, and strategic planning*
 
 - [**plan-dashboard-upgrade.md**](plan-dashboard-upgrade.md) — Proposed compatibility-first upgrade plan for the iPad Grid Dashboard
-- [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — NAS storage/ACL inventory, writable Hetzner access, identity options and migration checklist
+- [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — NAS storage/ACL inventory, writable Hetzner access, deployed SSO and phased FromDrobo data migration
+- [**plan-nas-access-model.md**](plan-nas-access-model.md) — Shares, homes, users and roles; `svc-` naming policy and account migration; full Hetzner access, Plex grants and HA backup roles; current grants listed separately
+- [**plan-nas-data-protection.md**](plan-nas-data-protection.md) — Per-share B2 schedules, capture methods, retention, encryption, restore checks and current/future RAID placement
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
 - [**household-identity.md**](operations/household-identity.md) — AD, unified SMB credentials, browser SSO, certificate trust and rollout checkpoints
