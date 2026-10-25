@@ -76,6 +76,19 @@ updated deployment.
 Do not reboot the NAS, alter unrelated containers, or assume a model-specific
 physical path. Complete discovery before deploying the cache stack.
 
+## October 25 SSH recovery
+
+After the preparatory firmware-maintenance reboot, QTS still allowed SSH for
+`usenet-deploy`, but its SSH Keys list was empty and the existing dedicated key
+was rejected. QTS reported that it could not save keys without a home folder.
+With explicit user approval, home folders were enabled on the existing Scratch
+volume through Control Panel. The original `usenet-qnap-admin` key immediately
+reappeared with its September 10 creation date and the fingerprint recorded
+above; a fresh dedicated-key SSH login succeeded. No key was generated,
+replaced or imported. The same key also passed after the subsequent firmware
+update reboot. Preserve the home-folder setting during recovery and
+check it before attempting any credential replacement after a reboot.
+
 ## Supported one-time access setup
 
 Use a dedicated NAS account with SSH and Container Station/Docker access. QTS

@@ -149,7 +149,7 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   A post-link backup passed off-host download, SQLite integrity and Git-object
   verification; its restored database contains one explicit OIDC link to ID 1.
   Forgejo retains local recovery login. Arr's proxy and application changes are
-  deployed as described below; browser acceptance remains pending.
+  deployed as described below; the user confirmed browser acceptance on October 25.
 * The full clean-checkout deployment exposed a startup race between Authelia
   and the directory route. Authelia now depends on the route, whose health check
   requires the production virtual address to answer LDAPS. The runtime retry
@@ -199,9 +199,9 @@ the previously documented findings.
 Current source/index scanning passed separately. A new encrypted identity seal
 was restored into a disposable directory: all 58 files were identical, including
 the gateway credential and original CA material; the plaintext restore was removed.
-Authenticated Arr browser acceptance remains unverified. The user subsequently
-asked to continue without Mac interaction; this is permission to proceed, not
-evidence of a successful authenticated browser check.
+On October 25, 2026, the user completed Authelia sign-in/MFA and confirmed
+Prowlarr, Radarr, Sonarr and SABnzbd opened without a second application
+password. This verifies browser sign-in, not searches, downloads or playback.
 
 When restoring an older native HA backup, run `just usenet identity arr-gateway`
 after restoring the controller identity seal. This reinstalls the same gateway
@@ -320,7 +320,7 @@ Never recreate Ryan's profile to resolve a login failure.
 | --- | --- | --- |
 | QNAP SMB | Verified AD accounts and preserved local recovery accounts | Keep the native domain join and share groups; browser proxy authentication cannot authenticate SMB. |
 | QNAP administration | Existing local administrator; domain membership is active | Preserve emergency administration independently of the browser identity service. |
-| Catalog / OliveTin | Native Authelia OAuth at `https://catalog.home.rytim.com`, with an outer MFA gate and existing local recovery login | Only `ryantimmons` receives the existing operator capabilities. Authenticated browser acceptance remains pending. |
+| Catalog / OliveTin | Native Authelia OAuth at `https://catalog.home.rytim.com`, with an outer MFA gate and existing local recovery login | Only `ryantimmons` receives the existing operator capabilities. The user confirmed OAuth sign-in and visible operator actions on October 25, 2026; no copy or transfer was started. |
 | Jellyfin / Moonfin | Jellyfin 12.3.0 with official LDAP-Auth 24.0.0.0, verified LDAPS and the existing `ryan` profile | Shared AD password on native clients; no browser redirect gate or Authelia MFA on the playback API. Local recovery administration is separate. |
 | Plex and Seerr | Native Plex login plus the explicitly approved dedicated Moonfin request account | Preserve those client and API flows; do not put browser redirects in front of native playback or the request integration. |
 | HA administration and community add-ons | Existing HA authentication and ingress | Keep HA ingress as the authenticated boundary pending a separate supported integration. |
@@ -421,7 +421,9 @@ Remaining improvements are explicit:
   existing authentication but do not gain browser TLS from this rollout. Use a
   trusted management network or pinned SSH tunnel; prefer canonical HTTPS for
   ordinary sign-in. Do not disable recovery access before testing its replacement.
-* **Acceptance and clients:** Arr's authenticated browser check is still pending.
+* **Acceptance and clients:** The user confirmed all four Arr/SAB browser entrances
+  on October 25, 2026. The user also confirmed Catalog OAuth sign-in and visible operator actions;
+  no copy or transfer was started.
   Jellyfin, Plex/Seerr and HA require their native-client/authentication behavior
   to be preserved; an indiscriminate browser redirect gate is not appropriate.
 

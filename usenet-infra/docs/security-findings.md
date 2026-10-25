@@ -90,10 +90,27 @@ the Seerr update. Original immutable recovery archives were not modified.
 
 Seerr was updated to pinned stable 3.5.1; its two accounts, credentials, permissions,
 API key, database integrity and native connections passed checks. See
-[Seerr operations](seerr.md#october-25-security-update). QNAP and Plex remain pending
-a renewed local-administrator QTS session: observed QTS is 5.2.10 build 20260731,
-and Plex's QNAP package reports 1.43.3. The official Plex Intel QNAP target is
-1.43.5.11029-6bf8af3f0. QNAP's
-[current critical PHP advisory](https://www.qnap.com/en/security-advisory/qsa-26-18)
-lists QTS 5.2.11.3661 build 20261023 as fixed; model eligibility and supported
-installation must be confirmed in QTS. Neither NAS firmware nor Plex was changed.
+[Seerr operations](seerr.md#october-25-security-update).
+
+On October 25, QNAP TS-451D2 was updated through QTS with the official
+TS-X53D image to **5.2.11.3661 build 20261023**, the fixed release named in
+[QNAP's critical PHP advisory](https://www.qnap.com/en/security-advisory/qsa-26-18).
+The vendor checksum matched before installation. After reboot, SSH reported
+5.2.11/build 20261023, the four-disk RAID was healthy, SMARTHOME domain trust
+passed, and hosted containers restarted. The original dedicated SSH key was
+preserved; see [home-folder recovery](qnap-bootstrap.md#october-25-ssh-recovery).
+
+Plex was updated through App Center using the checksum-verified official Intel
+QNAP package to **1.43.5.11029-6bf8af3f0**. App Center and the live Plex API
+confirmed the update. Playback was idle before installation. Server identity,
+token and five library-definition fingerprints matched before and after; no
+media scan or acquisition was initiated. This does not establish post-update
+Apple TV/Roku playback or a fresh managed-profile authorization test. Fresh
+three-scope encrypted NAS settings backups passed both before and after
+installation, including required off-host upload and readback verification.
+
+QTS retained required app updates and automatically updated License Center to
+1.9.61. App Center still offers an HBS update; that separate package has not
+been updated as part of this firmware/Plex checkpoint. QTS also reported its
+firmware-policy migration to automatic quality updates at the configured time;
+no additional policy change was made by the agent.

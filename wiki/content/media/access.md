@@ -27,9 +27,10 @@ browser bookmarks. Native API clients and saved playback addresses retain their
 existing access paths. No browser SSO redirect is added to playback APIs.
 
 The [identity runbook](../../../docs/operations/household-identity.md) records the
-exact boundaries and dated acceptance. Authenticated Arr and Catalog browser
-acceptance remains unverified; configured routes and successful anonymous denial
-checks do not establish a completed human sign-in.
+exact boundaries and dated acceptance. On October 25, 2026, the user confirmed
+Prowlarr, Radarr, Sonarr and SABnzbd opened through Authelia without a second
+application password. The user also confirmed Catalog OAuth sign-in and visible
+operator actions. These checks did not start searches, downloads or transfers.
 
 ## Roku: browse, request and watch with Moonfin
 

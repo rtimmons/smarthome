@@ -30,13 +30,13 @@
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "d8466f1277ef0fc8532de9dc2fc6559b5ef5061d399d679112db98d4c9396d10",
-    "reason": "Cold review and rereview: correct SSO and AD access instructions, native exceptions and unauthenticated recovery boundaries",
+    "fingerprint": "263f919af3ea9858ca5e155243a0f0761cfe6f2fcfef0b653075c90699061b08",
+    "reason": "Reviewed QTS/Plex versions, original SSH key recovery, confirmed sign-ins and successful pre/post encrypted backup readback",
     "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "68a6ab1a971f8d5056e9c738c60e715c1e6a25bdac4c04c21de53e0caa59e927",
-    "reason": "Cold review: correct Forgejo migration status, Jellyfin HTTPS routing and preferred authenticated browser entrances",
+    "fingerprint": "7f3aef822a2f169cece5498ce65b229d51544e57ba2716dea7e1908b80d96437",
+    "reason": "Reviewed confirmed Arr/SAB and Catalog OAuth human acceptance, preserving native-client and recovery boundaries",
     "reviewed_at": "2026-10-25"
   },
   "printing": {

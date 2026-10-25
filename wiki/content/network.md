@@ -59,8 +59,9 @@ write and denial checks. Gmail SMTP delivered the enrollment email, and Ryan
 confirmed OTP enrollment. Forgejo's native OIDC account link and fresh sign-in
 passed. Arr/SAB browser entrances now use the Authelia MFA proxy; Prowlarr uses
 External authentication and native API keys remain unchanged. Catalog has an
-outer MFA gate plus native OAuth. Authenticated human browser acceptance for
-Arr and Catalog remains unverified. Jellyfin uses verified AD-backed LDAPS
+outer MFA gate plus native OAuth. The user confirmed all four Arr/SAB browser
+entrances and Catalog OAuth sign-in with visible operator actions on October 25,
+2026. No search, download or transfer was started. Jellyfin uses verified AD-backed LDAPS
 with the existing account; its playback APIs have no browser MFA redirect.
 The directory moved from the NAS to HA with its existing identity;
 QNAP's machine trust and both household logins passed. Follow the dated
