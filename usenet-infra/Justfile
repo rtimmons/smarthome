@@ -45,7 +45,7 @@ test: ansible-setup
 	shellcheck compose/qnap/catalog-run scripts/catalog-list scripts/catalog-status scripts/catalog-pull scripts/catalog-evict scripts/healthcheck scripts/qnap-command scripts/cloud-command scripts/cloud-ui scripts/filex-ui scripts/config-backup-local scripts/backup-cloud scripts/secret-scan scripts/store-hcloud-token scripts/generate-ssh-keys scripts/prepare-terraform-vars scripts/terraform-with-token
 	@python3 -c 'from pathlib import Path; import yaml; [list(yaml.compose_all(p.read_text())) for root in ("ansible", "compose") for p in Path(root).rglob("*") if p.suffix in (".yml", ".yaml") and p.is_file() and not p.is_symlink() and ".collections" not in p.parts]'
 	cd ansible && {{ansible}} ansible-playbook -i inventory.example.yml --syntax-check \
-	    site.yml backup.yml cloud-lan-ui.yml discovery.yml \
+	    site.yml backup.yml cloud-lan-ui.yml cloud-sso.yml discovery.yml \
 	    dashboard-refresh.yml scheduled-backups.yml qnap-backups.yml cloud-library.yml \
 	    qnap-remote-media.yml native-cutover.yml filex.yml seerr.yml \
 	    seerr-recovery.yml seerr-sync.yml seerr-safety.yml cleanuparr-replay.yml \
@@ -327,6 +327,10 @@ configure-cloud: age-bootstrap ansible-setup
 [group: 'ansible']
 configure-cloud-lan-ui: ansible-setup
 	cd ansible && ../../wiki/run with-deployment --scope media-cloud-lan-ui -- {{ansible}} ansible-playbook cloud-lan-ui.yml
+
+# Update authentication without redeploying VPN or media applications.
+configure-cloud-sso: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-cloud-sso -- {{ansible}} ansible-playbook cloud-sso.yml
 
 # Check WAN inputs and live source restrictions without changing them.
 [group: 'network']

@@ -53,6 +53,14 @@ def main():
             with tarfile.open(fileobj=io.BytesIO(outer.extractfile(member).read())) as inner:
                 app_files[app] = {m.name: inner.extractfile(m).read()
                                   for m in inner.getmembers() if m.isfile()}
+        gateway = PRIVATE/'secrets/arr-gateway.json'
+        if gateway.exists():
+            ssl_member = next(m for m in outer.getmembers() if m.name in ('ssl.tar.gz', 'ssl.tar'))
+            with tarfile.open(fileobj=io.BytesIO(outer.extractfile(ssl_member).read())) as inner:
+                matching = [m for m in inner.getmembers() if m.name.endswith('/arr-gateway-authorization')]
+                expected_gateway = (json.loads(gateway.read_text())['authorization']+'\n').encode()
+                if len(matching) != 1 or inner.extractfile(matching[0]).read() != expected_gateway:
+                    raise RuntimeError('Preserved Arr gateway credential missing from SSL backup')
     authelia = app_files['local_authelia']
     acme = app_files['local_home_acme']
     directory = app_files['local_directory']
@@ -90,6 +98,7 @@ def main():
     if restored != plain:
         raise RuntimeError('Encrypted HA backup readback differs')
     path = state/'recovery'/time.strftime('ha-identity-%Y%m%dT%H%M%SZ.tar.age', time.gmtime())
+    path.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     with path.open('xb') as stream:
         stream.write(cipher)
     receipt = {'archive': str(path), 'native_slug': slug, 'apps': sorted(APPS),

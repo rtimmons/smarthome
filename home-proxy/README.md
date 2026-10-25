@@ -1,28 +1,35 @@
-# Home HTTP proxy
+# Home web proxy
 
 A small Caddy add-on with explicit mappings:
 
 | Browser URL | Upstream |
 | --- | --- |
 | `http://grid-dashboard.home.arpa/` | `http://hass.home.arpa:3000/` |
-| `http://git.home.arpa/` | `http://192.168.1.66:3003/` |
+| `https://git.home.rytim.com/` | `http://192.168.1.66:3003/` |
 | `http://jellyfin.home.arpa/` | `http://192.168.1.66:8096/` |
 | `http://moonfin.home.arpa/` | `http://192.168.1.66:8096/Moonfin/Web/` |
 | `http://plex.home.arpa/` | `http://192.168.1.66:32400/web/` |
 | `http://seerr.home.arpa/` | `http://10.77.0.1:15055/` |
-| `http://radarr.home.arpa/` | `http://10.77.0.1:19696/radarr/` |
-| `http://sonarr.home.arpa/` | `http://10.77.0.1:19696/sonarr/` |
-| `http://prowlarr.home.arpa/` | `http://10.77.0.1:19696/` |
-| `http://sabnzbd.home.arpa/` | `http://10.77.0.1:18080/` |
+| `https://radarr.home.rytim.com/` | `http://10.77.0.1:19696/radarr/` |
+| `https://sonarr.home.rytim.com/` | `http://10.77.0.1:19696/sonarr/` |
+| `https://prowlarr.home.rytim.com/` | `http://10.77.0.1:19696/` |
+| `https://sabnzbd.home.rytim.com/` | `http://10.77.0.1:18080/` |
 | `http://catalog.home.arpa/` | `http://192.168.1.66:1337/` |
 | `http://printer.home.arpa/` | `http://hass.home.arpa:8099/` |
 | `http://tinyurl.home.arpa/` | `http://hass.home.arpa:4100/` |
 
-It binds only Home Assistant's LAN address, `192.168.1.163:80`, and accepts
-clients from `192.168.1.0/24`. Unknown hosts return 404; other sources return
-403. It does not trust forwarded-IP headers for access control. TLS and Caddy's
-administration API are disabled. There are no credentials, host mounts, Docker
-access or Home Assistant API permissions.
+It binds only Home Assistant's LAN address, `192.168.1.163`, on ports 80 and
+443, and accepts clients from `192.168.1.0/24`. Unknown hosts return 404; other
+sources return 403. It does not trust forwarded-IP headers for access control.
+HTTPS uses the renewed public Let's Encrypt certificate from the read-only SSL
+mount. Caddy's admin socket is private to the container and configuration
+persistence is disabled. No Docker or Home Assistant API access is granted.
+
+Authelia checks every Arr browser request before the gateway credential is
+injected. The upstream cloud gateway requires this credential and HA's actual
+source IP, then strips credentials and identity headers before the app. Private
+SSL state, including this credential, is retained by the encrypted identity
+backup. The `.home.arpa` Git and Arr aliases redirect to canonical HTTPS names.
 
 Host networking is intentional: binding the exact LAN interface avoids exposing
 this listener on Home Assistant's other interfaces. There is no Docker port
@@ -47,7 +54,8 @@ source during recovery; retain DNS runtime policy and resolver backups.
 
 ## Service routing and checks
 
-All direct ports and existing login gates remain available. The Arr routes
+Direct recovery ports retain their existing authentication. Forgejo uses OIDC;
+Arr browser routes require the Authelia `arr-users` group and two factors. The Arr routes
 preserve their base paths and reject sibling applications. Seerr requires its
 existing numeric Host upstream; its gateway still rejects API-key headers.
 Moonfin redirects only its root to the plugin web client; native clients use
@@ -65,3 +73,12 @@ points, login gates, isolation and existing routes without reading media catalog
 non-LAN-source check must return 403 even with a forged `X-Forwarded-For` header.
 See the [service route inventory](../docs/operations/service-hostnames.md) for
 acceptance details and limitations.
+
+The isolated authentication regression suite uses synthetic services and secrets:
+
+```sh
+HOME_PROXY_RUNTIME_TEST=1 uv run --project wiki --python "$(cat .python-version)" --frozen python -m unittest discover -s home-proxy -p test_gateway.py -v
+```
+
+It verifies anonymous and denied requests, identity-service failure, API paths,
+header spoofing, credential injection after authorization and sibling isolation.

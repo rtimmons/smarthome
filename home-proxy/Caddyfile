@@ -10,6 +10,27 @@
 	}
 }
 
+(arr_gate) {
+	request_header -Authorization
+	request_header -Proxy-Authorization
+	request_header -Forwarded
+	request_header -X-Forwarded-*
+	request_header -X-Real-IP
+	request_header -Remote-*
+	request_header -X-Remote-*
+	request_header -X-Auth-*
+	forward_auth http://127.0.0.1:9091 {
+		uri /api/authz/forward-auth
+	}
+}
+
+(arr_upstream) {
+	header_up Authorization {env.SMARTHOME_ARR_AUTH}
+	header_up -Proxy-Authorization
+	header_up -Remote-*
+	header_up -X-Auth-*
+}
+
 http://:80 {
 	bind 192.168.1.163
 	@outside not remote_ip 192.168.1.0/24
@@ -49,9 +70,9 @@ http://:80 {
 			header_up Host 10.77.0.1:15055
 		}
 	}
-	@sabnzbd host sabnzbd.home.arpa
+	@sabnzbd host sabnzbd.home.arpa sabnzbd.home.rytim.com
 	handle @sabnzbd {
-		reverse_proxy http://10.77.0.1:18080
+		redir https://sabnzbd.home.rytim.com{uri} 308
 	}
 	@catalog host catalog.home.arpa
 	handle @catalog {
@@ -65,37 +86,17 @@ http://:80 {
 	handle @tinyurl {
 		reverse_proxy http://hass.home.arpa:4100
 	}
-	@radarr host radarr.home.arpa
+	@radarr host radarr.home.arpa radarr.home.rytim.com
 	handle @radarr {
-		redir / /radarr/ 302
-		@radarr_path path /radarr /radarr/*
-		handle @radarr_path {
-			reverse_proxy http://10.77.0.1:19696
-		}
-		handle {
-			respond "Unknown service path" 404
-		}
+		redir https://radarr.home.rytim.com{uri} 308
 	}
-	@sonarr host sonarr.home.arpa
+	@sonarr host sonarr.home.arpa sonarr.home.rytim.com
 	handle @sonarr {
-		redir / /sonarr/ 302
-		@sonarr_path path /sonarr /sonarr/*
-		handle @sonarr_path {
-			reverse_proxy http://10.77.0.1:19696
-		}
-		handle {
-			respond "Unknown service path" 404
-		}
+		redir https://sonarr.home.rytim.com{uri} 308
 	}
-	@prowlarr host prowlarr.home.arpa
+	@prowlarr host prowlarr.home.arpa prowlarr.home.rytim.com
 	handle @prowlarr {
-		@sibling path /radarr /radarr/* /sonarr /sonarr/*
-		handle @sibling {
-			respond "Unknown service path" 404
-		}
-		handle {
-			reverse_proxy http://10.77.0.1:19696
-		}
+		redir https://prowlarr.home.rytim.com{uri} 308
 	}
 	handle {
 		respond "Unknown service" 404
@@ -123,5 +124,93 @@ https://git.home.rytim.com {
 	}
 	handle {
 		reverse_proxy http://192.168.1.66:3003
+	}
+}
+
+https://radarr.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			redir / /radarr/ 302
+			@allowed path /radarr /radarr/*
+			handle @allowed {
+				reverse_proxy http://10.77.0.1:19696 {
+					import arr_upstream
+				}
+			}
+			handle {
+				respond "Unknown service path" 404
+			}
+		}
+	}
+}
+
+https://sonarr.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			redir / /sonarr/ 302
+			@allowed path /sonarr /sonarr/*
+			handle @allowed {
+				reverse_proxy http://10.77.0.1:19696 {
+					import arr_upstream
+				}
+			}
+			handle {
+				respond "Unknown service path" 404
+			}
+		}
+	}
+}
+
+https://prowlarr.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			@sibling path /radarr /radarr/* /sonarr /sonarr/*
+			handle @sibling {
+				respond "Unknown service path" 404
+			}
+			handle {
+				reverse_proxy http://10.77.0.1:19696 {
+					import arr_upstream
+				}
+			}
+		}
+	}
+}
+
+https://sabnzbd.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			reverse_proxy http://10.77.0.1:18080 {
+				import arr_upstream
+			}
+		}
 	}
 }

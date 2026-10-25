@@ -1,0 +1,8 @@
+---
+- name: Update only the existing private cloud application gateway
+  hosts: cloud
+  become: true
+  gather_facts: false
+  serial: 1
+  roles:
+    - role: cloud_ui_proxy

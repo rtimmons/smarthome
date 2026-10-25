@@ -28,6 +28,8 @@ cloud_vpn_crypto_profiles:
     ike: aes256-sha256-prfsha256-modp2048
     esp: aes256-sha256-modp2048
 cloud_ui_auth_source: ""
+cloud_ui_sso_auth_source: "{{ lookup('env', 'SMARTHOME_STATE_DIR') | default(lookup('env', 'HOME') + '/.local/share/smarthome', true) }}/tree/build/identity-private/secrets/arr-gateway.json"
+cloud_ui_sso_address: "192.168.1.163"
 # Intentionally empty: the firewall role refuses to run until trusted source
 # CIDRs are supplied in inventory.yml or an ignored vars/vault file.
 cloud_ssh_allowed_cidrs: []

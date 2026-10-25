@@ -22,6 +22,8 @@ IMAGE = 'localhost/usenet-cloud-ui:caddy-2.11.4-nonroot'
 def render(name: str, **values: str) -> str:
     """These templates intentionally use only literal variable substitutions."""
     value = (ROLE / 'templates' / name).read_text()
+    values.setdefault('cloud_ui_sso_auth.password_hash', values.get('cloud_ui_auth.password_hash', 'fixture'))
+    values.setdefault('cloud_ui_sso_address', '127.0.0.1')
     for key, replacement in values.items():
         value = value.replace('{{ ' + key + ' }}', replacement)
     if '{{' in value or '{%' in value:
@@ -143,17 +145,17 @@ while True: time.sleep(60)
                            *cls.restrictions, 'docker.io/library/python:3.14.7-alpine3.24',
                            'python3', '-c', server])
 
-    def request(self, port, *, password=None, path='/', extra=None):
+    def request(self, port, *, password=None, path='/', extra=None, username='fixture', source='127.0.0.1'):
         # Only fixed synthetic credentials and local-container addresses enter this process.
-        payload = json.dumps(dict(port=port, password=password, path=path, extra=extra or {}))
+        payload = json.dumps(dict(port=port, password=password, path=path, extra=extra or {}, username=username, source=source))
         script = '''
 import base64,http.client,json,sys,time
 p=json.load(sys.stdin)
 h=p['extra']
-if p['password'] is not None: h['Authorization']='Basic '+base64.b64encode(('fixture:'+p['password']).encode()).decode()
+if p['password'] is not None: h['Authorization']='Basic '+base64.b64encode((p['username']+':'+p['password']).encode()).decode()
 for attempt in range(30):
  try:
-  c=http.client.HTTPConnection('127.0.0.1',p['port'],timeout=3); c.request('GET',p['path'],headers=h)
+  c=http.client.HTTPConnection('127.0.0.1',p['port'],timeout=3,source_address=(p['source'],0)); c.request('GET',p['path'],headers=h)
   r=c.getresponse(); body=r.read().decode(); status=r.status
   if status==502: time.sleep(.1); continue
   print(json.dumps({'status':status,'headers':dict(r.getheaders()),'body':body})); break
@@ -220,6 +222,16 @@ else: raise SystemExit(1)
             self.assertNotIn('authorization', headers)
             self.assertNotIn('remote-user', headers)
             self.assertNotIn('x-auth-request-user', headers)
+
+    def test_machine_credential_requires_the_actual_gateway_source(self):
+        for port in (18080, 19696):
+            allowed = self.request(port, password='synthetic-proxy-test', username='household-sso')
+            self.assertEqual(allowed['status'], 200)
+            denied = self.request(port, password='synthetic-proxy-test', username='household-sso',
+                                  source='127.0.0.2', extra={'X-Forwarded-For': '127.0.0.1'})
+            self.assertEqual(denied['status'], 403)
+            recovery = self.request(port, password='synthetic-proxy-test', source='127.0.0.2')
+            self.assertEqual(recovery['status'], 200)
 
     def test_request_urls_and_hashes_never_reach_container_logs(self):
         self.request(18080, password='synthetic-proxy-test', path='/test?apikey=synthetic-log-marker')

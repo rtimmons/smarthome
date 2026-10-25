@@ -1,7 +1,7 @@
 # Web service hostnames
 
 Deployed October 24, 2026, Newark LAN. Direct host-and-port access remains
-available. The HTTP proxy binds `192.168.1.163:80` and permits only
+available. The web proxy binds `192.168.1.163:80` and `:443` and permits only
 `192.168.1.0/24` clients. No WAN forwarding or wildcard DNS was added.
 `ha.home.arpa` remains deferred; use `hass.home.arpa:8123` for Home Assistant.
 
@@ -17,17 +17,19 @@ NAS address and isolated static server. `hass.home.arpa` remains the host alias.
 | `moonfin.home.arpa` | `http://192.168.1.66:8096` | Redirect only `/` to `/Moonfin/Web/` on the same hostname; proxy every other path unchanged | Moonfin Web returned 200; same Jellyfin container |
 | `plex.home.arpa` | `http://192.168.1.66:32400` | Redirect only `/` to `/web/`; preserve other paths | Native NAS listener; `/web/` returned 302 to its web client |
 | `seerr.home.arpa` | `http://10.77.0.1:15055` | Existing private Seerr proxy, with its login and API-key restrictions | Cloud container healthy; 307 to login |
-| `radarr.home.arpa` | `http://10.77.0.1:19696` | Root redirect to `/radarr/`; preserve that prefix; reject paths outside it | Active cloud Radarr healthy; private gateway returned 401 |
-| `sonarr.home.arpa` | `http://10.77.0.1:19696` | Root redirect to `/sonarr/`; preserve that prefix; reject paths outside it | Active cloud Sonarr healthy; private gateway returned 401 |
-| `prowlarr.home.arpa` | `http://10.77.0.1:19696` | Preserve paths, but deny the sibling `/radarr` and `/sonarr` routes on this hostname | Cloud container healthy; private gateway returned 401 |
-| `sabnzbd.home.arpa` | `http://10.77.0.1:18080` | Existing authenticated private proxy | Cloud container healthy; private gateway returned 401 |
+| `radarr.home.rytim.com` | `http://10.77.0.1:19696` | Root redirect to `/radarr/`; preserve that prefix; reject paths outside it | Active cloud Radarr healthy; public TLS and anonymous SSO redirect verified |
+| `sonarr.home.rytim.com` | `http://10.77.0.1:19696` | Root redirect to `/sonarr/`; preserve that prefix; reject paths outside it | Active cloud Sonarr healthy; public TLS and anonymous SSO redirect verified |
+| `prowlarr.home.rytim.com` | `http://10.77.0.1:19696` | Preserve paths, but deny the sibling `/radarr` and `/sonarr` routes on this hostname | Cloud container healthy; public TLS and anonymous SSO redirect verified |
+| `sabnzbd.home.rytim.com` | `http://10.77.0.1:18080` | Existing authenticated private proxy | Cloud container healthy; public TLS and anonymous SSO redirect verified |
 | `catalog.home.arpa` | `http://192.168.1.66:1337` | NAS selective-copy dashboard; preserve paths and authentication | NAS container healthy; HTTP 200 |
 | `printer.home.arpa` | `http://hass.home.arpa:8099` | Preserve `/bb` entry redirect and all service paths | HA add-on started; root returned 302 to `/bb` |
 | `tinyurl.home.arpa` | `http://hass.home.arpa:4100` | Preserve UI and short-link paths | HA add-on started; HTTP 200 |
 
 Home Assistant itself needs a separate trusted-proxy change and acceptance.
-The Arr gateway's 401 responses are its existing Basic Auth gate. Invalid
-credentials still receive a challenge; application authentication is unchanged.
+The old Arr HTTP names redirect to the same service beneath `home.rytim.com`.
+The HTTPS routes require Authelia MFA and membership in `arr-users`. The numeric
+cloud gateway retains its Basic recovery login. App-to-app API keys remain
+unchanged; Prowlarr now uses External authentication behind the gateway.
 Seerr retains its login and API-key restrictions. Its numeric upstream Host must
 be preserved because the existing cloud gateway matches `10.77.0.1:15055`.
 

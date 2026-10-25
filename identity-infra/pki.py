@@ -16,6 +16,16 @@ def require_existing_secrets(state):
     if initialized and any(not (state/'secrets'/name).is_file() for name in SECRET_NAMES):
         raise RuntimeError('Existing identity is missing secret material; restore it before certificate renewal')
 
+def require_existing_pki(state, pki):
+    # A restored controller must not create another CA when the original CA
+    # directory was omitted. The identity seal contains these external files.
+    initialized = any((state/name).exists() for name in
+                      ('tls/ca.crt', 'authelia-seed/configuration.json', 'ha-cutover.json'))
+    required = [pki/name for name in ('root.key', 'root.crt', 'issuing.key', 'issuing.crt')]
+    required += [state/'tls'/name for name in ('dc.key', 'web.key')]
+    if initialized and any(not path.is_file() for path in required):
+        raise RuntimeError('Existing identity is missing PKI material; restore the identity seal before renewal')
+
 def run(*args):
     subprocess.run(['openssl',*map(str,args)],check=True,stdout=subprocess.DEVNULL,stderr=subprocess.PIPE)
 
@@ -45,6 +55,7 @@ def issue(name, subject, sans, days=180):
 
 def main():
     require_existing_secrets(STATE)
+    require_existing_pki(STATE, PKI)
     os.umask(0o077);PKI.mkdir(parents=True,exist_ok=True,mode=0o700)
     key(PKI/'root.key')
     if not (PKI/'root.crt').exists():

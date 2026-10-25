@@ -8,10 +8,31 @@ import unittest
 from unittest.mock import patch
 
 import render_authelia
-from pki import require_existing_secrets
+from pki import require_existing_secrets, require_existing_pki
 
 
 class AutheliaRecovery(unittest.TestCase):
+    def test_missing_external_ca_directory_cannot_replace_the_existing_identity(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            private, pki = root/'private', root/'pki'
+            private.mkdir()
+            (private/'ha-cutover.json').write_text('{}')
+            with self.assertRaisesRegex(RuntimeError, 'restore the identity seal'):
+                require_existing_pki(private, pki)
+            self.assertFalse(pki.exists())
+            paths = [pki/name for name in ('root.key', 'root.crt', 'issuing.key', 'issuing.crt')]
+            paths += [private/'tls'/name for name in ('dc.key', 'web.key')]
+            for path in paths:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('synthetic existing material')
+            require_existing_pki(private, pki)
+            for path in paths:
+                path.unlink()
+                with self.assertRaisesRegex(RuntimeError, 'restore the identity seal'):
+                    require_existing_pki(private, pki)
+                path.write_text('synthetic existing material')
+
     def test_certificate_renewal_cannot_regenerate_lost_identity_secrets(self):
         with tempfile.TemporaryDirectory() as temporary:
             private = Path(temporary)

@@ -12,7 +12,13 @@
 (private_auth) {
 	basic_auth argon2id "Usenet private applications" {
 		{{ cloud_ui_auth.username }} {{ cloud_ui_auth.password_hash }}
+		household-sso {{ cloud_ui_sso_auth.password_hash }}
 	}
+	@misplaced_sso {
+		not remote_ip {{ cloud_ui_sso_address }}
+		expression {http.auth.user.id} == "household-sso"
+	}
+	respond @misplaced_sso "Gateway source required" 403
 }
 
 http://:18080 {

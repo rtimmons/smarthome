@@ -52,7 +52,11 @@
     "auth.apps.home.arpa": "192.168.1.163",
     "auth.home.arpa": "192.168.1.163",
     "auth.home.rytim.com": "192.168.1.163",
-    "git.home.rytim.com": "192.168.1.163"
+    "git.home.rytim.com": "192.168.1.163",
+    "radarr.home.rytim.com": "192.168.1.163",
+    "sonarr.home.rytim.com": "192.168.1.163",
+    "prowlarr.home.rytim.com": "192.168.1.163",
+    "sabnzbd.home.rytim.com": "192.168.1.163"
   },
   "resolvers": [
     "192.168.1.163",
@@ -198,7 +202,15 @@
     "@@|auth.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
     "|auth.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
     "@@|git.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
-    "|git.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163"
+    "|git.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|radarr.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|radarr.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|sonarr.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|sonarr.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|prowlarr.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|prowlarr.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|sabnzbd.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|sabnzbd.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163"
   ],
   "mdns_records": {
     "001788613749.home.arpa": {

@@ -25,19 +25,19 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "790a46de3a55b31646d5a8eb49058e2b46a6606ebe457166245dab8330e6cd97",
-    "reason": "Record independently restored post-link Forgejo backup preserving account, repository and SSH identity",
+    "fingerprint": "e00173bcaf6affd053880f8f11480c33a7cc67f4d284c2f79643b7183f26fb6a",
+    "reason": "Verify identity backup from restored controller state and create its recovery output directory",
     "reviewed_at": "2026-10-24"
   },
   "media": {
-    "fingerprint": "16f97ef83536561e121b59cf831777a85b70427e6f6cbeaa5f2270194f4504fa",
-    "reason": "Document Roku-only Moonfin setup and request workflow, separate login identities, verified password reset without secrets, and 36-episode acceptance limits",
+    "fingerprint": "5dccc8b9a3037ba34f4ec5cdc73725b4783a34b8a9c3033dad8f02f730499d78",
+    "reason": "Retain existing API keys and recovery account while adding the tested HA-only machine account to the VPN gateway; scope deployment to proxy only",
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "b78187fdea7d2f9b2965794a3580e074dac41fd9359e8baad75188caf06844e3",
-    "reason": "Restore the directory containers own DNS resolver at every startup after clean-deploy validation exposed regenerated Docker DNS settings",
-    "reviewed_at": "2026-10-24"
+    "fingerprint": "26c281213cddf53a21b3a263b4b1db454131914a6dbb170d4408706bf0b87d3b",
+    "reason": "All four Arr aliases verified by paired DNS transaction; preserve app API keys and profile identities; record clean deploy, MFA recovery and pending authenticated browser acceptance",
+    "reviewed_at": "2026-10-25"
   },
   "printing": {
     "fingerprint": "3614ace3dd4e9e36021dee7b3a16e555cb4b2b7351eb570982dc4f5076ea230e",

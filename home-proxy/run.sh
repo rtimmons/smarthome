@@ -5,6 +5,11 @@ mkdir -p /run/caddy-private
 chmod 700 /run/caddy-private
 certificate=/ssl/smarthome/acme/current/fullchain.pem
 test -s "$certificate"
+credential=/ssl/smarthome/arr-gateway-authorization
+test -s "$credential"
+SMARTHOME_ARR_AUTH=$(cat "$credential")
+case "$SMARTHOME_ARR_AUTH" in 'Basic '*) ;; *) exit 1 ;; esac
+export SMARTHOME_ARR_AUTH
 previous=$(sha256sum "$certificate" | cut -d ' ' -f 1)
 caddy run --config /etc/caddy/Caddyfile --adapter caddyfile &
 server=$!

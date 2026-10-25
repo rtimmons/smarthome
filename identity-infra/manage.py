@@ -346,6 +346,8 @@ def main():
              'stage-authelia':'stage_authelia.py', 'stage-web':'stage_web.py', 'backup':'backup_directory.py',
              'inventory':'inventory.py', 'dreamhost-key':'configure_dns_key.py', 'stage-acme':'stage_acme.py'}
     local['backup-ha'] = 'backup_ha.py'
+    local['arr-gateway'] = 'arr_gateway.py'
+    local['migrate-arr'] = 'migrate_arr.py'
     local['verify-authelia-backup'] = 'verify_authelia_backup.py'
     local['gmail-smtp'] = 'configure_smtp.py'
     local['cleanup-ha-seeds'] = 'cleanup_ha_seeds.py'

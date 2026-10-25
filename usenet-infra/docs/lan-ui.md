@@ -35,6 +35,17 @@ The existing scoped `just usenet configure-cloud-lan-ui` workflow owns the
 cloud VPN/proxy; preserve unrelated media services and transfers. Capture and
 verify the separate encrypted VPN archive after an accepted change.
 
+## Household SSO gateway
+
+The browser migration uses the four Arr/SAB names beneath `home.rytim.com`.
+HA checks Authelia first, then sends a dedicated machine credential over the
+existing encrypted VPN. The cloud accepts that account only from HA's actual
+LAN address. Numeric recovery access retains the original dashboard credential;
+API keys and loopback app bindings are preserved. Use
+`just usenet configure-cloud-sso` to update only this gateway, without restarting
+VPN or media services. See [household identity](../../docs/operations/household-identity.md)
+for credential recovery and live acceptance status.
+
 ## Historical USG setup
 
 This section records the retired gateway and its provisioning override. Current

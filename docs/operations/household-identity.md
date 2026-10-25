@@ -103,7 +103,7 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   Gmail SMTP is configured with required TLS, certificate verification and
   startup checks; Authelia restarted successfully. Ryan confirmed receipt of
   the enrollment email and completed OTP enrollment. Forgejo account linking
-  and an end-to-end OIDC sign-in remain separate acceptance steps.
+  and a fresh OIDC sign-out/sign-in cycle subsequently passed.
   Ryan belongs to the Git and Arr access groups. Michael has NAS groups only.
   Both initial credentials passed LDAPS and Kerberos authentication, with exact
   approved group memberships. The private 1Password import is
@@ -127,7 +127,8 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   administrator remains user ID 1 with its original repository and SSH key.
   A post-link backup passed off-host download, SQLite integrity and Git-object
   verification; its restored database contains one explicit OIDC link to ID 1.
-  Forgejo retains local recovery login. Arr still uses its existing authentication.
+  Forgejo retains local recovery login. Arr's proxy and application changes are
+  deployed as described below; browser acceptance remains pending.
 * The full clean-checkout deployment exposed a startup race between Authelia
   and the directory route. Authelia now depends on the route, whose health check
   requires the production virtual address to answer LDAPS. The runtime retry
@@ -135,6 +136,74 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   Recreated directory containers also restore their own resolver to Samba on
   loopback, so AD hostname and Kerberos discovery survive Docker's regenerated
   resolver file. The HA host and other apps retain their existing DNS settings.
+* The disposable checkout at `067930c` passed `git clean -dfx && just deploy`,
+  followed by directory, household login, SMB permission and QNAP trust checks.
+  All 66 selected credential files remained byte-identical. Its independent
+  native HA backup restore retained the original Authelia configuration and
+  one OTP enrollment. The backup writer now creates its output directory when
+  running from freshly restored controller state.
+
+## Arr browser gateway
+
+The Arr migration uses `radarr`, `sonarr`, `prowlarr` and `sabnzbd` beneath
+`home.rytim.com`. Caddy checks Authelia locally before forwarding any request,
+including API and WebSocket paths. The `arr-users` group requires two factors;
+missing authorization or an unavailable identity service fails closed.
+Legacy `.home.arpa` browser routes redirect to these HTTPS names.
+
+HA authenticates to the existing VPN-only cloud gateway using a dedicated
+random service credential. The cloud checks both its Argon2id hash and HA's
+actual source IP; forwarded headers cannot satisfy that restriction. Existing
+numeric-address recovery credentials remain valid. The cloud gateway strips
+authentication and identity headers before the application. No new listeners
+or VPN routes are needed. Existing app-to-app API keys stay unchanged.
+
+`just usenet identity arr-gateway` creates this credential once in external
+controller state and stages the exact bytes into HA's protected SSL directory.
+It refuses to replace an existing credential. The encrypted native HA backup
+includes that directory and verifies the gateway credential when configured.
+`just usenet configure-cloud-sso` updates only the cloud gateway. Live Arr
+acceptance is recorded separately after browser sign-in and API checks.
+
+The deployed gate passed public TLS validation and anonymous denial for all
+four apps, including API paths. HA's machine credential reached the existing
+cloud gateway from its actual LAN address. Prowlarr's scoped restart retained
+the original API key and every setting except `AuthenticationMethod`; its
+original configuration remains in a protected recovery directory. Cloud health
+checks passed with the same pre-existing SAB warnings and retired-worker holds.
+The full repository suite passed, alongside 14 isolated cloud-gateway tests and
+three home-proxy authorization tests. The infrastructure unit suite completed
+550 tests with 12 runtime checks skipped; its final history scan still reports
+the previously documented findings.
+Current source/index scanning passed separately. A new encrypted identity seal
+was restored into a disposable directory: all 58 files were identical, including
+the gateway credential and original CA material; the plaintext restore was removed.
+Authenticated Arr browser acceptance still requires the user's fresh MFA login.
+
+When restoring an older native HA backup, run `just usenet identity arr-gateway`
+after restoring the controller identity seal. This reinstalls the same gateway
+credential into SSL state without replacing the cloud credential or any user key.
+
+## Remaining service assessment
+
+| Service | Current authentication | Next integration boundary |
+| --- | --- | --- |
+| QNAP SMB | Verified AD accounts and preserved local recovery accounts | Keep the native domain join and share groups; browser proxy authentication cannot authenticate SMB. |
+| QNAP administration | Existing local administrator; domain membership is active | Preserve emergency administration independently of the browser identity service. |
+| Catalog / OliveTin | Local operator login, with explicit action ACLs | Evaluate its native OAuth2 user-info mapping against the installed version; retain the existing operator permissions and recovery login. |
+| Jellyfin / Moonfin | Jellyfin 12.3.0; existing `ryan` administrator uses its local provider; no auth plugin installed | Verify plugin compatibility and explicit linkage to the existing profile before enabling AD or OIDC. Preserve profile identity, library grants and native clients. |
+| Plex and Seerr | Native Plex login plus the explicitly approved dedicated Moonfin request account | Preserve those client and API flows; do not put browser redirects in front of native playback or the request integration. |
+| HA administration and community add-ons | Existing HA authentication and ingress | Keep HA ingress as the authenticated boundary pending a separate supported integration. |
+
+[Jellyfin's official LDAP plugin](https://jellyfin.org/docs/general/server/plugins/#ldap)
+supports directory authentication and configurable username mapping. Its native
+client compatibility makes it worth evaluating before a browser-only SSO change.
+The [Authelia Jellyfin guide](https://www.authelia.com/integration/openid-connect/clients/jellyfin/)
+documents a separate SSO plugin, with an older tested server version than this
+installation. [OliveTin's OAuth2 configuration](https://docs.olivetin.app/security/oauth2.html)
+provides username and group mapping; verify the deployed implementation before
+granting any catalog action through it. These are assessment findings, not
+completed migrations.
 
 ## Recovery and operations
 
@@ -144,6 +213,8 @@ under `~/.config/smarthome/pki`. The existing encrypted-checkout recovery master
 is `~/.config/smarthome/recovery.agekey`. Store its complete contents as a
 1Password Document and retain the encrypted archives separately. Never commit
 these paths' contents or paste credentials into chat or command arguments.
+Certificate renewal refuses missing established CA or leaf-key material;
+restore the identity seal before renewal instead of creating replacement keys.
 
 Directory state lives in the HA `directory` app's persistent `/data`, outside
 the checkout. The stopped NAS copy remains at

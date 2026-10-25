@@ -27,7 +27,8 @@ docs:
   docs: >
     Caddy binds only 192.168.1.163 on ports 80 and 443 and accepts only
     192.168.1.0/24 clients. The sign-in portal uses Let's Encrypt certificates;
-    application routes retain their existing authentication until migrated.
+    Git uses its native OIDC login. Arr browser routes require Authelia MFA
+    before the proxy uses a separate credential for the VPN-only cloud gateway.
     A private Unix socket reloads renewed certificates without a proxy restart.
     Unknown hosts return 404. No public forwarding, HA API or Docker access.
   access: >

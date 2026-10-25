@@ -42,6 +42,38 @@
     fail_msg: "The dashboard credential source must contain a safe username and an Argon2id PHC hash."
   no_log: true
 
+- name: Inspect the dedicated SSO gateway credential privately
+  ansible.builtin.stat:
+    path: "{{ cloud_ui_sso_auth_source }}"
+    follow: false
+  delegate_to: localhost
+  become: false
+  register: cloud_ui_sso_auth_stat
+  no_log: true
+
+- name: Require the preserved SSO gateway credential
+  ansible.builtin.assert:
+    that:
+      - cloud_ui_sso_auth_stat.stat.isreg | default(false)
+      - cloud_ui_sso_auth_stat.stat.mode == '0600'
+      - cloud_ui_sso_auth_stat.stat.size | int <= 4096
+      - cloud_ui_sso_address == '192.168.1.163'
+      - cloud_ui_auth.username != 'household-sso'
+    fail_msg: "Restore or stage the dedicated HA gateway credential before deploying this proxy."
+  no_log: true
+
+- name: Read the SSO gateway hash privately
+  ansible.builtin.set_fact:
+    cloud_ui_sso_auth: "{{ lookup('ansible.builtin.file', cloud_ui_sso_auth_source) | from_json }}"
+  no_log: true
+
+- name: Validate the SSO gateway hash before rendering
+  ansible.builtin.assert:
+    that:
+      - cloud_ui_sso_auth.username == 'household-sso'
+      - cloud_ui_sso_auth.password_hash is match('^\$argon2id\$v=19\$m=[0-9]+,t=[0-9]+,p=[0-9]+\$[A-Za-z0-9+/]+\$[A-Za-z0-9+/]+\Z')
+  no_log: true
+
 - name: Create protected private proxy directories
   ansible.builtin.file:
     path: "{{ item }}"
@@ -164,6 +196,7 @@
 - name: Forget the temporary in-memory credential fact
   ansible.builtin.set_fact:
     cloud_ui_auth: {}
+    cloud_ui_sso_auth: {}
   no_log: true
 
 - name: Install the proxy service with VPN dependency ordering

@@ -15,18 +15,6 @@ CASES = [
     ('plex', '/web/index.html', 200, None),
     ('seerr', '/', 307, '/login'),
     ('seerr', '/api/v1/auth/me', 401, None),
-    ('radarr', '/', 302, '/radarr/'),
-    ('radarr', '/radarr/', 401, None),
-    ('radarr', '/sonarr/', 404, None),
-    ('radarr', '/radarrr/', 404, None),
-    ('sonarr', '/', 302, '/sonarr/'),
-    ('sonarr', '/sonarr/', 401, None),
-    ('sonarr', '/radarr/', 404, None),
-    ('prowlarr', '/', 401, None),
-    ('prowlarr', '/radarr', 404, None),
-    ('prowlarr', '/radarr/', 404, None),
-    ('prowlarr', '/sonarr/', 404, None),
-    ('sabnzbd', '/', 401, None),
     ('catalog', '/', 200, None),
     ('printer', '/', 302, '/bb'),
     ('printer', '/bb', 200, None),
@@ -35,6 +23,9 @@ CASES = [
     ('ha', '/', 404, None),
     ('unknown-proxy-check', '/', 404, None),
 ]
+
+
+ARR = ('radarr', 'sonarr', 'prowlarr', 'sabnzbd')
 
 
 def main():
@@ -60,6 +51,24 @@ def main():
         print(f'{"PASS" if ok else "FAIL"} {host}{path} status={status} expected={expected}', flush=True)
         if not ok:
             failed.append(host + path)
+    for name in ARR:
+        old = name+'.home.arpa'
+        host = name+'.home.rytim.com'
+        for scheme, domain, path, expected in (('http',old,'/',308),
+                ('https',host,'/',302),('https',host,'/api/v1/system/status?apikey=synthetic',302)):
+            port = '443' if scheme=='https' else '80'
+            command = ['curl','--noproxy','*','--silent','--show-error','--max-time','20',
+                       '--output','/dev/null','--write-out','%{json}']
+            if not args.dns:
+                command += ['--resolve',domain+':'+port+':192.168.1.163']
+            result = subprocess.run(command+[scheme+'://'+domain+path],capture_output=True,text=True)
+            info = json.loads(result.stdout or '{}')
+            prefix = 'https://'+host+'/' if scheme=='http' else 'https://auth.home.rytim.com/'
+            ok = (result.returncode==0 and info.get('http_code')==expected
+                  and info.get('redirect_url','').startswith(prefix)
+                  and info.get('ssl_verify_result',0)==0)
+            print(f'{"PASS" if ok else "FAIL"} {domain} {scheme} gate status={info.get("http_code")}')
+            if not ok: failed.append(domain+path)
     if failed:
         raise SystemExit('Failed routes: ' + ', '.join(failed))
 
