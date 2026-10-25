@@ -324,6 +324,7 @@ Never recreate Ryan's profile to resolve a login failure.
 | Jellyfin / Moonfin | Jellyfin 12.3.0 with official LDAP-Auth 24.0.0.0, verified LDAPS and the existing `ryan` profile | Shared AD password on native clients; no browser redirect gate or Authelia MFA on the playback API. Local recovery administration is separate. |
 | Plex and Seerr | Native Plex login plus the explicitly approved dedicated Moonfin request account | Preserve those client and API flows; do not put browser redirects in front of native playback or the request integration. |
 | HA administration and community add-ons | Existing HA authentication and ingress | Keep HA ingress as the authenticated boundary pending a separate supported integration. |
+| Standalone LAN tools: grid dashboard, printer, tinyurl and wiki | Their existing LAN HTTP interfaces remain outside Authelia | Inventory kiosk and machine callers before requiring browser MFA; HA ingress does not protect these direct endpoints. |
 
 The [QTS domain-security guide](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/domain-security-5933D0DB.html)
 supports directory accounts for NAS access. This does not turn QTS administration

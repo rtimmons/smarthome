@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "bd76c5cd8e84610ed21882e04fb2e63d421154e66ee1dcba0e30b7c7a37ea809",
-    "reason": "Preserve immutable pre-AD recovery checkpoint; final Catalog and Jellyfin identity paths and protocol limits reviewed",
+    "fingerprint": "1308bcd041ad8963635984544678ada518893533789d03a81d42a3ea14ddd21f",
+    "reason": "Explicitly document standalone LAN endpoints outside Authelia and preserve kiosk/API compatibility boundaries",
     "reviewed_at": "2026-10-25"
   },
   "printing": {
