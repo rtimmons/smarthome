@@ -43,6 +43,7 @@ The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built fr
 - [**plan-nas-access-model.md**](plan-nas-access-model.md) — Named datasets, homes, users and roles; `svc-` migration; Forgejo isolation, Hetzner/Plex/HA access and restricted platform roots
 - [**plan-nas-data-protection.md**](plan-nas-data-protection.md) — Per-share and QNAP-exception B2 policies, complete application recovery, retention, restore checks and current/future RAID placement
 - [**nas-preflight-2026-10-25.md**](nas-preflight-2026-10-25.md) — Read-only disk/snapshot, homes, legacy-share and backup findings; resolved ownership and remaining migration gates
+- [**nas-media-retirement-2026-10-25.md**](nas-media-retirement-2026-10-25.md) — QNAP media apps removed with encrypted state preservation; retained-service checks and deferred scrub decision
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
 - [**household-identity.md**](operations/household-identity.md) — AD, unified SMB credentials, browser SSO, certificate trust and rollout checkpoints

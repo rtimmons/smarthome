@@ -99,11 +99,12 @@ These findings block production data migration, stress tests and redundancy
 reduction pending recovery review and diagnosis; do not enable a scrub merely
 to establish a dated result. Preserve the older slot-1/4 error evidence too.
 
-The QNAP media dependency check found zero Video Station sources and an empty
-multimedia index. That does not classify Samples/system metadata as disposable
-or prove the apps have no unique settings. Preserve required state through
-Application recovery, or explicitly establish it is reproducible, before the
-planned app/share retirement. Container Station's protected-share registration
+The QNAP media apps were [retired on October 25](nas-media-retirement-2026-10-25.md)
+after a verified encrypted copy of application state to the controller's durable
+private backups. That one-time archive is not recurring B2 coverage or a live
+restore qualification. Samples/system metadata remain unclassified and must not
+be treated as disposable merely because the app index was empty. Complete their
+protection/classification before share retirement. Container Station's protected-share registration
 confirms the required Container exception; retain and protect that package scope.
 
 ## Storage tiers and eventual placement

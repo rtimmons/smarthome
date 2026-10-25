@@ -48,9 +48,11 @@ September 2024 with no schedule, the other volumes have none, and UPS support is
 disabled. These are readiness gaps, not authorization to start tests or change
 settings. Both Public data folders belong to Ryan and
 will move to his qualified private AD home. Video Station and Multimedia Console
-are unused by the household; native inspection found zero Video Station sources
-and indexed files, and no additional installed multimedia consumer. Retire them
-after state preservation and the final dependency/removal review at cutover.
+were [retired on October 25](nas-media-retirement-2026-10-25.md) after encrypted
+state preservation. The native inventory found no additional multimedia consumer;
+retained-service checks passed within the recorded limits. The Multimedia share
+and its contents remain to classify and retire. A scrub was deferred pending
+disk-2 diagnosis and recovery review.
 
 ## What is actually deployed
 
@@ -693,17 +695,19 @@ October 25 decisions and evidence: the two Public data folders are Ryan's privat
 files, destined for his canonical AD home after privacy/backup qualification.
 Public's cached total is 9.95 GiB. Multimedia has Samples and system metadata
 (2.09 MiB cached); contents still need classification. Video Station 5.8.9 and
-Multimedia Console 2.11.2 are enabled but confirmed unused by the household.
+Multimedia Console 2.11.2 were confirmed unused and then removed through App Center
+on October 25, with an encrypted archive of application state preserved off-NAS.
 No container bind or host crontab reference to Public/Multimedia was found.
 The follow-up read-only dependency check found zero Video Station content sources,
 videos and used bytes, an enabled but empty/completed multimedia index, and no
 additional installed multimedia consumer in the suite/package inventory. Plex,
 HBS and Container Station startup scripts have no direct references to the two
-apps. Preserve any unique application state and classify Samples/system metadata;
-inspect the removal confirmation for unexpected consumers at cutover and verify
-retained apps, including File Station browsing and used preview features. No
-package was stopped or uninstalled during preflight. See the
-[evidence and limits](nas-preflight-2026-10-25.md#share-inventory-ownership-and-platform-dependencies).
+apps. The removal confirmations named no additional consumer. Plex availability,
+HBS status, container/backup health and File Station root browsing passed after
+retirement; media previews, downloads and client playback remain unqualified.
+Classify Samples/system metadata before deleting the share. See the
+[preflight evidence](nas-preflight-2026-10-25.md#share-inventory-ownership-and-platform-dependencies)
+and [retirement receipt and recovery limits](nas-media-retirement-2026-10-25.md).
 Homes are an evidenced platform dependency for the dedicated deployment SSH key,
 not an optional default share to disable during cleanup.
 
@@ -712,7 +716,7 @@ requiring it, firmware/package version and supporting evidence, responsible owne
 required principals/operations, data class, backing volume, B2 policy/source,
 restore evidence and a next-review trigger. `Public` is a documented platform
 exception; the Container Station protected-share registry also requires Container.
-Multimedia's final removal and retained-app regression checks remain pending. Unknown
+Multimedia share removal and the remaining client/preview acceptance remain pending. Unknown
 contents or untested access are unfinished work, not an accepted exception.
 Any required ordinary-user access must be explicitly approved and scoped; broad
 legacy grants do not become permanent merely because a root is retained.
@@ -795,7 +799,8 @@ later changes.
 - [x] Inspect retained disk/RAID event and kernel history: distinguish the old slot-2 bad blocks from its August replacement; record recent slot-2 I/O errors and 26 link resets through October 24, older slot-1/4 read errors and August scan/rebuild completions. Confirm scrub scheduler off in Safari and no retained scrub event; correct the earlier configuration-flag inference.
 - [ ] Investigate the disk-2 drive/connection path before production migration or stress tests; obtain full drive-internal SMART/error logs, reconcile other historical faults and verify recovery coverage. Then qualify scheduled tests/scrubbing, current snapshot recovery/reserve policy and physical UPS/shutdown behavior. Clean array counters and Good summaries do not clear the logged faults.
 - [x] Record cached QTS share sizes and bounded Public metadata; confirm both Public data folders belong to Ryan and QNAP media apps are unused by the household.
-- [x] Inspect Multimedia Console's source/index/suite/transcoding pages, installed packages, protected-share registry and retained-app startup references. Video Station has no sources, the index has no files, and no other installed multimedia consumer was found. Final removal confirmation, unique-state preservation and retained-app regression remain cutover gates.
+- [x] Inspect Multimedia Console's source/index/suite/transcoding pages, installed packages, protected-share registry and retained-app startup references. Video Station had no sources, the index had no files, and no other installed multimedia consumer was found. The subsequent retirement is recorded separately below.
+- [x] Retire Video Station and Multimedia Console through App Center after encrypted state preservation; confirm both registry entries absent, retained services healthy and unchanged SMB configuration. See the [October 25 receipt](nas-media-retirement-2026-10-25.md) for incomplete download/preview/playback acceptance. Shares and scrub policy were not changed.
 - [ ] Determine used bytes by data class from existing indices/QTS accounting; do not trigger a whole-collection scan/hash merely to plan.
 - [ ] Inventory shares/aliases, NFS/AFP/WebDAV/FTP, QTS application privileges, scheduled tasks, package paths, symlinks, open sessions and every client. The SMB session probe required root and was not completed.
 - [x] Verify homes enabled on Scratch, actual `home`/`homes` definitions, observed local admin/deployment homes, deployment SSH dependency and absence from HBS selection; supersede the failed earlier home probe.

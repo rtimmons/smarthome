@@ -10,6 +10,10 @@ Private probe output stays outside Git; this report omits credentials, disk
 serials, media identifiers and payload filenames. Times below are Eastern unless
 explicitly UTC. Readings are point-in-time observations, not continuous monitoring.
 
+The subsequent authorized [media-app retirement](nas-media-retirement-2026-10-25.md)
+removed Video Station and Multimedia Console after state preservation. That later
+change is separate from this read-only record; no scrub was started.
+
 The later October 25 follow-up adds retained event/kernel history and native
 app dependency/source inspection. **Disk 2 has recurring link errors, and the
 RAID scrub schedule is disabled.** These findings supersede the earlier
