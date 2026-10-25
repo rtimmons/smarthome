@@ -185,6 +185,27 @@ class SecretScanTests(unittest.TestCase):
             self.assertIn(('source', 'untracked.txt', 'native age private identity'), findings)
             self.assertFalse(any('ignored.txt' in path for _, path, _ in findings))
 
+    def test_reflog_only_secret_and_commit_message_are_checked(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            def git(*args):
+                return subprocess.check_output(['git', '-c', 'commit.gpgsign=false',
+                    '-c', 'core.hooksPath=/dev/null', '-c', 'user.name=Synthetic',
+                    '-c', 'user.email=synthetic@example.invalid', '-C', str(root), *args],
+                    stderr=subprocess.DEVNULL)
+            git('init', '-q')
+            git('commit', '--allow-empty', '-qm', 'clean fixture')
+            clean = git('rev-parse', 'HEAD').decode().strip()
+            (root / 'reflog-only.txt').write_bytes(age_secret())
+            git('add', 'reflog-only.txt')
+            git('commit', '-qm', age_secret().decode())
+            abandoned = git('rev-parse', 'HEAD').decode().strip()
+            git('reset', '--hard', clean)
+            findings, _, _ = scanner.scan(root)
+            self.assertIn(('history', 'reflog-only.txt', 'native age private identity'), findings)
+            self.assertIn(('history', 'commit-message/' + abandoned, 'native age private identity'), findings)
+            self.assertFalse(scanner.scan(root, history=False)[0])
+
     def test_cli_diagnostics_never_echo_matched_content(self):
         finding = [('source', 'synthetic.txt', 'native age private identity')]
         with mock.patch.object(scanner, 'scan', return_value=(finding, 1, 0)), \

@@ -52,3 +52,48 @@ vulnerabilities. Service tests and builds pass. The four affected live add-ons w
 checks. The config generator is a local build tool. GitHub default-branch alerts
 remain open until the branch updates reach that branch. No blanket upgrade or scanner exemption
 was applied.
+
+## October 25, 2026 remediation and remaining approvals
+
+The current-source/index scan passes. The scanner now also checks commit messages
+and reflog-only history; a synthetic abandoned-commit test verifies both and that
+`--no-history` still describes a narrower check. The full scan still reports the
+two historical RSA keys plus two source-visible private paths. The latter are
+links retained in two local Codex checkpoint trees, not exposed backup contents.
+No scanner exemptions were added.
+
+Using current dedicated access only, a read-only audit checked one NAS, two cloud
+and one HA SSH authorization files. Neither exposed public fingerprint appeared.
+This is evidence for those accessible files, not proof against unknown reuse or
+other machines. The earlier user confirmation that the two known Pi consumers
+were retired/wiped remains the basis for their revocation disposition.
+
+An isolated cleanup preview removed the documented historical key paths, the old
+plaintext HA secrets file, private-directory paths and their local tree-checkpoint
+references. A fresh clone containing all preview refs passed the expanded scanner;
+the current source tree hash stayed identical. The preview rewrote 99 refs and
+sanitized two checkpoint trees. It has not been applied to the active repository
+or pushed. Applying it needs coordinated handling of active worktrees, five saved
+stashes, reflogs, remote branches and other clones; it changes commit IDs and
+removes old commit signatures. Immutable private recovery snapshots must remain
+unchanged. Remote ref refresh was blocked by the unavailable SSH signing agent.
+See [GitHub's removal guidance](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/removing-sensitive-data-from-a-repository).
+
+Pre-update backup verification found seven accidentally root-owned evidence files
+inside existing service-owned configuration directories: four replay logs, two
+replay topology/receipt files and the Prowlarr authentication migration receipt.
+Their intended service ownership was restored, retaining mode 0600 and identical
+bytes. The producing tasks now retain that ownership. The resulting encrypted
+cloud archive independently verified 1,020 files and 17 SQLite databases.
+A second encrypted cloud archive verified the same file/database counts after
+the Seerr update. Original immutable recovery archives were not modified.
+
+Seerr was updated to pinned stable 3.5.1; its two accounts, credentials, permissions,
+API key, database integrity and native connections passed checks. See
+[Seerr operations](seerr.md#october-25-security-update). QNAP and Plex remain pending
+a renewed local-administrator QTS session: observed QTS is 5.2.10 build 20260731,
+and Plex's QNAP package reports 1.43.3. The official Plex Intel QNAP target is
+1.43.5.11029-6bf8af3f0. QNAP's
+[current critical PHP advisory](https://www.qnap.com/en/security-advisory/qsa-26-18)
+lists QTS 5.2.11.3661 build 20261023 as fixed; model eligibility and supported
+installation must be confirmed in QTS. Neither NAS firmware nor Plex was changed.

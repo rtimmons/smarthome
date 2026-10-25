@@ -99,6 +99,8 @@ def main():
             raise RuntimeError('Unrelated Prowlarr settings changed')
         (backup/'receipt.json').write_text(json.dumps({'original_sha256':hashlib.sha256(stopped).hexdigest(),
             'settings_except_authentication':'identical','api_key':'preserved','loopback_binding':'verified'})+'\n')
+        os.chown(backup/'receipt.json', info.st_uid, info.st_gid)
+        (backup/'receipt.json').chmod(0o600)
         print('Prowlarr External auth enabled; original API key and every other setting preserved.')
     except Exception:
         subprocess.run(['docker','stop','--time','30',container],check=True,stdout=subprocess.DEVNULL)

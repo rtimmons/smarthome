@@ -25,18 +25,18 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "d32d4e677701f0f46537d94fec62eaabb7cd3e81fd35d3fcba14443d41b63952",
-    "reason": "Document fresh-checkout SOPS bootstrap/restore and preserve historical recovery boundaries",
+    "fingerprint": "ec9a321f01c6546e81e8f4f1237875fe258500122011e32ed1a3d407d95b25d7",
+    "reason": "Reviewed expanded history scanning and private backup evidence ownership; recovery scopes and immutable archives remain unchanged",
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "7922dcf8904656dfb20d23e6fda17969a3a4931cf7976db71e9590c2efff6f0a",
-    "reason": "Catalog dashboards and entity visibility retain exact owner ACL; Jellyfin native login documented",
+    "fingerprint": "31bec38370a4e06e1cec7e94cb2e1c6d1a94e2c5148bd6a444ec823b3b6a2d6b",
+    "reason": "Reviewed stable Seerr security update, account preservation, verified pre/post-update backups and unapplied history cleanup",
     "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "efffe458044a806d15c85b260300da1aba70445cc23e436e9cb0de9cc7389bba",
-    "reason": "Reviewed standalone owner-only MFA gates, SOPS recovery, four verified DNS aliases and retained native client paths",
+    "fingerprint": "c3e867a6adeb04c94afb401033890666f7c3118154362d2f257341a124319039",
+    "reason": "Reviewed private migration receipt ownership and current stable Seerr support boundary",
     "reviewed_at": "2026-10-25"
   },
   "printing": {

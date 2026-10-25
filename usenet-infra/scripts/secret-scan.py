@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Scan main-repository source/index/history without printing credential bytes.
+"""Scan source, index, ref/reflog history and commit messages without credential output.
 
 Ignored private inputs and submodule repositories are outside this source gate.
 This is a high-confidence detector, not a certification that all data is public.
@@ -250,11 +250,13 @@ def scan(root, *, history=True):
             if mode != b'160000':
                 objects[(oid.decode(), path.decode('utf-8', 'surrogateescape'))] = 'index'
     if history:
-        for raw in _git(root, ['rev-list', '--objects', '--all']).splitlines():
+        for raw in _git(root, ['rev-list', '--objects', '--all', '--reflog']).splitlines():
             fields = raw.split(b' ', 1)
             if len(fields) == 2:
                 oid, path = fields
                 objects.setdefault((oid.decode(), path.decode('utf-8', 'surrogateescape')), 'history')
+        for oid in _git(root, ['rev-list', '--all', '--reflog']).decode().splitlines():
+            objects.setdefault((oid, 'commit-message/' + oid), 'history')
     blobs = 0
     with subprocess.Popen(['git', '-C', str(root), 'cat-file', '--batch'], stdin=subprocess.PIPE,
                           stdout=subprocess.PIPE, stderr=subprocess.DEVNULL) as process:
@@ -267,7 +269,7 @@ def scan(root, *, history=True):
             if len(header) != 3 or not header[2].isdigit():
                 raise ScanError('Git source object is unavailable.')
             size = int(header[2])
-            if header[1] == b'blob':
+            if header[1] in (b'blob', b'commit'):
                 result = inspect_stream(path, process.stdout, size)
                 blobs += 1
                 findings.update((scope, path, reason) for reason in result)
@@ -301,7 +303,7 @@ def main(argv=None):
             print('Secret scan failed; diagnostics contain paths and classifications only.', file=sys.stderr)
             return 1
         print('No high-confidence credentials or invalid vaults found in ' + str(files) +
-              ' main-repository source files and ' + str(blobs) + ' index/history blobs' +
+              ' main-repository source files and ' + str(blobs) + ' index/history objects' +
               (' (history omitted).' if args.no_history else '.'))
         return 0
     except Exception:

@@ -65,12 +65,24 @@
           ansible.builtin.command:
             argv: [python3, /srv/usenet/libexec/cleanuparr_replay.py, topology]
           changed_when: false
+        - name: Preserve private topology evidence for the backup identity
+          ansible.builtin.file:
+            path: /srv/usenet/config/catalog/cleanuparr-replay/data/topology.json
+            owner: usenet
+            group: usenet
+            mode: '0600'
       always:
         - name: Preserve private test log
           ansible.builtin.shell:
             cmd: 'umask 077; docker compose logs --no-color > /srv/usenet/config/catalog/cleanuparr-replay/log.txt'
             chdir: /srv/usenet/compose/cleanuparr-replay
           changed_when: false
+        - name: Keep private evidence readable by its existing backup identity
+          ansible.builtin.file:
+            path: /srv/usenet/config/catalog/cleanuparr-replay/log.txt
+            owner: usenet
+            group: usenet
+            mode: '0600'
         - name: Remove offline containers and network but preserve evidence
           ansible.builtin.command:
             cmd: docker compose down
@@ -80,3 +92,9 @@
       ansible.builtin.command:
         argv: [python3, /srv/usenet/libexec/cleanuparr_replay.py, verify]
       changed_when: false
+    - name: Preserve private receipt for the backup identity
+      ansible.builtin.file:
+        path: /srv/usenet/config/catalog/cleanuparr-replay/receipt.json
+        owner: usenet
+        group: usenet
+        mode: '0600'

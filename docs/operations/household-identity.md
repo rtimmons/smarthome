@@ -378,7 +378,7 @@ browser redirects. No HA Core authentication settings changed in this rollout.
 
 [Seerr's stable user settings](https://docs.seerr.dev/using-seerr/settings/users/)
 document local and media-server authentication. The configured deployment is pinned
-to v3.4.1. Its [native OIDC implementation](https://github.com/seerr-team/seerr/pull/2715)
+to v3.5.1 after the security update. Its [native OIDC implementation](https://github.com/seerr-team/seerr/pull/2715)
 is still an open PR at this review, with a separate preview build. An integration
 guide or preview image does not establish stable support. Preserve Plex login,
 existing Seerr user IDs, API keys and the approved Moonfin local request account.

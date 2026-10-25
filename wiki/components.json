@@ -204,7 +204,8 @@
         "usenet-infra/docs/repair-spool.md",
         "usenet-infra/docs/operations.md",
         "usenet-infra/docs/validation.md",
-        "usenet-infra/docs/jellyfin-trial.md"
+        "usenet-infra/docs/jellyfin-trial.md",
+        "usenet-infra/docs/security-findings.md"
       ]
     },
     {

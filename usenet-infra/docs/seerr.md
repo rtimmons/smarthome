@@ -38,8 +38,8 @@ restart its retired worker to test Seerr.
 
 ## Deployment and verification
 
-The isolated `usenet-seerr` Compose project runs Seerr v3.4.1, pinned to digest
-`sha256:f4768de5f616248d723e05891f3345a1402123775d03bf0890dbfedc0831bda1`.
+The isolated `usenet-seerr` Compose project runs Seerr v3.5.1, pinned to digest
+`sha256:d8fab675b55ad293ded98fd71efcfd46054cbad9746534ae1cc4794a88c0b3be`.
 The app listens only on loopback port 5055. Its private proxy listens on
 10.77.0.1:15055 and rejects API-key authentication from remote clients.
 The VPN firewall permits that UI only through the existing private tunnel;
@@ -74,7 +74,7 @@ To roll back the portal, stop and disable only `usenet-seerr.service`, retaining
 its configuration/database for recovery. Keep both carts disabled; native Arr
 manual requests remain available. Never restore historical cart/RSS policy.
 
-Official references: [release](https://github.com/seerr-team/seerr/releases/tag/v3.4.1),
+Official references: [release](https://github.com/seerr-team/seerr/releases/tag/v3.5.1),
 [Docker setup](https://docs.seerr.dev/getting-started/docker/),
 [service settings](https://docs.seerr.dev/using-seerr/settings/services/).
 
@@ -151,3 +151,19 @@ force-import support cannot resolve the ambiguous episode mappings from those
 repairs. Keep manual review for those cases and keep automated recovery
 report-only. The [settings and qualification runbook](native-media.md#settings-ownership-and-offline-recovery-qualification)
 records commands, evidence, official references, rollback and promotion limits.
+
+## October 25 security update
+
+The stable 3.5.1 image replaced 3.4.1 after an independently verified encrypted
+cloud backup (1,020 files and 17 SQLite databases). A cold Seerr configuration
+copy remains in the private cloud backup directory for rollback. Only Seerr was
+recreated; its proxy, Plex, Arr and download services were not restarted.
+Both existing user records retained their authentication credentials, identifiers,
+permissions and quotas; the API key remained identical. SQLite integrity and the
+existing Plex/Arr connection checks passed. No requests or playback were triggered.
+
+[3.5.0 release notes](https://github.com/seerr-team/seerr/releases/tag/v3.5.0)
+describe access-control and information-disclosure fixes;
+[3.5.1](https://github.com/seerr-team/seerr/releases/tag/v3.5.1) updates the runtime
+certificate trust store. This is a stable security update, not the OIDC preview.
+The existing Plex and approved Moonfin account flows remain enabled.

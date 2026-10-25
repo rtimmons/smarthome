@@ -133,3 +133,11 @@ repository and the wiki itself has no login.
 
 This directory documents the repository's access configuration. It does not test
 passwords, change accounts, or establish that every service is currently online.
+
+## Security maintenance
+
+Seerr now runs pinned stable 3.5.1 with its existing account and client mappings.
+QNAP firmware and Plex package updates are prepared but still require a renewed
+QTS administrator session. See the [security findings and remediation status](../../../usenet-infra/docs/security-findings.md)
+for the historical-key audit, backup ownership repair and unapplied history-cleanup
+preview. Browser SSO does not replace native Plex or SMB authentication.
