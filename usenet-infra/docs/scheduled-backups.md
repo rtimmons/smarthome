@@ -44,7 +44,8 @@ successfully on October 18 at 14:15 Eastern, transferring about 1.85 decimal TB.
 The October 19 run also succeeded, finishing at 04:42 after transferring about
 355 GB; its selected source size was 4.845 decimal TB. HBS reported the October 19
 06:00 quick integrity check as `Good`. These are job and integrity-check results;
-a B2 sample restore remains unverified. Do not equate a successful upload or a
+a B2 sample restore was not yet verified. The October 25 settings-file sample
+below subsequently passed. Do not equate a successful upload or a
 quick integrity result with demonstrated recovery of the selected sources.
 
 Client-side encryption is disabled, and HBS does not allow it to be enabled
@@ -71,12 +72,12 @@ Gmail reauthorization and QNAP cleared its expired-account warning, but the
 authorized test email failed at 10:48 Eastern. QNAP logged its generic
 `error(401) msg(sendmail fail)`; this does not identify a Google authentication
 failure. TLS connections to Gmail on ports 465 and 587 passed from the NAS backup
-container. Alert delivery remains unverified until a test succeeds.
+container. Alert delivery was still unverified at that checkpoint.
 The user then ran QNAP's documented Notification Center stop/start workaround;
 one authorized retry at 10:57 also failed with the same generic error. The rule
-is enabled, but must not be represented as working email delivery. Notification
-Center is 1.10.0.3331 on QTS 5.2.10. Further repair requires resolving this SMTP
-service failure or setting up a separately approved delivery account.
+was enabled, but delivery remained unverified at that point. Notification
+Center was 1.10.0.3331 on QTS 5.2.10. The October 25 reauthorization and inbox
+verification below resolved delivery using the existing account.
 
 Manage HBS jobs through QNAP's interface; database inspection is read-only.
 Use the dedicated NAS identity and pinned hostname from private inputs. Do not
@@ -99,14 +100,37 @@ cache changed. This preserves the job selection, scheduling, retention, rate
 limit and saved destination credentials without recreating a job or account.
 Encrypted NAS settings archives verified before and after the update include
 the HBS databases; all three post-update scopes passed off-host upload and
-readback. The existing notification-delivery limitation above
-is separate and is not resolved by a successful package update.
+readback. Notification delivery was verified separately afterward, as recorded
+below; a successful package update alone did not establish mail delivery.
 
 A post-update native HBS **Quick Check** against the existing B2 backup finished
 with **Good** on October 25; the job returned to **Success**. The unchanged
 scheduled job remains enabled. This verifies live destination access and HBS's
 quick integrity checks, not a new backup upload, full content check or sample
 restore. Those distinctions follow [QNAP's integrity-check documentation](https://www.qnap.com/en/how-to/tutorial/article/data-integrity-check-in-hbs-3).
+
+## October 25 email delivery and B2 sample restore
+
+After the firmware and HBS updates, Notification Center reported expired Gmail
+authorization. The user reauthorized the existing account, and the saved sender
+and recipients were retained. The native QNAP test succeeded at 16:28 Eastern;
+an independent Gmail inbox check found the matching NAS test message received
+at 16:28:52. The existing HBS email rule remained enabled. No new credential,
+recipient or alert rule was created, and no artificial backup failure was induced.
+
+A one-time HBS restore used the existing B2 account and the October 25 02:00:17
+backup version. It selected only `Usenet/Backups/automatic/forgejo`, restoring
+seven files (17,239,788 bytes) into the new private directory
+`/share/Usenet/b2-restore-test-20261025`, outside the backed-up source folders.
+HBS reported Success; every restored regular file matched its original
+byte-for-byte, and no symlinks were restored. The original files and backup job
+were retained. The test restore job has no recurring schedule and uses Skip
+files on destination conflicts; its small output remains available for review.
+
+This proves a small B2 restore of encrypted configuration archives and receipts.
+It does not prove recovery of the private originals, a full Time Machine backup,
+or a replacement NAS. Earlier independent archive-decryption checks remain
+separate evidence; this test compared the restored ciphertext and receipts.
 
 ## Repository-owned encrypted settings archives
 

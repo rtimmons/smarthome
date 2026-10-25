@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "d45817ae734839cc2d4e0964e2efcc7f5eae4a587fc4e47beacd48e98777a002",
-    "reason": "Reviewed HBS update evidence and preservation of settings-only backup scope, rate limit and unverified sample-restore boundary",
+    "fingerprint": "dfbc214c169539795a8c3bbde66e249a4c500d7235fa6354687d9355c8dc6461",
+    "reason": "Documented successful QNAP email delivery and limited B2 settings-file recovery while preserving full-restore limits",
     "reviewed_at": "2026-10-25"
   },
   "media": {
     "fingerprint": "2a90332b94fc67d9c4a9c518c81b8514cc7938dac9ef24bd0ae0b97c3ecb3a83",
-    "reason": "Verified HBS 26.4.6.205 update, unchanged job and credentials, healthy databases, Good B2 Quick Check and encrypted post-update backups",
+    "reason": "Verified existing Gmail account reauthorization and inbox delivery plus isolated seven-file B2 restore with byte-for-byte comparisons",
     "reviewed_at": "2026-10-25"
   },
   "network": {
