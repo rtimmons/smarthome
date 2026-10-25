@@ -2,8 +2,9 @@
 
 Seerr accepts explicit requests using Plex sign-in. Radarr and Sonarr search
 through Prowlarr, submit to their own SAB categories, import to the Storage Box
-and remove completed source downloads. RSS polling, direct carts, watchlist
-acquisition and automatic upgrades stay off. Automatic requests (including
+and remove completed source downloads. Since October 25, native Arr RSS checks
+newly posted releases every 15 minutes for monitored items. Direct carts,
+watchlist acquisition and automatic upgrades stay off. Automatic requests (including
 Seerr) use Arr's native failed-download blocklisting and replacement search.
 Failures from manually selected interactive-search releases do not trigger
 automatic replacement. This is a failure-triggered policy, not a repair timer.
@@ -15,6 +16,13 @@ SAB archives its history records. Apply this cleanup policy with
 on the existing SAB client in each app and verifies readback. No new cleanup
 worker, search, service restart or pause change is introduced. Unowned/manual
 SAB jobs and completed-but-unimported jobs still need explicit review.
+Apply RSS with `just usenet configure-rss` after verifying monitored movies and
+seasons against approved requests. Only the Arr interval changes; no bulk search
+or manual resume is sent. Native RSS and native failed-release retries are not
+subject to the custom worker's three-attempt budget or queue cap. RSS may select
+multi-episode releases under native rules. Preserve no-upgrade profiles and
+review native activity when investigating duplicate or capacity concerns.
+
 Apply the replacement-search policy separately with
 `just usenet configure-failed-downloads`; it does not replay historical failures.
 
@@ -144,7 +152,9 @@ in the same bind mount. Private inventory enables `qnap_native_tv_copy_enabled`;
 keep it disabled if Plex's TV source includes staging. New episodes are not
 automatically copied. Local eviction removes only an owned NAS copy.
 
-Plex owns discovery through watches, partial scans and an hourly fallback.
+Native Arr import/rename notifications now request mapped Plex updates;
+Plex also uses watches, partial scans and an hourly fallback. See the
+[native connection setup](seerr.md#native-plex-import-notifications).
 Remote mounts may need a general-library scan; copying alone does not prove
 indexing. Ownership receipts under `state/native-items` are included in NAS
 settings backups. A rebuilt destination still requires integrity/ownership
@@ -189,13 +199,18 @@ proposals. Incomplete API reads fail closed.
 
 The report reader remains read-only apart from its existing HA notification.
 As of October 25, a separate, explicitly enabled executor recovers **missing TV
-episodes in approved, still-open requests**. It uses the report's 15-minute grace
+episodes in approved, still-open requests**. It uses a six-hour per-episode observation grace
 and missing-only proposals, then recollects live approvals, files, queue and health
 before each grab. Existing file records, unlinked completed jobs, ambiguous
 imports, completed historical requests, unrequested seasons and movies remain held.
 
-`just usenet configure-seerr-recovery-execute` installs the separate one-minute
-timer. The observation grace is per missing episode, so importing one episode
+`just usenet configure-seerr-recovery-execute` installs the separate fifteen-minute
+timer. Native RSS gets six hours to handle a newly observed missing episode
+before backlog acquisition becomes eligible. A fresh observer report with no
+missing-TV proposal skips the worker's extra API and remote filesystem reads.
+A persistent global cooldown permits at most one worker lookup per 15 minutes,
+including operator invocations and retries across restarts. Cached reports can
+only suppress work; every actual lookup and grab still requires fresh checks. The observation grace is per missing episode, so importing one episode
 does not restart every other episode's wait. Each invocation selects at most one Sonarr-approved Usenet release whose
 native mapped episode list contains exactly the missing episode ID. It excludes
 season packs, extras, AV1, rejection overrides and previously attempted release
@@ -211,10 +226,11 @@ Private `executor-journal.json` records attempts before sending a grab. Per epis
 at most three releases and seven lookups are allowed, with six hours between
 attempts and 24 hours after an empty lookup. A lookup interrupted before any
 grab, or deferred because live scope changed, can be reconsidered after a minute;
-its lookup count still consumes the seven-lookup budget. A timeout or interrupted submission
+its lookup count still consumes the seven-lookup budget and the global
+15-minute lookup cooldown still applies. A timeout or interrupted submission
 holds that episode for review instead of retrying an uncertain write. Native
 Sonarr imports and failed-download cleanup remain the owners; the executor does
-not import manually, rename, delete, change profiles or enable RSS. The report's
+not import manually, rename, delete, change profiles or RSS settings. The report's
 existing HA notification includes exhausted budgets and uncertain outcomes.
 
 Use `just usenet seerr-recovery-execute-status` for sanitized state and
@@ -291,7 +307,7 @@ settings sync; replacements require an explicitly scoped native operation.
 up to 15 minutes of jitter. Service output uses the bounded system journal;
 Recyclarr also retains its own rotating logs. A failed sync is a failed systemd
 service; inspect it before treating the policy as current. There are no searches,
-imports or existing-file renames in this configuration. RSS remains off. Native
+imports or existing-file renames in this configuration. Native RSS is enabled; settings synchronization preserves its interval. Native
 completed-download and failed-download handling retain their existing settings.
 
 ```sh

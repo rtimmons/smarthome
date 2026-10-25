@@ -60,7 +60,9 @@ The [wiki operations guide](../../docs/operations/wiki.md) owns publication deta
 
 The reporting deployment installs read-only checks and Home Assistant notifications.
 The separately enabled `just usenet configure-seerr-recovery-execute` deployment
-installs bounded acquisition for missing TV episodes in approved open requests.
+installs bounded backlog acquisition for missing TV episodes in approved open
+requests. Native RSS handles new releases every 15 minutes; backlog recovery
+waits six hours before becoming eligible and runs every 15 minutes.
 Sonarr retains import and cleanup ownership; ambiguous imports remain manual
 review. Preserve the private retry journal when restoring configuration. See
 the [media recovery runbook](../../usenet-infra/docs/native-media.md#seerr-recovery-reporting)

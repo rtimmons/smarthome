@@ -23,6 +23,8 @@ MAX_SEARCHES = 7
 RETRY_SECONDS = 6 * 3600
 NO_RESULT_SECONDS = 24 * 3600
 MAX_QUEUE = 3
+BACKLOG_GRACE_SECONDS = 6 * 3600
+LOOKUP_INTERVAL_SECONDS = 15 * 60
 
 
 def module(name, root=ROOT):
@@ -125,8 +127,20 @@ def execute(reader, rec, state=STATE, now=None, request_id=None):
         journal_path = state / 'executor-journal.json'
         journal = rec.private_json(journal_path) if journal_path.exists() else {'schema': 1, 'episodes': {}}
         rec.require(journal.get('schema') == 1 and isinstance(journal.get('episodes'), dict), 'journal_invalid')
+        # The five-minute observer already checks library files. When its fresh
+        # report has no missing-TV proposal, avoid another remote filesystem walk.
+        # Cached state can only suppress work; it can never authorize a grab.
+        if request_id is None and not any(
+                p.get('kind') == 'missing_episode_search'
+                for request in previous.get('requests', []) for p in request.get('proposals', [])):
+            return {'status': 'idle', 'grabs': 0, 'used_fresh_report': True}
+        last_lookup = max([journal.get('last_lookup_at', 0)] +
+                          [e.get('last_search', 0) for e in journal['episodes'].values()])
+        if now - last_lookup < LOOKUP_INTERVAL_SECONDS:
+            return {'status': 'lookup_cooldown', 'grabs': 0,
+                    'retry_after_seconds': int(LOOKUP_INTERVAL_SECONDS - (now - last_lookup))}
         snapshot = rec.collect(reader)
-        grace = 0 if request_id is not None else rec.GRACE_SECONDS
+        grace = 0 if request_id is not None else BACKLOG_GRACE_SECONDS
         report = rec.plan(snapshot, previous, now=now, grace_seconds=grace)
         options = [t for t in targets(snapshot, report) if request_id is None or t[0] == request_id]
         selected = next((t for t in options if due(journal['episodes'].get(f'{t[1]}:{t[2]}', {}), now)), None)
@@ -137,6 +151,7 @@ def execute(reader, rec, state=STATE, now=None, request_id=None):
         key = f'{series_id}:{episode_id}'
         entry = journal['episodes'].setdefault(key, {'searches': 0, 'attempts': []})
         entry.update(searches=entry['searches'] + 1, last_search=now, last_result='search_pending')
+        journal['last_lookup_at'] = now
         rec.atomic_json(journal_path, journal)
         releases = reader.arr.call('sonarr', f'release?episodeId={episode_id}', timeout=120)
         attempted = {a['fingerprint'] for a in entry['attempts']}
@@ -188,13 +203,14 @@ def main():
         if args.action == 'status':
             policy = rec.private_json(STATE / 'executor-policy.json')
             status = rec.private_json(STATE / 'executor-status.json') if (STATE / 'executor-status.json').exists() else {}
-            print(json.dumps({'enabled': policy.get('enabled'), **status}, sort_keys=True))
+            print(json.dumps({'enabled': policy.get('enabled'), 'budget_scope': 'custom_worker_only', **status}, sort_keys=True))
             return 0
         result = execute(rec.Reader(), rec, request_id=args.request_id)
     except BlockingIOError:
         result = {'status': 'busy', 'grabs': 0}
     except Exception as error:
         result = {'status': 'held', 'reason': str(error) if isinstance(error, rec.RecoveryError) else 'execution_failed', 'error_type': type(error).__name__, 'grabs': 0}
+    result['budget_scope'] = 'custom_worker_only'
     result['checked_at'] = dt.datetime.now(dt.timezone.utc).isoformat()
     rec.atomic_json(STATE / 'executor-status.json', result)
     print(json.dumps(result, sort_keys=True))

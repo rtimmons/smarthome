@@ -23,7 +23,7 @@ CLIENT = 'SABnzbd manual discovery'
 DOWNLOAD_POLICY = {'enableCompletedDownloadHandling': True,
                    'autoRedownloadFailed': True,
                    'autoRedownloadFailedFromInteractiveSearch': False}
-RSS_INTERVAL = 0
+RSS_INTERVAL = 15
 PROFILE_POLICY = {'enableRss': True, 'enableAutomaticSearch': True,
                   'enableInteractiveSearch': True}
 EXPECTED_HEALTH = set()
@@ -144,6 +144,29 @@ def configure_failed_cleanup(api):
     return {'status': 'verified', 'changed': changed, 'remove_failed_downloads': True}
 
 
+def configure_rss(api):
+    """Enable native RSS after validating both apps; preserve other settings."""
+    ensure_versions(api)
+    before = {app: api.call(app, 'config/indexer') for app in ('radarr', 'sonarr')}
+    for app, resource in before.items():
+        if resource.get('rssSyncInterval') not in (0, RSS_INTERVAL):
+            raise DiscoveryError('rss_interval_requires_review')
+        if any(h.get('type') in ('warning', 'error') for h in api.call(app, 'health')):
+            raise DiscoveryError('unexpected_application_health_issue')
+        if not require_policy(api.call(app, 'config/downloadclient'), DOWNLOAD_POLICY):
+            raise DiscoveryError('download_policy_not_verified')
+    changed = False
+    for app, resource in before.items():
+        if resource['rssSyncInterval'] == RSS_INTERVAL:
+            continue
+        desired = dict(resource, rssSyncInterval=RSS_INTERVAL)
+        api.call(app, 'config/indexer', 'PUT', desired)
+        if api.call(app, 'config/indexer') != desired:
+            raise DiscoveryError('rss_readback_failed')
+        changed = True
+    return {'status': 'verified', 'changed': changed, 'rss_interval_minutes': RSS_INTERVAL}
+
+
 def check_lists(api, app):
     # No lists are created implicitly. Existing lists must remain metadata-only.
     for item in api.call(app, 'importlist'):
@@ -166,7 +189,7 @@ def inspect(api):
     source_indexers = api.call('prowlarr', 'indexer')
     if len(source_indexers) != 2 or any(item.get('appProfileId') != owned[0]['id'] for item in source_indexers):
         raise DiscoveryError('source_indexer_policy_not_verified')
-    result = {'status': 'verified', 'automatic_acquisition': False, 'automatic_import': True,
+    result = {'status': 'verified', 'automatic_acquisition': True, 'automatic_import': True,
               'explicit_native_requests': True, 'automatic_failed_release_search': True, 'apps': {}}
     for app in ('radarr', 'sonarr'):
         check_lists(api, app)
@@ -187,19 +210,19 @@ def inspect(api):
             raise DiscoveryError('unexpected_application_health_issue')
         result['apps'][app] = {'version': APPS[app][1], 'interactive_indexers': len(indexers),
                                'download_clients': len(clients), 'rss_interval': rss_interval,
-                               'automatic_search': True, 'rss_enabled': False,
+                               'automatic_search': True, 'rss_enabled': True,
                                'expected_policy_notices': len(health)}
     return result
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('inspect', 'configure-failed-downloads', 'configure-failed-cleanup'))
+    parser.add_argument('action', choices=('inspect', 'configure-failed-downloads', 'configure-failed-cleanup', 'configure-rss'))
     args = parser.parse_args()
     try:
         api = API()
         result = (configure_failed_downloads(api) if args.action == 'configure-failed-downloads'
-                  else configure_failed_cleanup(api) if args.action == 'configure-failed-cleanup' else inspect(api))
+                  else configure_failed_cleanup(api) if args.action == 'configure-failed-cleanup' else configure_rss(api) if args.action == 'configure-rss' else inspect(api))
         print(json.dumps(result, sort_keys=True))
     except DiscoveryError as error:
         print(json.dumps({'status': 'failed', 'reason': str(error)}))

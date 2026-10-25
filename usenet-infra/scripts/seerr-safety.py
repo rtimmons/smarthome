@@ -213,7 +213,7 @@ def main(action):
     (path / 'after.json').write_text(json.dumps(current))
     receipt = {'status': 'verified', 'existing_files_preserved': {a: len(v['files']) for a,v in current['apps'].items()},
                'scope': 'approved_seerr_requests', 'recovery_mode': 'report-only', 'settings_owner': 'recyclarr',
-               'rss_enabled': False, 'acquisition_writes': 0}
+               'rss_enabled': all(a['config/indexer']['rssSyncInterval'] > 0 for a in current['apps'].values()), 'acquisition_writes': 0}
     (path / 'receipt.json').write_text(json.dumps(receipt))
     (ROOT / 'config/catalog/recyclarr/ownership.json').write_text(json.dumps(receipt))
     return receipt

@@ -327,8 +327,10 @@ in for 20 minutes. Imported files waiting more than 15 minutes for Seerr to show
 availability are reported separately; that status does not prove playback. A Plex
 sync that has stopped for 20 minutes also raises an alert. The private connection
 check verifies that Seerr can reach the expected Plex server through the VPN.
-For repaired files, refresh the affected Plex folders and sync Seerr instead of
-requesting the episodes again.
+Native Sonarr/Radarr import and rename notifications now update the mapped
+general Plex library. Seerr continues its native availability scans. For repaired
+files, refresh the affected Plex folders and sync Seerr instead of requesting
+the episodes again. Use `just usenet arr-plex-status` to check the native mappings.
 
 Use `just usenet seerr-recovery-status` for a private summary. The
 [native media runbook](../../../usenet-infra/docs/native-media.md#seerr-recovery-reporting)
@@ -342,12 +344,17 @@ library. See the [rollout and qualification details](../../../usenet-infra/docs/
 
 ### Missing requested episodes
 
-The approved TV recovery worker checks once per minute and grabs at most one
+Native Arr RSS checks newly posted releases every 15 minutes for monitored
+items. The approved TV backlog worker waits six hours after observing a missing
+episode, then checks every 15 minutes and grabs at most one
 Sonarr-approved release mapped to exactly one missing requested episode. It
 rechecks library records and active downloads first, keeps at most three jobs
 queued, and holds on pauses, processing, health or storage issues. Existing files,
 season packs and ambiguous imports are excluded. Retry budgets persist across
-restarts; exhausted or uncertain attempts need review. Sonarr performs the import
+restarts; exhausted or uncertain attempts need review. Its limits apply only to
+this worker, not native RSS or native failure retries. A persistent global
+cooldown limits worker lookups to one per 15 minutes; fresh reports with no
+missing-TV proposal skip redundant remote-library checks. Sonarr performs the import
 and cleanup. Use `just usenet seerr-recovery-execute-status` to inspect it.
 
 Date-named daily programmes need the correct native series type; a numbered-series

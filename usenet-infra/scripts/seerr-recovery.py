@@ -552,9 +552,9 @@ def notification(report):
                'This report does not execute recovery actions. '
                'Review Seerr and Sonarr/Radarr for details.')
     if summary.get('executor_enabled'):
-        message += ' Bounded missing-TV acquisition is enabled; ambiguous imports still need review.'
+        message += ' Bounded missing-TV backlog acquisition is enabled; its retry limits apply only to that worker. Native RSS and failed-release retries operate separately. Ambiguous imports still need review.'
     if summary.get('executor_attention'):
-        message += f' {summary["executor_attention"]} episode retry budget(s) or uncertain grab(s) need review.'
+        message += f' {summary["executor_attention"]} custom-worker episode retry budget(s) or uncertain grab(s) need review.'
     if summary['blocked']:
         message += ' Recovery checks are held by a health, storage, or pause condition.'
     return digest, {'action': 'create' if active else 'dismiss', 'message': message}

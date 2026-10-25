@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "e8b6a0e3611d74fda4d6696c0bd4e568862a4e456a4b87e2ee101bb7dab286ca",
-    "reason": "Reviewed the new recovery recipes, service and timer coverage; updated maintenance guidance to distinguish read-only reporting from bounded acquisition and preserve retry journals on restore.",
+    "fingerprint": "c952f9a61d0ae1ba2d0819a58bce9941375186d604422e84a1edc2ba23d2b89e",
+    "reason": "Reviewed native Plex setup/status workflow and standard bridge-only proxy units; no media-service restarts or broad LAN routing are introduced.",
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "8e857b02a8fb03dc0aaa6447dbf48214c0537370b26aa2b84fa2d1d5e7be3d64",
-    "reason": "Reviewed native failed-download cleanup, exact missing-episode acquisition and persistent retry budgets; corrected future-episode guidance and verified the completed recovery without replacing existing files.",
+    "fingerprint": "d1255f65a27e849c5b5888a065f132ced4ef469b39ab69d72716c7ba97b9a38a",
+    "reason": "Reviewed and tested native Plex mapping checks, bridge-only systemd proxy and exact firewall arguments, plus bounded backlog polling and worker-only retry reporting.",
     "reviewed_at": "2026-10-25"
   },
   "network": {

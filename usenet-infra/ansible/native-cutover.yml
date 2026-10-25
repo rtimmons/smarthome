@@ -61,6 +61,14 @@
       register: failed_cleanup_policy
       changed_when: (failed_cleanup_policy.stdout | from_json).changed
 
+    - name: Enable explicitly requested native RSS acquisition
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/discovery-config.py, configure-rss]
+      become_user: usenet
+      when: native_configure_rss | default(false) | bool
+      register: rss_policy
+      changed_when: (rss_policy.stdout | from_json).changed
+
     - name: Verify native owners, retired timers and preserved history
       ansible.builtin.command:
         argv: [python3, /srv/usenet/libexec/native-cutover.py, inspect]

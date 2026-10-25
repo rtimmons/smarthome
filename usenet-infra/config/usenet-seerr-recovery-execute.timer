@@ -1,9 +1,9 @@
 [Unit]
-Description=Recover approved missing TV episodes once per minute
+Description=Recover approved missing TV episodes every fifteen minutes
 
 [Timer]
 OnBootSec=3min
-OnUnitActiveSec=1min
+OnUnitActiveSec=15min
 RandomizedDelaySec=5s
 Unit=usenet-seerr-recovery-execute.service
 

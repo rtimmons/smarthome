@@ -1,0 +1,15 @@
+[Unit]
+Description=Forward native Arr Plex notifications through the existing host VPN route
+Requires=usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+After=usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+
+[Service]
+ExecStart=/lib/systemd/systemd-socket-proxyd 192.168.1.66:32400
+DynamicUser=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true

@@ -1,0 +1,14 @@
+[Unit]
+Description=Private Docker bridge entrance to native Plex notifications
+Requires=docker.service usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+After=docker.service usenet-cloud.service usenet-vpn-address.service usenet-vpn-firewall.service strongswan.service
+
+[Socket]
+ListenStream={{ arr_plex_network.gateway }}:32401
+BindToDevice={{ arr_plex_network.bridge }}
+NoDelay=true
+IPAddressDeny=any
+IPAddressAllow={{ arr_plex_network.subnet }}
+
+[Install]
+WantedBy=sockets.target

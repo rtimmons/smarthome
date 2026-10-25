@@ -130,7 +130,7 @@ def inspect(root, api, sab):
         require(media.get('skipFreeSpaceCheckWhenImporting') is False
                 and media.get('minimumFreeSpaceWhenImporting', 0) >= 30 * 1024
                 and media.get('copyUsingHardlinks') is True, 'native_import_reserve_changed')
-        require(api.call(app, 'config/indexer')['rssSyncInterval'] == 0,
+        require(api.call(app, 'config/indexer')['rssSyncInterval'] == 15,
                 'native_intake_phase_changed')
     require(not any(int(f['enable']) for f in sab.api('get_config', section='rss')['config']['rss']),
             'direct_feed_still_enabled')

@@ -1,10 +1,12 @@
 # Radarr, Sonarr and Prowlarr
 
 The current workflow uses Seerr or explicit Arr search, with native imports and
-completed-source cleanup. RSS polling stays off to preserve the existing backlog.
+completed-source cleanup. Native Arr RSS polls every 15 minutes for monitored items. Existing-file
+upgrade rules remain disabled; RSS is not a full historical backlog search.
 Prowlarr supplies two configured indexers; direct Prowlarr downloads and both
-cart feeds stay disabled. Failed removal, automatic retries, automatic import
-lists and watchlist acquisition remain disabled.
+cart feeds stay disabled. Native failed-download cleanup and replacement
+searches are enabled; interactive-search failures retain explicit retry handling.
+Automatic import lists and watchlist acquisition remain disabled.
 
 Images and API version guards are pinned in `compose/` and
 `scripts/discovery-config.py`; update them together. Saved resource names
@@ -12,8 +14,9 @@ Images and API version guards are pinned in `compose/` and
 not the current capabilities. Preserve their IDs and keys when restoring state.
 
 Each Arr app has one SAB client with its own category (`radarr` or `sonarr`).
-`/library` aliases its subtree of the common `/storage` bind so completed files
-and imports can hardlink. No writer key or incomplete-download mount enters the
+`/library` exposes the remote canonical library, while `/data/complete`
+exposes completed local scratch. Imports across those filesystems copy and then
+remove the source; enabling hardlinks cannot avoid that transfer. No writer key or incomplete-download mount enters the
 Arr containers. See [native media](native-media.md) and [repair storage](repair-spool.md).
 
 ## Operation and recovery

@@ -69,13 +69,45 @@ class ExecutorTests(unittest.TestCase):
     def setup_run(self, folder):
         state = Path(folder); state.chmod(0o700)
         r.atomic_json(state/'executor-policy.json', {'schema':1, 'enabled':True, 'scope':'approved_missing_tv'})
-        r.atomic_json(state/'report.json', {'generated_at':'2027-01-15T08:00:00+00:00'})
+        r.atomic_json(state/'report.json', {'generated_at':'2027-01-15T08:00:00+00:00', 'requests':[{'proposals':[{'kind':'missing_episode_search'}]}]})
         reader = mock.Mock()
         reader.sab.return_value = {'noofslots': 0, 'paused':False, 'diskspace1':'100', 'diskspace2':'1000', 'slots':[]}
         snapshot = scoped_snapshot()
         report = {'requests':[{'request_id':1,'app':'sonarr','native_id':10,
                     'proposals':[{'kind':'missing_episode_search','ids':[20]}]}]}
         return state, reader, snapshot, report
+
+    def test_backlog_waits_for_native_rss_unless_operator_scopes_request(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state, reader, snapshot, report = self.setup_run(folder)
+            with mock.patch.object(r, 'collect', return_value=snapshot), mock.patch.object(r, 'stamp', return_value=NOW), mock.patch.object(r, 'plan', return_value={'requests': []}) as plan:
+                self.assertEqual(x.execute(reader, r, state, NOW)['grabs'], 0)
+                self.assertEqual(plan.call_args.kwargs['grace_seconds'], 6 * 3600)
+                x.execute(reader, r, state, NOW, request_id=1)
+                self.assertEqual(plan.call_args.kwargs['grace_seconds'], 0)
+            self.assertEqual(reader.arr.call.call_count, 0)
+
+    def test_fresh_empty_report_skips_remote_library_and_api_reads(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state, reader, snapshot, report = self.setup_run(folder)
+            r.atomic_json(state/'report.json', {'generated_at':'2027-01-15T08:00:00+00:00', 'requests':[]})
+            with mock.patch.object(r, 'collect') as collect, mock.patch.object(r, 'stamp', return_value=NOW):
+                self.assertTrue(x.execute(reader, r, state, NOW)['used_fresh_report'])
+                collect.assert_not_called()
+            self.assertEqual(reader.mock_calls, [])
+
+    def test_lookup_cooldown_is_global_durable_and_not_bypassed_by_operator(self):
+        with tempfile.TemporaryDirectory() as folder:
+            state, reader, snapshot, report = self.setup_run(folder)
+            # Migrate the cooldown from an older journal without the global field.
+            r.atomic_json(state/'executor-journal.json', {'schema':1, 'episodes':{
+                '99:99':{'last_search':NOW-100, 'attempts':[]}}})
+            with mock.patch.object(r, 'collect') as collect, mock.patch.object(r, 'stamp', return_value=NOW):
+                result = x.execute(reader, r, state, NOW, request_id=1)
+                self.assertEqual(result['status'], 'lookup_cooldown')
+                self.assertEqual(result['retry_after_seconds'], 800)
+                collect.assert_not_called()
+            self.assertEqual(reader.mock_calls, [])
 
     def test_changed_scope_after_lookup_prevents_grab(self):
         with tempfile.TemporaryDirectory() as folder:

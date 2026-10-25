@@ -17,10 +17,11 @@ libraries (IDs 2/3/4/5); private library ID 1 is excluded.
 
 Seerr sends explicit requests to Radarr/Sonarr, which find releases through
 Prowlarr, send them to SAB, import into the Storage Box and clean up completed
-sources. Watchlist acquisition is off. Arr RSS polling remains off to preserve
-the existing missing backlog. The bounded recovery worker can acquire aired,
-monitored episodes within approved open requests; episodes outside that scope
-still require explicit Sonarr searches.
+sources. Watchlist acquisition is off. Native Arr RSS checks newly posted
+releases every 15 minutes for monitored items, including future episodes as
+they become available. RSS can also match a newly posted release for an older
+missing item; it is not a full historical search. The bounded worker is a
+six-hour-delayed fallback for missing episodes in approved open requests.
 Wait for a large request to finish before adding another. For automatically
 selected releases, Arr blocklists a failed release and searches for an eligible
 alternative under the same quality profile. Manually selected interactive-search
@@ -181,3 +182,32 @@ retry budgets. Existing episodes and completed imports cannot authorize a grab.
 Sonarr owns imports and source cleanup; ambiguous matching remains a review.
 See [the native recovery policy](native-media.md#seerr-recovery-reporting) for
 limits, status commands and disabling the executor.
+
+## Native Plex import notifications
+
+`just usenet configure-arr-plex` configures each Arr app's built-in Plex Media
+Server connection. Sonarr uses **On Import Complete**, Radarr uses **On Import**,
+and both use **On Rename**. Grab, delete and add events are disabled. Sonarr's
+per-file import event stays off to avoid duplicate batch notifications.
+
+Arr runs on the existing private Docker bridge. A bridge-bound systemd socket
+on port 32401 uses the standard `systemd-socket-proxyd` to forward only to
+`192.168.1.66:32400`, using the existing host VPN route and firewall. It has no
+public or LAN listener and does not change Arr container networking. Re-run the
+setup if the external Docker network is recreated.
+
+The helper reads the existing Seerr owner token privately and tests both native
+connections before creating either one. It requires the single Arr root
+`/library` and maps it to the exact remote Movies or TV location in Plex's general
+libraries 4 and 5. It refuses unexpected roots, duplicate mappings or a competing
+Plex connection. Other connections, library grants and Plex trash settings remain
+unchanged. Native connection tests prove authentication and section discovery;
+they do not simulate a new import or prove playback.
+
+Run `just usenet arr-plex-status` after changing paths, restoring configuration,
+or updating Plex. Native Arr can fall back to other same-type sections if its
+root mapping does not match; disable the connection before changing roots, then
+revalidate the exact mapping before re-enabling it. For rollback, disable the
+import/rename triggers on the connection named `Plex native imports` in both
+apps. Plex's existing periodic scans remain a fallback, and Seerr's native scans
+continue to reconcile availability. No new scan daemon is installed.

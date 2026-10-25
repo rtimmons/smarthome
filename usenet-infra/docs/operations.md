@@ -28,7 +28,8 @@ just usenet filex-status
 just usenet seerr-status
 ```
 
-Start explicit requests in Seerr or Arr. RSS and direct carts stay disabled.
+Start requests in Seerr or Arr. Native Arr RSS handles newly posted releases;
+direct carts and direct SAB RSS feeds remain disabled.
 Check the intended movie/episode scope and wait for import/cleanup before another
 large request. An automatically selected failed release triggers Arr's alternative search;
 never replay a request with an uncertain response before reconciling its exact
@@ -77,6 +78,8 @@ never restart Plex, the NAS or unrelated services for a Usenet refresh.
 | `usenet configure-seerr-recovery-execute` | Enable bounded, missing-only TV acquisition for approved open requests; preserve the private retry journal |
 | `usenet seerr-recovery-execute-status` | Read the acquisition worker's sanitized status |
 | `usenet seerr-recovery-execute-run` | Run one guarded recovery attempt; no bypass of pause, scope or budget checks |
+| `usenet configure-arr-plex` / `usenet arr-plex-status` | Configure or test native import/rename notifications with exact general-library path mappings |
+| `usenet configure-rss` | Enable 15-minute native RSS after reviewing monitored scope; preserve profiles and direct-feed exclusions |
 | `usenet configure-failed-cleanup` | Enable native Arr removal of handled failed downloads and scratch; preserve completed/import-blocked work |
 | `usenet configure-failed-downloads` | Enable automatic alternative-release searches after failure in both Arr apps; retain manual-selection behavior |
 | `usenet configure-post-processing` | Between processing jobs, persist concurrent downloading and `-T4`; verify reserves and direct unpack off without resuming manual pauses or restarting services |

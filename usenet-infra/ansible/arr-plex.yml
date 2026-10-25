@@ -1,0 +1,87 @@
+---
+- name: Configure native Arr import notifications for general Plex libraries
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Verify native ownership and runtime limits
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      become_user: usenet
+      changed_when: false
+
+    - name: Discover only the existing native Docker bridge
+      ansible.builtin.command:
+        argv:
+          - python3
+          - -c
+          - |
+            import ipaddress,json,subprocess
+            n=json.loads(subprocess.check_output(['docker','network','inspect','usenet-cloud_default']))[0]
+            assert n['Driver']=='bridge' and len(n['IPAM']['Config'])==1
+            c=n['IPAM']['Config'][0]; subnet=ipaddress.IPv4Network(c['Subnet']); gateway=ipaddress.IPv4Address(c['Gateway'])
+            assert subnet.is_private and gateway in subnet and not subnet.overlaps(ipaddress.ip_network('192.168.1.0/24'))
+            bridge=n.get('Options',{}).get('com.docker.network.bridge.name') or 'br-'+n['Id'][:12]
+            assert bridge.replace('-','').isalnum()
+            print(json.dumps(dict(gateway=str(gateway),subnet=str(subnet),bridge=bridge)))
+      register: native_bridge
+      changed_when: false
+
+    - name: Retain the validated private bridge endpoints
+      ansible.builtin.set_fact:
+        arr_plex_network: '{{ native_bridge.stdout | from_json }}'
+
+    - name: Save private native Plex proxy endpoints
+      ansible.builtin.copy:
+        content: '{{ arr_plex_network | to_json }}'
+        dest: /srv/usenet/config/catalog/arr-plex-network.json
+        owner: usenet
+        group: usenet
+        mode: '0600'
+
+    - name: Install the bridge-only Plex socket
+      ansible.builtin.template:
+        src: '{{ usenet_project_root }}/config/usenet-arr-plex.socket.j2'
+        dest: /etc/systemd/system/usenet-arr-plex.socket
+        owner: root
+        group: root
+        mode: '0644'
+      register: plex_socket
+
+    - name: Install the standard TCP proxy service
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/usenet-arr-plex.service'
+        dest: /etc/systemd/system/usenet-arr-plex.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Allow only bridge clients to the bridge-local Plex socket
+      ansible.builtin.command:
+        argv: [ufw, allow, in, 'on', '{{ arr_plex_network.bridge }}', from,
+               '{{ arr_plex_network.subnet }}', to, '{{ arr_plex_network.gateway }}',
+               port, '32401', proto, tcp, comment, 'Native Arr Plex notifications']
+      register: plex_bridge_firewall
+      changed_when: "'Rule added' in plex_bridge_firewall.stdout or 'Rules updated' in plex_bridge_firewall.stdout"
+
+    - name: Start the bridge-only socket without restarting media services
+      ansible.builtin.systemd_service:
+        name: usenet-arr-plex.socket
+        enabled: true
+        state: "{{ 'restarted' if plex_socket.changed else 'started' }}"
+        daemon_reload: true
+
+    - name: Install scoped native Plex configuration helper
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/arr-plex.py'
+        dest: /srv/usenet/libexec/arr-plex.py
+        owner: root
+        group: usenet
+        mode: '0550'
+
+    - name: Validate both mappings and enable native import notifications
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/arr-plex.py, configure]
+      become_user: usenet
+      register: plex_configuration
+      changed_when: (plex_configuration.stdout | from_json).changed | default(false)

@@ -16,7 +16,7 @@ disposition records and all 44 journals alongside the immutable `recovery/` reco
 
 | Area | Evidence and limit |
 | --- | --- |
-| Native acquisition | [Native acceptance](../recovery/drills/native-cutover-20260920.json): fresh movie/episode imports, source cleanup, Plex discovery and scoped restart passed. RSS/direct carts stay off; failed releases need explicit review. |
+| Native acquisition | [Native acceptance](../recovery/drills/native-cutover-20260920.json): fresh movie/episode imports, source cleanup, Plex discovery and scoped restart passed. RSS was off at that checkpoint. The October 25 policy enables native RSS and failed-download cleanup; see the current native workflow. Direct carts remain off. |
 | NAS copying | [Movie copy](../recovery/drills/native-copy-live-20260913.json) and [September closure](../recovery/drills/closure-20260922.json): selected movie/TV copies passed SHA-256, safe repeat and exact-file Plex indexing. TV required a general-library scan. |
 | Playback/privacy | User confirmed Roku and Apple TV playback and restricted-profile privacy. This is not an agent-run codec/subtitle matrix. |
 | Seerr/Filex | [October closure](../recovery/drills/closure-20261008.json): user confirmed both browser sign-ins. Earlier Seerr 2160p acquisition passed after a manually selected alternate; automatic failed-release recovery is not proven. |

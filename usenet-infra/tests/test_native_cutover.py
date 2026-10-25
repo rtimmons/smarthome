@@ -112,7 +112,7 @@ class NativeCutoverTests(unittest.TestCase):
                     'autoRedownloadFailed': True, 'autoRedownloadFailedFromInteractiveSearch': False}
                 data[app, 'config/mediamanagement'] = {'skipFreeSpaceCheckWhenImporting': False,
                     'minimumFreeSpaceWhenImporting': 30 * 1024, 'copyUsingHardlinks': True}
-                data[app, 'config/indexer'] = {'rssSyncInterval': 0}
+                data[app, 'config/indexer'] = {'rssSyncInterval': 15}
             api = mock.Mock()
             api.call.side_effect = lambda app, endpoint: data[app, endpoint]
             config = {'misc': dict(cutover.LIMITS), 'rss': [], 'categories': [

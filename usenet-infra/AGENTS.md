@@ -41,8 +41,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 
 ## File ownership and recovery
 
-- Radarr/Sonarr explicit search and native completed imports are enabled; RSS
-  polling stays off under the September 20 native policy.
+- Radarr/Sonarr explicit search, 15-minute native RSS and completed imports are
+  enabled under the October 25 policy. Preserve approved monitoring scope.
   `/library` is a real Storage Box SSHFS library, with completed scratch mounted
   at `/data/complete`. Preserve mount-dependent systemd startup and mode-0000
   unmounted directory protection. Never enable the retired publisher timer.
@@ -101,7 +101,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
 - Seerr at `http://10.77.0.1:15055/` uses Plex sign-in and only libraries 2/3/4/5.
   Local login is enabled by the October 23 user-approved Moonfin exception;
   preserve the dedicated non-admin request account and existing Plex sign-in.
-  Keep registration, watchlist acquisition, RSS polling and direct carts disabled.
+  Keep registration, watchlist acquisition and direct carts disabled. Native Arr
+  RSS is enabled; direct SAB RSS feeds remain disabled.
   Ultra-HD prefers 2160p with 1080p fallback; no automatic upgrades.
 - Radarr/Sonarr own new downloads, imports and completed-source cleanup. The
   publisher, cart importer, capacity admission and incomplete maintenance workers

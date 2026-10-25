@@ -112,6 +112,28 @@ class DiscoveryTests(unittest.TestCase):
         with self.assertRaisesRegex(discovery.DiscoveryError, 'readback_failed'):
             discovery.configure_failed_cleanup(api)
 
+    def test_rss_preflights_both_apps_preserves_fields_and_verifies_readback(self):
+        api = ReadAPI(); writes = []; original = api.call
+        for app in ('radarr', 'sonarr'):
+            api.data[app, 'config/indexer'].update(rssSyncInterval=0, maximumSize=102400, id=1)
+        def call(app, route, method='GET', body=None):
+            if method == 'GET': return original(app, route)
+            self.assertEqual((route, method), ('config/indexer', 'PUT'))
+            self.assertEqual(body, dict(api.data[app, route], rssSyncInterval=15))
+            writes.append(app); api.data[app, route] = copy.deepcopy(body)
+        api.call = call
+        api.data['sonarr', 'health'] = [{'type':'error'}]
+        with self.assertRaises(discovery.DiscoveryError): discovery.configure_rss(api)
+        self.assertEqual(writes, [])
+        api.data['sonarr', 'health'] = []
+        self.assertTrue(discovery.configure_rss(api)['changed'])
+        self.assertEqual(writes, ['radarr', 'sonarr'])
+        self.assertFalse(discovery.configure_rss(api)['changed'])
+        api.data['sonarr', 'config/indexer']['rssSyncInterval'] = 0
+        api.call = lambda app, route, method='GET', body=None: original(app, route) if method == 'GET' else body
+        with self.assertRaisesRegex(discovery.DiscoveryError, 'rss_readback_failed'):
+            discovery.configure_rss(api)
+
     def setUp(self):
         import json
         temporary = tempfile.TemporaryDirectory()
@@ -129,15 +151,15 @@ class DiscoveryTests(unittest.TestCase):
             marker.write_text(json.dumps({'phase': 'active', 'integrity_policy': 'native_arr_import_and_cleanup'}))
             with patch.object(discovery, 'NATIVE_MARKER', marker):
                 api = ReadAPI()
-                api.data['radarr', 'config/indexer']['rssSyncInterval'] = 15
+                api.data['radarr', 'config/indexer']['rssSyncInterval'] = 0
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(api)
                 for app in ('radarr', 'sonarr'):
-                    api.data[app, 'config/indexer']['rssSyncInterval'] = 0
+                    api.data[app, 'config/indexer']['rssSyncInterval'] = discovery.RSS_INTERVAL
                 result = discovery.inspect(api)
-                self.assertFalse(result['automatic_acquisition'])
+                self.assertTrue(result['automatic_acquisition'])
                 self.assertTrue(result['explicit_native_requests'])
-                self.assertFalse(result['apps']['sonarr']['rss_enabled'])
+                self.assertTrue(result['apps']['sonarr']['rss_enabled'])
                 api.data['sonarr', 'health'] = [{'type': 'error', 'source': 'DownloadClientCheck'}]
                 with self.assertRaises(discovery.DiscoveryError):
                     discovery.inspect(api)
@@ -149,10 +171,10 @@ class DiscoveryTests(unittest.TestCase):
         api = ReadAPI()
         result = discovery.inspect(api)
         self.assertEqual(result['status'], 'verified')
-        self.assertFalse(result['automatic_acquisition'])
+        self.assertTrue(result['automatic_acquisition'])
         self.assertTrue(result['automatic_import'])
         changes = [
-            ('config/indexer', 'rssSyncInterval', 15),
+            ('config/indexer', 'rssSyncInterval', 0),
             *[('config/downloadclient', key, not value) for key, value in discovery.DOWNLOAD_POLICY.items()],
         ]
         for app in ('radarr', 'sonarr'):
