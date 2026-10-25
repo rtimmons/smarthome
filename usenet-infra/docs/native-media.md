@@ -8,12 +8,24 @@ Seerr) use Arr's native failed-download blocklisting and replacement search.
 Failures from manually selected interactive-search releases do not trigger
 automatic replacement. This is a failure-triggered policy, not a repair timer.
 The user accepted native Arr cleanup; it does not perform the retired importer's
-independent SHA-256-before-delete gate. Failed jobs remain for explicit review.
-Their payloads are not automatically deleted, even when Arr selects a replacement;
-retained failures can consume repair-spool space. Apply the retry policy with
-`just usenet configure-failed-downloads`; it updates both apps without a restart
-or explicit search command. Already processed historical failures are not replayed
-by this helper. Pending failures can be handled on the next normal Arr poll.
+independent SHA-256-before-delete gate. Since October 25, native Arr clients remove failed downloads after handling them,
+including their incomplete payloads. Failure/blocklist evidence remains in Arr;
+SAB archives its history records. Apply this cleanup policy with
+`just usenet configure-failed-cleanup`. It changes only `removeFailedDownloads`
+on the existing SAB client in each app and verifies readback. No new cleanup
+worker, search, service restart or pause change is introduced. Unowned/manual
+SAB jobs and completed-but-unimported jobs still need explicit review.
+Apply the replacement-search policy separately with
+`just usenet configure-failed-downloads`; it does not replay historical failures.
+
+The October 25 incident found about 181 GiB of failed scratch retained on the
+294 GiB repair filesystem, following four reserve-triggered pauses the previous
+day. The approved one-time cleanup uses exact failed SAB job IDs, validates their
+incomplete paths, archives records and excludes completed/active work. Missing
+articles and insufficient repair blocks caused the failures; more free disk
+cannot make those releases complete. Native cleanup prevents handled failures
+from accumulating, but the 30 GiB reserve still cannot guarantee space for every
+concurrent repair/unpack expansion.
 
 Sonarr's **Rename Episodes** setting is enabled for future imports as of October
 16. Its existing naming formats are retained; standard episodes include the
@@ -23,7 +35,7 @@ not rename existing files or initiate downloads. The change preserved all 435
 existing Sonarr file records and queue/acquisition settings, with no rename or
 search commands. Keep `renameEpisodes: true` in Sonarr's saved naming settings
 when restoring configuration. Any repair of existing filenames remains a
-separate, explicitly scoped native operation. Recovery remains report-only.
+separate, explicitly scoped native operation. Ambiguous-import recovery remains report-only.
 
 ## Storage and startup
 
@@ -156,7 +168,10 @@ unrequested seasons and pending, declined, blocked or deleted requests cannot
 propose acquisition. Existing file records are excluded even when their disk
 verification fails: that inconsistency needs review, never a replacement search.
 The report distinguishes native files from Seerr availability; it does not prove
-Plex indexing or playback. An availability lag lasting 15 minutes raises a finding.
+Plex indexing or playback. TV availability follows the fulfilled request and its
+approved seasons, so an available requested season does not require the whole
+series to be available. Native file verification still takes precedence. An
+availability lag lasting 15 minutes raises a finding.
 
 Completed jobs take precedence over replacements. After 15 minutes, one-to-one
 embedded series, season, episode and episode-title matches can propose a native
@@ -172,13 +187,50 @@ Stale Seerr Plex scans (over 20 minutes), mount, reserve, manual-pause,
 native-health and post-processing gates suppress all
 proposals. Incomplete API reads fail closed.
 
-**There is no recovery executor or apply switch.** Search, grab, import, delete,
-rename and acquisition-setting writes are absent. The only remote write is a
-Home Assistant notification. Unsuitable-release classification is evaluated in
-reports; live release restrictions, retry budgets and automated recovery remain
-for a later reviewed promotion. That promotion must revalidate scope, library,
-queue and release overlap immediately before any native action and enforce a
-persistent bounded retry budget. Native Arr handling remains unchanged.
+The report reader remains read-only apart from its existing HA notification.
+As of October 25, a separate, explicitly enabled executor recovers **missing TV
+episodes in approved, still-open requests**. It uses the report's 15-minute grace
+and missing-only proposals, then recollects live approvals, files, queue and health
+before each grab. Existing file records, unlinked completed jobs, ambiguous
+imports, completed historical requests, unrequested seasons and movies remain held.
+
+`just usenet configure-seerr-recovery-execute` installs the separate one-minute
+timer. The observation grace is per missing episode, so importing one episode
+does not restart every other episode's wait. Each invocation selects at most one Sonarr-approved Usenet release whose
+native mapped episode list contains exactly the missing episode ID. It excludes
+season packs, extras, AV1, rejection overrides and previously attempted release
+names, including the same release on another indexer. Native profile ordering is
+retained. The queue is capped at three jobs; manual pauses, active native commands,
+postprocessing, unlinked or unknown-scope active jobs, mount/health failures and
+low reserves stop dispatch. A candidate
+must fit twice its compressed size above the 30 GiB scratch reserve, in addition
+to the preserved 100 GiB release limit. These bounds do not guarantee arbitrary
+archive expansion will fit.
+
+Private `executor-journal.json` records attempts before sending a grab. Per episode,
+at most three releases and seven lookups are allowed, with six hours between
+attempts and 24 hours after an empty lookup. A lookup interrupted before any
+grab, or deferred because live scope changed, can be reconsidered after a minute;
+its lookup count still consumes the seven-lookup budget. A timeout or interrupted submission
+holds that episode for review instead of retrying an uncertain write. Native
+Sonarr imports and failed-download cleanup remain the owners; the executor does
+not import manually, rename, delete, change profiles or enable RSS. The report's
+existing HA notification includes exhausted budgets and uncertain outcomes.
+
+Use `just usenet seerr-recovery-execute-status` for sanitized state and
+`just usenet seerr-recovery-execute-run` for a guarded extra invocation. An operator can pass `--request-id` to the
+executor after reviewing a specific request to skip only its initial observation
+grace; all live scope, overlap, budget and pause/storage checks still apply. Disable
+`usenet-seerr-recovery-execute.timer` and set `executor-policy.json`'s `enabled`
+to false to stop acquisition while keeping reports. The policy, journal and status
+live beside the private recovery reports and are included in configuration backups.
+Restore the journal with the policy; never reset budgets merely to force retries.
+
+The October 25 missing-episode investigation found a daily programme configured
+as a standard series. Correcting only that series' type made date-based releases
+map to exact native episode IDs while preserving its 65 existing file records.
+For similar failures, inspect native mappings and the actual series format before
+changing a type; never bypass an identity rejection or guess from release names.
 
 `just usenet seerr-recovery-status` returns a sanitized summary and report age.
 `just usenet seerr-recovery-run` requests an extra report through the same locked
@@ -318,10 +370,11 @@ describes native-item searching, including season-level Sonarr searches; it does
 not establish exact Seerr request/season authorization or global completed-file
 and release-overlap exclusion.
 
-**Recovery remains report-only.** Do not connect this trial to production or
+**Ambiguous-import recovery remains report-only.** Do not connect this trial to production or
 promote its dry-run switch alone. Off-the-shelf recovery has not demonstrated
 all of: exact current Seerr scope, checking completed sources before any search,
 excluding existing episodes from packs, durable bounded retries, and safe behavior
 through restart/API failures. Prefer leaving ambiguous cases for manual review
 over building a second acquisition engine. The small existing report-only
-observer and Home Assistant alerts remain; neither has a recovery apply path.
+observer and Home Assistant alerts remain read-only. The separately authorized
+bounded TV executor described above does not use Cleanuparr or force imports.

@@ -402,7 +402,7 @@ def collect(reader):
             'processing': int(sabh['ppslots']), 'captured_at': dt.datetime.now(dt.timezone.utc).isoformat()}
 
 
-def plan(snapshot, previous=None, now=None):
+def plan(snapshot, previous=None, now=None, grace_seconds=GRACE_SECONDS):
     now = now if now is not None else dt.datetime.now(dt.timezone.utc).timestamp()
     previous = previous or {}
     observations, reports = {}, []
@@ -452,7 +452,7 @@ def plan(snapshot, previous=None, now=None):
                 key = 'completed:' + job
                 first = previous.get('observations', {}).get(key, {}).get('first_seen', now)
                 observations[key] = {'first_seen': min(first, now)}
-                if now - first < GRACE_SECONDS:
+                if now - first < grace_seconds:
                     continue
                 files = snapshot.get('candidates', {}).get(job, [])
                 release = snapshot.get('jobs', {}).get(job, {}).get('name', qrows[0].get('title', ''))
@@ -484,13 +484,18 @@ def plan(snapshot, previous=None, now=None):
             out['findings'].append('completed_request_missing_file')
             searchable = []
         if searchable:
-            # Grace is keyed by exact missing scope; newly changing scopes restart the clock.
-            key = hashlib.sha256(json.dumps([request['id'], searchable]).encode()).hexdigest()
-            first = previous.get('observations', {}).get(key, {}).get('first_seen', now)
-            observations[key] = {'first_seen': min(first, now)}
-            if now - first >= GRACE_SECONDS:
+            # Preserve each missing item's grace independently while neighbouring
+            # imports finish. Newly missing items still receive their full grace.
+            ready = []
+            for identity in searchable:
+                key = hashlib.sha256(json.dumps([request['id'], app, item['id'], identity]).encode()).hexdigest()
+                first = previous.get('observations', {}).get(key, {}).get('first_seen', now)
+                observations[key] = {'first_seen': min(first, now)}
+                if now - first >= grace_seconds:
+                    ready.append(identity)
+            if ready:
                 out['proposals'].append({'kind': 'missing_episode_search' if app == 'sonarr' else 'missing_movie_search',
-                    'ids': searchable, 'strategy': 'individual_missing_only', 'exclude_release_overlap': out['present_ids']})
+                    'ids': ready, 'strategy': 'individual_missing_only', 'exclude_release_overlap': out['present_ids']})
                 out['findings'].append('missing_without_active_download')
         if snapshot.get('blocked') or snapshot.get('processing'):
             out['proposals'] = []
@@ -498,12 +503,18 @@ def plan(snapshot, previous=None, now=None):
         elif out['findings']:
             out['state'] = 'needs_review'
         elif not missing and not out['held_ids'] and episodes:
-            out['state'] = 'available_in_seerr' if request['media'].get('status') == 5 else 'imported_waiting_for_availability'
+            # TV availability is scoped to the approved request seasons. A fulfilled
+            # season can coexist with a partially available whole-series status.
+            requested_seasons_available = (app == 'sonarr' and request['status'] == 5
+                and all(s.get('status') == 5 for s in request['seasons']
+                        if s['seasonNumber'] in seasons))
+            available = request['media'].get('status') == 5 or requested_seasons_available
+            out['state'] = 'available_in_seerr' if available else 'imported_waiting_for_availability'
             if out['state'] == 'imported_waiting_for_availability':
                 key = 'availability:' + str(request['id'])
                 first = previous.get('observations', {}).get(key, {}).get('first_seen', now)
                 observations[key] = {'first_seen': min(first, now)}
-                if now - first >= GRACE_SECONDS:
+                if now - first >= grace_seconds:
                     out['findings'].append('imported_waiting_for_seerr_availability')
         else:
             out['state'] = 'waiting'
@@ -531,14 +542,19 @@ def notification(report):
     summary = report['summary']
     issues = [{'request_id': r['request_id'], 'findings': r.get('findings', []),
                'missing': r.get('missing_ids', [])} for r in report['requests'] if r.get('findings')]
-    value = {'blocked': summary['blocked'], 'issues': issues}
+    value = {'blocked': summary['blocked'], 'issues': issues,
+             'executor_attention': summary.get('executor_attention', 0)}
     digest = hashlib.sha256(json.dumps(value, sort_keys=True).encode()).hexdigest()
-    active = bool(issues or summary['blocked'])
+    active = bool(issues or summary['blocked'] or summary.get('executor_attention'))
     message = (f'Report-only checks found {len(issues)} Seerr request(s) needing attention. '
                f'Proposed imports: {summary["proposals"].get("native_manual_import", 0)}; '
                f'proposed searches: {sum(n for k, n in summary["proposals"].items() if k.endswith("search"))}. '
-               'No recovery downloads, imports, or deletions were performed. '
+               'This report does not execute recovery actions. '
                'Review Seerr and Sonarr/Radarr for details.')
+    if summary.get('executor_enabled'):
+        message += ' Bounded missing-TV acquisition is enabled; ambiguous imports still need review.'
+    if summary.get('executor_attention'):
+        message += f' {summary["executor_attention"]} episode retry budget(s) or uncertain grab(s) need review.'
     if summary['blocked']:
         message += ' Recovery checks are held by a health, storage, or pause condition.'
     return digest, {'action': 'create' if active else 'dismiss', 'message': message}
@@ -559,6 +575,33 @@ def notify_ha(config, payload):
         connection.close()
 
 
+def executor_attention(state, snapshot):
+    policy = state / 'executor-policy.json'
+    if not policy.exists() or not private_json(policy).get('enabled'):
+        return {'executor_enabled': False, 'executor_attention': 0}
+    path = state / 'executor-journal.json'
+    journal = private_json(path) if path.exists() else {'episodes': {}}
+    missing = {(item['id'], e['id']) for key, item in snapshot.get('items', {}).items()
+               if key.startswith('sonarr:') for e in item.get('episodes', [])
+               if not e.get('hasFile') and not e.get('episodeFileId')}
+    active = {(q.get('seriesId'), q.get('episodeId')) for q in snapshot.get('queue', {}).get('sonarr', [])
+              if q.get('status') != 'failed'}
+    attention = 0
+    for key, entry in journal['episodes'].items():
+        identity = tuple(map(int, key.split(':')))
+        if identity in active or (identity[0], None) in active:
+            continue
+        attempts = entry.get('attempts', [])
+        # Pending submission may be in flight; the same condition becomes
+        # actionable after five minutes if the executor died before readback.
+        pending_old = any(a['status'] == 'pending' and
+            dt.datetime.now(dt.timezone.utc).timestamp() - a['at'] > 300 for a in attempts)
+        if identity in missing and (entry.get('searches', 0) >= 7 or len(attempts) >= 3
+                or pending_old or any(a['status'] == 'uncertain' for a in attempts)):
+            attention += 1
+    return {'executor_enabled': True, 'executor_attention': attention}
+
+
 def run(reader, state=STATE):
     state.mkdir(mode=0o700, parents=True, exist_ok=True)
     require(not state.is_symlink() and not state.stat().st_mode & 0o077, 'state_directory_not_private')
@@ -568,6 +611,7 @@ def run(reader, state=STATE):
         try:
             snapshot = collect(reader)
             report = plan(snapshot, previous)
+            report['summary'].update(executor_attention(state, snapshot))
             atomic_json(state / 'snapshot.json', snapshot)
         except Exception as error:
             reason = str(error) if isinstance(error, RecoveryError) else 'inspection_failed'

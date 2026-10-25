@@ -234,7 +234,7 @@ This page is deliberately static. It does not query applications, list media, or
 | SAB, Prowlarr, Radarr or Sonarr is unavailable | Private route first, then discovery/cloud health | Separate network reachability from an application failure. Recheck after scratch recovery; do not assume every HTTP error has one cause. |
 | Download finished but import is delayed | The owning Arr queue/history; retained journals for historical cart jobs | Preserve the completion and journal. Never replay an import or reset activation blindly. |
 | Imported item is not visible in Plex | Correct library, readable episode filename and Plex scan timing | Check the file exists in the expected library. A manually matched episode may still have a scrambled name: use Sonarr's verified file assignments and scoped rename preview before scanning its folder. See the [availability repair procedure](../../../usenet-infra/docs/seerr.md). Keep private libraries excluded and automatic trash emptying off. |
-| A release fails with missing articles | The failure in SAB and the owning Arr history | Keep the failed record and payload. Arr searches for an alternative after an automatically selected release fails; manually selected releases retain manual retry behavior. Reconcile the existing request before another manual grab. |
+| A release fails with missing articles | The failure in SAB and the owning Arr history | Arr removes handled failed payloads and retains failure/blocklist evidence; SAB archives the history. Apply with `just usenet configure-failed-cleanup`. Unowned jobs still need review. Arr searches for an alternative after an automatically selected release fails; manually selected releases retain manual retry behavior. Reconcile the existing request before another manual grab. |
 | Filex transfer interrupted | Filex operation history and destination space | Keep the source and partial destination. Review the error before an explicit retry; use Restore for sources retained in staging trash. |
 | NAS copy failed | NAS Downloads panel, free-space reserve, source availability and exact failure text | Retry only the same owned item after the blocking condition is fixed. Do not overwrite an unrelated destination or grant the NAS write access upstream. |
 
@@ -312,13 +312,14 @@ Existing filenames and quality choices are preserved. Future movie and TV
 selections reject releases labelled AV1, which can force slow conversion on older
 TV players. H.264 and HEVC remain eligible. This checks release names, so playback
 still depends on the actual video, audio and subtitle formats. Existing copies
-are replaced only when explicitly requested. Recovery remains report-only.
+are replaced only when explicitly requested. Ambiguous imports remain report-only.
 
 A five-minute report-only check follows approved Seerr requests through native
 media processing. It checks for existing files first, holds active downloads,
 and proposes matching completed files before looking for missing episodes.
 Ambiguous files and extras-only packs need review. It does not start recovery
-downloads, change files, or apply new release filters during this trial.
+downloads or change files. A separate, bounded worker now handles approved
+missing TV episodes as described below.
 
 Home Assistant shows one persistent notification when something needs attention
 and clears it when resolved. It also warns if the cloud monitor stops checking
@@ -338,6 +339,19 @@ movies outside approved requests are unmonitored. Cleanuparr is being qualified
 only in an offline dry-run lab, with saved repair cases and no media access.
 Ambiguous episode matches still need review. It is not enabled against the live
 library. See the [rollout and qualification details](../../../usenet-infra/docs/native-media.md#settings-ownership-and-offline-recovery-qualification).
+
+### Missing requested episodes
+
+The approved TV recovery worker checks once per minute and grabs at most one
+Sonarr-approved release mapped to exactly one missing requested episode. It
+rechecks library records and active downloads first, keeps at most three jobs
+queued, and holds on pauses, processing, health or storage issues. Existing files,
+season packs and ambiguous imports are excluded. Retry budgets persist across
+restarts; exhausted or uncertain attempts need review. Sonarr performs the import
+and cleanup. Use `just usenet seerr-recovery-execute-status` to inspect it.
+
+Date-named daily programmes need the correct native series type; a numbered-series
+setting can reject otherwise valid releases before any download begins.
 
 ## Official references
 

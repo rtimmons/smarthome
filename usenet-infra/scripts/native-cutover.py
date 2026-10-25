@@ -43,7 +43,7 @@ def native_client(client, app):
     fields[category]['value'] = app
     for key in ('recent' + prefix + 'Priority', 'older' + prefix + 'Priority'):
         fields[key]['value'] = 0
-    result.update(enable=True, removeCompletedDownloads=True, removeFailedDownloads=False)
+    result.update(enable=True, removeCompletedDownloads=True, removeFailedDownloads=True)
     return result
 
 

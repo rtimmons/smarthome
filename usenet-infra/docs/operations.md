@@ -74,7 +74,11 @@ never restart Plex, the NAS or unrelated services for a Usenet refresh.
 | `usenet configure-seerr-recovery` | Install five-minute report-only checks for approved Seerr requests and Home Assistant persistent alerts; no acquisition writes |
 | `usenet seerr-recovery-status` / `usenet seerr-recovery-run` | Read report age or request another report-only pass |
 | `usenet configure-native-ownership` | Refresh current native health helpers and verify existing ownership; no migration or application restart |
-| `usenet configure-failed-downloads` | Enable automatic alternative-release searches after failure in both Arr apps; retain manual-selection behavior and failed payloads |
+| `usenet configure-seerr-recovery-execute` | Enable bounded, missing-only TV acquisition for approved open requests; preserve the private retry journal |
+| `usenet seerr-recovery-execute-status` | Read the acquisition worker's sanitized status |
+| `usenet seerr-recovery-execute-run` | Run one guarded recovery attempt; no bypass of pause, scope or budget checks |
+| `usenet configure-failed-cleanup` | Enable native Arr removal of handled failed downloads and scratch; preserve completed/import-blocked work |
+| `usenet configure-failed-downloads` | Enable automatic alternative-release searches after failure in both Arr apps; retain manual-selection behavior |
 | `usenet configure-post-processing` | Between processing jobs, persist concurrent downloading and `-T4`; verify reserves and direct unpack off without resuming manual pauses or restarting services |
 | `usenet sab-buffered-build` | Build the pinned buffered-copy image and run isolated integration tests; no application restart |
 | `usenet sab-buffered-deploy` | With SAB/Arr idle, retain the current image and Compose definition, switch SAB and restore its pause state; automatically roll back an unhealthy candidate |

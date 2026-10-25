@@ -1,0 +1,60 @@
+---
+- name: Enable bounded native recovery of approved missing TV episodes
+  hosts: cloud
+  become: true
+  gather_facts: false
+  tasks:
+    - name: Verify native owners and limits before enabling acquisition
+      ansible.builtin.command:
+        argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/native-cutover.py, inspect]
+      changed_when: false
+
+    - name: Require the existing private recovery directory
+      ansible.builtin.stat:
+        path: /srv/usenet/config/catalog/seerr-recovery
+      register: recovery_state
+
+    - name: Refuse an unconfigured recovery installation
+      ansible.builtin.assert:
+        that:
+          - recovery_state.stat.isdir | default(false)
+          - recovery_state.stat.mode == '0700'
+          - not recovery_state.stat.islnk
+
+    - name: Install the bounded executor and current report reader
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/scripts/{{ item }}.py'
+        dest: '/srv/usenet/libexec/{{ item }}.py'
+        owner: root
+        group: usenet
+        mode: '0550'
+      loop: [seerr-recovery, seerr-recovery-execute]
+
+    - name: Persist the explicitly authorized TV recovery policy
+      ansible.builtin.copy:
+        content: '{"schema":1,"enabled":true,"scope":"approved_missing_tv"}'
+        dest: /srv/usenet/config/catalog/seerr-recovery/executor-policy.json
+        owner: usenet
+        group: usenet
+        mode: '0600'
+
+    - name: Install dedicated acquisition units
+      ansible.builtin.copy:
+        src: '{{ usenet_project_root }}/config/{{ item }}'
+        dest: '/etc/systemd/system/{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop: [usenet-seerr-recovery-execute.service, usenet-seerr-recovery-execute.timer]
+
+    - name: Refresh the report before starting acquisition
+      ansible.builtin.systemd_service:
+        name: usenet-seerr-recovery.service
+        state: started
+        daemon_reload: true
+
+    - name: Enable bounded recurring acquisition
+      ansible.builtin.systemd_service:
+        name: usenet-seerr-recovery-execute.timer
+        enabled: true
+        state: started

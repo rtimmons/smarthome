@@ -25,18 +25,18 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "dfbc214c169539795a8c3bbde66e249a4c500d7235fa6354687d9355c8dc6461",
-    "reason": "Documented successful QNAP email delivery and limited B2 settings-file recovery while preserving full-restore limits",
+    "fingerprint": "e8b6a0e3611d74fda4d6696c0bd4e568862a4e456a4b87e2ee101bb7dab286ca",
+    "reason": "Reviewed the new recovery recipes, service and timer coverage; updated maintenance guidance to distinguish read-only reporting from bounded acquisition and preserve retry journals on restore.",
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "2a90332b94fc67d9c4a9c518c81b8514cc7938dac9ef24bd0ae0b97c3ecb3a83",
-    "reason": "Verified existing Gmail account reauthorization and inbox delivery plus isolated seven-file B2 restore with byte-for-byte comparisons",
+    "fingerprint": "8e857b02a8fb03dc0aaa6447dbf48214c0537370b26aa2b84fa2d1d5e7be3d64",
+    "reason": "Reviewed native failed-download cleanup, exact missing-episode acquisition and persistent retry budgets; corrected future-episode guidance and verified the completed recovery without replacing existing files.",
     "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "7f3aef822a2f169cece5498ce65b229d51544e57ba2716dea7e1908b80d96437",
-    "reason": "Reviewed confirmed Arr/SAB and Catalog OAuth human acceptance, preserving native-client and recovery boundaries",
+    "fingerprint": "597a045fdcce5b30d66ab95bbf9d7890c2859381c50dfa219f779a6c7fe2e513",
+    "reason": "Reviewed TinyURL short-host routing and synthetic path/query checks against the network guide; reviewed the Time Machine ACL repair narrative and its explicit unresolved backup and restart limitations.",
     "reviewed_at": "2026-10-25"
   },
   "printing": {

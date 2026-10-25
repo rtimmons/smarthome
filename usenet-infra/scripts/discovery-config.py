@@ -119,6 +119,31 @@ def configure_failed_downloads(api):
             'interactive_failed_release_search': False}
 
 
+def configure_failed_cleanup(api):
+    """Enable native failed-job removal; preserve all other client settings."""
+    ensure_versions(api)
+    before = {app: api.call(app, 'downloadclient') for app in ('radarr', 'sonarr')}
+    for app, clients in before.items():
+        if (len(clients) != 1 or clients[0].get('implementation') != 'Sabnzbd'
+                or clients[0].get('name') != CLIENT or not clients[0].get('id')
+                or not require_policy(clients[0], {'enable': True, 'removeCompletedDownloads': True})
+                or type(clients[0].get('removeFailedDownloads')) is not bool
+                or not require_policy(api.call(app, 'config/downloadclient'), DOWNLOAD_POLICY)):
+            raise DiscoveryError('existing_cleanup_policy_requires_review')
+    changed = False
+    for app, clients in before.items():
+        resource = clients[0]
+        if resource['removeFailedDownloads']:
+            continue
+        desired = dict(resource, removeFailedDownloads=True)
+        api.call(app, 'downloadclient/' + str(resource['id']), 'PUT', desired)
+        actual = api.call(app, 'downloadclient')
+        if len(actual) != 1 or any(actual[0].get(key) != value for key, value in desired.items()):
+            raise DiscoveryError('failed_cleanup_readback_failed')
+        changed = True
+    return {'status': 'verified', 'changed': changed, 'remove_failed_downloads': True}
+
+
 def check_lists(api, app):
     # No lists are created implicitly. Existing lists must remain metadata-only.
     for item in api.call(app, 'importlist'):
@@ -154,7 +179,7 @@ def inspect(api):
             raise DiscoveryError('synced_indexer_policy_not_verified')
         clients = api.call(app, 'downloadclient')
         if len(clients) != 1 or clients[0].get('name') != CLIENT or not require_policy(clients[0],
-                {'enable': True, 'removeCompletedDownloads': True, 'removeFailedDownloads': False}):
+                {'enable': True, 'removeCompletedDownloads': True, 'removeFailedDownloads': True}):
             raise DiscoveryError('client_policy_not_verified')
         health = api.call(app, 'health')
         if any(item.get('type') in ('warning', 'error') and item.get('source') not in EXPECTED_HEALTH
@@ -169,12 +194,12 @@ def inspect(api):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('inspect', 'configure-failed-downloads'))
+    parser.add_argument('action', choices=('inspect', 'configure-failed-downloads', 'configure-failed-cleanup'))
     args = parser.parse_args()
     try:
         api = API()
         result = (configure_failed_downloads(api) if args.action == 'configure-failed-downloads'
-                  else inspect(api))
+                  else configure_failed_cleanup(api) if args.action == 'configure-failed-cleanup' else inspect(api))
         print(json.dumps(result, sort_keys=True))
     except DiscoveryError as error:
         print(json.dumps({'status': 'failed', 'reason': str(error)}))

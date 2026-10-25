@@ -1,0 +1,19 @@
+[Unit]
+Description=Bounded recovery of approved missing TV episodes
+After=network-online.target usenet-seerr.service usenet-discovery.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=usenet
+Group=usenet
+UMask=0077
+ExecStart=/usr/bin/python3 /srv/usenet/libexec/seerr-recovery-execute.py run
+TimeoutStartSec=240
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/srv/usenet/config/catalog/seerr-recovery
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+LockPersonality=true

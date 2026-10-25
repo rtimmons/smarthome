@@ -68,7 +68,7 @@ class NativeCutoverTests(unittest.TestCase):
             self.assertEqual(fields[category], app)
             self.assertEqual(fields['apiKey'], 'synthetic-credential')
             self.assertTrue(changed['removeCompletedDownloads'])
-            self.assertFalse(changed['removeFailedDownloads'])
+            self.assertTrue(changed['removeFailedDownloads'])
 
     def test_ambiguous_client_fields_are_refused(self):
         with self.assertRaisesRegex(RuntimeError, 'duplicate_client_fields'):

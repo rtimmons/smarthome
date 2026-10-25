@@ -132,6 +132,16 @@ class RecoveryTests(unittest.TestCase):
             ids = [i for p in aged(value)['requests'][0]['proposals'] for i in p.get('ids', [])]
             self.assertEqual(ids, [] if episode is None else [3])
 
+    def test_import_does_not_reset_other_missing_episode_grace(self):
+        value = snapshot(); first = r.plan(value, now=1700000000)
+        value['items']['sonarr:10']['episodes'][1].update(hasFile=True, episodeFileId=102, verified=True)
+        # A newly added missing episode must wait while the old one is ready.
+        value['items']['sonarr:10']['episodes'].append(dict(value['items']['sonarr:10']['episodes'][2], id=4, episodeNumber=4))
+        report = r.plan(value, first, now=1700001000)
+        self.assertEqual(report['requests'][0]['proposals'][0]['ids'], [3])
+        later = r.plan(value, report, now=1700002000)
+        self.assertEqual(later['requests'][0]['proposals'][0]['ids'], [3, 4])
+
     def test_unlinked_completed_jobs_hold_search_until_review(self):
         value = snapshot(); value['unlinked_completed_categories'] = ['sonarr']
         self.assertEqual(aged(value)['summary']['proposals'], {})
@@ -180,6 +190,38 @@ class RecoveryTests(unittest.TestCase):
         self.assertIn('imported_waiting_for_seerr_availability', aged(value)['requests'][0]['findings'])
         value['requests'][0]['media']['status'] = 5
         self.assertEqual(r.notification(aged(value))[1]['action'], 'dismiss')
+
+    def test_fulfilled_requested_season_does_not_require_whole_series_availability(self):
+        value = snapshot()
+        for e in value['items']['sonarr:10']['episodes']:
+            e.update(hasFile=True, episodeFileId=e['id']+100, verified=True)
+        request = value['requests'][0]
+        request.update(status=5)
+        request['media']['status'] = 4
+        request['seasons'][0]['status'] = 5
+        result = aged(value)['requests'][0]
+        self.assertEqual(result['state'], 'available_in_seerr')
+        self.assertEqual(result['findings'], [])
+        request['seasons'].append({'seasonNumber': 2, 'status': 2})
+        self.assertIn('imported_waiting_for_seerr_availability', aged(value)['requests'][0]['findings'])
+        request['seasons'].pop()
+        value['items']['sonarr:10']['episodes'][0]['verified'] = False
+        self.assertIn('library_record_or_file_needs_review', aged(value)['requests'][0]['findings'])
+
+    def test_executor_budget_alert_waits_for_active_download_to_finish(self):
+        with tempfile.TemporaryDirectory() as temp:
+            state = Path(temp)
+            r.atomic_json(state/'executor-policy.json', {'enabled':True})
+            r.atomic_json(state/'executor-journal.json', {'episodes':{'10:2':{
+                'attempts':[{'status':'submitted'}]*3, 'searches':3}}})
+            value = snapshot()
+            self.assertEqual(r.executor_attention(state,value)['executor_attention'],1)
+            value['queue']['sonarr'] = [{'seriesId':10,'episodeId':2,'status':'downloading'}]
+            self.assertEqual(r.executor_attention(state,value)['executor_attention'],0)
+            value['queue']['sonarr'][0]['status'] = 'failed'
+            self.assertEqual(r.executor_attention(state,value)['executor_attention'],1)
+            value['items']['sonarr:10']['episodes'][1]['hasFile'] = True
+            self.assertEqual(r.executor_attention(state,value)['executor_attention'],0)
 
     def test_notification_delivery_retries_and_unchanged_reports_send_only_heartbeat(self):
         with tempfile.TemporaryDirectory() as temp:

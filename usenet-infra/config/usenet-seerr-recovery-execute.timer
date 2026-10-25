@@ -1,0 +1,11 @@
+[Unit]
+Description=Recover approved missing TV episodes once per minute
+
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=1min
+RandomizedDelaySec=5s
+Unit=usenet-seerr-recovery-execute.service
+
+[Install]
+WantedBy=timers.target

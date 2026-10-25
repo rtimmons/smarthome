@@ -53,6 +53,14 @@
       register: failed_download_policy
       changed_when: (failed_download_policy.stdout | from_json).changed
 
+    - name: Enable explicitly requested native failed-download cleanup
+      ansible.builtin.command:
+        argv: [python3, /srv/usenet/libexec/discovery-config.py, configure-failed-cleanup]
+      become_user: usenet
+      when: native_configure_failed_cleanup | default(false) | bool
+      register: failed_cleanup_policy
+      changed_when: (failed_cleanup_policy.stdout | from_json).changed
+
     - name: Verify native owners, retired timers and preserved history
       ansible.builtin.command:
         argv: [python3, /srv/usenet/libexec/native-cutover.py, inspect]

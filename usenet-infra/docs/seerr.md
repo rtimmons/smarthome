@@ -18,11 +18,13 @@ libraries (IDs 2/3/4/5); private library ID 1 is excluded.
 Seerr sends explicit requests to Radarr/Sonarr, which find releases through
 Prowlarr, send them to SAB, import into the Storage Box and clean up completed
 sources. Watchlist acquisition is off. Arr RSS polling remains off to preserve
-the existing missing backlog; future episodes require explicit Sonarr searches.
+the existing missing backlog. The bounded recovery worker can acquire aired,
+monitored episodes within approved open requests; episodes outside that scope
+still require explicit Sonarr searches.
 Wait for a large request to finish before adding another. For automatically
 selected releases, Arr blocklists a failed release and searches for an eligible
 alternative under the same quality profile. Manually selected interactive-search
-releases retain manual retry behavior. Failed payloads remain for review; the
+releases retain manual retry behavior. Arr now removes handled failed downloads and their scratch payloads; the
 100 GiB release limit and 30 GiB reserves still apply. This does not abort a
 slow repair on a time limit, and replacements are not guaranteed to be available.
 
@@ -89,7 +91,7 @@ media or manually mark it available to hide a sync failure.
 
 Sonarr's automatic episode renaming is now enabled for future imports, retaining
 the existing naming formats. This setting does not rename the existing library
-or start downloads; recovery remains report-only. Preserve it on configuration
+or start downloads; ambiguous-import recovery remains report-only. Preserve it on configuration
 restore. It improves filenames after matching, but cannot identify an ambiguous
 file or replace Plex's scan.
 
@@ -127,7 +129,9 @@ To investigate an availability gap, compare native file records and sizes,
 Plex episode identities, Seerr scan freshness and request/season states in that
 order. Preserve library IDs 2/3/4/5, disabled trash emptying, existing file IDs,
 queue contents and acquisition settings. Verify fresh automatic scan timestamps
-and fulfilled request seasons after repair. Exact operational evidence remains
+and fulfilled request seasons after repair. The recovery monitor accepts fulfilled
+requested TV seasons even when Seerr reports the whole series as partially
+available; it still requires every scoped native file to verify. Exact operational evidence remains
 in private runtime snapshots, not published media listings.
 
 The October 16 sync repair verified all 191 requested episodes across three
@@ -143,13 +147,13 @@ settings for Sonarr and Radarr. It preserves the current formats, quality order
 and per-movie exceptions. Existing files were not renamed. Approved requests carry
 `seerr-approved`; existing movies outside approved requests are unmonitored, and
 unrequested TV seasons remain unmonitored. Exact request and season bindings,
-not tags alone, continue to define the report-only recovery scope.
+not tags alone, define the scope for reports and bounded missing-TV acquisition.
 
 Cleanuparr is evaluated in an offline dry-run lab against the five repaired
 requests. It has no live service, credentials or media access. Its limited
 force-import support cannot resolve the ambiguous episode mappings from those
-repairs. Keep manual review for those cases and keep automated recovery
-report-only. The [settings and qualification runbook](native-media.md#settings-ownership-and-offline-recovery-qualification)
+repairs. Keep manual review for those cases; the separate bounded TV executor
+does not perform these imports. The [settings and qualification runbook](native-media.md#settings-ownership-and-offline-recovery-qualification)
 records commands, evidence, official references, rollback and promotion limits.
 
 ## October 25 security update
@@ -167,3 +171,13 @@ describe access-control and information-disclosure fixes;
 [3.5.1](https://github.com/seerr-team/seerr/releases/tag/v3.5.1) updates the runtime
 certificate trust store. This is a stable security update, not the OIDC preview.
 The existing Plex and approved Moonfin account flows remain enabled.
+
+## Bounded missing-episode recovery
+
+The separately enabled recovery worker now handles missing TV episodes within
+approved, open requests. It selects only Sonarr-approved releases mapped to one
+exact missing episode, rechecks live state before dispatch, and persists bounded
+retry budgets. Existing episodes and completed imports cannot authorize a grab.
+Sonarr owns imports and source cleanup; ambiguous matching remains a review.
+See [the native recovery policy](native-media.md#seerr-recovery-reporting) for
+limits, status commands and disabling the executor.

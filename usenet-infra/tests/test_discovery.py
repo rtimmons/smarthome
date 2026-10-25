@@ -32,7 +32,7 @@ class ReadAPI:
             self.data[app, 'config/downloadclient'] = dict(discovery.DOWNLOAD_POLICY)
             self.data[app, 'indexer'] = [dict(discovery.PROFILE_POLICY), dict(discovery.PROFILE_POLICY)]
             self.data[app, 'downloadclient'] = [{'name': discovery.CLIENT, 'enable': True,
-                'removeCompletedDownloads': True, 'removeFailedDownloads': False}]
+                'id': 1, 'implementation': 'Sabnzbd', 'removeCompletedDownloads': True, 'removeFailedDownloads': True}]
 
     def call(self, app, endpoint, method='GET', body=None):
         if method != 'GET':
@@ -77,6 +77,40 @@ class DiscoveryTests(unittest.TestCase):
             original_call(app, endpoint) if method == 'GET' else body)
         with self.assertRaisesRegex(discovery.DiscoveryError, 'readback_failed'):
             discovery.configure_failed_downloads(api)
+
+    def test_cleanup_preflights_both_apps_and_preserves_client_fields(self):
+        api = ReadAPI()
+        for app in ('radarr', 'sonarr'):
+            api.data[app, 'downloadclient'][0].update(removeFailedDownloads=False,
+                fields=[{'name': 'apiKey', 'value': 'synthetic-secret'}])
+        original = copy.deepcopy(api.data)
+        writes = []
+        original_call = api.call
+        def call(app, endpoint, method='GET', body=None):
+            if method == 'GET':
+                return original_call(app, endpoint)
+            self.assertEqual((endpoint, method), ('downloadclient/1', 'PUT'))
+            self.assertEqual(body, dict(original[app, 'downloadclient'][0], removeFailedDownloads=True))
+            writes.append(app)
+            api.data[app, 'downloadclient'] = [copy.deepcopy(body)]
+        api.call = call
+        api.data['sonarr', 'downloadclient'][0]['implementation'] = 'Unexpected'
+        with self.assertRaisesRegex(discovery.DiscoveryError, 'requires_review'):
+            discovery.configure_failed_cleanup(api)
+        self.assertEqual(writes, [])
+        api.data['sonarr', 'downloadclient'][0]['implementation'] = 'Sabnzbd'
+        self.assertTrue(discovery.configure_failed_cleanup(api)['changed'])
+        self.assertEqual(writes, ['radarr', 'sonarr'])
+        self.assertFalse(discovery.configure_failed_cleanup(api)['changed'])
+
+    def test_cleanup_rejects_unpersisted_write(self):
+        api = ReadAPI()
+        api.data['radarr', 'downloadclient'][0]['removeFailedDownloads'] = False
+        original_call = api.call
+        api.call = lambda app, endpoint, method='GET', body=None: (
+            original_call(app, endpoint) if method == 'GET' else body)
+        with self.assertRaisesRegex(discovery.DiscoveryError, 'readback_failed'):
+            discovery.configure_failed_cleanup(api)
 
     def setUp(self):
         import json

@@ -48,7 +48,7 @@ test: ansible-setup
 	    site.yml backup.yml cloud-lan-ui.yml cloud-sso.yml discovery.yml \
 	    dashboard-refresh.yml scheduled-backups.yml qnap-backups.yml cloud-library.yml \
 	    qnap-remote-media.yml native-cutover.yml filex.yml seerr.yml \
-	    seerr-recovery.yml seerr-sync.yml seerr-safety.yml cleanuparr-replay.yml \
+	    seerr-recovery.yml seerr-recovery-execute.yml seerr-sync.yml seerr-safety.yml cleanuparr-replay.yml \
 	    filex-backups.yml restore-storage.yml qnap-wiki.yml
 	cd ansible && {{ansible}} ansible-playbook -i inventory.example.yml sab-buffered.yml -e sab_buffered_action=build --syntax-check
 	shellcheck config/arr-shared-library-init
@@ -77,6 +77,20 @@ seerr-recovery-status:
 seerr-recovery-run:
 	@./scripts/cloud-command sudo -n systemctl start usenet-seerr-recovery.service
 	@just seerr-recovery-status
+
+# Explicit promotion: approved missing TV only, with durable retry budgets.
+[group: 'setup']
+configure-seerr-recovery-execute: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-recovery-execute -- {{ansible}} ansible-playbook seerr-recovery-execute.yml
+
+[group: 'health']
+seerr-recovery-execute-status:
+	@./scripts/cloud-command sudo -n -u usenet python3 /srv/usenet/libexec/seerr-recovery-execute.py status
+
+[group: 'health']
+seerr-recovery-execute-run:
+	@./scripts/cloud-command sudo -n systemctl start usenet-seerr-recovery-execute.service
+	@just seerr-recovery-execute-status
 
 # Repair only Seerr's exact-host Plex route and read-only sync health checks.
 [group: 'setup']
@@ -223,6 +237,11 @@ configure-post-processing: ansible-setup
 [group: 'setup']
 configure-failed-downloads: ansible-setup
 	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- {{ansible}} ansible-playbook native-cutover.yml -e native_configure_failed_downloads=true
+
+# Remove failed native downloads through the existing Arr owner, without searches.
+[group: 'setup']
+configure-failed-cleanup: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-native-ownership -- {{ansible}} ansible-playbook native-cutover.yml -e native_configure_failed_cleanup=true
 
 # Build and test without restarting production services.
 [group: 'setup']
