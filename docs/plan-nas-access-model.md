@@ -17,6 +17,11 @@ These are logical access boundaries. The [per-share protection policy](plan-nas-
 defines each tier and B2 profile, including schedule, method, retention, encryption
 and restore checks. All existing local shares still inherit one RAID-5 group;
 different redundancy requires different backing storage, not just different names.
+The target is a flat catalog of named datasets. Application data is a category,
+not an `AppData` share; the former `BackupArchives` umbrella is replaced by
+`forgejo-backups` and `infrastructure-backups`. Existing household/media share
+names stay unchanged. New service shares use lowercase hyphenated names and are
+ordinary-user SMB-denied by default, with local service mounts and explicit ACLs.
 
 | Share | Contents / existing source | Target storage tier | B2 policy |
 | --- | --- | --- | --- |
@@ -32,8 +37,18 @@ different redundancy requires different backing storage, not just different name
 | `RemoteFiles` | General remote files; proposed Ryan-owned scope | Provider-managed | Remote originals |
 | `Hetzner` | Entire account filesystem, including hidden directories and backups; new full-account gateway | Provider-managed | Mixed by subtree |
 | `TransferStaging` | Existing Filex staging; proposed shared temporary area | Disposable, conditional | Transient |
-| `AppData` | Existing `Container` and package state; access limited per service | Protected | Settings |
-| `BackupArchives` | Existing encrypted artifacts under `Usenet/Backups/automatic` | Replica | Settings |
+| `forgejo` | Repositories, database, LFS/attachments, configuration and keys; existing `Container/home-git` | Protected | Forgejo recovery |
+| `forgejo-backups` | Completed encrypted Forgejo recovery archives; existing `Usenet/Backups/automatic/forgejo` | Replica | Forgejo recovery |
+| `jellyfin` | Jellyfin database, configuration, plugins and persistent metadata; current `jellyfin-trial` state | Protected | Application recovery |
+| `media-control` | Catalog/copy state, manifests, receipts and required configuration | Protected | Application recovery |
+| `filex` | Filex configuration, host keys and persistent state; payloads remain in `TransferStaging` | Protected | Application recovery |
+| `dns` | Resolver and discovery configuration/state, separated by subfolder ACLs | Protected | Application recovery |
+| `wiki` | Reproducible published site and runtime configuration; source remains in Git | Disposable, conditional | Rebuild |
+| `remote-reader` | Read-only mount service configuration/credentials; no mounted remote content or cache bytes | Protected | Application recovery |
+| `remote-maintainer` | Configuration/credentials for the proposed media-only writable gateway | Protected | Application recovery |
+| `hetzner-gateway` | Configuration/credentials for the proposed full-account gateway | Protected | Application recovery |
+| `backup-control` | Backup scripts, schedules, per-job configuration/credentials and status; distinct job subfolders | Protected | Application recovery |
+| `infrastructure-backups` | Encrypted NAS/application/cloud recovery artifacts, excluding Forgejo and native HA archives | Replica | Application recovery |
 | `HomeAssistantBackups` | New dedicated native HA archive destination; currently no HA NAS backup mount | Replica | HA archives |
 | `SpaceBlackTimeMachine` | Existing laptop backup share/chain; preserve its name | Replica | Laptop history |
 
@@ -83,10 +98,26 @@ that exist only on the NAS. Narrower share rules do not protect a remote object
 from someone who also holds the full-account role. Off-account encryption keys
 and independent recovery copies remain separate.
 
-`AppData/<service>` below is a logical scope, not an instruction to move a QTS
-package. User-facing SMB exports and local container binds enforce the same scope
-through different mechanisms. Preserve `Public` and `Multimedia` as compatibility
-shares until their contents and replacement permissions are classified.
+Each named service dataset gets its own QTS-managed share root and explicit
+service permissions. Keep application-internal layout inside that root: Forgejo's
+repositories, database, attachments and configuration form one recovery unit.
+People use Forgejo's Git SSH/HTTPS permissions; membership in `git-users` grants
+no direct file access to `forgejo` or `forgejo-backups`. The Forgejo runtime must
+not mount its backup share or receive B2 credentials.
+
+`dns` groups one resolver/discovery recovery unit; its subfolder ACLs still
+separate the two runtimes. `backup-control` groups recovery-job inputs, with a
+different private subfolder per job and no shared runtime-wide grant. These are
+bounded datasets, not replacements for an all-application parent. Reuse B2
+policy definitions across shares without assuming one bucket or volume per share.
+
+Native Plex, HBS and QTS package state stays at supported package locations;
+`package-state(plex)` and `package-state(hbs)` below are explicit non-share scopes.
+Their supported exports enter `infrastructure-backups` under Application recovery.
+Do not create a fictional `plex` share or move package internals to satisfy the
+layout. User-facing SMB exports and local container binds enforce access through
+different mechanisms. Preserve `Public`, `Multimedia`, and required `Container`
+package paths until their consumers and supported replacement paths are qualified.
 
 ## 2. Human users
 
@@ -154,9 +185,10 @@ or renaming anything. Record the realm/host as part of the account identity.
 | `svc-discovery` | DNS discovery state | Runtime UID 1004 |
 | `svc-wiki` | Serve the published static wiki | Runtime UID 1004; published site/config mounted read-only |
 | `svc-forgejo` | Git service | Runtime UID 1004 |
-| `svc-settings-backup` | Settings capture, encryption, upload and readback | Backup container UID 0/GID 100; Forgejo has a separate host-owned backup job |
+| `svc-forgejo-backup` | Capture consistent full Forgejo recovery archives | Existing separate host-owned stopped-state job; target identity separation still to qualify |
+| `svc-settings-backup` | Infrastructure/application capture, encryption, off-host upload and readback | Backup container UID 0/GID 100; excludes the separately scoped Forgejo producer in the target model |
 | `svc-originals-backup` | HBS originals/laptop backup | Native HBS package and existing B2 credential; effective runtime UID still to verify |
-| `svc-settings-b2` | Upload verified settings archives to B2 | Proposed distinct archive-upload job/credential, separate from the settings capture producer |
+| `svc-archive-b2` | Upload verified Forgejo and infrastructure archives to B2 | Proposed distinct archive-upload job, with a separate destination credential/scope for each archive family |
 | `svc-hetzner-backup` | Protect canonical remote originals and other non-excluded account data in B2 | Proposed cloud backup runner; excludes replaceable media and qualified duplicate replicas |
 | `svc-ha-backup` | HA writes/reads/prunes its native archives on the NAS | Proposed dedicated QNAP-local destination login; current automatic backups use HA local storage only |
 | `svc-ha-backup-replica` | Copy HA archives to an independent destination | Proposed separate replication job/credential; no off-host HA backup agent currently selected |
@@ -276,31 +308,33 @@ evidence. A changed display label or untested replacement account is insufficien
 Role names below describe the target policy. Shared human roles should be backed
 by AD security groups, personal homes by owner ACLs, and service roles by scoped
 host groups/ACLs and mounts. Roles do not automatically nest in one another.
-`app-state(service)` is a separate scope for
-the named service, not a shared group that opens every application's state.
+`service-state(dataset)` names exactly one of the real service shares below;
+it is not a shared group opening every application's state. Parameterized archive
+and backup-control roles likewise grant only the named family or job subfolder.
 
 | Account | Target roles |
 | --- | --- |
 | AD Ryan | `home-owner(ryan)`, `private-media-maintainers`, `media-maintainers`, existing `nas-timemachine`; proposed `remote-file-maintainers(ryan)` and `transfer-users` |
 | AD Michael | `home-owner(michael)`, `media-maintainers`; proposed `transfer-users` |
 | QNAP `usenet-deploy` → target `svc-nas-deploy` | `nas-deployment-operator`; no routine playback, household-file or backup-job role |
-| `svc-plex` | `private-media-readers`, `media-readers`, `app-state(plex)` |
-| `svc-jellyfin-runtime` | `media-readers`, `app-state(jellyfin)` |
-| `svc-media-copy` | `media-copy`, `app-state(media-copy)` |
-| `svc-remote-reader` | `remote-reader`, `playback-cache-writer`, `app-state(remote-reader)` |
-| `svc-remote-maintainer` | `remote-gateway-writer`, `app-state(remote-maintainer)` |
-| `svc-hetzner-gateway` | `hetzner-account-maintainers`, `app-state(hetzner-gateway)` |
-| `svc-filex` | `transfer-users`, `app-state(filex)` |
-| `svc-dns` | `app-state(dns)` |
-| `svc-discovery` | `app-state(discovery)`, `dns-config-reader` |
-| `svc-wiki` | `app-static(wiki)` |
-| `svc-forgejo` | `app-state(forgejo)` |
-| `svc-settings-backup` | `settings-backup-reader`, `backup-archive-writer`, `app-state(settings-backup)` |
-| `svc-originals-backup` | `originals-backup-reader`, `home-backup-reader`, `b2-backup-writer(originals)`, `b2-backup-writer(laptop-history)`, `app-state(hbs)` |
-| `svc-settings-b2` | `backup-archive-readers`, `b2-backup-writer(settings)`, `app-state(settings-b2)` |
-| `svc-hetzner-backup` | `hetzner-account-readers`, `b2-backup-writer(remote-originals)`; cloud-host state, no NAS `AppData` grant |
+| `svc-plex` | `private-media-readers`, `media-readers`, `package-state(plex)` |
+| `svc-jellyfin-runtime` | `media-readers`, `service-state(jellyfin)` |
+| `svc-media-copy` | `media-copy`, `service-state(media-control)` |
+| `svc-remote-reader` | `remote-reader`, `playback-cache-writer`, `service-state(remote-reader)` |
+| `svc-remote-maintainer` | `remote-gateway-writer`, `service-state(remote-maintainer)` |
+| `svc-hetzner-gateway` | `hetzner-account-maintainers`, `service-state(hetzner-gateway)` |
+| `svc-filex` | `transfer-users`, `service-state(filex)` |
+| `svc-dns` | `dns-runtime` |
+| `svc-discovery` | `dns-discovery`, `dns-config-reader` |
+| `svc-wiki` | `wiki-reader` |
+| `svc-forgejo` | `service-state(forgejo)`; no backup-share or B2 grant |
+| `svc-forgejo-backup` | `forgejo-backup-source-reader`, `forgejo-capture-control`, `archive-writer(forgejo)`, `backup-control(forgejo-capture)` |
+| `svc-settings-backup` | `infrastructure-backup-source-reader`, `archive-writer(infrastructure)`, `backup-control(infrastructure-capture)` |
+| `svc-originals-backup` | `originals-backup-reader`, `home-backup-reader`, `b2-backup-writer(originals)`, `b2-backup-writer(laptop-history)`, `package-state(hbs)` |
+| `svc-archive-b2` | `archive-readers(forgejo)`, `archive-readers(infrastructure)`, `b2-backup-writer(forgejo)`, `b2-backup-writer(infrastructure)`, `backup-control(archive-b2)` |
+| `svc-hetzner-backup` | `hetzner-account-readers`, `b2-backup-writer(remote-originals)`; cloud-host state, no local NAS service-share grant |
 | `svc-ha-backup` | `ha-backup-writer` |
-| `svc-ha-backup-replica` | `ha-backup-readers`, `b2-backup-writer(home-assistant)`, `app-state(ha-backup-replica)` |
+| `svc-ha-backup-replica` | `ha-backup-readers`, `b2-backup-writer(home-assistant)`, `backup-control(ha-replica)` |
 | AD `svc-authelia`, AD `svc-jellyfin` | `directory-lookup` only |
 | Separate NAS recovery administrators | `platform-admin`; outside ordinary data grants |
 | Unassigned until ownership is decided | `document-readers(scope)`, `document-maintainers(scope)`, additional `remote-file-maintainers(scope)` memberships, `backup-operators` |
@@ -353,14 +387,20 @@ The remaining shares and backend roles have explicit scopes:
 | `ha-backup-readers` | `HomeAssistantBackups` only | R |
 | `b2-backup-writer(scope)` | Assigned B2 job repository/prefix | Upload/readback and required bounded retention operations; no other share or B2-account administration |
 | `b2-restore-readers(scope)` | Assigned B2 recovery repository/prefix | Read/list for recovery; decryption keys held separately; no prune authority |
-| `backup-archive-readers` | Verified artifacts in `BackupArchives` | R; no configuration-source or media access |
-| `app-state(service)` | Only that service's `AppData` state/cache | RW; immutable config and credentials mounted read-only where possible |
-| `app-static(wiki)` | Published wiki site and runtime config | R |
-| `dns-config-reader` | Generated DNS configuration consumed by discovery | R |
-| `settings-backup-reader` | Enumerated application state and native QTS/Plex/HBS settings sources | R; preserve each job's existing capture method and add new identity coverage separately |
-| `backup-archive-writer` | Assigned settings/Forgejo/cloud-replica archive directories in `BackupArchives` | RW |
-| `originals-backup-reader` | Approved originals in `Documents`, plus `BackupArchives` | R; existing HBS selections only until reviewed |
-| `backup-operators` | Encrypted `BackupArchives` and `HomeAssistantBackups` | R; restore to an isolated destination, no ordinary overwrite authority on source shares |
+| `service-state(dataset)` | Exactly one of `forgejo`, `jellyfin`, `media-control`, `filex`, `remote-reader`, `remote-maintainer`, `hetzner-gateway`, as assigned above | RW on required mutable state; configuration/credentials mounted R where supported; no other service or backup share |
+| `dns-runtime` | `dns/resolver` only | R on deployed config, RW on required runtime state; no discovery-state grant |
+| `dns-discovery` | `dns/discovery` only | RW on discovery state; no resolver configuration write grant |
+| `dns-config-reader` | Enumerated generated resolver config in `dns/resolver` | R for discovery; no credential-wide directory access |
+| `wiki-reader` | `wiki` publication and runtime config | R; deployment operator publishes; sources stay in Git |
+| `package-state(service)` | Supported native Plex or HBS package paths, as assigned | Required package state access; a non-share exception, not a grant on other services |
+| `forgejo-backup-source-reader` | Entire consistent `forgejo` recovery set | R on repository objects, database, LFS/attachments, configuration and keys |
+| `forgejo-capture-control` | Forgejo service lifecycle only | Pause/start for consistent capture through a qualified bounded helper; no general Docker socket in Forgejo |
+| `infrastructure-backup-source-reader` | Enumerated recovery inputs in `jellyfin`, `media-control`, `filex`, `dns`, the three remote-service shares, `backup-control`, and supported QTS/Plex/HBS exports | R for consistent encrypted capture; no Forgejo source or media payload grant |
+| `archive-writer(forgejo)` / `archive-readers(forgejo)` | `forgejo-backups` | RW for capture/pruning / R for upload or recovery |
+| `archive-writer(infrastructure)` / `archive-readers(infrastructure)` | Assigned NAS/application/cloud streams in `infrastructure-backups` | RW for capture/replica/pruning / R for upload or recovery; job ACLs restrict each writer to its stream |
+| `backup-control(job)` | `backup-control/<job>` for the exact job named above | RW on status/journals; R on deployed config/keys; no other job's credential scope |
+| `originals-backup-reader` | Approved originals in `Documents` in addition to the data matrix | R; archive ingestion belongs to the separate uploader in the target model |
+| `backup-operators` | Encrypted `forgejo-backups`, `infrastructure-backups` and `HomeAssistantBackups` | R; restore to an isolated destination, no ordinary overwrite authority on source shares |
 | `remote-reader` | Internal reader mount and its backend | R on backend; local disposable cache uses the separate `playback-cache-writer` scope |
 | `directory-lookup` | No NAS share | No share access; read-only directory lookup |
 | `nas-deployment-operator` | NAS configuration, deployed service definitions and managed state | Administrative deployment capability; current QTS administrator membership can override share ACLs, so no data-isolation guarantee |
@@ -371,6 +411,11 @@ administrative exception, not an ordinary RW role or a privacy boundary against
 the NAS administrator. The current deployment operator has this same technical
 bypass capability; its distinct role is an operational boundary. Decryption/recovery
 keys are separate from backup-read roles.
+The current root backup container and host-owned Forgejo scheduler can exceed
+these target file grants. Qualify separate identities and bounded lifecycle
+controls before claiming isolation; a newly named role does not remove root or
+Docker-management capability. Keep HBS's existing archive selections until the
+replacement upload path and historical/new-path restores pass.
 
 Managed-media RW is filesystem permission, not a second import workflow. Both
 maintainers must preserve Arr bookkeeping, hardlinks and NAS-copy receipts, using
@@ -455,7 +500,7 @@ This verifies configuration/archive metadata, not decryption or an independent r
 | HA native daily backup | HA Core/Supervisor; Core/database, all apps and `/ssl` in the observed archive | Currently local HA storage only; proposed `HomeAssistantBackups` plus the dedicated B2 HA-archive policy |
 | Talos `addon-state` export | Repository apps and all of `/share`; deliberately excludes HA Core and `/ssl` | On-demand native partial archive plus controller download; intentionally unencrypted, no automatic pruning; not the daily recovery backup |
 | Identity-specific HA export | Cold backups of directory, directory-route, Authelia and home-acme plus `/ssl` | Point-in-time native export encrypted with age and verified off-host; not a whole-HA or recurring schedule |
-| NAS settings and Forgejo jobs | QTS/Plex/application settings, plus the separate Forgejo stopped-state job | `BackupArchives` / confined Hetzner NAS-settings tree; does not create native HA backups |
+| NAS/application and Forgejo jobs | Supported QTS/Plex/HBS and application exports; Forgejo's full repositories/database/state captured separately | `infrastructure-backups` and `forgejo-backups`, plus the existing confined Hetzner tree; neither creates native HA backups |
 | Cloud settings job | SAB/Arr and cloud service state | Separate encrypted cloud-backup tree, with a NAS replica; not HA state |
 | HBS originals/laptop job | Selected private/Public originals, laptop history and encrypted settings archives | Existing B2 job; HA native archives are not proven included |
 | Time Machine | The laptop's backup process | `SpaceBlackTimeMachine`; unrelated to HA native restore |
@@ -463,7 +508,7 @@ This verifies configuration/archive metadata, not decryption or an independent r
 Keep a dedicated `HomeAssistantBackups` share and `svc-ha-backup` destination
 login. A QNAP-local service login is proposed so connecting to HA's recovery
 destination does not depend on the AD service hosted by HA itself. It gets no
-`FromDrobo`, private-media, `AppData` or NAS-settings-archive access. Do not reuse
+`FromDrobo`, private-media, service-data or other archive-share access. Do not reuse
 the broadly authorized legacy `hass` account. Native HA still produces the
 archives; this login only controls access to their storage destination.
 
@@ -496,8 +541,8 @@ contents are not established by the earlier six-share inventory.
 | `home` / `homes` (unverified) | Per-user views and their administrative parent, if enabled | Owner-scoped AD homes; preserve/migrate any separate local-account homes after explicit ownership mapping |
 | `Public` | System volume; mixed originals and other files | Classified `Documents` subtrees; retain compatibility meanwhile |
 | `Multimedia` | System volume; content ownership not classified | Retain existing access until classification; do not merge blindly into general media |
-| `Container` | System volume; application state | Per-service `AppData` scopes |
-| `Usenet` | Main data volume; settings archives | `BackupArchives` plus any separately inventoried remaining contents |
+| `Container` | System volume; application state | Named `forgejo`, `jellyfin`, `media-control`, `filex`, `dns`, `wiki`, remote-service and `backup-control` shares; required native package paths remain |
+| `Usenet` | Main data volume; settings archives | `forgejo-backups` and `infrastructure-backups`, plus any separately inventoried remaining contents |
 | `SpaceBlackTimeMachine` | Dedicated laptop-backup volume | Keep existing share |
 
 Current AD memberships and share grants are already deployed:
@@ -531,6 +576,9 @@ deletion, rejoin or recursive ownership rewrite is implied by this inventory.
 The [FromDrobo data-migration phase](plan-nas-storage-and-access.md#fromdrobo-data-migration)
 defines physical destinations, consumer cutovers, verification and rollback;
 restricted aliases alone do not complete that migration.
+The [service-data and archive migration](plan-nas-storage-and-access.md#service-data-and-archive-migration)
+separately cuts over `Container` data and `Usenet` recovery artifacts; no service
+share is complete until its mounts, permissions, export and B2 restore are tested.
 
 Evidence: [identity rollout](operations/household-identity.md),
 [NAS/Plex layout](../usenet-infra/docs/nas-plex-layout.md),

@@ -20,14 +20,24 @@ according to what it contains. Share permissions are independent of these choice
 | `home` (Michael) | Protected | Local originals | Michael's canonical personal directory under `homes`; current existence and B2 selection unverified |
 | `homes` | Protected | Local originals | Back up the selected canonical user directories once; the administrative parent and per-user views are not additional copies |
 | `MediaCache` | Disposable | Rebuild | No B2 copy of replaceable media; back up manifests/ownership receipts as application settings |
-| `PlaybackCache` | Disposable | Rebuild | No B2 copy of disposable rclone cache bytes; protect mount configuration/credentials through Settings |
+| `PlaybackCache` | Disposable | Rebuild | No B2 copy of disposable rclone cache bytes; protect `remote-reader` configuration through Application recovery |
 | `RemoteMedia` | Provider-managed | Rebuild | Canonical replaceable media is excluded from B2; this read-only view is not a second backup source |
 | `RemoteManage` | Provider-managed | Rebuild | Same canonical data and policy as `RemoteMedia`; a writable alias does not create another backup set |
 | `RemoteFiles` | Provider-managed | Remote originals | General files and originals; new protection, not covered by the current NAS HBS selections |
 | `Hetzner` | Provider-managed | Mixed by subtree | One canonical account inventory: remote originals protected, replaceable media excluded, already-covered settings replicas deduplicated by source policy |
 | `TransferStaging` | Disposable, conditional | Transient | No B2 backup while another verified source exists; a sole copy must be moved into a protected class before it is treated as durable |
-| `AppData` | Protected | Settings | Consistent database/configuration exports, service identities and ownership receipts; exclude reproducible caches; audit gaps in existing exports |
-| `BackupArchives` | Replica | Settings | Verified encrypted NAS/cloud/Forgejo settings artifacts; current `Usenet/Backups` selection already reaches B2 |
+| `forgejo` | Protected | Forgejo recovery | Entire consistent application recovery set, including Git objects; existing encrypted Forgejo archives already sit in the B2-selected parent |
+| `forgejo-backups` | Replica | Forgejo recovery | Upload these archives to B2 once; preserve old history and existing confined Hetzner copy |
+| `jellyfin` | Protected | Application recovery | Consistent export to `infrastructure-backups`; exclude only proven-rebuildable cache/transcodes; qualify recurring coverage |
+| `media-control` | Protected | Application recovery | Preserve ownership receipts and journals in consistent exports; media bytes remain in their separate shares |
+| `filex` | Protected | Application recovery | Export required configuration/keys; keep transfer payload policy separate |
+| `dns` | Protected | Application recovery | Capture resolver/discovery recovery inputs together; preserve subfolder ownership and startup dependencies |
+| `wiki` | Disposable, conditional | Rebuild | Rebuild only after independent source/build-input recovery is verified; unique configuration must enter Application recovery |
+| `remote-reader` | Protected | Application recovery | Export configuration/credentials; exclude FUSE mounts and `PlaybackCache` from capture |
+| `remote-maintainer` | Protected | Application recovery | New dataset when gateway is provisioned; encrypted export to `infrastructure-backups` |
+| `hetzner-gateway` | Protected | Application recovery | New dataset when provisioned; secrets stay off the exported Storage Box filesystem |
+| `backup-control` | Protected | Application recovery | Capture recovery inputs through an independent encrypted export; exclude output archives, locks and rebuildable scratch; keys escrowed independently |
+| `infrastructure-backups` | Replica | Application recovery | Split from existing `Usenet/Backups/automatic`; include consistent Jellyfin/media/Filex/DNS exports and supported QTS/Plex/HBS exports; qualify gaps |
 | `HomeAssistantBackups` | Replica | HA archives | Native protected HA archives; new NAS/B2 coverage is required; the native daily job currently stores only on HA |
 | `SpaceBlackTimeMachine` | Replica | Laptop history | Preserve existing HBS/B2 coverage of the current laptop backup chain |
 
@@ -45,7 +55,7 @@ synthetic private file with the other user denied. Do not assume existing HBS
 selections include homes. Inventory local/domain duplicate homes and service
 homes before selecting canonical roots; preserve unique files in either identity's
 old home until migration and B2 restore pass. Service-home configuration or keys
-belong in the relevant Settings export, with plaintext kept out of backup logs.
+belong in the relevant application recovery export, with plaintext kept out of backup logs.
 QTS stores enabled homes on the selected backing volume, so these user views share
 its RAID and snapshot policy. Separate B2 source selections do not alter that.
 
@@ -76,12 +86,13 @@ cannot be assumed to have independently isolated snapshot space or history.
 | --- | --- | --- | --- |
 | Local originals | Nightly at 02:00 | HBS versioned incremental backup from the selected NAS roots, using a stable snapshot where supported; preserve ACLs, ownership and extended attributes | 30 daily recovery points plus 12 monthly points |
 | Remote originals | Nightly at 04:00 | Proposed pinned restic job on the cloud host, reading a stable read-only Storage Box snapshot/view; use an explicit writer-quiescence window if a consistent snapshot is unavailable; encrypted repository through B2's S3 API | 30 daily recovery points plus 12 monthly points |
-| Settings | After each successful consistent export; daily catch-up at 03:00 | Existing application-aware producers create complete, verified encrypted artifacts; a separate versioned HBS job copies those artifacts from `BackupArchives` to B2 | 30 daily recovery points plus 12 monthly points; preserve pre-change recovery checkpoints through acceptance |
+| Forgejo recovery | Keep the existing daily capture/freshness gate (hourly due-check); upload after each successful verified capture, with daily B2 catch-up at 03:00 | Stop/capture/start Forgejo using its qualified job; encrypt the entire recovery set into `forgejo-backups`; a separate uploader sends those archives to B2. Preserve the existing verified Hetzner copy. | Proposed B2 30 daily recovery points plus 12 monthly points; keep pre-change checkpoints and old history through acceptance |
+| Application recovery | Capture each required application at least daily and before material changes; upload after each completed export; daily B2 catch-up at 03:00 | Application-aware producers export enumerated durable state/configuration into encrypted streams in `infrastructure-backups`; separate versioned HBS upload to B2. Keep the existing NAS/cloud activity gates and off-host readback. | Proposed B2 30 daily recovery points plus 12 monthly points; preserve pre-change checkpoints through acceptance |
 | HA archives | After the native daily archive is complete and verified at its destination; daily catch-up at 08:00 | HA produces the protected archive; copy its original encrypted bytes to `HomeAssistantBackups`, then a dedicated archive job copies to B2. Native HA currently retains three local automatic copies. | 30 daily recovery points plus 12 monthly points, independent of HA's local three-copy retention |
 | Laptop history | Nightly at 02:00; serialize with the originals job | HBS backup of a consistent NAS snapshot of the Time Machine bundle; qualify capture while the Mac is idle and demonstrate restoring from the B2 copy | Preserve the existing latest-30-backup-version policy initially; do not assume this means 30 calendar days |
-| Rebuild | No scheduled media backup | Recreate from canonical media; application settings/receipts use Settings | None for media bytes |
+| Rebuild | No scheduled backup of reproducible payloads | Recreate media/cache from the verified canonical source, or wiki publication from independently recoverable Git/build inputs; durable configuration/receipts use Application recovery | None for reproducible bytes |
 | Transient | No scheduled backup | Keep the source until the transfer destination and its protection are verified; promote sole-copy originals to Local or Remote originals | None for staging bytes |
-| Mixed by subtree | Inherit Remote originals or Settings; Rebuild for explicitly replaceable media | One reviewed canonical source map, never a recursive backup of every mounted alias | Inherit the selected subtree policy |
+| Mixed by subtree | Inherit Remote originals, Forgejo recovery or Application recovery; Rebuild for explicitly replaceable media | One reviewed canonical source map, never a recursive backup of every mounted alias | Inherit the selected subtree policy |
 
 Schedules are queue/start times, not promises that all transfers finish then.
 Serialize heavy NAS jobs and preserve the current **10 MiB/s aggregate HBS upload
@@ -95,11 +106,43 @@ An upload of a stale export does not reset source freshness. Measured restore
 time, including downloading/decrypting large data, must be recorded before a
 redundancy reduction; no whole-library restore-time guarantee exists yet.
 
-Settings producers must use native database backup, a supported consistent
+Application recovery producers must use native database backup, a supported consistent
 snapshot, or an explicitly scheduled stop/capture/start. Copying live SQLite or
 AD files is not an accepted replacement. Preserve the existing jobs' activity
-gates and recovery identities. Neither daily catch-up time may silently reuse an
+gates and recovery identities. No daily catch-up may silently reuse an
 unfinished archive or mark missing producer output as fresh.
+
+### Named service datasets and recovery units
+
+`forgejo` is authoritative application data, including Git repositories, LFS,
+attachments, the database, configuration and keys. Protect the complete consistent
+set, not merely settings or a clone of each repository. The existing job stops
+Forgejo for capture, checks SQLite and encrypts the archive; preserve that method
+and independently verify repository integrity, application login, user/repository
+IDs, OIDC links and attachment access during isolated restoration. See the
+[Forgejo recovery contract](../git-host/README.md#encrypted-off-host-backups).
+
+The active `forgejo` share and `forgejo-backups` reference the same recovery
+pipeline, not two independent B2 source copies. Likewise, named infrastructure
+shares feed their selected encrypted streams in `infrastructure-backups`. Do not
+recursively upload live databases as a second substitute backup. Grouping these
+streams is acceptable only while their retention, recovery operators and B2 policy
+match; source freshness, capture consistency and writer ACLs remain per stream.
+
+Native QTS/Plex/HBS state remains at supported package paths on protected storage.
+Its supported exports use Application recovery even though the source is not a
+new share. Preserve these explicit non-share sources in the capture inventory.
+`backup-control` holds per-job inputs and status, not archive payloads. Include
+its necessary control/credential inputs in an independently recoverable encrypted
+export, keep recovery keys in separate escrow, and exclude output archives,
+transient locks and scratch so capture never recursively backs up itself.
+
+Keep `forgejo-backups` on the existing RAID initially. Its current producer retains
+at least seven generations and all archives younger than 90 days locally, with
+indefinite existing Hetzner retention. Those are separate from proposed B2
+30-daily/12-monthly retention; preserve them until a reviewed retention change.
+Neither separate local shares nor different jobs create independent disk-failure
+protection. A Replica tier reduction still requires the B2 restore/source gates.
 
 The 30-daily/12-monthly policy means distinct recovery points with overlap allowed,
 not 42 independent full data copies. HBS jobs with different source, retention or
@@ -161,7 +204,10 @@ HA directory, or Storage Box.
 | Job / target account | Source role | B2 destination role |
 | --- | --- | --- |
 | HBS originals, homes and laptop jobs / `svc-originals-backup` | `originals-backup-reader`, `home-backup-reader`, bounded per job | `b2-backup-writer(originals)` and `b2-backup-writer(laptop-history)` |
-| Settings archive upload / `svc-settings-b2` | `backup-archive-readers` | `b2-backup-writer(settings)` |
+| Forgejo capture / `svc-forgejo-backup` | `forgejo-backup-source-reader`, bounded `forgejo-capture-control`; writes `forgejo-backups` through `archive-writer(forgejo)` | None; emits verified encrypted archives for the separate uploader |
+| NAS/application capture / `svc-settings-backup` | `infrastructure-backup-source-reader`; writes assigned `infrastructure-backups` streams through `archive-writer(infrastructure)` | None; preserves the existing separately confined Hetzner upload/readback |
+| Forgejo archive upload / `svc-archive-b2` | `archive-readers(forgejo)` on `forgejo-backups`; no live Forgejo grant | `b2-backup-writer(forgejo)` |
+| Infrastructure archive upload / `svc-archive-b2` | `archive-readers(infrastructure)` on `infrastructure-backups`; no live service-source grant | `b2-backup-writer(infrastructure)` |
 | HA archive replica / `svc-ha-backup-replica` | `ha-backup-readers` | `b2-backup-writer(home-assistant)` |
 | Remote originals / `svc-hetzner-backup` | `hetzner-account-readers` through a read-only source view | `b2-backup-writer(remote-originals)` |
 | Recovery operator | Explicit isolated-restore role and separately held decryption material | `b2-restore-readers(scope)`; no routine prune authority |
@@ -172,11 +218,16 @@ themselves create OS-level isolation between HBS jobs. Source identities get no
 write permission merely because the destination job needs to upload or prune.
 Each destination role is restricted to its own repository/prefix; it is not an
 AD role automatically understood by Backblaze.
+The uploader's two jobs use separate destination scopes/credentials and shared
+bandwidth scheduling. The archive shares are separate from application runtimes;
+no ordinary service gets access to its backup share or to another job's B2 key.
+Keep current HBS archive coverage until replacement jobs, source mappings and
+historical/new-path restoration pass; new role names do not change today's jobs.
 
 Account names follow the [`svc-` policy and migration](plan-nas-access-model.md#service-account-migration).
 Before each identity cutover, export its old/new realm, UID/GID/SID, job references,
 source ACLs, destination key references and decryption-key custody privately.
-Update consumers and fresh encrypted Settings exports, then test source access,
+Update consumers and fresh encrypted recovery exports, then test source access,
 destination upload/readback and an isolated restore under the accepted mapping.
 Keep historical keys and identity mappings needed to restore old ownership; a
 rename must not create a new empty backup history or change retention. Preserve
@@ -188,7 +239,8 @@ documented; a pure account/label rename keeps the still-required credential.
 ## Backup continuity during data migration
 
 The [FromDrobo migration](plan-nas-storage-and-access.md#fromdrobo-data-migration)
-must carry its backup source map with it. Before a protected root changes, retain
+and [service/archive migration](plan-nas-storage-and-access.md#service-data-and-archive-migration)
+must carry their backup source maps with them. Before a protected root changes, retain
 a recoverable checkpoint at the old location and record the exact source selection,
 exclusions, destination/catalog and encryption key reference. Keep existing B2
 history; a path change is not permission to delete old versions or start a fresh

@@ -11,7 +11,7 @@ and support for roles with full Hetzner account filesystem access**.
 already deployed.** Preserve that architecture; the original Authentik/backend
 selection proposal is superseded by the [household identity runbook](operations/household-identity.md).
 The remaining order is recovery coverage, storage authorization, runtime-service
-separation, writable remote access, the FromDrobo data split, and physical pool changes
+separation, writable remote access, named service/archive and FromDrobo data migrations, and physical pool changes
 only if justified. Most of the benefit does not require a pool rebuild. Keep
 each cutover independently reversible.
 
@@ -28,6 +28,10 @@ Every proposed share also has a [B2 backup and redundancy policy](plan-nas-data-
 schedule, authoritative source, capture method, retention, encryption, restore
 checks and eventual storage tier. These are proposed policies alongside the
 dated deployed baseline, not new backup jobs or RAID changes.
+The target share catalog is flat: `forgejo`, `jellyfin`, `media-control` and other
+named datasets replace the proposed `AppData` parent. `forgejo-backups` and
+`infrastructure-backups` replace the proposed `BackupArchives` umbrella. These
+are real share boundaries with defined service access, not just renamed subfolders.
 
 ## What is actually deployed
 
@@ -209,6 +213,11 @@ Use purpose and recovery requirements for names. Separate shares, credentials,
 backup selection and capacity policy even where data initially stays on one pool.
 Names below are proposed. The requested FromDrobo split includes real data
 destinations and a separate cutover phase; an alias can be an intermediate step.
+Create one share per independently managed dataset/recovery unit, with structured
+folders inside it. A share does not require a separate volume, pool or B2 bucket.
+Existing household/media names remain stable; new service names use lowercase
+hyphens. Default ordinary household SMB access to service/archive shares is denied;
+applications use local binds, and human Git access stays inside Forgejo.
 
 | Proposed share / area | Purpose | Access | Protection and placement |
 | --- | --- | --- | --- |
@@ -224,10 +233,36 @@ destinations and a separate cutover phase; an alias can be an intermediate step.
 | `RemoteFiles` | General writable remote files | Proposed Ryan-owned scope; additional owners undecided | Provider-managed redundancy; Remote originals B2 policy |
 | `Hetzner` | Entire Storage Box filesystem, including media, staging, hidden files and backup trees | Explicit full-account R or RW roles; human members not yet selected | Provider-managed redundancy; Mixed by subtree B2 policy, covering each authoritative path once |
 | `TransferStaging` | Manual incoming/outgoing files and quarantine | Transfer owner and Filex | Conditional Disposable tier; Transient policy, no B2 while another verified source exists |
-| `AppData` | Application databases and settings | Per-service principals and administrators | Protected tier; Settings B2 policy using consistent exports, excluding reproducible caches |
-| `BackupArchives` | Encrypted settings archives | Backup services/operators | Replica tier; Settings B2 policy; separate from general media writers |
+| `forgejo` | Repositories, database, LFS/attachments, configuration and keys; existing `Container/home-git` | `svc-forgejo` RW; dedicated capture reader; no household SMB grant | Protected tier; Forgejo recovery B2 policy |
+| `forgejo-backups` | Completed encrypted Forgejo recovery archives; existing `Usenet/Backups/automatic/forgejo` | Forgejo backup job RW; archive uploader/recovery readers R; Forgejo runtime denied | Replica tier; Forgejo recovery B2 policy |
+| `jellyfin` | Jellyfin database, configuration, plugins and persistent metadata; current `jellyfin-trial` state | Jellyfin runtime RW; scoped capture reader; no household SMB grant | Protected tier; Application recovery B2 policy |
+| `media-control` | Catalog/copy state, manifests, receipts and required configuration | Media-copy service RW; scoped capture reader | Protected tier; Application recovery B2 policy |
+| `filex` | Filex configuration, host keys and persistent state; payloads remain in `TransferStaging` | Filex runtime uses its state only; scoped capture reader | Protected tier; Application recovery B2 policy |
+| `dns` | Resolver and discovery configuration/state, separated by subfolder ACLs | Resolver and discovery roles get distinct scopes; deployment publishes configuration | Protected tier; Application recovery B2 policy |
+| `wiki` | Reproducible published site and runtime configuration; source remains in Git | Wiki runtime R; deployment publishes; no runtime write grant | Disposable, conditional tier; Rebuild B2 policy |
+| `remote-reader` | Read-only mount service configuration/credentials; no mounted remote content or cache bytes | Reader service has its own scoped state; backend remains R | Protected tier; Application recovery B2 policy |
+| `remote-maintainer` | Configuration/credentials for the proposed media-only writable gateway | Media gateway service only; no full-account credentials | Protected tier; Application recovery B2 policy |
+| `hetzner-gateway` | Configuration/credentials for the proposed full-account gateway | Full-account gateway service only; ordinary media roles denied | Protected tier; Application recovery B2 policy |
+| `backup-control` | Backup scripts, schedules, per-job configuration/credentials and status; distinct job subfolders | Each job gets only its own control scope; recovery administrators | Protected tier; Application recovery B2 policy |
+| `infrastructure-backups` | Encrypted NAS/application/cloud recovery artifacts, excluding Forgejo and native HA archives | Infrastructure capture/replica jobs write assigned streams; uploader/recovery readers R | Replica tier; Application recovery B2 policy |
 | `HomeAssistantBackups` | Native HA backup archives | Dedicated HA writer, replica reader and recovery operators | Replica tier; HA archives B2 policy; preserve native archive/encryption semantics |
 | `SpaceBlackTimeMachine` | Current laptop recovery | Existing local grants plus `SMARTHOME\nas-timemachine`; recovery admin | Replica tier; Laptop history B2 policy; keep name, account realm and existing backup chain |
+
+Forgejo's repositories, database, LFS/attachments and configuration belong in the
+same application recovery unit. Its runtime gets `forgejo`, not `forgejo-backups`;
+the capture job reads live state and writes encrypted archives, and a separate
+uploader reads those archives for B2. The shared Application recovery profile
+covers other named service datasets through `infrastructure-backups`, with
+per-stream source lists and freshness checks. It is not a settings-only backup.
+`dns` and `backup-control` have explicit per-runtime/per-job subfolder ACLs; their
+common recovery policy does not grant every participant access to the whole share.
+
+Native Plex/HBS/QTS package paths remain supported non-share exceptions. Preserve
+them in the application backup inventory and export to `infrastructure-backups`;
+do not move package internals or create an `AppData` replacement to force every
+source into a new share. Wiki publication can use Rebuild only after its Git/build
+inputs are independently recoverable. New gateway shares are provisioned with
+their corresponding gateway, not as empty claims of deployed coverage.
 
 Initially expose `PrivateLibrary` as a QTS-managed share of the existing private
 root, if supported by the installed firmware, preserving Plex ID 1 and its source
@@ -392,7 +427,7 @@ when their share pilot is ready. Proposed additions are not current grants:
 | New `b2-backup-writer(scope)`, `b2-restore-readers(scope)` | Separate destination upload/retention and recovery roles per B2 job; no implicit rights from Hetzner data roles |
 | Proposed `svc-media-copy`, `svc-remote-reader`, `svc-remote-maintainer` accounts | Separate local-copy, canonical-read and gateway-write roles; inventory existing credentials before provisioning anything |
 | Proposed `svc-hetzner-gateway`, `svc-ha-backup`, `svc-ha-backup-replica` | Full-account gateway, HA-only NAS writer and HA archive replication; separate backend credentials/scopes |
-| Proposed `svc-settings-b2`, `svc-hetzner-backup` | Verified settings-artifact upload and canonical remote-originals backup; source read and B2 write authority kept distinct |
+| Proposed `svc-forgejo-backup`, `svc-archive-b2`, `svc-hetzner-backup` | Consistent Forgejo capture, verified Forgejo/infrastructure artifact upload and remote-originals backup; separate source and destination roles |
 | Per-service DNS/Git/wiki/Filex/playback/backup identities | Only required config/state and explicit media roots; noninteractive where QTS supports it |
 | `nas-deployment-operator` | Existing local `usenet-deploy`; target `svc-nas-deploy` after migration gates pass; administrator capability for NAS deployment, separate from runtime and recovery roles |
 | Existing `svc-authelia`, `svc-jellyfin` | Dedicated directory lookup identities; preserve no administrative or NAS-share access and no password-write delegation |
@@ -446,7 +481,8 @@ identity runbook requires. Never rotate credentials merely to reconcile this pla
 | 2. Private isolation | Remove unintended local/domain access through every route; introduce clear share alias; preserve Plex source/ID | Restore exact saved ACL/share policy if authorized access or playback fails; do not roll back the domain join |
 | 3. Service-account migration | Apply the `svc-` policy; move one runtime at a time off shared UID 1004, migrate legacy integrations, then the deployment login; retain explicit platform exceptions and recovery access; verify exports before retiring old logins | Restore the affected identity, UID/GID/SID, ACLs and consumer settings; reconcile new writes; preserve domain trust and unrelated services |
 | 4. Writable remote access | Qualify AD-authorized NAS gateway; separately scoped direct route if needed; keep playback read-only and managed edits reconciled | Unmount/revoke only new writer routes; preserve existing domain and read-only playback mount |
-| 5. FromDrobo data migration | Execute the source/destination map below in small cutovers; move local data into independent share roots, relocate the remote mount, qualify homes and remove the overloaded export after acceptance | Reverse same-volume rename and saved references, or switch back to retained cross-volume source after reconciling new writes; no dual writers |
+| 5a. Service-data and archive migration | Split owned `Container` data into named service shares; split archive outputs into `forgejo-backups` and `infrastructure-backups`; update mounts, role ACLs, capture inputs and HBS sources; retain native package paths | Restore that service/job's saved paths and permissions, reconcile writes, reverse a same-volume rename or use the retained cross-volume source; preserve backup history |
+| 5b. FromDrobo data migration | Execute the source/destination map below in small cutovers; move local data into independent share roots, relocate the remote mount, qualify homes and remove the overloaded export after acceptance | Reverse same-volume rename and saved references, or switch back to retained cross-volume source after reconciling new writes; no dual writers |
 | 6. Identity continuity and acceptance | Repeat Arr/Catalog browser and TV/native-client acceptance after changes; verify account lifecycle, HA outage recovery and recurring backup restore | Revert only the affected storage/service integration; retain current account IDs, MFA keys and domain trust |
 | 7. Optional pool redesign | Place each share on backing storage meeting its redundancy tier; verify B2 coverage, source availability and evacuation before a reduction; disk-level runbook | Rebuild has no instant rollback: retain verified external source until full restore and acceptance |
 
@@ -454,6 +490,64 @@ Allow each changed service and backup to complete its normal cycle before the
 next phase. Keep disk layout, group/ACL changes and media path migrations in
 different maintenance windows. A regression in privacy, file identity, backup
 coverage or application ownership stops progression.
+
+## Service-data and archive migration
+
+This is a separate path cutover after the relevant identity/ACL pilot. Keep
+container-internal paths stable where possible; change the resolved host binds,
+deployment inputs and backup inventory together. Names below are target shares,
+not commands or assumed existing paths. Resolve exact private source paths and
+backing device IDs first, especially where current state/configuration is mixed.
+
+| Current source / boundary | Target share | Dependencies and acceptance |
+| --- | --- | --- |
+| `/share/Container/home-git` durable data/configuration and deployment inputs | `forgejo` | Preserve internal layout, repository/user IDs, DB, LFS/attachments, secrets and SSH identity; update Compose and stopped-state capture source together; test clone/fetch/push with a synthetic repository and OIDC/recovery login |
+| `/share/Usenet/Backups/automatic/forgejo` | `forgejo-backups` | Preserve archive bytes, status/pending-upload references, readback, producer retention and historical B2/Hetzner recovery; runtime denied; update scheduler output and uploader/HBS selection |
+| `/share/Container/usenet/jellyfin-trial` durable configuration/plugin/metadata state | `jellyfin` | Preserve user/library IDs, LDAPS CA and plugin settings, GPU/device access and container paths; distinguish cache/transcode data and prove a consistent export/restore |
+| Catalog/copy state, manifests, receipts and required config under `/share/Container/usenet` | `media-control` | Inventory exact shared state subpaths; preserve copy/evict ownership and journals; source media and staging remain in their dedicated shares |
+| Filex SFTP keys/configuration and durable application state under the current service root | `filex` | Preserve application login/host key and bindings; transfer payloads remain in `TransferStaging`; do not combine this move with a login rename |
+| Resolver/discovery configuration and state under the current service root | `dns` | Map resolver/discovery subfolders and inherited ACLs; preserve generated config flow, discovery state and startup dependency; test resolution before retiring old binds |
+| Existing wiki publication root under `/share/Container/usenet/wiki` | `wiki` | Redeploy from verified Git/build inputs; runtime R, publisher controlled; verify canonical HTTPS and recovery routes; preserve unique inputs separately if found |
+| Remote-reader config/key/known-host references; new gateway state when provisioned | `remote-reader`, `remote-maintainer`, `hetzner-gateway` | Separate backend credentials by service; update read-only/privileged-helper mounts; keep FUSE data mounts and `PlaybackCache` outside recursive capture |
+| Backup definitions, scripts, recipient/configuration, schedules and status inputs | `backup-control` | Inventory each job's private subfolder, key references and scratch; update cron/capture/uploader bindings without exposing another job's credentials; never move recovery escrow into this share |
+| Remaining verified NAS/application/cloud streams in `/share/Usenet/Backups/automatic` | `infrastructure-backups` | Preserve per-stream artifacts and status; exclude the already-mapped Forgejo stream and native HA archive destination; qualify currently missing application exports |
+| Native Plex, HBS and QTS package paths | Stay at supported locations | Keep required package/Container roots; capture through supported exports into `infrastructure-backups`; no generic service-data share |
+
+1. **Baseline and recovery.** Record exact source-to-destination roots, all local
+   binds and SMB/NFS aliases, current/target owner identities, ACLs, open consumers,
+   available space and rollback references. Inventory executable paths, shared
+   libraries/tools and credential mounts separately from mutable state; avoid
+   duplicating untracked configuration without an authoritative owner. Verify
+   existing restore points before moving authoritative data.
+2. **Prepare the service boundary.** Create QTS-managed destination definitions
+   and test role-specific allow/deny rules with synthetic data. Avoid broad
+   parent binds, including the backup container's current whole-service-root bind.
+   Replace them with enumerated sources/exports. Keep native package paths stable.
+   Account migration and path migration get separate checkpoints and windows.
+3. **Cut over one service or archive stream.** Finish pending backups/transfers,
+   then pause only the affected writer/scheduler. Prefer a same-filesystem rename
+   into an absent destination, verifying device/inode and metadata. For a justified
+   cross-volume copy, preserve ACLs/ownership/xattrs/hardlinks, verify copied bytes
+   and retain a frozen old source. Save and update Compose, Ansible/durable inputs,
+   cron, source-export lists and HBS selections as one reviewed mapping. Archive
+   payload relocation must not lose pending-upload/status references or silently
+   reset retention; keep status in its job's `backup-control` scope where supported.
+4. **Prove application and backup behavior.** Restart only the affected service;
+   test authorized actions and cross-service/household denial, new-file ownership,
+   one normal capture/upload cycle and isolated restore from both old and new
+   history. Verify Forgejo's whole application, not only a Git clone. Verify DNS
+   and wiki recovery routes before dependent cutovers. Price any B2 full re-seed
+   before changing jobs, and retain old selection/history until new coverage passes.
+5. **Accept or roll back.** Reconcile post-cutover writes before reversing paths
+   and saved configuration; do not leave two active writers. Remove obsolete
+   broad aliases and binds only after their last consumer is accounted for.
+   Keep old cross-volume data/checkpoints through explicit acceptance. Retire
+   only emptied, unreferenced service subtrees; never delete `Container` or
+   `Usenet` wholesale while required package or unclassified data remains.
+
+Record accepted roots and restore-path translations in canonical runbooks and
+encrypted recovery supplements. Older snapshots remain immutable; restore them
+with the accepted mappings rather than redeploying their former shared paths.
 
 ## FromDrobo data migration
 
@@ -478,8 +572,8 @@ The internal remote reader remains broader than its human-facing media view
 because it retrieves cloud settings archives too. Put its new mountpoint outside
 all recursive local backup selections, retain that archive consumer, and qualify
 `RemoteManage`/`Hetzner` independently. Do not move or recursively traverse a live
-FUSE mount, or include it in a copy of the old parent. `Container` package/state
-and `Usenet` archives have separate migrations if needed; the FromDrobo split
+FUSE mount, or include it in a copy of the old parent. `Container` service data
+and `Usenet` archives follow phase 5a above; the FromDrobo split
 does not relocate QTS packages, AD or Time Machine as a side effect.
 
 1. **Inventory and dry run.** Use existing indices/accounting first. Privately
@@ -536,7 +630,7 @@ Keep unique data in old homes protected, verify each owner's AD access and the
 other user's denial, and add the canonical roots to B2 before retiring local-home
 compatibility. Do not move either person's data into a generally shared folder.
 
-Phase 5 is complete only when the data classes have independent real roots,
+Phase 5b is complete only when the data classes have independent real roots,
 all consumers and backup sources use the accepted mapping, and the overloaded
 `FromDrobo` export is retired. An interim private alias alone is not completion.
 Update canonical runbooks and durable controller/recovery supplements at cutover,
@@ -595,6 +689,8 @@ later changes.
 ### Paths, storage and writable remote mounts
 
 - [ ] Record each source → destination mapping, filesystem/device identity, required space/reserve, writer, reader, backup and rollback reference before any move.
+- [ ] Complete phase 5a's service/archive map: no target `AppData` or `BackupArchives` share, no broad parent container bind, and explicit supported native-package exceptions. Test cross-service denial and each archive pipeline before retiring any old service path.
+- [ ] Verify `svc-forgejo` cannot access `forgejo-backups` or B2 credentials; capture can read its complete consistent source, the archive uploader can read only completed archive inputs, and historical/new-path application restores preserve Git objects, database, users and attachments.
 - [ ] Execute the FromDrobo data-class cutovers above, including unclassified remainder, private-root backup continuity and remote-mount exclusion from local copies. Preserve same-filesystem staging/publication; retire the old export only after every consumer and B2 source is verified.
 - [ ] Record current backing RAID/pool and target tier for each local share. Before moving Disposable or Replica shares to zero-redundancy storage, prove rebuild/source availability and the required B2 restore; verify changed backup paths, inherited ACLs and new-file protection afterward. Provider-backed views do not have a NAS-selectable data RAID level.
 - [ ] For same-volume renames, require absent destination and compare device/inode afterward. For a justified cross-volume move, preserve metadata/hardlinks, verify the moved data, and retain the old source until acceptance.
