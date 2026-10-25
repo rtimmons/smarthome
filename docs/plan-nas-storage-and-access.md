@@ -40,12 +40,17 @@ shares only where QNAP supports it. Relabel the existing `Scratch` volume
 the [legacy-share retirement phase](#legacy-share-retirement-and-system-label).
 
 The latest preflight resolves the firmware (QTS 5.2.11), home-folder enablement
-and current HBS sources. All four disks report Good, but the main data volume's
-only snapshot is from September 2024 with no schedule, the other volumes have
-none, and UPS support is disabled. These are readiness gaps, not authorization
-to start tests or change settings. Both Public data folders belong to Ryan and
+and current HBS sources. All four disks report Good, but retained logs show
+recurring **disk-2 SATA link/I/O errors through October 24**. Investigate these
+before production moves or stress tests. The scrub scheduler is **off**, with no
+retained completed-scrub record. The main data volume's only snapshot is from
+September 2024 with no schedule, the other volumes have none, and UPS support is
+disabled. These are readiness gaps, not authorization to start tests or change
+settings. Both Public data folders belong to Ryan and
 will move to his qualified private AD home. Video Station and Multimedia Console
-are unused by the household and should retire after native dependency checks.
+are unused by the household; native inspection found zero Video Station sources
+and indexed files, and no additional installed multimedia consumer. Retire them
+after state preservation and the final dependency/removal review at cutover.
 
 ## What is actually deployed
 
@@ -496,7 +501,7 @@ identity runbook requires. Never rotate credentials merely to reconcile this pla
 | Phase | Deliverable / gate | Rollback boundary |
 | --- | --- | --- |
 | Established identity baseline | AD/Authelia on HA, QNAP trust, original account links and approved domain share grants already deployed | Preserve current identities and post-join recovery state; no rejoin/reprovision or retired-DC startup |
-| 0. Recovery and baseline | Current exports; per-share B2 policy/source map, retention sizing and encrypted-job pilots; recurring off-host identity/Jellyfin coverage; B2/Time Machine sample restores and alerts; pending human acceptance before affected app changes | Isolated restores; preserve existing B2 history, identity keys and current AD/Authelia databases |
+| 0. Recovery and baseline | Investigate disk-2 link/I/O errors and review older disk faults before production moves/stress tests; qualify disk, scrub/snapshot and UPS readiness; current exports, per-share B2 policies and encrypted-job pilots; recurring off-host identity/Jellyfin coverage; B2/Time Machine restores and alerts; pending human acceptance | Isolated restores; preserve current disks/logs, existing B2 history, identity keys and current AD/Authelia databases |
 | 1. Permission pilot | Synthetic share and owner-home tests using narrow AD groups/ACLs; local/domain effective-access matrix; verify emergency admin | Remove only pilot grants/share; do not delete/recreate existing accounts or groups |
 | 2. Private isolation | Remove unintended local/domain access through every route; introduce clear share alias; preserve Plex source/ID | Restore exact saved ACL/share policy if authorized access or playback fails; do not roll back the domain join |
 | 3. Service-account migration | Apply the `svc-` policy; move one runtime at a time off shared UID 1004, migrate legacy integrations, then the deployment login; retain explicit platform exceptions and recovery access; verify exports before retiring old logins | Restore the affected identity, UID/GID/SID, ACLs and consumer settings; reconcile new writes; preserve domain trust and unrelated services |
@@ -690,7 +695,15 @@ Public's cached total is 9.95 GiB. Multimedia has Samples and system metadata
 (2.09 MiB cached); contents still need classification. Video Station 5.8.9 and
 Multimedia Console 2.11.2 are enabled but confirmed unused by the household.
 No container bind or host crontab reference to Public/Multimedia was found.
-Native package/indexing and client dependencies remain to check before removal.
+The follow-up read-only dependency check found zero Video Station content sources,
+videos and used bytes, an enabled but empty/completed multimedia index, and no
+additional installed multimedia consumer in the suite/package inventory. Plex,
+HBS and Container Station startup scripts have no direct references to the two
+apps. Preserve any unique application state and classify Samples/system metadata;
+inspect the removal confirmation for unexpected consumers at cutover and verify
+retained apps, including File Station browsing and used preview features. No
+package was stopped or uninstalled during preflight. See the
+[evidence and limits](nas-preflight-2026-10-25.md#share-inventory-ownership-and-platform-dependencies).
 Homes are an evidenced platform dependency for the dedicated deployment SSH key,
 not an optional default share to disable during cleanup.
 
@@ -698,7 +711,8 @@ Maintain an exception register with the exact share/path, platform or applicatio
 requiring it, firmware/package version and supporting evidence, responsible owner,
 required principals/operations, data class, backing volume, B2 policy/source,
 restore evidence and a next-review trigger. `Public` is a documented platform
-exception; Multimedia/package consumers still need local verification. Unknown
+exception; the Container Station protected-share registry also requires Container.
+Multimedia's final removal and retained-app regression checks remain pending. Unknown
 contents or untested access are unfinished work, not an accepted exception.
 Any required ordinary-user access must be explicitly approved and scoped; broad
 legacy grants do not become permanent merely because a root is retained.
@@ -778,8 +792,10 @@ later changes.
 - [x] Recheck HA directory database/DNS status, QNAP machine trust, share grants/private-root ACL, retired DC shutdown and all 45 HTTP/TLS route checks on October 25. No authenticated browser or new SMB-fixture acceptance is implied.
 - [x] Inspect native HA backup schedule, selected agents, latest archive component metadata and Supervisor mounts on October 25: daily local-only protected backup, Core/all apps/SSL included, no NAS backup mount; no backup or restore was triggered.
 - [x] Read all four disk-health/SMART panels, current RAID counters, pool alarms and snapshot coverage in October 25 preflight: all disks Good; disk 2 SATA counter 13; main volume one September 2024 snapshot/no schedule; other volumes none; UPS support disabled.
-- [ ] Qualify full disk error history, disk-2 counter trend, dated scrub result/schedule, needed self-test coverage, snapshot retention/reserve policy and physical UPS/shutdown behavior. Current clean counters and Good summaries do not complete these gates.
+- [x] Inspect retained disk/RAID event and kernel history: distinguish the old slot-2 bad blocks from its August replacement; record recent slot-2 I/O errors and 26 link resets through October 24, older slot-1/4 read errors and August scan/rebuild completions. Confirm scrub scheduler off in Safari and no retained scrub event; correct the earlier configuration-flag inference.
+- [ ] Investigate the disk-2 drive/connection path before production migration or stress tests; obtain full drive-internal SMART/error logs, reconcile other historical faults and verify recovery coverage. Then qualify scheduled tests/scrubbing, current snapshot recovery/reserve policy and physical UPS/shutdown behavior. Clean array counters and Good summaries do not clear the logged faults.
 - [x] Record cached QTS share sizes and bounded Public metadata; confirm both Public data folders belong to Ryan and QNAP media apps are unused by the household.
+- [x] Inspect Multimedia Console's source/index/suite/transcoding pages, installed packages, protected-share registry and retained-app startup references. Video Station has no sources, the index has no files, and no other installed multimedia consumer was found. Final removal confirmation, unique-state preservation and retained-app regression remain cutover gates.
 - [ ] Determine used bytes by data class from existing indices/QTS accounting; do not trigger a whole-collection scan/hash merely to plan.
 - [ ] Inventory shares/aliases, NFS/AFP/WebDAV/FTP, QTS application privileges, scheduled tasks, package paths, symlinks, open sessions and every client. The SMB session probe required root and was not completed.
 - [x] Verify homes enabled on Scratch, actual `home`/`homes` definitions, observed local admin/deployment homes, deployment SSH dependency and absence from HBS selection; supersede the failed earlier home probe.

@@ -93,6 +93,18 @@ The October 25 UI showed no retained snapshots on Scratch or either laptop
 volume; GPvQNAP has one September 2024 snapshot and no schedule. Qualify recurring
 snapshot policy and current recovery points before migration; an HBS capture
 option alone does not provide retained volume rollback. UPS support is disabled.
+The follow-up found scheduled RAID scrubbing disabled and repeated disk-2
+link/I/O errors in retained logs through October 24, despite Good disk summaries.
+These findings block production data migration, stress tests and redundancy
+reduction pending recovery review and diagnosis; do not enable a scrub merely
+to establish a dated result. Preserve the older slot-1/4 error evidence too.
+
+The QNAP media dependency check found zero Video Station sources and an empty
+multimedia index. That does not classify Samples/system metadata as disposable
+or prove the apps have no unique settings. Preserve required state through
+Application recovery, or explicitly establish it is reproducible, before the
+planned app/share retirement. Container Station's protected-share registration
+confirms the required Container exception; retain and protect that package scope.
 
 ## Storage tiers and eventual placement
 

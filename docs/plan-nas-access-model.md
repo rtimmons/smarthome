@@ -146,7 +146,12 @@ administrative inventory and [exception protection policy](plan-nas-data-protect
 The user confirmed both Public data folders are Ryan's private files: migrate
 them to his canonical AD home only after privacy and backup qualification, not
 to shared `Documents`. Video Station and Multimedia Console are unused by the
-household but remain enabled; retire them after native dependency/indexing checks.
+household but remain enabled. Read-only native checks found zero Video Station
+sources/videos, zero indexed files and no additional installed multimedia consumer.
+Retire the unused apps in phase 5c after preserving unique state and reviewing the
+actual dependency confirmation; verify retained Plex/HBS/Container Station and
+File Station features afterward. Required Container roots remain an evidenced
+Container Station exception. See the [preflight dependency inventory](nas-preflight-2026-10-25.md#share-inventory-ownership-and-platform-dependencies).
 Migrate other originals to owner homes, approved `Documents` scopes or `PrivateLibrary`
 according to ownership; only verified replaceable media belongs in `MediaCache`.
 Give each exception an owner, exact required principals/operations and backup
@@ -578,7 +583,7 @@ share and needs clarification before cleanup.
 | `FromDrobo` | Main data volume; private originals, local media, remote mount and staging mixed together | Physical data split into `PrivateLibrary`, `MediaCache`, `PlaybackCache`, `TransferStaging`; remote views relocated through a mount cutover |
 | `home` / `homes` | Enabled on system volume; local admin/deployment homes observed; human/domain paths and effective isolation unqualified | Owner-scoped AD homes with B2 coverage; preserve deployment SSH dependency and distinct local homes |
 | `Public` | System volume; two Ryan-owned data folders, about 9.95 GiB, plus system metadata | Move both folders to Ryan's qualified AD home with backup continuity; retire household access; retain minimal required platform root |
-| `Multimedia` | System volume; Samples/system metadata; two enabled QNAP media apps confirmed unused by household | Classify remaining contents and qualify native dependencies, then retire apps/share through supported controls or document required exception |
+| `Multimedia` | System volume; Samples/system metadata; unused QNAP media apps enabled, but zero Video Station sources and indexed files; no additional installed multimedia consumer found | Preserve unique state/classify contents; review final package dependencies and retire through supported controls; test retained app features |
 | `Container` | System volume; application state | Named `forgejo`, `jellyfin`, `media-control`, `filex`, `dns`, `wiki`, remote-service and `backup-control` shares; required native package paths remain |
 | `Usenet` | Main data volume; settings archives | `forgejo-backups` and `infrastructure-backups`, plus any separately inventoried remaining contents |
 | `SpaceBlackTimeMachine` | Dedicated laptop-backup volume | Keep existing share |
