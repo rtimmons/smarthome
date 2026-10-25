@@ -34,6 +34,16 @@ repositories, and do not run a destructive clean in the working checkout as a te
 
 ## Encryption and the 1Password handoff
 
+Current credential files also have a Git-tracked SOPS escrow at
+`identity-infra/credentials.sops.json`, encrypted to this same workstation master.
+Use `just credentials capture` after reviewed credential changes and
+`just credentials verify` to compare and independently restore them.
+`just credentials restore --destination /absolute/new-directory` creates a
+separate private recovery tree; it never overwrites deployed credentials.
+See [household identity](../operations/household-identity.md#git-tracked-sops-credential-escrow)
+for scope, the historical master's distinction, native database recovery, and
+the complete AD/Authelia/ACME architecture.
+
 The new workstation recovery bundle uses native age with the repository's
 existing SHA-256-verified, pinned bootstrap. It is additive: the original SOPS
 vault, recovery master, bound inventory and immutable historical snapshots remain

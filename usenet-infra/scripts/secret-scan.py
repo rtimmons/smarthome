@@ -18,7 +18,8 @@ import sys
 
 VAULT_PATH = 'usenet-infra/vault/secrets.sops.json'
 RADIO_VAULT_PATH = 'usenet-infra/vault/homeassistant-radio-20261016.sops.json'
-VAULT_PATHS = {VAULT_PATH, RADIO_VAULT_PATH}
+CREDENTIAL_VAULT_PATH = 'identity-infra/credentials.sops.json'
+VAULT_PATHS = {VAULT_PATH, RADIO_VAULT_PATH, CREDENTIAL_VAULT_PATH}
 MAX_JSON = 32 * 1024**2
 CHUNK = 1024**2
 OVERLAP = 8192
@@ -57,7 +58,7 @@ def _encrypted(value):
         return False
 
 
-def valid_sops(content: bytes, *, radio: bool = False) -> bool:
+def valid_sops(content: bytes, *, radio: bool = False, credentials: bool = False) -> bool:
     """Accept the selected exact vault schema, with every payload leaf encrypted."""
     try:
         if len(content) > MAX_JSON:
@@ -65,7 +66,10 @@ def valid_sops(content: bytes, *, radio: bool = False) -> bool:
         value = _json(content)
         if not isinstance(value, dict):
             return False
-        if radio:
+        if credentials:
+            if set(value) != {'payload', 'sops'} or not _encrypted(value['payload']):
+                return False
+        elif radio:
             if set(value) != {'schema_version', 'captured_at', 'purpose', 'thread', 'backups', 'sops'}:
                 return False
             if any(not _encrypted(value[key]) for key in ('schema_version', 'captured_at', 'purpose')):
@@ -138,11 +142,17 @@ def forbidden_path(path):
 
 def inspect_content(path, content):
     findings = {label for label, pattern in PATTERNS if pattern.search(content)}
-    if path in VAULT_PATHS and not valid_sops(content, radio=path == RADIO_VAULT_PATH):
+    if path in VAULT_PATHS and not valid_sops(content, radio=path == RADIO_VAULT_PATH, credentials=path == CREDENTIAL_VAULT_PATH):
         findings.add('invalid or plaintext SOPS vault envelope')
     if len(content) <= MAX_JSON and content.lstrip().startswith(b'{'):
         try:
             value = _json(content)
+            if isinstance(value, dict) and set(value) == {'payload'} and isinstance(value['payload'], str):
+                nested = _json(value['payload'])
+                if isinstance(nested, dict) and {'schema', 'entries'} <= set(nested):
+                    findings.add('plaintext credential recovery envelope')
+            if isinstance(value, dict) and {'schema', 'entries'} <= set(value):
+                findings.add('plaintext credential recovery envelope')
             if (isinstance(value, dict) and {'entries', 'inventory_sha256', 'schema_version', 'source_checkout'} <= set(value)
                     and not valid_sops(content)):
                 findings.add('plaintext or malformed recovery bundle')

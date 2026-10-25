@@ -25,9 +25,9 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "e00173bcaf6affd053880f8f11480c33a7cc67f4d284c2f79643b7183f26fb6a",
-    "reason": "Verify identity backup from restored controller state and create its recovery output directory",
-    "reviewed_at": "2026-10-24"
+    "fingerprint": "d32d4e677701f0f46537d94fec62eaabb7cd3e81fd35d3fcba14443d41b63952",
+    "reason": "Document fresh-checkout SOPS bootstrap/restore and preserve historical recovery boundaries",
+    "reviewed_at": "2026-10-25"
   },
   "media": {
     "fingerprint": "5dccc8b9a3037ba34f4ec5cdc73725b4783a34b8a9c3033dad8f02f730499d78",
@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-24"
   },
   "network": {
-    "fingerprint": "26c281213cddf53a21b3a263b4b1db454131914a6dbb170d4408706bf0b87d3b",
-    "reason": "All four Arr aliases verified by paired DNS transaction; preserve app API keys and profile identities; record clean deploy, MFA recovery and pending authenticated browser acceptance",
+    "fingerprint": "dc232d606706d878ed3ff77eebcf378af5a90c0dbb0e98705ade8a844535ade6",
+    "reason": "Document verified 89-file SOPS restore, NAS virtualization removal and post-uninstall AD/SMB checks with upstream guidance",
     "reviewed_at": "2026-10-25"
   },
   "printing": {

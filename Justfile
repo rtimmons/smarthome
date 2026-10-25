@@ -74,6 +74,12 @@ checkout-prepare:
 checkout-state action="status" *args:
 	@python3 tools/checkout/state.py "$1" "${@:2}"
 
+# Capture/verify current credentials in SOPS; restore only to a new external directory.
+[group: 'backup']
+[positional-arguments]
+credentials action="verify" *args:
+	@python3 identity-infra/credentials.py "$1" "${@:2}"
+
 [group: 'test']
 checkout-test:
 	@python3 -m unittest discover -s tools/checkout -p 'test_*.py'

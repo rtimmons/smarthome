@@ -1,5 +1,14 @@
 # Secrets and state recovery
 
+The current auth rollout additionally uses
+`identity-infra/credentials.sops.json`
+for current credentials, including DreamHost, SMTP, OIDC, AD, service API keys
+and preserved SSH/CA material. It uses the external workstation recovery master,
+not this historical vault's older master. The original vault and inventory are
+unchanged. See the [current credential workflow](../../docs/operations/household-identity.md#git-tracked-sops-credential-escrow)
+and `just credentials verify`. Persistent authentication databases and OTP
+enrollment remain covered by native encrypted backups, not credential export.
+
 Current controller inputs are managed outside the checkout by the additive
 [disposable-checkout workflow](../../docs/setup/disposable-checkout.md). Its new
 age snapshot/master does not replace this historical SOPS vault or its bound

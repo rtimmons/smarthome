@@ -347,6 +347,7 @@ def main():
              'inventory':'inventory.py', 'dreamhost-key':'configure_dns_key.py', 'stage-acme':'stage_acme.py'}
     local['backup-ha'] = 'backup_ha.py'
     local['arr-gateway'] = 'arr_gateway.py'
+    local['escrow-app-keys'] = 'capture_app_keys.py'
     local['migrate-arr'] = 'migrate_arr.py'
     local['verify-authelia-backup'] = 'verify_authelia_backup.py'
     local['gmail-smtp'] = 'configure_smtp.py'
@@ -366,6 +367,10 @@ def main():
     parser.add_argument('--email', help='Approved email for first household-user creation')
     parser.add_argument('--host', help='Explicit temporary LAN address of the prepared VM')
     args=parser.parse_args()
+    if (PRIVATE/'ha-cutover.json').exists() and args.action in (
+            'vm-prepare', 'vm-repair-bootstrap', 'vm-disk', 'vm-storage-access',
+            'vm-finish-disk', 'vm-start-preparation'):
+        raise RuntimeError('NAS VM trial retired after HA cutover; do not recreate or start it')
     if args.action == 'users' and not args.email:
         parser.error('users requires --email')
     if args.email and args.action != 'users':

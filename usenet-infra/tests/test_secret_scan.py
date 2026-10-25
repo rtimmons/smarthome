@@ -42,6 +42,19 @@ def radio_envelope():
 
 
 class SecretScanTests(unittest.TestCase):
+    def test_current_credentials_require_exact_path_and_fully_encrypted_payload(self):
+        value = {'payload': encrypted(), 'sops': envelope()['sops']}
+        self.assertFalse(scanner.inspect_content(scanner.CREDENTIAL_VAULT_PATH, json.dumps(value).encode()))
+        self.assertTrue(scanner.inspect_content('other.json', json.dumps(value).encode()))
+        value['payload'] = 'plaintext'
+        self.assertTrue(scanner.inspect_content(scanner.CREDENTIAL_VAULT_PATH, json.dumps(value).encode()))
+        value['payload'] = encrypted()
+        value['extra_unencrypted'] = 'plaintext'
+        self.assertTrue(scanner.inspect_content(scanner.CREDENTIAL_VAULT_PATH, json.dumps(value).encode()))
+        plain = {'schema': 1, 'entries': {'tree/synthetic': {'content': 'c3ludGhldGlj'}}}
+        for value in (plain, {'payload': json.dumps(plain)}):
+            self.assertIn('plaintext credential recovery envelope', scanner.inspect_content('renamed.json', json.dumps(value).encode()))
+
     def test_complete_native_age_identity_detected_but_template_literals_are_not(self):
         self.assertIn('native age private identity', scanner.inspect_content('anywhere.txt', age_secret()))
         for content in (b'AGE-SECRET-KEY-1synthetic', b'$SOPS_AGE_KEY', b'AGE-SECRET-KEY-1...'):

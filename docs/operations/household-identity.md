@@ -6,6 +6,23 @@ is QNAP, Forgejo, Arr, then the remaining hosted services. Existing local
 administrators, service identities, SSH keys and application ownership remain
 available during each cutover.
 
+## How sign-in works
+
+| Request | Authentication path | Authorization boundary |
+| --- | --- | --- |
+| SMB shares | Client → QNAP domain member → Samba AD on HA | QNAP share grants for AD groups; existing local recovery grants retained |
+| Forgejo browser | Client → HTTPS Forgejo → Authelia OIDC → LDAPS AD + OTP | `git-users`, explicit link to existing `ryan` account; Forgejo keeps repository permissions |
+| Arr browser | Client → HA Caddy → Authelia forward-auth → VPN cloud gateway → app | `arr-users` + OTP on every route, then an HA-only gateway credential |
+| App-to-app calls | Existing internal routes and application API keys | Application API authorization; browser cookies are not service credentials |
+| Git SSH | Existing Forgejo SSH listener and public keys | Forgejo repository grants; OIDC does not replace SSH keys |
+
+Authelia runs on HA loopback; AD runs in a separate app network namespace.
+The directory-route app exposes the existing `.10` LAN address and waits for
+LDAPS before Authelia starts. A failure of the HA host affects both new domain
+logins and browser SSO. QNAP local recovery administration remains available.
+Neither the private directory nor browser services require inbound Internet ports.
+Public DNS supplies only ACME validation; LAN DNS supplies the service addresses.
+
 ## Names and certificate trust
 
 Keep `.home.arpa` for LAN discovery, the AD realm and existing aliases. The
@@ -39,23 +56,27 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   QNAP's native SMB maintenance uses host-wide process termination, which also
   kills containerized Samba. Migration to a kernel-isolated Virtualization
   Station VM was attempted before the HA hosting decision.
-  Virtualization Station is installed; the trial guest has one CPU, 768 MiB
+  The abandoned trial guest had one CPU, 768 MiB
   RAM and an 8 GiB virtual disk. Preparation uses DHCP and masks Samba services;
   no directory state has been copied into it. The trial has not passed the
   capacity gate: the 4 GB, two-core NAS showed sustained load around 20–27,
   paging and SSH timeouts during startup. Do not cut over on this evidence.
   HA has 32 GB RAM and approximately 27 GiB available. Moving AD there is now
-  approved. The trial VM's memory is saved and it is shut off, with autostart
-  disabled. Its disk and original keys remain intact.
+  approved. On October 24, the user approved removal of this unused trial VM,
+  its disk/folder and Virtualization Station. The VM and trial files were deleted
+  after confirming it was the only VM, powered off, with autostart disabled.
+  QNAP App Center confirmed Virtualization Station was uninstalled.
+  Remaining installer/seed images were checksum-verified against the preserved
+  originals and removed with their empty directories. QNAP domain trust, live AD
+  verification and encrypted SMB3 share/denial tests passed after uninstall.
+  Original operator and host keys remain in encrypted recovery; the HA directory
+  still uses those identities, despite their historical `vm/` filenames.
   The HA directory app now runs in its own network namespace. A
   separate routing app retains the directory's LAN address without changing
   HA's DHCP address or conflicting with AdGuard's host-wide DNS listeners.
-  An interrupted first boot created the guest administrator without installing
-  its SSH key. A separate repair seed reruns cloud-init with the original keys;
-  it preserves the first seed and refuses use after directory migration.
-  Guest disk integrity checks passed. Its dedicated SSH host and operator keys
-  are preserved in encrypted controller recovery. Never run both copies with
-  the same directory identity and address.
+  Historical repair seeds and original keys remain in controller recovery;
+  VM preparation/start commands now refuse use after HA cutover. Never run two
+  copies with the same directory identity and address.
 * The HA cutover passed: exact cold-copy file hashes, domain and every account's
   SID/GUID, password material and memberships matched. SYSVOL file hashes and
   Windows permissions matched after rebinding the inode-based ACL database.
@@ -178,7 +199,9 @@ the previously documented findings.
 Current source/index scanning passed separately. A new encrypted identity seal
 was restored into a disposable directory: all 58 files were identical, including
 the gateway credential and original CA material; the plaintext restore was removed.
-Authenticated Arr browser acceptance still requires the user's fresh MFA login.
+Authenticated Arr browser acceptance remains unverified. The user subsequently
+asked to continue without Mac interaction; this is permission to proceed, not
+evidence of a successful authenticated browser check.
 
 When restoring an older native HA backup, run `just usenet identity arr-gateway`
 after restoring the controller identity seal. This reinstalls the same gateway
@@ -205,7 +228,98 @@ provides username and group mapping; verify the deployed implementation before
 granting any catalog action through it. These are assessment findings, not
 completed migrations.
 
+## Upstream practice review — October 24, 2026
+
+The design was checked against project-maintained guidance, rather than treating
+forum examples as a security specification. This is a configuration review and
+targeted runtime validation, not a penetration test or vendor certification.
+
+| Area | Guidance and current assessment |
+| --- | --- |
+| AD and SMB | [Ubuntu's Samba AD guide](https://ubuntu.com/server/docs/how-to/samba/provision-samba-ad-controller/) separates directory and file-server roles. QNAP is the member file server; the HA Samba app is the DC. Reusing QNAP's own Samba process namespace proved unsafe and was abandoned. |
+| LDAP | [Authelia's AD integration](https://www.authelia.com/integration/ldap/activedirectory/) uses LDAPS. The deployment verifies the private CA and server name, uses a dedicated bind account and rejects cleartext binds. Password reset/change are disabled, so the bind account needs no password-write delegation. |
+| Browser proxy | [Authelia's Caddy guide](https://www.authelia.com/integration/proxies/caddy/#trusted-proxies-and-integration-security) supports native forward-auth and warns against trusting whole client subnets as proxies. Our LAN is a client allowlist, not a trusted-proxy list. Spoofed identity headers are stripped; unauthenticated API/WebSocket paths and failed auth services cannot reach Arr. |
+| Git SSO | [Authelia's Forgejo guide](https://www.authelia.com/integration/openid-connect/clients/forgejo/) supports OIDC. Existing-account linkage, a confidential client, exact callback, group policy and OTP preserve Forgejo ownership. Native Git SSH and local recovery login remain independent. |
+| Public certificates on private services | [Let's Encrypt DNS-01 guidance](https://letsencrypt.org/docs/challenge-types/#dns-01-challenge) supports wildcard certificates without publicly exposing the web servers. DNS permissions are limited to list/add/remove; renewal runs in a separate app rather than the web proxy. |
+| Git secrets | [SOPS documentation](https://getsops.io/docs/) supports age-encrypted Git files. The master stays outside Git and outside its payload; the new vault has authenticated decrypt, restore/readback, wrong-key and tamper tests. Historical ciphertext is retained. |
+
+Remaining improvements are explicit:
+
+* **Directory availability:** AD and Authelia share one HA host. A second DC on a
+  separate always-on machine would remove that single host failure for directory
+  login; a second browser identity/proxy instance would be a separate project.
+  The underpowered NAS VM is not a suitable redundancy solution. Keep off-host
+  native backups and local emergency access; a snapshot alone is not replication.
+* **DNS credential scope:** DreamHost's DNS-only key still controls DNS across
+  the account. Let's Encrypt recommends narrower credentials or challenge
+  delegation. A dedicated `_acme-challenge.home.rytim.com` zone/provider with a
+  zone-scoped token would reduce the impact of compromise. No delegation/provider
+  change was made as part of this review.
+* **Backup scheduling:** the successful identity restore drills are point-in-time
+  evidence. Do not assume that existing NAS/cloud schedules include the new HA
+  identity apps, SSL files or private controller CA. Include them explicitly in
+  a recurring off-host policy and test renewal/restore after credential changes.
+* **Emergency browser access:** legacy numeric HTTP recovery endpoints retain
+  existing authentication but do not gain browser TLS from this rollout. Use a
+  trusted management network or pinned SSH tunnel; prefer canonical HTTPS for
+  ordinary sign-in. Do not disable recovery access before testing its replacement.
+* **Acceptance and clients:** Arr's authenticated browser check is still pending.
+  Jellyfin, Plex/Seerr and HA require their native-client/authentication behavior
+  to be preserved; an indiscriminate browser redirect gate is not appropriate.
+
 ## Recovery and operations
+
+### Git-tracked SOPS credential escrow
+
+`identity-infra/credentials.sops.json` is the current, separate SOPS vault.
+It encrypts the entire payload, including paths and checksums. Its public
+recipient is in `identity-infra/.sops.yaml`; its existing private age identity is
+`~/.config/smarthome/recovery.agekey`, outside the checkout and payload.
+The historical `usenet-infra/vault/secrets.sops.json` and its older master remain
+unchanged. Keep both recovery identities in 1Password; they are not interchangeable.
+
+Coverage includes DreamHost DNS and Gmail SMTP credentials, all Authelia secrets
+and OIDC signing/client keys, AD bootstrap/user credentials, private CA and LDAP
+keys, original HA/directory/deployment/signing SSH identities, current controller
+inventory/environment inputs, existing service operator credentials and four
+live Arr/downloader API keys. Preserved ACME account/certificate keys and Forgejo
+server secrets were additionally escrowed from the independently verified native
+HA and post-link Forgejo backups. Those server exports are dated snapshots;
+refresh them from a verified backup after server-side credential rotation.
+The October 24 capture and independent filesystem restore verified 89 files
+byte-for-byte; wrong-key, modified-ciphertext and unsafe-path tests also passed.
+
+```sh
+just --no-dotenv usenet-crypto-bootstrap
+just usenet identity escrow-app-keys
+just credentials capture
+just credentials verify
+just credentials restore --destination /absolute/new-credential-restore
+```
+
+On a fresh checkout, run the bootstrap and restore commands; the app-key escrow
+command is for an already configured controller with live cloud access.
+
+Capture never rotates keys. Verification decrypts with an isolated SOPS process,
+authenticates its MAC, compares current source bytes, restores into a new private
+directory and reads every file back. Restore refuses existing destinations,
+unsafe paths, symlinks, checksum mismatches and wrong keys. The result separates
+`tree/` controller files from `pki/`; reconcile selected files into the external
+controller state and `~/.config/smarthome/pki` only after reviewing the recovery
+target. No automatic overwrite or deployment occurs. Use
+`SMARTHOME_RECOVERY_KEY` for a key retrieved independently from 1Password.
+
+After a credential change, refresh its escrow, run capture/verify, review the
+ciphertext-only diff and commit it. A `git clean` removes untracked source work,
+so the vault and helpers must be tracked. The current-source scanner accepts only
+this exact SOPS path with an encrypted payload and valid age metadata; plaintext
+or renamed copies fail its checks.
+
+SOPS protects credentials in Git. It does not make running application files
+encrypted, nor replace native database backups. AD databases/SIDs/password
+hashes, Authelia OTP enrollment, Forgejo repositories/account links and ACME
+runtime state still require their consistent native backups. The age workstation
+archive additionally preserves operational state excluded from this small vault.
 
 Controller private state is under
 `~/.local/share/smarthome/tree/build/identity-private`; CA signing material is

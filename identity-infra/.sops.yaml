@@ -1,0 +1,4 @@
+# Public recipient for the existing external workstation recovery master.
+creation_rules:
+  - path_regex: (^|.*/)credentials\.sops\.json$
+    age: age14qzv6nmphfj5dz2mr97p4gx6r7r88rgg2km4n2t6dm3kq398q4hqnl5y75
