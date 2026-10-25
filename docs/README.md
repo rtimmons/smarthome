@@ -39,9 +39,9 @@ The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built fr
 *System maintenance, verification, and strategic planning*
 
 - [**plan-dashboard-upgrade.md**](plan-dashboard-upgrade.md) — Proposed compatibility-first upgrade plan for the iPad Grid Dashboard
-- [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — Flat service shares, NAS storage/ACL inventory, writable Hetzner access and phased service/archive/FromDrobo migrations
-- [**plan-nas-access-model.md**](plan-nas-access-model.md) — Named datasets, homes, users and roles; `svc-` naming and migration; Forgejo isolation, full Hetzner access, Plex grants and HA backups
-- [**plan-nas-data-protection.md**](plan-nas-data-protection.md) — Per-share B2 schedules, complete Forgejo/application recovery, retention, encryption, restore checks and current/future RAID placement
+- [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — Flat service shares, writable Hetzner access, phased migrations, legacy-share retirement, System volume label and QNAP cleanup exceptions
+- [**plan-nas-access-model.md**](plan-nas-access-model.md) — Named datasets, homes, users and roles; `svc-` migration; Forgejo isolation, Hetzner/Plex/HA access and restricted platform roots
+- [**plan-nas-data-protection.md**](plan-nas-data-protection.md) — Per-share and QNAP-exception B2 policies, complete application recovery, retention, restore checks and current/future RAID placement
 - [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
 - [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
 - [**household-identity.md**](operations/household-identity.md) — AD, unified SMB credentials, browser SSO, certificate trust and rollout checkpoints

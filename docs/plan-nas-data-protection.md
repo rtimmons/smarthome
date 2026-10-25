@@ -15,7 +15,7 @@ according to what it contains. Share permissions are independent of these choice
 | Share | Target storage tier | B2 policy | Scope / current coverage |
 | --- | --- | --- | --- |
 | `PrivateLibrary` | Protected | Local originals | All private originals; existing HBS selection already includes the current private root |
-| `Documents` | Protected | Local originals | All classified personal/shared originals; only two selected `Public` folders are currently covered, so additional folders need explicit inclusion |
+| `Documents` | Protected | Local originals | All classified shared originals from Public/Multimedia; personal originals may use owner homes; only two selected Public folders are currently covered, so additional originals need explicit inclusion |
 | `home` (Ryan) | Protected | Local originals | Ryan's canonical personal directory under `homes`; current existence and B2 selection unverified |
 | `home` (Michael) | Protected | Local originals | Michael's canonical personal directory under `homes`; current existence and B2 selection unverified |
 | `homes` | Protected | Local originals | Back up the selected canonical user directories once; the administrative parent and per-user views are not additional copies |
@@ -58,6 +58,28 @@ old home until migration and B2 restore pass. Service-home configuration or keys
 belong in the relevant application recovery export, with plaintext kept out of backup logs.
 QTS stores enabled homes on the selected backing volume, so these user views share
 its RAID and snapshot policy. Separate B2 source selections do not alter that.
+
+### Required platform roots
+
+The [legacy-share retirement phase](plan-nas-storage-and-access.md#legacy-share-retirement-and-system-label)
+keeps a separate exception register for required QNAP roots. Their omission from
+the target dataset catalog is not a backup exclusion. Each retained data-bearing
+exception needs its owner, exact source/export, backing volume, assigned policy,
+job/credential scope and restore evidence; use the existing schedules and
+retention definitions below.
+
+| Retained object / data | Redundancy and B2 handling |
+| --- | --- |
+| Minimal `Public` root | Keep current RAID 5. No payload backup is needed only after proving it has no unique data; capture its share/ACL definition in Application recovery. Required configuration/state uses that policy; any original still required there uses Local originals. |
+| Conditional `Multimedia` exception | Keep current RAID 5. Unique originals use Local originals; required application state uses Application recovery. Rebuild applies only to explicitly proven replaceable bytes; its name does not establish disposability. |
+| Native package/required Container paths | Keep current RAID 5; supported consistent exports use Application recovery through `infrastructure-backups`. Enumerate any excluded or unsupported recovery inputs as gaps. |
+| `System` volume, formerly `Scratch` | Retain the same volume/RAID/snapshots. Relabeling does not create a B2 source or a whole-volume image backup; protect each dataset and required QTS/package recovery input through its assigned policy. |
+
+Unclassified contents block final retirement/acceptance. Preserve existing backup
+coverage while classifying them; verify protection of newly discovered originals
+before moving or pruning anything. Do not drop the existing Public selections
+until destination protection and old/new-path restore have passed. Avoid duplicate
+backups through retained aliases; capture every authoritative source once.
 
 ## Storage tiers and eventual placement
 
@@ -238,8 +260,9 @@ documented; a pure account/label rename keeps the still-required credential.
 
 ## Backup continuity during data migration
 
-The [FromDrobo migration](plan-nas-storage-and-access.md#fromdrobo-data-migration)
-and [service/archive migration](plan-nas-storage-and-access.md#service-data-and-archive-migration)
+The [FromDrobo migration](plan-nas-storage-and-access.md#fromdrobo-data-migration),
+[service/archive migration](plan-nas-storage-and-access.md#service-data-and-archive-migration)
+and [Public/Multimedia retirement](plan-nas-storage-and-access.md#legacy-share-retirement-and-system-label)
 must carry their backup source maps with them. Before a protected root changes, retain
 a recoverable checkpoint at the old location and record the exact source selection,
 exclusions, destination/catalog and encryption key reference. Keep existing B2
@@ -261,6 +284,15 @@ rename plus saved configuration and a qualified checkpoint. Reconcile post-cutov
 writes before either rollback. Record an explicit retirement decision after at
 least one normal backup/application cycle; never prune the old source or B2 history
 as an automatic cleanup step.
+
+Final cleanup reconciles the live source inventory with the new roots and every
+required QNAP exception, checks failure notifications, and records a restore-path
+translation for old archives. The `Scratch` → `System` label change must leave
+source paths, schedules, retention and snapshot identity unchanged; compare the
+job selections before/after rather than recreating jobs to match a display label.
+Recheck retained or recreated default shares after the planned restart and relevant
+QTS/package updates or restores, so new data or inherited grants cannot bypass the
+accepted access and protection policies.
 
 ## Recorded baseline and implementation gates
 

@@ -20,13 +20,14 @@ different redundancy requires different backing storage, not just different name
 The target is a flat catalog of named datasets. Application data is a category,
 not an `AppData` share; the former `BackupArchives` umbrella is replaced by
 `forgejo-backups` and `infrastructure-backups`. Existing household/media share
-names stay unchanged. New service shares use lowercase hyphenated names and are
+names in the target catalog stay stable; legacy exports follow the retirement
+policy below. New service shares use lowercase hyphenated names and are
 ordinary-user SMB-denied by default, with local service mounts and explicit ACLs.
 
 | Share | Contents / existing source | Target storage tier | B2 policy |
 | --- | --- | --- | --- |
 | `PrivateLibrary` | Private originals under `FromDrobo`; new restricted share | Protected | Local originals |
-| `Documents` | Classified originals from selected `Public` folders; ownership still to decide | Protected | Local originals |
+| `Documents` | Classified shared originals from `Public`/`Multimedia`; personal files may use owner homes; ownership still to decide | Protected | Local originals |
 | `home` (Ryan) | Ryan's personal QTS home view, backed by his directory in `homes`; enablement/location unverified | Protected | Local originals |
 | `home` (Michael) | Michael's personal QTS home view, backed by his directory in `homes`; enablement/location unverified | Protected | Local originals |
 | `homes` | Administrative parent of all personal homes; not a household-wide share | Protected | Local originals |
@@ -116,8 +117,33 @@ Native Plex, HBS and QTS package state stays at supported package locations;
 Their supported exports enter `infrastructure-backups` under Application recovery.
 Do not create a fictional `plex` share or move package internals to satisfy the
 layout. User-facing SMB exports and local container binds enforce access through
-different mechanisms. Preserve `Public`, `Multimedia`, and required `Container`
-package paths until their consumers and supported replacement paths are qualified.
+different mechanisms. Preserve required `Container` package paths; legacy
+household exports follow the explicit retirement policy below.
+
+### Legacy shares and required platform exceptions
+
+The [retirement and System-label phase](plan-nas-storage-and-access.md#legacy-share-retirement-and-system-label)
+defines the supported removal gates and QNAP evidence. These objects are outside
+the target household/service dataset catalog, but must remain visible in the
+administrative inventory and [exception protection policy](plan-nas-data-protection.md#required-platform-roots).
+
+| Object | Target access / disposition |
+| --- | --- |
+| `FromDrobo` | No remaining export or ordinary grant after its data cutover |
+| `Public` | Retire household use; retain QNAP-required root with administrative recovery and only verified native consumers; no ordinary household/media role |
+| `Multimedia` | Remove after dependency qualification, or retain only the exact required application scope; any continuing human access needs an explicit scoped policy |
+| Required package/Container paths | Existing bounded package-state roles and verified native principals; no blanket household or cross-service grant |
+| `Scratch` → `System` | Volume display alias only; creates no share, account, role or new permission |
+
+Migrate originals to owner homes, approved `Documents` scopes or `PrivateLibrary`
+according to ownership; only verified replaceable media belongs in `MediaCache`.
+Give each exception an owner, exact required principals/operations and backup
+source. Do not invent a broad platform-share access group. Review existing
+`nas-users`, `nas-multimedia-writers`, local-user and legacy `hass` grants after
+replacement access passes; retire obsolete grants without removing unrelated
+memberships or deleting a still-used group. Evaluate effective denial, including
+inherited/default grants and direct paths. Hiding a share does not establish denial;
+avoid blanket group denies that also remove administrative or native service access.
 
 ## 2. Human users
 
@@ -539,8 +565,8 @@ contents are not established by the earlier six-share inventory.
 | --- | --- | --- |
 | `FromDrobo` | Main data volume; private originals, local media, remote mount and staging mixed together | Physical data split into `PrivateLibrary`, `MediaCache`, `PlaybackCache`, `TransferStaging`; remote views relocated through a mount cutover |
 | `home` / `homes` (unverified) | Per-user views and their administrative parent, if enabled | Owner-scoped AD homes; preserve/migrate any separate local-account homes after explicit ownership mapping |
-| `Public` | System volume; mixed originals and other files | Classified `Documents` subtrees; retain compatibility meanwhile |
-| `Multimedia` | System volume; content ownership not classified | Retain existing access until classification; do not merge blindly into general media |
+| `Public` | System volume; mixed originals and other files | Classify/migrate all household data to owner homes or named datasets; retire household access; retain minimal required platform root |
+| `Multimedia` | System volume; content ownership not classified | Classify/migrate by owner and data class; remove through supported dependency workflow, or document a narrowly scoped required exception |
 | `Container` | System volume; application state | Named `forgejo`, `jellyfin`, `media-control`, `filex`, `dns`, `wiki`, remote-service and `backup-control` shares; required native package paths remain |
 | `Usenet` | Main data volume; settings archives | `forgejo-backups` and `infrastructure-backups`, plus any separately inventoried remaining contents |
 | `SpaceBlackTimeMachine` | Dedicated laptop-backup volume | Keep existing share |

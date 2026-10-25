@@ -11,8 +11,9 @@ and support for roles with full Hetzner account filesystem access**.
 already deployed.** Preserve that architecture; the original Authentik/backend
 selection proposal is superseded by the [household identity runbook](operations/household-identity.md).
 The remaining order is recovery coverage, storage authorization, runtime-service
-separation, writable remote access, named service/archive and FromDrobo data migrations, and physical pool changes
-only if justified. Most of the benefit does not require a pool rebuild. Keep
+separation, writable remote access, named service/archive and legacy-share data
+migrations, and physical pool changes only if justified. Most of the benefit does
+not require a pool rebuild. Keep
 each cutover independently reversible.
 
 The [shares, accounts and role matrices](plan-nas-access-model.md) define the
@@ -32,6 +33,10 @@ The target share catalog is flat: `forgejo`, `jellyfin`, `media-control` and oth
 named datasets replace the proposed `AppData` parent. `forgejo-backups` and
 `infrastructure-backups` replace the proposed `BackupArchives` umbrella. These
 are real share boundaries with defined service access, not just renamed subfolders.
+Retire `FromDrobo` and household use of `Public`/`Multimedia`; remove the latter
+shares only where QNAP supports it. Relabel the existing `Scratch` volume
+`System`. Required platform roots remain explicit, restricted exceptions under
+the [legacy-share retirement phase](#legacy-share-retirement-and-system-label).
 
 ## What is actually deployed
 
@@ -222,7 +227,7 @@ applications use local binds, and human Git access stays inside Forgejo.
 | Proposed share / area | Purpose | Access | Protection and placement |
 | --- | --- | --- | --- |
 | `PrivateLibrary` | Private original collection | Ryan maintains; Plex and backup services read; Michael has no private role | Protected tier; Local originals B2 policy |
-| `Documents` | Personal and shared originals, classified from Public | Named household groups | Protected tier; Local originals B2 policy |
+| `Documents` | Classified shared originals from Public/Multimedia; personal files may instead use their owner's home | Named household groups | Protected tier; Local originals B2 policy |
 | `home` (Ryan) | Ryan's personal space under QTS `homes` | `home-owner(ryan)` RW; scoped backup reader | Protected tier; Local originals B2 policy; one canonical source |
 | `home` (Michael) | Michael's personal space under QTS `homes` | `home-owner(michael)` RW; scoped backup reader | Protected tier; Local originals B2 policy; one canonical source |
 | `homes` | Administrative parent of personal home directories | Recovery administrators; backup reads selected homes; no household-wide RW | Same backing volume/tier; Local originals selection covers each home once |
@@ -292,8 +297,9 @@ The separate `Hetzner` export intentionally exposes the complete account to its
 full-account roles, including remote copies of backups. These broader grants
 override the protection afforded by narrower remote views for those members.
 
-Change permissions and labels before moving data. `Scratch` should be described
-as system/application storage; keep QTS-managed `CACHEDEV*` identifiers stable.
+Pilot permissions before moving data. Relabel `Scratch` to `System` through
+QTS's volume-alias control in a separate checkpoint; preserve the existing volume,
+QTS-managed `CACHEDEV*` identifiers, mount paths, package state and RAID layout.
 The [FromDrobo migration](#fromdrobo-data-migration) separates originals, selected
 copies, transfer staging and playback cache into independent share roots. Prefer
 same-filesystem renames, with private originals moved only after their recovery
@@ -415,7 +421,7 @@ when their share pilot is ready. Proposed additions are not current grants:
 | Group / principal | Intended rights |
 | --- | --- |
 | Existing `nas-users` | Preserve approved FromDrobo/Public/Multimedia compatibility; progressively replace broad storage grants after equivalent narrower access passes |
-| Existing `nas-timemachine`, `nas-multimedia-writers` | Preserve Ryan's Time Machine and Michael's Multimedia scope; do not repurpose these groups |
+| Existing `nas-timemachine`, `nas-multimedia-writers` | Preserve Ryan's Time Machine scope; retain Michael's Multimedia compatibility until replacement access passes, then retire obsolete grants; do not repurpose these groups |
 | Existing `git-users`, `arr-users` | Browser application access only; no implied NAS, private-media or backup rights |
 | New `private-media-readers`, `private-media-maintainers` | Ryan maintains; scoped Plex/backup access reads; Michael has no private role; never automatically nest `nas-users` |
 | New `media-readers`, `media-maintainers` | Playback reads; Ryan and Michael maintain local/general media and the separate remote-management path |
@@ -483,6 +489,7 @@ identity runbook requires. Never rotate credentials merely to reconcile this pla
 | 4. Writable remote access | Qualify AD-authorized NAS gateway; separately scoped direct route if needed; keep playback read-only and managed edits reconciled | Unmount/revoke only new writer routes; preserve existing domain and read-only playback mount |
 | 5a. Service-data and archive migration | Split owned `Container` data into named service shares; split archive outputs into `forgejo-backups` and `infrastructure-backups`; update mounts, role ACLs, capture inputs and HBS sources; retain native package paths | Restore that service/job's saved paths and permissions, reconcile writes, reverse a same-volume rename or use the retained cross-volume source; preserve backup history |
 | 5b. FromDrobo data migration | Execute the source/destination map below in small cutovers; move local data into independent share roots, relocate the remote mount, qualify homes and remove the overloaded export after acceptance | Reverse same-volume rename and saved references, or switch back to retained cross-volume source after reconciling new writes; no dual writers |
+| 5c. Legacy-share retirement and system label | Classify/migrate all Public and Multimedia contents; retire household use, remove supported unused exports, record required QNAP exceptions, and relabel Scratch to System; complete final cleanup checks | Restore affected share definitions/ACLs, supported application configuration and saved references after reconciling writes; reverse only the alias for a label regression; retain data and B2 history |
 | 6. Identity continuity and acceptance | Repeat Arr/Catalog browser and TV/native-client acceptance after changes; verify account lifecycle, HA outage recovery and recurring backup restore | Revert only the affected storage/service integration; retain current account IDs, MFA keys and domain trust |
 | 7. Optional pool redesign | Place each share on backing storage meeting its redundancy tier; verify B2 coverage, source availability and evacuation before a reduction; disk-level runbook | Rebuild has no instant rollback: retain verified external source until full restore and acceptance |
 
@@ -638,6 +645,96 @@ including the accepted new cache paths; do not rewrite immutable old snapshots.
 An old recovery snapshot must be reconciled to the accepted path map before any
 redeployment, never silently restore the previous FromDrobo layout.
 
+## Legacy-share retirement and System label
+
+Phase 5c finishes the legacy layout after destination roles and backup policies
+are qualified. It does not authorize deleting unknown files or removing an
+application merely to shorten the share list. Keep the dated baseline above;
+record the accepted new layout separately after implementation.
+
+### QNAP exceptions and final disposition
+
+QNAP's September 2026 guidance says `Public` is required and cannot be removed.
+It documents removal of `Multimedia` through the Multimedia Console dependency
+workflow, including uninstalling that application on QTS 5.0 and later. Verify
+the installed firmware and application dependencies before applying that workflow.
+[QNAP default-share removal](https://www.qnap.com/en-us/how-to/faq/article/how-can-i-remove-the-default-shared-folders-on-my-nas).
+
+| Existing object | Final disposition | Exception / completion gate |
+| --- | --- | --- |
+| `FromDrobo` | Retire the export and obsolete references after phase 5b | Every subtree/consumer accounted for; no permanent catch-all alias |
+| `Public` | Retire household storage and ordinary access; retain the minimal required platform root | Empty of household data, with only inventoried system-required contents/grants; do not force-delete or rename the default root |
+| `Multimedia` | Move classified contents and remove the unused share through supported QTS controls | First prove Multimedia Console and its dependents are unnecessary or have supported replacements; otherwise retain only the documented required scope, with ordinary access removed where possible |
+| `Scratch` volume | Rename its display alias to `System` | Same backing volume, system designation, mount paths, shares, snapshots and RAID; no `/share/System` export is implied |
+| Required native package/Container paths | Retain supported platform locations after phase 5a extracts owned service data | Enumerate actual package requirements and protection; never remove the parent wholesale |
+| `home` / `homes` | Keep the chosen owner-scoped home service | Do not disable homes as part of default-share cleanup; preserve Time Machine separately |
+
+Maintain an exception register with the exact share/path, platform or application
+requiring it, firmware/package version and supporting evidence, responsible owner,
+required principals/operations, data class, backing volume, B2 policy/source,
+restore evidence and a next-review trigger. `Public` is a documented platform
+exception; Multimedia/package consumers still need local verification. Unknown
+contents or untested access are unfinished work, not an accepted exception.
+Any required ordinary-user access must be explicitly approved and scoped; broad
+legacy grants do not become permanent merely because a root is retained.
+
+### Data cutover and retirement
+
+1. **Classify all contents and consumers.** Inventory Public/Multimedia roots,
+   hidden files, recycle bins and snapshot access privately, using existing
+   accounting first. Resolve ownership before selecting destinations: personal
+   originals to the owner's home, shared originals to approved `Documents`
+   scopes, private-library content to `PrivateLibrary`, and only proven replaceable
+   copies to `MediaCache`. Map service state/archives to their named shares.
+   If no existing dataset fits, define its owner, roles and protection before
+   adding one. Never classify by the old share's name or assume media is replaceable.
+2. **Prepare recovery and path changes.** Record every client mount, app/library
+   root, indexing source, task, HBS selection, alias and credential consumer.
+   Agree destination roles without copying broad legacy ACLs; preserve ownership
+   and retain the ACL export for deliberate reconciliation. These shares currently
+   live on the system volume, so moves to the main data volume are cross-filesystem
+   copies unless device checks prove otherwise. Apply the copy/verification,
+   writer-pause and rollback gates above. Protect unique data before relocation;
+   the two existing Public backup selections do not cover every original.
+3. **Cut over and prove recovery.** Move one classified subtree at a time, update
+   consumers and backup selections, then verify household/application behavior,
+   private-data denial and a normal backup cycle with old/new-path restores.
+   Preserve existing IDs and source history. Retain frozen old sources/checkpoints
+   through acceptance, reconcile new writes before rollback and avoid dual writers.
+4. **Retire ordinary access and supported exports.** Remove obsolete local/domain
+   grants, mounts, bookmarks, aliases and application defaults after their replacements
+   pass. In particular, review `nas-users`, `nas-multimedia-writers` and local
+   compatibility grants; do not delete groups with other consumers. Remove an
+   unused Multimedia export only after its supported dependency gate passes.
+   Preserve Public's required root and any verified native principals. Use QTS
+   controls, not manual deletion of share symlinks or configuration entries.
+   Do not combine share removal with a delete-underlying-data option; source-data
+   disposal gets a separate recorded acceptance after recovery/rollback gates.
+5. **Restrict required remnants.** Remove ordinary access as qualified and hide
+   retained platform-only shares from browsing where supported. Test direct-path
+   SMB, File Station and other enabled protocols; hiding is not an access control.
+   Use the exception register for any retained app/data dependency and verify it
+   still works. Preserve administrative recovery without blanket deny rules that
+   also block required system principals. Check that updates/restores do not
+   recreate broad defaults or make retired shares active again.
+
+### Relabel the system volume
+
+Record the existing alias, volume ID/UUID, system designation, device/mount paths,
+share bindings, snapshot schedules and package locations. Confirm `System` does
+not conflict with another volume alias. Use **Storage & Snapshots → select the
+volume → Manage → Actions → Rename Volume Alias**, after verifying the control
+on the installed release. QNAP documents this control for firmware 4.4.3; verify
+its current presentation rather than relying on that older UI screenshot.
+[QNAP volume-alias procedure](https://www.qnap.com/en-us/how-to/faq/article/how-do-i-rename-the-volume-alias).
+
+Change only `Scratch` to `System`, then compare the saved identifiers, bindings
+and schedules and check affected applications/backups. Update active inventory,
+monitoring labels and recovery mapping without rewriting dated evidence. A label
+regression rolls back by restoring `Scratch`; never recreate, move or format the
+system volume to rename it. If the supported control is unavailable, leave the
+volume intact and record the relabel as blocked pending a supported method.
+
 ## Preflight and acceptance checklist
 
 Checked items identify either the dated storage investigation, the documented
@@ -714,6 +811,17 @@ later changes.
 - [ ] Confirm HBS still selects the exact intended sources after every share/path change; exclude remote mounts, caches and staging; preserve existing B2 history. Check incremental behavior before allowing an unexpected full re-upload.
 - [ ] Perform a controlled restart/reboot and outage test only in its maintenance phase, then verify all mounts, credentials, service dependencies and backup schedules. A healthy container alone is insufficient.
 - [ ] Record acceptance and rollback evidence without media names/IDs in Git. Update canonical runbooks, inventory and recovery supplements; keep original bound snapshots immutable.
+
+### Final cleanup and exceptions
+
+- [ ] Reconcile every legacy subtree with an accepted destination or verified QNAP exception; no unclassified Public/Multimedia/FromDrobo contents remain. Personal/shared/private ownership and protection are explicit.
+- [ ] Confirm FromDrobo is retired; Public has no household data/use and only required platform scope; Multimedia is removed or has an evidenced, narrowly scoped dependency exception. Check all exports, direct paths, aliases and local mounts.
+- [ ] Confirm the former Scratch volume displays System with unchanged volume identity, system designation, backing RAID, mount paths, package locations and snapshot/backup schedules. Record any unsupported relabel as unresolved, not completed.
+- [ ] Remove obsolete share grants and client/application defaults after replacement access passes; verify both local and domain users, guest denial, required service access and admin recovery. Retained platform-only shares must not grant household access merely through a broad group.
+- [ ] Verify B2 covers every migrated original and required exception dataset at its new canonical source; prove historical/new restores and notifications. Retain old B2 history and checkpoints; do not treat a share disappearing as authorization to purge its data.
+- [ ] Reconcile live/durable deployment, monitoring and recovery inputs against the final paths. Historical docs and immutable snapshots may retain old names only with an explicit restore mapping; no active consumer may silently recreate the old catch-all layout.
+- [ ] Record each retained QNAP exception's owner, evidence, principals, backup policy and next-review trigger. During the planned restart test and after relevant QTS/app updates or restores, recheck share creation, permissions, mounts, applications and backup selection.
+- [ ] Record final acceptance and separate source-data disposal decisions. The final catalog consists of the named datasets plus documented platform exceptions; backing-volume deletion and lower-redundancy redesign remain separate work.
 
 ## Decisions to settle before implementation
 
