@@ -60,6 +60,8 @@ function resolveBaseUrl() {
   }
   const port = clientConfig.port || 4100;
   const { protocol, hostname } = window.location;
+  // Shared links retain the LAN entry point used by QR codes and native clients.
+  if (hostname === "tinyurl.home.rytim.com") return "http://tinyurl.home.arpa";
   return `${protocol}//${hostname}:${port}`;
 }
 

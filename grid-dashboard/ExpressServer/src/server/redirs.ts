@@ -18,8 +18,8 @@ export const redirs = Router();
 
 const urls: { [key: string]: (req: RQ, res: RS) => string } = {
     // 1 is up
-    '1up': (req: RQ) => `http://${req.headers.host}/up`,
-    '1down': (req: RQ) => `http://${req.headers.host}/down`,
+    '1up': () => `http://127.0.0.1:${cfg.port}/up`,
+    '1down': () => `http://127.0.0.1:${cfg.port}/down`,
     '1left': () => `${cfg.sonosUrl}/Bedroom/favorite/Play%20NPR%20One`,
     '1right': () => `${cfg.sonosUrl}/Bedroom/favorite/Zero%207%20Radio`,
     // 2 is right

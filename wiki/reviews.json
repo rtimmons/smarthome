@@ -5,9 +5,9 @@
     "reviewed_at": "2026-10-22"
   },
   "dashboard": {
-    "fingerprint": "2a344a02157cb0adacdf229a9f01477d7aafb2bea0798518fe82fb864bc283b9",
-    "reason": "Documented the explicit LAN HTTP dashboard URL and retained direct port-3000 and HA ingress recovery paths",
-    "reviewed_at": "2026-10-24"
+    "fingerprint": "39e7b20baec122e3d3efbd3fc69811da41e6d412aa4f9ab5218e18c34b219f80",
+    "reason": "Reviewed HTTPS printer navigation and loopback self calls; preserved kiosk and lighting contracts",
+    "reviewed_at": "2026-10-25"
   },
   "home": {
     "fingerprint": "3fcfd96708cb626ecda63f8af4ef6a67a13c9298867b55b2b39b64681faa4aaf",
@@ -35,18 +35,18 @@
     "reviewed_at": "2026-10-25"
   },
   "network": {
-    "fingerprint": "1308bcd041ad8963635984544678ada518893533789d03a81d42a3ea14ddd21f",
-    "reason": "Explicitly document standalone LAN endpoints outside Authelia and preserve kiosk/API compatibility boundaries",
+    "fingerprint": "efffe458044a806d15c85b260300da1aba70445cc23e436e9cb0de9cc7389bba",
+    "reason": "Reviewed standalone owner-only MFA gates, SOPS recovery, four verified DNS aliases and retained native client paths",
     "reviewed_at": "2026-10-25"
   },
   "printing": {
-    "fingerprint": "3614ace3dd4e9e36021dee7b3a16e555cb4b2b7351eb570982dc4f5076ea230e",
-    "reason": "Verified snapshot and receipt routes and printer instructions; replaced proposed snapshot features with implemented behavior and corrected Python and TypeScript source watches.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "71c6c1a0e24aee92ba8f3e5b4474f6cbfaa5c032eee997b6ba51cbfd1ab2f088",
+    "reason": "Reviewed protected printer browser entrance and unchanged LAN QR and HA REST clients",
+    "reviewed_at": "2026-10-25"
   },
   "utilities": {
-    "fingerprint": "685a67e7b4a40d6422dc10ca66bee15d947a547dd61fed6cd14adae06c547281",
-    "reason": "Checked MongoDB entrypoint, image pin and host port declaration; corrected data path and isolation claims and retained TinyURL database recovery guidance.",
-    "reviewed_at": "2026-10-16"
+    "fingerprint": "2c7a75f14e4f0a0b4b27e6b579ee149bd331d60e1fcdb1b4e9a6207e7d463c0c",
+    "reason": "Reviewed protected TinyURL management and preserved generated LAN links and explicit base override",
+    "reviewed_at": "2026-10-25"
   }
 }

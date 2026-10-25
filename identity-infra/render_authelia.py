@@ -81,6 +81,9 @@ def main():
             },
         },
         'access_control': {'default_policy': 'deny', 'rules': [
+            {'domain': ['grid-dashboard.home.rytim.com', 'printer.home.rytim.com',
+                        'tinyurl.home.rytim.com', 'wiki.home.rytim.com'],
+             'subject': 'user:ryantimmons', 'policy': 'two_factor'},
             {'domain': ['radarr.home.rytim.com','sonarr.home.rytim.com','prowlarr.home.rytim.com','sabnzbd.home.rytim.com'],
              'subject': 'group:arr-users', 'policy': 'two_factor'},
         ]},

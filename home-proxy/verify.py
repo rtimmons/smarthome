@@ -50,11 +50,13 @@ def main():
         print(f'{"PASS" if ok else "FAIL"} {host}{path} status={status} expected={expected}', flush=True)
         if not ok:
             failed.append(host + path)
-    for name in ARR:
+    for name in (*ARR, 'grid-dashboard', 'printer', 'tinyurl', 'wiki'):
         old = name+'.home.arpa'
         host = name+'.home.rytim.com'
         for scheme, domain, path, expected in (('http',old,'/',308),
                 ('https',host,'/',302),('https',host,'/api/v1/system/status?apikey=synthetic',302)):
+            if name not in ARR and scheme == 'http':
+                continue  # Legacy LAN/kiosk entrances intentionally remain unchanged.
             port = '443' if scheme=='https' else '80'
             command = ['curl','--noproxy','*','--silent','--show-error','--max-time','20',
                        '--output','/dev/null','--write-out','%{json}']

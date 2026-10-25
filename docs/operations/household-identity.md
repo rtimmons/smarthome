@@ -324,7 +324,7 @@ Never recreate Ryan's profile to resolve a login failure.
 | Jellyfin / Moonfin | Jellyfin 12.3.0 with official LDAP-Auth 24.0.0.0, verified LDAPS and the existing `ryan` profile | Shared AD password on native clients; no browser redirect gate or Authelia MFA on the playback API. Local recovery administration is separate. |
 | Plex and Seerr | Native Plex login plus the explicitly approved dedicated Moonfin request account | Preserve those client and API flows; do not put browser redirects in front of native playback or the request integration. |
 | HA administration and community add-ons | Existing HA authentication and ingress | Keep HA ingress as the authenticated boundary pending a separate supported integration. |
-| Standalone LAN tools: grid dashboard, printer, tinyurl and wiki | Their existing LAN HTTP interfaces remain outside Authelia | Inventory kiosk and machine callers before requiring browser MFA; HA ingress does not protect these direct endpoints. |
+| Standalone LAN tools: grid dashboard, printer, tinyurl and wiki | New HTTPS browser entrances use Authelia MFA, restricted to `ryantimmons` | Existing LAN HTTP, direct ports and HA ingress remain for kiosks and native clients. These are explicit ungated compatibility paths, not universal SSO enforcement. |
 
 The [QTS domain-security guide](https://docs.qnap.com/operating-system/qts/5.2.x/en-us/domain-security-5933D0DB.html)
 supports directory accounts for NAS access. This does not turn QTS administration
@@ -342,6 +342,49 @@ OIDC provider. Keep Plex/Seerr's native account and the approved Moonfin request
 integration. Full universal browser SSO would require unsupported integration or
 replacing those services. API keys, SSH keys, emergency accounts and device/kiosk
 sessions also remain distinct from browser cookies.
+
+## Standalone browser entrances
+
+Use `https://grid-dashboard.home.rytim.com`, `https://printer.home.rytim.com`,
+`https://tinyurl.home.rytim.com` and `https://wiki.home.rytim.com` for browser access.
+Each exact alias resolves privately to the HA proxy. The existing public wildcard
+certificate covers them without installing a root CA. Every path on these origins,
+including API paths, requires Ryan's Authelia MFA session. Other household users
+have no new grants. Incoming credentials and identity headers are stripped before
+forward authentication; unavailable SSO fails closed.
+
+The old `.home.arpa` names, direct service ports and HA ingress stay available.
+They remain a LAN trust boundary: knowing a direct address still bypasses this
+browser gate. Do not describe this rollout as network-wide enforcement. Kiosk
+segmentation and per-client credentials would be separate work before closing those
+paths. The HA printer REST command on localhost and existing QR links are unchanged.
+The HTTPS dashboard links to the HTTPS printer; the printer proxy retains its LAN
+Host when generating QR URLs. TinyURL management uses HTTPS, but copied short links
+still use `http://tinyurl.home.arpa` unless an explicit public base URL is configured.
+The dashboard's server-side self calls use loopback rather than the browser Host.
+
+DNS `set-record` accepts repeated `--name` options with one `--address`. All aliases
+are validated and applied in one existing paired-resolver transaction, preserving
+learned discovery records, pending-generation recovery and rollback. Only discovery
+is paused during verification; the DNS resolvers stay running.
+
+### HA and Plex/Seerr support assessment
+
+The official HA providers above do not include OIDC. Community custom providers
+exist, but introducing one requires version compatibility, owner-account linkage,
+mobile refresh-token and recovery testing. Keep native HA authentication and ingress;
+do not use `trusted_networks` as a substitute for SSO or gate its native API with
+browser redirects. No HA Core authentication settings changed in this rollout.
+
+[Seerr's stable user settings](https://docs.seerr.dev/using-seerr/settings/users/)
+document local and media-server authentication. The configured deployment is pinned
+to v3.4.1. Its [native OIDC implementation](https://github.com/seerr-team/seerr/pull/2715)
+is still an open PR at this review, with a separate preview build. An integration
+guide or preview image does not establish stable support. Preserve Plex login,
+existing Seerr user IDs, API keys and the approved Moonfin local request account.
+Reassess native OIDC after a supported release, with a settings/database backup and
+account-linking trial. Plex's Google/Apple federation does not accept Authelia as a
+custom provider. Neither Plex nor Seerr was restarted or reconfigured for this review.
 
 ## Upstream practice review — October 24, 2026
 

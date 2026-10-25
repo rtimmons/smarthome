@@ -1,7 +1,7 @@
 """Explicit manual aliases without replacing the scanner's learned inventory.
 
 Executed on the NAS with the existing scanner image, while its worker is stopped.
-Only the exact requested record is changed; credentials stay in its private mount.
+Only the exact requested records are changed; credentials stay in its private mount.
 """
 import copy
 import fcntl
@@ -30,10 +30,19 @@ def with_record(policy, name, address):
     return result
 
 
+def with_records(policy, names, address):
+    if not names or len(set(names)) != len(names):
+        raise ValueError('Expected distinct explicit aliases')
+    candidate = policy
+    for name in names:
+        candidate = with_record(candidate, name, address)
+    return candidate
+
+
 def main():
     from automatic import STATE, clients, verify
     from reconciler import atomic_json, converge
-    name, address = sys.argv[1:]
+    names, address = sys.argv[1:-1], sys.argv[-1]
     with (STATE / 'worker.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         previous = json.loads((STATE / 'policy.json').read_text())
@@ -43,7 +52,7 @@ def main():
             # and DNS verification. Never discard a journal to permit a write.
             converge(apis, previous, previous, STATE, verify)
             previous = json.loads((STATE / 'policy.json').read_text())
-        candidate = with_record(previous, name, address)
+        candidate = with_records(previous, names, address)
         atomic_json(STATE / ('manual-before-' + str(time.time_ns()) + '.json'), previous)
         accepted, changed = converge(apis, previous, candidate, STATE, verify)
         print(json.dumps({'ok': True, 'changed': changed, 'records': len(accepted['records'])}))

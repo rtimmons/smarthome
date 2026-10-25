@@ -58,7 +58,11 @@
     "prowlarr.home.rytim.com": "192.168.1.163",
     "sabnzbd.home.rytim.com": "192.168.1.163",
     "catalog.home.rytim.com": "192.168.1.163",
-    "jellyfin.home.rytim.com": "192.168.1.163"
+    "jellyfin.home.rytim.com": "192.168.1.163",
+    "grid-dashboard.home.rytim.com": "192.168.1.163",
+    "printer.home.rytim.com": "192.168.1.163",
+    "tinyurl.home.rytim.com": "192.168.1.163",
+    "wiki.home.rytim.com": "192.168.1.163"
   },
   "resolvers": [
     "192.168.1.163",
@@ -216,7 +220,15 @@
     "@@|catalog.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
     "|catalog.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
     "@@|jellyfin.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
-    "|jellyfin.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163"
+    "|jellyfin.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|grid-dashboard.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|grid-dashboard.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|printer.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|printer.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|tinyurl.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|tinyurl.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|wiki.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
+    "|wiki.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163"
   ],
   "mdns_records": {
     "001788613749.home.arpa": {

@@ -1,5 +1,11 @@
 # Web service hostnames
 
+Browser additions: `grid-dashboard`, `printer`, `tinyurl` and `wiki` beneath
+`home.rytim.com` use HTTPS and Ryan-only Authelia MFA through the HA proxy.
+Their `.home.arpa` names and direct ports below retain compatibility access.
+See [household identity](household-identity.md#standalone-browser-entrances) for
+client exceptions and supported HA/Plex/Seerr integration limits.
+
 Deployed October 24, 2026, Newark LAN. Direct host-and-port access remains
 available. The web proxy binds `192.168.1.163:80` and `:443` and permits only
 `192.168.1.0/24` clients. No WAN forwarding or wildcard DNS was added.
@@ -21,7 +27,7 @@ NAS address and isolated static server. `hass.home.arpa` remains the host alias.
 | `sonarr.home.rytim.com` | `http://10.77.0.1:19696` | Root redirect to `/sonarr/`; preserve that prefix; reject paths outside it | Active cloud Sonarr healthy; public TLS and anonymous SSO redirect verified |
 | `prowlarr.home.rytim.com` | `http://10.77.0.1:19696` | Preserve paths, but deny the sibling `/radarr` and `/sonarr` routes on this hostname | Cloud container healthy; public TLS and anonymous SSO redirect verified |
 | `sabnzbd.home.rytim.com` | `http://10.77.0.1:18080` | Existing authenticated private proxy | Cloud container healthy; public TLS and anonymous SSO redirect verified |
-| `catalog.home.arpa` | `http://192.168.1.66:1337` | NAS selective-copy dashboard; preserve paths and authentication | NAS container healthy; HTTP 200 |
+| `catalog.home.rytim.com` | `http://192.168.1.66:1337` | Owner-only Authelia MFA and native OAuth; old HTTP name redirects | Anonymous SSO redirect verified; human OAuth acceptance pending |
 | `printer.home.arpa` | `http://hass.home.arpa:8099` | Preserve `/bb` entry redirect and all service paths | HA add-on started; root returned 302 to `/bb` |
 | `tinyurl.home.arpa` | `http://hass.home.arpa:4100` | Preserve UI and short-link paths | HA add-on started; HTTP 200 |
 

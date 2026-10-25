@@ -243,3 +243,69 @@ https://jellyfin.home.rytim.com {
 		reverse_proxy http://192.168.1.66:8096
 	}
 }
+
+# Browser-only entrances; legacy LAN and ingress paths remain for kiosks/clients.
+
+https://grid-dashboard.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			reverse_proxy http://hass.home.arpa:3000
+		}
+	}
+}
+
+https://printer.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			reverse_proxy http://hass.home.arpa:8099 {
+				header_up Host printer.home.arpa
+			}
+		}
+	}
+}
+
+https://tinyurl.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			reverse_proxy http://hass.home.arpa:4100
+		}
+	}
+}
+
+https://wiki.home.rytim.com {
+	bind 192.168.1.163
+	tls /ssl/smarthome/acme/current/fullchain.pem /ssl/smarthome/acme/current/key.pem
+	@outside not remote_ip 192.168.1.0/24
+	handle @outside {
+		respond "LAN access only" 403
+	}
+	handle {
+		route {
+			import arr_gate
+			reverse_proxy http://192.168.1.66:80 {
+				header_up Host wiki.home.arpa
+			}
+		}
+	}
+}

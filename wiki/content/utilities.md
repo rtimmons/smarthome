@@ -1,5 +1,7 @@
 # Utility services
 
+Use [TinyURL management](https://tinyurl.home.rytim.com/) with Ryan’s Authelia MFA. Copied links retain the LAN destination for native clients; legacy HTTP management and direct ports remain accessible on the LAN.
+
 ## TinyURL and MongoDB
 
 `tinyurl-service` maps short links to their destinations. MongoDB stores persistent mappings; it is a dependency, not a user-facing website. An HTTP service restart cannot recover missing database data.

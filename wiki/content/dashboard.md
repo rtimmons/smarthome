@@ -1,5 +1,7 @@
 # Dashboard and controls
 
+Use [the HTTPS dashboard](https://grid-dashboard.home.rytim.com/) for browser access with Ryan’s Authelia MFA. Existing LAN URLs and HA ingress remain for kiosks. Printer shortcuts from this HTTPS page use the protected printer entrance.
+
 The [room and device catalog](wiki-reference:rooms) shows physical areas, Sonos players, lighting families and temperature sources together. See [Rooms and device locations](rooms.md) to confirm assignments and understand cross-room presets.
 
 The Grid Dashboard is the household interface for room lighting, Sonos shortcuts, and the LED Grid Wall. Open it from Home Assistant’s sidebar so Home Assistant manages the session.

@@ -15,6 +15,9 @@ class PrinterController {
     _buildPresetUrl(slug) {
         // Uses the printer add-on preset URL scheme to trigger countdown prints and auto-return.
         const location = this.app.window.location;
+        if (location.hostname === 'grid-dashboard.home.rytim.com') {
+            return 'https://printer.home.rytim.com/p/' + encodeURIComponent(slug) + '?print=true';
+        }
         const protocol = location.protocol || 'http:';
         const hostname = location.hostname;
         return (

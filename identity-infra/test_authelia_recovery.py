@@ -55,6 +55,12 @@ class AutheliaRecovery(unittest.TestCase):
                 render_authelia.main()
                 target = private/'authelia-seed/configuration.json'
                 initial = json.loads(target.read_text())
+                browser_rule = initial['access_control']['rules'][0]
+                self.assertEqual(browser_rule['subject'], 'user:ryantimmons')
+                self.assertEqual(browser_rule['policy'], 'two_factor')
+                self.assertEqual(set(browser_rule['domain']), {name + '.home.rytim.com'
+                    for name in ('grid-dashboard', 'printer', 'tinyurl', 'wiki')})
+                self.assertEqual(initial['access_control']['default_policy'], 'deny')
                 smtp_path = secrets/'gmail-smtp.json'
                 smtp_path.write_text(json.dumps({'username': 'fixture@gmail.com', 'password': 'synthetic fixture'}))
                 render_authelia.main()

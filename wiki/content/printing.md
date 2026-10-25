@@ -1,5 +1,7 @@
 # Printing labels
 
+Use [the HTTPS printer](https://printer.home.rytim.com/) for browser access with Ryan’s Authelia MFA. Existing LAN QR links, HA print commands and ingress remain unchanged. Do not use print-triggering URLs as health checks.
+
 The printer service renders and sends labels to the Brother QL-810W. Its reserved address is `192.168.1.192`, using raw printing on TCP port 9100. The printer belongs to the trusted network; the restricted print-client network is for request clients, not the printer itself.
 
 ## Daily use

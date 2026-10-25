@@ -1,7 +1,7 @@
 """Manual aliases retain runtime discovery ownership and local containment."""
 import unittest
 from discovery import reconcile, rules, GRACE
-from manual import with_record
+from manual import with_record, with_records
 
 
 class ManualTests(unittest.TestCase):
@@ -27,6 +27,21 @@ class ManualTests(unittest.TestCase):
                               ('service.home.arpa', '192.168.1.255')]:
             with self.subTest(name=name, address=address), self.assertRaises(ValueError):
                 with_record(self.policy, name, address)
+
+    def test_batch_preserves_inventory_and_is_atomic_on_invalid_alias(self):
+        import copy
+        before = copy.deepcopy(self.policy)
+        names = ['first.home.rytim.com', 'second.home.rytim.com']
+        result = with_records(self.policy, names, '192.168.1.163')
+        for name in names:
+            self.assertEqual(result['records'][name], '192.168.1.163')
+        self.assertEqual(result['mdns_records'], before['mdns_records'])
+        with self.assertRaises(ValueError):
+            with_records(self.policy, names + ['*.home.arpa'], '192.168.1.163')
+        self.assertEqual(self.policy, before)
+        for invalid in ([], names + names):
+            with self.assertRaises(ValueError):
+                with_records(self.policy, invalid, '192.168.1.163')
 
     def test_refuses_unreviewed_custom_rules(self):
         self.policy['user_rules'].append('||fixture.example^')
@@ -54,12 +69,13 @@ class ManualTests(unittest.TestCase):
             fake = SimpleNamespace(STATE=state, clients=lambda: apis,
                                    verify=lambda candidate, previous: verified.append(copy.deepcopy(candidate)))
             with patch.dict(sys.modules, {'automatic': fake}), patch.object(sys, 'argv',
-                    ['manual.py', 'service.home.arpa', '192.168.1.163']):
+                    ['manual.py', 'service.home.arpa', 'browser.home.rytim.com', '192.168.1.163']):
                 main()
             accepted = json.loads((state / 'policy.json').read_text())
             self.assertEqual(len(verified), 2)
             self.assertNotIn('service.home.arpa', verified[0]['records'])
             self.assertEqual(accepted['records']['prior-service.home.arpa'], '192.168.1.91')
             self.assertEqual(accepted['records']['service.home.arpa'], '192.168.1.163')
+            self.assertEqual(accepted['records']['browser.home.rytim.com'], '192.168.1.163')
             self.assertEqual(accepted['mdns_records'], self.policy['mdns_records'])
             self.assertFalse((state / 'pending.json').exists())

@@ -373,10 +373,11 @@ auto_compose up -d --wait --wait-timeout 420 scanner
 
 def set_record(name, address):
     """Pause only discovery, transact against live inventory, and resume it."""
-    from manual import with_record
+    from manual import with_records
     if not POLICY.get('automatic_discovery'):
         raise ValueError('set-record requires the existing NAS automatic owner')
-    candidate_seed = with_record(POLICY, name, address)
+    names = [name] if isinstance(name, str) else name
+    candidate_seed = with_records(POLICY, names, address)
     transcript = PRIVATE / ('dns-manual-' + str(time.time_ns()) + '.log')
     # The trap resumes discovery on failures too. The existing reconciler keeps
     # a durable recovery journal if a paired write cannot be rolled back.
@@ -389,7 +390,7 @@ trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
 auto_compose stop -t 10 scanner
 auto_compose run --rm -T --no-deps scanner python - NAME ADDRESS
-'''.replace('NAME ADDRESS', shlex.quote(name) + ' ' + shlex.quote(address))
+'''.replace('NAME ADDRESS', ' '.join(shlex.quote(item) for item in [*names, address]))
     print('Manual DNS transaction log: ' + str(transcript.relative_to(ROOT)), flush=True)
     remote(script, (HERE / 'manual.py').read_bytes(), transcript=transcript)
     # Retain only the explicit seed edit locally, never replay the old seed over
@@ -435,7 +436,7 @@ auto_compose run --rm -T --no-deps scanner python -
 def main():
     global POLICY
     p = argparse.ArgumentParser(); p.add_argument('action', choices=['deploy', 'check', 'rollback-primary', 'discover', 'auto-deploy', 'auto-status', 'auto-stop', 'set-record', 'delegate-ad'])
-    p.add_argument('--name', help='Exact manual home.arpa or home.rytim.com alias for set-record')
+    p.add_argument('--name', action='append', help='Exact manual home.arpa or home.rytim.com alias for set-record')
     p.add_argument('--address', help='Newark LAN IPv4 address for set-record')
     p.add_argument('--apply', action='store_true', help='Deploy discovered records; otherwise preview only')
     p.add_argument('--snapshot', type=Path)

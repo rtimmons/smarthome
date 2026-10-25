@@ -1,5 +1,7 @@
 # Network and local names
 
+The [HTTPS wiki](https://wiki.home.rytim.com/) uses Ryan’s Authelia MFA. The HTTP entrances below remain available for LAN compatibility and recovery. These retained paths mean browser SSO is not universal network enforcement.
+
 The Cloud Gateway Max at `192.168.1.1` provides routing and UniFi management.
 The USG and Cloud Key are retired and disconnected; their configurations and
 encrypted backups remain available for rollback.
