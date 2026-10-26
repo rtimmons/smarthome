@@ -10,6 +10,7 @@ route. Filex additionally needs a tunnel running on the computer opening it.
 | --- | --- | --- |
 | [Seerr](http://seerr.home.arpa/) | Browse and request movies or TV | **Sign in with Plex**, using the existing owner account. The dedicated Moonfin local login is also enabled; automatic registration remains disabled. Seerr does not yet use Authelia OIDC. |
 | [Plex](http://plex.home.arpa/web/) | Watch the NAS and Remote libraries | Your existing **Plex account**. For ordinary household viewing, select the **Movies & TV** profile after signing in; its profile/PIN choice is separate from the account login. |
+| [Plex on Home Assistant](http://homeassistant.local:32400/web/) | Watch **Movies (hass) (Remote)** and **TV Shows (hass) (Remote)** on the established HA server | The same **Plex account** and **Movies & TV** managed profile. |
 | [Jellyfin](https://jellyfin.home.rytim.com/) | Watch the general libraries alongside Plex | **Household AD password**, with `ryantimmons` or the existing `ryan` alias. This preserves Ryan's existing profile; it is not Authelia browser MFA. |
 | [Moonfin](https://jellyfin.home.rytim.com/Moonfin/Web/) | Jellyfin playback and integrated Seerr requests | Use the same **AD-backed Jellyfin login**. Its separate request session is configured server-side; Roku app setup remains a user step. See the [Moonfin runbook](../../../usenet-infra/docs/jellyfin-trial.md#moonfin-requests). |
 | [NAS copies / catalog dashboard](https://catalog.home.rytim.com/) | Select local copies and follow transfers | **Authelia MFA**, then Catalog's native OAuth sign-in using the same household identity. Only Ryan's mapped identity receives operator actions. The local catalog login is retained for recovery. |
@@ -19,6 +20,11 @@ route. Filex additionally needs a tunnel running on the computer opening it.
 | [Sonarr](https://sonarr.home.rytim.com/sonarr/) | TV series, episodes and import history | **Authelia sign-in and MFA** at the proxy. Native API clients keep their existing API keys. |
 | [Filex](http://127.0.0.1:15213/) | Browse staging files and perform reviewed file operations | The saved **Filex operator account**, not its bootstrap administrator. First run `just usenet-filex-ui` from the repository root and leave it running. The link works only on that computer. |
 | [QNAP administration](http://192.168.1.66:8080/cgi-bin/) | NAS settings and maintenance | The existing **local QTS administrator** for maintenance and recovery. QTS is not behind Authelia; AD-backed SMB share access is separate from the administration login. |
+
+HA Plex is an ongoing household service. The NAS libraries remain available;
+their possible future retirement includes analysis, Jellyfin/Moonfin migration
+and service-address updates described in the
+[HA Plex runbook](../../../docs/operations/plex-secondary.md#possible-future-nas-retirement).
 
 The protected browser entrances use publicly trusted HTTPS and the household
 [Authelia portal](https://auth.home.rytim.com/). The older numeric cloud entrances

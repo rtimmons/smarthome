@@ -1,5 +1,12 @@
 # NAS and Plex layout
 
+Plex also runs as an established household server on Home Assistant with
+`Movies (hass) (Remote)` and `TV Shows (hass) (Remote)`. The NAS libraries below
+remain active. Possible future retirement of the general NAS libraries must
+include HA analysis, Jellyfin/Moonfin migration, service-address updates and
+preservation of the NAS media path; see the
+[HA Plex transition notes](../../docs/operations/plex-secondary.md#possible-future-nas-retirement).
+
 The existing `FromDrobo` share remains at `/share/CACHEDEV2_DATA/FromDrobo` on
 the 4 TiB data volume. Application state is `/share/Container/usenet`. Preserve
 `qnap_data_root: /share/FromDrobo` and `qnap_catalog_cache_dir: /share/FromDrobo/Movies`

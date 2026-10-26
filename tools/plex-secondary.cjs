@@ -19,6 +19,7 @@ const SETTINGS = {
   TranscoderQuality: 0, TranscoderThrottleBuffer: 60,
   autoEmptyTrash: 0, allowMediaDeletion: 0,
   PublishServerOnPlexOnlineKey: 0,
+  LanNetworksBandwidth: '192.168.1.0/255.255.255.0',
   customConnections: 'http://192.168.1.163:32400,http://homeassistant.local:32400',
   GenerateBIFBehavior: 'never', GenerateIntroMarkerBehavior: 'never',
   GenerateCreditsMarkerBehavior: 'never', GenerateAdMarkerBehavior: 'never',

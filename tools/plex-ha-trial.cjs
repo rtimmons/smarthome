@@ -21,6 +21,9 @@ function summary(values) {
 async function hostSample() {
   const command = 'cat /proc/loadavg; head -3 /proc/pressure/cpu; '
     + 'grep -E "MemAvailable:|SwapFree:" /proc/meminfo; '
+    + 'for f in /sys/devices/system/cpu/cpu*/cpufreq/scaling_cur_freq '
+    + '/sys/class/hwmon/hwmon*/name /sys/class/hwmon/hwmon*/temp*_input; do '
+    + 'if [ -r "$f" ]; then printf "%s: %s\\n" "$f" "$(cat "$f")"; fi; done; '
     + 'ha --raw-json core stats; ha --raw-json apps stats core_zwave_js; '
     + 'ha --raw-json apps stats a0d7b954_plex';
   const { stdout } = await exec('ssh', [...client.getSshOptions(), options.host, command],

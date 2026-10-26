@@ -1,5 +1,12 @@
 # Jellyfin NAS trial
 
+Jellyfin/Moonfin still run on the NAS. If the NAS-hosted general Plex libraries
+are retired in the future, move Jellyfin/Moonfin to HA as part of that transition
+and update DNS/proxy destinations and saved clients as appropriate. Preserve
+AD login and Seerr linkage. See the
+[HA Plex transition notes](../../docs/operations/plex-secondary.md#possible-future-nas-retirement);
+that plan does not change today's hosting or addresses.
+
 Jellyfin runs alongside Plex. Open `https://jellyfin.home.rytim.com/` and use
 `ryantimmons` (or the existing `ryan` alias) with the household AD password.
 The native listener `http://192.168.1.66:8096/` remains for saved playback clients.

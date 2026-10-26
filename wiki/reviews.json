@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "89930ff5d937bc70234cb42d943b95e43150e4b1f0205067816e2419c8208634",
-    "reason": "Fix the parallel store-reload lock timeout from ten seconds to five minutes, test queued workers and reload failure cleanup, and expose remote phase errors",
+    "fingerprint": "4c54ced02682a894c018a28260610257d6778b465eaee54f7005596b40095ebf",
+    "reason": "Promote HA Plex to established household service, retain benchmark and thermal history, and document conditional NAS retirement with analysis, Jellyfin/Moonfin, DNS and integration cutover",
     "reviewed_at": "2026-10-26"
   },
   "media": {
-    "fingerprint": "5306177b38de433cc722aef752b488e0f665045f55aae60631e772dd9e671737",
-    "reason": "Condensed October 25 Plex evidence without changing repair scope, privacy boundaries or outstanding Roku/iOS client acceptance; household page links canonical investigation.",
+    "fingerprint": "d3ecd9471de72c77fd5e2fa4a2f3b2fb21d4e95f724295d9e110d7cf463bf579",
+    "reason": "Document established HA Plex access alongside current NAS services and link conditional NAS-library and Jellyfin/Moonfin migration plan",
     "reviewed_at": "2026-10-26"
   },
   "network": {

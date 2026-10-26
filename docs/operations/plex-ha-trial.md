@@ -50,7 +50,9 @@ no entities, and installs no persistent automation. Round-trip timing includes
 network/client overhead and, for scripts, WebSocket authentication.
 
 Every ten seconds it samples host load, CPU pressure, available memory, Core,
-Z-Wave JS and Plex app statistics. Host sampling consumes time between probes;
+Z-Wave JS and Plex app statistics. Following the later Roku incident, it also
+captures hwmon temperatures and per-core clocks; the original trial receipts
+did not measure thermal headroom. Host sampling consumes time between probes;
 this is not an exact 1 Hz sampling clock. Output includes counts, median, p95,
 maximum and failures. A failed phase is invalid, not a successful low-latency
 result. The observer does not start, stop or constrain any workload.
@@ -82,7 +84,8 @@ do not establish physical device latency or real Central Scene delivery.
    Consider 4K/HDR only after these phases pass; it is not part of initial acceptance.
 5. Stop the trial if API or script calls time out, sustained p95 exceeds twice
    baseline with more than 100 ms added latency, memory available falls below
-   2 GiB, disk free below 20 GB, Core/radio services restart, or new radio errors
+   2 GiB, disk free below 20 GB, CPU/GPU temperature reaches 85°C, effective
+   clocks collapse under load, Core/radio services restart, or new radio errors
    appear. These are conservative trial thresholds, not guarantees. A human or
    supervising runner must enforce them; this probe alone is not a watchdog.
 6. Stop playback and the Plex app, then measure recovery and compare fresh
