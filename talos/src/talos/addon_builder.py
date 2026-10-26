@@ -905,7 +905,9 @@ read_addon_ip() {{
 
 reload_addons() {{
     local attempt exit_code
-    for attempt in $(seq 1 100); do
+    # Store reload refreshes every repository and can take tens of seconds.
+    # Allow queued parallel workers five minutes, not ten seconds, to acquire it.
+    for attempt in $(seq 1 300); do
         if mkdir /tmp/talos-addon-reload.lock 2>/dev/null; then
             RELOAD_LOCK_HELD="true"
             run_quiet ha store reload
@@ -914,8 +916,9 @@ reload_addons() {{
             RELOAD_LOCK_HELD="false"
             return "$exit_code"
         fi
-        sleep 0.1
+        if [ "$attempt" -lt 300 ]; then sleep 1; fi
     done
+    log_error "Timed out waiting for /tmp/talos-addon-reload.lock after 300 attempts; another store reload may still be running"
     return 1
 }}
 
@@ -1201,6 +1204,10 @@ def deploy_artifact(
                 "addon": addon_key,
                 "host": ha_host,
                 "exit_code": e.returncode,
+                "remote_errors": "\n".join(
+                    line for line in (e.stderr or "").splitlines()
+                    if "] ERROR: " in line
+                )[-2000:],
                 "recent_logs": addon_logs
             },
             troubleshooting_steps=[

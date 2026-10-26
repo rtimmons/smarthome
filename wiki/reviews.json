@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "cef4de0503e96a850c5dba5e35a60100d29a111487ce2d1ea8d2cc8dbf7bec5b",
-    "reason": "Document the deployed HA secondary Plex libraries, approved profile access and LAN startup, disabled duplicate analysis, and measured per-engine cap limitation",
+    "fingerprint": "89930ff5d937bc70234cb42d943b95e43150e4b1f0205067816e2419c8208634",
+    "reason": "Fix the parallel store-reload lock timeout from ten seconds to five minutes, test queued workers and reload failure cleanup, and expose remote phase errors",
     "reviewed_at": "2026-10-26"
   },
   "media": {

@@ -142,6 +142,35 @@ def test_remote_metrics_are_recorded_and_hidden():
     assert timer.events[0]["addon"] == "grid-dashboard"
 
 
+@pytest.mark.parametrize("busy_attempts,reload_status,expected", [(120, 0, 0), (120, 9, 9), (300, 0, 1)])
+def test_reload_lock_waits_for_parallel_workers_and_preserves_failure(busy_attempts, reload_status, expected):
+    script = addon_builder.render_remote_deploy_script(
+        slug="fixture", remote_tar="/tmp/fixture.tar.gz",
+        remote_addon_dir="/addons/fixture", remote_addons_dir="/addons", verbose=False,
+    )
+    body = script.split("reload_addons() {\n", 1)[1].split("\n}\n", 1)[0]
+    # Exercise the generated shell without touching a live lock or sleeping.
+    harness = '''
+attempts=0
+released=false
+RELOAD_LOCK_HELD=false
+mkdir() { attempts=$((attempts + 1)); [ "$attempts" -gt "$1_BUSY" ]; }
+rmdir() { released=true; }
+sleep() { [ "$1" = 1 ]; }
+run_quiet() { [ "$*" = "ha store reload" ] || exit 99; return "$RELOAD_STATUS"; }
+log_error() { echo "$1" >&2; }
+'''.replace('"$1_BUSY"', str(busy_attempts)).replace('"$RELOAD_STATUS"', str(reload_status))
+    harness += 'reload_addons() {\n' + body + '\n}\n'
+    harness += 'reload_addons; result=$?; echo "$attempts $released $RELOAD_LOCK_HELD"; exit "$result"\n'
+    result = subprocess.run(["bash", "-c", harness], capture_output=True, text=True)
+    assert result.returncode == expected
+    if busy_attempts == 300:
+        assert result.stdout.strip() == "300 false false"
+        assert "Timed out waiting" in result.stderr
+    else:
+        assert result.stdout.strip() == "121 true false"
+
+
 @pytest.mark.parametrize(
     ("mounts", "expected"),
     [

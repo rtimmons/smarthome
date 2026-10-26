@@ -18,6 +18,13 @@ total. The probe observes performance and does not enforce workload stop thresho
 
 Standard local add-on deployment detects the actual source mount in the SSH environment: `/local_apps` on current Home Assistant, or a mounted `/addons` on older versions. It refuses to stop or replace an add-on if neither mount is present. An ordinary leftover `/addons` directory is not a valid destination: uploading there can produce an apparently successful rebuild of old source. Verify served assets or behavior after deployment, in addition to service readiness.
 
+Parallel deployments serialize Supervisor store reloads with a shared lock.
+Workers allow up to five minutes to acquire it: reloads refresh all repositories
+and can take tens of seconds. The former ten-second wait caused October 26
+deployments to fail after stopping otherwise healthy apps. A timeout now names
+the lock in the deployment error. Do not remove a lock while its reload is still
+running; inspect the failed phase and restore affected stopped apps before retrying.
+
 New local add-ons are registered with `ha store reload`. On the current CLI,
 `ha apps reload` only lists installed apps and does not discover new source.
 The [HTTP proxy](network.md#named-web-services) binds an explicit LAN address
