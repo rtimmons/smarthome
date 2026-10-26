@@ -1,8 +1,8 @@
 {
   "audio": {
-    "fingerprint": "46d11618226feada4ac3dc0b422c5b6393dab3f4e0fab3ddc6fe4fda0f5b45df",
-    "reason": "Reconciled deployed HA-backed Sonos and disabled legacy state with October acceptance; replaced stale implementation/merge tasks with remaining retirement gates and moved rollback into the routing runbook while preserving current household state and the final root-test gate.",
-    "reviewed_at": "2026-10-22"
+    "fingerprint": "cd5c138443811264b4127ef5f96c3163c88729883c129e27f611d14e7b4710a4",
+    "reason": "Reviewed Sonos index links against the household guide and canonical architecture; disabled legacy rollback status is retained.",
+    "reviewed_at": "2026-10-26"
   },
   "dashboard": {
     "fingerprint": "39e7b20baec122e3d3efbd3fc69811da41e6d412aa4f9ab5218e18c34b219f80",
@@ -10,9 +10,9 @@
     "reviewed_at": "2026-10-25"
   },
   "home": {
-    "fingerprint": "317e0197dd1046ad810b39b5542117d066de77e5acca3b73c014bade0c9b2ae8",
-    "reason": "Cold review: use current Catalog SSO and named native media entrances",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "e42bdceea13878acb097a554c02c135430d6b8cc22869721a1ed95b89a6746f7",
+    "reason": "Reviewed concise repository entrypoint: existing generated service/reference inventory replaces duplicate prose; household guide remains accurate.",
+    "reviewed_at": "2026-10-26"
   },
   "integrations": {
     "fingerprint": "a25558e8168ae88596069b2f8bd7345a1d35893660d05755eb63db21a5a8a730",
@@ -30,14 +30,14 @@
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "1a267782a4ccc5142695e5379a895f25568b7eeeab68d4c80e2ca2255e00a12b",
-    "reason": "Reviewed observer-only file-check caching with fresh acquisition checks, finite Recyclarr size limits and exact preservation readback with bounded verification retries.",
+    "fingerprint": "5306177b38de433cc722aef752b488e0f665045f55aae60631e772dd9e671737",
+    "reason": "Condensed October 25 Plex evidence without changing repair scope, privacy boundaries or outstanding Roku/iOS client acceptance; household page links canonical investigation.",
     "reviewed_at": "2026-10-26"
   },
   "network": {
-    "fingerprint": "597a045fdcce5b30d66ab95bbf9d7890c2859381c50dfa219f779a6c7fe2e513",
-    "reason": "Reviewed TinyURL short-host routing and synthetic path/query checks against the network guide; reviewed the Time Machine ACL repair narrative and its explicit unresolved backup and restart limitations.",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "596b878e8c3e96caca03e2ee05dc01b20183c70c7e8a97e06f5093c3e7d5a0c2",
+    "reason": "Reviewed go routing and synthetic redirect checks, canonical proxy inventory, Time Machine repair and untested restore limits; reconciled Catalog user acceptance with identity runbook.",
+    "reviewed_at": "2026-10-26"
   },
   "printing": {
     "fingerprint": "71c6c1a0e24aee92ba8f3e5b4474f6cbfaa5c032eee997b6ba51cbfd1ab2f088",

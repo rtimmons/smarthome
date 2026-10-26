@@ -44,6 +44,12 @@ it does not add Internet access or automatic service discovery.
 
 See [proxy operation and recovery](../../docs/operations/home-dns.md#http-service-pilot).
 
+For a saved TinyURL slug, use `http://go/<slug>` on the Newark trusted LAN.
+The gateway resolves `go` (also `go.localdomain`), and the proxy redirects to
+the same path at `tinyurl.home.arpa`. Use the explicit `http://` prefix;
+public or encrypted DNS overrides may bypass the household shortcut. See
+[short-name setup and recovery](../../docs/operations/service-hostnames.md#tinyurl-short-name).
+
 ## Household sign-in rollout
 
 The `SMARTHOME` AD directory runs on Home Assistant at `192.168.1.10` and uses

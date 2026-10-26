@@ -1,6 +1,6 @@
 # Agents Guide
 
-Guidance for humans and agents working in this repository.
+Repository-wide constraints; component `AGENTS.md` files add local guidance.
 
 ## Ground rules
 - Durable controller inputs now live outside Git at `~/.local/share/smarthome/tree/`.
@@ -24,7 +24,7 @@ Guidance for humans and agents working in this repository.
 ## Root workflows (Justfile-aligned)
 - Bootstrap everything: `just setup` (installs pinned Node/Python, builds `talos` if needed).
 - Create the ignored, repository-local Home Assistant SSH key with `just ha-ssh-key-create`. A human installs it on Home Assistant once with `just ha-ssh-key-copy`; agents must not run the copy recipe.
-- Run the whole stack locally: `just dev`; free conflicting ports with `just kill`. Services map to localhost ports: grid-dashboard 3000, sonos-api 5006, node-sonos-http-api 5005, printer 8099, snapshot-service 4010, tinyurl-service 4100.
+- Run the whole stack locally: `just dev`; free conflicting ports with `just kill`. Read the relevant add-on’s `AGENTS.md`; manifests and the generated wiki service reference own ports and dependencies.
 - Build add-ons: `just ha-addon [addon]`; list discovered add-ons with `just addons` (discovery is by `*/addon.yaml`).
 - Deploy: `just deploy [addon]` builds via `talos` and deploys, then rolls out `new-hass-configs`. Use `just printer-image` to preflight the printer container build.
 - Tests: `just test [addon]` runs add-on tests plus container build checks.
@@ -38,15 +38,6 @@ Guidance for humans and agents working in this repository.
 - **SSH access**: From the repository root, use `ssh -i .ssh/id_ed25519_codex_smarthome -o IdentitiesOnly=yes root@homeassistant.local` to access Home Assistant directly. Always select this repository-local identity explicitly; do not use 1Password or another SSH-agent identity for agent access. The remote `ha` command manages Core/Supervisor lifecycle, logs, backups, and host services; it does not expose entity state or service-call commands, so use the repository API client for those. The entity registry is at `/config/.storage/core.entity_registry` for advanced device discovery.
 - **SSH key setup and failures**: The private key is local-only under the Git-ignored `/.ssh/` directory. If the keypair is missing, run `just ha-ssh-key-create`, then stop and ask Ryan to run the human-only `just ha-ssh-key-copy`. If the dedicated key exists but authentication fails, stop the Home Assistant workflow immediately and ask Ryan to rerun `just ha-ssh-key-copy`; do not retry repeatedly or fall back to 1Password, another host, an IP address, a browser session, an API token, or alternate credentials.
 - **Hostname failures are not authentication failures**: The Codex sandbox can fail to resolve `homeassistant.local`. Retry the same hostname-based command with the repository-local identity once outside the sandbox; do not substitute an IP address. If it still cannot resolve, stop and report the mDNS/network failure rather than changing credentials.
-
-## Add-ons at a glance
-- `grid-dashboard` (port 3000) — Main dashboard UI. See `grid-dashboard/AGENTS.md`.
-- `sonos-api` (port 5006) — Custom Sonos proxy. See `sonos-api/AGENTS.md`.
-- `node-sonos-http-api` (port 5005) — Upstream Sonos service plus local patches. See `node-sonos-http-api/AGENTS.md`.
-- `printer` (port 8099) — Label printer service. See `printer/AGENTS.md`.
-- `snapshot-service` (port 4010) — Fixture daily print summaries and receipt checkbox analysis. See `snapshot-service/AGENTS.md`.
-- `tinyurl-service` (port 4100) — URL shortener backed by MongoDB. See `tinyurl-service/AGENTS.md`.
-- `mongodb` — MongoDB add-on; local dev uses Homebrew for the daemon. See `mongodb/AGENTS.md`.
 
 ## Operational notes
 - Lifecycle hooks live in `local-dev/hooks/` per add-on and are documented in `docs/addon-development/hooks-guide.md`; `node-sonos-http-api` checks Sonos multicast reachability and `printer` validates cairo/pkg-config for label rendering.
@@ -62,8 +53,3 @@ Guidance for humans and agents working in this repository.
 - The smarthome wiki is built from `wiki/` and explicitly imported canonical runbooks. For behavioral changes, update the corresponding explanation and run `just wiki-check`. Review changed component fingerprints with `just wiki-review <component> '<specific reason>'`; do not acknowledge unfamiliar changes merely to bypass the check. Supported deployments publish once after success; use `just wiki-deploy` for documentation-only changes. See `docs/operations/wiki.md` and `docs/operations/home-dns.md`.
 - Usenet, QNAP storage, Plex and their recovery workflow: read `usenet-infra/AGENTS.md` and `usenet-infra/docs/validation.md` for accepted scope and recovery limits before operating them.
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
-- Container runtime details: `docs/addon-development/container-runtime.md`.
-- UniFi access and Apple TV/Bonjour troubleshooting: `docs/operations/unifi-ssh-access.md`, `docs/operations/unifi-apple-tv-remote.md`.
-- Sonos architecture/routing: `docs/sonos/overview.md`, `docs/sonos/routing-guide.md`.
-- Versioning and runtimes: `docs/setup/version-management.md`.
-- Home Assistant ingress history/fixes: `docs/addon-development/ingress-fixes.md`.

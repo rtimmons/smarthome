@@ -6,14 +6,9 @@ Use [operations](docs/operations.md) for additional commands.
 
 ## Media privacy in commits
 
-Never commit real media titles, release names, filenames, title-derived field
-names, or identifying external catalog links/IDs from live operations. Use neutral
-aliases such as `media-001` and descriptive keys such as
-`failed_download_allocated_bytes` in receipts, documentation, tests derived from
-live data, and commit messages. Keep exact operational filenames and alias
-mappings in ignored private evidence and runtime journals. Review the entire staged
-diff for these identifiers before committing; a generic secret scan does not
-establish media privacy. Synthetic tests may use clearly invented fixture names.
+Follow the root [media privacy rules](../AGENTS.md#media-privacy), including
+full staged-diff review. Use descriptive field names rather than title-derived
+keys; exact filenames and alias maps belong in ignored evidence/runtime journals.
 
 Redacted receipt paths are aliases, not executable paths. Resolve actual paths
 through exact native job/file IDs privately before operating on files. Historical
@@ -119,8 +114,8 @@ unchanged. Do not commit the private replacement map used for a privacy rewrite.
   SSH tunnel. Keep host trust policy unchanged: no CA installation or TLS bypass.
   Preserve its reviewed image, verified transfers, quarantine and disabled purge.
   Canonical roots are read-only; staging is excluded from configuration backups.
-- The static private wiki is at `http://wiki.home.arpa/`, with numeric recovery at
-  `http://192.168.1.66/`. Edit repository-root `wiki/` or its imported runbooks and publish through
+- The private wiki uses `https://wiki.home.rytim.com/`; LAN compatibility and
+  numeric recovery entrances are documented in [wiki operations](../docs/operations/wiki.md). Edit repository-root `wiki/` or its imported runbooks and publish through
   `just wiki-deploy` (`just usenet-wiki-deploy` remains an alias). It must not gain credentials,
   live APIs, media listings, Docker access or public exposure.
 - Before live changes, use the read-only health commands in the README. Do not

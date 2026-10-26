@@ -164,6 +164,36 @@ trusted HTTPS cannot be issued for `.home.arpa` itself.
   one OTP enrollment. The backup writer now creates its output directory when
   running from freshly restored controller state.
 
+## Time Machine after the domain join — October 25, 2026
+
+`SpaceBlackTimeMachine` mounted through SMB after the AD join, but its existing
+encrypted sparsebundle retained local-account ACLs. The scoped repair added
+`SMARTHOME\nas-timemachine` (GID 10001109) to 11,520 access ACLs and three
+directory default ACLs, preserving prior entries, ownership, modes, sizes,
+mtimes and backup identity hashes. Membership remained Ryan-only. Original ACLs
+and the receipt are in external controller state at
+`build/identity-private/timemachine-repair-20261025`; do not blindly restore them
+after newer backups have added files. Share-root synthetic access alone does
+not establish access to an existing backup.
+
+The Mac recognized **Use Existing Backup** with the original encryption password.
+Authenticated attempts then failed the mounted-volume write test with `EINVAL`
+(22) / `BACKUP_FAILED_TARGETVOL_NOT_MOUNTED` (19); the cause was not established.
+A normal Mac restart and retry eventually cleared that failure. Do not disable
+SIP to restart protected `backupd`. The October 25 run reported **Backup succeeded**
+at 19:24:43 Eastern using the existing encrypted image and history; hourly
+backups remain enabled and the temporary monitor was removed. Cleanup warnings
+were nonterminal and no manual deletion occurred. A sample restore remains
+untested; agent `tmutil` history listing still lacks Full Disk Access.
+
+The NAS/AD login and backup-encryption passwords are separate. Preserve encryption
+and history when refreshing network credentials. If setup offers a new encryption
+password, verify existing bundle access before proceeding; never erase or replace
+the backup to fix authentication. QNAP's
+[domain-account destination procedure](https://www.qnap.com/en-ca/how-to/faq/article/how-can-i-use-a-domain-user-for-time-machine-after-adding-my-nas-to-ad-domain)
+uses `tmutil setdestination -p` with administrator privileges and Full Disk Access,
+prompting privately for the network password.
+
 ## Arr browser gateway
 
 The Arr migration uses `radarr`, `sonarr`, `prowlarr` and `sabnzbd` beneath

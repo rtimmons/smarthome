@@ -28,7 +28,7 @@ NAS address and isolated static server. `hass.home.arpa` remains the host alias.
 | `sonarr.home.rytim.com` | `http://10.77.0.1:19696` | Root redirect to `/sonarr/`; preserve that prefix; reject paths outside it | Active cloud Sonarr healthy; public TLS and anonymous SSO redirect verified |
 | `prowlarr.home.rytim.com` | `http://10.77.0.1:19696` | Preserve paths, but deny the sibling `/radarr` and `/sonarr` routes on this hostname | Cloud container healthy; public TLS and anonymous SSO redirect verified |
 | `sabnzbd.home.rytim.com` | `http://10.77.0.1:18080` | Existing authenticated private proxy | Cloud container healthy; public TLS and anonymous SSO redirect verified |
-| `catalog.home.rytim.com` | `http://192.168.1.66:1337` | Owner-only Authelia MFA and native OAuth; old HTTP name redirects | Anonymous SSO redirect verified; human OAuth acceptance pending |
+| `catalog.home.rytim.com` | `http://192.168.1.66:1337` | Owner-only Authelia MFA and native OAuth; old HTTP name redirects | Anonymous SSO redirect verified; user confirmed OAuth and operator actions October 25 (see household identity) |
 | `printer.home.arpa` | `http://hass.home.arpa:8099` | Preserve `/bb` entry redirect and all service paths | HA add-on started; root returned 302 to `/bb` |
 | `tinyurl.home.arpa` | `http://hass.home.arpa:4100` | Preserve UI and short-link paths | HA add-on started; HTTP 200 |
 
@@ -39,6 +39,50 @@ cloud gateway retains its Basic recovery login. App-to-app API keys remain
 unchanged; Prowlarr now uses External authentication behind the gateway.
 Seerr retains its login and API-key restrictions. Its numeric upstream Host must
 be preserved because the existing cloud gateway matches `10.77.0.1:15055`.
+
+## TinyURL short name
+
+`http://go/<slug>` redirects with HTTP 302 to
+`http://tinyurl.home.arpa/<slug>`, preserving the full path and query string.
+DNS resolves the hostname; the `home-proxy` route performs the URL redirect.
+The destination then resolves the existing saved short link normally.
+
+The gateway owns two explicit Host (A) records, `go` and `go.localdomain`,
+pointing at `192.168.1.163`. `localdomain` is the existing Default network's
+DHCP search suffix; both bare and suffixed HTTP Host values are accepted.
+These records live in UniFi **Settings → Policy Engine → DNS Records**,
+separately from the AdGuard `home.arpa` inventory. They require gateway DNS;
+direct AdGuard or public/encrypted DNS clients do not receive these aliases.
+The shortcut inherits the proxy's Newark trusted-LAN source restriction.
+
+Use the explicit `http://go/` prefix to avoid address-bar search ambiguity.
+This does not change generated QR/link URLs or the HTTPS administration entrance.
+After configuring DNS, run the proxy `verify --dns` recipe and check both names'
+A and AAAA responses through `192.168.1.1` over UDP/TCP. Confirm normal system
+resolution and a synthetic path/query redirect, then recheck `home.arpa` local
+negative answers. No real saved links need to be opened for acceptance.
+
+For rollback, pause only the two `go` DNS records and remove the `@go` handle
+from `home-proxy/Caddyfile`, then redeploy only that add-on. Keep the existing
+TinyURL record, dual domain forwarders, DHCP settings and other proxy routes.
+After gateway replacement, recreate these native records from this runbook;
+replaying the AdGuard policy alone does not restore them.
+
+October 24, 2026 acceptance: both records returned exactly `192.168.1.163` for
+A and empty AAAA over UDP/TCP. Normal Mac resolution preserved the synthetic
+slug and encoded query, and following `http://go/` reached TinyURL with HTTP 200.
+The non-LAN SSH add-on source received 403 even with a forged LAN forwarding
+header. All 45 proxy route checks and the gateway's full retained-record,
+local-negative and public-resolution contract passed. No saved link mappings
+were changed or opened.
+
+The gateway's record provisioning briefly interrupted DNS. Home Assistant's
+internal resolver then retained NXDOMAIN for `hass.home.arpa`, while the gateway
+and both AdGuards returned the correct address. Restarting only `ha dns` cleared
+that stale cache, after which the dashboard, printer and TinyURL routes passed.
+For this symptom, compare the internal resolver (`172.30.32.3`) with the gateway
+and both backends before applying that recovery; do not reset DNS configuration
+or restart healthy applications.
 
 ## Two distinctions that affect the names
 

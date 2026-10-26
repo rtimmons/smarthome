@@ -82,6 +82,10 @@ http://:80 {
 	handle @printer {
 		reverse_proxy http://hass.home.arpa:8099
 	}
+	@go host go go.localdomain
+	handle @go {
+		redir http://tinyurl.home.arpa{uri} 302
+	}
 	@tinyurl host tinyurl.home.arpa
 	handle @tinyurl {
 		reverse_proxy http://hass.home.arpa:4100

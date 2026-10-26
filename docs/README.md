@@ -1,119 +1,17 @@
 # Documentation
 
-This directory contains project-specific documentation for the smarthome repository. For contributor guidance and workflow overview, start with [`AGENTS.md`](../AGENTS.md) in the repo root.
+Start with [contributor rules](../AGENTS.md) and [development setup](setup/dev-setup.md).
 
-The household-facing [Smarthome field guide](http://wiki.home.arpa/) is built from
-`wiki/` and selected runbooks here. See [wiki operations](operations/wiki.md),
-[DNS operations](operations/home-dns.md) and the [wiki assessment](operations/wiki-audit.md).
+The [Smarthome field guide](https://wiki.home.rytim.com/) contains household
+instructions, generated configuration references and a generated runbook directory.
+[Wiki operations](operations/wiki.md) explains authoring and publication;
+[DNS operations](operations/home-dns.md) documents recovery entrances.
 
-## Quick Start
+- [Setup](setup/README.md) — Bootstrap, disposable checkouts, Home Assistant installation and runtime pins
+- [Development](development/README.md) — Local services and configuration sync
+- [Add-on development](addon-development/README.md) — Hooks, containers and ingress
+- [Operations](operations/README.md) — Runbooks, accepted limits and current plans
+- [Sonos](sonos/README.md) — Architecture and routing
+- [Upstream references](../reference-repos/AGENTS.md) — Home Assistant and Just manuals, examples and submodule maintenance
 
-- **New contributors**: Start with [`AGENTS.md`](../AGENTS.md), then [`setup/dev-setup.md`](setup/dev-setup.md)
-- **Local development**: Run `just setup` then `just dev` (see [`development/local-development.md`](development/local-development.md))
-- **Add-on development**: See [Add-on Development](#add-on-development) and [Home Assistant Add-on Development](#home-assistant-add-on-development) sections below
-
-## 📁 Documentation Structure
-
-### 🚀 [Setup](setup/) - Getting Started & Installation
-*Everything needed to get from zero to a working development environment*
-
-- [**dev-setup.md**](setup/dev-setup.md) — First-time development environment bootstrap
-- [**homeassistant-installation.md**](setup/homeassistant-installation.md) — Home Assistant OS installation guide
-- [**version-management.md**](setup/version-management.md) — Node/Python version sourcing and consistency
-
-### 💻 [Development](development/) - Active Development Workflow
-*Day-to-day development activities and local environment*
-
-- [**local-development.md**](development/local-development.md) — Orchestrated local dev and service graph
-- [**configuration-sync.md**](development/configuration-sync.md) — Bidirectional Home Assistant configuration sync
-- [**development-environment-summary.md**](development/development-environment-summary.md) — Implementation details and architecture
-
-### 🔧 [Add-on Development](addon-development/) - Home Assistant Integration
-*Add-on specific development concerns and Home Assistant integration*
-
-- [**hooks-guide.md**](addon-development/hooks-guide.md) — Lifecycle hook design and usage
-- [**container-runtime.md**](addon-development/container-runtime.md) — Podman/Docker runtime details
-- [**ingress-fixes.md**](addon-development/ingress-fixes.md) — Home Assistant ingress integration fixes
-
-### 🔍 [Operations](operations/) - Maintenance & Planning
-*System maintenance, verification, and strategic planning*
-
-- [**plan-dashboard-upgrade.md**](plan-dashboard-upgrade.md) — Proposed compatibility-first upgrade plan for the iPad Grid Dashboard
-- [**plan-nas-storage-and-access.md**](plan-nas-storage-and-access.md) — Flat service shares, writable Hetzner access, phased migrations, legacy-share retirement, System volume label and QNAP cleanup exceptions
-- [**plan-nas-access-model.md**](plan-nas-access-model.md) — Named datasets, homes, users and roles; `svc-` migration; Forgejo isolation, Hetzner/Plex/HA access and restricted platform roots
-- [**plan-nas-data-protection.md**](plan-nas-data-protection.md) — Per-share and QNAP-exception B2 policies, complete application recovery, retention, restore checks and current/future RAID placement
-- [**nas-preflight-2026-10-25.md**](nas-preflight-2026-10-25.md) — Read-only disk/snapshot, homes, legacy-share and backup findings; resolved ownership and remaining migration gates
-- [**nas-media-retirement-2026-10-25.md**](nas-media-retirement-2026-10-25.md) — QNAP media apps removed with encrypted state preservation; retained-service checks and deferred scrub decision
-- [**system-verification.md**](operations/system-verification.md) — System consistency verification procedures
-- [**addon-state-backups.md**](operations/addon-state-backups.md) — Talos-native Supervisor backup workflow and restore-ready artifact contract
-- [**household-identity.md**](operations/household-identity.md) — AD, unified SMB credentials, browser SSO, certificate trust and rollout checkpoints
-- [**unifi-network-setup.md**](operations/unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
-- [**unifi-ssh-access.md**](operations/unifi-ssh-access.md) — Cloud Gateway Max console and retained AP/switch SSH access
-- [**unifi-post-migration.md**](operations/unifi-post-migration.md) — Native DNS pilot, Site Magic, VPN modernization, backup and firewall acceptance
-- [**UniFi MCP**](../network-infra/unifi-mcp/README.md) — Pinned read-only launcher using the MCP settings environment
-- [**unifi-apple-tv-remote.md**](operations/unifi-apple-tv-remote.md) — Evidence-first UniFi, Bonjour, and Apple TV Remote troubleshooting
-- [**nest-integration.md**](operations/nest-integration.md) — Google Nest OAuth, Device Access, Pub/Sub, entity naming, and verification
-- [**zwave-scene-ops.md**](operations/zwave-scene-ops.md) — Z-Wave scene responsiveness diagnostics and inventory workflow
-- [**sonoff-zigbee-thread.md**](operations/sonoff-zigbee-thread.md) — Shared Sonoff Zigbee and Thread configuration, restore fix, and recovery
-- [**esphome-fancontrollers.md**](operations/esphome-fancontrollers.md) — ESPHome fan controller inventory and setup workflow
-- [**improvements.md**](operations/improvements.md) — **Comprehensive improvements roadmap**
-- [**Usenet acceptance**](../usenet-infra/docs/validation.md) — Current deployment and accepted recovery limits
-- [**Native media**](../usenet-infra/docs/native-media.md) — Arr imports, canonical storage and remote Plex playback
-- [**Repair volume**](../usenet-infra/docs/repair-spool.md) — Current mount definitions and existing-volume recovery
-- [**Scheduled backups**](../usenet-infra/docs/scheduled-backups.md) — Host-owned schedules, freshness, scope and retention
-- [**Checkout recovery**](../usenet-infra/docs/checkout-recovery.md) — Local files, Git history/stashes, restore and deletion check
-- [**Security findings**](../usenet-infra/docs/security-findings.md) — Dependency fixes and historical-key limits
-- [**Usenet operations**](../usenet-infra/docs/operations.md) — Operating commands for native acquisition and selective NAS copies
-- [**Private file portal**](../usenet-infra/docs/filex.md) — Bounded staging, verified transfers, read-only canonical media and emergency disable
-- [**Filex recovery**](../usenet-infra/docs/filex-recovery.md) — Encrypted portal state, key escrow and restore procedure
-- [**NAS and Plex layout**](../usenet-infra/docs/nas-plex-layout.md) — Media directories, library separation, profile permissions and rollback
-
-### 🎵 [Sonos](sonos/) - Domain-Specific Architecture
-*Sonos integration architecture and routing*
-
-- [**overview.md**](sonos/overview.md) — Sonos add-on architecture
-- [**routing-guide.md**](sonos/routing-guide.md) — API routing flow
-
-## Home Assistant Add-on Development
-
-This project follows Home Assistant add-on development standards. **Always refer to the official documentation first:**
-
-### Essential References
-- **[Add-on Development Guide](../reference-repos/developers.home-assistant/docs/add-ons.md)** — Start here for add-on development
-- **[Add-on Tutorial](../reference-repos/developers.home-assistant/docs/add-ons/tutorial.md)** — Step-by-step first add-on
-- **[Add-on Configuration](../reference-repos/developers.home-assistant/docs/add-ons/configuration.md)** — Complete config.yaml reference
-- **[Add-on Testing](../reference-repos/developers.home-assistant/docs/add-ons/testing.md)** — Local testing with devcontainer
-- **[Add-on Communication](../reference-repos/developers.home-assistant/docs/add-ons/communication.md)** — Inter-add-on networking
-- **[Add-on Publishing](../reference-repos/developers.home-assistant/docs/add-ons/publishing.md)** — Container registry publishing
-
-### Official Examples
-- **[Official Add-ons Repository](../reference-repos/addons/README.md)** — Production add-on examples
-- **[Example Add-on Repository](https://github.com/home-assistant/addons-example)** — Template repository
-
-### Development Environment
-- **[Development Environment Setup](../reference-repos/developers.home-assistant/docs/development_environment.mdx)** — Official dev environment guide
-- **[Supervisor Development](../reference-repos/developers.home-assistant/docs/supervisor/development.md)** — Supervisor API and host behavior
-
-## Home Assistant Installation & OS
-
-- **[Raspberry Pi Installation](../reference-repos/home-assistant.io/source/installation/raspberrypi.markdown)** — Official installation guide
-- **[Installation Troubleshooting](../reference-repos/home-assistant.io/source/installation/troubleshooting.markdown)** — Recovery and SSH setup
-- **[Operating System Documentation](../reference-repos/operating-system/Documentation/README.md)** — OS internals and kernel details
-
-## Build Tools & Workflows
-
-### Just Command Runner
-- **[Just Manual](../reference-repos/just/README.md)** — Complete just documentation and quick start
-- **[Just Online Manual](https://just.systems/man/en/)** — Official online documentation
-- **[Just Cheatsheet](https://cheatography.com/linux-china/cheat-sheets/justfile/)** — Syntax overview
-
-#### Project Justfile Patterns
-This repository uses `just` extensively for development workflows. Key patterns:
-- **Root Justfile**: Main orchestration (`just setup`, `just dev`, `just deploy`)
-- **Add-on Justfiles**: Per-add-on builds and tests (`just ha-addon`, `just test`)
-- **Imported modules**: Shared functionality (e.g., `talos/just/nvm.just`)
-- **Environment handling**: Automatic nvm/pyenv integration
-- **Parallel execution**: Multi-add-on operations
-
-### Frontend Development
-- **[Frontend Development](../reference-repos/frontend/README.md)** — Home Assistant frontend development guide
+Use `just --list` for available commands and `just addons` for discovered add-ons.

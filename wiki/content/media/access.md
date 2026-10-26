@@ -32,6 +32,13 @@ Prowlarr, Radarr, Sonarr and SABnzbd opened through Authelia without a second
 application password. The user also confirmed Catalog OAuth sign-in and visible
 operator actions. These checks did not start searches, downloads or transfers.
 
+## Plex: slow title opening or playback
+
+The October 25 server analysis repair passed; fresh Roku/iOS playback remains
+unverified. See the [Plex investigation](../../../usenet-infra/docs/nas-plex-layout.md#playback-delay-investigation)
+for evidence, limits and the iOS 2026.20.0 Direct Play workaround. Confirm playback
+actually advances before treating either issue as resolved.
+
 ## Roku: browse, request and watch with Moonfin
 
 The server integration is configured. After connecting the **Moonfin** Roku app,

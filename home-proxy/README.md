@@ -1,22 +1,10 @@
 # Home web proxy
 
-A small Caddy add-on with explicit mappings:
-
-| Browser URL | Upstream |
-| --- | --- |
-| `http://grid-dashboard.home.arpa/` | `http://hass.home.arpa:3000/` |
-| `https://git.home.rytim.com/` | `http://192.168.1.66:3003/` |
-| `http://jellyfin.home.arpa/` | `http://192.168.1.66:8096/` |
-| `http://moonfin.home.arpa/` | `http://192.168.1.66:8096/Moonfin/Web/` |
-| `http://plex.home.arpa/` | `http://192.168.1.66:32400/web/` |
-| `http://seerr.home.arpa/` | `http://10.77.0.1:15055/` |
-| `https://radarr.home.rytim.com/` | `http://10.77.0.1:19696/radarr/` |
-| `https://sonarr.home.rytim.com/` | `http://10.77.0.1:19696/sonarr/` |
-| `https://prowlarr.home.rytim.com/` | `http://10.77.0.1:19696/` |
-| `https://sabnzbd.home.rytim.com/` | `http://10.77.0.1:18080/` |
-| `http://catalog.home.arpa/` | `http://192.168.1.66:1337/` |
-| `http://printer.home.arpa/` | `http://hass.home.arpa:8099/` |
-| `http://tinyurl.home.arpa/` | `http://hass.home.arpa:4100/` |
+A stateless Caddy add-on. [Caddyfile](Caddyfile) owns executable routes; the
+[service-hostname runbook](../docs/operations/service-hostnames.md) records
+routing decisions, the `go` shortcut, dated acceptance and recovery. Add-on
+ports and dependencies are generated in the wiki's Services reference from
+[addon.yaml](addon.yaml).
 
 It binds only Home Assistant's LAN address, `192.168.1.163`, on ports 80 and
 443, and accepts clients from `192.168.1.0/24`. Unknown hosts return 404; other
@@ -53,13 +41,6 @@ use the original host-and-port URLs or HA ingress during recovery. Rebuild this 
 source during recovery; retain DNS runtime policy and resolver backups.
 
 ## Service routing and checks
-
-Direct recovery ports retain their existing authentication. Forgejo uses OIDC;
-Arr browser routes require the Authelia `arr-users` group and two factors. The Arr routes
-preserve their base paths and reject sibling applications. Seerr requires its
-existing numeric Host upstream; its gateway still rejects API-key headers.
-Moonfin redirects only its root to the plugin web client; native clients use
-the Jellyfin root. `ha.home.arpa` remains deferred and has no route or DNS record.
 
 No access logs are enabled. HTTP request-error dumps are excluded to avoid
 recording tokens in media URLs; startup/configuration diagnostics remain enabled.
