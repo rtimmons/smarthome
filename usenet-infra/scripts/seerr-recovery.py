@@ -29,6 +29,7 @@ STATE = ROOT / 'config/catalog/seerr-recovery'
 MODE = 'report-only'
 GRACE_SECONDS = 900
 MAX_ROWS = 5000
+FILE_CHECK_SECONDS = 3600
 
 
 class RecoveryError(Exception):
@@ -317,7 +318,32 @@ def plex_scan_fresh(settings, now):
                     and 0 <= now - library['lastScan'] / 1000 <= 1200 for library in selected))
 
 
-def collect(reader):
+class FileChecks:
+    """Observer-only positive cache. Executors never supply this to collect."""
+
+    def __init__(self, saved=None, now=None):
+        self.now = dt.datetime.now(dt.timezone.utc).timestamp() if now is None else now
+        self.saved = saved if isinstance(saved, dict) else {}
+        self.entries = {}
+        self.checked = self.reused = 0
+
+    def verify(self, path, app, record, mount, resolve=None):
+        # Native metadata/path changes and remounts invalidate earlier evidence.
+        key = hashlib.sha256(json.dumps([app, str(path), record, mount], sort_keys=True).encode()).hexdigest()
+        at = self.saved.get(key)
+        if type(at) in (int, float) and 0 <= self.now - at < FILE_CHECK_SECONDS:
+            self.entries[key] = at  # Reuse never extends the original deadline.
+            self.reused += 1
+            return True
+        self.checked += 1
+        path = resolve() if resolve is not None else path
+        valid = path.stat().st_size == record['size'] and record['size'] > 0
+        if valid:
+            self.entries[key] = self.now
+        return valid
+
+
+def collect(reader, file_checks=None):
     raw_requests = requests(reader)
     items = {}
     for app, route in (('sonarr', 'series'), ('radarr', 'movie')):
@@ -337,6 +363,10 @@ def collect(reader):
         fs = os.statvfs(reader.root / 'library')
         if fs.f_bavail * fs.f_frsize < 30 * 1024**3:
             blocked.append('library_reserve_low')
+    mount = None
+    if mounted and file_checks is not None:
+        info = (reader.root / 'library').stat()
+        mount = [info.st_dev, info.st_ino]
     for app, identity in sorted(wanted):
         item = items[f'{app}:{identity}']
         if app == 'sonarr':
@@ -352,8 +382,13 @@ def collect(reader):
             if mounted and (episode.get('hasFile') or fid):
                 try:
                     f = files[fid]
-                    path = library_path(f.get('path') or str(Path(item['path']) / f['relativePath']), app, reader.root)
-                    episode['verified'] = path.stat().st_size == f['size'] and f['size'] > 0
+                    raw_path = f.get('path') or str(Path(item['path']) / f['relativePath'])
+                    if file_checks is not None:
+                        episode['verified'] = file_checks.verify(raw_path, app, f, mount,
+                            resolve=lambda: library_path(raw_path, app, reader.root))
+                    else:
+                        path = library_path(raw_path, app, reader.root)
+                        episode['verified'] = path.stat().st_size == f['size'] and f['size'] > 0
                 except (KeyError, OSError, RecoveryError):
                     episode['verified'] = False
     queue, candidates = {}, {}
@@ -609,10 +644,15 @@ def run(reader, state=STATE):
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
         previous = private_json(state / 'report.json') if (state / 'report.json').exists() else {}
         try:
-            snapshot = collect(reader)
+            cache_path = state / 'file-checks.json'
+            checks = FileChecks(private_json(cache_path) if cache_path.exists() else {})
+            snapshot = collect(reader, file_checks=checks)
             report = plan(snapshot, previous)
+            report['summary']['file_checks'] = {'checked': checks.checked, 'reused': checks.reused,
+                                               'maximum_age_seconds': FILE_CHECK_SECONDS}
             report['summary'].update(executor_attention(state, snapshot))
             atomic_json(state / 'snapshot.json', snapshot)
+            atomic_json(cache_path, checks.entries)
         except Exception as error:
             reason = str(error) if isinstance(error, RecoveryError) else 'inspection_failed'
             report = plan({'requests': [], 'blocked': [reason], 'settings': {}, 'items': {}, 'queue': {}}, previous)

@@ -30,9 +30,9 @@
     "reviewed_at": "2026-10-25"
   },
   "media": {
-    "fingerprint": "d1255f65a27e849c5b5888a065f132ced4ef469b39ab69d72716c7ba97b9a38a",
-    "reason": "Reviewed and tested native Plex mapping checks, bridge-only systemd proxy and exact firewall arguments, plus bounded backlog polling and worker-only retry reporting.",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "1a267782a4ccc5142695e5379a895f25568b7eeeab68d4c80e2ca2255e00a12b",
+    "reason": "Reviewed observer-only file-check caching with fresh acquisition checks, finite Recyclarr size limits and exact preservation readback with bounded verification retries.",
+    "reviewed_at": "2026-10-26"
   },
   "network": {
     "fingerprint": "597a045fdcce5b30d66ab95bbf9d7890c2859381c50dfa219f779a6c7fe2e513",

@@ -10,6 +10,18 @@ spec.loader.exec_module(s)
 
 
 class SafetyTests(unittest.TestCase):
+    def test_quality_sizes_preserve_unmanaged_definitions_and_require_exact_readback(self):
+        before = [{'id': 1, 'quality': {'name': 'WEBDL-2160p'}, 'minSize': 0},
+                  {'id': 2, 'quality': {'name': 'SDTV'}, 'minSize': 0, 'maxSize': 100}]
+        policy = [{'name': 'WEBDL-2160p', 'min': 0, 'preferred': 380, 'max': 400}]
+        after = copy.deepcopy(before); after[0].update(minSize=0, preferredSize=380, maxSize=400)
+        s.verify_sizes(before, after, policy)
+        s.verify_sizes(after, after, policy)
+        for index, field, value in ((0, 'maxSize', 500), (0, 'minSize', 10), (1, 'maxSize', 200)):
+            changed = copy.deepcopy(after); changed[index][field] = value
+            with self.assertRaises(RuntimeError): s.verify_sizes(before, changed, policy)
+        with self.assertRaises(RuntimeError): s.verify_sizes(before, after[:-1], policy)
+
     def test_scope_excludes_deleted_denied_and_separate_4k(self):
         value = snapshot()
         for patch in ({'status': 3}, {'is4k': True}, {'media': {'status': 7}}, {'media': {'status': 6}}):

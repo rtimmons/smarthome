@@ -17,7 +17,7 @@ ROOT = Path('/srv/usenet')
 TAG = 'seerr-approved'
 BASE = ROOT / 'config/catalog/settings-rollout'
 ROUTES = ('config/naming', 'config/mediamanagement', 'config/indexer',
-          'config/downloadclient', 'qualityprofile', 'customformat', 'downloadclient', 'tag')
+          'config/downloadclient', 'qualityprofile', 'customformat', 'downloadclient', 'tag', 'qualitydefinition')
 
 
 def require(value, reason):
@@ -144,6 +144,23 @@ def seerr_update(r, app, server):
         return json.load(response)
 
 
+def verify_sizes(before, after, definitions):
+    """Require exact configured sizes and preserve every unmanaged definition."""
+    expected = {q['name']: q for q in definitions}
+    require(len(expected) == len(definitions), 'duplicate_quality_size_policy')
+    old = {q['quality']['name']: q for q in before}
+    new = {q['quality']['name']: q for q in after}
+    require(len(old) == len(before) and len(new) == len(after) and old.keys() == new.keys()
+            and expected.keys() <= old.keys(), 'quality_size_inventory_changed')
+    for name, previous in old.items():
+        desired = dict(previous)
+        if name in expected:
+            q = expected[name]
+            require(0 <= q['min'] <= q['preferred'] <= q['max'], 'invalid_quality_sizes')
+            desired.update(minSize=q['min'], preferredSize=q['preferred'], maxSize=q['max'])
+        require(new[name] == desired, 'quality_size_readback_failed')
+
+
 def main(action):
     os.umask(0o077)
     module, r = reader()
@@ -188,6 +205,7 @@ def main(action):
         (path / 'scope.json').write_text(json.dumps(changes))
         return {'status': 'scope_reconciled', **changes}
     require(action == 'verify', 'unsupported_action')
+    sizes = json.loads((ROOT / 'config/catalog/recyclarr/quality-sizes.json').read_text())
     for app in ('radarr','sonarr'):
         a, b = current['apps'][app], before['apps'][app]
         require(same_media_files(b['files'], a['files']) and a['stats'] == b['stats'], 'existing_media_changed')
@@ -195,6 +213,7 @@ def main(action):
         for route in ('config/indexer','config/downloadclient','downloadclient'):
             require(a[route] == b[route], 'acquisition_or_quality_policy_changed')
         verify_codec_policy(b, a)
+        verify_sizes(b['qualitydefinition'], a['qualitydefinition'], sizes[app])
         expected_naming = dict(b['config/naming'], **{'renameEpisodes' if app == 'sonarr' else 'renameMovies': True})
         require(a['config/naming'] == expected_naming, 'naming_readback_failed')
         require(a['config/mediamanagement'] == dict(b['config/mediamanagement'], downloadPropersAndRepacks='doNotPrefer'), 'media_management_readback_failed')

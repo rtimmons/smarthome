@@ -357,6 +357,20 @@ cooldown limits worker lookups to one per 15 minutes; fresh reports with no
 missing-TV proposal skip redundant remote-library checks. Sonarr performs the import
 and cleanup. Use `just usenet seerr-recovery-execute-status` to inspect it.
 
+Health, queue and availability checks continue every five minutes. Successful
+checks of unchanged existing files are reused for at most an hour; failed checks
+and changed native file records are checked again, and acquisition always verifies fresh evidence.
+This reduces remote filesystem traffic while retaining the recovery checks.
+Recyclarr now maintains finite HD size limits, preserving existing minimums and
+tighter limits. These affect future downloads only; the 100 GiB job cap and disk
+reserves remain independent safeguards. See the native runbook for exact limits.
+
+The initial post-RSS observation found no backlog-worker searches or grabs.
+A one-week follow-up will compare native imports with worker submissions before
+considering further reductions. An idle period alone is not evidence that native
+RSS replaces historical backlog searches. Keep the hourly Plex scan as a fallback
+for the remote filesystem, with automatic trash emptying disabled.
+
 Date-named daily programmes need the correct native series type; a numbered-series
 setting can reject otherwise valid releases before any download begins.
 

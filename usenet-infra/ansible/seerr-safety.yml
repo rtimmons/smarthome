@@ -52,6 +52,18 @@
         argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/seerr-safety.py, prepare]
       changed_when: true
 
+    - name: Derive exact size readback policy from the same reviewed Recyclarr configuration
+      ansible.builtin.copy:
+        content: >-
+          {{ {'radarr': size_config.radarr.seerr_movies.quality_definition.qualities,
+              'sonarr': size_config.sonarr.seerr_tv.quality_definition.qualities} | to_json }}
+        dest: /srv/usenet/config/catalog/recyclarr-preview/quality-sizes.json
+        owner: usenet
+        group: usenet
+        mode: '0600'
+      vars:
+        size_config: "{{ lookup('ansible.builtin.file', usenet_project_root + '/config/recyclarr.yml') | replace('!secret ', '') | from_yaml }}"
+
     - name: Preview Recyclarr changes privately
       ansible.builtin.shell:
         cmd: 'umask 077; docker compose run --rm recyclarr sync --preview > /srv/usenet/config/catalog/recyclarr-preview/preview.log 2>&1'
@@ -69,6 +81,7 @@
       loop:
         - {source: config/catalog/recyclarr-preview/recyclarr.yml, destination: config/catalog/recyclarr/recyclarr.yml}
         - {source: config/catalog/recyclarr-preview/secrets.yml, destination: config/catalog/recyclarr/secrets.yml}
+        - {source: config/catalog/recyclarr-preview/quality-sizes.json, destination: config/catalog/recyclarr/quality-sizes.json}
         - {source: compose/recyclarr-preview/compose.yaml, destination: compose/recyclarr/compose.yaml}
       when: seerr_safety_apply | default(false) | bool
 
@@ -98,6 +111,12 @@
       ansible.builtin.command:
         argv: [sudo, -n, -u, usenet, python3, /srv/usenet/libexec/seerr-safety.py, verify]
       when: seerr_safety_apply | default(false) | bool
+      # Native API readback can briefly lag a completed settings sync. Retry only
+      # verification against the original snapshot, never the mutation or capture.
+      register: settings_verification
+      until: settings_verification.rc == 0
+      retries: 3
+      delay: 5
       changed_when: false
 
     - name: Install settings synchronization units

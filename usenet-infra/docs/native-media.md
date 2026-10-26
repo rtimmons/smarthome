@@ -198,6 +198,15 @@ native-health and post-processing gates suppress all
 proposals. Incomplete API reads fail closed.
 
 The report reader remains read-only apart from its existing HA notification.
+Its five-minute checks still read native queue, health, storage and availability
+state. Successful existing-file size checks may be reused for at most one hour,
+without extending their original deadline. Changed native file metadata, paths
+or mount identity require a fresh check; failed checks are never cached. The
+private `file-checks.json` is disposable, and reports expose checked/reused counts.
+An unchanged file removed outside Arr may therefore take up to an hour to raise
+a report finding. Every acquisition invocation and pre-grab recheck bypasses this
+observer cache; cached evidence cannot authorize a download.
+
 As of October 25, a separate, explicitly enabled executor recovers **missing TV
 episodes in approved, still-open requests**. It uses a six-hour per-episode observation grace
 and missing-only proposals, then recollects live approvals, files, queue and health
@@ -289,6 +298,24 @@ management settings are not synchronized, as documented by Recyclarr's
 references. The [quality-profile reference](https://recyclarr.dev/reference/configuration/quality-profiles/)
 describes the upgrade flag. Disabled upgrades are this household's preservation
 policy, not a claim that every TRaSH recommendation disables upgrades.
+
+Recyclarr also owns explicit HD quality-size definitions. These are household
+capacity limits, not the guide's quality-first unlimited maxima. Existing minimum
+sizes and tighter maximum sizes are retained. Previously unlimited 1080p encodes
+are capped at 200 MB/min, 1080p remuxes at 400 MB/min, 2160p encodes at 400 MB/min,
+and 2160p remuxes at 800 MB/min. Previously unlimited preferred sizes are set to
+95% of the new maximum; existing lower preferences remain. SD, disc-image and raw
+definitions remain unchanged. Limits are shared across profiles on Sonarr v4 and
+Radarr; they affect future release eligibility, not existing files. The 100 GiB
+job cap and 30 GiB reserves still apply independently. Long or unusually large
+releases can be excluded even when their quality is otherwise allowed.
+
+The settings rollout previews these overrides and snapshots every native size
+definition. Readback must match all configured values and preserve every unmanaged
+definition, existing file, profile and RSS setting. Its verification policy is
+derived from the same Recyclarr YAML, avoiding a second hand-maintained set of
+limits. See [Recyclarr size configuration](https://recyclarr.dev/reference/configuration/quality-definition/)
+and the [guide's explanation of unlimited maxima](https://trash-guides.info/Radarr/Radarr-Quality-Settings-File-Size/).
 
 The October 21 codec policy rejects release names marked AV1 in both Sonarr
 and Radarr. Recyclarr installs only the guide's AV1 custom format, assigns

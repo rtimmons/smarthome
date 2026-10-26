@@ -41,6 +41,37 @@ def completed(value):
 
 
 class RecoveryTests(unittest.TestCase):
+    def test_file_cache_expires_without_sliding_and_rechecks_changes(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'synthetic.mkv'; path.write_bytes(b'fixture')
+            record = {'id': 1, 'size': 7, 'path': str(path)}
+            first = r.FileChecks(now=10000)
+            self.assertTrue(first.verify(path, 'sonarr', record, [1, 2]))
+            path.unlink()
+            cached = r.FileChecks(first.entries, now=13599)
+            resolver = mock.Mock(side_effect=FileNotFoundError)
+            self.assertTrue(cached.verify(path, 'sonarr', record, [1, 2], resolve=resolver))
+            resolver.assert_not_called()
+            self.assertEqual(cached.entries, first.entries)
+            for now, value, mount in ((13600, record, [1, 2]), (9999, record, [1, 2]),
+                                      (10001, dict(record, id=2), [1, 2]),
+                                      (10001, record, [1, 3])):
+                checks = r.FileChecks(cached.entries, now=now)
+                with self.assertRaises(FileNotFoundError):
+                    checks.verify(path, 'sonarr', value, mount, resolve=resolver)
+                self.assertEqual(checks.entries, {})
+            self.assertEqual(resolver.call_count, 4)
+
+    def test_file_cache_never_keeps_failures_or_unused_entries(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'synthetic.mkv'; path.write_bytes(b'fixture')
+            checks = r.FileChecks({'unused': 10000}, now=10001)
+            self.assertFalse(checks.verify(path, 'radarr', {'size': 8}, [1, 2]))
+            self.assertEqual(checks.entries, {})
+            path.write_bytes(b'new-size')
+            self.assertTrue(checks.verify(path, 'radarr', {'size': 8}, [1, 2]))
+            self.assertEqual(checks.checked, 2)
+
     def test_plex_scan_freshness_requires_every_selected_general_library(self):
         value = {'plex': {'libraries': [{'id': str(i), 'enabled': True, 'lastScan': 1699999990000} for i in (2,3,4,5)]}}
         self.assertTrue(r.plex_scan_fresh(value, 1700000000))

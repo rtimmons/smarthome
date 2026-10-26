@@ -3,6 +3,24 @@
 # Unspecified settings are retained; no broad guide templates are imported.
 radarr:
   seerr_movies:
+    # Household capacity ceilings; retain existing minima and tighter limits.
+    quality_definition:
+      type: movie
+      qualities:
+        - {"name": "HDTV-720p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "WEBDL-720p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "WEBRip-720p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "Bluray-720p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "HDTV-1080p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "WEBDL-1080p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "WEBRip-1080p", "min": 0, "preferred": 95, "max": 100}
+        - {"name": "Bluray-1080p", "min": 0, "preferred": 190.0, "max": 200}
+        - {"name": "Remux-1080p", "min": 0, "preferred": 380.0, "max": 400}
+        - {"name": "HDTV-2160p", "min": 0, "preferred": 380.0, "max": 400}
+        - {"name": "WEBDL-2160p", "min": 0, "preferred": 380.0, "max": 400}
+        - {"name": "WEBRip-2160p", "min": 0, "preferred": 380.0, "max": 400}
+        - {"name": "Bluray-2160p", "min": 0, "preferred": 380.0, "max": 400}
+        - {"name": "Remux-2160p", "min": 0, "preferred": 760.0, "max": 800}
     base_url: http://127.0.0.1:7878/radarr
     api_key: !secret radarr_api_key
     media_management:
@@ -40,6 +58,24 @@ radarr:
           - {name: HD - 720p/1080p, score: -10000}
 sonarr:
   seerr_tv:
+    # Household capacity ceilings; retain existing minima and tighter limits.
+    quality_definition:
+      type: series
+      qualities:
+        - {"name": "HDTV-720p", "min": 3, "preferred": 95, "max": 125}
+        - {"name": "HDTV-1080p", "min": 4, "preferred": 95, "max": 125}
+        - {"name": "WEBRip-720p", "min": 3, "preferred": 95, "max": 130}
+        - {"name": "WEBDL-720p", "min": 3, "preferred": 95, "max": 130}
+        - {"name": "Bluray-720p", "min": 4, "preferred": 95, "max": 130}
+        - {"name": "WEBRip-1080p", "min": 4, "preferred": 95, "max": 130}
+        - {"name": "WEBDL-1080p", "min": 4, "preferred": 95, "max": 130}
+        - {"name": "Bluray-1080p", "min": 4, "preferred": 95, "max": 155}
+        - {"name": "Bluray-1080p Remux", "min": 35, "preferred": 95, "max": 400}
+        - {"name": "HDTV-2160p", "min": 35, "preferred": 95, "max": 199.9}
+        - {"name": "WEBRip-2160p", "min": 35, "preferred": 95, "max": 400}
+        - {"name": "WEBDL-2160p", "min": 35, "preferred": 95, "max": 400}
+        - {"name": "Bluray-2160p", "min": 35, "preferred": 95, "max": 400}
+        - {"name": "Bluray-2160p Remux", "min": 35, "preferred": 95, "max": 800}
     base_url: http://127.0.0.1:8989/sonarr
     api_key: !secret sonarr_api_key
     media_management:
