@@ -18,6 +18,10 @@ The printer service listens on port 8099. The restricted VLAN is allowed to reac
 
 The add-on manifest and printer service settings own its endpoint and runtime configuration. Rendering requires its documented fonts and graphics libraries, so validate with the repository’s container preflight rather than assuming a host-only render represents production.
 
+Printer source is maintained in a separate private repository at `smarthome/printer`.
+Restore both source checkouts before testing or deployment. The root `just` commands
+still build and test the combined workspace; printing and saved-label behavior are unchanged.
+
 See the [printer guide](../../printer/README.md) and [QL-810W troubleshooting](../../printer/docs/ql810w-troubleshooting.md). Restore saved service configuration and the fixed address before changing application targets.
 
 ## Daily summaries and receipt checkboxes

@@ -31,6 +31,14 @@ The build stages only these sources and reviewed assets, never the whole checkou
 Links to imported runbooks become local links; other tracked source references
 remain links to the repository. Private/ignored file links fail validation.
 
+The nested private `printer/` repository is an explicit source exception: review
+fingerprints use its own Git source list, excluding its ignored runtime files.
+Only the printer runbooks named in `wiki/components.json` are imported; application
+source is hashed for review, not copied into the site. Private source references
+are labeled as private local paths rather than linked to GitHub. Publication
+metadata records the private revision and dirty state as well as the parent
+revision. Both checkouts must be present for wiki checks and deployment.
+
 Keep specific media titles, artists, albums, release filenames, artwork links,
 and identifying catalog links/IDs out of wiki prose, examples, and imported
 receipts. Use neutral aliases for operational evidence and synthetic test data.

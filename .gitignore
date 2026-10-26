@@ -2,6 +2,8 @@
 build/
 backups/
 tools/addons.yaml
+# Independent private repository; clone it here before setup/test/deploy.
+/printer/
 node-sonos-http-api/node-sonos-http-api/
 
 # JetBrains IDEs (IntelliJ IDEA, WebStorm, PyCharm, etc.)

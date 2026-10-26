@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import subprocess
+import shutil
 from pathlib import Path
+
+import pytest
 
 
 def _env_with_stubbed_path(tmp_path: Path) -> dict[str, str]:
@@ -12,7 +15,8 @@ def _env_with_stubbed_path(tmp_path: Path) -> dict[str, str]:
     return env
 
 
-def test_python_use_prefers_local_python_version(tmp_path: Path):
+@pytest.mark.parametrize("nested_repository", [False, True])
+def test_python_use_selects_pin_inside_or_outside_nested_repository(tmp_path: Path, nested_repository):
     script = Path(__file__).resolve().parents[1] / "scripts" / "python_use.sh"
     env = _env_with_stubbed_path(tmp_path)
 
@@ -63,9 +67,17 @@ def test_python_use_prefers_local_python_version(tmp_path: Path):
     )
     pyenv.chmod(0o755)
 
-    workdir = tmp_path / "work"
-    workdir.mkdir()
-    (workdir / ".python-version").write_text(f"{required_version}\n", encoding="utf-8")
+    workspace = tmp_path / "work"
+    workspace.mkdir()
+    (workspace / ".python-version").write_text(f"{required_version}\n", encoding="utf-8")
+    workdir = workspace
+    if nested_repository:
+        copied = workspace / "talos/scripts/python_use.sh"
+        copied.parent.mkdir(parents=True)
+        shutil.copy(script, copied)
+        script = copied
+        workdir = workspace / "printer"
+        subprocess.run(["git", "init", "-q", str(workdir)], check=True)
 
     proc = subprocess.run(
         ["bash", "-c", f'source "{script}" && echo "$TALOS_PYTHON_BIN"'],

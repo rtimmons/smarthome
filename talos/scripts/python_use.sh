@@ -2,11 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-if REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null)"; then
-  :
-else
-  REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-fi
+# The enclosing workspace owns the runtime pin, even from a nested add-on repo.
+REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 
 DEFAULT_PY_VERSION_FILE="$REPO_ROOT/.python-version"
 LOCAL_PY_VERSION_FILE="$(pwd)/.python-version"

@@ -1,9 +1,0 @@
-label-output.png
-label-output/
-.uv-cache/
-.venv/
-developers.home-assistant/
-build/
-tests/baselines/DIFF_*.png
-tests/baselines/ENHANCED_*.png
-tests/baselines/visual-diff-report.html

@@ -16,6 +16,36 @@ from areas import render_rooms
 
 
 class ContentTests(unittest.TestCase):
+    def test_nested_private_sources_follow_their_own_git_ignores(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            printer = root / "printer"
+            (printer / "src").mkdir(parents=True)
+            subprocess.run(["git", "init", "-q", str(root)], check=True)
+            subprocess.run(["git", "init", "-q", str(printer)], check=True)
+            (root / ".gitignore").write_text("/printer/\n")
+            (printer / ".gitignore").write_text("src/runtime.txt\n")
+            (printer / "src/app.py").write_text("fixture = 1\n")
+            (printer / "src/runtime.txt").write_text("private runtime evidence")
+            component = {"id": "printing", "watch": ["printer/src/*"]}
+            paths = tool.source_files(component, root)
+            self.assertEqual(paths, ["printer/src/app.py"])
+            before = tool.fingerprint(paths, root)
+            (printer / "src/app.py").write_text("fixture = 2\n")
+            self.assertNotEqual(before, tool.fingerprint(paths, root))
+
+    def test_private_sources_never_link_to_parent_github_history(self):
+        reference = tool.source_reference("printer/addon.yaml", "old-parent-sha")
+        self.assertIn("private printer repository", reference)
+        self.assertNotIn("github", reference)
+        with self.assertRaisesRegex(ValueError, "Private source"):
+            tool.source_url("printer/addon.yaml", "old-parent-sha")
+        with patch.object(tool, "known_source_files", return_value={"printer/addon.yaml"}):
+            rendered = tool.rewrite_links("[Manifest](./addon.yaml)", "printer/README.md", "runbooks/printer/README.md", {}, "HEAD")
+            self.assertEqual(rendered, "Manifest (private printer repository)")
+            with self.assertRaisesRegex(ValueError, "Unpublished local link"):
+                tool.rewrite_links("[Private runtime](./.runtime-evidence.txt)", "printer/README.md", "runbooks/printer/README.md", {}, "HEAD")
+
     def test_room_catalog_distinguishes_inheritance_controls_and_stale_verification(self):
         model = {"devices": [{"entity": "light.fixture", "areaId": "office"}], "scenes": [
             {"id": "fixture_high", "name": "Fixture high", "targets": [{"entity": "light.fixture"}]}],

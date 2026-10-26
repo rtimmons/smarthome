@@ -15,8 +15,8 @@ set positional-arguments := true
 # VARIABLES
 # ============================================================================
 
-# Repository root detection
-repo_root := `git rev-parse --show-toplevel 2>/dev/null || pwd`
+# Workspace root comes from this shared file, including inside nested repositories.
+repo_root := clean(source_directory() / "../..")
 
 # Talos binary path
 talos_bin := repo_root + "/talos/build/bin/talos"

@@ -10,8 +10,8 @@
     "reviewed_at": "2026-10-25"
   },
   "home": {
-    "fingerprint": "e42bdceea13878acb097a554c02c135430d6b8cc22869721a1ed95b89a6746f7",
-    "reason": "Reviewed concise repository entrypoint: existing generated service/reference inventory replaces duplicate prose; household guide remains accurate.",
+    "fingerprint": "830c859e0c5d592a5cacdef0ffd16b61e66751469cf1043319b06136a731d89b",
+    "reason": "Reviewed the README private checkout prerequisite; household navigation and service entry points are unchanged.",
     "reviewed_at": "2026-10-26"
   },
   "integrations": {
@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "4c54ced02682a894c018a28260610257d6778b465eaee54f7005596b40095ebf",
-    "reason": "Promote HA Plex to established household service, retain benchmark and thermal history, and document conditional NAS retirement with analysis, Jellyfin/Moonfin, DNS and integration cutover",
+    "fingerprint": "a03ed81f7c797923aa3a95c1afb53fca56811861869eb434553ebc039094db16",
+    "reason": "Reviewed paired repository setup and recovery, shared workspace path resolution, and private wiki source metadata.",
     "reviewed_at": "2026-10-26"
   },
   "media": {
@@ -40,9 +40,9 @@
     "reviewed_at": "2026-10-26"
   },
   "printing": {
-    "fingerprint": "71c6c1a0e24aee92ba8f3e5b4474f6cbfaa5c032eee997b6ba51cbfd1ab2f088",
-    "reason": "Reviewed protected printer browser entrance and unchanged LAN QR and HA REST clients",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",
+    "reason": "Reviewed private printer checkout and manifest URL, unchanged service commands, and source references without GitHub links.",
+    "reviewed_at": "2026-10-26"
   },
   "utilities": {
     "fingerprint": "2c7a75f14e4f0a0b4b27e6b579ee149bd331d60e1fcdb1b4e9a6207e7d463c0c",

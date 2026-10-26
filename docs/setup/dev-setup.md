@@ -2,6 +2,34 @@
 
 This guide helps you set up the local development environment for the first time.
 
+## Private printer checkout
+
+From a fresh smarthome clone or worktree, clone the private printer repository at
+the exact nested path before running setup, tests, development or deployment:
+
+```bash
+git clone ssh://git@git-ssh.home.arpa:2222/ryan/printer.git printer
+just checkout-prepare
+just setup
+```
+
+An existing `printer/.git` means the clone is already present; inspect it instead
+of cloning over it. `printer/` is ignored by smarthome and is not a submodule.
+Its origin is private; the directory, add-on key and commands remain `printer`.
+The repositories deliberately share the parent's Talos, runtime pins and build
+layout. No package release, version pin or compatibility layer separates them.
+
+Run `just test`, `just test printer`, `just printer-image`, `just ha-addon printer`
+and `just deploy [printer]` from smarthome as usual. Within `printer`, `just setup`,
+`just test` and `just build` still use the enclosing workspace. `just deploy`
+also deploys Home Assistant configuration and publishes the wiki after success.
+
+Review both repositories with `git status` and `git -C printer status`; parent
+status does not report private source edits. Follow the parent
+[paired repository rules](../../AGENTS.md#paired-printer-repository) for changes
+that span the two working trees. Clone both repositories when restoring source;
+checkout-state recovery restores runtime state, not the private source clone.
+
 ## Home Assistant Development Standards
 
 This project follows Home Assistant add-on development standards. **Read the official documentation first:**

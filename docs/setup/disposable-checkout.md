@@ -32,6 +32,14 @@ must be tracked before running Git clean. Untracked new source work is still
 subject to Git's normal deletion rules. Do not use `-ff` to remove nested Git
 repositories, and do not run a destructive clean in the working checkout as a test.
 
+The private `printer/` source checkout is an independent nested Git repository.
+An ordinary single-force clean preserves it; `git clean -ff` can destroy it and
+must not be used. A fresh smarthome clone/worktree needs a private clone at
+`printer/` before setup, tests or deployment; follow `docs/setup/dev-setup.md`.
+`just checkout-prepare` restores its label-output compatibility link after cloning,
+but does not clone, update or back up printer source. Preserve and push that source
+through its own private origin, including any coordinated smarthome changes.
+
 ## Encryption and the 1Password handoff
 
 Current credential files also have a Git-tracked SOPS escrow at

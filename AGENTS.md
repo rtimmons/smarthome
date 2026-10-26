@@ -15,6 +15,42 @@ Repository-wide constraints; component `AGENTS.md` files add local guidance.
 - Runtimes are pinned by `.nvmrc` (Node) and `.python-version` (Python); use the self-contained nvm/pyenv installed by `just setup`.
 - “Prepare to commit” means: stage your changes (with permission), run `just test`, and drop the proposed commit message in `./msg` without staging that file.
 
+## Paired printer repository
+- `printer/` is an independent, ignored private Git repository, cloned from
+  `ssh://git@git-ssh.home.arpa:2222/ryan/printer.git`. It is required at that exact
+  path for setup, tests, local development, builds, deployment and wiki checks.
+  It is not a submodule; never force-add it or its source to this repository.
+- The two repositories may depend on each other's current structure and change
+  together. Keep application code, tests, assets and printer docs in `printer`;
+  keep shared orchestration and integration consumers in smarthome. Read both
+  this file and `printer/AGENTS.md` before cross-repository work.
+- Inspect both `git status` and `git -C printer status` before and after work.
+  A printer-only implementation change needs only a printer commit unless its
+  public integration/docs or the printing wiki review also change. Shared API,
+  manifest, build/runtime or deployment changes require a coordinated pair when
+  both repositories are affected; do not create empty companion commits.
+- For coordinated commits, finish both sides and run root `just test` against
+  the combined working trees first. Ask before index writes as above. Stage
+  explicit paths separately and inspect each complete staged diff, filenames,
+  and proposed message for secrets and media identifiers. Put a proposed message
+  in each affected repo's untracked `msg` without overwriting an existing message.
+- Git cannot commit two repositories atomically. When commits are authorized,
+  commit printer first, then smarthome with the printer SHA in its commit body;
+  use a shared short change description in both messages. Record both SHAs in
+  the handoff. If the second commit fails, finish or report the incomplete pair
+  before deployment/publication; do not rewrite unrelated history. When pushes
+  are requested, push printer only to its private origin before the smarthome
+  companion. Never push printer to GitHub.
+- Use the same dedicated agent signing key for both repos. From this root, the
+  printer command is `git -C printer -c gpg.format=ssh -c gpg.ssh.program=ssh-keygen
+  -c user.signingkey="$PWD/.ssh/id_ed25519_codex_git_signing" -c commit.gpgsign=true
+  commit ...`. Do not change the user's Git configuration or author metadata.
+- A fresh clone/worktree must have its own private clone at `printer/`; see
+  `docs/setup/dev-setup.md`. Preserve its `.git`, ignored state and uncommitted
+  work. Never use `git clean -ff` to remove nested repositories. History in old
+  smarthome commits is unchanged; this boundary keeps future printer source out
+  of smarthome commits.
+
 ## Media privacy
 - Never commit specific movie/show/episode/song/program titles, artists, albums, release names, media filenames, artwork URLs, or identifying catalog links/IDs from live content. This applies across the repository, including wiki sources, code examples, fixtures, receipts, filenames, and commit messages.
 - Use neutral aliases (`media-001`) for operational evidence and clearly synthetic metadata (`Synthetic Track`, `Fixture Artist`) in tests. Preserve parser syntax and relationships without copying real content. Exact operational names and replacement maps belong only in ignored private evidence.

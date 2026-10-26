@@ -27,6 +27,7 @@ BUILD = ROOT / "build/wiki"
 CATALOG = PROJECT / "components.json"
 REVIEWS = PROJECT / "reviews.json"
 REPO_URL = "https://github.com/rtimmons/smarthome/blob/"
+PRIVATE_REPOSITORIES = ("printer",)
 
 
 def run(argv, **kwargs):
@@ -53,10 +54,25 @@ def safe_file(relative: str, root=ROOT):
     return path
 
 
-def source_files(component, root=ROOT):
+def private_repository(path):
+    return next((name for name in PRIVATE_REPOSITORIES if path.startswith(name + "/")), None)
+
+
+def known_source_files(root=ROOT):
     # Git's tracked-file list prevents ignored secrets and local runtime artifacts
-    # from becoming review inputs. Explicit new source paths can be reviewed pre-commit.
+    # from becoming review inputs. Only explicitly named nested repos participate.
     known = set(subprocess.check_output(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"], text=True).splitlines())
+    known = {p for p in known if not private_repository(p)}
+    for name in PRIVATE_REPOSITORIES:
+        nested = root / name
+        if (nested / ".git").exists():
+            paths = subprocess.check_output(["git", "-C", str(nested), "ls-files", "--cached", "--others", "--exclude-standard"], text=True).splitlines()
+            known.update(f"{name}/{p}" for p in paths)
+    return known
+
+
+def source_files(component, root=ROOT):
+    known = known_source_files(root)
     import fnmatch
     matched = set(component.get("pages", []) + component.get("runbooks", []))
     for pattern in component["watch"]:
@@ -130,7 +146,28 @@ def review(component_id, reason):
 
 
 def source_url(path, revision):
+    if private_repository(path):
+        raise ValueError(f"Private source cannot be linked to GitHub: {path}")
     return REPO_URL + revision + "/" + quote(path, safe="/")
+
+
+def source_reference(path, revision, label=None):
+    if private_repository(path):
+        return f"{label or f'`{path}`'} (private {private_repository(path)} repository)"
+    return f"[{label or path}]({source_url(path, revision)})"
+
+
+def private_repository_states():
+    states = {}
+    for name in PRIVATE_REPOSITORIES:
+        path = ROOT / name
+        revision = subprocess.run(["git", "-C", str(path), "rev-parse", "--verify", "HEAD"],
+                                  capture_output=True, text=True)
+        states[name] = {
+            "revision": revision.stdout.strip() if revision.returncode == 0 else None,
+            "dirty": bool(subprocess.check_output(["git", "-C", str(path), "status", "--porcelain", "--untracked-files=normal"], text=True).strip()),
+        }
+    return states
 
 
 def table(headers, rows):
@@ -172,7 +209,7 @@ def export_reference(stage, data, revision):
     run(["just", "wiki-model-export"], cwd=ROOT)
     model = json.loads((BUILD / "model.json").read_text())
     def source_link(source):
-        return f"[{source}]({source_url(source, revision)})"
+        return source_reference(source, revision)
 
     def generated(name, title, sources, body):
         target = stage / "reference" / name
@@ -312,6 +349,11 @@ def rewrite_links(text, source, destination, mapping, revision):
         else:
             # Non-imported runbooks/source links remain explicit source references.
             # Never turn private or ignored files into a web link.
+            if private_repository(relative):
+                if relative not in known_source_files():
+                    raise ValueError(f"Unpublished local link in {source}: {reference}")
+                safe_file(relative)
+                return source_reference(relative, revision, prefix[1:-2])
             if subprocess.run(["git", "-C", str(ROOT), "ls-files", "--error-unmatch", relative],
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
                 raise ValueError(f"Unpublished local link in {source}: {reference}")
@@ -319,7 +361,7 @@ def rewrite_links(text, source, destination, mapping, revision):
             if parsed.fragment:
                 result += "#" + parsed.fragment
         return prefix + result + suffix
-    return re.sub(r"(\]\()([^\s)]+)(\))", replace, text)
+    return re.sub(r"(\[[^\]\n]*\]\()([^\s)]+)(\))", replace, text)
 
 
 class PageParser(HTMLParser):
@@ -392,8 +434,9 @@ def build(receipts=None):
     signature = publication_inputs()
     receipts = receipts if receipts is not None else {}
     revision = git("rev-parse", "HEAD")
-    dirty = bool(git("status", "--porcelain", "--untracked-files=normal"))
-    key = digest(json.dumps([signature, receipts, revision, dirty], sort_keys=True).encode())
+    private_states = private_repository_states()
+    dirty = bool(git("status", "--porcelain", "--untracked-files=normal")) or any(s["dirty"] for s in private_states.values())
+    key = digest(json.dumps([signature, receipts, revision, dirty, private_states], sort_keys=True).encode())
     output = BUILD / "candidates" / key
     if (output / "manifest.json").exists():
         validate_site(output / "site")
@@ -418,7 +461,11 @@ def build(receipts=None):
         reviewed = reviews[owner["id"]]["reviewed_at"] if owner else "See the dated observations in this runbook"
         committed = subprocess.run(["git", "-C", str(ROOT), "cat-file", "-e", f"{revision}:{source}"],
                                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
-        source_label = f"[Source]({source_url(source, revision)})" if committed else f"Source: `{source}` (new working-tree file)"
+        if private_repository(source):
+            state = private_states[private_repository(source)]
+            source_label = source_reference(source, revision) + f" · Private revision: `{state['revision'] or 'uncommitted'}`"
+        else:
+            source_label = source_reference(source, revision, "Source") if committed else f"Source: `{source}` (new working-tree file)"
         body += (f"\n\n---\n\n{source_label} · "
                  f"Documentation reviewed: {reviewed}.  \nSource revision: `{revision[:12]}`"
                  f"{' + working-tree changes' if dirty else ''}. Built: {built_at}. "
@@ -456,7 +503,7 @@ def build(receipts=None):
     # The built-in theme's version notification is an optional external script.
     # Remove it if a later theme version adds one; validation still rejects all other external assets.
     site = output / "site"
-    publication = {"revision": revision, "dirty": dirty, "source_fingerprint": signature,
+    publication = {"revision": revision, "dirty": dirty, "private_repositories": private_states, "source_fingerprint": signature,
                    "built_at": built_at, "receipts": receipts}
     write_json(site / "publication.json", publication)
     validate_site(site)
