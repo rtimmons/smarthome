@@ -279,10 +279,16 @@
         ".python-version",
         "wiki/areas.py",
         "git-host/*",
+        "tools/plex-ha-trial.cjs",
+        "tools/plex-secondary.cjs",
+        "tools/plex-secondary.test.cjs",
+        "docs/operations/plex-ha-trial-results.json",
         "tools/checkout/*"
       ],
       "runbooks": [
         "docs/plan-hardening.md",
+        "docs/operations/plex-ha-trial.md",
+        "docs/operations/plex-secondary.md",
         "docs/operations/addon-state-backups.md",
         "usenet-infra/docs/scheduled-backups.md",
         "docs/operations/wiki.md",

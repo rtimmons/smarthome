@@ -817,3 +817,19 @@ dns-deploy:
 [positional-arguments]
 dns-rollback-primary snapshot:
 	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns rollback-primary --snapshot "$1"
+
+# Device-free Core API/script scheduler measurements for the isolated Plex trial.
+[group: 'diagnostics']
+[positional-arguments]
+plex-ha-probe phase output seconds="120":
+    @{{nvm_use}} && cd new-hass-configs/config-generator && npm run build
+    @{{nvm_use}} && node tools/plex-ha-trial.cjs "$1" "$2" "$3"
+
+[group: 'diagnostics']
+[positional-arguments]
+plex-secondary action token_file:
+    @{{nvm_use}} && node tools/plex-secondary.cjs "$1" "$2"
+
+[group: 'diagnostics']
+plex-secondary-test:
+    @{{nvm_use}} && node --test tools/plex-secondary.test.cjs

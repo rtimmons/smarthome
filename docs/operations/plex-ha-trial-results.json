@@ -1,0 +1,357 @@
+{
+  "date": "2026-10-26",
+  "scope": "Synthetic 1080p H.264 source to 720p H.264; no device service calls",
+  "caveats": [
+    "Software phase reused an 8 Mbps decision and is not bitrate-matched to corrected GPU phases.",
+    "Round-trip latency includes connection and authentication; serverMs includes a requested 50 ms delay.",
+    "Two-stream first run contained a 4.3 second round-trip outlier; causation is unproven."
+  ],
+  "results": [
+    {
+      "phase": "plex-idle-clean",
+      "started": "2026-10-26T20:08:34.697Z",
+      "finished": "2026-10-26T20:09:35.555Z",
+      "requestedSeconds": 60,
+      "latency": {
+        "apiMs": {
+          "count": 42,
+          "median": 4.55,
+          "p95": 260.4,
+          "max": 288
+        },
+        "scriptRoundtripMs": {
+          "count": 42,
+          "median": 315.57,
+          "p95": 318.4,
+          "max": 346.2
+        },
+        "serverMs": {
+          "count": 42,
+          "median": 51.28,
+          "p95": 52.77,
+          "max": 63.7
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": {
+        "min": 0.21,
+        "median": 0.23,
+        "max": 24.28
+      },
+      "memoryAvailableGiB": {
+        "min": 26.15,
+        "median": 26.29,
+        "max": 26.29
+      }
+    },
+    {
+      "phase": "software-one",
+      "started": "2026-10-26T20:10:31.555Z",
+      "finished": "2026-10-26T20:12:31.622Z",
+      "requestedSeconds": 120,
+      "latency": {
+        "apiMs": {
+          "count": 79,
+          "median": 9.63,
+          "p95": 269.73,
+          "max": 382.61
+        },
+        "scriptRoundtripMs": {
+          "count": 79,
+          "median": 339.16,
+          "p95": 435.45,
+          "max": 518.69
+        },
+        "serverMs": {
+          "count": 79,
+          "median": 55.27,
+          "p95": 72.78,
+          "max": 232.26
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": {
+        "min": 54.83,
+        "median": 73.99,
+        "max": 78.21
+      },
+      "memoryAvailableGiB": {
+        "min": 26.09,
+        "median": 26.11,
+        "max": 26.14
+      },
+      "load": {
+        "sessions": 1,
+        "hardwareRequested": false,
+        "selectedMedia": [
+          null
+        ],
+        "reportedSpeed": {
+          "min": 0.3,
+          "median": 0.6,
+          "max": 0.7
+        },
+        "sessionSamples": 21,
+        "allFullHardware": false,
+        "allActiveUnthrottled": true,
+        "errors": []
+      }
+    },
+    {
+      "phase": "gpu-one-verified",
+      "started": "2026-10-26T20:23:22.176Z",
+      "finished": "2026-10-26T20:25:22.504Z",
+      "requestedSeconds": 120,
+      "latency": {
+        "apiMs": {
+          "count": 81,
+          "median": 7.76,
+          "p95": 266.49,
+          "max": 283.95
+        },
+        "scriptRoundtripMs": {
+          "count": 81,
+          "median": 331.7,
+          "p95": 353.4,
+          "max": 398.19
+        },
+        "serverMs": {
+          "count": 81,
+          "median": 54.08,
+          "p95": 58.89,
+          "max": 123.15
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": {
+        "min": 24.08,
+        "median": 29.82,
+        "max": 30.89
+      },
+      "memoryAvailableGiB": {
+        "min": 26.17,
+        "median": 26.24,
+        "max": 26.24
+      },
+      "load": {
+        "sessions": 1,
+        "hardwareRequested": true,
+        "selectedMedia": [
+          {
+            "width": 1280,
+            "height": 720,
+            "bitrate": 3545,
+            "videoCodec": "h264"
+          }
+        ],
+        "reportedSpeed": {
+          "min": 2,
+          "median": 2.5,
+          "max": 2.8
+        },
+        "sessionSamples": 22,
+        "allFullHardware": true,
+        "allActiveUnthrottled": true,
+        "errors": []
+      }
+    },
+    {
+      "phase": "gpu-two-verified",
+      "started": "2026-10-26T20:25:43.210Z",
+      "finished": "2026-10-26T20:27:44.089Z",
+      "requestedSeconds": 120,
+      "latency": {
+        "apiMs": {
+          "count": 77,
+          "median": 8.27,
+          "p95": 267.01,
+          "max": 287.71
+        },
+        "scriptRoundtripMs": {
+          "count": 77,
+          "median": 333.45,
+          "p95": 385.71,
+          "max": 4314.5
+        },
+        "serverMs": {
+          "count": 77,
+          "median": 54.29,
+          "p95": 66.83,
+          "max": 584.24
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": {
+        "min": 29.1,
+        "median": 34.92,
+        "max": 40.55
+      },
+      "memoryAvailableGiB": {
+        "min": 26.08,
+        "median": 26.19,
+        "max": 26.24
+      },
+      "load": {
+        "sessions": 2,
+        "hardwareRequested": true,
+        "selectedMedia": [
+          {
+            "width": 1280,
+            "height": 720,
+            "bitrate": 3545,
+            "videoCodec": "h264"
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "bitrate": 3545,
+            "videoCodec": "h264"
+          }
+        ],
+        "reportedSpeed": {
+          "min": 0.9,
+          "median": 1.3,
+          "max": 1.5
+        },
+        "sessionSamples": 42,
+        "allFullHardware": true,
+        "allActiveUnthrottled": true,
+        "errors": []
+      }
+    },
+    {
+      "phase": "gpu-recovery",
+      "started": "2026-10-26T20:28:13.869Z",
+      "finished": "2026-10-26T20:29:14.396Z",
+      "requestedSeconds": 60,
+      "latency": {
+        "apiMs": {
+          "count": 41,
+          "median": 6.95,
+          "p95": 265.04,
+          "max": 290.8
+        },
+        "scriptRoundtripMs": {
+          "count": 41,
+          "median": 327.63,
+          "p95": 352.16,
+          "max": 379.82
+        },
+        "serverMs": {
+          "count": 41,
+          "median": 53.41,
+          "p95": 56.97,
+          "max": 97.46
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": {
+        "min": 0.35,
+        "median": 0.48,
+        "max": 0.64
+      },
+      "memoryAvailableGiB": {
+        "min": 26.33,
+        "median": 26.34,
+        "max": 26.35
+      }
+    },
+    {
+      "phase": "gpu-two-repeat",
+      "started": "2026-10-26T20:29:42.585Z",
+      "finished": "2026-10-26T20:30:42.688Z",
+      "requestedSeconds": 60,
+      "latency": {
+        "apiMs": {
+          "count": 40,
+          "median": 7.82,
+          "p95": 269.24,
+          "max": 293.59
+        },
+        "scriptRoundtripMs": {
+          "count": 40,
+          "median": 336.64,
+          "p95": 385.32,
+          "max": 454.95
+        },
+        "serverMs": {
+          "count": 40,
+          "median": 55,
+          "p95": 57.29,
+          "max": 63.09
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": {
+        "min": 29.39,
+        "median": 37.22,
+        "max": 37.44
+      },
+      "memoryAvailableGiB": {
+        "min": 26.22,
+        "median": 26.24,
+        "max": 26.24
+      },
+      "load": {
+        "sessions": 2,
+        "hardwareRequested": true,
+        "selectedMedia": [
+          {
+            "width": 1280,
+            "height": 720,
+            "bitrate": 3545,
+            "videoCodec": "h264"
+          },
+          {
+            "width": 1280,
+            "height": 720,
+            "bitrate": 3545,
+            "videoCodec": "h264"
+          }
+        ],
+        "reportedSpeed": {
+          "min": 1.1,
+          "median": 1.4,
+          "max": 1.5
+        },
+        "sessionSamples": 22,
+        "allFullHardware": true,
+        "allActiveUnthrottled": true,
+        "errors": []
+      }
+    },
+    {
+      "phase": "gpu-final-recovery",
+      "started": "2026-10-26T20:31:10.261Z",
+      "finished": "2026-10-26T20:32:10.593Z",
+      "requestedSeconds": 60,
+      "latency": {
+        "apiMs": {
+          "count": 46,
+          "median": 6.98,
+          "p95": 30.7,
+          "max": 281.27
+        },
+        "scriptRoundtripMs": {
+          "count": 46,
+          "median": 327.03,
+          "p95": 353.07,
+          "max": 377.37
+        },
+        "serverMs": {
+          "count": 46,
+          "median": 53.41,
+          "p95": 54.73,
+          "max": 83.77
+        }
+      },
+      "probeErrors": [],
+      "plexCpuPercent": null,
+      "memoryAvailableGiB": {
+        "min": 26.46,
+        "median": 26.46,
+        "max": 26.47
+      }
+    }
+  ]
+}

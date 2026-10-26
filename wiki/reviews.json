@@ -25,9 +25,9 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "c952f9a61d0ae1ba2d0819a58bce9941375186d604422e84a1edc2ba23d2b89e",
-    "reason": "Reviewed native Plex setup/status workflow and standard bridge-only proxy units; no media-service restarts or broad LAN routing are introduced.",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "cef4de0503e96a850c5dba5e35a60100d29a111487ce2d1ea8d2cc8dbf7bec5b",
+    "reason": "Document the deployed HA secondary Plex libraries, approved profile access and LAN startup, disabled duplicate analysis, and measured per-engine cap limitation",
+    "reviewed_at": "2026-10-26"
   },
   "media": {
     "fingerprint": "5306177b38de433cc722aef752b488e0f665045f55aae60631e772dd9e671737",

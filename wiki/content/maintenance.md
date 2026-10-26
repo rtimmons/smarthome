@@ -8,6 +8,14 @@ Infrastructure commands use `just usenet <recipe> [args...]`; list them with `ju
 
 Before changing a system, read its current runbook, inspect health, preserve unrelated local edits, and retain rollback information. Scene operations, printing, media requests, and speaker writes can affect the household; do not use them as generic smoke tests.
 
+The [Plex co-hosting trial](../../docs/operations/plex-ha-trial.md) uses
+`just plex-ha-probe <phase> <output.json> [seconds]` to measure Core API and
+script scheduler response without changing lights. It led to a running
+[secondary Plex server](../../docs/operations/plex-secondary.md) with the two
+`(hass) (Remote)` libraries; the NAS remains available. Expensive duplicate
+analysis is disabled. GPU and CPU caps are each one, not a verified one-session
+total. The probe observes performance and does not enforce workload stop thresholds.
+
 Standard local add-on deployment detects the actual source mount in the SSH environment: `/local_apps` on current Home Assistant, or a mounted `/addons` on older versions. It refuses to stop or replace an add-on if neither mount is present. An ordinary leftover `/addons` directory is not a valid destination: uploading there can produce an apparently successful rebuild of old source. Verify served assets or behavior after deployment, in addition to service readiness.
 
 New local add-ons are registered with `ha store reload`. On the current CLI,
