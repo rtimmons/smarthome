@@ -11,6 +11,13 @@ SSL locally, with no backup network mount and no `/share`. The concurrent HBS
 QuDedup seed is not yet qualified recovery; preserve its separate follow-up.
 Current app-owned capture snapshots do not clear the retained-snapshot gate.
 
+**Wiki recovery supplement, October 27:** the [wiki checkpoint](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint)
+preserved both published releases and their pointers off NAS, verified their
+encrypted round trip, and rebuilt from independently restored source bundles for
+both repositories. Exact inputs and receipts remain private. This supports wiki
+rollback; it does not add recurring HTML capture, B2 delivery, replacement-host
+bootstrap or disk/power/snapshot qualification.
+
 **Open future action:** complete the [unattended-capture and cron-persistence checklist](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification)
 after the next eligible normal runs. Qualify new source captures and off-host
 restores, record NAS replication separately, and leave the HBS seed with its

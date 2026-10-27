@@ -80,6 +80,12 @@ qualification, followed by a separately verified runtime switch. The exact scope
 checks and rollback remain in the
 [wiki pilot](nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints).
 
+The [wiki recovery/account checkpoint](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint)
+now records verified off-NAS release preservation and independent source
+restore/build. The local `wiki-reader` group exists; account submission and
+synthetic access checks remain next. This does not close the wiki migration or
+waive the production storage gates.
+
 **Open future action:** [qualify unattended cloud/Forgejo captures and cron persistence](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification).
 Review after the next eligible normal runs; October 28 after 17:30 Eastern is the
 suggested initial review window. This can proceed independently of offline wiki

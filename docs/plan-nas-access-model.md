@@ -9,6 +9,14 @@ instance; the old inactive-mount finding below is historical. Preserve `hass`
 until its consumers and replacement scopes are qualified. Wiki is the first
 recommended runtime pilot, with no live identity or path change yet.
 
+**Wiki account checkpoint, October 27:** repository preparation is committed and
+QNAP-local `wiki-reader` (GID 1000) has been created without production grants.
+`svc-wiki` creation is pending the password/submission handoff. Its prepared form
+removes the wizard's broad defaults and disables recursive permission propagation;
+those choices are not tested effective access until creation and fixture checks.
+See the [checkpoint and remaining gates](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint).
+The live wiki remains 1004:100 and no service data path has moved.
+
 **Proposed access model, October 25, 2026. No accounts, groups or permissions have
 been changed.** This is the concise authorization companion to the
 [storage and migration plan](plan-nas-storage-and-access.md). The current-state

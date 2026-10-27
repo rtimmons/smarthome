@@ -62,6 +62,51 @@ completed; this report relies on those selected fields, not a successful generic
 health result. HA hostname resolution likewise required the permitted retry
 outside the sandbox with the same dedicated key and hostname.
 
+### Wiki preparation and recovery checkpoint
+
+Preparation commit `1a29627` adds wiki-only runtime inputs with the existing
+UID/GID defaults. Focused tests and a localhost rendering check with the pinned
+Ansible engine passed for default, UID-only, GID-only and combined overrides.
+The infrastructure suite passed 585 tests (12 skipped), plus syntax checks;
+its full-history scanner still reports the known two RSA keys and historical
+private paths. Current-source scanning passed. Root tests/container checks passed
+on retry after the unrelated printer preview measured 102.9 ms against 100 ms.
+The later documentation-only full run hit the same printer test at 103.3 ms
+(224 printer tests passed); no printer code or threshold was changed. Wiki
+checks and the current-source scan passed for the documentation checkpoint.
+
+A fresh bounded NAS read found the wiki healthy at 1004:100, zero effective
+capabilities, two read-only binds and no deployment lock. Current and retained
+release pointers were preserved off NAS with both static releases: 216 files,
+212 verified manifest entries, 3,022,400 bytes encrypted. Pointers matched before
+and after capture; independent decryption and checks passed. This is a direct
+runtime recovery supplement; recurring settings capture still omits site HTML.
+
+Both source repositories were separately bundled and restored with current
+tracked working-tree overlays. Bundle verification, Git object checks and an
+isolated wiki build passed (102 static files); the build reused only the
+controller's pinned Node tooling, with no live credentials or NAS access. The
+5,903,830-byte encrypted source checkpoint also passed decryption. Private
+receipts, archives and exact source revisions are under ignored
+`build/wiki-identity-20261027/`. These controller copies are not a new B2 delivery
+or proof of replacement-controller bootstrap.
+
+Safari's local-user wizard exposed Public read and Multimedia write defaults,
+all application grants, and checked recursive permission propagation. The pending
+`svc-wiki` form instead denies all seven existing shares and every listed
+application, with recursion unchecked and no administrator membership. QNAP
+created the otherwise unused local `wiki-reader` group, GID 1000. Account password
+entry/submission remains a human handoff; no service UID has been allocated or
+used by this checkpoint. Do not treat the pending form as effective denial.
+
+Next: finish account creation, verify its actual UID/groups and saved grants,
+then run the retained synthetic ACL fixture with an explicitly selected runtime
+GID. It checks read, write/create/rename/delete, private-file and share-root
+traversal behavior plus read/validation of the existing wiki inputs, without a
+service restart. Only a passing fixture supports a runtime-only cutover. The
+named-share move remains blocked on disk/power/snapshot readiness; this migration
+is **open**, not closed. Preserve all releases and the separate HBS seed.
+
 ## Common identity and permission contract
 
 The live deployment login is QNAP-local `usenet-deploy`, UID **1004**, primary

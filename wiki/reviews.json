@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "4b9ed4e4b137466c2a7d90aa518c9e5d8a68d4a16e08404461f404047816bb9a",
-    "reason": "Reviewed wiki-specific runtime UID/GID defaults, independent overrides, same-release identity changes and retained identity rollback; preparation is local and production gates remain open.",
+    "fingerprint": "d33a39f8f5e0b7d475a6e9f9f59fb3d041156b4a8b702f3daec86722e9565797",
+    "reason": "Verified wiki preparation and current/previous release recovery, independent source restore/build and pending QNAP account checkpoint; named-share and storage gates remain open.",
     "reviewed_at": "2026-10-27"
   },
   "media": {

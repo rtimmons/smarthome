@@ -181,6 +181,20 @@ retained QNAP defaults can grant access independently of container mount scope.
 Keep account grants, runtime switching and the named-share move separate. The
 named-share move remains subject to disk, power, snapshot and recovery readiness.
 
+### October 27 recovery supplement and account checkpoint
+
+The [migration ledger](../nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint)
+records verified encrypted copies of the current/retained published releases and
+fresh source bundles for both repositories. Independent source restore/build
+passed using the controller's pinned Node runtime. Preserve those exact private
+archives and the original publication pointers; a future rebuild need not produce
+the same metadata digest because build times and working-tree state are inputs.
+
+The local `wiki-reader` group exists; service-account creation and effective
+access checks remain pending. Neither prepared UI denials nor the earlier
+container's read-only mounts establish the new identity's access. No runtime
+switch or named-share migration has occurred in this checkpoint.
+
 ## Initial expansion acceptance (2026-10-09)
 
 Numeric port-80 access, local search, phone-width navigation and the original
