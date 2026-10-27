@@ -1,5 +1,15 @@
 # NAS storage and access improvement plan
 
+**October 27 application checkpoint:** the [bounded service inventory and migration
+ledger](nas-service-inventory-2026-10-27.md) reconcile current NAS/cloud runtimes,
+HA consumers and recovery streams. Start with its wiki preparation/rehearsal
+pilot, keeping identity and path cutovers separate. Production moves remain
+blocked: the user confirms no later disk-2 repair or power qualification, UPS is
+still disabled, and retained snapshot recovery remains unqualified. Fresh reads
+also found stale Forgejo/cloud recovery and unhealthy DNS discovery. Diagnose
+those before dependent cutovers; no production change was made by this checkpoint.
+The current HBS seed belongs to concurrent backup work and must remain undisturbed.
+
 Status: storage proposal with an **October 24, 2026 storage baseline**, revised
 on **October 25** against the deployed household identity rollout and fresh
 read-only directory, QNAP trust/share/ACL, HTTP/TLS and HA backup metadata checks,
@@ -409,8 +419,8 @@ where appropriate, and preserve the five existing legacy/native hardlink relatio
 and their manifests. An uncoordinated Finder edit can invalidate file records,
 manifests and NAS-copy ownership receipts even when the filesystem operation works.
 Test manual-add, rename, replace and delete cases in a synthetic area before a
-real maintenance operation. Preserve disabled automatic upgrades/RSS and existing
-request scope so rescanning does not become unrequested acquisition.
+real maintenance operation. Preserve disabled automatic upgrades, the approved
+native Arr RSS policy and existing request scope; direct SAB RSS remains disabled.
 
 ## Identities, groups and SSO
 
@@ -520,6 +530,12 @@ different maintenance windows. A regression in privacy, file identity, backup
 coverage or application ownership stops progression.
 
 ## Service-data and archive migration
+
+The [October 27 inventory](nas-service-inventory-2026-10-27.md#nas-application-boundaries)
+now maps current principals, mounts, source/credential references and backup
+consumers. Its [wiki pilot](nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints)
+is the first recommended application checkpoint. A successful offline rehearsal
+will not qualify production storage health or QNAP effective access.
 
 This is a separate path cutover after the relevant identity/ACL pilot. Keep
 container-internal paths stable where possible; change the resolved host binds,
@@ -892,6 +908,7 @@ the proposed B2 retention/cost and lower-redundancy tier gates are acceptable an
 capacity pressure justifies a later physical redesign. A second DC is optional
 availability work, not a prerequisite for share cleanup.
 
-Start with the recovery/permission pilot. The observed broad private-root grants
-and shared deployment/runtime identity offer a clearer immediate benefit than
-rebuilding a functioning RAID group.
+Start with the application inventory's recovery diagnosis and offline wiki pilot.
+Keep household-file ownership and dumping grounds deferred. The shared deployment
+and runtime identity can be separated incrementally without rebuilding the pool;
+the disk, snapshot and recovery gates still precede production data moves.

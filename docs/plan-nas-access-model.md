@@ -1,5 +1,14 @@
 # NAS shares, accounts, roles and protection
 
+**October 27 reconciliation:** see the [application/account inventory](nas-service-inventory-2026-10-27.md).
+Live NAS process metadata confirms the shared 1004:100 runtime mapping, native
+Plex root, Jellyfin 0:100 and the privileged remote-reader exception. Existing
+AD lookup SIDs resolve; no accounts, IDs or memberships were changed. The HA
+FromDrobo mount is now active and writable, serving the established HA Plex
+instance; the old inactive-mount finding below is historical. Preserve `hass`
+until its consumers and replacement scopes are qualified. Wiki is the first
+recommended runtime pilot, with no live identity or path change yet.
+
 **Proposed access model, October 25, 2026. No accounts, groups or permissions have
 been changed.** This is the concise authorization companion to the
 [storage and migration plan](plan-nas-storage-and-access.md). The current-state
@@ -571,6 +580,12 @@ the [Talos backup contract](operations/addon-state-backups.md), and the
 [identity recovery runbook](operations/household-identity.md).
 
 ## Current state and migration delta
+
+The October 27 service ledger is the latest application checkpoint. Its explicit
+observed/configured/proposed labels supersede any inference that naming a role
+has already deployed or tested it. No new service-share paths were returned for
+wiki, Forgejo or the two archive shares. Expected denials remain to be tested on
+both host/container and SMB paths; retained administrative bypass is explicit.
 
 The fresh October 25 preflight found seven path-bearing SMB shares, adding the
 enabled `homes` parent to the earlier six-share inventory. `home` is a dynamic

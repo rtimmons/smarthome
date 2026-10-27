@@ -1,5 +1,14 @@
 # NAS share backup and redundancy policies
 
+**October 27 recovery checkpoint:** the [service/backup ledger](nas-service-inventory-2026-10-27.md#backup-producers-uploaders-and-archive-policy)
+finds current NAS three-scope ciphertext verification, but stale Forgejo recovery
+(October 24) with a missing persistent cron marker and failed cloud recovery
+(last success October 16). A fresh Filex inner bundle does not close its outer
+offsite-delivery gap. The latest protected HA archive includes Core, 27 apps and
+SSL locally, with no backup network mount and no `/share`. The concurrent HBS
+QuDedup seed is not yet qualified recovery; preserve its separate follow-up.
+Current app-owned capture snapshots do not clear the retained-snapshot gate.
+
 **Proposed policy, October 25, 2026. No backup job, retention rule, RAID layout or
 data has changed through this plan.** Current observations are recorded in the
 [October 25 read-only preflight](nas-preflight-2026-10-25.md), including separately
@@ -237,7 +246,8 @@ HA directory, or Storage Box.
   Test Object Lock, lifecycle and pruning together before enabling an immutable
   policy; Object Lock is currently disabled on the existing bucket.
 - Verify every completed artifact's checksum or backup-catalog result. Continue
-  the existing HBS Monday 06:00 quick check and first-of-month 06:00 content check
+  the HBS Monday 16:00 quick check and first-of-month 17:00 content check
+  recorded by the October 27 backup maintenance (superseding 06:00)
   until each replacement has an equivalent tested check; budget content-check
   downloads and serialize them with backups. Qualify repository integrity checks
   for the proposed restic job separately.
