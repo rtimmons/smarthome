@@ -237,11 +237,45 @@ The new encrypted controller checkpoint contains pointers, ACLs, account mapping
 private inventory and both source bundles, with independently verified decryption
 and hashes. Combine it with the preserved unchanged release payloads. See the
 [completed runtime checkpoint and limits](../nas-service-inventory-2026-10-27.md#wiki-runtime-identity-checkpoint).
-Normal NAS settings capture/restore and authenticated SMB/SSH denial remain open.
+Normal unattended NAS settings capture/restore remains open. The later
+valid-credential network check passed: SMB refused session setup and SSH denied
+the password login. No authenticated SMB share connection was opened.
+
+The [later backup follow-up](../nas-service-inventory-2026-10-27.md#wiki-backup-and-network-verification-follow-up)
+adds a verified manual Hetzner checkpoint containing a current native QTS export
+and the preserved wiki recovery inputs. The latest scheduled archives were
+restored and found to predate this identity change. Inspect the next eligible
+normal capture separately; a manual supplement does not prove the schedule.
+
 In particular, a fresh outer archive can still contain an older weekly native
 QTS snapshot that predates the account. No named-share migration has occurred;
 disk/power/snapshot gates still apply. This switch intentionally retained the
 current publication; updated docs can publish with the next normal release.
+
+### Repeat the runtime account network checks
+
+Run `just wiki-check-runtime-access` interactively from the repository root and
+enter the existing `svc-wiki` password from its private vault item. The command
+does not create or reset credentials. It first checks the dedicated HA/directory
+transport, before requesting a password, then qualifies the existing local
+UID/group and Samba credential reference through the dedicated NAS connection;
+the bounded read-only container can take several minutes on this NAS.
+
+The existing pinned directory maintenance transport supplies the encrypted SMB3
+client. It checks only share connections, never lists or reads household files.
+The supplied password must match the existing account before any network login
+attempt. Each authenticated tree-connect denial is recorded separately. A refusal
+during session setup stops further SMB attempts and is recorded as a session
+denial, not seven independently tested share ACLs. Bad-password, timeout and
+connection errors do not pass. SSH uses the pinned NAS host key, one password
+attempt and no SSH-agent identity; its receipt records whether a password prompt
+occurred and confirms that no session opened.
+
+Temporary credential files are private and removed when their checks finish.
+Only sanitized receipts remain under the ignored `build/identity-private/wiki-access/`
+state directory. A failure does not change account grants or stop any service.
+Interpret these protocol checks alongside the separate process, bind-mount and
+filesystem ACL checks; SMB denial does not establish host-process isolation.
 
 ## Initial expansion acceptance (2026-10-09)
 

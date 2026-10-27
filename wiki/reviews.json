@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "433c106a5acb1c17ff41783dd64c54ca4a3a8fa3ef34a43797b443d87ca8dad3",
-    "reason": "Verified the approved wiki runtime switch, effective process/mount and HTTP checks, unchanged peers, encrypted recovery checkpoint and retained rollback; normal capture, network-denial and storage gates remain explicit.",
+    "fingerprint": "c18dd2eec9e701ee4111226621fd005eba94695aa338799553c99bbacdd82dbc",
+    "reason": "Verified current native QTS account/application records and manual Hetzner recovery, unchanged wiki/peers, valid-credential session/login denials, and explicit unattended-capture/storage gates.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
@@ -35,9 +35,9 @@
     "reviewed_at": "2026-10-27"
   },
   "network": {
-    "fingerprint": "596b878e8c3e96caca03e2ee05dc01b20183c70c7e8a97e06f5093c3e7d5a0c2",
-    "reason": "Reviewed go routing and synthetic redirect checks, canonical proxy inventory, Time Machine repair and untested restore limits; reconciled Catalog user acceptance with identity runbook.",
-    "reviewed_at": "2026-10-26"
+    "fingerprint": "8b3881284b36e1bd7a5aa01fbda99976321541ff7733dff3927a8909abdbbf3e",
+    "reason": "Verified existing-credential SMB session refusal and SSH password-login denial, transport repair handling, private temporary credentials and classification tests; individual share ACLs are not inferred.",
+    "reviewed_at": "2026-10-27"
   },
   "printing": {
     "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",

@@ -19,7 +19,9 @@ propagation. Synthetic probes explicitly select 1005:1000: allowed reads and
 actual file/share denials passed. A separate saved/restorable grant added only
 reader-group access to the current wiki inputs; all site reads and Caddy validation
 passed without changing existing ACL entries or ownership.
-SMB authentication/denial is not tested. See the [checkpoint and remaining gates](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint).
+The later [valid-credential checks](nas-service-inventory-2026-10-27.md#wiki-backup-and-network-verification-follow-up)
+passed: SMB denied session setup before any share connection, and SSH denied a
+password login. This does not test seven individual authenticated share ACLs.
 The approved runtime switch is now complete: init and Caddy run as 1005:1000,
 with only group 1000, zero capabilities and read-only inputs. Durable wiki-only
 overrides preserve that mapping on future deployment. Both HTTP routes and the
@@ -277,7 +279,7 @@ Administrative and compatibility principals remain explicit:
 | --- | --- | --- |
 | QNAP `badmin`, UID 1000 | Local administrator / recovery | Keep separate from everyday Ryan login; verify emergency access |
 | QNAP `admin`, UID 0 | Built-in administrator | Preserve recovery configuration; login enablement was not verified |
-| Wiki runtime 1005:1000 | `svc-wiki` / `wiki-reader` runtime phase complete | Normal capture and authenticated network denials remain; named-share move requires storage gates |
+| Wiki runtime 1005:1000 | `svc-wiki` / `wiki-reader` runtime phase complete | Valid-credential SMB session/SSH denials and manual off-host recovery passed; unattended capture remains; named-share move requires storage gates |
 | QNAP `hass`, UID 1002 | Legacy integration account with broad `FromDrobo` access | Identify actual consumers; replace with explicit scopes before removing access |
 | `guest`, `httpdusr`, `[sshd]` | QTS built-ins | No new data roles; guest denied on all six inspected SMB shares |
 | AD administrator and machine principals | Directory administration and NAS trust | Preserve existing identities/trust; no new household data roles |

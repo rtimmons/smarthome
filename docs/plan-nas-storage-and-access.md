@@ -89,9 +89,18 @@ reads plus Caddy validation as 1005:1000. The opt-in publisher step repeats only
 those read grants on future releases. The live init/Caddy processes are healthy
 at 1005:1000, with unchanged content and peer-service start times. Both HTTP ports
 and the TLS/MFA redirect passed; a new encrypted controller recovery checkpoint
-verified pointers, ACLs, inventory and source bundles. Normal NAS capture/restore
-and authenticated SMB/SSH denials remain open. The runtime identity phase is
-complete; the named-share migration remains blocked by the storage gates.
+verified pointers, ACLs, inventory and source bundles. Normal unattended NAS
+capture/restore remains open. The runtime identity phase is complete; the
+named-share migration remains blocked by the storage gates.
+
+The later [wiki verification follow-up](nas-service-inventory-2026-10-27.md#wiki-backup-and-network-verification-follow-up)
+proved that the latest scheduled archives still contain the old runtime and
+pre-account native snapshot. Current native settings and the verified wiki
+recovery inputs now have an independently downloaded/decrypted manual Hetzner
+checkpoint. Valid-credential network checks also passed: SMB refused session
+setup before any share connection, and SSH denied the password login. Individual
+authenticated share ACLs were not exercised. The next unattended capture remains
+separate from the gated named-share move.
 
 **Open future action:** [qualify unattended cloud/Forgejo captures and cron persistence](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification).
 Review after the next eligible normal runs; October 28 after 17:30 Eastern is the

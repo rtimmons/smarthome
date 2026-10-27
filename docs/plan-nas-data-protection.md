@@ -30,6 +30,15 @@ check its source date and account/group contents, not just the outer archive's
 freshness. Rebuild must restore the local mapping and enable the qualified reader
 ACL step; mode bits alone did not permit the new runtime to read old inputs.
 
+The later [wiki verification follow-up](nas-service-inventory-2026-10-27.md#wiki-backup-and-network-verification-follow-up)
+confirmed that the latest scheduled off-host archives predate the account and
+runtime change. A current native export and the preserved wiki recovery inputs
+now have a separate encrypted Hetzner checkpoint with successful download,
+decryption, payload hashes and account/group verification. This closes the
+manual off-host preservation gap; it does not establish unattended capture,
+replacement-NAS startup or new B2 delivery. Normal schedules, retention and HBS
+remain unchanged. Do not force the weekly native script: it rotates old history.
+
 **Open future action:** complete the [unattended-capture and cron-persistence checklist](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification)
 after the next eligible normal runs. Qualify new source captures and off-host
 restores, record NAS replication separately, and leave the HBS seed with its

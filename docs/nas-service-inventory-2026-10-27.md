@@ -207,8 +207,9 @@ normal NAS settings capture and off-host restore, including the new runtime
 mapping and a native QTS export new enough to contain the account/group. The
 existing QTS stream uses a weekly native snapshot, so archive freshness alone
 cannot prove that newly created accounts are recoverable. Include this in the
-October 28 after-17:30 unattended-backup review. Authenticated SMB/SSH denials
-remain unqualified; do not promote saved settings into tested network isolation.
+October 28 after-17:30 unattended-backup review. The later follow-up below records
+valid-credential network denials; saved share settings still do not establish
+individual authenticated share ACLs or host-process isolation.
 
 Rollback for this checkpoint restores the retained 1004:100 environment using
 the existing helper and removes only the three wiki inventory overrides after
@@ -217,6 +218,82 @@ checkpoint. Recheck retained pointers after any later publication; do not blindl
 restore a whole inventory, ACL tree or older release over subsequent work. The
 current publication was intentionally preserved; updated repository documentation
 can publish with the next normal wiki release.
+
+### Wiki backup and network verification follow-up
+
+**October 27, after the runtime cutover.** The normal NAS success receipt still
+dates from 16:15 Eastern. Both the QNAP settings archive and native-settings
+archive were independently downloaded from Hetzner, matched against their
+ciphertext receipts, decrypted and checked. The QNAP archive contains the old
+wiki runtime mapping; its native payload is the October 25 QTS snapshot and
+contains neither `svc-wiki` nor `wiki-reader`. Archive freshness therefore does
+not close the account-recovery gap.
+
+A current native QTS export was downloaded through Safari without changing the
+backup schedule or running the rotating weekly capture script. Its vendor format
+was decoded only in a private temporary directory, then encrypted with the
+existing NAS recovery identity and verified on the controller. The 974-member
+export contains UID 1005, primary GID 100, `wiki-reader` GID 1000 membership,
+password records, no administrator membership, and all seven saved share
+denials. Its application-privilege database passed SQLite integrity checking and
+contains the five saved application records for UID 1005. Repeated identity-file
+entries are byte-identical. This is archive
+inspection, not restoration over the running NAS or a replacement-NAS boot test.
+
+A separate **28,750,900-byte encrypted manual checkpoint** combines that native
+export and decoded recovery copy with the previously verified wiki runtime,
+inventory, ACL, source-bundle and retained-release archives. Its live current and
+rollback pointers were rechecked unchanged. The checkpoint was added under the
+existing confined Hetzner NAS-settings destination's `archives/wiki-checkpoints/`
+prefix; downloaded ciphertext, decryption, bundle hashes and recovered account/
+group records passed. No earlier archive, retention rule, normal status receipt,
+service runtime, HBS job or data path changed. Private receipts and scripts are
+under `build/wiki-identity-20261027/verification-checkpoint/`.
+
+The default manual recipe rejected its durable-state compatibility symlink
+before capture. Two subsequent bounded application-capture attempts, using a
+private output directory and the existing backup container, produced no accepted
+archive. The deployed helper hash matches the repository; the latter attempt
+returned no payload under its alarm limit. A bounded process sample observed a
+Python process waiting in kernel I/O with NAS load around 19. This does not
+diagnose a new disk fault or justify a stress test. Preserve the verified manual
+checkpoint, and review helper output-path compatibility and capture time limits
+separately; do not lengthen limits blindly or force another full scan. Capture
+failure details were insufficient to attribute the stall to a specific file.
+
+`just wiki-check-runtime-access` now prompts privately for the existing account
+password, verifies it against the existing local credential, and distinguishes
+authenticated SMB share denials from session refusal. It also checks one pinned
+SSH password-login denial. No account is created, reset or granted access. The
+first interactive run stopped before credential transmission because the
+dedicated HA transport rejected its key; the user completed the repository's
+human-only repair, and transport readiness passed afterward. The command now
+checks that transport before the slow NAS lookup and hidden password prompt.
+
+**Valid-credential network checks passed at 19:28:21 Eastern.** The supplied
+password matched the existing QNAP-local Samba credential. The client required
+SMB3 encryption and received `NT_STATUS_ACCESS_DENIED` at **session setup** on
+its first attempt. No authenticated tree connection was possible; the command
+stopped without repeating six more login attempts. This proves the account's
+SMB session refusal, not seven individually exercised share ACLs. SSH requested
+the password and denied login without opening a session. No permission changed
+and no household file was listed or read. The sanitized private receipt is under
+`build/identity-private/wiki-access/`; the existing local/container ACL tests
+remain separate evidence for process and filesystem isolation.
+
+Final checks found all 12 baseline container states/start times unchanged, the
+wiki healthy at 1005:1000, the same publication hash served over HTTP, and the
+normal backup status unchanged. The container listing raced removal of an ID
+outside that baseline; every baseline service was present and unchanged. Full
+root `just test`, including container checks and 22 identity tests, passed. An
+earlier run hit the existing printer preview timing failure (103.4 ms against
+100 ms); no printer code or threshold changed.
+
+Next, inspect the next eligible unattended NAS capture and its off-host restore
+after October 28 at 17:30 Eastern. Check the weekly native source timestamp and
+actual account/group records as well as the new runtime mapping. The verified
+manual supplement does not prove that scheduled capture. The named-share move
+remains blocked by the unchanged disk-2, power and retained-snapshot gates.
 
 ## Common identity and permission contract
 
@@ -405,16 +482,17 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    Supported local creation, synthetic actual-operation denials, explicit group
    read grants and exact synthetic ACL rollback passed. The current publication
    is readable by 1005:1000 after its narrowly saved/restorable grant. Preserve
-   deployment ownership. SMB/SSH denial is configured but not authenticated/tested;
-   shell is still `/bin/sh`. Reverting this account now requires runtime rollback
+   deployment ownership. The later valid-credential SMB session/SSH login
+   denials passed; shell is still `/bin/sh`. Reverting this account now requires runtime rollback
    first; use the separate saved grant checkpoint and preserve unrelated shares.
 3. **Runtime identity checkpoint completed under the approved window.** Same
    release/paths now run at 1005:1000, with durable wiki-only overrides and retained
    identity rollback. Process/child, mounts, actual runtime write denial, both
    ports, unchanged bytes and unauthenticated TLS/MFA redirect passed. Recovery
-   metadata/source capture verified off NAS. Normal settings capture/restore and
-   authenticated SMB/SSH denials remain separate follow-ups; do not claim them
-   from this successful runtime switch. No ownership or peer-service change.
+   metadata/source capture verified off NAS. Normal unattended settings capture/
+   restore remains a separate follow-up; valid-credential SMB session/SSH denials
+   passed later. Neither checkpoint proves individual authenticated share ACLs.
+   No ownership or peer-service change.
 4. **Named share checkpoint (after production storage gates).** Resolve a
    QTS-managed `wiki` root on the same filesystem (current source device 64519),
    exact destination absence/ACLs, and publisher/backup consumers before any
@@ -429,7 +507,7 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
 The runtime input preparation is implemented and its local fixture checks passed.
 The pilot account and runtime switch are complete, with publication-read and
 synthetic denials qualified. Paths remain unchanged; finish the normal recovery
-and network-denial follow-ups before closing the broader migration.
+and the named-share readiness gates before closing the broader migration.
 The follow-up above repaired cloud capture and Forgejo scheduling
 and verified fresh off-host archives. Normal unattended cycles still need
 observation; offline wiki preparation can proceed independently. Leave ambiguous

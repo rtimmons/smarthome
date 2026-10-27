@@ -637,6 +637,11 @@ wiki-build:
 wiki-check:
 	@./wiki/run check
 
+# Prompt privately for the existing wiki credential and test NAS network denials.
+[group: 'wiki']
+wiki-check-runtime-access:
+	@just usenet --command python3 ../identity-infra/check_wiki_access.py
+
 [group: 'wiki']
 wiki-preview:
 	@./wiki/run preview
