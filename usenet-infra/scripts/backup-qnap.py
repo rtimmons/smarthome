@@ -377,6 +377,13 @@ test -x "$qnap_docker"
     return [*command, remote], identity
 
 
+def default_output_dir(environment: dict) -> Path:
+    # Select durable state directly; the checkout's backups link is compatibility
+    # plumbing, not an arbitrary symlink exception to capture's safety checks.
+    state = Path(environment.get('SMARTHOME_STATE_DIR', str(Path.home() / '.local/share/smarthome'))).expanduser().resolve()
+    return state / 'tree/usenet-infra/backups'
+
+
 def capture(environment: dict, age: Path, output_dir: Path) -> tuple[Path, dict]:
     command, identity = connection(environment)
     recipient = Path(str(identity) + '.pub')
@@ -391,15 +398,32 @@ def capture(environment: dict, age: Path, output_dir: Path) -> tuple[Path, dict]
         encrypted = work / 'archive.age'
         with subprocess.Popen([str(age), '--encrypt', '--recipients-file', str(recipient), '--output', str(encrypted)],
                               stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True) as encryption:
-            with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=encryption.stdin, stderr=subprocess.DEVNULL,
+            with tempfile.TemporaryFile() as diagnostics, subprocess.Popen(command, stdin=subprocess.PIPE, stdout=encryption.stdin, stderr=diagnostics,
                                   start_new_session=True) as remote:
                 encryption.stdin.close()
-                timer = threading.Timer(180, stop_group, (remote,))
+                deadline = threading.Event()
+                def expire():
+                    deadline.set()
+                    stop_group(remote)
+                timer = threading.Timer(180, expire)
                 timer.start()
                 try:
                     remote.communicate(Path(__file__).read_bytes(), timeout=190)
+                    if deadline.is_set():
+                        raise BackupError('QNAP controller capture deadline (180 seconds) expired; no archive was published.')
+                    if remote.returncode == 124:
+                        raise BackupError('QNAP remote capture deadline (150 seconds) expired; no archive was published.')
                     if remote.returncode:
-                        raise BackupError('QNAP capture failed or was busy; no archive was published.')
+                        diagnostics.seek(0)
+                        detail = ''
+                        try:
+                            report = json.loads(diagnostics.read(8192))
+                            kind = report.get('error_type') if isinstance(report, dict) else None
+                            if kind in {'PermissionError', 'FileNotFoundError', 'BackupError', 'TimeoutError'}:
+                                detail = ' (' + kind + ')'
+                        except (ValueError, UnicodeError):
+                            pass
+                        raise BackupError('QNAP capture exited with status ' + str(remote.returncode) + detail + '; no archive was published.')
                     if encryption.wait(timeout=30):
                         raise BackupError('Backup encryption failed; no archive was published.')
                 finally:
@@ -432,6 +456,7 @@ def main(argv=None) -> int:
         if args.operation == 'remote-capture':
             # The container exits independently of the SSH client, even if the
             # connection disappears while reading a slow filesystem.
+            signal.signal(signal.SIGALRM, lambda *_: sys.exit(124))
             signal.alarm(150)
             manifest, contents = snapshot(Path('/source'), args.host_root)
             write_tar(manifest, contents, sys.stdout.buffer)
@@ -440,7 +465,7 @@ def main(argv=None) -> int:
         age = age_binary()
         check_age(age)
         if args.operation == 'capture':
-            archive, manifest = capture(os.environ, age, Path(__file__).resolve().parents[1] / 'backups')
+            archive, manifest = capture(os.environ, age, default_output_dir(os.environ))
         else:
             archive = args.archive
             identity = args.identity_file or Path(os.environ.get('QNAP_SSH_KEY', ''))
@@ -451,10 +476,11 @@ def main(argv=None) -> int:
                           'cache_content_included': False, 'archive': str(archive)}))
         return 0
     except BackupError as error:
-        print(json.dumps({'error': str(error)}), file=sys.stderr)
+        print(json.dumps({'error': str(error), 'error_type': type(error).__name__}), file=sys.stderr)
         return 1
-    except Exception:
-        print(json.dumps({'error': 'QNAP backup failed; no raw error or secret was displayed.'}), file=sys.stderr)
+    except Exception as error:
+        kind = type(error).__name__ if isinstance(error, (PermissionError, FileNotFoundError, TimeoutError)) else 'Exception'
+        print(json.dumps({'error': 'QNAP backup failed; no raw error or secret was displayed.', 'error_type': kind}), file=sys.stderr)
         return 1
 
 

@@ -24,6 +24,19 @@ just usenet backup-qnap-verify /absolute/qnap.tar.age
 just usenet backup-qnap-restore /absolute/qnap.tar.age /absolute/new/qnap-restore
 ```
 
+Manual NAS capture uses `just usenet backup-qnap`. Its destination is the durable
+`$SMARTHOME_STATE_DIR/tree/usenet-infra/backups` directory, defaulting to
+`~/.local/share/smarthome/tree/usenet-infra/backups`. The checkout's `backups`
+symlink is only a compatibility view. The capture still requires a private real
+output directory and publishes only verified ciphertext. It does not prune
+history, update scheduled-backup status, or stop services.
+
+Capture errors distinguish the unchanged 150-second remote and 180-second
+controller deadlines from numeric remote failures. Only selected error classes
+are reported; raw stderr and private paths are not printed. A failed manual
+capture is not evidence of scheduled-backup failure. Preserve the last verified
+checkpoint and diagnose the reported failure before retrying or changing limits.
+
 Use a new private destination, never running state. Cloud and QNAP archives have
 distinct formats; neither is a master `recovery-bundle` archive. Verify every
 manifest member and SQLite snapshot, expected app/credential coverage and receipt

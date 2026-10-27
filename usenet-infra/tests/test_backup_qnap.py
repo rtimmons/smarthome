@@ -347,11 +347,28 @@ class BackupQnapTests(unittest.TestCase):
         self.assertTrue(archive.read_bytes().startswith(b'age-encryption.org/v1\n'))
         self.assertNotIn(b'PRIVATE-TEST-FIXTURE', archive.read_bytes())
         self.assertEqual(stat.S_IMODE(archive.stat().st_mode), 0o600)
-        command[-1] = '1'
-        with mock.patch.object(backup, 'connection', return_value=(command, identity)):
-            with self.assertRaisesRegex(backup.BackupError, 'no archive was published'):
-                backup.capture({}, REAL_AGE, output_dir)
-        self.assertEqual(list(output_dir.iterdir()), [archive])
+        emitter.write_text(emitter.read_text().replace(
+            'raise SystemExit',
+            'sys.stderr.write(\'{"error_type":"PermissionError","error":"PRIVATE-ERROR-DETAIL"}\')\nraise SystemExit'))
+        for status, message in [('1', 'status 1'), ('124', 'remote capture deadline')]:
+            command[-1] = status
+            with mock.patch.object(backup, 'connection', return_value=(command, identity)):
+                with self.assertRaisesRegex(backup.BackupError, message) as caught:
+                    backup.capture({}, REAL_AGE, output_dir)
+            self.assertNotIn('PRIVATE-ERROR-DETAIL', str(caught.exception))
+            self.assertEqual(list(output_dir.iterdir()), [archive])
+
+    def test_default_output_uses_durable_state_without_relaxing_symlink_guard(self):
+        state = self.work / 'external'
+        target = backup.default_output_dir({'SMARTHOME_STATE_DIR': str(state)})
+        self.assertEqual(target, state.resolve() / 'tree/usenet-infra/backups')
+        target.mkdir(parents=True, mode=0o700)
+        compatibility = self.work / 'compatibility'
+        compatibility.symlink_to(target, target_is_directory=True)
+        identity = self.identity()
+        with mock.patch.object(backup, 'connection', return_value=([], identity)):
+            with self.assertRaisesRegex(backup.BackupError, '0700'):
+                backup.capture({}, REAL_AGE, compatibility)
 
     def test_cli_never_prints_arbitrary_exceptions(self):
         with mock.patch.object(backup, 'check_age', side_effect=RuntimeError('SECRET URL PASSWORD')):

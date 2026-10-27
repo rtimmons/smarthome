@@ -295,6 +295,34 @@ actual account/group records as well as the new runtime mapping. The verified
 manual supplement does not prove that scheduled capture. The named-share move
 remains blocked by the unchanged disk-2, power and retained-snapshot gates.
 
+### Manual capture follow-up
+
+The manual recipe's output-path failure was caused by rejecting the checkout's
+intentional durable-state compatibility symlink. The CLI now selects
+`$SMARTHOME_STATE_DIR/tree/usenet-infra/backups` directly (default state root:
+`~/.local/share/smarthome`). The capture function still refuses symlink output
+directories and non-private permissions; no existing directory is chmodded or
+moved. Archives still publish only after authenticated decryption and manifest
+verification, and existing archives are retained.
+
+The 150-second remote and 180-second controller deadlines are unchanged. A
+remote alarm now has a distinct exit status, and the controller reports deadline
+expiry separately from other numeric remote exits without exposing stderr or
+private filenames. This improves diagnosis without assuming that a longer scan
+is safe. Rollback is reverting this code change; no live configuration, HBS,
+schedule, retention, account or data-path change is involved.
+
+Live qualification cleared the former output-path rejection but did not produce
+an accepted archive. The first bounded attempt returned remote status 1; its
+underlying error was not retained. A second diagnostic attempt reached the
+180-second controller deadline. That deadline includes remote startup as well as
+capture, so the evidence does not localize the delay to filesystem traversal.
+No limits were increased and no further scan was launched. Preserve the verified
+Hetzner wiki checkpoint; next qualify remote startup/capture stage timing before
+changing limits or permissions. Manual capture remains operationally unqualified.
+The 21 focused tests, root suite and infrastructure unit/syntax checks passed;
+full-history scanning retains the documented pre-existing findings.
+
 ## Common identity and permission contract
 
 The live deployment login is QNAP-local `usenet-deploy`, UID **1004**, primary

@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "c18dd2eec9e701ee4111226621fd005eba94695aa338799553c99bbacdd82dbc",
-    "reason": "Verified current native QTS account/application records and manual Hetzner recovery, unchanged wiki/peers, valid-credential session/login denials, and explicit unattended-capture/storage gates.",
+    "fingerprint": "b2d753f8c6c90e638e34edf48cf67d18a61add9abd09e8d2e76678cd9720aac0",
+    "reason": "Reviewed durable manual capture destinations, unchanged deadlines, private failure diagnostics and regression coverage; live capture remains unqualified after a controller timeout.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
-    "fingerprint": "fed8674ac21150378fea9bd9091f9d2e4fd719cc39037fe13ca5cae6ad6caaf6",
-    "reason": "Reviewed opt-in wiki reader ACLs: existing local group required, linked inputs and ACL errors rejected, site/Caddyfile only, defaults and other services unchanged.",
+    "fingerprint": "dd8a9e678d06545fd445da42e96bf5399dbff662e5c1954f8d9978348f1103f3",
+    "reason": "Reviewed durable manual capture destinations, unchanged deadlines, private failure diagnostics and regression coverage; live capture remains unqualified after a controller timeout.",
     "reviewed_at": "2026-10-27"
   },
   "network": {
