@@ -223,6 +223,11 @@ Original SOPS-bound inventory and original recovery receipts remain immutable.
 
 ## Read-only follow-up
 
+The [October 27 backup repair](backup-repair-2026-10-27.md) records the cloud
+SQLite read-only consistency fix, approved Forgejo capture/schedule repair, fresh
+off-host restores and scoped rollbacks. Subsequent unattended captures still need
+observation. Neither repair changes the ongoing HBS seed or storage-readiness gates.
+
 Use the committed [verified archive receipt](../recovery/drills/scheduled-backups-20260911.json)
 as the initial evidence, then inspect current freshness. On the cloud, the status
 receipt is `/srv/usenet/backups/scheduled/cloud-status.json`; inspect the timer

@@ -1,16 +1,18 @@
 # NAS share backup and redundancy policies
 
 **October 27 recovery checkpoint:** the [service/backup ledger](nas-service-inventory-2026-10-27.md#backup-producers-uploaders-and-archive-policy)
-finds current NAS three-scope ciphertext verification, but stale Forgejo recovery
-(October 24) with a missing persistent cron marker and failed cloud recovery
-(last success October 16). A fresh Filex inner bundle does not close its outer
-offsite-delivery gap. The latest protected HA archive includes Core, 27 apps and
+finds current NAS three-scope ciphertext verification. Subsequent
+[backup repairs](../usenet-infra/docs/backup-repair-2026-10-27.md) restored cloud
+capture and Forgejo scheduling. Both fresh Hetzner archives independently
+verified on October 27, with the Filex inner bundle included in the cloud stream;
+subsequent unattended captures still need observation. The latest protected HA
+archive includes Core, 27 apps and
 SSL locally, with no backup network mount and no `/share`. The concurrent HBS
 QuDedup seed is not yet qualified recovery; preserve its separate follow-up.
 Current app-owned capture snapshots do not clear the retained-snapshot gate.
 
-**Proposed policy, October 25, 2026. No backup job, retention rule, RAID layout or
-data has changed through this plan.** Current observations are recorded in the
+**Proposed policy, October 25, 2026. No per-share backup policy, retention rule,
+RAID layout or application data location has changed through this plan.** Current observations are recorded in the
 [October 25 read-only preflight](nas-preflight-2026-10-25.md), including separately
 documented backup maintenance. Every share in the [access model](plan-nas-access-model.md)
 has both a storage-redundancy requirement and a B2 policy below. Schedules use

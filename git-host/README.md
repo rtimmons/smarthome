@@ -61,6 +61,16 @@ that probe. Cron invokes `backup.sh` hourly at minute 23, skipping when the most
 recent verified success is less than 23 hours old. Deployment requires explicit
 approval of this backup destination before first use.
 
+Active and persistent QNAP cron can differ. The installer saves both separately
+in a private `cron-checkpoint-*` directory and reconciles only its own marked
+entries in each; it refuses a detected concurrent edit before writing. Never
+restore one entire cron file over the other. `just git-host backup-unschedule`
+removes only the Forgejo job/probe from both files, preserving unrelated entries
+and all archives. It does not stop Forgejo. Restoring the schedule can trigger
+the stopped-service capture below and therefore needs an approved window.
+See the [October 27 backup repair](../usenet-infra/docs/backup-repair-2026-10-27.md)
+for the missing-entry diagnosis and current recovery checkpoint.
+
 Only Forgejo stops during capture. The snapshot checks SQLite integrity, includes
 any retained WAL/SHM files with the raw database, rejects symbolic links, and
 streams directly into age encryption. A WAL can contain committed data and must

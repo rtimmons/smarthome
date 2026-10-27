@@ -291,6 +291,7 @@
         "docs/operations/plex-secondary.md",
         "docs/operations/addon-state-backups.md",
         "usenet-infra/docs/scheduled-backups.md",
+        "usenet-infra/docs/backup-repair-2026-10-27.md",
         "docs/operations/wiki.md",
         "usenet-infra/docs/checkout-recovery.md",
         "usenet-infra/docs/recovery.md",

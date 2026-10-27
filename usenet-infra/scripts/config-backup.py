@@ -245,6 +245,24 @@ def sqlite_integrity(path: Path) -> None:
             raise BackupError('A settings database failed its integrity check.')
 
 
+def database_fingerprint(path: Path) -> tuple:
+    """Check authoritative SQLite bytes; SHM is a regenerable reader index."""
+    result = []
+    for source in (path, Path(str(path) + '-wal')):
+        if source != path and not source.exists() and not source.is_symlink():
+            result.append(None)
+            continue
+        before = ordinary(source)
+        if before.st_size > MAX_BYTES:
+            raise BackupError('A settings database exceeds the bounded backup size.')
+        metadata = lambda info: (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, info.st_ctime_ns)
+        checksum = digest(source)
+        if metadata(before) != metadata(ordinary(source)):
+            raise BackupError('A settings database changed during capture; retry during a quiet interval.')
+        result.append((*metadata(before), checksum))
+    return tuple(result)
+
+
 def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture_manifests, scope='cloud-config') -> dict:
     paths = inventory(root, scope)
     environment = read_environment(root) if scope == 'cloud-config' else {}
@@ -272,8 +290,8 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
             if source.suffix in ('.db', '.sqlite', '.sqlite3') and not is_sqlite:
                 raise BackupError('A settings database has an invalid SQLite header.')
             if is_sqlite:
+                fingerprint = database_fingerprint(source)
                 connection = stack.enter_context(closing(sqlite3.connect(source.as_uri() + '?mode=ro', uri=True, timeout=5)))
-                version = connection.execute('PRAGMA data_version').fetchone()[0]
                 deadline = time.monotonic() + 60
                 def progress(*unused):
                     if time.monotonic() > deadline:
@@ -283,7 +301,7 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
                     # Materialize a standalone database. A WAL-mode source
                     # otherwise leaves a WAL header in the copied main file.
                     destination.execute('PRAGMA journal_mode=DELETE')
-                databases.append((connection, version, source, info.st_dev, info.st_ino))
+                databases.append((source, fingerprint))
                 sqlite_integrity(target)
             else:
                 # Never turn a source link introduced during capture into a
@@ -318,10 +336,12 @@ def stage_snapshot(root: Path, stage: Path, idle=require_idle, manifests=capture
             after = (info.st_dev, info.st_ino, info.st_size, info.st_mtime_ns, digest(paths[name]))
             if before != after:
                 raise BackupError('Configuration changed during capture; retry while idle.')
-        for connection, version, source, device, inode in databases:
-            current = ordinary(source)
-            if ((current.st_dev, current.st_ino) != (device, inode)
-                    or connection.execute('PRAGMA data_version').fetchone()[0] != version):
+        for source, before in databases:
+            # On a read-only filesystem SQLite may rebuild its WAL reader index
+            # and advance data_version without any writer. Compare main/WAL
+            # identity, metadata and bytes instead; never discard a WAL or grant
+            # writes to the production configuration to accommodate that index.
+            if database_fingerprint(source) != before:
                 raise BackupError('A settings database changed during capture; retry during a quiet interval.')
     if len(entries) > MAX_FILES or sum(entry['size'] for entry in entries) > MAX_BYTES:
         raise BackupError('Combined configuration and metadata exceeds the bounded backup limits.')

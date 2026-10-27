@@ -8,6 +8,7 @@ import os
 import tarfile
 import tempfile
 import unittest
+from unittest import mock
 
 
 def module(name):
@@ -67,6 +68,49 @@ class BackupTests(unittest.TestCase):
         self.assertTrue(result.startswith(unrelated))
         self.assertNotIn('home-git-cron-probe', result)
         self.assertEqual(result.count(cron.MARKER), 1)
+
+    def test_cron_install_preserves_distinct_files_and_rollback_only_removes_ours(self):
+        cron = module('install-cron')
+        persistent = self.root / 'persistent'
+        spool = self.root / 'crontabs/admin'
+        spool.parent.mkdir()
+        old = {'persistent': '5 2 * * * /persistent-only\n',
+               'active': '9 3 * * * /active-only\n'}
+        persistent.write_text(old['persistent']); spool.write_text(old['active'])
+        with mock.patch.multiple(cron, PERSISTENT=persistent, SPOOL=spool, ROOT=self.root):
+            with mock.patch.object(cron.sys, 'argv', ['install-cron.py', '--probe']):
+                cron.main()
+            checkpoint = next(self.root.glob('cron-checkpoint-*'))
+            for name, path in [('persistent', persistent), ('active', spool)]:
+                self.assertEqual((checkpoint / name).read_text(), old[name])
+                self.assertEqual(path.read_text(), cron.reconcile(old[name], True))
+                self.assertEqual((checkpoint / name).stat().st_mode & 0o777, 0o600)
+            # A later unrelated job must survive removal too.
+            spool.write_text(spool.read_text() + '11 4 * * * /new-unrelated\n')
+            with mock.patch.object(cron.sys, 'argv', ['install-cron.py', '--remove']):
+                cron.main()
+            self.assertEqual(persistent.read_text(), old['persistent'])
+            self.assertEqual(spool.read_text(), old['active'] + '11 4 * * * /new-unrelated\n')
+            self.assertEqual((spool.parent / 'cron.update').read_text(), 'admin\nadmin\n')
+
+    def test_cron_refuses_a_concurrent_edit_before_writing(self):
+        cron = module('install-cron')
+        persistent, spool = self.root / 'persistent', self.root / 'active'
+        persistent.write_text('5 2 * * * /persistent-only\n')
+        spool.write_text('9 3 * * * /active-only\n')
+        read = Path.read_text
+        def changed(path, *args, **kwargs):
+            value = read(path, *args, **kwargs)
+            if path == spool and '/concurrent' not in value:
+                spool.write_text(value + '11 4 * * * /concurrent\n')
+            return value
+        with mock.patch.multiple(cron, PERSISTENT=persistent, SPOOL=spool, ROOT=self.root), \
+                mock.patch.object(Path, 'read_text', changed):
+            with self.assertRaisesRegex(RuntimeError, 'changed during preparation'):
+                cron.main()
+        self.assertEqual(persistent.read_text(), '5 2 * * * /persistent-only\n')
+        self.assertEqual(spool.read_text(), '9 3 * * * /active-only\n11 4 * * * /concurrent\n')
+        self.assertFalse((self.root / 'cron.update').exists())
 
     def test_independent_restore_checks_manifest_and_database(self):
         writer = sqlite3.connect(self.root / 'data/forgejo.db')

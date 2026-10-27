@@ -113,6 +113,11 @@ service and verifies off-host readback in the existing confined Storage Box back
 account. Run `just git-host backup-status` to check freshness, and follow the
 runbook's dated acceptance evidence and restore procedure before upgrading.
 
+The [October 27 backup diagnosis](../../usenet-infra/docs/backup-repair-2026-10-27.md)
+repaired cloud capture and restored Forgejo's schedule after an approved capture
+stop. Both fresh off-host archives independently verified. Follow the runbook's
+scope and rollback; the HBS seed and production storage gates remain separate.
+
 | What was lost | Recovery guide | What it can recover |
 | --- | --- | --- |
 | An add-on’s saved state | [Add-on backups](../../docs/operations/addon-state-backups.md) | The selected application state; verify the archive scope |

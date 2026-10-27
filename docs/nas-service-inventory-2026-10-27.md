@@ -3,7 +3,8 @@
 First bounded checkpoint for the [storage plan](plan-nas-storage-and-access.md),
 [access model](plan-nas-access-model.md) and [protection policy](plan-nas-data-protection.md).
 This is an inventory and pilot specification, **not a production migration**.
-No account, ACL, share, schedule, application path or running service was changed.
+No account, ACL, share, schedule, application path or running service was changed
+by the initial inventory. The subsequent backup repair is recorded below.
 Household collections, share contents and media payloads were not traversed.
 
 ## Evidence and decision ledger
@@ -30,6 +31,27 @@ Credential references below identify files/purposes, never secret values.
 | HA recovery and consumers | **O:** FromDrobo CIFS mount is active, media usage, writable; no default backup mount. Latest protected archive is October 27 05:16:06, local only, Core/database, all 27 installed apps and `/ssl`; `/share` absent. | Preserve the active HA Plex consumer. Qualify native off-host HA recovery separately from NAS settings. |
 | Validation | Full root `just test` passed; current-source/index secret scan passed; no new implementation tests were added for documentation. | Review only this checkpoint's four files and preserve unrelated work/index/`msg`. |
 | First pilot | **O/C:** wiki has two read-only input binds, zero effective capabilities at its init process, no persistent writable mount, no DB and a retained-release rollback helper. | Recommend the wiki preparation/rehearsal below. No production identity or path cutover yet. |
+
+### Follow-up: backup diagnosis and repair
+
+The [October 27 repair checkpoint](../usenet-infra/docs/backup-repair-2026-10-27.md)
+supersedes the two initial backup rows above. Cloud failure was a false SQLite
+change signal under the backup unit's read-only restriction, first reproduced on
+retained stopped test evidence. The helper now checks main/WAL bytes and metadata;
+the evidence remains captured. A single-file deployment and a normal backup run
+succeeded at 17:09:11 Eastern, with 1,049 files and verified Hetzner readback.
+An independent off-host download/decrypt verified all files and 17 SQLite databases.
+No application stopped and no archive was eligible for pruning.
+
+Both Forgejo cron files lacked its entry and differed from each other. After the
+user approved capture and recurring stops, a fresh complete archive succeeded at
+17:19:24 Eastern; independent restore verified 151 entries, SQLite and both Git
+repositories. Forgejo restarted and is healthy. The schedule repair preserves
+the two cron files independently; all unrelated entries were verified unchanged.
+The minute probe executed and was removed; both tables retain exactly one job.
+The HBS seed, storage-readiness gates and wiki pilot recommendation are unchanged.
+Next: observe later unattended captures and continue
+the offline wiki preparation. These successes do not clear the storage gates.
 
 The generic `just usenet qnap-recon` did not complete successfully after the
 sandbox hostname failure. A narrower probe using its same connection helper
@@ -240,11 +262,12 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    saved references after reconciling publisher writes if checks fail. Do not
    combine with account creation, ownership changes or backup-history deletion.
 
-No pilot account, service input change, deployment or share has been implemented
-at this checkpoint. The inventory and exact pilot boundaries are ready for the
-next session. **First operational follow-up is backup diagnosis**, especially
-Forgejo's missing persistent schedule and the failed cloud stream; the offline
-wiki preparation can proceed independently. Leave ambiguous household files,
+No wiki pilot account, runtime input change, deployment or share has been
+implemented at this checkpoint. The inventory and exact pilot boundaries are ready for the
+next session. The follow-up above repaired cloud capture and Forgejo scheduling
+and verified fresh off-host archives. Normal unattended cycles still need
+observation; offline wiki preparation can proceed independently. Leave ambiguous
+household files,
 Public/Multimedia/FromDrobo contents, full Hetzner membership and storage redesign
 deferred. The removed media apps remain removed; their leftover share is still
 pending supported retirement, not forgotten or silently accepted.

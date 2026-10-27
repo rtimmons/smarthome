@@ -23,7 +23,7 @@ compose() { "$docker" compose -f "$root/compose.yaml" "$@"; }
 def payload(action):
     if action in ('backup', 'backup-status'):
         return PRELUDE + 'sh "$root/backup.sh" ' + ('force' if action == 'backup' else 'check') + '\n'
-    if action in ('backup-deploy', 'backup-schedule', 'backup-update'):
+    if action in ('backup-deploy', 'backup-schedule', 'backup-update', 'backup-unschedule'):
         script = PRELUDE + '''umask 077
 mkdir -p /share/Usenet/Backups/automatic/forgejo
 chmod 700 /share/Usenet/Backups/automatic/forgejo
@@ -41,7 +41,7 @@ test "$("$docker" inspect --format '{{.State.Running}}' usenet-backups-backups-1
   --mount type=bind,src=/etc/config/crontab,dst=/persistent \
   --mount type=bind,src=/tmp/cron/crontabs,dst=/crontabs \
   --entrypoint python3 usenet-catalog-tools:rclone-1.75.1-python-3.14.7 /source/install-cron.py'''
-        return script + (' --probe\n' if action == 'backup-deploy' else '\n')
+        return script + (' --probe\n' if action == 'backup-deploy' else ' --remove\n' if action == 'backup-unschedule' else '\n')
     if action == 'status':
         return PRELUDE + '''compose ps
 "$docker" stats --no-stream --format '{{.Name}} CPU={{.CPUPerc}} memory={{.MemUsage}}' home-git-forgejo-1
@@ -89,7 +89,7 @@ compose up -d --wait --wait-timeout 180
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=('deploy', 'status', 'auth-status', 'bootstrap', 'credentials',
-                                         'backup', 'backup-status', 'backup-deploy', 'backup-schedule', 'backup-update',
+                                         'backup', 'backup-status', 'backup-deploy', 'backup-schedule', 'backup-update', 'backup-unschedule',
                                          'backup-verify'))
     action = parser.parse_args().action
     if action == 'backup-verify':

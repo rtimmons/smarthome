@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import sqlite3
+import shutil
 import subprocess
 import tarfile
 import tempfile
@@ -260,6 +261,57 @@ class ConfigBackupTests(unittest.TestCase):
             return self.remote
         with self.assertRaisesRegex(backup.BackupError, 'database changed'):
             self.snapshot(manifests=manifests)
+
+    def test_read_only_wal_evidence_is_captured_without_changing_source(self):
+        # Preserve a stopped WAL database including its reader index. The
+        # scheduler sees these files through ProtectSystem=strict on Linux.
+        original = self.work / 'writer.db'
+        with closing(sqlite3.connect(original)) as writer:
+            writer.execute('PRAGMA journal_mode=WAL')
+            writer.execute('CREATE TABLE settings (value TEXT)')
+            writer.execute("INSERT INTO settings VALUES ('committed WAL fixture')")
+            writer.commit()
+            for suffix in ('', '-wal', '-shm'):
+                shutil.copyfile(Path(str(original) + suffix), Path(str(self.db) + suffix))
+        sources = [Path(str(self.db) + suffix) for suffix in ('', '-wal', '-shm')]
+        before = {p: p.read_bytes() for p in sources}
+        try:
+            for p in sources:
+                p.chmod(0o400)
+            self.db.parent.chmod(0o500)
+            self.snapshot()
+            self.assertEqual({p: p.read_bytes() for p in sources}, before)
+            with closing(sqlite3.connect(self.stage / 'config/prowlarr/prowlarr.db')) as restored:
+                self.assertEqual(restored.execute('SELECT value FROM settings').fetchall(),
+                                 [('committed WAL fixture',)])
+        finally:
+            self.db.parent.chmod(0o700)
+            for p in sources:
+                p.chmod(0o600)
+
+    def test_concurrent_wal_commit_refuses_capture(self):
+        with closing(sqlite3.connect(self.db)) as writer:
+            writer.execute('PRAGMA journal_mode=WAL')
+            writer.execute("INSERT INTO settings VALUES ('initial WAL commit')")
+            writer.commit()
+            def manifests(*args):
+                writer.execute("INSERT INTO settings VALUES ('new WAL commit')")
+                writer.commit()
+                return self.remote
+            with self.assertRaisesRegex(backup.BackupError, 'database changed'):
+                self.snapshot(manifests=manifests)
+
+    def test_database_replacement_and_wal_symlink_are_refused(self):
+        def manifests(*args):
+            replacement = self.db.with_suffix('.replacement')
+            replacement.write_bytes(self.db.read_bytes())
+            replacement.replace(self.db)
+            return self.remote
+        with self.assertRaisesRegex(backup.BackupError, 'database changed'):
+            self.snapshot(manifests=manifests)
+        Path(str(self.db) + '-wal').symlink_to(self.work / 'missing')
+        with self.assertRaises(backup.BackupError):
+            self.snapshot()
 
     def test_concurrent_settings_and_manifest_changes_refuse_capture(self):
         def manifests(*args):

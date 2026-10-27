@@ -6,8 +6,11 @@ HA consumers and recovery streams. Start with its wiki preparation/rehearsal
 pilot, keeping identity and path cutovers separate. Production moves remain
 blocked: the user confirms no later disk-2 repair or power qualification, UPS is
 still disabled, and retained snapshot recovery remains unqualified. Fresh reads
-also found stale Forgejo/cloud recovery and unhealthy DNS discovery. Diagnose
-those before dependent cutovers; no production change was made by this checkpoint.
+also found stale Forgejo/cloud recovery and unhealthy DNS discovery. The
+[backup repair follow-up](../usenet-infra/docs/backup-repair-2026-10-27.md) now
+records fresh verified off-host archives for both services and restored Forgejo
+scheduling after an approved capture stop. Subsequent unattended captures and DNS
+discovery diagnosis remain prerequisites for dependent cutovers.
 The current HBS seed belongs to concurrent backup work and must remain undisturbed.
 
 Status: storage proposal with an **October 24, 2026 storage baseline**, revised
