@@ -139,3 +139,33 @@ The next useful recovery check is a later unattended capture for each stream;
 do not infer this from the minute probe or from a successful manual run.
 The separate HBS seed, disk-2/power/snapshot gates, service-account separation
 and wiki pilot boundaries are unchanged. No production data migration occurred.
+
+## Future actions: unattended recovery qualification
+
+**Open; recorded October 27.** The next recovery-maintenance session owns these
+checks. Suggested review: **October 28 after 17:30 America/New_York**, after both
+normal schedules have had an eligible opportunity. Re-read the actual timestamps
+and timers first: busy applications, host downtime or a newer manual capture can
+defer eligibility.
+
+- [ ] **Cloud:** observe a new capture from the existing hourly timer, newer than
+  the October 27 17:09:11 success. Confirm successful unit completion, a still-active
+  timer, a fresh source timestamp and verified Hetzner ciphertext readback.
+  Independently retrieve/decrypt that new archive and verify its files/databases.
+  Record NAS mirror freshness separately; Hetzner success does not prove the NAS
+  replica or B2 delivery has caught up.
+- [ ] **Forgejo:** observe a new capture from the minute-23 cron job, newer than
+  the October 27 17:19:24 success. Confirm one owned entry in each cron table,
+  no probe, healthy application restart and no stale capture/resume markers.
+  Independently verify the new off-host archive, SQLite and Git objects.
+- [ ] **Cron persistence:** after the next separately approved QTS/package change
+  or reboot, recheck both tables and subsequent execution. Do not trigger such
+  maintenance just to test persistence; the original disappearance remains unexplained.
+
+Both jobs skip a success younger than 23 hours. Do not force another capture,
+change a timer or pause/resume work to manufacture unattended-run evidence.
+Close each action only with its observed run/receipt and sanitized result in the
+service ledger; keep exact logs and restore evidence private. Preserve old
+archives and the separate HBS seed/follow-up. These actions do not block the
+[offline wiki preparation](../../docs/nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints),
+and their completion does not clear the disk, power or snapshot gates.

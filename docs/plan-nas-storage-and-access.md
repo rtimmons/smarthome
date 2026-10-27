@@ -67,6 +67,23 @@ retained-service checks passed within the recorded limits. The Multimedia share
 and its contents remain to classify and retire. A scrub was deferred pending
 disk-2 diagnosis and recovery review.
 
+## Next bounded change and open follow-up
+
+**Next: prepare wiki runtime identity inputs in the repository.** Compose already
+uses `WIKI_UID`/`WIKI_GID`; Ansible publication and rollback still supply the shared
+`qnap_uid/gid`. Add wiki-specific inputs with those existing values as defaults,
+then rehearse overrides, failed-candidate recovery and retained-release rollback
+locally. Keep deployment credentials, durable inventory and production paths
+unchanged. The exact scope, checks and rollback are in the
+[wiki pilot](nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints).
+No implementation or live identity change is included in this planning checkpoint.
+
+**Open future action:** [qualify unattended cloud/Forgejo captures and cron persistence](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification).
+Review after the next eligible normal runs; October 28 after 17:30 Eastern is the
+suggested initial review window. This can proceed independently of offline wiki
+preparation. Later checkpoints are a synthetic `svc-wiki` permission fixture,
+an approved runtime-only cutover, then a named-share move after storage gates pass.
+
 ## What is actually deployed
 
 ### Disks, pool and volumes — October 24 baseline

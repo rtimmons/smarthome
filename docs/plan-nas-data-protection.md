@@ -11,6 +11,12 @@ SSL locally, with no backup network mount and no `/share`. The concurrent HBS
 QuDedup seed is not yet qualified recovery; preserve its separate follow-up.
 Current app-owned capture snapshots do not clear the retained-snapshot gate.
 
+**Open future action:** complete the [unattended-capture and cron-persistence checklist](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification)
+after the next eligible normal runs. Qualify new source captures and off-host
+restores, record NAS replication separately, and leave the HBS seed with its
+existing follow-up. This recovery qualification can run alongside offline wiki
+preparation; it does not authorize a production data move.
+
 **Proposed policy, October 25, 2026. No per-share backup policy, retention rule,
 RAID layout or application data location has changed through this plan.** Current observations are recorded in the
 [October 25 read-only preflight](nas-preflight-2026-10-25.md), including separately

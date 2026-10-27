@@ -153,6 +153,27 @@ release pointers live under the existing NAS application backup root. Restore
 those settings or rebuild from source; neither procedure restores NAS media.
 Use numeric addresses during a DNS failure. See [DNS operations](home-dns.md).
 
+### Planned runtime identity preparation
+
+The next [NAS service pilot](../nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints)
+is a repository-only preparation patch. Compose already accepts `WIKI_UID` and
+`WIKI_GID`; Ansible currently passes the shared `qnap_uid/gid` to publication and
+rollback. Introduce `qnap_wiki_uid` / `qnap_wiki_gid` inputs defaulting to those
+shared values. Do not assign new IDs in durable inventory or deploy this step.
+
+Acceptance needs default-equivalent rendering, independently overridden runtime
+IDs, unchanged repeated-release behavior, and synthetic tests proving rejected
+candidates and explicit rollback restore the retained environment, including its
+identity. Reverting the preparation commit is the rollback; it changes no live
+state. Current/previous release metadata and independent recovery of both source
+repositories and build inputs remain prerequisites for a later live switch.
+
+After preparation, separately qualify a supported `svc-wiki` account using a
+synthetic NAS fixture and actual local/container denials. SMB checks alone cannot
+establish runtime isolation. A live identity switch needs its own approved
+wiki-only interruption; the named-share move follows storage readiness. Keep
+those checkpoints separate and preserve the current deployment identity.
+
 ## Initial expansion acceptance (2026-10-09)
 
 Numeric port-80 access, local search, phone-width navigation and the original

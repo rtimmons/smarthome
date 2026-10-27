@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "7deb2205a19c7e304071efd47ac2d9b6ff7058b28a53c18998f1b647de096c53",
-    "reason": "Reviewed cloud read-only SQLite capture repair, preserved WAL evidence and concurrent-write rejection, verified off-host archive recovery, and repaired Forgejo cron with independent table preservation and scoped rollback; verified fresh recovery for both services.",
+    "fingerprint": "841fd72fe011016b7acb13363b7b06e3e5149012f5dad61c71a0fedf7c2f2da7",
+    "reason": "Reviewed open unattended backup qualification, reconciled the completed recovery repairs, and specified the next wiki runtime identity preparation with unchanged defaults, local rollback checks and separate production gates.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
