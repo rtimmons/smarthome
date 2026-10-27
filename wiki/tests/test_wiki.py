@@ -365,8 +365,8 @@ else:raise SystemExit('unexpected Docker command')
         (target / "SHA256SUMS").write_text(value + "  site/publication.json\n")
         return target
 
-    def apply(self, name, mode="publish", reject=False):
-        return subprocess.run(["sh", str(ROOT / "wiki/apply.sh"), str(self.root), mode, name, "1000", "1000",
+    def apply(self, name, mode="publish", reject=False, uid="1004", gid="100"):
+        return subprocess.run(["sh", str(ROOT / "wiki/apply.sh"), str(self.root), mode, name, uid, gid,
                                str(self.docker), "true" if reject else "false"], capture_output=True, text=True,
                               env={**os.environ, "MOCK_WIKI_ROOT": str(self.root)})
 
@@ -375,15 +375,36 @@ else:raise SystemExit('unexpected Docker command')
         first = self.apply("a" * 64)
         self.assertEqual(first.returncode, 0, first.stdout + first.stderr)
         before = (self.root / ".env").read_text()
-        failed = self.apply("b" * 64, reject=True)
+        failed = self.apply("b" * 64, reject=True, uid="2401", gid="2402")
         self.assertEqual(failed.returncode, 1, failed.stdout + failed.stderr)
         self.assertEqual((self.root / ".env").read_text(), before)
+        self.assertEqual(json.loads((self.root / "active.json").read_text())["WIKI_UID"], "1004")
+        self.assertEqual(json.loads((self.root / "active.json").read_text())["WIKI_GID"], "100")
         self.assertIn("previous release restored", failed.stderr)
-        good = self.apply("b" * 64)
+        good = self.apply("b" * 64, uid="2401", gid="2402")
         self.assertEqual(good.returncode, 0, good.stdout + good.stderr)
-        rolled = self.apply("unused", mode="rollback")
+        self.assertEqual(json.loads((self.root / "active.json").read_text())["WIKI_UID"], "2401")
+        rolled = self.apply("unused", mode="rollback", uid="9999", gid="9998")
         self.assertEqual(rolled.returncode, 0, rolled.stdout + rolled.stderr)
         self.assertEqual((self.root / ".env").read_text(), before)
+
+    def test_identity_only_change_restarts_and_rollback_restores_retained_ids(self):
+        name = "a" * 64
+        self.release(name)
+        self.assertEqual(self.apply(name).returncode, 0)
+        before = (self.root / ".env").read_bytes()
+        changed = self.apply(name, uid="2401", gid="2402")
+        self.assertEqual(changed.returncode, 0, changed.stdout + changed.stderr)
+        active = json.loads((self.root / "active.json").read_text())
+        self.assertEqual((active["WIKI_UID"], active["WIKI_GID"]), ("2401", "2402"))
+        self.assertEqual((self.root / "starts").read_text().splitlines(), ["start", "start"])
+        self.assertEqual(self.apply(name, uid="2401", gid="2402").returncode, 0)
+        self.assertEqual((self.root / "starts").read_text().splitlines(), ["start", "start"])
+        rolled = self.apply("unused", mode="rollback", uid="9999", gid="9998")
+        self.assertEqual(rolled.returncode, 0, rolled.stdout + rolled.stderr)
+        self.assertEqual((self.root / ".env").read_bytes(), before)
+        active = json.loads((self.root / "active.json").read_text())
+        self.assertEqual((active["WIKI_UID"], active["WIKI_GID"]), ("1004", "100"))
 
     def test_repeated_healthy_release_does_not_restart(self):
         self.release("a" * 64)

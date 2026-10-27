@@ -153,26 +153,33 @@ release pointers live under the existing NAS application backup root. Restore
 those settings or rebuild from source; neither procedure restores NAS media.
 Use numeric addresses during a DNS failure. See [DNS operations](home-dns.md).
 
-### Planned runtime identity preparation
+### Runtime identity inputs
 
-The next [NAS service pilot](../nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints)
-is a repository-only preparation patch. Compose already accepts `WIKI_UID` and
-`WIKI_GID`; Ansible currently passes the shared `qnap_uid/gid` to publication and
-rollback. Introduce `qnap_wiki_uid` / `qnap_wiki_gid` inputs defaulting to those
-shared values. Do not assign new IDs in durable inventory or deploy this step.
+Ansible accepts independent `qnap_wiki_uid` and `qnap_wiki_gid` inputs. They
+inherit `qnap_uid` and `qnap_gid` unless explicitly overridden, preserving the
+existing deployment. Both must be positive. They populate Compose's existing
+`WIKI_UID` / `WIKI_GID`; deployment credentials and other runtimes are unchanged.
+Do not assign new IDs in durable inventory before the account/ACL checkpoint.
 
-Acceptance needs default-equivalent rendering, independently overridden runtime
-IDs, unchanged repeated-release behavior, and synthetic tests proving rejected
-candidates and explicit rollback restore the retained environment, including its
-identity. Reverting the preparation commit is the rollback; it changes no live
-state. Current/previous release metadata and independent recovery of both source
-repositories and build inputs remain prerequisites for a later live switch.
+Publication compares the entire candidate environment: a UID/GID change with
+the same site release still recreates only the wiki container. Repeating the
+same healthy release and identity does not restart it. Rejected publication
+and explicit rollback restore the retained environment, including its original
+identity; rollback does not adopt newly supplied UID/GID values.
 
-After preparation, separately qualify a supported `svc-wiki` account using a
-synthetic NAS fixture and actual local/container denials. SMB checks alone cannot
-establish runtime isolation. A live identity switch needs its own approved
-wiki-only interruption; the named-share move follows storage readiness. Keep
-those checkpoints separate and preserve the current deployment identity.
+The October 27 repository preparation tested default rendering, independent
+overrides, root/missing-ID rejection, rejected-candidate recovery, same-release
+identity changes and retained-identity rollback with synthetic local fixtures.
+No live identity or path change is established by those tests. Revert only the
+preparation commit to undo the input change; it leaves production state alone.
+
+Follow the [NAS pilot checkpoints](../nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints)
+for account qualification and live checks. Current/previous release metadata and
+independent recovery of both source repositories and build inputs remain live
+switch prerequisites. Test actual local/container denials as well as SMB;
+retained QNAP defaults can grant access independently of container mount scope.
+Keep account grants, runtime switching and the named-share move separate. The
+named-share move remains subject to disk, power, snapshot and recovery readiness.
 
 ## Initial expansion acceptance (2026-10-09)
 

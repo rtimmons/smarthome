@@ -25,14 +25,14 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "841fd72fe011016b7acb13363b7b06e3e5149012f5dad61c71a0fedf7c2f2da7",
-    "reason": "Reviewed open unattended backup qualification, reconciled the completed recovery repairs, and specified the next wiki runtime identity preparation with unchanged defaults, local rollback checks and separate production gates.",
+    "fingerprint": "4b9ed4e4b137466c2a7d90aa518c9e5d8a68d4a16e08404461f404047816bb9a",
+    "reason": "Reviewed wiki-specific runtime UID/GID defaults, independent overrides, same-release identity changes and retained identity rollback; preparation is local and production gates remain open.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
-    "fingerprint": "d3ecd9471de72c77fd5e2fa4a2f3b2fb21d4e95f724295d9e110d7cf463bf579",
-    "reason": "Document established HA Plex access alongside current NAS services and link conditional NAS-library and Jellyfin/Moonfin migration plan",
-    "reviewed_at": "2026-10-26"
+    "fingerprint": "c4f0e7359d97731ce317304a4b6de79407a7efc2fc8ecd3d75d79cf15d19ce97",
+    "reason": "Shared Ansible defaults now expose wiki-only runtime UID/GID overrides; media identities, paths, credentials and household access behavior are unchanged.",
+    "reviewed_at": "2026-10-27"
   },
   "network": {
     "fingerprint": "596b878e8c3e96caca03e2ee05dc01b20183c70c7e8a97e06f5093c3e7d5a0c2",

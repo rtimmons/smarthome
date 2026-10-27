@@ -69,14 +69,16 @@ disk-2 diagnosis and recovery review.
 
 ## Next bounded change and open follow-up
 
-**Next: prepare wiki runtime identity inputs in the repository.** Compose already
-uses `WIKI_UID`/`WIKI_GID`; Ansible publication and rollback still supply the shared
-`qnap_uid/gid`. Add wiki-specific inputs with those existing values as defaults,
-then rehearse overrides, failed-candidate recovery and retained-release rollback
-locally. Keep deployment credentials, durable inventory and production paths
-unchanged. The exact scope, checks and rollback are in the
+**October 27: wiki runtime identity preparation implemented locally.** New
+`qnap_wiki_uid` / `qnap_wiki_gid` inputs default to the existing shared values.
+Publication and rollback pass them through Compose's existing contract. Synthetic
+checks cover independent overrides, rejected candidates, retained-identity
+rollback and same-release identity changes; unchanged repeats do not restart.
+Deployment credentials, durable inventory and production paths are unchanged.
+The next checkpoint is supported `svc-wiki` account creation and synthetic access
+qualification, followed by a separately verified runtime switch. The exact scope,
+checks and rollback remain in the
 [wiki pilot](nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints).
-No implementation or live identity change is included in this planning checkpoint.
 
 **Open future action:** [qualify unattended cloud/Forgejo captures and cron persistence](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification).
 Review after the next eligible normal runs; October 28 after 17:30 Eastern is the

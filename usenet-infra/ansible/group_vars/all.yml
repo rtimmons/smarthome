@@ -93,6 +93,9 @@ qnap_storagebox_key_file: "{{ qnap_container_root }}/secrets/storagebox/id_ed255
 qnap_storagebox_known_hosts_file: "{{ qnap_container_root }}/secrets/storagebox/known_hosts"
 qnap_storagebox_private_key_source: ""
 qnap_storagebox_known_hosts_source: ""
+# Keep the existing runtime identity unless this service is explicitly qualified.
+qnap_wiki_uid: "{{ qnap_uid }}"
+qnap_wiki_gid: "{{ qnap_gid }}"
 qnap_wiki_root: "{{ qnap_container_root }}/wiki"
 qnap_wiki_source_dir: "{{ usenet_project_root }}/wiki"
 qnap_wiki_bind_address: 192.168.1.66

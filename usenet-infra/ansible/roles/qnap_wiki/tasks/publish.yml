@@ -65,7 +65,7 @@
     DOCKER_CONFIG={{ qnap_docker_config_dir | quote }}
     sh {{ (qnap_wiki_root ~ '/releases/' ~ qnap_wiki_manifest.release ~ '/runtime/apply.sh') | quote }}
     {{ qnap_wiki_root | quote }} publish {{ qnap_wiki_manifest.release | quote }}
-    {{ qnap_uid | int }} {{ qnap_gid | int }} {{ qnap_docker_executable | quote }}
+    {{ qnap_wiki_uid | int }} {{ qnap_wiki_gid | int }} {{ qnap_docker_executable | quote }}
     {{ 'true' if qnap_wiki_test_fail_smoke | default(false) | bool else 'false' }}
   register: qnap_wiki_apply
   changed_when: "'Wiki release accepted' in qnap_wiki_apply.stdout"

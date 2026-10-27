@@ -4,8 +4,8 @@
     that:
       - qnap_wiki_bind_address == '192.168.1.66'
       - qnap_wiki_port | int == 8090
-      - qnap_uid | int > 0
-      - qnap_gid | int > 0
+      - qnap_wiki_uid | int > 0
+      - qnap_wiki_gid | int > 0
       - qnap_wiki_root == qnap_container_root ~ '/wiki'
       - qnap_wiki_action | default('publish') in ['publish', 'rollback']
 
@@ -20,6 +20,6 @@
     runtime=$(sed -n 's/^WIKI_RUNTIME_DIR=//p' .env)
     case "$runtime" in {{ qnap_wiki_root | quote }}/releases/*/runtime) ;; *) echo 'No versioned rollback helper found.' >&2; exit 1;; esac
     DOCKER_CONFIG={{ qnap_docker_config_dir | quote }} sh "$runtime/apply.sh" \
-      {{ qnap_wiki_root | quote }} rollback unused {{ qnap_uid | int }} {{ qnap_gid | int }} {{ qnap_docker_executable | quote }}
+      {{ qnap_wiki_root | quote }} rollback unused {{ qnap_wiki_uid | int }} {{ qnap_wiki_gid | int }} {{ qnap_docker_executable | quote }}
   when: qnap_wiki_action | default('publish') == 'rollback'
   changed_when: true

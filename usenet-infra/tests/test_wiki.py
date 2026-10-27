@@ -5,9 +5,14 @@ from html.parser import HTMLParser
 import hashlib
 from pathlib import Path
 import re
+import shlex
+
 import unittest
 from urllib.parse import parse_qs, urlsplit
 import xml.etree.ElementTree as ET
+
+from jinja2 import Environment, StrictUndefined
+import yaml
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -56,6 +61,42 @@ class WikiDeploymentTests(unittest.TestCase):
             self.assertNotIn(forbidden, compose)
         self.assertEqual((WIKI / ".dockerignore").read_text().splitlines(),
                          ["**", "!Dockerfile", "!.dockerignore"])
+
+    def test_wiki_identity_defaults_and_independent_overrides_reach_both_actions(self):
+        defaults = yaml.safe_load((ROOT / "ansible/group_vars/all.yml").read_text())
+        main = yaml.safe_load(ROLE.read_text())
+        publish = yaml.safe_load((ROLE.parent / "publish.yml").read_text())
+        render = Environment(undefined=StrictUndefined)
+        render.filters["quote"] = shlex.quote
+        render.filters["bool"] = bool
+        for overrides, expected in [({}, (1004, 100)),
+                                    ({"qnap_wiki_uid": 2401}, (2401, 100)),
+                                    ({"qnap_wiki_gid": 2402}, (1004, 2402)),
+                                    ({"qnap_wiki_uid": 2401, "qnap_wiki_gid": 2402}, (2401, 2402))]:
+            with self.subTest(overrides=overrides):
+                values = dict(qnap_uid=1004, qnap_gid=100,
+                              qnap_wiki_root="/share/Container/usenet/wiki",
+                              qnap_docker_config_dir="/fixture/docker-client",
+                              qnap_docker_executable="/fixture/docker",
+                              qnap_wiki_manifest={"release": "a" * 64})
+                for key in ("qnap_wiki_uid", "qnap_wiki_gid"):
+                    values[key] = overrides.get(key, render.from_string(defaults[key]).render(values))
+                for task in (main[-1], publish[-1]):
+                    command = render.from_string(task["ansible.builtin.raw"]).render(values)
+                    self.assertIn(f"{expected[0]} {expected[1]} /fixture/docker", command)
+                self.assertEqual((values["qnap_uid"], values["qnap_gid"]), (1004, 100))
+
+    def test_wiki_boundary_rejects_root_and_missing_runtime_ids(self):
+        tasks = yaml.safe_load(ROLE.read_text())
+        checks = tasks[0]["ansible.builtin.assert"]["that"]
+        render = Environment(undefined=StrictUndefined)
+        checks = [render.compile_expression(check) for check in checks if "uid" in check or "gid" in check]
+        for uid, gid, allowed in [(1004, 100, True), (2401, 2402, True),
+                                  (0, 100, False), (1004, 0, False),
+                                  (None, 100, False), (1004, None, False)]:
+            with self.subTest(uid=uid, gid=gid):
+                self.assertEqual(all(check(qnap_wiki_uid=uid, qnap_wiki_gid=gid)
+                                     for check in checks), allowed)
 
     def test_caddy_has_no_admin_tls_logging_or_dynamic_backend(self):
         config = (WIKI / "Caddyfile").read_text()

@@ -102,7 +102,7 @@ Service configuration should be mounted R wherever the application permits it.
 
 | Service and current roots (mounts O; other paths C unless stated) | Actual principal / login / credential reference | Proposed account → roles → access | Writers, deployment and dependencies | Recovery / unresolved / smallest action |
 | --- | --- | --- | --- | --- |
-| Wiki: `U/wiki/.env`, `.env.previous`, `releases/<release>/{site,runtime}` → `wiki` | QNAP numeric 1004:100; inspected init same IDs/group 100, capabilities zero. No app secret; HTTPS uses outer Ryan MFA, numeric/old LAN routes remain open. Publisher uses dedicated QNAP SSH. | `svc-wiki` → `wiki-reader`: R on publication/Caddyfile; runtime denied writes and all archives. Deployment operator publishes. | Two observed R binds (`site` and Caddyfile); tmpfs only for runtime writes. `qnap_wiki_root`, shared `qnap_uid/gid`, `wiki/apply.sh`; all supported deployments may publish wiki afterward. DNS, HA HTTPS proxy and source/build inputs are dependencies. | Rebuild conditional; NAS capture includes pointers/runtime but deliberately omits site HTML. Private printer checkout is now a required build input. First pilot below; independently recover both repositories before claiming rebuild coverage. |
+| Wiki: `U/wiki/.env`, `.env.previous`, `releases/<release>/{site,runtime}` → `wiki` | QNAP numeric 1004:100; inspected init same IDs/group 100, capabilities zero. No app secret; HTTPS uses outer Ryan MFA, numeric/old LAN routes remain open. Publisher uses dedicated QNAP SSH. | `svc-wiki` → `wiki-reader`: R on publication/Caddyfile; runtime denied writes and all archives. Deployment operator publishes. | Two observed R binds (`site` and Caddyfile); tmpfs only for runtime writes. `qnap_wiki_root`, wiki-specific UID/GID inputs defaulting to shared `qnap_uid/gid`, `wiki/apply.sh`; all supported deployments may publish wiki afterward. DNS, HA HTTPS proxy and source/build inputs are dependencies. | Rebuild conditional; NAS capture includes pointers/runtime but deliberately omits site HTML. Private printer checkout is now a required build input. First pilot below; independently recover both repositories before claiming rebuild coverage. |
 | Forgejo: `/share/Container/home-git/{data,config}` → `forgejo` | QNAP numeric 1004:100; init same IDs/group 100/capabilities zero. Existing app user/OIDC link, SSH Git keys and local recovery login; server secrets in `data/custom/conf/app.ini`, key files under data, escrow references in identity runbook. | `svc-forgejo` → `service-state(forgejo)` RW; deny `forgejo-backups`, uploader keys, other apps and household shares. `git-users` permits app access only. | Two RW data/config binds; hard-coded IDs and paths in `git-host/compose.yaml`, `manage.py`, backup helpers and identity integration. Capturer needs stop/start. Printer's private origin is hosted here; publishing the wiki depends on a local printer checkout. | Full recovery unit below. October 27 fresh capture and independent restore passed; unattended capture and isolated application startup remain prerequisites for account/path migration. |
 | Jellyfin/Moonfin: `U/jellyfin-trial/{config,web-config.json,cache}` → durable `jellyfin`; cache remains disposable | Actual process UID 0/GID 100, group 100, `DAC_READ_SEARCH`; GPU device exception. AD `svc-jellyfin` lookup is distinct; original Ryan app ID/alias and hidden local recovery admin. Operator reference `usenet-infra/secrets/jellyfin/operator.json`; recovery/lookup files in external identity-private state. | `svc-jellyfin-runtime` → own state RW + `media-readers` R; private media and archives denied. Retain required root/GPU exception until tested replacement. | Config/cache RW, web config and five general-media leaves R; no private root bind. `scripts/jellyfin-trial.py`, Compose, LDAP plugin/CA and Moonfin Seerr linkage. | Pre/post-AD stopped-state exports passed historically; recurring NAS allowlist omits `jellyfin-trial`. Specify a consistent recurring export and GPU/ACL test before migration. |
 | Catalog/OliveTin, refresh/copy helpers and rclone cache: `U/{state,scripts,config/catalog,compose/qnap,secrets}` → `media-control` (exact split pending) | Dashboard and cache process 1004:100/group 100/capabilities zero. OAuth owner ACL plus separate local recovery login. `secrets/dashboard-auth.json`, provider-reader key/known-host files; keep API keys private. | `svc-media-copy` → own state RW + `media-copy`: selected general cache RW, canonical reader R; private roots and backup shares denied. | Dashboard binds broad `U/state` RW; refresh and transient catalog jobs share locks/receipts. Media cache/staging pairs must remain same-filesystem. Ansible qnap roles, refresh deployer, private path overrides and native ownership are coupled. | Recurring qnap-config captures enumerated state/config; H recovery checks include native-copy receipts. Inventory shared state subpaths and each writer before splitting; do not rename receipt-owned media. |
@@ -224,16 +224,17 @@ identity mappings remain necessary after any future rename; no history was prune
 
 ## First pilot: wiki preparation, then separate identity and path checkpoints
 
-**Next change, preparation not yet implemented:** start with wiki. Forgejo has
+**October 27 preparation implemented locally; live checkpoints remain open.**
+Start with wiki. Forgejo has
 unique mutable state and is a source-recovery dependency; DNS discovery is degraded;
 backup infrastructure has an active seed and newly repaired capture streams awaiting
 unattended qualification. Wiki's runtime has no database, credentials,
 persistent writer or media bind. That supports a small reversible pilot, but
 does **not** yet qualify all its build/recovery inputs or QNAP local permissions.
 
-1. **Preparation/rehearsal (safe while storage gate remains closed).** Introduce
+1. **Preparation/rehearsal implemented (safe while storage gate remains closed).** Added
    `qnap_wiki_uid` / `qnap_wiki_gid` inputs, defaulting to today's `qnap_uid/gid`.
-   Reuse Compose's existing `WIKI_UID` / `WIKI_GID` contract; pass the new Ansible
+   Reused Compose's existing `WIKI_UID` / `WIKI_GID` contract; passed the new Ansible
    inputs through publish and rollback roles without changing `qnap_wiki_root`,
    deployment credentials or defaults for any other service. Do not populate a
    new numeric ID in durable inventory. Verify current-default rendering and
@@ -270,9 +271,10 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    saved references after reconciling publisher writes if checks fail. Do not
    combine with account creation, ownership changes or backup-history deletion.
 
-No wiki pilot account, runtime input change, deployment or share has been
-implemented at this checkpoint. The inventory and exact pilot boundaries are ready for the
-next session. The follow-up above repaired cloud capture and Forgejo scheduling
+The runtime input preparation is implemented and its local fixture checks passed.
+No wiki pilot account, live identity change, deployment or share migration is
+established by this preparation checkpoint. Account qualification is next.
+The follow-up above repaired cloud capture and Forgejo scheduling
 and verified fresh off-host archives. Normal unattended cycles still need
 observation; offline wiki preparation can proceed independently. Leave ambiguous
 household files,
