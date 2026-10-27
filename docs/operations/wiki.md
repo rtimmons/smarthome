@@ -161,6 +161,20 @@ existing deployment. Both must be positive. They populate Compose's existing
 `WIKI_UID` / `WIKI_GID`; deployment credentials and other runtimes are unchanged.
 Do not assign new IDs in durable inventory before the account/ACL checkpoint.
 
+`qnap_wiki_manage_reader_acl` defaults to `false`. After a local reader group is
+qualified, enabling it adds that runtime GID's read/traverse access to each
+candidate's site directories, and read access to site files and its Caddyfile,
+before runtime validation. It requires an existing local group and rejects
+symlinked inputs. It preserves existing ACL entries, masks, owners and mode bits;
+it adds no parent/share traversal, default ACL, write or credential grant.
+Every publication reapplies the scoped entries, so future releases do not depend
+on manually inherited ACLs. An ACL command failure aborts before publication.
+
+Before enabling this on an existing release, save its exact ACLs separately.
+Runtime rollback restores the retained identity/environment; undoing a grant is
+a separate ACL checkpoint using that saved preimage. Preserve the preimage until
+acceptance, and never restore it blindly after another publisher has changed files.
+
 Publication compares the entire candidate environment: a UID/GID change with
 the same site release still recreates only the wiki container. Repeating the
 same healthy release and identity does not restart it. Rejected publication
@@ -190,10 +204,24 @@ passed using the controller's pinned Node runtime. Preserve those exact private
 archives and the original publication pointers; a future rebuild need not produce
 the same metadata digest because build times and working-tree state are inputs.
 
-The local `wiki-reader` group exists; service-account creation and effective
-access checks remain pending. Neither prepared UI denials nor the earlier
-container's read-only mounts establish the new identity's access. No runtime
-switch or named-share migration has occurred in this checkpoint.
+Local `svc-wiki` (UID 1005) and `wiki-reader` (GID 1000) now exist. The account's
+QNAP primary group remains `everyone` (100); probes explicitly use 1005:1000 with
+no supplementary group 100. Saved share/application denials and actual synthetic
+file/share-root denials are recorded in the ledger. `test -r/-x` disagreed with
+actual listing/traversal; actual operations are the acceptance checks.
+
+The original publication read failed. After a scoped grant, all 101 site files
+were readable and Caddy validated at 1005:1000. Only 186 group read entries were
+added; the pre-existing ACL record is otherwise identical and retained off NAS.
+The publisher's opt-in step makes future release grants explicit. Synthetic
+write/create/rename/delete and share-root denials, plus exact ACL restoration,
+passed. No share-wide grant or guest-denial removal was needed.
+
+The live runtime remains 1004:100 and durable inventory is unchanged. Agree its
+interruption window under current NAS load before switching the identity. Keep
+runtime rollback separate from undoing ACL grants. Post-switch acceptance,
+authenticated SMB/SSH denial and normal settings capture remain open; no named
+share migration has occurred.
 
 ## Initial expansion acceptance (2026-10-09)
 

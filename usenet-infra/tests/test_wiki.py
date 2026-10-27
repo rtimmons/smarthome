@@ -3,9 +3,14 @@ from __future__ import annotations
 
 from html.parser import HTMLParser
 import hashlib
+import grp
+import json
+import os
 from pathlib import Path
 import re
 import shlex
+import subprocess
+import tempfile
 
 import unittest
 from urllib.parse import parse_qs, urlsplit
@@ -97,6 +102,77 @@ class WikiDeploymentTests(unittest.TestCase):
             with self.subTest(uid=uid, gid=gid):
                 self.assertEqual(all(check(qnap_wiki_uid=uid, qnap_wiki_gid=gid)
                                      for check in checks), allowed)
+
+    def test_reader_acl_is_opt_in_scoped_and_fails_before_publication(self):
+        defaults = yaml.safe_load((ROOT / "ansible/group_vars/all.yml").read_text())
+        tasks = yaml.safe_load((ROLE.parent / "publish.yml").read_text())
+        task = next(task for task in tasks if "qualified runtime group" in task["name"])
+        render = Environment(undefined=StrictUndefined)
+        render.filters["quote"] = shlex.quote
+        render.filters["bool"] = bool
+        enabled = render.compile_expression(task["when"])
+        self.assertFalse(defaults["qnap_wiki_manage_reader_acl"])
+        self.assertFalse(enabled())
+        self.assertTrue(enabled(qnap_wiki_manage_reader_acl=True))
+        group_id = next(entry.gr_gid for entry in grp.getgrall() if entry.gr_gid > 0)
+        for failure in (None, "unknown-group", "candidate-link", "site-link", "runtime-link",
+                        "nested-link", "config-link", "acl-failure"):
+            with self.subTest(failure=failure), tempfile.TemporaryDirectory() as temporary:
+                base = Path(temporary)
+                root = base / "wiki space"
+                candidate = root / "releases" / ("a" * 64)
+                site = candidate / "site"
+                runtime = candidate / "runtime"
+                site.mkdir(parents=True)
+                runtime.mkdir()
+                (site / "index.html").write_text("Synthetic wiki")
+                (site / "nested").mkdir()
+                (site / "nested" / "page.html").write_text("Synthetic page")
+                (runtime / "Caddyfile").write_text("Synthetic configuration")
+                (root / "private.txt").write_text("Synthetic private state")
+                log = base / "calls.jsonl"
+                commands = base / "bin"
+                commands.mkdir()
+                executable = commands / "setfacl"
+                executable.write_text(
+                    "#!/usr/bin/env python3\nimport json, os, sys\n"
+                    "with open(os.environ['ACL_CALLS'], 'a') as stream: "
+                    "stream.write(json.dumps(sys.argv[1:]) + '\\n')\n"
+                    "sys.exit(int(os.environ.get('ACL_FAILURE', '0')))\n")
+                executable.chmod(0o755)
+                if failure == "candidate-link":
+                    candidate.rename(root / "elsewhere")
+                    candidate.symlink_to(root / "elsewhere", target_is_directory=True)
+                elif failure == "site-link":
+                    site.rename(candidate / "elsewhere")
+                    site.symlink_to(candidate / "elsewhere", target_is_directory=True)
+                elif failure == "runtime-link":
+                    runtime.rename(candidate / "elsewhere")
+                    runtime.symlink_to(candidate / "elsewhere", target_is_directory=True)
+                elif failure == "nested-link":
+                    (site / "escape").symlink_to(root / "private.txt")
+                elif failure == "config-link":
+                    (runtime / "Caddyfile").unlink()
+                    (runtime / "Caddyfile").symlink_to(root / "private.txt")
+                command = render.from_string(task["ansible.builtin.raw"]).render(
+                    qnap_wiki_root=str(root), qnap_wiki_manifest={"release": "a" * 64},
+                    qnap_wiki_gid=2147483000 if failure == "unknown-group" else group_id)
+                result = subprocess.run(["sh", "-c", command], capture_output=True, text=True,
+                                        env={**os.environ, "PATH": f"{commands}:{os.environ['PATH']}",
+                                             "ACL_CALLS": str(log), "ACL_FAILURE": "1" if failure == "acl-failure" else "0"})
+                self.assertEqual(result.returncode == 0, failure is None, result.stderr)
+                calls = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
+                if failure not in (None, "acl-failure"):
+                    self.assertEqual(calls, [])
+                elif failure is None:
+                    actual = {path: call[:3] for call in calls for path in call[3:]}
+                    self.assertEqual(actual, {
+                        str(site): ["-n", "-m", f"g:{group_id}:r-x"],
+                        str(site / "nested"): ["-n", "-m", f"g:{group_id}:r-x"],
+                        str(site / "index.html"): ["-n", "-m", f"g:{group_id}:r--"],
+                        str(site / "nested" / "page.html"): ["-n", "-m", f"g:{group_id}:r--"],
+                        str(runtime / "Caddyfile"): ["-n", "-m", f"g:{group_id}:r--"],
+                    })
 
     def test_caddy_has_no_admin_tls_logging_or_dynamic_backend(self):
         config = (WIKI / "Caddyfile").read_text()

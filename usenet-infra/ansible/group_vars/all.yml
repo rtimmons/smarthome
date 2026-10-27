@@ -96,6 +96,8 @@ qnap_storagebox_known_hosts_source: ""
 # Keep the existing runtime identity unless this service is explicitly qualified.
 qnap_wiki_uid: "{{ qnap_uid }}"
 qnap_wiki_gid: "{{ qnap_gid }}"
+# Enable only after qualifying this group's QNAP filesystem ACL behavior.
+qnap_wiki_manage_reader_acl: false
 qnap_wiki_root: "{{ qnap_container_root }}/wiki"
 qnap_wiki_source_dir: "{{ usenet_project_root }}/wiki"
 qnap_wiki_bind_address: 192.168.1.66

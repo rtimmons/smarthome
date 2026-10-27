@@ -13,7 +13,8 @@ Household collections, share contents and media payloads were not traversed.
 16:50–17:00 Eastern. **C** means current checked-out configuration/runbook,
 including explicitly identified concurrent work. **H** means historical acceptance.
 **P** means proposed. Mount flags and UID observations are not effective-access
-tests. No new SMB, local-user denial, restore or playback test ran here.
+tests. The initial inventory ran no new SMB, local-user denial, restore or
+playback test; later wiki recovery and access probes are recorded separately below.
 
 Private metadata, exact SIDs, release pointers and probe scripts are retained in
 ignored `build/nas-service-inventory-20261027/`. No environments, credentials,
@@ -92,20 +93,75 @@ receipts, archives and exact source revisions are under ignored
 or proof of replacement-controller bootstrap.
 
 Safari's local-user wizard exposed Public read and Multimedia write defaults,
-all application grants, and checked recursive permission propagation. The pending
-`svc-wiki` form instead denies all seven existing shares and every listed
-application, with recursion unchecked and no administrator membership. QNAP
-created the otherwise unused local `wiki-reader` group, GID 1000. Account password
-entry/submission remains a human handoff; no service UID has been allocated or
-used by this checkpoint. Do not treat the pending form as effective denial.
+all application grants, and checked recursive permission propagation. These were
+removed before the user completed password entry and account creation. Saved
+QNAP-local `svc-wiki` is UID **1005**, primary GID **100** (`everyone`), with
+`wiki-reader` supplementary GID **1000** and no administrator membership. Its
+configured home is `/share/homes/svc-wiki` and shell is `/bin/sh`; this is not a
+verified nologin account. The password remains in human custody.
 
-Next: finish account creation, verify its actual UID/groups and saved grants,
-then run the retained synthetic ACL fixture with an explicitly selected runtime
-GID. It checks read, write/create/rename/delete, private-file and share-root
-traversal behavior plus read/validation of the existing wiki inputs, without a
-service restart. Only a passing fixture supports a runtime-only cutover. The
-named-share move remains blocked on disk/power/snapshot readiness; this migration
-is **open**, not closed. Preserve all releases and the separate HBS seed.
+Saved configuration denies this account on all seven existing shares and all
+listed application permissions (AFP, FTP, Microsoft Networking, WebDAV and File
+Station). Recursive subfolder propagation was disabled. The Container and Usenet
+share-root ACLs contain the new explicit user denial. The later wiki-only read
+grants below are a separate checkpoint. These are configuration observations, not an authenticated
+SMB or SSH denial test.
+
+A synthetic fixture ran as **1005:1000**, with only group 1000, no effective
+capabilities, no network and a read-only container root. Its fixture bind was
+writable so filesystem ACLs, rather than mount flags, had to enforce write
+restrictions. Reading the allowed synthetic file passed; reading a private file,
+append, create, rename and delete were denied. Actual listing and `cd` were also
+denied through read-only binds of the Container and Usenet roots. The initial
+`test -r/-x` assertions incorrectly reported access; use actual operations for
+this QNAP qualification. Host and container numeric credentials and source/bind
+inodes matched; no user-namespace remapping was observed.
+
+Before its scoped grant, the current publication was unreadable to the proposed
+runtime: an actual read of `index.html` failed before Caddy validation. Its existing ACLs include a
+guest denial despite ordinary read mode bits. A synthetic copy of that ACL shape
+was also unreadable. Adding explicit
+`wiki-reader` access enabled reading while append and create remained denied;
+no broad share grant or guest-denial removal was needed. This does not establish
+a vendor-level explanation for the ACL behavior.
+
+Publisher preparation now offers opt-in `qnap_wiki_manage_reader_acl` (default
+false). It adds the selected local group's R/RX entries only to the candidate
+site and Caddyfile on each publication, preserving masks, owners and other ACL
+entries. Missing groups, symlinked inputs and ACL failures abort before publication.
+Focused shell-execution tests passed. The NAS fixture passed actual input reads,
+write/create/rename/delete and share-root denials, unchanged owner/group/mode
+metadata, and exact restoration of the saved ACLs. Infrastructure validation
+passed 586 tests (12 skipped) and syntax checks; the full-history scan reports
+only its documented historical keys/private paths. Root `just test` stopped at
+the same unrelated printer preview timing check (105.0 ms against 100 ms; 224
+printer tests passed); the remaining root/container checks did not run. No test
+threshold or unrelated implementation was changed.
+
+The live grant checkpoint preserved exact ACLs and both release pointers off NAS
+before adding **186 group read entries** to the current site and Caddyfile.
+Comparison after removing only those new entries exactly reproduced the original
+ACL record, including owners, groups, masks, defaults and other grants. A temporary
+container at 1005:1000 read all **101 site files** and validated Caddy successfully,
+with only group 1000 and zero effective capabilities. No share-wide read grant,
+guest-denial removal, chown, runtime switch or data move was required. The original
+ACLs, synthetic fixtures, scripts and results are retained privately under
+`build/wiki-identity-20261027/account-checkpoint/`.
+
+Next: agree a wiki-only interruption window, then switch only its current immutable
+release from 1004:100 to 1005:1000 and set the three wiki-specific inventory inputs
+(UID, GID and reader-ACL opt-in). The NAS reported sustained load around 15 and slow
+temporary-container operations; the initially proposed two-minute window is not
+qualified. The user asked to be consulted before stopping services. Recheck live
+health, current/previous pointers and publisher exclusion immediately beforehand.
+Use the existing helper's retained-environment rollback; restore the old inventory
+values separately. Keep original retained-release metadata and the ACL preimage.
+The runtime is still 1004:100 and durable inventory is unchanged at this checkpoint.
+
+Authenticated SMB/SSH denial, post-switch HTTP/MFA/process checks and the next
+normal settings capture remain open. The named-share move is still blocked on
+disk/power/snapshot readiness; the wiki migration is **not closed**. Preserve all
+releases and the separate HBS seed.
 
 ## Common identity and permission contract
 
@@ -113,7 +169,8 @@ The live deployment login is QNAP-local `usenet-deploy`, UID **1004**, primary
 GID **100** (`everyone`), supplementary GID **0** (`administrators`). Its home is
 `/share/homes/usenet-deploy`. Preserve the home/key, pinned host trust and
 `QNAP_SSH_TARGET` / Ansible `ansible_user` references. Target `svc-nas-deploy`
-remains deferred until runtimes are separated. No new account exists yet.
+remains deferred until runtimes are separated. The separately qualified pilot
+account is recorded above; deployment ownership and credentials are unchanged.
 
 Runtime process credentials were read from container init PIDs and, where the
 application itself is PID 1, from that application. This is not an exhaustive
@@ -288,18 +345,19 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    environments must restore their identity too. Review source/build recovery for both
    smarthome and printer; preserve exact current/previous release metadata.
    Rollback is reverting only the preparation patch; no production state changes.
-2. **Synthetic NAS identity checkpoint (later, explicit qualified scope).** Check
-   supported local account/group creation and collisions in Safari. Allocate
-   `svc-wiki` with no admin/SMB/shell need, preserve deployment owner, and test
-   R/traverse on a fixture publication with write/rename/delete and unrelated
-   service/archive denial. Test QNAP ACL behavior using the actual account: the
-   Filex runbook records unknown numeric UIDs being mapped to denied guest ACLs.
-   Removing only fixture grants and disabling an unused pilot account reverses
-   this checkpoint; no existing owner or path changes.
+2. **Account and read-grant checkpoint completed within the recorded limits.**
+   Supported local creation, synthetic actual-operation denials, explicit group
+   read grants and exact synthetic ACL rollback passed. The current publication
+   is readable by 1005:1000 after its narrowly saved/restorable grant. Preserve
+   deployment ownership. SMB/SSH denial is configured but not authenticated/tested;
+   shell is still `/bin/sh`. Undo the unused account/grants only through their
+   separate saved checkpoint; do not rewrite unrelated share permissions.
 3. **Runtime identity checkpoint (separate decision/window).** Requires qualified
    recovery inputs, current service/backup health, no competing wiki publisher,
-   saved ACLs/environment, and an agreed wiki-only interruption (propose at most
-   two minutes; not yet approved). Grant only enumerated published inputs R,
+   saved ACLs/environment, and an agreed wiki-only interruption. The original
+   two-minute proposal is unqualified under the observed NAS load. The user
+   authorized migration but requested consultation before service stops. Retain
+   only the enumerated published-input read grants,
    switch this runtime, keep all paths and deployment identity. Verify PID/child
    UID/groups/capabilities, R binds, local and SMB denials, both ports, matching
    publication digest, HTTPS MFA gate, direct numeric recovery route and one
@@ -317,8 +375,9 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    combine with account creation, ownership changes or backup-history deletion.
 
 The runtime input preparation is implemented and its local fixture checks passed.
-No wiki pilot account, live identity change, deployment or share migration is
-established by this preparation checkpoint. Account qualification is next.
+The pilot account now exists, but the live runtime and paths remain unchanged.
+Publication-read and synthetic denials are qualified; agree the interruption
+window before switching it, then complete the remaining acceptance checks.
 The follow-up above repaired cloud capture and Forgejo scheduling
 and verified fresh off-host archives. Normal unattended cycles still need
 observation; offline wiki preparation can proceed independently. Leave ambiguous

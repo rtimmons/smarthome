@@ -75,22 +75,27 @@ Publication and rollback pass them through Compose's existing contract. Syntheti
 checks cover independent overrides, rejected candidates, retained-identity
 rollback and same-release identity changes; unchanged repeats do not restart.
 Deployment credentials, durable inventory and production paths are unchanged.
-The next checkpoint is supported `svc-wiki` account creation and synthetic access
-qualification, followed by a separately verified runtime switch. The exact scope,
+The `svc-wiki` account and narrow publication-read grants are now qualified
+within the ledger's limits. A separately verified runtime switch is next. Its scope,
 checks and rollback remain in the
 [wiki pilot](nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints).
 
 The [wiki recovery/account checkpoint](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint)
 now records verified off-NAS release preservation and independent source
-restore/build. The local `wiki-reader` group exists; account submission and
-synthetic access checks remain next. This does not close the wiki migration or
-waive the production storage gates.
+restore/build. Local `svc-wiki` / `wiki-reader` exist with saved share/application
+denials. Actual synthetic file/share-root denials and exact ACL rollback passed.
+A separate read grant preserved all old ACL metadata and enabled all current site
+reads plus Caddy validation as 1005:1000. The opt-in publisher step repeats only
+those read grants on future releases. Agree a wiki-only interruption window before
+switching the healthy 1004:100 runtime; the proposed two minutes is unqualified
+under current NAS load. SMB/SSH denial and post-switch capture/acceptance remain
+open. This does not close the wiki migration or waive the storage gates.
 
 **Open future action:** [qualify unattended cloud/Forgejo captures and cron persistence](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification).
 Review after the next eligible normal runs; October 28 after 17:30 Eastern is the
 suggested initial review window. This can proceed independently of offline wiki
-preparation. Later checkpoints are a synthetic `svc-wiki` permission fixture,
-an approved runtime-only cutover, then a named-share move after storage gates pass.
+preparation. The account/read-grant fixture has passed; next are the runtime-only
+cutover and acceptance, then a named-share move after storage gates pass.
 
 ## What is actually deployed
 

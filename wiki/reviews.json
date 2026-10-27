@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "d33a39f8f5e0b7d475a6e9f9f59fb3d041156b4a8b702f3daec86722e9565797",
-    "reason": "Verified wiki preparation and current/previous release recovery, independent source restore/build and pending QNAP account checkpoint; named-share and storage gates remain open.",
+    "fingerprint": "807cabc4bb0d6622e1f7297edd5a1e64a4d2a4e2e21197d79b1e0db417751fec",
+    "reason": "Recorded svc-wiki creation, verified scoped publication reads and exact ACL rollback, and documented the remaining runtime, capture and storage gates.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
-    "fingerprint": "c4f0e7359d97731ce317304a4b6de79407a7efc2fc8ecd3d75d79cf15d19ce97",
-    "reason": "Shared Ansible defaults now expose wiki-only runtime UID/GID overrides; media identities, paths, credentials and household access behavior are unchanged.",
+    "fingerprint": "fed8674ac21150378fea9bd9091f9d2e4fd719cc39037fe13ca5cae6ad6caaf6",
+    "reason": "Reviewed opt-in wiki reader ACLs: existing local group required, linked inputs and ACL errors rejected, site/Caddyfile only, defaults and other services unchanged.",
     "reviewed_at": "2026-10-27"
   },
   "network": {

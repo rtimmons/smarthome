@@ -60,6 +60,25 @@
     rm -f "$archive"
   changed_when: false
 
+- name: Grant the qualified runtime group read access to published inputs
+  ansible.builtin.raw: |
+    set -eu
+    candidate={{ (qnap_wiki_root ~ '/releases/' ~ qnap_wiki_manifest.release) | quote }}
+    gid={{ qnap_wiki_gid | int }}
+    awk -F: -v gid="$gid" '$3 == gid {found=1} END {exit !found}' /etc/group
+    test -d "$candidate" && test ! -L "$candidate"
+    test -d "$candidate/site" && test ! -L "$candidate/site"
+    test -d "$candidate/runtime" && test ! -L "$candidate/runtime"
+    test -f "$candidate/runtime/Caddyfile" && test ! -L "$candidate/runtime/Caddyfile"
+    links=$(find "$candidate/site" -type l -print)
+    test -z "$links"
+    # Preserve existing ACL entries and masks; grant neither writes nor parent traversal.
+    find "$candidate/site" -type d -exec setfacl -n -m "g:$gid:r-x" {} +
+    find "$candidate/site" -type f -exec setfacl -n -m "g:$gid:r--" {} +
+    setfacl -n -m "g:$gid:r--" "$candidate/runtime/Caddyfile"
+  when: qnap_wiki_manage_reader_acl | default(false) | bool
+  changed_when: false
+
 - name: Publish with exact binding checks and automatic runtime rollback
   ansible.builtin.raw: >-
     DOCKER_CONFIG={{ qnap_docker_config_dir | quote }}

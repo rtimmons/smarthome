@@ -16,7 +16,10 @@ preserved both published releases and their pointers off NAS, verified their
 encrypted round trip, and rebuilt from independently restored source bundles for
 both repositories. Exact inputs and receipts remain private. This supports wiki
 rollback; it does not add recurring HTML capture, B2 delivery, replacement-host
-bootstrap or disk/power/snapshot qualification.
+bootstrap or disk/power/snapshot qualification. The later account/read-grant
+checkpoint also preserved exact pre-grant ACLs and both release pointers off NAS;
+only group read entries changed. A normal settings capture containing the new
+account and eventual runtime mapping still needs verification.
 
 **Open future action:** complete the [unattended-capture and cron-persistence checklist](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification)
 after the next eligible normal runs. Qualify new source captures and off-host
