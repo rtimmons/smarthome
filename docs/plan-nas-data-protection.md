@@ -18,8 +18,17 @@ both repositories. Exact inputs and receipts remain private. This supports wiki
 rollback; it does not add recurring HTML capture, B2 delivery, replacement-host
 bootstrap or disk/power/snapshot qualification. The later account/read-grant
 checkpoint also preserved exact pre-grant ACLs and both release pointers off NAS;
-only group read entries changed. A normal settings capture containing the new
-account and eventual runtime mapping still needs verification.
+only group read entries changed. The approved runtime switch to 1005:1000 now has
+a separate encrypted off-NAS checkpoint of current/retained pointers, exact ACLs,
+account mapping, updated private inventory and both source bundles; decryption
+and all hashes verified. The unchanged publication payloads remain in the earlier
+archive. These controller copies do not establish B2 delivery.
+
+A normal settings capture/restore containing the new account and runtime mapping
+still needs verification. The native QTS payload comes from a weekly snapshot;
+check its source date and account/group contents, not just the outer archive's
+freshness. Rebuild must restore the local mapping and enable the qualified reader
+ACL step; mode bits alone did not permit the new runtime to read old inputs.
 
 **Open future action:** complete the [unattended-capture and cron-persistence checklist](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification)
 after the next eligible normal runs. Qualify new source captures and off-host

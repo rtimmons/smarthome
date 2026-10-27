@@ -148,20 +148,75 @@ guest-denial removal, chown, runtime switch or data move was required. The origi
 ACLs, synthetic fixtures, scripts and results are retained privately under
 `build/wiki-identity-20261027/account-checkpoint/`.
 
-Next: agree a wiki-only interruption window, then switch only its current immutable
-release from 1004:100 to 1005:1000 and set the three wiki-specific inventory inputs
-(UID, GID and reader-ACL opt-in). The NAS reported sustained load around 15 and slow
-temporary-container operations; the initially proposed two-minute window is not
-qualified. The user asked to be consulted before stopping services. Recheck live
-health, current/previous pointers and publisher exclusion immediately beforehand.
-Use the existing helper's retained-environment rollback; restore the old inventory
-values separately. Keep original retained-release metadata and the ACL preimage.
-The runtime is still 1004:100 and durable inventory is unchanged at this checkpoint.
+The subsequent approved runtime checkpoint below supersedes the pending
+interruption decision. Original retained-release metadata and the ACL preimage
+remain preserved; neither the HBS seed nor storage-readiness gates changed.
 
-Authenticated SMB/SSH denial, post-switch HTTP/MFA/process checks and the next
-normal settings capture remain open. The named-share move is still blocked on
-disk/power/snapshot readiness; the wiki migration is **not closed**. Preserve all
-releases and the separate HBS seed.
+### Wiki runtime identity checkpoint
+
+**Completed October 27, runtime started 18:53:11 Eastern.** The user approved a
+several-minute wiki-only interruption with uncertain duration. The existing
+helper validated and accepted the same immutable release at **1005:1000**.
+The retained environment is the same release at **1004:100**, and the older
+retained-release pointer remains in the separately preserved pre-change evidence.
+No content path, release payload, ownership, deployment identity or other service
+was changed. All 11 peer-container start times matched the preflight baseline.
+
+Durable private inventory now explicitly sets `qnap_wiki_uid: 1005`,
+`qnap_wiki_gid: 1000` and `qnap_wiki_manage_reader_acl: true`. Pinned Ansible
+verified those values and the unchanged shared 1004:100 defaults. The original
+inventory was encrypted and independently decrypted before its atomic update;
+only these three settings were added. Future publications apply the qualified
+reader entries to their site and Caddyfile before validation.
+
+Both the container init process and actual Caddy process have UID 1005, GID 1000,
+only group 1000, zero effective capabilities and `NoNewPrivs: 1`. The root
+filesystem and both input binds are read-only; a runtime create attempt was
+denied, and archive/Docker-socket paths are absent. Earlier writable-fixture
+checks remain the evidence for filesystem ACL denials beyond mount restrictions.
+Numeric port 80 and port 8090 served the unchanged publication bytes; the numeric
+index, legacy redirect and TLS-verified unauthenticated Authelia redirect passed.
+This did not repeat a human authenticated MFA session or an SMB/SSH login.
+
+The NAS remained slow (observed load roughly 20–29). Short HTTP probes timed out
+before replacement began; a longer index request succeeded. A guarded attempt
+to cancel the pre-start image inspection found that it had already completed and
+sent no signal. The single approved helper then completed normally. These probes
+do **not** qualify a precise outage duration or a two-minute future window.
+Trailing read-only checks in the SSH stdin wrapper did not execute after the
+helper returned; acceptance was therefore independently re-read in a separate
+command. Redirect helper stdin from `/dev/null` when invoking it through an SSH
+script stream so child commands cannot consume the remaining wrapper input. This
+kernel lacks procfs child lists, so Caddy was located by its actual parent PID
+instead of treating init-only credentials as sufficient.
+
+A new **5,913,542-byte encrypted controller archive** contains current/retained
+pointers, the exact post-grant ACLs, account/group mapping, updated private
+inventory and verified source bundles for both repositories. Decryption and all
+payload hashes passed; the current environment differs from the saved old one
+only in UID/GID, and ACLs match the qualified grant. The prior encrypted release
+archive still supplies the unchanged HTML/runtime payloads. Private receipts and
+scripts are under `build/wiki-identity-20261027/runtime-checkpoint/`. This is an
+off-NAS recovery supplement, not a new B2 upload or unattended-capture receipt.
+Full root `just test`, including container checks, passed for this checkpoint;
+the historical infrastructure secret-scan findings remain separately documented.
+
+The **runtime identity phase is complete**. Keep the named-share migration open:
+disk-2, power and retained-snapshot gates still block it. Next, inspect the next
+normal NAS settings capture and off-host restore, including the new runtime
+mapping and a native QTS export new enough to contain the account/group. The
+existing QTS stream uses a weekly native snapshot, so archive freshness alone
+cannot prove that newly created accounts are recoverable. Include this in the
+October 28 after-17:30 unattended-backup review. Authenticated SMB/SSH denials
+remain unqualified; do not promote saved settings into tested network isolation.
+
+Rollback for this checkpoint restores the retained 1004:100 environment using
+the existing helper and removes only the three wiki inventory overrides after
+checking for intervening edits. Undoing the read grants is a separate saved-ACL
+checkpoint. Recheck retained pointers after any later publication; do not blindly
+restore a whole inventory, ACL tree or older release over subsequent work. The
+current publication was intentionally preserved; updated repository documentation
+can publish with the next normal wiki release.
 
 ## Common identity and permission contract
 
@@ -174,11 +229,12 @@ account is recorded above; deployment ownership and credentials are unchanged.
 
 Runtime process credentials were read from container init PIDs and, where the
 application itself is PID 1, from that application. This is not an exhaustive
-audit of every child process. The NAS service containers using 1004:100 have
-only group 100 and zero effective capabilities at the inspected process:
+audit of every child process. At the initial inventory, the NAS service
+containers using 1004:100 had only group 100 and zero effective capabilities:
 wiki, dashboard, Forgejo, DNS resolver, discovery and Filex; the rclone cache
 container also has that same mapping. Different service labels do not isolate
-shared numeric owners. QNAP's `everyone` GID is not a suitable new private
+shared numeric owners. The later wiki checkpoint above separates only wiki to
+1005:1000. QNAP's `everyone` GID is not a suitable new private
 service group by assumption.
 
 AD `svc-authelia` and `svc-jellyfin` resolve to the existing domain SIDs (private
@@ -204,7 +260,7 @@ Service configuration should be mounted R wherever the application permits it.
 
 | Service and current roots (mounts O; other paths C unless stated) | Actual principal / login / credential reference | Proposed account → roles → access | Writers, deployment and dependencies | Recovery / unresolved / smallest action |
 | --- | --- | --- | --- | --- |
-| Wiki: `U/wiki/.env`, `.env.previous`, `releases/<release>/{site,runtime}` → `wiki` | QNAP numeric 1004:100; inspected init same IDs/group 100, capabilities zero. No app secret; HTTPS uses outer Ryan MFA, numeric/old LAN routes remain open. Publisher uses dedicated QNAP SSH. | `svc-wiki` → `wiki-reader`: R on publication/Caddyfile; runtime denied writes and all archives. Deployment operator publishes. | Two observed R binds (`site` and Caddyfile); tmpfs only for runtime writes. `qnap_wiki_root`, wiki-specific UID/GID inputs defaulting to shared `qnap_uid/gid`, `wiki/apply.sh`; all supported deployments may publish wiki afterward. DNS, HA HTTPS proxy and source/build inputs are dependencies. | Rebuild conditional; NAS capture includes pointers/runtime but deliberately omits site HTML. Private printer checkout is now a required build input. First pilot below; independently recover both repositories before claiming rebuild coverage. |
+| Wiki: `U/wiki/.env`, `.env.previous`, `releases/<release>/{site,runtime}` → `wiki` | Updated at the runtime checkpoint: QNAP-local 1005:1000, init/Caddy group 1000 only, capabilities zero. No app secret; HTTPS uses outer Ryan MFA, numeric/old LAN routes remain open. Publisher uses dedicated QNAP SSH. | `svc-wiki` → `wiki-reader`: R on publication/Caddyfile; runtime denied writes and all archives. Deployment operator publishes. | Two observed R binds (`site` and Caddyfile); tmpfs only for runtime writes. `qnap_wiki_root`, wiki-specific UID/GID inputs defaulting to shared `qnap_uid/gid`, `wiki/apply.sh`; all supported deployments may publish wiki afterward. DNS, HA HTTPS proxy and source/build inputs are dependencies. | Rebuild conditional; NAS capture includes pointers/runtime but deliberately omits site HTML. Private printer checkout is now a required build input. Both source bundles and the new identity/pointer recovery checkpoint verified off NAS. Normal capture and named-share migration remain open. |
 | Forgejo: `/share/Container/home-git/{data,config}` → `forgejo` | QNAP numeric 1004:100; init same IDs/group 100/capabilities zero. Existing app user/OIDC link, SSH Git keys and local recovery login; server secrets in `data/custom/conf/app.ini`, key files under data, escrow references in identity runbook. | `svc-forgejo` → `service-state(forgejo)` RW; deny `forgejo-backups`, uploader keys, other apps and household shares. `git-users` permits app access only. | Two RW data/config binds; hard-coded IDs and paths in `git-host/compose.yaml`, `manage.py`, backup helpers and identity integration. Capturer needs stop/start. Printer's private origin is hosted here; publishing the wiki depends on a local printer checkout. | Full recovery unit below. October 27 fresh capture and independent restore passed; unattended capture and isolated application startup remain prerequisites for account/path migration. |
 | Jellyfin/Moonfin: `U/jellyfin-trial/{config,web-config.json,cache}` → durable `jellyfin`; cache remains disposable | Actual process UID 0/GID 100, group 100, `DAC_READ_SEARCH`; GPU device exception. AD `svc-jellyfin` lookup is distinct; original Ryan app ID/alias and hidden local recovery admin. Operator reference `usenet-infra/secrets/jellyfin/operator.json`; recovery/lookup files in external identity-private state. | `svc-jellyfin-runtime` → own state RW + `media-readers` R; private media and archives denied. Retain required root/GPU exception until tested replacement. | Config/cache RW, web config and five general-media leaves R; no private root bind. `scripts/jellyfin-trial.py`, Compose, LDAP plugin/CA and Moonfin Seerr linkage. | Pre/post-AD stopped-state exports passed historically; recurring NAS allowlist omits `jellyfin-trial`. Specify a consistent recurring export and GPU/ACL test before migration. |
 | Catalog/OliveTin, refresh/copy helpers and rclone cache: `U/{state,scripts,config/catalog,compose/qnap,secrets}` → `media-control` (exact split pending) | Dashboard and cache process 1004:100/group 100/capabilities zero. OAuth owner ACL plus separate local recovery login. `secrets/dashboard-auth.json`, provider-reader key/known-host files; keep API keys private. | `svc-media-copy` → own state RW + `media-copy`: selected general cache RW, canonical reader R; private roots and backup shares denied. | Dashboard binds broad `U/state` RW; refresh and transient catalog jobs share locks/receipts. Media cache/staging pairs must remain same-filesystem. Ansible qnap roles, refresh deployer, private path overrides and native ownership are coupled. | Recurring qnap-config captures enumerated state/config; H recovery checks include native-copy receipts. Inventory shared state subpaths and each writer before splitting; do not rename receipt-owned media. |
@@ -326,7 +382,7 @@ identity mappings remain necessary after any future rename; no history was prune
 
 ## First pilot: wiki preparation, then separate identity and path checkpoints
 
-**October 27 preparation implemented locally; live checkpoints remain open.**
+**October 27 runtime identity phase completed; capture acceptance and named-share migration remain open.**
 Start with wiki. Forgejo has
 unique mutable state and is a source-recovery dependency; DNS discovery is degraded;
 backup infrastructure has an active seed and newly repaired capture streams awaiting
@@ -350,19 +406,15 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    read grants and exact synthetic ACL rollback passed. The current publication
    is readable by 1005:1000 after its narrowly saved/restorable grant. Preserve
    deployment ownership. SMB/SSH denial is configured but not authenticated/tested;
-   shell is still `/bin/sh`. Undo the unused account/grants only through their
-   separate saved checkpoint; do not rewrite unrelated share permissions.
-3. **Runtime identity checkpoint (separate decision/window).** Requires qualified
-   recovery inputs, current service/backup health, no competing wiki publisher,
-   saved ACLs/environment, and an agreed wiki-only interruption. The original
-   two-minute proposal is unqualified under the observed NAS load. The user
-   authorized migration but requested consultation before service stops. Retain
-   only the enumerated published-input read grants,
-   switch this runtime, keep all paths and deployment identity. Verify PID/child
-   UID/groups/capabilities, R binds, local and SMB denials, both ports, matching
-   publication digest, HTTPS MFA gate, direct numeric recovery route and one
-   normal settings capture. Roll back saved environment/ACLs and the previous
-   immutable runtime; no recursive chown, no other service restart.
+   shell is still `/bin/sh`. Reverting this account now requires runtime rollback
+   first; use the separate saved grant checkpoint and preserve unrelated shares.
+3. **Runtime identity checkpoint completed under the approved window.** Same
+   release/paths now run at 1005:1000, with durable wiki-only overrides and retained
+   identity rollback. Process/child, mounts, actual runtime write denial, both
+   ports, unchanged bytes and unauthenticated TLS/MFA redirect passed. Recovery
+   metadata/source capture verified off NAS. Normal settings capture/restore and
+   authenticated SMB/SSH denials remain separate follow-ups; do not claim them
+   from this successful runtime switch. No ownership or peer-service change.
 4. **Named share checkpoint (after production storage gates).** Resolve a
    QTS-managed `wiki` root on the same filesystem (current source device 64519),
    exact destination absence/ACLs, and publisher/backup consumers before any
@@ -375,9 +427,9 @@ does **not** yet qualify all its build/recovery inputs or QNAP local permissions
    combine with account creation, ownership changes or backup-history deletion.
 
 The runtime input preparation is implemented and its local fixture checks passed.
-The pilot account now exists, but the live runtime and paths remain unchanged.
-Publication-read and synthetic denials are qualified; agree the interruption
-window before switching it, then complete the remaining acceptance checks.
+The pilot account and runtime switch are complete, with publication-read and
+synthetic denials qualified. Paths remain unchanged; finish the normal recovery
+and network-denial follow-ups before closing the broader migration.
 The follow-up above repaired cloud capture and Forgejo scheduling
 and verified fresh off-host archives. Normal unattended cycles still need
 observation; offline wiki preparation can proceed independently. Leave ambiguous

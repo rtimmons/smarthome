@@ -3,11 +3,13 @@
 **October 27 reconciliation:** see the [application/account inventory](nas-service-inventory-2026-10-27.md).
 Live NAS process metadata confirms the shared 1004:100 runtime mapping, native
 Plex root, Jellyfin 0:100 and the privileged remote-reader exception. Existing
-AD lookup SIDs resolve; no accounts, IDs or memberships were changed. The HA
+AD lookup SIDs resolve; the initial metadata read changed no accounts, IDs or
+memberships. The HA
 FromDrobo mount is now active and writable, serving the established HA Plex
 instance; the old inactive-mount finding below is historical. Preserve `hass`
 until its consumers and replacement scopes are qualified. Wiki is the first
-recommended runtime pilot, with no live identity or path change yet.
+runtime pilot; the later checkpoint below records its completed identity switch.
+Data paths remain unchanged.
 
 **Wiki account checkpoint, October 27:** repository preparation is committed.
 QNAP-local `svc-wiki` now exists (UID 1005; primary `everyone` GID 100,
@@ -18,8 +20,12 @@ actual file/share denials passed. A separate saved/restorable grant added only
 reader-group access to the current wiki inputs; all site reads and Caddy validation
 passed without changing existing ACL entries or ownership.
 SMB authentication/denial is not tested. See the [checkpoint and remaining gates](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint).
-Agree the wiki-only interruption window before changing durable inventory or the
-live wiki, which remains 1004:100. No service data path has moved.
+The approved runtime switch is now complete: init and Caddy run as 1005:1000,
+with only group 1000, zero capabilities and read-only inputs. Durable wiki-only
+overrides preserve that mapping on future deployment. Both HTTP routes and the
+unauthenticated TLS/MFA redirect passed; all peer-container start times matched.
+See the [runtime checkpoint](nas-service-inventory-2026-10-27.md#wiki-runtime-identity-checkpoint)
+for rollback and recovery limits. No service data path has moved.
 
 **Proposed access model, October 25, 2026. No accounts, groups or permissions have
 been changed.** This is the concise authorization companion to the
@@ -247,7 +253,7 @@ or renaming anything. Record the realm/host as part of the account identity.
 | `svc-filex` | Transfer staging | Local runtime UID 1004; SFTP login `filex-staging` is an application login, not a separate NAS UID |
 | `svc-dns` | DNS resolver | Runtime UID 1004 |
 | `svc-discovery` | DNS discovery state | Runtime UID 1004 |
-| `svc-wiki` | Serve the published static wiki | Runtime UID 1004; published site/config mounted read-only |
+| `svc-wiki` | Serve the published static wiki | QNAP-local runtime 1005:1000 (`wiki-reader`), group 1000 only; published inputs read-only; October 27 runtime checkpoint passed within its recorded limits |
 | `svc-forgejo` | Git service | Runtime UID 1004 |
 | `svc-forgejo-backup` | Capture consistent full Forgejo recovery archives | Existing separate host-owned stopped-state job; target identity separation still to qualify |
 | `svc-settings-backup` | Infrastructure/application capture, encryption, off-host upload and readback | Backup container UID 0/GID 100; excludes the separately scoped Forgejo producer in the target model |
@@ -271,6 +277,7 @@ Administrative and compatibility principals remain explicit:
 | --- | --- | --- |
 | QNAP `badmin`, UID 1000 | Local administrator / recovery | Keep separate from everyday Ryan login; verify emergency access |
 | QNAP `admin`, UID 0 | Built-in administrator | Preserve recovery configuration; login enablement was not verified |
+| Wiki runtime 1005:1000 | `svc-wiki` / `wiki-reader` runtime phase complete | Normal capture and authenticated network denials remain; named-share move requires storage gates |
 | QNAP `hass`, UID 1002 | Legacy integration account with broad `FromDrobo` access | Identify actual consumers; replace with explicit scopes before removing access |
 | `guest`, `httpdusr`, `[sshd]` | QTS built-ins | No new data roles; guest denied on all six inspected SMB shares |
 | AD administrator and machine principals | Directory administration and NAS trust | Preserve existing identities/trust; no new household data roles |
@@ -311,7 +318,7 @@ every proposed account needs to be created immediately.
 | Existing identity / use | Target / disposition | Migration gate |
 | --- | --- | --- |
 | QNAP `usenet-deploy`, UID 1004 | `svc-nas-deploy`; retain `nas-deployment-operator` | Split runtime ownership first, then preserve identity through a supported rename; otherwise record an exception pending replacement |
-| Runtimes sharing UID 1004 | Individual `svc-media-copy`, `svc-filex`, `svc-dns`, `svc-discovery`, `svc-wiki`, `svc-forgejo` as applicable | Allocate supported non-conflicting IDs; separate shared variables; transfer only each service's enumerated state ownership and mounts |
+| Runtimes sharing UID 1004 | Individual `svc-media-copy`, `svc-filex`, `svc-dns`, `svc-discovery`, `svc-forgejo` as applicable | Allocate supported non-conflicting IDs; separate shared variables; transfer only each service's enumerated state ownership and mounts |
 | QNAP `hass`, UID 1002 | Split verified consumers into `svc-ha-<purpose>` accounts; retire if unused | Inventory callers and scopes first; `svc-ha-backup` is only for native backup storage, never a rename that inherits broad FromDrobo rights |
 | Filex application login `filex-staging` | If machine-only, target `svc-filex-transfer`; if used interactively, select a human-account design | Verify actual clients and application support; keep distinct from the `svc-filex` OS runtime; do not change both layers in one cutover |
 | AD `svc-authelia`, AD `svc-jellyfin` | Keep existing names, SIDs, credentials and lookup-only roles | Already compliant; no account recreation, OIDC relinking or new NAS grants |

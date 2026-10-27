@@ -74,10 +74,10 @@ disk-2 diagnosis and recovery review.
 Publication and rollback pass them through Compose's existing contract. Synthetic
 checks cover independent overrides, rejected candidates, retained-identity
 rollback and same-release identity changes; unchanged repeats do not restart.
-Deployment credentials, durable inventory and production paths are unchanged.
-The `svc-wiki` account and narrow publication-read grants are now qualified
-within the ledger's limits. A separately verified runtime switch is next. Its scope,
-checks and rollback remain in the
+Deployment credentials and production paths are unchanged. The account, narrow
+read grants and approved runtime-only switch are now complete within the ledger's
+limits. Durable wiki-specific overrides select 1005:1000 and enable reader ACLs.
+The scope, checks and rollback remain in the
 [wiki pilot](nas-service-inventory-2026-10-27.md#first-pilot-wiki-preparation-then-separate-identity-and-path-checkpoints).
 
 The [wiki recovery/account checkpoint](nas-service-inventory-2026-10-27.md#wiki-preparation-and-recovery-checkpoint)
@@ -86,16 +86,21 @@ restore/build. Local `svc-wiki` / `wiki-reader` exist with saved share/applicati
 denials. Actual synthetic file/share-root denials and exact ACL rollback passed.
 A separate read grant preserved all old ACL metadata and enabled all current site
 reads plus Caddy validation as 1005:1000. The opt-in publisher step repeats only
-those read grants on future releases. Agree a wiki-only interruption window before
-switching the healthy 1004:100 runtime; the proposed two minutes is unqualified
-under current NAS load. SMB/SSH denial and post-switch capture/acceptance remain
-open. This does not close the wiki migration or waive the storage gates.
+those read grants on future releases. The live init/Caddy processes are healthy
+at 1005:1000, with unchanged content and peer-service start times. Both HTTP ports
+and the TLS/MFA redirect passed; a new encrypted controller recovery checkpoint
+verified pointers, ACLs, inventory and source bundles. Normal NAS capture/restore
+and authenticated SMB/SSH denials remain open. The runtime identity phase is
+complete; the named-share migration remains blocked by the storage gates.
 
 **Open future action:** [qualify unattended cloud/Forgejo captures and cron persistence](../usenet-infra/docs/backup-repair-2026-10-27.md#future-actions-unattended-recovery-qualification).
 Review after the next eligible normal runs; October 28 after 17:30 Eastern is the
 suggested initial review window. This can proceed independently of offline wiki
-preparation. The account/read-grant fixture has passed; next are the runtime-only
-cutover and acceptance, then a named-share move after storage gates pass.
+preparation. Include the new wiki mapping and a native QTS snapshot containing
+its account/group in that review; outer archive freshness alone is insufficient.
+The next wiki change is its named-share move only after storage gates pass.
+Preserve the currently qualified runtime and do not combine it with another
+service migration or household cleanup.
 
 ## What is actually deployed
 
@@ -173,8 +178,9 @@ a current successful laptop mount or a fresh provider-side permissions test.
    `0777` alone is not proof of guest access: guest is explicitly denied and
    effective access also depends on share policy and ACLs.
 3. **Deployment and runtime identities overlap.** `usenet-deploy` is UID 1004 and
-   a NAS administrator. Media-copy, Filex, DNS, wiki and Forgejo containers reuse
-   UID 1004/GID 100. Their inspected containers do not automatically inherit the
+   a NAS administrator. Media-copy, Filex, DNS and Forgejo containers still reuse
+   UID 1004/GID 100. Wiki was separated to 1005:1000 on October 27 while keeping
+   deployment ownership unchanged. Their inspected containers do not automatically inherit the
    host's administrator supplementary group, and most have narrow mounts and
    dropped capabilities. Nevertheless, filesystem ownership and service lifecycle
    are coupled to the deployment principal.

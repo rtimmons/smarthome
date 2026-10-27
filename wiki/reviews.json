@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "807cabc4bb0d6622e1f7297edd5a1e64a4d2a4e2e21197d79b1e0db417751fec",
-    "reason": "Recorded svc-wiki creation, verified scoped publication reads and exact ACL rollback, and documented the remaining runtime, capture and storage gates.",
+    "fingerprint": "433c106a5acb1c17ff41783dd64c54ca4a3a8fa3ef34a43797b443d87ca8dad3",
+    "reason": "Verified the approved wiki runtime switch, effective process/mount and HTTP checks, unchanged peers, encrypted recovery checkpoint and retained rollback; normal capture, network-denial and storage gates remain explicit.",
     "reviewed_at": "2026-10-27"
   },
   "media": {

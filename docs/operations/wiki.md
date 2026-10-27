@@ -217,11 +217,31 @@ The publisher's opt-in step makes future release grants explicit. Synthetic
 write/create/rename/delete and share-root denials, plus exact ACL restoration,
 passed. No share-wide grant or guest-denial removal was needed.
 
-The live runtime remains 1004:100 and durable inventory is unchanged. Agree its
-interruption window under current NAS load before switching the identity. Keep
-runtime rollback separate from undoing ACL grants. Post-switch acceptance,
-authenticated SMB/SSH denial and normal settings capture remain open; no named
-share migration has occurred.
+The approved runtime switch completed October 27; the container started at
+18:53:11 Eastern. Init and Caddy now run as **1005:1000**, group 1000 only, with
+zero capabilities and `NoNewPrivs: 1`. Both binds/root remain read-only and a
+runtime create attempt was denied. Both HTTP ports served unchanged publication
+bytes; numeric access, the legacy redirect and unauthenticated TLS/Authelia
+redirect passed. All peer-container start times were unchanged.
+
+Durable inventory explicitly sets the wiki UID/GID and enables reader ACLs;
+pinned Ansible verified those inputs while shared defaults remain 1004:100.
+The same release at 1004:100 is retained for rollback. Restore those runtime
+settings and remove only the three wiki inventory overrides if rolling back this
+checkpoint, after checking for later edits. ACL rollback remains separate.
+When invoking the helper through an SSH stdin script, redirect the helper's stdin
+from `/dev/null`. The streamed wrapper's trailing checks did not execute during
+this run, so acceptance was independently read in a separate command.
+
+The new encrypted controller checkpoint contains pointers, ACLs, account mapping,
+private inventory and both source bundles, with independently verified decryption
+and hashes. Combine it with the preserved unchanged release payloads. See the
+[completed runtime checkpoint and limits](../nas-service-inventory-2026-10-27.md#wiki-runtime-identity-checkpoint).
+Normal NAS settings capture/restore and authenticated SMB/SSH denial remain open.
+In particular, a fresh outer archive can still contain an older weekly native
+QTS snapshot that predates the account. No named-share migration has occurred;
+disk/power/snapshot gates still apply. This switch intentionally retained the
+current publication; updated docs can publish with the next normal release.
 
 ## Initial expansion acceptance (2026-10-09)
 
