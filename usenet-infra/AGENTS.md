@@ -1,128 +1,71 @@
 # Usenet, NAS and Plex agent guide
 
-Read the [accepted scope and recovery limits](docs/validation.md), then [native media](docs/native-media.md),
-[NAS/Plex layout](docs/nas-plex-layout.md) and [scheduled backups](docs/scheduled-backups.md).
-Use [operations](docs/operations.md) for additional commands.
-
-## Media privacy in commits
-
-Follow the root [media privacy rules](../AGENTS.md#media-privacy), including
-full staged-diff review. Use descriptive field names rather than title-derived
-keys; exact filenames and alias maps belong in ignored evidence/runtime journals.
-
-Redacted receipt paths are aliases, not executable paths. Resolve actual paths
-through exact native job/file IDs privately before operating on files. Historical
-operational hashes remain dated evidence about the original inputs, not hashes
-of subsequently redacted documents. Preserve private bound recovery snapshots
-unchanged. Do not commit the private replacement map used for a privacy rewrite.
+For NAS storage changes, start with the single
+[migration entry point](../docs/plan-nas-storage-and-access.md), then read only the
+access/protection policies and service runbooks required for that checkpoint.
+The next move is the private library to `PrivatePlexLibrary`; the plan records
+the user's temporary backup exclusion and NAS-side rename preference.
+Do not treat superseded dated gates or the earlier HBS-untouched instruction as
+blocking that scoped exception. Other storage work retains its own readiness gates.
 
 ## Access and validation
 
-- Use root `just usenet <recipe> [args...]` (list with `just usenet --list`) or `just --justfile usenet-infra/Justfile
-  --working-directory usenet-infra ...`. Native/catalog recipes retain their
-  unprefixed names at the root (`just native-status`, `just native-pull`).
-  The private `.env` and ignored Ansible
-  inventory select dedicated cloud/NAS identities and verified host keys.
-  Do not substitute SSH-agent credentials or print tokens/configuration secrets.
-- Run the infrastructure `just test` recipe for implementation changes. It
-  includes unit tests, shell/YAML checks, deployment syntax and a secret scan.
-  The full scan currently fails on two documented historical RSA keys; report
-  that result separately from passing tests. Do not add exceptions or rewrite
-  history to make it green. `scripts/secret-scan --no-history` explicitly checks
-  current sources/index only. See `docs/security-findings.md`.
-- Runtime status must be checked before changing storage or restarting services.
-  Preserve active transfers and manual SAB pauses. Scope restarts to the affected
-  Usenet services; do not restart the NAS, Plex or unrelated containers by default.
+- Use root `just usenet <recipe>` and its private environment/inventory with the
+  existing dedicated identities and pinned host keys. Use Safari for QNAP UI.
+  Do not substitute SSH-agent credentials or display secrets.
+- Read [validation](docs/validation.md) before implementation/deployment work.
+  Run the infrastructure `just test` for implementation changes. Report known
+  historical secret-scan findings separately; do not waive them or rewrite history.
+- Inspect runtime/job activity before storage changes. Preserve active transfers
+  and manual SAB pauses. Scope interruptions to the affected operation; do not
+  restart the NAS or unrelated services as an audit step.
+- Root AGENTS.md owns media privacy, paired-repository checks, signing and Git-lock
+  rules. Preserve unrelated edits, staged work, ignored inputs and existing `msg`.
+  No PRs; no automatic cleanup of recovery snapshots, credentials or history.
 
-## File ownership and recovery
+## Migration boundaries
 
-- Radarr/Sonarr explicit search, 15-minute native RSS and completed imports are
-  enabled under the October 25 policy. Preserve approved monitoring scope.
-  `/library` is a real Storage Box SSHFS library, with completed scratch mounted
-  at `/data/complete`. Preserve mount-dependent systemd startup and mode-0000
-  unmounted directory protection. Never enable the retired publisher timer.
-- Five legacy movies have server-side hard links into native movie directories;
-  original catalog objects/manifests remain intact. Do not edit shared file bytes
-  in place. Native upgrades replace files normally.
-- The Storage Box is canonical; the NAS reader credential is server-enforced
-  read-only. NAS copies remain selective. Prefer native Arr/Plex features for
-  import and scanning; OliveTin is only the transitional copy/removal interface.
-- The deployed NAS cache is `/share/FromDrobo/Movies`; application state remains
-  `/share/Container/usenet`. Private inventory must retain `qnap_data_root:
-  /share/FromDrobo` and `qnap_catalog_cache_dir: /share/FromDrobo/Movies` after an
-  older recovery snapshot is restored. Do not silently redeploy the old cache path.
-- Prefer same-volume renames, verify device/inode and destination absence, and
-  preserve rollback settings. Do not recursively copy, hash or change permissions
-  on the existing collection merely to reorganize paths. Manifest-managed file
-  names must stay consistent with their verification records.
-- The original SOPS-bound snapshot/inventory is immutable and its clean-clone
-  secrets/state milestone passed. Do not regenerate keys or repeat purchases/setup.
-  Whole-machine replacement drills remain separate. Scheduled backups allow an
-  idle or fully paused SAB queue but reject post-processing. Never delete/resume
-  jobs just to satisfy backup checks. NAS settings-only coverage is deployed with required recurring off-host readback.
-  These repository-owned archives exclude media. The separate HBS/B2 job was
-  scoped by the user on October 17 to selected originals, two Public folders,
-  the current laptop's `SpaceBlackTimeMachine` share and encrypted settings
-  archives. On October 19 the user retired `SpaceGrayTimeMachineShare` and removed
-  it from future HBS backups; do not restore that selection. See
-  [scheduled backups](docs/scheduled-backups.md). A saved selection is not proof
-  that the first upload or a restore has completed.
+- Prefer an explicit same-filesystem NAS rename after resolving real paths and
+  device IDs; fail on cross-device operations instead of silently copying.
+  Do not stage NAS payload on the controller or copy it back over the LAN.
+- Keep path relocation, account/UID changes and ACL tightening in separate
+  checkpoints. Preserve metadata and save exact rollback references. Do not
+  recursively copy/hash/chown collections merely to reorganize them.
+- Preserve the original SOPS-bound recovery snapshots and separate master keys.
+  Use current private inventory after a restore rather than blindly redeploying
+  old paths. Required native QTS/package roots remain explicit exceptions.
+- The private-library backup exclusion is intentional and temporary. Preserve
+  its existing B2 copy; re-seed after the move. A replacement seed that excludes
+  this dataset must not trigger deletion of the old mixed backup repository.
+  The protection plan owns the complete retirement condition.
 
-- Checkout-local preservation and independent restore passed at the checkpoint
-  recorded in the recovery ledger. Follow
-  [checkout recovery](docs/checkout-recovery.md) and recheck current files, Git
-  history/settings and published source before declaring a later checkout safe.
-  Preserve the untracked `msg`. Do not delete the checkout as part of a handoff
-  update or imply NAS-loss protection. Original bound evidence stays immutable.
+## Plex and media operations
 
-## Plex privacy and playback
+- Preserve private Plex library ID 1, its files, metadata, watched state and
+  viewer restrictions while changing its path. The managed general profile
+  remains limited to library IDs 2/3/4/5. Never put a broad parent/private share
+  in a general library. Do not browse or emit private media names or thumbnails.
+- Keep automatic trash emptying disabled; do not empty trash to fix a missing
+  migration path. Native Plex runtime/package paths may remain supported
+  exceptions. Multiple libraries do not imply multiple runtime accounts.
+- [Native media](docs/native-media.md) owns acquisition policy and Arr ownership;
+  [NAS/Plex layout](docs/nas-plex-layout.md) owns current binds/cache paths;
+  [operations](docs/operations.md) owns health and lifecycle recipes.
+  Preserve the read-only Storage Box reader, mount-dependent startup, unmounted
+  mode-0000 guards, hard-linked objects, receipts, reserves and release limits.
+- Do not restore retired publishers/carts, broaden monitored scopes or enqueue
+  downloads for validation. Keep Filex quarantine/disabled purge and native
+  application authentication; no blanket SSO redirects over native APIs.
 
-- Plex runs on the QNAP. `loljk` is the existing private library; preserve its
-  files, library ID and root. Do not browse or emit its thumbnails/content while
-  inspecting settings. General libraries must never include the share root.
-- Managed profile `Movies & TV` is granted exactly `Movies (NAS)`, `TV Shows (NAS)`,
-  `Movies (Remote)` and `TV Shows (Remote)` (IDs 2/3/4/5); private `loljk` is ID 1.
-  Preserve its exclusion from home/global search and verify actual profile grants,
-  not only presentation settings. Owner PIN/client startup
-  configuration requires private user/device setup; do not invent a PIN.
-- Plex watches local changes, performs partial scans and scans hourly; automatic
-  trash emptying is disabled. Do not empty trash to resolve an unavailable mount.
-- Native TV sorting, the read-only remote mount and native selective-copy actions
-  are deployed. The user confirmed Apple TV and Roku playback and restricted privacy on September 22.
-  Record this as user verification, not an agent-run codec/subtitle matrix or proof for every future client.
+## Recovery and retained services
 
-## Current operation
+[Scheduled backups](docs/scheduled-backups.md) owns deployed jobs, activity gates,
+retention and off-host readback. Native HA archives, app recovery and media
+protection are different streams. A settings restore does not prove originals
+or whole-NAS recovery. Do not delete/resume acquisition jobs to satisfy a backup.
 
-- Seerr at `http://10.77.0.1:15055/` uses Plex sign-in and only libraries 2/3/4/5.
-  Local login is enabled by the October 23 user-approved Moonfin exception;
-  preserve the dedicated non-admin request account and existing Plex sign-in.
-  Keep registration, watchlist acquisition and direct carts disabled. Native Arr
-  RSS is enabled; direct SAB RSS feeds remain disabled.
-  Ultra-HD prefers 2160p with 1080p fallback; no automatic upgrades.
-- Radarr/Sonarr own new downloads, imports and completed-source cleanup. The
-  publisher, cart importer, capacity admission and incomplete maintenance workers
-  are retired. Their source and migration commands have been removed; never
-  restore or enable them from an old archive. Keep their journals and receipts.
-- Preserve the 100 GiB release limit, both 30 GiB SAB reserves, Arr free-space
-  checks and hardlinks, the 100 GiB NAS reserve, mount-dependent startup and
-  mode-0000 unmounted directories. Do not modify shared hard-linked bytes in place.
-- Preserve current private overrides: BX21, `repair_spool_enabled = true`,
-  `qnap_native_tv_copy_enabled: true`, and `qnap_backup_offhost_required: true`.
-  Restore current settings and mount identities; do not replay the historical
-  storage migrations or reformat the repair volume.
-- Filex uses `just usenet-filex-ui` and `http://127.0.0.1:15213/` through a pinned
-  SSH tunnel. Keep host trust policy unchanged: no CA installation or TLS bypass.
-  Preserve its reviewed image, verified transfers, quarantine and disabled purge.
-  Canonical roots are read-only; staging is excluded from configuration backups.
-- The private wiki uses `https://wiki.home.rytim.com/`; LAN compatibility and
-  numeric recovery entrances are documented in [wiki operations](../docs/operations/wiki.md). Edit repository-root `wiki/` or its imported runbooks and publish through
-  `just wiki-deploy` (`just usenet-wiki-deploy` remains an alias). It must not gain credentials,
-  live APIs, media listings, Docker access or public exposure.
-- Before live changes, use the read-only health commands in the README. Do not
-  restart services, inspect private media or enqueue requests merely to audit.
-- October 8 closure and its limits are recorded in `docs/validation.md` and
-  `recovery/drills/closure-20261008.json`. Dated recovery records are evidence,
-  not instructions to replay. Preserve original SOPS-bound snapshots unchanged.
-- No PRs. Ask before taking a Git lock, as required by the root guide. Preserve
-  unrelated changes, ignored private inputs and `msg`; do not delete refs or
-  worktrees as part of consolidation.
+[Checkout recovery](docs/checkout-recovery.md) owns source/input recovery;
+[wiki operations](../docs/operations/wiki.md) owns wiki publication. Wiki sources
+must not gain credentials, live APIs, media listings, Docker access or public
+exposure. Video Station and Multimedia Console remain retired; remaining share
+retirement belongs to the migration plan.

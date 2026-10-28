@@ -1,5 +1,13 @@
 # Scheduled configuration and NAS backups
 
+> **Private-library migration coordination:** the [current NAS plan](../../docs/plan-nas-storage-and-access.md#fromdrobo-data-migration)
+> permits temporarily excluding the private-library dataset from affected jobs,
+> moving it on the NAS, and re-seeding from `PrivatePlexLibrary` afterward.
+> Preserve the existing B2 recovery copy. If the replacement seed excludes this
+> dataset, its completion plus a settings sample restore does **not** authorize
+> deleting the old mixed backup repository. Apply the [complete retirement condition](../../docs/plan-nas-data-protection.md#private-library-migration-exception)
+> before any earlier seed-completion follow-up retires that history.
+
 ## Backblaze B2 coverage
 
 On October 17, 2026, the user confirmed that B2 should protect irreplaceable

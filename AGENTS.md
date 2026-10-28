@@ -87,7 +87,7 @@ Repository-wide constraints; component `AGENTS.md` files add local guidance.
 
 ## Docs map
 - The smarthome wiki is built from `wiki/` and explicitly imported canonical runbooks. For behavioral changes, update the corresponding explanation and run `just wiki-check`. Review changed component fingerprints with `just wiki-review <component> '<specific reason>'`; do not acknowledge unfamiliar changes merely to bypass the check. Supported deployments publish once after success; use `just wiki-deploy` for documentation-only changes. See `docs/operations/wiki.md` and `docs/operations/home-dns.md`.
-- Usenet, QNAP storage, Plex and their recovery workflow: read `usenet-infra/AGENTS.md` and `usenet-infra/docs/validation.md` for accepted scope and recovery limits before operating them.
+- NAS storage migration: start with `docs/plan-nas-storage-and-access.md`, the single current execution plan. It links the access/protection policies and dated evidence; do not replay obsolete proposals from historical reports. Read `usenet-infra/AGENTS.md` and `usenet-infra/docs/validation.md` for operational constraints and checks. The current private-library move allows temporary dataset backup exclusion and prefers a NAS-side same-filesystem rename; it does not authorize other storage redesign or premature B2 deletion.
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
 
 ## UniFi changes

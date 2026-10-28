@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "c005025f821afa9e51ad074b44a4d3adec5dceb70ba1c30f74b73316998da8f0",
-    "reason": "Verified the wiki-only migration exception, independent recovery/rollback, unchanged peers, valid-credential session/login denials and explicit unattended/latency follow-ups. Verified completed wiki migration, removal of the unnecessary reader, SOPS-backed access-check procedure and retained unattended-recovery follow-up.",
+    "fingerprint": "c3f6a0905ffe89641200c9423c44e7436111cc3566619a42e62186140aa02eea",
+    "reason": "Consolidated NAS migration guidance and explicit private-library backup exclusion/re-seed; old mixed B2 history cannot retire before replacement coverage.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
-    "fingerprint": "0d6b42804d96307d6c0c612074fc28fb874c5b05fb5e8b131073e6295635c60d",
-    "reason": "Verified named wiki share, preserved runtime isolation/publication, scoped backup mapping, fresh capture restore and Hetzner readback.",
+    "fingerprint": "13797746df423196f9dc354ef49306a0642588836c0d066efeb764d9355b5849",
+    "reason": "Consolidated NAS validation and retained runtime/privacy boundaries; PrivatePlexLibrary is the next bounded rename, not a completed move.",
     "reviewed_at": "2026-10-27"
   },
   "network": {

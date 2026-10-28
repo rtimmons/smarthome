@@ -1,30 +1,52 @@
-# Validation
+# Validation and recovery claims
+
+For storage migration, start with the [NAS migration plan](../../docs/plan-nas-storage-and-access.md).
+It owns current scope, exceptions and acceptance. This page owns repository
+checks and the limits of operational evidence; old implementation milestones are
+not today's work queue.
+
+## Required checks
 
 Run `just --justfile usenet-infra/Justfile --working-directory usenet-infra test`
-from the repository root. It checks unit behavior, shell/YAML syntax, Ansible
-playbooks and secrets. The full-history scan reports the two documented
-[historical RSA keys](security-findings.md); report that separately from current
-source/index checks. Do not waive findings or rewrite history to pass validation.
-Offline checks do not establish live deployment or media acceptance.
+for infrastructure implementation changes. It covers unit tests, shell/YAML,
+Ansible syntax and secrets. Root `just test` and `just wiki-check` cover shared
+integration/documentation changes under root AGENTS.md.
 
-## Recorded operational acceptance
+The full-history secret scan reports two documented
+[historical RSA keys](security-findings.md). Report them separately from a passing
+`scripts/secret-scan --no-history` source/index check. Do not add exceptions or
+rewrite history to make validation green. Inspect staged paths, complete diff
+and commit message for media privacy as well as secrets. Offline tests do not
+establish live permissions, playback, backup completion or a usable restore.
 
-The approved plan completed October 8, 2026. These are dated observations, not
-promises about future health. No operational acceptance work remains from that
-plan. The three old held requests were deliberately discarded; preserve their
-disposition records and all 44 journals alongside the immutable `recovery/` records.
+## Operational acceptance
 
-| Area | Evidence and limit |
-| --- | --- |
-| Native acquisition | [Native acceptance](../recovery/drills/native-cutover-20260920.json): fresh movie/episode imports, source cleanup, Plex discovery and scoped restart passed. RSS was off at that checkpoint. The October 25 policy enables native RSS and failed-download cleanup; see the current native workflow. Direct carts remain off. |
-| NAS copying | [Movie copy](../recovery/drills/native-copy-live-20260913.json) and [September closure](../recovery/drills/closure-20260922.json): selected movie/TV copies passed SHA-256, safe repeat and exact-file Plex indexing. TV required a general-library scan. |
-| Playback/privacy | User confirmed Roku and Apple TV playback and restricted-profile privacy. This is not an agent-run codec/subtitle matrix. |
-| Seerr/Filex | [October closure](../recovery/drills/closure-20261008.json): user confirmed both browser sign-ins. Earlier Seerr 2160p acquisition passed after a manually selected alternate; automatic failed-release recovery is not proven. |
-| Repair capacity | An 80 GiB PAR2 repair and two concurrent 50 GiB expansions passed. The latter peaked at 200.22 GiB with 90.97 GiB free. This does not cover arbitrary expansion or concurrent 100 GiB repairs. |
-| Configuration recovery | October cloud archive independently restored 785 files, five databases, all 44 journals and both Filex bundles. Recurring off-host NAS/Plex settings readback and isolated restores passed. |
-| Replacement startup | Isolated cloud startup, authenticated APIs, reboot and storage-loss guards passed using empty read-only fixtures. Disposable resources were removed. Live acquisition, canonical writes, NAS/VPN integration and replacement NAS boot were outside the drill. |
+For each changed scope, record configuration versus effective-access tests,
+source/destination identity, affected consumers, recovery evidence and rollback.
+Use bounded metadata and synthetic tests; do not replay downloads or traverse
+entire media trees merely to reproduce a receipt. Keep raw/identifying evidence
+in ignored private storage.
 
-NAS originals, artwork and installation binaries are excluded from the chosen
-settings-only backup scope. Do not infer whole-NAS protection from settings
-restore. New work that changes these boundaries requires its own relevant checks;
-do not rerun acquisitions, purchases or deployment merely to reproduce a receipt.
+The private-library migration allows temporary exclusion from backups using the
+existing B2 copy reported by the user. It does not require a completed replacement
+seed before moving data. Follow the plan's NAS-side rename and post-move re-seed
+sequence; never infer that the old mixed backup can be deleted from a settings-
+only sample restore when private-library coverage was excluded.
+
+## Evidence references and limits
+
+- [October closure](../recovery/drills/closure-20261008.json) records the completed
+  earlier deployment acceptance. Preserve its journals and immutable snapshots;
+  it is not evidence of present storage health or replacement NAS boot recovery.
+- [Backup runbook](scheduled-backups.md) and [backup repair](backup-repair-2026-10-27.md)
+  distinguish producer captures, offsite readback, restored artifacts and pending
+  unattended qualification. An upload of an old export is not fresh source recovery.
+- [Wiki migration ledger](../../docs/nas-wiki-share-migration-2026-10-27.md)
+  records completed identity/share, independent recovery and access-check evidence.
+- [Storage preflight](../../docs/nas-preflight-2026-10-25.md) retains unresolved
+  SATA/I/O, snapshot and UPS findings. “Good” disk summaries do not clear them.
+
+NAS originals, artwork and installation binaries are outside settings-only
+capture. Native HA backups and Time Machine each require their own restoration
+contract. A successful sample or application restore is not a full-library,
+whole-NAS, client-codec or all-user privacy guarantee.

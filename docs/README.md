@@ -10,6 +10,7 @@ instructions, generated configuration references and a generated runbook directo
 - [Setup](setup/README.md) — Bootstrap, disposable checkouts, Home Assistant installation and runtime pins
 - [Development](development/README.md) — Local services and configuration sync
 - [Add-on development](addon-development/README.md) — Hooks, containers and ingress
+- [NAS storage migration](plan-nas-storage-and-access.md) — Current decisions, next PrivatePlexLibrary move, acceptance and rollback
 - [Operations](operations/README.md) — Runbooks, accepted limits and current plans
 - [Sonos](sonos/README.md) — Architecture and routing
 - [Upstream references](../reference-repos/AGENTS.md) — Home Assistant and Just manuals, examples and submodule maintenance
