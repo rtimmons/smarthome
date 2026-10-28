@@ -164,3 +164,15 @@ terraform -chdir=usenet-infra/terraform/cloud plan
 If the VM is truly gone, import the still-live protected Primary IPs, firewall,
 and SSH key before allowing Terraform to create only the missing server. Never
 guess IDs. A no-change or explicitly understood plan is the recovery gate.
+
+### Named wiki share
+
+The [wiki share checkpoint](../../docs/nas-wiki-share-migration-2026-10-27.md)
+uses `QNAP_WIKI_ROOT` for a separate read-only mount, retaining `wiki/` inside
+archives. Read `source_roots.wiki` when restoring: logical `wiki/` payloads belong
+under the registered `/share/wiki` share after this migration, not in the old
+Container-tree root. Restore in isolation first; preserve current/previous
+identities and rebuild or independently restore generated HTML. Publication locks
+and mismatched/missing pointers fail capture. QTS recycle/snapshot trees are not
+runtime recovery inputs. This mapping does not change HBS or establish unattended
+capture/restore acceptance.

@@ -69,6 +69,7 @@
         printf '%s\n' '7 * * * * /usr/local/bin/python3 /opt/usenet/scripts/scheduled-backup.py nas' > /share/Container/usenet/config/backup/crontabs/root
         chmod 0600 /share/Container/usenet/config/backup/crontabs/root
         printf 'QNAP_BACKUP_ROOT=%s\nQNAP_PLEX_ROOT=%s\n' {{ qnap_backup_root | quote }} {{ qnap_plex_root | quote }} > /share/Container/usenet/config/backup/paths.env
+        printf 'QNAP_WIKI_ROOT=%s\n' {{ qnap_wiki_root | quote }} >> /share/Container/usenet/config/backup/paths.env
         printf 'QNAP_SYSTEM_BACKUP_ROOT=%s\n' {{ qnap_system_backup_root | default('/share/CACHEDEV1_DATA/.@backup_config') | quote }} >> /share/Container/usenet/config/backup/paths.env
         hbs_root=$(/sbin/getcfg HybridBackup Install_Path -f /etc/config/qpkg.conf)
         printf 'QNAP_HBS_CONFIG_ROOT=%s/CloudConnector3\n' "$hbs_root" >> /share/Container/usenet/config/backup/paths.env

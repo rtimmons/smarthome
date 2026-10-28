@@ -21,8 +21,11 @@
         echo "TCP $port has a non-wiki listener" >&2; exit 1
       fi
     done
+    test ! -d {{ (qnap_wiki_root ~ '/.deploy-lock') | quote }} || { echo 'Wiki publication or migration lock is held.' >&2; exit 1; }
     mkdir -p {{ (qnap_wiki_root ~ '/releases') | quote }}
-    chmod 0750 {{ qnap_wiki_root | quote }} {{ (qnap_wiki_root ~ '/releases') | quote }}
+    # QTS owns the named share root and its role ACL; do not chmod it on publication.
+    if test {{ qnap_wiki_root | quote }} != /share/wiki; then chmod 0750 {{ qnap_wiki_root | quote }}; fi
+    chmod 0750 {{ (qnap_wiki_root ~ '/releases') | quote }}
   changed_when: false
 
 - name: Upload the release with the dedicated inventory identity

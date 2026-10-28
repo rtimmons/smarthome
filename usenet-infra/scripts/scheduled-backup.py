@@ -226,7 +226,8 @@ def nas(stamp):
         raise RuntimeError('unexpected NAS public backup recipient')
     for attempt in range(13):
         try:
-            manifest, contents = qnap.snapshot(Path('/source/usenet'), '/share/Container/usenet')
+            manifest, contents = qnap.snapshot(Path('/source/usenet'), '/share/Container/usenet',
+                                               wiki_host_root=os.environ.get('QNAP_WIKI_ROOT'))
             break
         except qnap.BackupError as error:
             if str(error) != 'A catalog operation or refresh is active; retry when idle.' or attempt == 12:

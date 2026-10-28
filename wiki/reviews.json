@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "b2d753f8c6c90e638e34edf48cf67d18a61add9abd09e8d2e76678cd9720aac0",
-    "reason": "Reviewed durable manual capture destinations, unchanged deadlines, private failure diagnostics and regression coverage; live capture remains unqualified after a controller timeout.",
+    "fingerprint": "52622758ddff83bca1586718366a37cbc5b886603eef680d7c50d9110c61bee7",
+    "reason": "Verified the wiki-only migration exception, independent recovery/rollback, unchanged peers, valid-credential session/login denials and explicit unattended/latency follow-ups.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
-    "fingerprint": "dd8a9e678d06545fd445da42e96bf5399dbff662e5c1954f8d9978348f1103f3",
-    "reason": "Reviewed durable manual capture destinations, unchanged deadlines, private failure diagnostics and regression coverage; live capture remains unqualified after a controller timeout.",
+    "fingerprint": "0d6b42804d96307d6c0c612074fc28fb874c5b05fb5e8b131073e6295635c60d",
+    "reason": "Verified named wiki share, preserved runtime isolation/publication, scoped backup mapping, fresh capture restore and Hetzner readback.",
     "reviewed_at": "2026-10-27"
   },
   "network": {

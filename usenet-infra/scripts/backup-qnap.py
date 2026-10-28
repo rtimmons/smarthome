@@ -95,6 +95,8 @@ def secure_open(root: Path, name: str):
 
 def inventory(root: Path) -> dict[str, os.stat_result]:
     result = {}
+    if (root / 'wiki/.deploy-lock').exists():
+        raise BackupError('A wiki publication or migration is active; retry when idle.')
     for tree in TREES:
         base = root / tree
         if not base.exists():
@@ -109,6 +111,16 @@ def inventory(root: Path) -> dict[str, os.stat_result]:
         if not base.is_dir():
             raise BackupError('Configuration directory is invalid.')
         for directory, folders, files in os.walk(base, followlinks=False):
+            if tree == 'wiki':
+                # A QTS share also has platform recycle/snapshot directories.
+                # Only pointers and versioned runtime belong in this stream.
+                relative = Path(directory).relative_to(base).parts
+                if not relative:
+                    folders[:] = [name for name in folders if name == 'releases']
+                elif len(relative) == 2:
+                    folders[:] = [name for name in folders if name == 'runtime']
+                elif len(relative) >= 3:
+                    folders[:] = []
             for folder in folders:
                 if (Path(directory) / folder).is_symlink():
                     raise BackupError('Configuration directory links are refused.')
@@ -158,7 +170,12 @@ def validate_layout(content: bytes, host_root: str) -> None:
         raise BackupError('The media cache must be outside the backed-up application root.')
 
 
-def snapshot(root: Path, host_root: str, after_copy=None) -> tuple[dict, dict[str, bytes]]:
+def snapshot(root: Path, host_root: str, after_copy=None, *, wiki_host_root: str | None = None) -> tuple[dict, dict[str, bytes]]:
+    if wiki_host_root is not None:
+        if wiki_host_root not in {host_root + '/wiki', '/share/wiki'}:
+            raise BackupError('Unreviewed wiki backup source refused.')
+        if not (root / 'wiki/.env').is_file():
+            raise BackupError('Required wiki backup mount or pointers are missing.')
     with ExitStack() as stack:
         locked = {}
         for name in LOCKS:
@@ -190,6 +207,8 @@ def snapshot(root: Path, host_root: str, after_copy=None) -> tuple[dict, dict[st
             entries.append({'path': name, 'size': len(content), 'sha256': hashlib.sha256(content).hexdigest(),
                             'source_mode': stat.S_IMODE(info.st_mode), 'source_uid': info.st_uid, 'source_gid': info.st_gid})
         validate_layout(contents['compose/qnap/.env'], host_root)
+        if wiki_host_root is not None and (b'WIKI_ROOT=' + wiki_host_root.encode() + b'\n') not in contents.get('wiki/.env', b''):
+            raise BackupError('Wiki backup pointers do not match the configured source.')
         if after_copy:
             after_copy()
         after = inventory(root)
@@ -216,6 +235,7 @@ def snapshot(root: Path, host_root: str, after_copy=None) -> tuple[dict, dict[st
                         raise BackupError('Catalog locks changed during capture; retry when idle.')
         return {'schema_version': 1, 'scope': 'qnap-config', 'created_at': int(time.time()),
                 'age_version': AGE_VERSION, 'source_root': host_root,
+                'source_roots': {'wiki': wiki_host_root or host_root + '/wiki'},
                 'consistency': 'existing shared locks plus repeated inventory and content checks',
                 'cache_content_included': False, 'entries': entries}, contents
 
@@ -368,12 +388,18 @@ if test ! -x "$qnap_docker" && test -x /sbin/getcfg; then
 fi
 test -x "$qnap_docker"
 '''
+    wiki_root = environment.get('QNAP_WIKI_ROOT', host_root + '/wiki')
+    if wiki_root not in {host_root + '/wiki', '/share/wiki'}:
+        raise BackupError('Unreviewed wiki backup source refused.')
     mount = 'type=bind,src=' + host_root + ',dst=/source,readonly'
+    wiki_mount = 'type=bind,src=' + wiki_root + ',dst=/source/wiki,readonly'
     remote = discovery + ('exec "$qnap_docker" --config ' + shlex.quote(docker_config)
         + ' run --rm --pull=never --network=none --read-only --cap-drop=ALL --security-opt=no-new-privileges'
         + ' --memory=512m --cpus=0.5 --pids-limit=64 --user "$(id -u):$(id -g)"'
         + ' --env PYTHONDONTWRITEBYTECODE=1 --mount ' + shlex.quote(mount)
-        + ' --entrypoint python3 -i ' + shlex.quote(IMAGE) + ' - remote-capture --host-root ' + shlex.quote(host_root))
+        + ' --mount ' + shlex.quote(wiki_mount)
+        + ' --entrypoint python3 -i ' + shlex.quote(IMAGE) + ' - remote-capture --host-root ' + shlex.quote(host_root)
+        + ' --wiki-host-root ' + shlex.quote(wiki_root))
     return [*command, remote], identity
 
 
@@ -450,6 +476,7 @@ def main(argv=None) -> int:
             sub.add_argument('--destination', type=Path, required=True)
     remote = commands.add_parser('remote-capture', help=argparse.SUPPRESS)
     remote.add_argument('--host-root', required=True)
+    remote.add_argument('--wiki-host-root')
     args = parser.parse_args(argv)
     os.umask(0o077)
     try:
@@ -458,7 +485,7 @@ def main(argv=None) -> int:
             # connection disappears while reading a slow filesystem.
             signal.signal(signal.SIGALRM, lambda *_: sys.exit(124))
             signal.alarm(150)
-            manifest, contents = snapshot(Path('/source'), args.host_root)
+            manifest, contents = snapshot(Path('/source'), args.host_root, wiki_host_root=args.wiki_host_root)
             write_tar(manifest, contents, sys.stdout.buffer)
             signal.alarm(0)
             return 0

@@ -1,5 +1,7 @@
 # NAS storage and access improvement plan
 
+**Later October 27 wiki-only exception:** see the [named-share migration ledger](nas-wiki-share-migration-2026-10-27.md). The user authorized the wiki move and its necessary repository backup-worker mount change after independent recovery verification. General NAS readiness gates remain closed; HBS is unchanged.
+
 **October 27 application checkpoint:** the [bounded service inventory and migration
 ledger](nas-service-inventory-2026-10-27.md) reconcile current NAS/cloud runtimes,
 HA consumers and recovery streams. Start with its wiki preparation/rehearsal
@@ -107,7 +109,7 @@ Review after the next eligible normal runs; October 28 after 17:30 Eastern is th
 suggested initial review window. This can proceed independently of offline wiki
 preparation. Include the new wiki mapping and a native QTS snapshot containing
 its account/group in that review; outer archive freshness alone is insufficient.
-The next wiki change is its named-share move only after storage gates pass.
+The later wiki-only exception allowed its named-share checkpoint; next verify the unattended backup cycle. Other service moves still require the storage gates.
 Preserve the currently qualified runtime and do not combine it with another
 service migration or household cleanup.
 

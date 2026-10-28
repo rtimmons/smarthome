@@ -6,8 +6,18 @@
       - qnap_wiki_port | int == 8090
       - qnap_wiki_uid | int > 0
       - qnap_wiki_gid | int > 0
-      - qnap_wiki_root == qnap_container_root ~ '/wiki'
+      - qnap_wiki_root in [qnap_container_root ~ '/wiki', '/share/wiki']
       - qnap_wiki_action | default('publish') in ['publish', 'rollback']
+
+- name: Require the named wiki root to be a registered QTS share
+  ansible.builtin.raw: |
+    set -eu
+    configured=$(/sbin/getcfg wiki path -f /etc/config/smb.conf)
+    test -n "$configured" && test -d "$configured"
+    test -d /share/wiki
+    test "$(readlink -f /share/wiki)" = "$(readlink -f "$configured")"
+  when: qnap_wiki_root == '/share/wiki'
+  changed_when: false
 
 - name: Prepare a validated static release
   ansible.builtin.include_tasks: publish.yml

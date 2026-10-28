@@ -1,5 +1,7 @@
 # NAS share backup and redundancy policies
 
+**Later October 27 wiki-only exception:** see the [named-share migration ledger](nas-wiki-share-migration-2026-10-27.md). The user authorized the wiki move and its necessary repository backup-worker mount change after independent recovery verification. General NAS readiness gates remain closed; HBS is unchanged.
+
 **October 27 recovery checkpoint:** the [service/backup ledger](nas-service-inventory-2026-10-27.md#backup-producers-uploaders-and-archive-policy)
 finds current NAS three-scope ciphertext verification. Subsequent
 [backup repairs](../usenet-infra/docs/backup-repair-2026-10-27.md) restored cloud

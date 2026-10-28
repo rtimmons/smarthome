@@ -17,6 +17,7 @@ services:
       TZ: UTC
       BACKUP_OUTPUT: /backups
       BACKUP_AGE: /opt/usenet/bin/age
+      QNAP_WIKI_ROOT: '${QNAP_WIKI_ROOT:-/share/Container/usenet/wiki}'
       NAS_OFFHOST_REQUIRED: "${NAS_OFFHOST_REQUIRED:-false}"
       PYTHONDONTWRITEBYTECODE: '1'
       RCLONE_CONFIG_STORAGEBOX_TYPE: sftp
@@ -35,6 +36,8 @@ services:
       - '${QNAP_SYSTEM_BACKUP_ROOT:?Configure native QTS settings backup path}:/source/qts-backups:ro'
       - '${QNAP_HBS_CONFIG_ROOT:?Configure HBS configuration path}:/source/hbs:ro'
       - /share/Container/usenet:/source/usenet:ro
+      # Retain the archive's logical wiki/ namespace after the named-share move.
+      - '${QNAP_WIKI_ROOT:-/share/Container/usenet/wiki}:/source/usenet/wiki:ro'
       - /share/Container/usenet/scripts:/opt/usenet/scripts:ro
       - /share/Container/usenet/bin:/opt/usenet/bin:ro
       - /share/Container/usenet/config/backup/recipient.pub:/run/backup-recipient.pub:ro

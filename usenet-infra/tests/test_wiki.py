@@ -103,6 +103,19 @@ class WikiDeploymentTests(unittest.TestCase):
                 self.assertEqual(all(check(qnap_wiki_uid=uid, qnap_wiki_gid=gid)
                                      for check in checks), allowed)
 
+    def test_wiki_root_accepts_only_legacy_or_named_share(self):
+        tasks = yaml.safe_load(ROLE.read_text())
+        expressions = tasks[0]["ansible.builtin.assert"]["that"]
+        check = Environment(undefined=StrictUndefined).compile_expression(
+            next(value for value in expressions if "qnap_wiki_root" in value))
+        for root, accepted in [("/share/Container/usenet/wiki", True),
+                               ("/share/wiki", True), ("/share", False),
+                               ("/share/wiki/../Container", False),
+                               ("/share/forgejo", False)]:
+            with self.subTest(root=root):
+                self.assertEqual(check(qnap_wiki_root=root,
+                                       qnap_container_root="/share/Container/usenet"), accepted)
+
     def test_reader_acl_is_opt_in_scoped_and_fails_before_publication(self):
         defaults = yaml.safe_load((ROOT / "ansible/group_vars/all.yml").read_text())
         tasks = yaml.safe_load((ROLE.parent / "publish.yml").read_text())

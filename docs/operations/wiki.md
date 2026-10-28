@@ -1,8 +1,8 @@
 # Smarthome wiki operations
 
 The static wiki is built from the repository and served by the isolated
-`usenet-wiki` Compose project on the QNAP. The project identity and storage root
-remain stable even though its coverage now includes the whole house.
+`usenet-wiki` Compose project on the QNAP. The named-share migration and current
+acceptance state are recorded in the [October 27 ledger](../nas-wiki-share-migration-2026-10-27.md).
 
 ## Addresses and evidence
 
@@ -291,3 +291,21 @@ files, and DNS configuration/runtime/private recovery snapshots. It deliberately
 omits generated wiki HTML and DNS query/statistics data. After a replacement-host
 restore, rebuild and publish the site before starting the restored wiki pointers;
 those pointers alone cannot recreate the omitted static files.
+
+## Named-share deployment and recovery
+
+The reviewed named deployment root is `/share/wiki`, selected by private
+`qnap_wiki_root`; defaults retain the legacy root for unmigrated installations.
+The role requires a registered QTS share whose resolved path matches `/share/wiki`.
+It preserves QTS root ownership/ACLs rather than chmodding the share on publication.
+A migration/publication lock is checked before uploads. The old root is retained
+with a lock to reject stale deployment inputs; do not clear it as cleanup.
+
+`QNAP_WIKI_ROOT=/share/wiki` selects the manual and scheduled capture source.
+The repository backup worker mounts that source read-only over its logical wiki
+namespace; archives record `source_roots.wiki`. Recover to an isolated directory,
+then restore the runtime/pointers to the named share and rebuild or restore HTML.
+Current and previous environments both need the named path while retaining their
+individual UID/GID values. The path checkpoint's saved rollback is distinct from
+rolling back a publication or runtime identity. See the migration ledger for the
+exact scope, remaining qualifications and retained private evidence.

@@ -1,5 +1,7 @@
 # NAS shares, accounts, roles and protection
 
+**Later October 27 wiki-only exception:** see the [named-share migration ledger](nas-wiki-share-migration-2026-10-27.md). The user authorized the wiki move and its necessary repository backup-worker mount change after independent recovery verification. General NAS readiness gates remain closed; HBS is unchanged.
+
 **October 27 reconciliation:** see the [application/account inventory](nas-service-inventory-2026-10-27.md).
 Live NAS process metadata confirms the shared 1004:100 runtime mapping, native
 Plex root, Jellyfin 0:100 and the privileged remote-reader exception. Existing
@@ -279,7 +281,7 @@ Administrative and compatibility principals remain explicit:
 | --- | --- | --- |
 | QNAP `badmin`, UID 1000 | Local administrator / recovery | Keep separate from everyday Ryan login; verify emergency access |
 | QNAP `admin`, UID 0 | Built-in administrator | Preserve recovery configuration; login enablement was not verified |
-| Wiki runtime 1005:1000 | `svc-wiki` / `wiki-reader` runtime phase complete | Valid-credential SMB session/SSH denials and manual off-host recovery passed; unattended capture remains; named-share move requires storage gates |
+| Wiki runtime 1005:1000 | `svc-wiki` / `wiki-reader` runtime phase complete | Dedicated identity and named-share path checkpoints passed under the wiki-only exception; see its migration ledger for current access/recovery evidence and unattended follow-up |
 | QNAP `hass`, UID 1002 | Legacy integration account with broad `FromDrobo` access | Identify actual consumers; replace with explicit scopes before removing access |
 | `guest`, `httpdusr`, `[sshd]` | QTS built-ins | No new data roles; guest denied on all six inspected SMB shares |
 | AD administrator and machine principals | Directory administration and NAS trust | Preserve existing identities/trust; no new household data roles |

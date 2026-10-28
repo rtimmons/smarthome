@@ -286,6 +286,23 @@ class BackupQnapTests(unittest.TestCase):
             with self.assertRaisesRegex(backup.BackupError, 'file-count'):
                 backup.verify_tar(value)
 
+    def test_named_wiki_capture_requires_pointers_and_records_source_mapping(self):
+        with self.assertRaisesRegex(backup.BackupError, 'wiki backup mount'):
+            backup.snapshot(self.root, self.host_root, wiki_host_root='/share/wiki')
+        self.write('wiki/.env', b'WIKI_ROOT=/share/wiki\nWIKI_UID=1005\nWIKI_GID=1000\n')
+        manifest, contents = backup.snapshot(self.root, self.host_root, wiki_host_root='/share/wiki')
+        self.assertEqual(manifest['source_roots']['wiki'], '/share/wiki')
+        self.assertIn('wiki/.env', contents)
+        (self.root / 'wiki/@Recently-Snapshot').symlink_to(self.root, target_is_directory=True)
+        again, _ = backup.snapshot(self.root, self.host_root, wiki_host_root='/share/wiki')
+        self.assertEqual(again['entries'], manifest['entries'])
+        (self.root / 'wiki/.deploy-lock').mkdir()
+        with self.assertRaisesRegex(backup.BackupError, 'wiki publication'):
+            backup.snapshot(self.root, self.host_root, wiki_host_root='/share/wiki')
+        (self.root / 'wiki/.deploy-lock').rmdir()
+        with self.assertRaisesRegex(backup.BackupError, 'Unreviewed wiki'):
+            backup.snapshot(self.root, self.host_root, wiki_host_root='/share/forgejo')
+
     def test_pinned_connection_readonly_mount_network_disabled_and_shell_quoted(self):
         identity = self.work / 'key'
         identity.touch(mode=0o600)
@@ -306,6 +323,13 @@ class BackupQnapTests(unittest.TestCase):
         self.assertIn("type=bind,src=/share/Container/a b'$(touch NEVER),dst=/source,readonly", invocation)
         self.assertIn(backup.IMAGE, invocation)
         self.assertNotIn('/var/run/docker.sock', command[-1])
+        environment['QNAP_WIKI_ROOT'] = '/share/wiki'
+        named, _ = backup.connection(environment)
+        self.assertIn('type=bind,src=/share/wiki,dst=/source/wiki,readonly', named[-1])
+        environment['QNAP_WIKI_ROOT'] = '/share/forgejo'
+        with self.assertRaisesRegex(backup.BackupError, 'Unreviewed wiki'):
+            backup.connection(environment)
+        del environment['QNAP_WIKI_ROOT']
         environment['QNAP_PROJECT_DIR'] = '/share/Container/x,readonly=false/compose/qnap'
         with self.assertRaises(backup.BackupError):
             backup.connection(environment)
