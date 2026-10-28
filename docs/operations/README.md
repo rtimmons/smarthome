@@ -14,6 +14,7 @@ For the generated directory of published runbooks, use the [wiki](https://wiki.h
 - [unifi-network-setup.md](unifi-network-setup.md) — Current UniFi topology, radio plan, IoT SSID, client placement, and iteration workflow
 - [unifi-ssh-access.md](unifi-ssh-access.md) — Cloud Gateway Max console and retained AP/switch SSH access
 - [unifi-post-migration.md](unifi-post-migration.md) — Native DNS pilot, Site Magic, VPN modernization, backup and firewall acceptance
+- [UniFi as code investigation](../plan-unifi-iac.md) — Terraform/provider comparison, adoption limits, external state and proposed `just deploy` integration
 - [UniFi MCP](../../network-infra/unifi-mcp/README.md) — Pinned launcher with explicit approval required for writes using the MCP settings environment
 - [unifi-apple-tv-remote.md](unifi-apple-tv-remote.md) — Evidence-first UniFi, Bonjour, and Apple TV Remote troubleshooting
 - [nest-integration.md](nest-integration.md) — Google Nest OAuth, Device Access, Pub/Sub, entity naming, and verification
