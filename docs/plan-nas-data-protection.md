@@ -407,3 +407,13 @@ failure boundary, not separate redundancy per share.
 5. Only then move eligible shares to lower-redundancy backing storage. Preserve
    share identity, ACLs, application references and B2 source selection/history;
    confirm new-file backup and restore after the move before retiring the source.
+
+### Wiki verification procedure learning
+
+The wiki named-share migration is complete under its explicit exception. Keep
+verification simple: use the existing SOPS-backed credential and add it with a
+hidden prompt only when absent. Do not introduce a container to read NAS password
+hashes. Bound automated checks (55 seconds, excluding human entry), retain stage
+timings, and distinguish stored credentials from proven effective access.
+Timeouts are inconclusive. The next useful step is the eligible unattended
+capture and independent restore; HBS and general storage gates remain unchanged.

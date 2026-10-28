@@ -15,9 +15,9 @@ def ha_connection():
             'root@homeassistant.local']
 
 
-def connection():
+def connection(timeout=30):
     result = subprocess.run(ha_connection()+['ha apps info local_directory --raw-json'],
-                            capture_output=True, timeout=30)
+                            capture_output=True, timeout=timeout)
     if result.returncode:
         raise RuntimeError('HA SSH inspection failed; no alternate credentials attempted')
     info = json.loads(result.stdout)['data']

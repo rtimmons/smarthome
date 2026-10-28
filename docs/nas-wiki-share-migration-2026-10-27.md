@@ -119,10 +119,32 @@ Keep the independent manual recovery supplement and exact rollback inputs.
 Disk/power/snapshot diagnosis remains prerequisite work for another service;
 this wiki exception is not a general NAS readiness clearance.
 
-The user reported that the interactive access check took over a minute. Its
-transport/preflight latency is the next scoped fix after this migration commit:
-set a sub-minute non-interactive budget, diagnose stages before retries, and
-avoid creating a temporary NAS container merely to read an existing credential
-reference when an equally constrained existing read path can be qualified.
-Password entry time is separate; timeouts must remain inconclusive rather than
-being recorded as successful access denials.
+### Access-check procedure correction
+
+The original checker launched a temporary NAS container to compare the supplied
+password with the Samba hash. An attempted persistent reader passed one
+33.472-second preflight but still timed out for the user; this did not meet the
+latency requirement. The user rejected that unnecessary infrastructure.
+
+The corrected workflow reads the existing SOPS credential escrow locally and
+prompts only when its wiki entry is missing, adding just that entry with encrypted
+readback. No NAS password-database read or reader container is needed. Automated
+work has a shared 55-second budget excluding password entry. Receipts distinguish
+stored credentials, authenticated share denials and session refusals; a refusal
+alone cannot establish password correctness. Earlier hash-qualified migration
+checks remain dated evidence. See [the operation](operations/wiki.md#repeat-the-runtime-account-network-checks).
+
+The attempted helper container was stopped and removed successfully; wiki,
+backup-worker, HBS and other services were untouched. Its inactive, secret-free
+generated configuration remains on the NAS and is not recovery data. No reader
+setup recipe or Compose input remains in the repository. The next migration step remains unattended capture/restore
+qualification, not another production service move.
+
+The revised operation passed in **23.927 seconds** using the stored SOPS entry:
+local decryption 0.088 s, HA discovery 0.263 s, client readiness 0.255 s,
+SMB 16.373 s and SSH 6.948 s. The explicit QNAP-local SAM realm avoids sending
+this local account through the default workgroup path. SMB returned session
+`ACCESS_DENIED`; SSH prompted for the stored password and opened no session.
+These results do not independently establish that the stored password is current.
+Encrypted comparison verified one added entry and all **96 prior entries
+unchanged**. Private receipt: `wiki-access/20261028T010124Z.json`.

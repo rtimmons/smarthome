@@ -104,7 +104,7 @@ def binary():
     return historical_vault()._default_sops(ROOT)
 
 
-def crypt(data, key, encrypt=False):
+def crypt(data, key, encrypt=False, timeout=60):
     if not encrypt:
         historical_vault()._validate_ciphertext(data)
     with tempfile.TemporaryDirectory(prefix='smarthome-sops-') as temp:
@@ -115,17 +115,17 @@ def crypt(data, key, encrypt=False):
             args += ['--config', str(CONFIG), '--filename-override', str(VAULT), '--encrypt']
         else:
             args += ['--decrypt']
-        result = subprocess.run(args+['/dev/stdin'], input=data, capture_output=True, env=env, timeout=60)
+        result = subprocess.run(args+['/dev/stdin'], input=data, capture_output=True, env=env, timeout=timeout)
         if result.returncode:
             raise ValueError('SOPS operation failed; credential contents and provider diagnostics suppressed')
         return result.stdout
 
 
-def decrypt(cipher, key):
+def decrypt(cipher, key, timeout=60):
     if len(cipher) > 32*1024**2:
         raise ValueError('Oversized ciphertext')
     # Authenticate the SOPS MAC before interpreting any restoration path.
-    outer = json.loads(crypt(cipher, key))
+    outer = json.loads(crypt(cipher, key, timeout=timeout))
     if set(outer) != {'payload'}:
         raise ValueError('Invalid SOPS envelope')
     document = json.loads(outer['payload'])

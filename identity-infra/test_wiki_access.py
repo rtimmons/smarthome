@@ -12,11 +12,10 @@ class WikiAccessClassification(unittest.TestCase):
         with patch.object(checks.sys.stdin, 'isatty', return_value=True), \
                 patch.object(checks, 'directory_connection', side_effect=RuntimeError('failed')), \
                 patch.object(checks.getpass, 'getpass') as password, \
-                patch.object(checks, 'account_reference') as account:
+                patch.object(checks, 'password_from_vault', return_value='synthetic'):
             with self.assertRaises(checks.CheckError):
                 checks.main()
             password.assert_not_called()
-            account.assert_not_called()
 
     def test_distinguishes_authenticated_share_denial_from_session_refusal(self):
         self.assertEqual(classify_smb(1, 'tree connect failed: NT_STATUS_ACCESS_DENIED')['phase'],
@@ -60,3 +59,27 @@ class WikiAccessClassification(unittest.TestCase):
                     patch.object(checks.subprocess, 'run', side_effect=run):
                 self.assertTrue(checks.ssh_check('synthetic-password')['password_prompted'])
             self.assertFalse(seen[0].exists())
+
+
+class WikiAccessLatency(unittest.TestCase):
+    def test_human_delay_does_not_consume_network_budget(self):
+        budget = checks.Budget()
+        with patch.object(checks.time, 'monotonic', side_effect=[0, 5, 125, 130]):
+            budget.call('before prompt', lambda timeout: None, 10)
+            # Two minutes spent entering a password occur outside timed calls.
+            observed = budget.call('after prompt', lambda timeout: timeout, 55)
+        self.assertEqual(observed, 50)
+        self.assertEqual(budget.elapsed, 10)
+
+    def test_total_budget_is_shared_and_expiry_is_inconclusive(self):
+        budget = checks.Budget()
+        with patch.object(checks.time, 'monotonic', side_effect=[0, 20, 20, 50, 50, 55]):
+            limits = []
+            for stage in ('first', 'second', 'third'):
+                budget.call(stage, lambda limit: limits.append(limit), 40)
+        self.assertEqual(limits, [40, 35, 5])
+        with self.assertRaisesRegex(checks.CheckError, 'inconclusive'):
+            budget.call('too late', lambda _: self.fail('must not run'), 10)
+        with patch.object(checks.subprocess, 'run', side_effect=subprocess.TimeoutExpired('PRIVATE', 1)):
+            with self.assertRaisesRegex(checks.CheckError, '^synthetic stage timed out; access result inconclusive$'):
+                checks.Budget().run('synthetic stage', ['fixture'], limit=1)

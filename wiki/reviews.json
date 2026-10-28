@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "52622758ddff83bca1586718366a37cbc5b886603eef680d7c50d9110c61bee7",
-    "reason": "Verified the wiki-only migration exception, independent recovery/rollback, unchanged peers, valid-credential session/login denials and explicit unattended/latency follow-ups.",
+    "fingerprint": "c005025f821afa9e51ad074b44a4d3adec5dceb70ba1c30f74b73316998da8f0",
+    "reason": "Verified the wiki-only migration exception, independent recovery/rollback, unchanged peers, valid-credential session/login denials and explicit unattended/latency follow-ups. Verified completed wiki migration, removal of the unnecessary reader, SOPS-backed access-check procedure and retained unattended-recovery follow-up.",
     "reviewed_at": "2026-10-27"
   },
   "media": {
@@ -35,9 +35,9 @@
     "reviewed_at": "2026-10-27"
   },
   "network": {
-    "fingerprint": "88a7cfaa061159de110cfcf3f64c3de7bb602a46c202f1ef58c8488cc035673f",
-    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation.",
-    "reviewed_at": "2026-10-28"
+    "fingerprint": "dc9ee1d541c199cb1e22e653dd9b4e94d7f373ff412a0a39c202e53d02b68939",
+    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation. Verified local SOPS credential lookup and scoped missing-entry preservation, shared check deadlines, and honest session-denial classification without NAS hash reads or reader containers.",
+    "reviewed_at": "2026-10-27"
   },
   "printing": {
     "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",

@@ -545,3 +545,11 @@ household files,
 Public/Multimedia/FromDrobo contents, full Hetzner membership and storage redesign
 deferred. The removed media apps remain removed; their leftover share is still
 pending supported retirement, not forgotten or silently accepted.
+
+### Wiki access-check credential workflow
+
+Use the current SOPS escrow for the existing `svc-wiki` password. The check prompts
+only to add a missing entry, preserves other escrow inputs, and does not read NAS
+password hashes or create a reader container. Stored credentials are not proof
+of authentication; record session refusals separately from authenticated share
+denials. See the [procedure](operations/wiki.md#repeat-the-runtime-account-network-checks).

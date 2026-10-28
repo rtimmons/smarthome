@@ -962,3 +962,13 @@ Start with the application inventory's recovery diagnosis and offline wiki pilot
 Keep household-file ownership and dumping grounds deferred. The shared deployment
 and runtime identity can be separated incrementally without rebuilding the pool;
 the disk, snapshot and recovery gates still precede production data moves.
+
+### Wiki verification procedure learning
+
+The wiki named-share migration is complete under its explicit exception. Keep
+verification simple: use the existing SOPS-backed credential and add it with a
+hidden prompt only when absent. Do not introduce a container to read NAS password
+hashes. Bound automated checks (55 seconds, excluding human entry), retain stage
+timings, and distinguish stored credentials from proven effective access.
+Timeouts are inconclusive. The next useful step is the eligible unattended
+capture and independent restore; HBS and general storage gates remain unchanged.

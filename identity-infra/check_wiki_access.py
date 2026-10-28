@@ -9,9 +9,11 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 
 from ha_directory import connection as directory_connection
-from manage import connection, PRIVATE
+from manage import PRIVATE
+from wiki_credentials import CredentialError, password_from_vault
 
 SHARES = ('Container', 'FromDrobo', 'homes', 'Multimedia', 'Public',
           'SpaceBlackTimeMachine', 'Usenet')
@@ -21,6 +23,33 @@ DENIALS = {'NT_STATUS_ACCESS_DENIED', 'NT_STATUS_ACCOUNT_DISABLED',
 
 class CheckError(RuntimeError):
     """Only fixed, nonsecret diagnostics may be shown to the operator."""
+
+
+AUTOMATED_BUDGET = 55
+
+
+class Budget:
+    """Bound network work across stages; hidden password entry is not timed."""
+    def __init__(self):
+        self.elapsed = 0.0
+        self.stages = {}
+
+    def call(self, stage, operation, limit):
+        remaining = AUTOMATED_BUDGET - self.elapsed
+        if remaining <= 0:
+            raise CheckError('Automated access-check budget exhausted; result inconclusive')
+        started = time.monotonic()
+        try:
+            return operation(min(limit, remaining))
+        except subprocess.TimeoutExpired:
+            raise CheckError(stage + ' timed out; access result inconclusive') from None
+        finally:
+            duration = time.monotonic() - started
+            self.elapsed += duration
+            self.stages[stage] = round(duration, 3)
+
+    def run(self, stage, command, *, limit, **kwargs):
+        return self.call(stage, lambda timeout: subprocess.run(command, timeout=timeout, **kwargs), limit)
 
 
 def classify_smb(code, output):
@@ -41,35 +70,12 @@ def ssh_denied(result):
             and b'Host key verification failed' not in result.stderr)
 
 
-def account_reference():
-    script = b'''set -eu
-test "$(id -u svc-wiki)" = 1005
-test "$(awk -F: '$1=="wiki-reader" {print $3}' /etc/group)" = 1000
-package=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
-export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
-"$package/bin/docker" run --rm --pull=never --network=none --read-only --cap-drop=ALL \\
- --security-opt=no-new-privileges --memory=128m --cpus=0.25 --pids-limit=32 --user 0:0 \\
- --mount type=bind,src=/etc/config,dst=/source,readonly --entrypoint awk \\
- usenet-catalog-tools:rclone-1.75.1-python-3.14.7 -F: '$1=="svc-wiki" {print}' /source/smbpasswd
-/sbin/getcfg System 'Server Name' -f /etc/config/uLinux.conf
-'''
-    result = subprocess.run(connection(), input=script, capture_output=True, timeout=300)
-    if result.returncode:
-        raise CheckError('Dedicated NAS account inspection failed')
-    lines = result.stdout.decode().splitlines()
-    if len(lines) != 2:
-        raise CheckError('Expected one existing local Samba credential and realm')
-    row = lines[0].split(':')
-    if (len(row) < 6 or row[:2] != ['svc-wiki', '1005']
-            or not re.fullmatch(r'[0-9A-Fa-f]{32}', row[3])
-            or not re.fullmatch(r'[A-Za-z0-9_-]{1,15}', lines[1])):
-        raise CheckError('Existing wiki credential reference is not qualified')
-    return row[3].lower(), lines[1]
-
-
-def prepare_smb_transport():
+def prepare_smb_transport(budget=None):
+    budget = budget or Budget()
     try:
-        command = directory_connection()
+        command = budget.call('HA directory discovery', lambda timeout: directory_connection(timeout=timeout), 10)
+    except CheckError:
+        raise
     except RuntimeError:
         raise CheckError('Dedicated HA/directory transport unavailable; no password requested. '
                          'Follow AGENTS.md for dedicated-key repair before retrying') from None
@@ -82,47 +88,49 @@ assert len(c.get_nt_hash())==16
 print('wiki-smb-client-ready')
 WIKI_CLIENT_CHECK
 '''
-    result = subprocess.run(command, input=probe, capture_output=True, timeout=60)
+    result = budget.run('SMB client readiness', command, input=probe, capture_output=True, limit=10)
     if result.returncode or result.stdout.strip() != b'wiki-smb-client-ready':
         raise CheckError('Pinned directory SMB client unavailable; no password requested')
     return command
 
 
-def smb_checks(password, expected_hash, realm, command):
+def smb_checks(password, command, budget=None):
+    budget = budget or Budget()
     # Use the existing pinned directory maintenance transport and installed SMB
     # client. No directory database is opened or changed. The password travels
     # over SSH stdin, never argv, and exists remotely only in private /run temp.
-    values = {'password': password, 'expected_hash': expected_hash,
-              'realm': realm, 'shares': SHARES}
+    # Observed QNAP local SAM realm; do not send this local account through AD.
+    values = {'password': password, 'realm': 'RYNAPQNAP', 'shares': SHARES}
     remote = 'values = ' + repr(values) + '\n' + '''
-import hmac,json,os,subprocess,tempfile
+import json,os,subprocess,tempfile,time
 from pathlib import Path
-from samba.credentials import Credentials
 os.umask(0o077)
-c=Credentials();c.set_password(values['password'])
-if not hmac.compare_digest(bytes(c.get_nt_hash()).hex(),values['expected_hash']):
- print(json.dumps({'credential_verified':False}));raise SystemExit(0)
 results=[]
+deadline=time.monotonic()+25
 with tempfile.TemporaryDirectory(prefix='wiki-denial-',dir='/run') as directory:
  auth=Path(directory)/'credentials'
  auth.write_text('username = svc-wiki\\npassword = '+values['password']+'\\ndomain = '+values['realm']+'\\n')
  for share in values['shares']:
-  r=subprocess.run(['smbclient','//192.168.1.66/'+share,'-A',str(auth),
-    '--client-protection=encrypt','-m','SMB3','-c','quit'],capture_output=True,timeout=30)
+  try:
+   r=subprocess.run(['smbclient','//192.168.1.66/'+share,'-A',str(auth),
+    '--client-protection=encrypt','-m','SMB3','-c','quit'],capture_output=True,
+    timeout=max(0.01,min(20,deadline-time.monotonic())))
+  except subprocess.TimeoutExpired:
+   print(json.dumps({'error':'SMB client timed out'}));raise SystemExit(0)
   output=(r.stdout+r.stderr).decode(errors='replace')
   results.append({'share':share,'code':r.returncode,'output':output})
   # A session refusal applies before any share selection. Do not repeat it or
   # risk lockout; tree-connect denials qualify the individual share instead.
   if 'tree connect failed:' not in output: break
-print(json.dumps({'credential_verified':True,'results':results}))
+print(json.dumps({'results':results}))
 '''
-    result = subprocess.run(command, input=("python3 - <<'WIKI_ACCESS_CHECK'\n" + remote
-                            + '\nWIKI_ACCESS_CHECK\n').encode(), capture_output=True, timeout=300)
+    result = budget.run('SMB denial probes', command, input=("python3 - <<'WIKI_ACCESS_CHECK'\n" + remote
+                            + '\nWIKI_ACCESS_CHECK\n').encode(), capture_output=True, limit=30)
     if result.returncode:
         raise CheckError('Pinned SMB probe failed; no raw credential-bearing output saved')
     value = json.loads(result.stdout)
-    if value.get('credential_verified') is not True:
-        raise CheckError('Password does not match the existing account; no login attempted')
+    if value.get('error') == 'SMB client timed out':
+        raise CheckError('SMB client timed out; access result inconclusive')
     checks = [dict(share=row['share'], **classify_smb(row['code'], row['output']))
               for row in value['results']]
     if not checks or (checks[-1]['phase'] == 'authenticated-tree-connect'
@@ -131,7 +139,8 @@ print(json.dumps({'credential_verified':True,'results':results}))
     return checks
 
 
-def ssh_check(password):
+def ssh_check(password, budget=None):
+    budget = budget or Budget()
     target = os.environ['QNAP_SSH_TARGET'].split('@', 1)[1]
     hosts = Path(os.environ['QNAP_SSH_KNOWN_HOSTS']).expanduser().resolve(strict=True)
     with tempfile.TemporaryDirectory(prefix='wiki-ssh-denial-') as directory:
@@ -149,37 +158,35 @@ def ssh_check(password):
                 '-o', 'IdentityAgent=none', '-o', 'IdentitiesOnly=yes',
                 '-o', 'PubkeyAuthentication=no', '-o', 'PreferredAuthentications=password',
                 '-o', 'KbdInteractiveAuthentication=no', '-o', 'NumberOfPasswordPrompts=1',
-                '-o', 'ConnectTimeout=10', '-o', 'ConnectionAttempts=1',
+                '-o', 'ConnectTimeout=5', '-o', 'ConnectionAttempts=1',
                 '--', 'svc-wiki@'+target, 'id -u']
-        result = subprocess.run(args, stdin=subprocess.DEVNULL, capture_output=True,
-                                env=env, timeout=45)
+        result = budget.run('SSH login denial', args, stdin=subprocess.DEVNULL, capture_output=True,
+                            env=env, limit=10)
         password_prompted = prompted.exists()
-    if not ssh_denied(result):
+    if not password_prompted or not ssh_denied(result):
         raise CheckError('SSH did not return a qualified login denial')
-    return {'valid_credential_login_denied': True, 'password_prompted': password_prompted,
+    return {'stored_credential_login_denied': True, 'password_prompted': password_prompted,
             'session_created': False}
 
 
 def main():
     os.umask(0o077)
-    if not sys.stdin.isatty():
-        raise CheckError('Run interactively; the password must use a hidden terminal prompt')
-    print('Checking the existing dedicated HA/directory SMB transport...', flush=True)
-    command = prepare_smb_transport()
-    print('Reading the existing wiki credential reference through the dedicated NAS connection...', flush=True)
-    expected, realm = account_reference()
-    password = getpass.getpass('Existing svc-wiki password (hidden; temporary use only): ')
-    if not password or any(c in password for c in '\r\n\x00'):
-        raise CheckError('Empty or multiline credentials are not supported')
+    budget = Budget()
+    print('Checking the SOPS-backed wiki credential...', flush=True)
+    password = password_from_vault(budget)
+    print('Checking dedicated transports (55-second automated budget; password entry excluded)...', flush=True)
+    command = prepare_smb_transport(budget)
     print('Checking the password and encrypted SMB denials...', flush=True)
-    checks = smb_checks(password, expected, realm, command)
+    checks = smb_checks(password, command, budget)
     print('Checking one SSH login denial...', flush=True)
-    ssh = ssh_check(password)
+    ssh = ssh_check(password, budget)
     receipt = {'checked_at': dt.datetime.now(dt.timezone.utc).isoformat(),
                'account': 'svc-wiki', 'realm': 'QNAP-local', 'uid': 1005,
-               'password_matches_existing_samba_credential': True,
+               'credential_source': 'SOPS',
+               'password_matches_existing_samba_credential': None,
                'smb3_encryption_required': True, 'smb': checks, 'ssh': ssh,
-               'permissions_changed': False, 'household_files_read': False}
+               'permissions_changed': False, 'household_files_read': False,
+               'automated_seconds': round(budget.elapsed, 3), 'stage_seconds': budget.stages}
     output = PRIVATE/'wiki-access'
     output.mkdir(mode=0o700, parents=True, exist_ok=True)
     path = output/(dt.datetime.now(dt.timezone.utc).strftime('%Y%m%dT%H%M%SZ')+'.json')
@@ -192,7 +199,7 @@ def main():
 if __name__ == '__main__':
     try:
         main()
-    except CheckError as error:
+    except (CheckError, CredentialError) as error:
         print(str(error)+'; no access changed.', file=sys.stderr)
         raise SystemExit(1)
     except (OSError, ValueError, subprocess.SubprocessError) as error:

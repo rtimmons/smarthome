@@ -248,32 +248,41 @@ restored and found to predate this identity change. Inspect the next eligible
 normal capture separately; a manual supplement does not prove the schedule.
 
 In particular, a fresh outer archive can still contain an older weekly native
-QTS snapshot that predates the account. No named-share migration has occurred;
-disk/power/snapshot gates still apply. This switch intentionally retained the
-current publication; updated docs can publish with the next normal release.
+QTS snapshot that predates the account. The later named-share migration completed
+under the documented wiki-only exception; general storage gates remain closed.
+Publication bytes were retained; docs can publish with the next normal release.
 
 ### Repeat the runtime account network checks
 
-Run `just wiki-check-runtime-access` interactively from the repository root and
-enter the existing `svc-wiki` password from its private vault item. The command
-does not create or reset credentials. It first checks the dedicated HA/directory
-transport, before requesting a password, then qualifies the existing local
-UID/group and Samba credential reference through the dedicated NAS connection;
-the bounded read-only container can take several minutes on this NAS.
+Run `just wiki-check-runtime-access` from the repository root. It decrypts the
+current `identity-infra/credentials.sops.json` locally and uses the `svc-wiki`
+entry when present. If missing, run interactively and enter/confirm the existing
+password from 1Password. The command adds only this entry, verifies encrypted
+readback, and preserves the private source at
+`build/identity-private/secrets/wiki-runtime.json` for subsequent normal SOPS
+captures. It never creates or resets a NAS account/password. Review and commit
+the ciphertext-only vault change. Existing entries are never implicitly replaced.
+
+Automated work shares a 55-second budget, excluding hidden password entry.
+There is no NAS credential-database read, temporary container or persistent
+reader. Successful receipts include stage timings; a timeout is inconclusive.
+Follow AGENTS.md for dedicated HA-key failures rather than substituting access.
 
 The existing pinned directory maintenance transport supplies the encrypted SMB3
 client. It checks only share connections, never lists or reads household files.
-The supplied password must match the existing account before any network login
-attempt. Each authenticated tree-connect denial is recorded separately. A refusal
+The password comes from SOPS; it is not independently compared with the NAS
+password hash. Each authenticated tree-connect denial is recorded separately. A refusal
 during session setup stops further SMB attempts and is recorded as a session
-denial, not seven independently tested share ACLs. Bad-password, timeout and
+denial, not proof of a current password or seven independently tested share ACLs. Bad-password, timeout and
 connection errors do not pass. SSH uses the pinned NAS host key, one password
 attempt and no SSH-agent identity; its receipt records whether a password prompt
 occurred and confirms that no session opened.
 
 Temporary credential files are private and removed when their checks finish.
 Only sanitized receipts remain under the ignored `build/identity-private/wiki-access/`
-state directory. A failure does not change account grants or stop any service.
+state directory. A probe failure does not change account grants or stop any service. An initial
+credential entry already saved in SOPS remains saved if a later probe fails;
+its presence does not certify successful authentication.
 Interpret these protocol checks alongside the separate process, bind-mount and
 filesystem ACL checks; SMB denial does not establish host-process isolation.
 
