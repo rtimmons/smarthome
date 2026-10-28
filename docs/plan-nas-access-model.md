@@ -10,12 +10,12 @@ records dated runtime principals and dependencies.
 ## Share catalog
 
 Use flat, named service datasets and separate archive shares. No AppData umbrella.
-`wiki` is deployed; `PrivatePlexLibrary` is next and replaces the former proposed
-name `PrivateLibrary`. Native package state stays at supported package paths.
+`wiki` and `PrivatePlexLibrary` are deployed; the latter replaces the former
+proposed name `PrivateLibrary`. Native package state stays at supported package paths.
 
 | Share | Contents / existing source |
 | --- | --- |
-| `PrivatePlexLibrary` | Private originals under `FromDrobo`; new restricted share |
+| `PrivatePlexLibrary` | Private originals relocated from `FromDrobo` on October 28 |
 | `Documents` | Explicitly classified shared originals; no current Public payload is assigned here |
 | `home` (Ryan) | Canonical AD personal home; destination for both Public folders after privacy/backup pilot; homes enabled on Scratch, personal path unqualified |
 | `home` (Michael) | Canonical AD personal home; homes enabled on Scratch, personal path and isolation unqualified |
@@ -182,13 +182,22 @@ these tables are policy, not proof that existing ACLs already enforce it.
 | `nas-deployment-operator` | NAS configuration, deployed service definitions and managed state | Administrative deployment capability; current QTS administrator membership can override share ACLs, so no data-isolation guarantee |
 | `platform-admin` | NAS recovery and permission administration | Broad administrative exception, including recovery access to `homes`; no implied everyday data role |
 
-For the next move, `PrivatePlexLibrary` grants Ryan's maintainer role RW and
+The target model for `PrivatePlexLibrary` grants Ryan's maintainer role RW and
 Plex's private-reader role R; ordinary Michael/general-media, guest, lookup and
 unrelated service roles receive no grant. Backup reading can be temporarily
 inactive under the approved migration exception. Administrators/native root
 processes remain explicit bypass exceptions. Preserve the tree's metadata during
 the rename; inventory and fix excess filesystem ACLs as a separate checkpoint,
 without claiming SMB denial establishes host/container isolation.
+
+The October 28 path checkpoint explicitly approved RW for existing **local**
+`ryantimmons` and `badmin`, with native administrator exceptions, guest denied,
+and access-based visibility enabled. The user subsequently approved AD Ryan RW
+on this share and a separate additive root/default filesystem ACL entry.
+Encrypted SMB3 synthetic create/readback/delete passes for AD Ryan; AD Michael
+remains denied at authenticated tree connect. All existing ACL entries were
+preserved, with no recursive changes. Existing descendant access was not tested;
+broad filesystem grants still need separate review.
 
 ## Plex viewer boundaries
 

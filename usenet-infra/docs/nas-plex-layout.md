@@ -14,7 +14,6 @@ in private inventory; older bound snapshots contain the former cache path.
 
 ```text
 FromDrobo/
-├── loljk/                    private collection
 ├── Movies/
 │   ├── video/<item-id>/       published NAS movies
 │   ├── .staging/             excluded from Plex
@@ -26,11 +25,17 @@ FromDrobo/
 └── .remote-cache/            disposable playback cache
 ```
 
+The private collection moved on October 28 to `/share/PrivatePlexLibrary`,
+backed by `/share/CACHEDEV2_DATA/PrivatePlexLibrary` on the same volume. The old
+FromDrobo subtree is absent. See the [migration checkpoint](../../docs/plan-nas-storage-and-access.md#october-28-cutover--completed-path-change)
+for approved local-account grants, preserved filesystem ACL exceptions and
+temporary backup exclusion.
+
 ## Libraries and profile grants
 
 | Library | Plex ID | Source beneath the physical share |
 | --- | --- | --- |
-| Private `loljk` | 1 | `loljk` |
+| Private library | 1 | `/share/CACHEDEV2_DATA/PrivatePlexLibrary` (separate share) |
 | Movies (NAS) | 2 | `Movies/video` |
 | TV Shows (NAS) | 3 | `TV Shows/library` |
 | Movies (Remote) | 4 | `Remote/files/library/Movies` and `Remote/files/objects/video` |

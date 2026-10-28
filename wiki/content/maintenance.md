@@ -86,6 +86,27 @@ Use `just wiki-rollback` to restore the retained previous release. Inspect deplo
 
 The [wiki operations guide](../../docs/operations/wiki.md) owns publication details. Read [add-on state backups](../../docs/operations/addon-state-backups.md) and [NAS backup coverage](../../usenet-infra/docs/scheduled-backups.md) for the state each system protects. NAS media is excluded from the repository-owned settings archives. The separate HBS/B2 job selects irreplaceable files, the current laptop's `SpaceBlackTimeMachine` share and those settings archives. The retired SpaceGray share was removed from future backups on October 19. Its expanded uploads succeeded on October 18–19. An October 25 B2 restore of seven small configuration-backup files matched the originals byte-for-byte; recovery of private originals, Time Machine and a replacement NAS remains unverified. QNAP notification email delivery was independently confirmed after reauthorizing the existing Gmail account. Its upload rate is capped at 10 MB/s every day to reduce contention with Plex.
 
+Long B2 runs can reflect Time Machine band rewrites: the existing HBS job uploads
+whole changed files with QuDedup disabled. Integrity checks now start at 16:00
+on Mondays and 17:00 on the first of each month to reduce overlap with uploads.
+The [October 27 investigation and trial](../../usenet-infra/docs/scheduled-backups.md#october-27-backup-duration-and-deduplication-trial)
+showed block reuse and a matching synthetic restore. The separate production job
+`B2 QuDedup 20261027` has its own destination, but its initial seed was stopped
+for Time Machine recovery and its cap returned to 10 MiB/s on October 27.
+The temporary 200 Mbps plan is superseded; no completed production seed or
+production sample restore has been verified.
+
+After the October 28 private-library move, both jobs temporarily exclude that
+dataset and keep the other four sources. At handoff both runs are stopped; the
+old job's daily 02:00 schedule remains enabled, the replacement stays manual,
+and the Codex monitor is paused. Coordinate resumption with recovery owners.
+Preserve the old mixed backup until the new private-library root is protected,
+a bounded data/metadata restore passes, and Time Machine and every other
+required recovery source are accounted for. A settings-only restore cannot
+release the retained private-library copy. Follow the
+[seed and verification checkpoint](../../usenet-infra/docs/scheduled-backups.md#october-28-migration-handoff-and-remaining-verification)
+before cutting over or removing history.
+
 The reporting deployment installs read-only checks and Home Assistant notifications.
 The separately enabled `just usenet configure-seerr-recovery-execute` deployment
 installs bounded backlog acquisition for missing TV episodes in approved open

@@ -13,13 +13,20 @@
 On October 17, 2026, the user confirmed that B2 should protect irreplaceable
 files and configuration, initially including both Mac Time Machine shares, while
 excluding replaceable media. On October 19, the user retired the SpaceGray backup.
-The QNAP HBS 3 job `Backup 1` now selects exactly:
+After the October 28 private-library exclusion, both `Backup 1` and
+`B2 QuDedup 20261027` select exactly:
 
-- `FromDrobo/loljk`
 - `Public/RyMongo Backups`
 - `Public/Saved Downloads`
 - `Usenet/Backups`
 - `SpaceBlackTimeMachine`
+
+The private dataset now lives at `/share/PrivatePlexLibrary` and is temporarily
+excluded from both jobs. Retain its existing B2 history until new-root coverage
+and the protection plan's recovery gates pass. At migration handoff both jobs
+were stopped; legacy daily 02:00 scheduling remains enabled and the replacement
+remains manual at 10 MiB/s. Coordinate resumption with Time Machine recovery.
+Source-removal edits preserved retention, destinations and all other job settings.
 
 On October 19, `SpaceGrayTimeMachineShare` was removed from the job's future
 source selection and its QNAP share/data were deleted through Control Panel.
@@ -33,9 +40,10 @@ mounts and caches. Those paths are no longer selected. Source files are never
 deleted by the job, and no existing B2 versions were manually purged. Retention
 remains the latest 30 versions, with backups daily at 02:00 NAS local time
 (America/New_York). Snapshots remain enabled; preservation of ACLs and extended
-attributes is enabled for recovery of the newly included data. Quick integrity
-checks run Mondays at 06:00; full content checks run on the first of each month
-at 06:00. Full content checks download data and consume bandwidth; account
+attributes is enabled for recovery of the newly included data. As of October 27,
+quick integrity checks run Mondays at 16:00; full content checks run on the first
+of each month at 17:00. These replace the former 06:00 schedules, which overlapped
+the daily upload. Full content checks download data and consume bandwidth; account
 egress allowances must be considered separately from storage charges.
 
 On October 19, the user-requested upload cap was saved through HBS as **10 MB/s**,
@@ -139,6 +147,145 @@ This proves a small B2 restore of encrypted configuration archives and receipts.
 It does not prove recovery of the private originals, a full Time Machine backup,
 or a replacement NAS. Earlier independent archive-decryption checks remain
 separate evidence; this test compared the restored ciphertext and receipts.
+
+## October 27 backup duration and deduplication trial
+
+Read-only HBS history inspection showed that the long runs were transferring
+hundreds of gigabytes, despite relatively little new user content. October 25
+transferred 344.83 decimal GB in 9 hours 38 minutes; October 26 transferred
+399.94 GB in 12 hours 12 minutes. October 27 also succeeded, transferring
+355.60 GB in 11 hours 19 minutes. The daily scan was not the main delay:
+October 27 finished scanning at 02:17, then spent most of the run uploading.
+At the configured 10 MiB/s cap, 350 decimal GB alone takes at least 9.3 hours.
+
+The Time Machine sparsebundle uses 266,055,680-byte bands. With QuDedup disabled,
+a change within a band makes the whole band eligible for upload. HBS remains
+incremental at the file level; a small logical change can therefore produce a
+large transfer. Historical per-version file records may include reused entries,
+so their summed size is not a reliable measure of bytes uploaded by that run.
+Use the job history transfer counters for that comparison.
+
+The integrity schedules above were saved through HBS and independently verified
+without interrupting the active backup. The daily schedule, five source roots,
+30-version retention, snapshots and upload cap were preserved. HBS skips a
+scheduled integrity check if the backup is still running, so the later times
+reduce the observed overlap but do not guarantee that every check will run.
+
+HBS disables the QuDedup control when editing this existing job. Enabling it
+requires a new backup job and separate initial upload; the current destination
+and recovery history must remain available during any migration. A separate
+synthetic trial uses `Usenet/b2-dedup-test-20261027/source`, with QuDedup enabled,
+compression disabled, snapshots enabled and the same 10 MiB/s upload cap. It
+targets its own B2 prefix and contains no user files. The fixture is one random
+266,055,680-byte file, matching a Time Machine band's size. This can test block
+reuse and restore correctness, but cannot establish actual Time Machine savings
+or full Time Machine recovery.
+
+Both synthetic uploads succeeded. The initial run transferred 268,402,228 bytes
+in 101 seconds. Replacing exactly 1 MiB at offset 128 MiB, without changing the
+file size, produced a second upload of 2,324,562 bytes in 47 seconds (about 99.1%
+less transferred data). HBS displays these as 2.22 MB and 255.97 MB, using binary
+units. The trial was returned to manual scheduling after its initial run, which
+followed the production job.
+
+The modified version was restored through HBS into
+`Usenet/b2-dedup-test-20261027/restore`, outside the source folder. HBS reported
+Success after 17 seconds, with one file restored and none skipped. An independent
+read of the complete 266,055,680-byte restored file matched the modified source's
+SHA-256 exactly. Both trial jobs have no recurring schedule, and their small
+synthetic source, cloud backup and restore output remain available for review.
+At the end of the synthetic trial, the production job still had QuDedup disabled
+and no replacement seed had started. Actual Time Machine transfer savings require
+comparison of real band changes before treating this synthetic result as a
+production forecast.
+
+## October 27 production QuDedup seed
+
+After the user authorized a separate production job and initial upload, HBS job
+`B2 QuDedup 20261027` was created through Safari. It uses the existing B2 account
+and `RynapQNAP` bucket with a separate `/B2 QuDedup 20261027.qdff` destination.
+Read-only configuration inspection confirmed the same five source roots as
+`Backup 1`, QuDedup enabled, compression disabled, snapshots enabled, ACL and
+extended attributes preserved, 30-version retention, and an initial 10 MiB/s
+upload cap at all times on all seven days. Filters and source deletion remain disabled;
+the failure notification trigger is enabled. Existing encryption settings and
+bucket policy were preserved.
+
+The initial run started at **16:00:26 Eastern on October 27**. Both HBS's interface
+and its run history showed it running. The source-selection estimate was 4.19 TiB;
+this is a multi-day seed, with no reliable completion estimate at launch. This
+checkpoint establishes creation and startup only, not a completed backup or a
+verified production restore.
+
+The user then authorized a temporary **200 Mbps** cap for the seed, returning to
+the original cap afterward. HBS accepts whole-number binary MB/s values, so the
+closest supported setting is **24 MiB/s**: 25,165,824 bytes/s, or 201.33 Mbps.
+This was saved through Safari and independently read back. HBS explicitly says
+changes to a running job apply to its next run, so only the new seed was stopped
+and restarted at **16:21:38 Eastern** with the higher cap. The stopped attempt
+is not a completed backup. The replacement run was verified as running; measured
+throughput and completion time remain dependent on NAS processing and B2, not
+just the bandwidth limit. Sending all 4.19 TiB at this cap would take about
+51 hours before other overhead or deduplication savings.
+
+### October 28 migration handoff and remaining verification
+
+The Time Machine repair task intentionally stopped the replacement seed at
+**21:38 Eastern on October 27** after finding APFS image corruption. The user's
+subsequent choice returned its saved cap to **10 MiB/s** (HBS displays `10 MB/s`,
+independently verified as 10,485,760 bytes/s), always on, all seven days. This
+supersedes the temporary 24 MiB/s setting; do not restore the higher cap. The
+stopped run transferred about 136.87 decimal GB and is not a completed production
+backup. No production restore from this replacement has passed.
+
+For the authorized private-library move, the migration task stopped the active
+legacy `Backup 1` run at **10:42 Eastern on October 28** and removed only the old
+private-library source from both jobs through HBS. Independent read-only
+inspection confirmed the four remaining roots listed above. Neither the obsolete
+private root nor `PrivatePlexLibrary` is currently selected. The move is recorded
+in the [NAS migration plan](../../docs/plan-nas-storage-and-access.md#fromdrobo-data-migration).
+Both jobs retain their destinations, 30-version retention, snapshots, ACL/xattrs,
+other sources and 10 MiB/s caps. Existing cloud history and test evidence remain.
+
+At handoff both jobs are stopped. The replacement and its integrity checks remain
+manual; `Backup 1` still has daily 02:00 backups, Monday 16:00 quick checks and
+first-of-month 17:00 full checks enabled. Stopping its run did not disable its
+next scheduled start. Coordinate that schedule and any resumption with the
+migration and Time Machine recovery owners. The Codex follow-up is paused and
+must not undo approved exclusions or restart the replacement without a safe
+handoff. Future UI actions require an unlocked Mac and a signed-in QNAP session.
+
+Time Machine's later Verify Backups result passed according to the repair task,
+but independent restore and post-verification error checks remain open. Successful
+backup jobs or an uploaded copy of the previously corrupt image do not establish
+usable laptop recovery or release old B2 history for deletion.
+
+After a coordinated handoff and a successful complete production seed with no
+unresolved errors, run HBS quick integrity verification and restore the small
+configuration sample from that completed version into a fresh
+`Usenet/b2-qudedup-restore-*` directory outside source roots, skipping conflicts.
+Compare complete SHA-256 hashes and sizes with the fixed reference in ignored
+`build/hbs-qudedup-20261027/restore-reference.json`: one 5.76 MB encrypted settings
+archive and its receipt. Preserve this reference across follow-ups. The earlier
+synthetic test does not satisfy this production restore requirement.
+
+The configuration sample alone cannot qualify the old mixed repository for
+retirement. First protect the private library from its new canonical root and
+independently restore a bounded sample of usable data and applicable metadata.
+Account for every other still-required source, including the repair task's
+accepted Time Machine recovery strategy and useful retained history. Apply the
+[complete retirement condition](../../docs/plan-nas-data-protection.md#private-library-migration-exception).
+Only after all relevant gates and ownership handoffs pass, transfer daily 02:00
+protection and the Monday 16:00 / first-of-month 17:00 integrity schedules to the
+new job, verify them, and disable the old recurring schedule.
+
+The user authorized conditional retirement only of `Backup 1` and its precisely
+superseded `/Backup 1.qdff` history. Permanent deletion through computer use still
+requires action-time confirmation with concrete verification and the exact target
+ready. Preserve unrelated jobs, prefixes, sources and test evidence. Verify whether
+B2 retained object versions remain before claiming storage was reclaimed. On
+failure retain all existing backups and coordinate diagnosis. Later production
+incremental runs must establish actual Time Machine transfer savings.
 
 ## Repository-owned encrypted settings archives
 

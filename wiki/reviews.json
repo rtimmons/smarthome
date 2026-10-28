@@ -25,13 +25,13 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "b0821ed96986adb670303a983e40c9a57794d171280845c177ba3a18c545b0c7",
-    "reason": "Reviewed atomic live/current publication using the existing QNAP Python rename syscall because firmware mv lacks -T, stable read-only mounts, content/runtime/legacy rollback tests, and backup reconstruction; existing recovery documentation preserved.",
+    "fingerprint": "d02ce2889c62edc0339e8f412f25d6cfec240a8108e400e163227af58e7f5af3",
+    "reason": "Verified October 28 four-root HBS selections, stopped runs, restored 10 MiB/s cap, paused monitor and complete old-history retirement gates; preserved migration coverage edit.",
     "reviewed_at": "2026-10-28"
   },
   "media": {
-    "fingerprint": "93477fac98390067b6c398581f949782096a4487e1186e4c32b5f01ef04ae35b",
-    "reason": "Reviewed wiki static publication and scoped traversal ACLs; live/current is excluded by existing backup traversal, verified by regression test. Media services and backup workers remain unchanged.",
+    "fingerprint": "32129619cfbeb4a447e8f95f8366758939e978891ac0c87e8cb6be148af8e591",
+    "reason": "Verified approved AD Ryan share and additive root/default ACL grants with encrypted SMB synthetic create/readback/delete; Michael remains denied; existing entries preserved without recursion.",
     "reviewed_at": "2026-10-28"
   },
   "network": {

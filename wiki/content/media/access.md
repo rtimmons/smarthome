@@ -38,6 +38,16 @@ Prowlarr, Radarr, Sonarr and SABnzbd opened through Authelia without a second
 application password. The user also confirmed Catalog OAuth sign-in and visible
 operator actions. These checks did not start searches, downloads or transfers.
 
+## Private NAS library
+
+The private collection now uses the separate `PrivatePlexLibrary` share. Its
+October 28 cutover preserves Plex library ID 1 and the general profile's denial.
+The approved share grants now include Ryan's local NAS and AD accounts. AD Ryan
+passes encrypted SMB create/readback/delete after the separately approved
+root/default ACL addition. Michael remains denied. No recursive permissions
+were changed; broader filesystem review and new-root B2 coverage remain open;
+see the [current migration plan](../../../docs/plan-nas-storage-and-access.md).
+
 ## Plex: slow title opening or playback
 
 The October 25 server analysis repair passed; fresh Roku/iOS playback remains

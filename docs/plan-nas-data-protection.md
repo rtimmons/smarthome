@@ -58,7 +58,7 @@ Shares and bind aliases do not create independent failure domains.
 
 | Share | Target storage tier | B2 policy | Scope / current coverage |
 | --- | --- | --- | --- |
-| `PrivatePlexLibrary` | Protected | Local originals | Static private originals; temporary backup exclusion authorized for the next move, then re-seed from the new root |
+| `PrivatePlexLibrary` | Protected | Local originals | Static private originals; October 28 move accepted, temporarily excluded from both HBS jobs; new-root seed and restore verification pending |
 | `Documents` | Protected | Local originals | Explicitly classified shared originals; no current Public payload assigned here; new roots need explicit inclusion |
 | `home` (Ryan) | Protected | Local originals | Canonical AD home, including both Ryan-owned Public folders after cutover; personal root unqualified and homes absent from current HBS selection |
 | `home` (Michael) | Protected | Local originals | Canonical AD home; personal root unqualified and homes absent from current HBS selection |
