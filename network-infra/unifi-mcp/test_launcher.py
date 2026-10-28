@@ -71,13 +71,13 @@ print(json.dumps({
         self.assertNotIn("synthetic-unrelated-value", result.stdout + result.stderr)
         return result
 
-    def test_injected_key_mapping_preserves_read_only_boundary_and_protocol_input(self):
+    def test_injected_key_mapping_preserves_approval_mode_boundary_and_protocol_input(self):
         result = self.run_launcher(
             UBIQUITI_API_KEY=SYNTHETIC_KEY,
             DEBUG="true",
             DATABASE_URL="synthetic-database-value",
-            UNIFI_READ_ONLY="false",
-            UNIFI_STDIO_ROLE="admin",
+            UNIFI_READ_ONLY="true",
+            UNIFI_STDIO_ROLE="viewer",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         value = json.loads(result.stdout)
@@ -90,8 +90,8 @@ print(json.dumps({
             "UV_CACHE_DIR": "cache", "UV_TOOL_DIR": "tools", "UV_TOOL_BIN_DIR": "bin",
         }, {
             "UNIFI_API_TYPE": "local", "UNIFI_LOCAL_HOST": "192.168.1.1",
-            "UNIFI_PROFILE": "network", "UNIFI_READ_ONLY": "true",
-            "UNIFI_DRY_RUN": "true", "UNIFI_STDIO_ROLE": "viewer",
+            "UNIFI_PROFILE": "network", "UNIFI_READ_ONLY": "false",
+            "UNIFI_DRY_RUN": "false", "UNIFI_STDIO_ROLE": "admin",
             "MCP_SERVER_TRANSPORT": "stdio", "UNIFI_SITE_MANAGER_ENABLED": "false",
             "AGNOST_ENABLED": "false", "SUPERMEMORY_ENABLED": "false",
             "UNIFI_METRICS_ENABLED": "false", "LOG_API_REQUESTS": "false",
@@ -104,7 +104,7 @@ print(json.dumps({
         self.assertEqual(value["args"], [
             "--python", "3.14.6", "--from",
             "git+https://github.com/enuno/unifi-mcp-server.git@12b4c6e964f920806e2604ab8554e98a4b92536f",
-            "unifi-mcp-server",
+            "python", str(self.launcher.parent / "server.py"),
         ])
 
     def test_check_uses_the_same_source_and_credential_boundary(self):
@@ -113,7 +113,7 @@ print(json.dumps({
         self.assertEqual(check.returncode, 0, check.stderr)
         value = json.loads(check.stdout)
         self.assertTrue(value["key_matches"])
-        self.assertEqual(value["args"][:-2], json.loads(server.stdout)["args"][:-1])
+        self.assertEqual(value["args"][:-2], json.loads(server.stdout)["args"][:-2])
         self.assertEqual(value["args"][-2:], ["python", str(self.launcher.parent / "check.py")])
 
     def test_invalid_arguments_do_not_access_credentials_or_start_server(self):

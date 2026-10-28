@@ -213,8 +213,8 @@ specific change. Do not migrate IoT clients as a substitute for a routed policy.
 ### API and MCP diagnostics
 
 Prefer the supported Max UI and version-specific Integrations API. The existing
-[read-only MCP launcher](../../network-infra/unifi-mcp/README.md) exposes 26 tools
-and has passed live reads. Keep its settings-provided credential and controls;
+[approval-gated MCP launcher](../../network-infra/unifi-mcp/README.md) supports policy-listed reads and explicitly approved writes; its earlier
+read-only configuration passed live reads. Keep its settings-provided credential and controls;
 SSH supplies effective-state checks. Never reconnect the Cloud Key or write
 controller MongoDB to perform current diagnostics.
 

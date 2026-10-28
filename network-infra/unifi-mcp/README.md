@@ -8,7 +8,22 @@ It targets the Cloud Gateway Max at `192.168.1.1:443` over local stdio, with
 no MCP network listener. The repository Python is pinned; package/cache/tool
 environments stay under ignored `build/unifi-mcp/`.
 
-## Current status — October 22, 2026
+## Write support — October 27, 2026
+
+The launcher now enables the upstream network write tools under the
+[approval policy](POLICY.md) and `policy.json` allowlist. Every live change
+requires explicit approval of the concrete plan. The wrapper defaults omitted
+`dry_run` to true, restricts controller/site, and rejects unlisted calls.
+The policy is loaded on every call; malformed/missing policy fails closed.
+Server initialization sends the approval policy to clients. Confirmation flags
+are caller assertions, not independent proof of human consent.
+
+Restart/reconnect the desktop MCP server to load this change. Existing sessions
+keep their old tool list. No live write has been performed for acceptance.
+Private upstream audit records go to ignored `build/unifi-mcp/audit.jsonl`;
+audit failures block writes. Preserve these records privately.
+
+## Previous read-only acceptance — October 22, 2026
 
 Setup and live acceptance are complete. Preserve the existing launcher and
 credential; do not reinstall, recreate keys or restore credential fallbacks.
@@ -49,8 +64,9 @@ The observed Network 10.6.106 key form is **Integrations > Create New API Key**.
 It offers name, description and expiry, with no read-only scope selector. The
 underlying credential is not constrained by the MCP server's read-only mode.
 
-The launcher enforces the `network` profile, `UNIFI_READ_ONLY=true`, dry-run
-mode and the `viewer` stdio role. Debug requests, cloud tools, external
+The launcher enforces the `network` profile, `UNIFI_READ_ONLY=false`,
+`UNIFI_DRY_RUN=false` and the `admin` stdio role (needed for approved deletions).
+The repository wrapper supplies the approval instructions and call restrictions. Debug requests, cloud tools, external
 telemetry and network transport are disabled. TLS verification is initially
 disabled for this LAN appliance's certificate; a verified appliance CA remains
 a separate reviewed change.
@@ -76,11 +92,11 @@ shellcheck network-infra/unifi-mcp/run.sh
 settings variable belongs to its server process; it is not automatically
 exported into an unrelated Terminal shell.
 
-Repeat live acceptance after a credential/package change: inspect tools with
-controller mutations/debug absent, then read clients, networks/Wi-Fi and WAN
+Repeat live acceptance after a credential/package change: inspect tools against
+`policy.json`, with debug absent, then read clients, networks/Wi-Fi and WAN
 and confirm Max/site identity. These checks passed October 22; they are dated
 evidence, not continuous monitoring. Do not attempt a real mutation to test
-read-only mode. The API's restored inactive `Internet 2` definition alone is
+write access. The API's restored inactive `Internet 2` definition alone is
 not evidence of active WAN2 service.
 
 Review upstream release notes before changing the immutable source pin, then

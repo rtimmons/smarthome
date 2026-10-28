@@ -89,3 +89,12 @@ Repository-wide constraints; component `AGENTS.md` files add local guidance.
 - The smarthome wiki is built from `wiki/` and explicitly imported canonical runbooks. For behavioral changes, update the corresponding explanation and run `just wiki-check`. Review changed component fingerprints with `just wiki-review <component> '<specific reason>'`; do not acknowledge unfamiliar changes merely to bypass the check. Supported deployments publish once after success; use `just wiki-deploy` for documentation-only changes. See `docs/operations/wiki.md` and `docs/operations/home-dns.md`.
 - Usenet, QNAP storage, Plex and their recovery workflow: read `usenet-infra/AGENTS.md` and `usenet-infra/docs/validation.md` for accepted scope and recovery limits before operating them.
 - Start with `docs/README.md` for the index; `docs/setup/dev-setup.md` and `docs/development/local-development.md` cover local workflows.
+
+## UniFi changes
+- Before any UniFi mutation through MCP, UI, API, SSH or automation, read and
+  follow `network-infra/unifi-mcp/POLICY.md`. Every live change requires explicit
+  user approval of the concrete target and change; enabling write tools is not
+  approval to change the network. Read-only inspection and dry-run previews are
+  allowed. Do not treat `confirm=true` as evidence of human approval.
+- Policy files constrain approved changes; they do not grant unattended write
+  authority. Do not edit policy to authorize your own proposed operation.

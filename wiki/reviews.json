@@ -35,9 +35,9 @@
     "reviewed_at": "2026-10-27"
   },
   "network": {
-    "fingerprint": "8b3881284b36e1bd7a5aa01fbda99976321541ff7733dff3927a8909abdbbf3e",
-    "reason": "Verified existing-credential SMB session refusal and SSH password-login denial, transport repair handling, private temporary credentials and classification tests; individual share ACLs are not inferred.",
-    "reviewed_at": "2026-10-27"
+    "fingerprint": "88a7cfaa061159de110cfcf3f64c3de7bb602a46c202f1ef58c8488cc035673f",
+    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation.",
+    "reviewed_at": "2026-10-28"
   },
   "printing": {
     "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",

@@ -28,9 +28,9 @@ SSH; its own host-key output and MAC then matched. The switch negotiated
 selected identity and candidate host keys with this record and a trusted console
 before installing pins. Stop on a mismatch; a scan alone is not trust.
 
-Prefer supported UI/API and [read-only MCP](../../network-infra/unifi-mcp/README.md)
+Prefer supported UI/API and [approval-gated MCP](../../network-infra/unifi-mcp/README.md)
 for configuration/client reads; SSH corroborates effective state. MCP remains
-viewer/read-only/dry-run with mutations/debug disabled. Use the approved network
+subject to the repository approval policy; debug tools remain disabled. Use the approved network
 executor when the ordinary sandbox denies TCP; do not bypass it with GUI terminals.
 
 ## Verification commands

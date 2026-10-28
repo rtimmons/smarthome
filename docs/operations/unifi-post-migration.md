@@ -147,7 +147,7 @@ Ryan enabled Max SSH and installed the existing owner key, restricted to
 and switch. Printer-network SSH to all four devices and Max external IPv4 WAN
 SSH were blocked, with working positive controls. DNS and wiki access still
 passed. [SSH operations](unifi-ssh-access.md) owns fingerprints, commands,
-permissions, rollback and update/restore checks. MCP remains read-only.
+permissions, rollback and update/restore checks. MCP writes now require explicit approval under `network-infra/unifi-mcp/POLICY.md`.
 
 <a id="remaining-acceptance"></a>
 

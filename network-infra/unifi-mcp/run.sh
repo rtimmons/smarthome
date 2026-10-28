@@ -23,9 +23,9 @@ export UNIFI_LOCAL_VERIFY_SSL=false
 export UNIFI_DEFAULT_SITE=default
 export UNIFI_SITE_MANAGER_ENABLED=false
 export UNIFI_PROFILE=network
-export UNIFI_READ_ONLY=true
-export UNIFI_DRY_RUN=true
-export UNIFI_STDIO_ROLE=viewer
+export UNIFI_READ_ONLY=false
+export UNIFI_DRY_RUN=false
+export UNIFI_STDIO_ROLE=admin
 export MCP_SERVER_TRANSPORT=stdio
 export AGNOST_ENABLED=false
 export SUPERMEMORY_ENABLED=false
@@ -42,10 +42,13 @@ export UV_CACHE_DIR="$repo_root/build/unifi-mcp/uv-cache"
 export UV_TOOL_DIR="$repo_root/build/unifi-mcp/tools"
 export UV_TOOL_BIN_DIR="$repo_root/build/unifi-mcp/bin"
 export UV_PYTHON_DOWNLOADS=never
+export UNIFI_AUDIT_LOG_ENABLED=true
+export UNIFI_AUDIT_FAIL_CLOSED=true
+export UNIFI_AUDIT_LOG_PATH="$repo_root/build/unifi-mcp/audit.jsonl"
 cd "$launcher_dir"
 # v0.6.1 exists on GitHub, but is not published on PyPI. Use its exact commit.
 unifi_source='git+https://github.com/enuno/unifi-mcp-server.git@12b4c6e964f920806e2604ab8554e98a4b92536f'
 if [[ "${1:-}" == --check ]]; then
   exec /opt/homebrew/bin/uvx --python "$(cat "$repo_root/.python-version")" --from "$unifi_source" python "$launcher_dir/check.py"
 fi
-exec /opt/homebrew/bin/uvx --python "$(cat "$repo_root/.python-version")" --from "$unifi_source" unifi-mcp-server
+exec /opt/homebrew/bin/uvx --python "$(cat "$repo_root/.python-version")" --from "$unifi_source" python "$launcher_dir/server.py"
