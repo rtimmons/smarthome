@@ -4,11 +4,29 @@ This is the single entry point and execution queue for NAS storage migration.
 Updated October 28, 2026. **The private-library path cutover is complete:**
 `PrivatePlexLibrary` is registered on the NAS and existing Plex library ID 1
 uses its new physical root. Discovery, bounded streaming and AD Ryan synthetic
-SMB read/write checks passed. Both HBS jobs temporarily exclude this dataset;
-retain its old B2 copy. Next: coordinate new-root backup coverage and recovery
-verification. Wiki's named-share migration is complete.
+SMB read/write checks passed. The replacement HBS job now selects the new root;
+legacy `Backup 1` still excludes it. The replacement seed started at 15:27 Eastern; retain the old B2 copy.
+Next: complete the seed and verify recovery. Wiki's named-share migration is complete.
 
 ## Cold-agent continuation
+
+**October 28, 15:26 Eastern continuation:** saved `PrivatePlexLibrary` as the
+fifth source of `B2 QuDedup 20261027` through Safari/HBS. Independent full job
+comparison found only `backup.source` changed; legacy `Backup 1` is unchanged.
+Destination remains `RynapQNAP` → `/B2 QuDedup 20261027.qdff`, with 30 versions,
+snapshots, ACL/xattrs, manual scheduling and 10 MiB/s preserved. Both backup
+chats cleared the source edit; Time Machine restore validation remains open.
+The user then explicitly directed proceeding despite SATA problems. The seed
+started through HBS at **15:27:48 Eastern**; independent read-only job history
+confirms Running. No completed seed or production restore is claimed.
+
+Read-only health checks at 15:18–15:19 Eastern found data RAID 4/4, degraded zero,
+sync idle and the expected new-root inode. The latest matching kernel SATA reset
+maps to the already documented 04:22 burst; no later matching error was observed
+in the current kernel log. This does not resolve the hardware fault. The user
+accepted proceeding with this seed despite that risk; this is not hardware-health
+clearance. Legacy 02:00 scheduling is still enabled, and the follow-up monitor
+remains paused. The sequence below now resumes at seed completion and recovery verification.
 
 The move and access changes are accepted, including Ryan's successful Mac
 connection. **Do not repeat the rename, recreate the share/library, or replay
@@ -22,18 +40,19 @@ execution history and rollback context, not the next task.
 2. Refresh read-only NAS health, HBS activity/selections and Time Machine recovery
    status. The stopped-job observations below are dated: legacy `Backup 1` still
    has an enabled daily 02:00 Eastern schedule and can restart automatically.
-   Replacement `B2 QuDedup 20261027` is manual, stopped, capped at 10 MiB/s; the
-   follow-up monitor is paused. Do not restart that job or automation implicitly.
+   Replacement `B2 QuDedup 20261027` is manually scheduled, running since 15:27
+   Eastern, capped at 10 MiB/s; the follow-up monitor is paused. Preserve the run
+   and do not restart the automation implicitly.
 3. Coordinate with **Fix TimeMachine backup failures** and **Diagnose slow b2
    backups** before HBS edits or resumption. This migration chat was explicitly
    authorized to message both. Verify the current recovery decision rather than
    treating a passed Time Machine Verify Backups result as a completed restore.
-   The SATA-risk exception authorized this completed bounded move only.
-4. Prepare new-root backup coverage for `/share/PrivatePlexLibrary`, resolving
+   The user subsequently accepted the known SATA risk for the new-root seed.
+4. Verify completion of the running new-root backup for `/share/PrivatePlexLibrary`, resolving
    to `/share/CACHEDEV2_DATA/PrivatePlexLibrary`. Confirm the exact HBS destination,
-   source selection, retention and safe scheduling before the initial sync.
+   source selection, retention and scheduling against the saved checkpoint.
    Keep the four other selected roots and existing 10 MiB/s limits unless the
-   user authorizes a change. No new-root seed has been started by this migration.
+   user authorizes a change. The new-root seed started at 15:27 Eastern.
 5. After complete coverage, restore a bounded private data/metadata sample to
    an isolated NAS destination and verify it independently without emitting media
    identifiers. A settings-only restore or a seed excluding this dataset cannot
@@ -56,7 +75,8 @@ Remaining filesystem work is separate: broad original ACL entries were preserved
 not hardened. Only AD Ryan's root/default entries were added; descendant access
 was not recursively changed or comprehensively tested. Do not silently tighten
 permissions as part of backup setup. The last published wiki release for access
-acceptance is `20261028T153306Z-xC31Rl`; this plan includes the later user confirmation.
+acceptance was `20261028T153306Z-xC31Rl`. The backup-start handoff was published
+in release `20261028T193420Z-Z1J3Ac`; Multimedia retirement is recorded below.
 
 ## Read only what the next change needs
 
@@ -87,8 +107,8 @@ and superseded proposals remain in Git history rather than this plan.
 - Wiki is at `/share/wiki`, running as `svc-wiki` 1005:1000. Independent recovery,
   backup mount mapping and access checks passed. Unattended backup qualification
   remains a follow-up, not a prerequisite for the private-library move.
-- Video Station and Multimedia Console are removed. Their leftover Multimedia
-  share still needs supported retirement; do not reinstall the apps.
+- Video Station and Multimedia Console are removed. The leftover Multimedia
+  share was retired through QTS on October 28; do not reinstall the apps.
 - All local volumes currently share one RAID-5 failure boundary. Creating a share
   does not change redundancy. Physical storage redesign is outside this work.
 
@@ -240,7 +260,18 @@ not delete its backing data. Retain the existing B2 history throughout.
 
 ## Service-data and archive migration
 
-After this move, choose one bounded service checkpoint from the inventory.
+**Next service checkpoint: `forgejo`.** The user requested continuing share work
+while the B2 seed runs. Prepare relocation of the complete current
+`/share/Container/home-git` recovery unit to the named service share, keeping its
+runtime UID/GID and archive destination unchanged. First refresh capture/cron
+status and independently rehearse recovery/startup, then enumerate deployment,
+cron, backup and container path consumers. Do not move `Usenet/Backups` or its
+Forgejo archive subtree while the seed reads them. Preserve both repositories,
+LFS, attachments, database, configuration and keys together. A brief Forgejo-only
+stop is required for its eventual consistent cutover; prepare exact rollback and
+supported share grants before requesting any action-time access approval.
+
+For each bounded service checkpoint, use the inventory to identify consumers.
 Preserve Forgejo as a complete recovery unit: database, repositories, LFS,
 attachments, configuration and keys. Keep capture producers, archive uploaders,
 runtime principals and directory-lookup accounts distinct. Do not rename
@@ -258,8 +289,21 @@ contents. The two known Public folders belong to Ryan, not shared Documents;
 qualify his canonical home and protection before moving them. Preserve enabled
 homes and the deployment SSH home/key dependency.
 
-Retire Multimedia through supported QTS controls after checking its remaining
-samples/system metadata and dependencies. Retain only explicit required platform
+Multimedia share retirement completed October 28 while the replacement B2 seed
+continued running. Read-only checks found no HBS source, container bind or Plex
+library-root reference. QTS removed only its share definition with **Also delete
+the data unchecked**. The physical `/share/CACHEDEV1_DATA/Multimedia` directory
+remains, with unchanged device/inode, owner and mode. Aggregate file inventory
+changed from eight files / 2,053,473 bytes to seven / 2,053,371 bytes during QTS
+removal; the missing 102-byte file was not individually identified. No file-content
+identity or byte-for-byte preservation claim is made. Preserve the remaining
+files; no payload deletion was requested. The share configuration preimage and
+sanitized checks are retained privately in `build/multimedia-retirement-20261028/`.
+Rollback is supported QTS registration of that existing directory using the saved
+share settings, subject to approval of restored access. Review after QTS/package
+updates for automatic recreation; the removed apps must stay absent.
+
+Retain only explicit required platform
 exceptions: minimal Public, Container/package paths and homes where needed.
 Record each exception's owner, consumer, protection and review trigger.
 `Scratch` → `System` remains a later display-label change, not a data move or
@@ -271,7 +315,8 @@ permission to recreate the volume. Preserve all stable bindings and snapshots.
 | --- | --- |
 | Wiki identity and named share | Complete; `f8c7fd4`, followed by SOPS access-check simplification `738901e`; see its completion ledger |
 | PrivatePlexLibrary | Path/share/Plex cutover complete; bounded stream and general-profile denial pass; discovery and AD Ryan synthetic SMB read/write passed; existing descendant access remains unqualified |
-| Private-library B2 replacement | Temporarily excluded from both jobs; retain old history. Next: initial sync from the new root, verify recovery, then retire only superseded data as specified in the protection policy |
+| Private-library B2 replacement | New root saved in replacement job; legacy still excludes it. Replacement seed running since 15:27 Eastern with user acceptance of known SATA risk. Retain old history until complete coverage and independent recovery verification |
+| Multimedia legacy share | Retired through QTS with data deletion unchecked; backing directory retained; see the 102-byte inventory discrepancy above |
 | Unattended app backups | Verify the next eligible NAS/cloud/Forgejo captures and offsite restores, including wiki mapping and a current native QTS export |
 | Disk/power/snapshot work | Still unresolved; separate diagnosis before stress tests or broader storage redesign |
 | Remaining service and household migrations | Select individually after the private-library checkpoint; household dumping grounds stay deferred |

@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "d02ce2889c62edc0339e8f412f25d6cfec240a8108e400e163227af58e7f5af3",
-    "reason": "Verified October 28 four-root HBS selections, stopped runs, restored 10 MiB/s cap, paused monitor and complete old-history retirement gates; preserved migration coverage edit.",
+    "fingerprint": "953918c9ff9c8c7d198bdbc2a0a0d2a1fb8ed21c5ee79e4f239e2bb7d1e998f4",
+    "reason": "Updated new-root source and verified seed startup after explicit SATA-risk acceptance; completion and restore gates remain open",
     "reviewed_at": "2026-10-28"
   },
   "media": {

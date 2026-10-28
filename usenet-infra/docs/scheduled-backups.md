@@ -230,6 +230,20 @@ just the bandwidth limit. Sending all 4.19 TiB at this cap would take about
 
 ### October 28 migration handoff and remaining verification
 
+**Later continuation, 15:26 Eastern:** `PrivatePlexLibrary` is now saved as the
+replacement job's fifth source. Full before/after configuration comparison found
+only `backup.source` changed; legacy `Backup 1` remains unchanged with four
+sources. Destination, 30-version retention, snapshots, ACL/xattrs, 10 MiB/s and
+manual replacement scheduling are preserved. The user explicitly accepted proceeding despite SATA problems; the replacement
+seed started at **15:27:48 Eastern**, independently confirmed Running. Legacy
+remains stopped. Both backup chats cleared the source edit. Data RAID is 4/4
+and idle; the last matching SATA reset in the current kernel log is the known
+04:22 burst. The underlying fault remains unresolved; the user accepted this seed despite
+that risk. Keep the monitor paused and all old history; seed completion and
+production restores remain unverified. This supersedes the source-selection
+state in the earlier handoff below and the four-root inventory above.
+
+
 The Time Machine repair task intentionally stopped the replacement seed at
 **21:38 Eastern on October 27** after finding APFS image corruption. The user's
 subsequent choice returned its saved cap to **10 MiB/s** (HBS displays `10 MB/s`,

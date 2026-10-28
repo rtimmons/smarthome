@@ -96,8 +96,10 @@ for Time Machine recovery and its cap returned to 10 MiB/s on October 27.
 The temporary 200 Mbps plan is superseded; no completed production seed or
 production sample restore has been verified.
 
-After the October 28 private-library move, both jobs temporarily exclude that
-dataset and keep the other four sources. At handoff both runs are stopped; the
+After the October 28 private-library move, the replacement job now selects
+`PrivatePlexLibrary` alongside the four other sources; the legacy job still
+excludes it. The replacement seed started at 15:27 Eastern with user acceptance
+of the known SATA risk; legacy remains stopped. The
 old job's daily 02:00 schedule remains enabled, the replacement stays manual,
 and the Codex monitor is paused. Coordinate resumption with recovery owners.
 Preserve the old mixed backup until the new private-library root is protected,

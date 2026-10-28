@@ -28,9 +28,12 @@ checks passed after removal. HBS, Plex, File Station and Container Station staye
 enabled. File Station root browsing passed; private download/media-preview and
 client playback were not qualified by this check.
 
-Shares and SMB configuration were unchanged. **Multimedia still exists and should
-be retired** through supported QTS controls after checking its remaining sample/
-system metadata and dependencies. Public, homes and Container have separate
+Shares and SMB configuration were unchanged at the October 25 checkpoint.
+**October 28 follow-up:** Multimedia was removed through supported QTS controls
+with data deletion unchecked after no HBS, container or Plex root dependency was
+found. Its backing directory remains. The [current plan](plan-nas-storage-and-access.md#legacy-share-retirement-and-system-label)
+records acceptance, rollback and the observed 102-byte file-count discrepancy.
+Public, homes and Container have separate
 platform/ownership requirements; do not delete them as part of app retirement.
 No scrub, account change or data migration was performed. Disk-2 concerns remain
 in the [storage readiness record](nas-preflight-2026-10-25.md). Check after future
