@@ -12,6 +12,32 @@ Forgejo now uses its named share and dedicated runtime identity; see the
 
 ## Cold-agent continuation
 
+**Latest handoff — October 28, after Forgejo verification and publication:**
+Forgejo's identity and named-share checkpoints are complete, committed separately
+as `011ced1` and `4ceb02f`. It runs healthy as `svc-forgejo` (`1006:100`) at
+`/share/forgejo`. The final new-path archive independently passed all 151 file
+checks, SQLite integrity and both repository checks. Full repository tests passed;
+the updated runbook was published as wiki release `20261028T203752Z-129Aie`.
+Do not repeat account creation, ownership changes or the share move. The
+[service checkpoint](#service-data-and-archive-migration) owns exact boundaries,
+rollback references and the temporary privileged-capture exception.
+
+**Next Forgejo work:** qualify an unattended capture at the new path, then scope
+the dedicated `svc-forgejo-backup` account. Cron runs at minute 23 each hour but
+skips capture until the latest verified success is at least 23 hours old; a manual
+backup resets that clock and does not prove scheduler execution. Inspect current
+status and cron evidence before forcing another capture. The dedicated capture
+principal needs read-only service access, archive write access and bounded
+Forgejo lifecycle control; keep offsite credentials with the separate uploader
+and grant no archive access to the runtime. Preserve the existing archive path
+while the B2 seed runs. No unattended-capture qualification or backup-account
+cutover is claimed yet, and no new monitor was enabled.
+
+At the final read-only HBS inspection, the replacement seed was still Running
+with the same five sources, destination and 10 MiB/s limit; legacy `Backup 1`
+was Stopped. These are dated observations, not a fresh status check. The seed
+completion and recovery sequence below remains open.
+
 **October 28, 15:26 Eastern continuation:** saved `PrivatePlexLibrary` as the
 fifth source of `B2 QuDedup 20261027` through Safari/HBS. Independent full job
 comparison found only `backup.source` changed; legacy `Backup 1` is unchanged.
@@ -293,10 +319,12 @@ completed the move. No recursive data ACL change accompanied the path move.
 Deployment, capture and both cron tables now use `/share/forgejo`; management and
 capture refuse an absent or mismatched QTS share mapping. The archive destination
 remains `/share/Usenet/Backups/automatic/forgejo`. Do not move that archive subtree
-or change HBS selections while the replacement seed reads it. Post-move checks verified runtime writes, zero effective capabilities, retained
+or change HBS selections while the replacement seed reads it. Post-move checks
+verified runtime writes, zero effective capabilities, retained
 metadata on all moved entries, absence of old-path payload and clear locks. Both
 cron tables have exactly one new-path job and unchanged unrelated entries; wiki
-UID 1005 and unrelated UID 65534 cannot read service data. The final new-path backup at 16:34 Eastern was independently downloaded and
+UID 1005 and unrelated UID 65534 cannot read service data. The final new-path
+backup at 16:34 Eastern was independently downloaded and
 decrypted: all 151 entries, SQLite integrity and both repositories passed. Restored
 Compose and all three helper scripts match current source. Forgejo remained
 healthy after capture/restart. Manual backups do not qualify an unattended run.
@@ -320,8 +348,8 @@ is a separate operation using its saved owner/mode/xattr metadata; never silentl
 combine it with path rollback.
 
 Next: qualify an unattended capture at the new path and separately scope the
-dedicated capture account. Continue the private-library
-seed completion/restore checks above; the old mixed B2 history stays retained.
+dedicated capture account. Continue the private-library seed completion/restore
+checks above; the old mixed B2 history stays retained.
 
 For each bounded service checkpoint, use the inventory to identify consumers.
 Preserve Forgejo as a complete recovery unit: database, repositories, LFS,
