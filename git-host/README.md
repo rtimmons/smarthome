@@ -35,6 +35,13 @@ State lives under `/share/Container/home-git/data` on the NAS's local
 filesystem, separate from existing media services. The deployment uses the
 existing dedicated NAS identity and pinned host keys through the infrastructure
 environment wrapper. It never uses the SSH agent or changes host trust.
+Deployment resolves the QTS-local `svc-forgejo` UID/GID by name and requires
+`data` and `config` to be provisioned for that identity first. Compose requires
+`FORGEJO_UID` and `FORGEJO_GID`; there is no fallback to the deployment account.
+The runtime has no archive mount or backup/cloud grant. Account provisioning,
+ownership migration and path relocation are separate checkpoints tracked in the
+[NAS migration plan](../docs/plan-nas-storage-and-access.md).
+
 This image stores its generated configuration at `data/custom/conf/app.ini`;
 the separate mounted `config` directory is reserved but currently unused.
 
@@ -71,6 +78,15 @@ the stopped-service capture below and therefore needs an approved window.
 See the [October 27 backup repair](../usenet-infra/docs/backup-repair-2026-10-27.md)
 for the missing-entry diagnosis and current recovery checkpoint.
 
+Capture currently uses a short-lived UID 0/GID 100 helper with only
+`DAC_OVERRIDE`, no network, a read-only container filesystem and a read-only
+Forgejo source mount. Its only persistent writable mount is the existing Forgejo
+archive directory. It receives only the public encryption recipient, with no
+Docker socket or private cloud/decryption credential. This bounded privileged
+capture is an interim exception pending the separate `svc-forgejo-backup`
+checkpoint; it does not grant backup access to `svc-forgejo`. The host scheduler
+still owns lifecycle control and the existing uploader owns offsite credentials.
+
 Only Forgejo stops during capture. The snapshot checks SQLite integrity, includes
 any retained WAL/SHM files with the raw database, rejects symbolic links, and
 streams directly into age encryption. A WAL can contain committed data and must
@@ -101,8 +117,11 @@ host cron settings are also included in the native QTS settings backup.
 Before upgrades, run a successful backup. For recovery, download an archive from
 `nasbackup:archives/forgejo/`, decrypt with the existing NAS recovery identity,
 verify every manifest SHA-256, and extract into a new private directory. Check
-SQLite integrity, restore ownership 1004:100, then use the recorded image and
-isolated ports to test login and repository access. Restore data/config together.
+SQLite integrity, resolve the recovery host's `svc-forgejo` UID/GID and restore
+ownership of `data` and `config` to those IDs. Export `FORGEJO_UID` and
+`FORGEJO_GID` before Compose startup; old archives may record the former
+1004:100 runtime and must not silently restore that shared identity. Use the
+recorded image and isolated ports to test login and repository access. Restore data/config together.
 Do not downgrade a migrated database; restore its matching pre-upgrade archive.
 
 ### October 24, 2026 acceptance

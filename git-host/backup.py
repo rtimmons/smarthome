@@ -28,8 +28,8 @@ def digest(path):
 def save(path, value):
     temp = path.with_suffix(path.suffix + '.new')
     with temp.open('w') as stream:
-        # Capture is UID 1004; off-host replication uses the existing backup
-        # container's UID 0/GID 100. Both read receipts through the private 0700 root.
+        # The isolated capture helper and off-host replication use UID 0/GID 100.
+        # Receipts remain inside the private archive root; Forgejo has no grant.
         os.chmod(temp, 0o640)
         json.dump(value, stream, sort_keys=True)
         stream.write('\n')

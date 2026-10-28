@@ -9,7 +9,9 @@ test -x "$docker" || docker="$pkg/usr/bin/docker"
 export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
 image=usenet-catalog-tools:rclone-1.75.1-python-3.14.7
 worker() {
-  "$docker" run --rm --network none --user 1004:100 --read-only --cap-drop ALL \
+  # Interim capture exception: separate from svc-forgejo, bounded by these mounts.
+  # DAC_OVERRIDE reads private service files; /source remains kernel-enforced RO.
+  "$docker" run --rm --network none --user 0:100 --read-only --cap-drop ALL --cap-add DAC_OVERRIDE \
     --security-opt no-new-privileges --memory 256m --cpus 0.5 \
     --mount "type=bind,src=$root,dst=/source,readonly" \
     --mount "type=bind,src=$output,dst=/backups/forgejo" \

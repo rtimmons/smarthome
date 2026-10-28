@@ -16,6 +16,10 @@ test -x "$docker" || docker="$pkg/usr/bin/docker"
 test -x "$docker"
 export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
 root=/share/Container/home-git
+FORGEJO_UID=$(id -u svc-forgejo)
+FORGEJO_GID=$(id -g svc-forgejo)
+export FORGEJO_UID FORGEJO_GID
+test "$FORGEJO_UID" -gt 0
 compose() { "$docker" compose -f "$root/compose.yaml" "$@"; }
 '''
 
@@ -73,10 +77,11 @@ if test ! -e "$root"; then
 fi
 test ! -L "$root"
 chmod 700 "$root"
-mkdir -p "$root/data" "$root/config"
-chmod 700 "$root/data" "$root/config"
-test "$(stat -c %u "$root/data")" = 1004
-test "$(stat -c %u "$root/config")" = 1004
+# Identity provisioning is a separate checkpoint; deployment must not re-own data.
+test -d "$root/data"
+test -d "$root/config"
+test "$(stat -c %u "$root/data")" = "$FORGEJO_UID"
+test "$(stat -c %u "$root/config")" = "$FORGEJO_UID"
 printf '%s' ''' + encoded + ''' | base64 -d > "$root/compose.yaml.new"
 "$docker" compose -f "$root/compose.yaml.new" config --quiet
 if test -e "$root/compose.yaml"; then cp "$root/compose.yaml" "$root/compose.yaml.previous"; fi

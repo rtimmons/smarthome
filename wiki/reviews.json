@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "953918c9ff9c8c7d198bdbc2a0a0d2a1fb8ed21c5ee79e4f239e2bb7d1e998f4",
-    "reason": "Updated new-root source and verified seed startup after explicit SATA-risk acceptance; completion and restore gates remain open",
+    "fingerprint": "d3171afd3443b7d34febc4e4a938af8e376999bc34d6fbc0196ee8d612e58b8f",
+    "reason": "Reviewed Forgejo dedicated runtime UID resolution, fail-closed ownership checks, isolated privileged capture exception, and recovery ownership instructions.",
     "reviewed_at": "2026-10-28"
   },
   "media": {

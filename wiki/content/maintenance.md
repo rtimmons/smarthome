@@ -134,7 +134,13 @@ media mounts and is removed after testing. See the [settings rollout runbook](..
 The NAS also hosts [Forgejo](../../git-host/README.md) for private Git repositories,
 issues and pull requests. Open `https://git.home.rytim.com/` on the LAN and run
 `just git-host status` for health. It uses one resource-limited container with
-SQLite; registration and CI runners are disabled. Its application state is
+SQLite; registration and CI runners are disabled. Deployment resolves the dedicated
+`svc-forgejo` account and refuses mismatched state ownership. The runtime has no
+backup/archive grant. Capture uses a separate, short-lived privileged helper with
+no network, read-only source and only the Forgejo archive directory writable;
+this interim exception remains distinct from the future dedicated backup account.
+Resolve the service UID/GID on the recovery host before starting restored state.
+Its application state is
 separate from media services. Its encrypted backup workflow captures the stopped
 service and verifies off-host readback in the existing confined Storage Box backup
 account. Run `just git-host backup-status` to check freshness, and follow the

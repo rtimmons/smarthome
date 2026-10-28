@@ -2,7 +2,7 @@ name: home-git
 services:
   forgejo:
     image: codeberg.org/forgejo/forgejo:15.0.10-rootless
-    user: "1004:100"
+    user: "${FORGEJO_UID:?resolve svc-forgejo UID}:${FORGEJO_GID:?resolve svc-forgejo GID}"
     restart: unless-stopped
     mem_limit: 512m
     cpus: 1.0
@@ -10,8 +10,8 @@ services:
     cap_drop: [ALL]
     security_opt: [no-new-privileges:true]
     environment:
-      USER_UID: "1004"
-      USER_GID: "100"
+      USER_UID: "${FORGEJO_UID:?resolve svc-forgejo UID}"
+      USER_GID: "${FORGEJO_GID:?resolve svc-forgejo GID}"
       FORGEJO__database__DB_TYPE: sqlite3
       FORGEJO__server__DOMAIN: git.home.rytim.com
       FORGEJO__server__ROOT_URL: https://git.home.rytim.com/
