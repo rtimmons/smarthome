@@ -31,11 +31,12 @@ creates the first administrator and refuses an existing user database or receipt
 then add your public SSH key in account settings. The receipt is then obsolete.
 Never use the infrastructure administration key as a Git client key.
 
-State lives under `/share/Container/home-git/data` on the NAS's local
+State lives under `/share/forgejo/data` on the NAS's local
 filesystem, separate from existing media services. The deployment uses the
 existing dedicated NAS identity and pinned host keys through the infrastructure
 environment wrapper. It never uses the SSH agent or changes host trust.
-Deployment resolves the QTS-local `svc-forgejo` UID/GID by name and requires
+The named share must already exist; management and capture refuse an absent or
+mismatched QTS path. Deployment resolves the QTS-local `svc-forgejo` UID/GID by name and requires
 `data` and `config` to be provisioned for that identity first. Compose requires
 `FORGEJO_UID` and `FORGEJO_GID`; there is no fallback to the deployment account.
 The runtime has no archive mount or backup/cloud grant. Account provisioning,
@@ -121,7 +122,8 @@ SQLite integrity, resolve the recovery host's `svc-forgejo` UID/GID and restore
 ownership of `data` and `config` to those IDs. Export `FORGEJO_UID` and
 `FORGEJO_GID` before Compose startup; old archives may record the former
 1004:100 runtime and must not silently restore that shared identity. Use the
-recorded image and isolated ports to test login and repository access. Restore data/config together.
+recorded image and isolated ports to test login and repository access. Restore
+data/config together.
 Do not downgrade a migrated database; restore its matching pre-upgrade archive.
 
 ### October 24, 2026 acceptance

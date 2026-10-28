@@ -25,8 +25,8 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "d3171afd3443b7d34febc4e4a938af8e376999bc34d6fbc0196ee8d612e58b8f",
-    "reason": "Reviewed Forgejo dedicated runtime UID resolution, fail-closed ownership checks, isolated privileged capture exception, and recovery ownership instructions.",
+    "fingerprint": "028e54ea0d395aaa4ab74f85decafd4d8fa7aaa517e24f237f33b060f970e6e7",
+    "reason": "Reviewed named Forgejo share mapping, canonical QTS path checks, preserved archive destination, and old-to-new cron reconciliation.",
     "reviewed_at": "2026-10-28"
   },
   "media": {

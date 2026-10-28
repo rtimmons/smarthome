@@ -9,8 +9,8 @@ PERSISTENT = Path('/persistent')
 SPOOL = Path('/crontabs/admin')
 ROOT = Path('/source')
 MARKER = '# home-git-backup'
-LINE = '23 * * * * /bin/sh /share/Container/home-git/backup.sh >> /share/Container/home-git/backup.log 2>&1 ' + MARKER
-PROBE = '* * * * * /bin/date > /share/Container/home-git/cron-probe.txt # home-git-cron-probe'
+LINE = '23 * * * * /bin/sh /share/forgejo/backup.sh >> /share/forgejo/backup.log 2>&1 ' + MARKER
+PROBE = '* * * * * /bin/date > /share/forgejo/cron-probe.txt # home-git-cron-probe'
 
 
 def reconcile(existing, probe=False, remove=False):

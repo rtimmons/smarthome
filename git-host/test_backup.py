@@ -69,6 +69,17 @@ class BackupTests(unittest.TestCase):
         self.assertNotIn('home-git-cron-probe', result)
         self.assertEqual(result.count(cron.MARKER), 1)
 
+    def test_cron_migrates_old_path_without_duplicate_or_unrelated_edits(self):
+        cron = module('install-cron')
+        unrelated = '5 2 * * * /unrelated/backup\n'
+        old = ('23 * * * * /bin/sh /share/Container/home-git/backup.sh '
+               '>> /share/Container/home-git/backup.log 2>&1 # home-git-backup\n')
+        result = cron.reconcile(unrelated + old)
+        self.assertEqual(result, unrelated + cron.LINE + '\n')
+        self.assertNotIn('/share/Container/home-git', result)
+        self.assertEqual(result.count(cron.MARKER), 1)
+        self.assertEqual(cron.reconcile(result), result)
+
     def test_cron_install_preserves_distinct_files_and_rollback_only_removes_ours(self):
         cron = module('install-cron')
         persistent = self.root / 'persistent'

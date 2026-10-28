@@ -7,6 +7,8 @@ uses its new physical root. Discovery, bounded streaming and AD Ryan synthetic
 SMB read/write checks passed. The replacement HBS job now selects the new root;
 legacy `Backup 1` still excludes it. The replacement seed started at 15:27 Eastern; retain the old B2 copy.
 Next: complete the seed and verify recovery. Wiki's named-share migration is complete.
+Forgejo now uses its named share and dedicated runtime identity; see the
+[service checkpoint](#service-data-and-archive-migration) for verification and remaining backup work.
 
 ## Cold-agent continuation
 
@@ -260,58 +262,66 @@ not delete its backing data. Retain the existing B2 history throughout.
 
 ## Service-data and archive migration
 
-**Next service checkpoint: `forgejo`.** The user requested continuing share work
-while the B2 seed runs. The user subsequently corrected the proposed share grants:
-use dedicated `svc-forgejo`, with no explicit ordinary `badmin` RW grant. Establish
-and verify that nonadministrative runtime identity **at the current path first**;
-then relocate the complete `/share/Container/home-git` recovery unit to the named
-service share in a separate checkpoint. Discover the actual assigned UID/GID;
-do not rename shared `usenet-deploy` or assume its UID is dedicated to Forgejo.
-The runtime gets only its service state, with no backup-share or B2 grant and no
-ordinary human/guest SMB grants. Preserve a separately scoped capture reader and
-archive writer; verify capture after changing ownership before moving paths.
-QTS administrator recovery authority is distinct from an explicit share RW grant.
+**Forgejo named-share cutover completed October 28, 16:31 Eastern.** The
+complete service recovery unit now lives at `/share/forgejo`, physically
+`/share/CACHEDEV1_DATA/forgejo`. The runtime uses dedicated QTS-local
+`svc-forgejo` (`1006:100`), with only the `everyone` group, no capabilities,
+and no archive mount or backup/cloud grant. QTS application/network-service
+grants are unchecked. There is no explicit `badmin` user RW grant or ordinary
+human/guest SMB grant; QTS retains its standard root/administrators recovery
+access. SMB encryption is mandatory and ABE/ABSE are enabled.
 
-Independent offsite restore verification passed all 151 archived entries, SQLite
-integrity and both repository checks on October 28. An isolated NAS rehearsal
-started healthy with no network or published ports and was then stopped. Its
-transfer emitted a base64 warning, so startup is not proof of an exact transfer;
-the independently verified local restore is retained. Private receipts and a
-prepared, unapplied path patch are in `build/forgejo-share-20261028/`. The user created `svc-forgejo` through QTS; its assigned UID/GID is `1006:100`,
-with only the `everyone` group and all QTS application/network-service grants
-unchecked. The production identity checkpoint passed at 16:18 Eastern: 147
+Identity and path changes were separate checkpoints. At 16:18 Eastern, 147
 state entries changed owner with inode, size, mtime, mode and xattrs preserved;
-Forgejo is healthy as `1006:100` with all capabilities dropped. A synthetic runtime
-write passed and archive-directory access was denied. The path remains unchanged.
-The fresh pre-change archive independently passed all 151 entries, SQLite and
-both repository checks. The post-identity archive also independently passed all 151 entries, SQLite
-integrity and both repository checks.
+health and synthetic runtime-write/archive-denial checks passed at the old path.
+Fresh pre-identity and post-identity archives independently passed all 151 file
+checks, SQLite integrity and both repository checks. An isolated startup under
+1006:100 also passed database/cache health with no network or published ports.
+Its earlier transfer emitted a base64 warning, so startup is not an exact transfer
+proof; the separately downloaded and verified archives remain the trusted copies.
+
+QTS created its root at mode 0777. Before moving data, the empty root was restricted
+to deployment owner 1004:100, mode 0700, with default group/mask/other permissions
+zero; its original ACL/xattr preimage was saved. The runtime owns `data` and
+`config`, while the deployment operator maintains the service definition/helpers.
+QTS-created `@Recycle` and `@Recently-Snapshot` were retained. All 17 service
+entries moved by same-filesystem rename with inode, owner/group and mode preserved.
+The deployment-account rename attempt was denied by NAS permissions; automatic
+rollback restored the old paths and healthy service before a bounded root helper
+completed the move. No recursive data ACL change accompanied the path move.
+
+Deployment, capture and both cron tables now use `/share/forgejo`; management and
+capture refuse an absent or mismatched QTS share mapping. The archive destination
+remains `/share/Usenet/Backups/automatic/forgejo`. Do not move that archive subtree
+or change HBS selections while the replacement seed reads it. Post-move checks verified runtime writes, zero effective capabilities, retained
+metadata on all moved entries, absence of old-path payload and clear locks. Both
+cron tables have exactly one new-path job and unchanged unrelated entries; wiki
+UID 1005 and unrelated UID 65534 cannot read service data. The final new-path backup at 16:34 Eastern was independently downloaded and
+decrypted: all 151 entries, SQLite integrity and both repositories passed. Restored
+Compose and all three helper scripts match current source. Forgejo remained
+healthy after capture/restart. Manual backups do not qualify an unattended run.
 
 Capture uses a separate short-lived UID 0/GID 100 helper, no network, only
 `DAC_OVERRIDE`, read-only service source and a writable Forgejo archive mount.
-This is an explicit interim privileged-capture exception pending the dedicated
-`svc-forgejo-backup` checkpoint, not a runtime archive grant. The nonroot capability
-probe returned zero effective capabilities on this NAS, so it was not used.
-Identity rollback metadata and prior scripts are retained privately under the
-service root's `identity-checkpoint-20261028`; do not replay them after path changes
-without resolving the current root. QTS has now created the empty `forgejo` share on Scratch, with no per-user
-SMB grants, guest denied, mandatory SMB encryption and ABE/ABSE enabled. QTS
-retains its standard root/administrators access; there is no explicit `badmin`
-user grant. Its newly created filesystem root is still mode 0777 with permissive
-default ACLs: restrict that empty root before moving service data into it.
-The physical path move is the next separate checkpoint. Preserve QTS-created
-`@Recycle` and `@Recently-Snapshot`; rename the complete service contents into
-the prepared root on the same filesystem, preserving each entry's inode/metadata.
-Both persistent and active cron currently point to the original service path.
+This interim privileged-capture exception remains pending the separately scoped
+`svc-forgejo-backup` checkpoint. A nonroot capability probe returned zero effective
+capabilities on this NAS, so it was not used. Do not rename shared `usenet-deploy`
+while other runtimes still depend on it.
 
-Refresh capture/cron status and qualify recovery under the new identity, then
-enumerate deployment, cron, backup and container path consumers. Save ownership
-and permission preimages for the identity checkpoint and exact path rollback for
-the later move. Do not move `Usenet/Backups` or its
-Forgejo archive subtree while the seed reads them. Preserve both repositories,
-LFS, attachments, database, configuration and keys together. A brief Forgejo-only
-stop is required for its eventual consistent cutover; prepare exact rollback and
-supported share grants before requesting any action-time access approval.
+Private evidence is under `build/forgejo-share-20261028/`; the earlier prepared
+path patch is superseded. The service root retains `identity-checkpoint-20261028`,
+`path-checkpoint-20261028` and separate cron preimages. Do not replay old scripts:
+resolve the current root first. For path rollback, acquire both migration/backup
+locks, stop only Forgejo, reverse the recorded service-entry renames, restore the
+old-path helper scripts, reconcile only Forgejo's entries in each cron table,
+and recreate Forgejo at the old path with UID 1006:100. Preserve later writes,
+QTS metadata, archive history and all unrelated cron entries. Identity rollback
+is a separate operation using its saved owner/mode/xattr metadata; never silently
+combine it with path rollback.
+
+Next: qualify an unattended capture at the new path and separately scope the
+dedicated capture account. Continue the private-library
+seed completion/restore checks above; the old mixed B2 history stays retained.
 
 For each bounded service checkpoint, use the inventory to identify consumers.
 Preserve Forgejo as a complete recovery unit: database, repositories, LFS,

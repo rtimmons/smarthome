@@ -1,7 +1,11 @@
 #!/bin/sh
 # QNAP host-owned scheduler. No Docker socket or private identity is put in Forgejo.
 set -eu
-root=/share/Container/home-git
+root=/share/forgejo
+expected_root=$(/sbin/getcfg forgejo path -f /etc/config/smb.conf)
+case "$expected_root" in /share/CACHEDEV*_DATA/forgejo) ;; *) exit 1 ;; esac
+test -d "$root"
+test "$(readlink -f "$root")" = "$expected_root"
 output=/share/Usenet/Backups/automatic/forgejo
 pkg=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
 docker="$pkg/bin/docker"

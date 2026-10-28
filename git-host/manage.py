@@ -15,7 +15,11 @@ docker="$pkg/bin/docker"
 test -x "$docker" || docker="$pkg/usr/bin/docker"
 test -x "$docker"
 export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
-root=/share/Container/home-git
+root=/share/forgejo
+expected_root=$(/sbin/getcfg forgejo path -f /etc/config/smb.conf)
+case "$expected_root" in /share/CACHEDEV*_DATA/forgejo) ;; *) exit 1 ;; esac
+test -d "$root"
+test "$(readlink -f "$root")" = "$expected_root"
 FORGEJO_UID=$(id -u svc-forgejo)
 FORGEJO_GID=$(id -g svc-forgejo)
 export FORGEJO_UID FORGEJO_GID
@@ -70,16 +74,12 @@ echo 'Administrator created; retrieve credentials into the ignored local file.'
     if action == 'deploy':
         encoded = base64.b64encode((ROOT / 'git-host/compose.yaml').read_bytes()).decode()
         return PRELUDE + '''umask 077
-if test ! -e "$root"; then
-  # Refuse occupied ports before creating a new installation.
-  netstat -ltn | awk '$4 ~ /:(3003|2222)$/ {found=1} END {exit found}'
-  mkdir "$root"
-fi
-test ! -L "$root"
 chmod 700 "$root"
 # Identity provisioning is a separate checkpoint; deployment must not re-own data.
 test -d "$root/data"
 test -d "$root/config"
+test ! -L "$root/data"
+test ! -L "$root/config"
 test "$(stat -c %u "$root/data")" = "$FORGEJO_UID"
 test "$(stat -c %u "$root/config")" = "$FORGEJO_UID"
 printf '%s' ''' + encoded + ''' | base64 -d > "$root/compose.yaml.new"

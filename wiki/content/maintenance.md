@@ -140,8 +140,9 @@ backup/archive grant. Capture uses a separate, short-lived privileged helper wit
 no network, read-only source and only the Forgejo archive directory writable;
 this interim exception remains distinct from the future dedicated backup account.
 Resolve the service UID/GID on the recovery host before starting restored state.
-Its application state is
-separate from media services. Its encrypted backup workflow captures the stopped
+Its complete application state lives under the named `/share/forgejo` share,
+separate from media services; encrypted archives remain at their existing backup
+location. Its encrypted backup workflow captures the stopped
 service and verifies off-host readback in the existing confined Storage Box backup
 account. Run `just git-host backup-status` to check freshness, and follow the
 runbook's dated acceptance evidence and restore procedure before upgrading.
