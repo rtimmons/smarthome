@@ -25,14 +25,14 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "c3f6a0905ffe89641200c9423c44e7436111cc3566619a42e62186140aa02eea",
-    "reason": "Consolidated NAS migration guidance and explicit private-library backup exclusion/re-seed; old mixed B2 history cannot retire before replacement coverage.",
-    "reviewed_at": "2026-10-27"
+    "fingerprint": "b0821ed96986adb670303a983e40c9a57794d171280845c177ba3a18c545b0c7",
+    "reason": "Reviewed atomic live/current publication using the existing QNAP Python rename syscall because firmware mv lacks -T, stable read-only mounts, content/runtime/legacy rollback tests, and backup reconstruction; existing recovery documentation preserved.",
+    "reviewed_at": "2026-10-28"
   },
   "media": {
-    "fingerprint": "13797746df423196f9dc354ef49306a0642588836c0d066efeb764d9355b5849",
-    "reason": "Consolidated NAS validation and retained runtime/privacy boundaries; PrivatePlexLibrary is the next bounded rename, not a completed move.",
-    "reviewed_at": "2026-10-27"
+    "fingerprint": "93477fac98390067b6c398581f949782096a4487e1186e4c32b5f01ef04ae35b",
+    "reason": "Reviewed wiki static publication and scoped traversal ACLs; live/current is excluded by existing backup traversal, verified by regression test. Media services and backup workers remain unchanged.",
+    "reviewed_at": "2026-10-28"
   },
   "network": {
     "fingerprint": "544ec801dc6993b4217a745838b0bb86009f2761c917c43157a4af29e47e7f72",

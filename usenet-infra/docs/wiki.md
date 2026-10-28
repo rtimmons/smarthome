@@ -15,4 +15,8 @@ alias. Do not edit generated HTML or copy the whole checkout to the NAS.
 
 See the canonical [wiki maintenance guide](../../docs/operations/wiki.md) for
 source ownership, reviews, deployment evidence and rollback. The existing QNAP
-Compose project, private storage root and isolation boundary remain in use.
+Compose project and named wiki share remain in use. Content publication switches
+`live/current` atomically inside a stable read-only mount; ordinary updates
+and content rollbacks leave Caddy running. Runtime changes and the initial
+upgrade from release-specific mounts recreate only the wiki container. The share
+root and private environment files remain outside the container.

@@ -293,6 +293,8 @@ class BackupQnapTests(unittest.TestCase):
         manifest, contents = backup.snapshot(self.root, self.host_root, wiki_host_root='/share/wiki')
         self.assertEqual(manifest['source_roots']['wiki'], '/share/wiki')
         self.assertIn('wiki/.env', contents)
+        (self.root / 'wiki/live').mkdir()
+        (self.root / 'wiki/live/current').symlink_to(self.root, target_is_directory=True)
         (self.root / 'wiki/@Recently-Snapshot').symlink_to(self.root, target_is_directory=True)
         again, _ = backup.snapshot(self.root, self.host_root, wiki_host_root='/share/wiki')
         self.assertEqual(again['entries'], manifest['entries'])

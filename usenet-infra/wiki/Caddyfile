@@ -23,7 +23,7 @@
 	handle /healthz {
 		respond "ok" 200
 	}
-	root * /srv
+	root * /srv/current
 	encode zstd gzip
 	file_server
 }
@@ -35,6 +35,6 @@
 	}
 	# Keep the original fragment and a DNS-independent destination.
 	redir / http://192.168.1.66/media/usenet/ 302
-	root * /srv
+	root * /srv/current
 	file_server
 }

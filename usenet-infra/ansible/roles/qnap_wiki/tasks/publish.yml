@@ -23,6 +23,8 @@
     done
     test ! -d {{ (qnap_wiki_root ~ '/.deploy-lock') | quote }} || { echo 'Wiki publication or migration lock is held.' >&2; exit 1; }
     mkdir -p {{ (qnap_wiki_root ~ '/releases') | quote }}
+    mkdir -p {{ (qnap_wiki_root ~ '/live') | quote }}
+    chmod 0750 {{ (qnap_wiki_root ~ '/live') | quote }}
     # QTS owns the named share root and its role ACL; do not chmod it on publication.
     if test {{ qnap_wiki_root | quote }} != /share/wiki; then chmod 0750 {{ qnap_wiki_root | quote }}; fi
     chmod 0750 {{ (qnap_wiki_root ~ '/releases') | quote }}
@@ -56,6 +58,7 @@
       tar -xzf "$archive" -C "$staging"
       (cd "$staging" && sha256sum -c SHA256SUMS >/dev/null)
       chmod -R a+rX "$staging/site" "$staging/runtime"
+      chmod 0750 "$staging"
       mv "$staging" "releases/$release"
       trap - EXIT HUP INT TERM
     fi
@@ -75,7 +78,8 @@
     test -f "$candidate/runtime/Caddyfile" && test ! -L "$candidate/runtime/Caddyfile"
     links=$(find "$candidate/site" -type l -print)
     test -z "$links"
-    # Preserve existing ACL entries and masks; grant neither writes nor parent traversal.
+    # Preserve existing ACL entries and masks; grant neither writes nor share-root traversal.
+    setfacl -n -m "g:$gid:r-x" "$candidate" {{ (qnap_wiki_root ~ "/releases") | quote }} {{ (qnap_wiki_root ~ "/live") | quote }}
     find "$candidate/site" -type d -exec setfacl -n -m "g:$gid:r-x" {} +
     find "$candidate/site" -type f -exec setfacl -n -m "g:$gid:r--" {} +
     setfacl -n -m "g:$gid:r--" "$candidate/runtime/Caddyfile"

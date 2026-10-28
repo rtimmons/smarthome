@@ -136,13 +136,32 @@ keeps `build/wiki/pending-receipts.json` for the wiki-only retry.
 
 ## Isolation and rollback
 
-Only immutable static files and a versioned Caddy configuration are mounted into
-the wiki container, read-only. It has no Docker socket, credentials, media mount,
+The releases directory, live-pointer directory and versioned Caddy configuration
+are mounted into the wiki container, read-only. Caddy serves `live/current`, a relative symlink
+to the accepted release’s `site` directory. The mount stays fixed while the
+publisher atomically replaces the symlink, so ordinary HTML updates and content
+rollbacks need no server restart. The share root, including private environment
+files and publication locks, is not mounted. Retained release runtime files are
+inside the read-only mount but outside the served site root. It has no Docker
+socket, credentials, media mount,
 application API connection, or writable host directory. Search and navigation run
 locally in the browser. No CDN, public hosting, WAN forward, or certificate trust
 change is required.
 
-Each candidate is checksummed before transfer. Deployment verifies bindings,
+Each candidate is checksummed before transfer. The first publication using the
+symlink layout recreates only the wiki container. Later publications recreate it
+only if runtime files, identity or bindings change, or the existing server fails
+its health/content checks. An unchanged runtime skips image and Caddy validation
+work. A rejected content update switches the pointer back without restarting.
+The `.env` and `.env.previous` files retain release/runtime identities for backup
+and rollback; after restoring settings and rebuilding HTML, publication recreates
+the derived `live/current` pointer. Do not bind-mount `current` itself: Docker
+would resolve it once and keep serving the old release. The atomic replacement
+uses `os.rename` through the existing host Python (`/usr/local/bin/python` on
+QNAP); the firmware’s BusyBox `mv` lacks `-T`. Missing Python fails before any
+pointer or runtime change.
+
+Deployment verifies bindings,
 container health, release mount, and HTTP content. A failed candidate restores
 the previous runtime and environment; a failed first deployment stops only the
 wiki. `just wiki-rollback` restores the retained previous release after acceptance.
@@ -164,9 +183,10 @@ Do not assign new IDs in durable inventory before the account/ACL checkpoint.
 `qnap_wiki_manage_reader_acl` defaults to `false`. After a local reader group is
 qualified, enabling it adds that runtime GID's read/traverse access to each
 candidate's site directories, and read access to site files and its Caddyfile,
-before runtime validation. It requires an existing local group and rejects
+before publication. It requires an existing local group and rejects
 symlinked inputs. It preserves existing ACL entries, masks, owners and mode bits;
-it adds no parent/share traversal, default ACL, write or credential grant.
+it adds read/traverse on the release directory, releases parent and live-pointer
+directory required by the stable mount, but no share-root, default ACL, write or credential grant.
 Every publication reapplies the scoped entries, so future releases do not depend
 on manually inherited ACLs. An ACL command failure aborts before publication.
 

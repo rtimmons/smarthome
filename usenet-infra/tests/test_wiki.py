@@ -136,6 +136,7 @@ class WikiDeploymentTests(unittest.TestCase):
                 candidate = root / "releases" / ("a" * 64)
                 site = candidate / "site"
                 runtime = candidate / "runtime"
+                (root / "live").mkdir(parents=True)
                 site.mkdir(parents=True)
                 runtime.mkdir()
                 (site / "index.html").write_text("Synthetic wiki")
@@ -180,6 +181,9 @@ class WikiDeploymentTests(unittest.TestCase):
                 elif failure is None:
                     actual = {path: call[:3] for call in calls for path in call[3:]}
                     self.assertEqual(actual, {
+                        str(root / "live"): ["-n", "-m", f"g:{group_id}:r-x"],
+                        str(candidate): ["-n", "-m", f"g:{group_id}:r-x"],
+                        str(root / "releases"): ["-n", "-m", f"g:{group_id}:r-x"],
                         str(site): ["-n", "-m", f"g:{group_id}:r-x"],
                         str(site / "nested"): ["-n", "-m", f"g:{group_id}:r-x"],
                         str(site / "index.html"): ["-n", "-m", f"g:{group_id}:r--"],

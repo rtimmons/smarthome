@@ -19,7 +19,13 @@ services:
       XDG_CONFIG_HOME: /config
     volumes:
       - type: bind
-        source: "${WIKI_RELEASE_DIR:?Set the immutable release directory}/site"
+        source: "${WIKI_ROOT:?Set the static publication root}/releases"
+        target: /releases
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: "${WIKI_ROOT:?Set the static publication root}/live"
         target: /srv
         read_only: true
         bind:

@@ -330,6 +330,7 @@ class RuntimeRollbackTests(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
+        (self.root / "live").mkdir()
         self.docker = self.root / "docker"
         self.docker.write_text('''#!/usr/bin/env python3
 import json,os,sys
@@ -346,10 +347,10 @@ if a[0]=='compose':
 elif a[0]=='ps':print('wiki-id')
 elif a[:2]==['image','inspect']:pass
 elif a[0]=='inspect':
- print('healthy' if 'Health.Status' in a[2] else current.get('WIKI_RELEASE_DIR','')+'/site')
+ print('healthy' if 'Health.Status' in a[2] else str(r/'releases') if current.get('WIKI_CONTENT_MODE')=='symlink' else current.get('WIKI_RELEASE_DIR','')+'/site')
 elif a[0]=='port':print('192.168.1.66:'+('80' if a[-1]=='8080/tcp' else '8090'))
 elif a[0]=='exec':
- if a[-1].endswith('publication.json'):sys.stdout.write((Path(current['WIKI_RELEASE_DIR'])/'site/publication.json').read_text())
+ if a[-1].endswith('publication.json'):sys.stdout.write(((r/'live/current/publication.json') if current.get('WIKI_CONTENT_MODE')=='symlink' else Path(current['WIKI_RELEASE_DIR'])/'site/publication.json').read_text())
  else:print('Smarthome field guide')
 else:raise SystemExit('unexpected Docker command')
 ''')
@@ -360,6 +361,8 @@ else:raise SystemExit('unexpected Docker command')
         (target / "site").mkdir(parents=True)
         (target / "runtime").mkdir()
         (target / "runtime/compose.yaml").write_text("name: usenet-wiki\n")
+        for file in ("Caddyfile", "Dockerfile"):
+            (target / "runtime" / file).write_text("synthetic runtime\n")
         (target / "site/publication.json").write_text(json.dumps({"release": name}))
         value = hashlib.sha256((target / "site/publication.json").read_bytes()).hexdigest()
         (target / "SHA256SUMS").write_text(value + "  site/publication.json\n")
@@ -405,6 +408,47 @@ else:raise SystemExit('unexpected Docker command')
         self.assertEqual((self.root / ".env").read_bytes(), before)
         active = json.loads((self.root / "active.json").read_text())
         self.assertEqual((active["WIKI_UID"], active["WIKI_GID"]), ("1004", "100"))
+
+    def test_content_publication_rejection_and_rollback_do_not_restart(self):
+        for name in ("a" * 64, "b" * 64):
+            self.release(name)
+        self.assertEqual(self.apply("a" * 64).returncode, 0)
+        rejected = self.apply("b" * 64, reject=True)
+        self.assertEqual(rejected.returncode, 1, rejected.stderr)
+        self.assertEqual(os.readlink(self.root / "live/current"), "../releases/" + "a" * 64 + "/site")
+        accepted = self.apply("b" * 64)
+        self.assertEqual(accepted.returncode, 0, accepted.stderr)
+        self.assertEqual(os.readlink(self.root / "live/current"), "../releases/" + "b" * 64 + "/site")
+        rolled = self.apply("unused", mode="rollback")
+        self.assertEqual(rolled.returncode, 0, rolled.stderr)
+        self.assertEqual(os.readlink(self.root / "live/current"), "../releases/" + "a" * 64 + "/site")
+        self.assertEqual((self.root / "starts").read_text().splitlines(), ["start"])
+
+    def test_legacy_mount_upgrade_and_rollback(self):
+        self.release("a" * 64)
+        self.release("b" * 64)
+        self.assertEqual(self.apply("a" * 64).returncode, 0)
+        # Model the previous release-specific bind mount and environment format.
+        legacy = (self.root / ".env").read_text().replace("WIKI_CONTENT_MODE=symlink\n", "")
+        (self.root / ".env").write_text(legacy)
+        active = json.loads((self.root / "active.json").read_text())
+        active.pop("WIKI_CONTENT_MODE")
+        (self.root / "active.json").write_text(json.dumps(active))
+        upgraded = self.apply("b" * 64)
+        self.assertEqual(upgraded.returncode, 0, upgraded.stderr)
+        rolled = self.apply("unused", mode="rollback")
+        self.assertEqual(rolled.returncode, 0, rolled.stderr)
+        self.assertEqual((self.root / ".env").read_text(), legacy)
+        self.assertEqual((self.root / "starts").read_text().splitlines(), ["start"] * 3)
+
+    def test_runtime_configuration_change_restarts(self):
+        self.release("a" * 64)
+        target = self.release("b" * 64)
+        (target / "runtime/Caddyfile").write_text("changed configuration\n")
+        self.assertEqual(self.apply("a" * 64).returncode, 0)
+        changed = self.apply("b" * 64)
+        self.assertEqual(changed.returncode, 0, changed.stderr)
+        self.assertEqual((self.root / "starts").read_text().splitlines(), ["start", "start"])
 
     def test_repeated_healthy_release_does_not_restart(self):
         self.release("a" * 64)
