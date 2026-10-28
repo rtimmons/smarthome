@@ -156,6 +156,47 @@ address in `192.168.1.0/24` are imported. Multiple interfaces advertising the
 same address are deduplicated; hosts with multiple LAN addresses are skipped.
 A previously learned ambiguous name is withdrawn rather than left misleading.
 
+### Laptop interface aliases
+
+Ryan's laptop uses separate UniFi DHCP reservations on the Newark Default LAN:
+
+| Interface | Client MAC | Reserved address | Manual DNS name |
+| --- | --- | --- | --- |
+| Wi-Fi | `70:8c:f2:aa:4f:0c` | `192.168.1.72` | `ryan-laptop-wifi.home.arpa` |
+| CalDigit Ethernet | `64:4b:f0:13:ee:76` | `192.168.1.109` | `ryan-laptop-ethernet.home.arpa` |
+
+The October 27 change reserves the existing Wi-Fi lease and retains the existing
+Ethernet reservation. The Ethernet identity belongs to the dock/adapter; a new
+adapter or changed Wi-Fi MAC needs its own reservation review. Each alias remains
+pinned in the paired AdGuard policy, including while that interface is disconnected.
+DNS resolution alone does not establish that the laptop is awake or reachable.
+
+`spaceblack-m4-max.local` advertises both addresses when both interfaces are
+connected, so automatic discovery deliberately skips its shared hostname. The
+manual interface names avoid that ambiguity and survive subsequent scans.
+Update an alias through the existing transaction, after verifying its reservation:
+
+```sh
+just usenet dns set-record --name ryan-laptop-wifi.home.arpa --address 192.168.1.72
+just usenet dns set-record --name ryan-laptop-ethernet.home.arpa --address 192.168.1.109
+```
+
+Each command pauses only discovery, retains the current policy privately,
+recovers any known pending generation, validates the paired update through both
+resolvers and the gateway over UDP/TCP, then resumes discovery. It preserves
+learned records and records only the explicit alias in the repository seed.
+
+October 27 acceptance: both reservations were read back from UniFi. A single
+paired transaction accepted both aliases and verified all 70 configured names.
+Independent Mac checks passed both aliases' exact A and empty AAAA answers,
+unknown subdomains, zone negatives and public DNS through the gateway and both
+AdGuards over UDP/TCP; ordinary macOS lookups also returned the reserved addresses.
+NAS load caused the first recovery attempt to time out before adding either
+alias; the successful retry retained the same checks with a 15-second per-query
+deadline. Neither DNS resolver was restarted.
+
+### Discovery ownership and acceptance
+
 Manual records, including `wiki` and `hass`, always take precedence.
 `policy.json` records ownership and last-seen timestamps under `mdns_records`.
 Later successful apply runs update changed addresses and remove discovered

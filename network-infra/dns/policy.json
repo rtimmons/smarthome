@@ -62,7 +62,9 @@
     "grid-dashboard.home.rytim.com": "192.168.1.163",
     "printer.home.rytim.com": "192.168.1.163",
     "tinyurl.home.rytim.com": "192.168.1.163",
-    "wiki.home.rytim.com": "192.168.1.163"
+    "wiki.home.rytim.com": "192.168.1.163",
+    "ryan-laptop-wifi.home.arpa": "192.168.1.72",
+    "ryan-laptop-ethernet.home.arpa": "192.168.1.109"
   },
   "resolvers": [
     "192.168.1.163",
@@ -228,7 +230,11 @@
     "@@|tinyurl.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
     "|tinyurl.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
     "@@|wiki.home.rytim.com|$dnsrewrite=NXDOMAIN;;",
-    "|wiki.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163"
+    "|wiki.home.rytim.com|$dnsrewrite=NOERROR;A;192.168.1.163",
+    "@@|ryan-laptop-wifi.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|ryan-laptop-wifi.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.72",
+    "@@|ryan-laptop-ethernet.home.arpa|$dnsrewrite=NXDOMAIN;;",
+    "|ryan-laptop-ethernet.home.arpa|$dnsrewrite=NOERROR;A;192.168.1.109"
   ],
   "mdns_records": {
     "001788613749.home.arpa": {

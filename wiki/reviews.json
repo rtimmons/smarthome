@@ -35,9 +35,9 @@
     "reviewed_at": "2026-10-27"
   },
   "network": {
-    "fingerprint": "dc9ee1d541c199cb1e22e653dd9b4e94d7f373ff412a0a39c202e53d02b68939",
-    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation. Verified local SOPS credential lookup and scoped missing-entry preservation, shared check deadlines, and honest session-denial classification without NAS hash reads or reader containers.",
-    "reviewed_at": "2026-10-27"
+    "fingerprint": "544ec801dc6993b4217a745838b0bb86009f2761c917c43157a4af29e47e7f72",
+    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation. Reviewed the SOPS-backed wiki access check, explicit local realm and measured denials. Verified laptop Wi-Fi/Ethernet reservations, both manual DNS aliases, all 70 names in the paired transaction, independent UDP/TCP and macOS lookups, and retained discovery ownership; documented the bounded timeout retry.",
+    "reviewed_at": "2026-10-28"
   },
   "printing": {
     "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",

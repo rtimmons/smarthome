@@ -115,6 +115,12 @@ off. New names normally appear within one or two minutes. Existing manual
 aliases win over discovered names; learned names missing for seven days expire.
 Only unambiguous Newark trusted-LAN IPv4 addresses are imported.
 
+Ryan's laptop has two reserved addresses: `ryan-laptop-wifi.home.arpa` resolves
+to `192.168.1.72`, and `ryan-laptop-ethernet.home.arpa` to `192.168.1.109` through
+the CalDigit adapter. These manual names remain pinned when an interface is
+disconnected. Its shared Bonjour hostname can advertise both addresses and is
+therefore skipped by discovery. See [laptop interface aliases](../../docs/operations/home-dns.md#laptop-interface-aliases).
+
 Cabin / Lehigh discovery is not yet enabled. A Newark-side check reached the
 Lehigh gateway and received the expected wiki DNS answer on October 24, but
 resolution and application access from cabin clients still need verification.
