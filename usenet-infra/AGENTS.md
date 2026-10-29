@@ -3,8 +3,8 @@
 For NAS storage changes, start with the single
 [migration entry point](../docs/plan-nas-storage-and-access.md), then read only the
 access/protection policies and service runbooks required for that checkpoint.
-The next move is the private library to `PrivatePlexLibrary`; the plan records
-the user's temporary backup exclusion and NAS-side rename preference.
+The private library's move to `PrivatePlexLibrary` is complete; the plan owns
+new-root seed completion, recovery verification and subsequent service checkpoints.
 Do not treat superseded dated gates or the earlier HBS-untouched instruction as
 blocking that scoped exception. Other storage work retains its own readiness gates.
 

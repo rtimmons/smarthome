@@ -25,14 +25,14 @@
     "reviewed_at": "2026-10-23"
   },
   "maintenance": {
-    "fingerprint": "028e54ea0d395aaa4ab74f85decafd4d8fa7aaa517e24f237f33b060f970e6e7",
-    "reason": "Reviewed named Forgejo share mapping, canonical QTS path checks, preserved archive destination, and old-to-new cron reconciliation.",
-    "reviewed_at": "2026-10-28"
+    "fingerprint": "960fa20d1b45d200c62f0ad88550db351d16537121cd213319416db201c439a4",
+    "reason": "Reviewed configure-filex-nas recipe limiting the existing Filex playbook to QNAP; full deployment remains available and recovery paths, keys, and cloud configuration are unchanged.",
+    "reviewed_at": "2026-10-29"
   },
   "media": {
-    "fingerprint": "32129619cfbeb4a447e8f95f8366758939e978891ac0c87e8cb6be148af8e591",
-    "reason": "Verified approved AD Ryan share and additive root/default ACL grants with encrypted SMB synthetic create/readback/delete; Michael remains denied; existing entries preserved without recursion.",
-    "reviewed_at": "2026-10-28"
+    "fingerprint": "5348ddf6bfdaa5b751c8e9f2e00aa2ddd22f51583a18292b0759f40ff2f104ed",
+    "reason": "Verified Filex NAS cutover to svc-filex 1008:100, preserved metadata and keys, capability-free runtime, pinned-host synthetic SFTP acceptance, and NAS-only deployment scope.",
+    "reviewed_at": "2026-10-29"
   },
   "network": {
     "fingerprint": "544ec801dc6993b4217a745838b0bb86009f2761c917c43157a4af29e47e7f72",

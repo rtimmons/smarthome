@@ -1,7 +1,7 @@
 # NAS storage migration — start here
 
 This is the single entry point and execution queue for NAS storage migration.
-Updated October 28, 2026. **The private-library path cutover is complete:**
+Updated October 29, 2026. **The private-library path cutover is complete:**
 `PrivatePlexLibrary` is registered on the NAS and existing Plex library ID 1
 uses its new physical root. Discovery, bounded streaming and AD Ryan synthetic
 SMB read/write checks passed. The replacement HBS job now selects the new root;
@@ -12,7 +12,54 @@ Forgejo now uses its named share and dedicated runtime identity; see the
 
 ## Cold-agent continuation
 
-**Latest handoff — October 28, after Forgejo verification and publication:**
+**October 29, 12:29 Eastern read-only refresh:** the replacement seed remains
+Running, with approximately 690 GB processed of 4.68 TB (decimal). Legacy
+`Backup 1` restarted on its enabled 02:00 schedule and is also Running. Both
+jobs retain their saved source selections, destinations and 10 MiB/s limits.
+Neither run was stopped or edited. Seed completion and production recovery
+remain unqualified; retain old B2 history.
+
+The current kernel log contains a newer `ata2` failed-read/failed-write and
+link-reset burst, approximately October 28 at 22:23 Eastern, after the previously
+documented 04:22 burst. The link recovered and the data RAID still reports 4/4
+members, degraded zero and sync idle. Those observations do not clear the fault.
+Do not begin further storage moves or stress tests on this evidence. The existing
+seed was authorized with known SATA risk; no broader hardware acceptance is implied.
+The related backup chats' latest handoffs still leave Time Machine restoration
+and post-verification error checks open; their monitor remains paused.
+Private evidence: `build/nas-seed-health-20261029/seed-health-output.txt`
+(remote return code zero). The SATA wall-clock estimate uses current time minus
+uptime; it is not a direct event timestamp or a complete historical log.
+
+**October 29 application-backup check:** Forgejo's latest verified success is
+still the October 28 manual capture, completed at 16:35:54 Eastern (151 files).
+With the 23-hour gate and minute-23 cron, the first eligible slot is October 29
+at 16:23 Eastern, provided no intervening capture resets the clock. Persistent
+cron has the correct new path; reading the active admin spool was denied and
+the backup log was empty. No unattended new-path capture is qualified yet.
+
+NAS status/logs record a successful October 28 capture at 16:11:11 Eastern,
+with all three scopes verified off-host; the current worker mounts `/share/wiki`
+read-only and its cron is running. Cloud status/journal record success at
+17:03:46 Eastern, verified ciphertext, an active timer and subsequent freshness
+skips. These checks establish capture/status and scheduler evidence, not a new
+independent restore or complete unattended qualification. The native QTS export
+inside the NAS recovery inputs is still dated October 25 at 15:47:54 Eastern,
+so it predates the later account/share changes. A fresh outer archive does not
+close that gap. No manual capture was forced. Private evidence is retained in
+`build/nas-unattended-20261029/`.
+
+The dedicated capture-account scope is now documented in the
+[checkpoint proposal](forgejo-backup-account-checkpoint.md). Source review found
+that the existing uploader also writes status/receipts and prunes local archives,
+and installation assumes archive owner UID 1004. The account switch must resolve
+that handoff and durable source-read permissions; simply changing the worker UID
+would not satisfy the target role model. Later this day, the user approved and
+created restricted `svc-forgejo-backup` (1007:100) through QTS; application/share
+denials and filesystem denial of source/archive access were independently checked.
+Worker activation and its permission changes remain pending; see the checkpoint.
+
+**Prior handoff — October 28, after Forgejo verification and publication:**
 Forgejo's identity and named-share checkpoints are complete, committed separately
 as `011ced1` and `4ceb02f`. It runs healthy as `svc-forgejo` (`1006:100`) at
 `/share/forgejo`. The final new-path archive independently passed all 151 file
@@ -244,7 +291,7 @@ source changes. Its log is retained privately as `cutover/commit-tests.log`.
 
 **Resume here:** follow the cold-agent continuation above for the new-root seed
 and bounded data/metadata restore. Filesystem ACL tightening is a separate
-checkpoint. Preserve the stopped replacement backup and the legacy schedule caveat in both backup chats.
+checkpoint. Preserve the running replacement seed and the legacy schedule caveat.
 
 ### Completed move procedure: move and verify
 
@@ -349,7 +396,45 @@ combine it with path rollback.
 
 Next: qualify an unattended capture at the new path and separately scope the
 dedicated capture account. Continue the private-library seed completion/restore
-checks above; the old mixed B2 history stays retained.
+checks above; the old mixed B2 history stays retained. The
+[dedicated capture-account checkpoint](forgejo-backup-account-checkpoint.md)
+records restricted account creation and scopes the pending worker activation.
+
+**October 29 Filex account cutover completed, verified 13:13 Eastern:**
+The user created QTS-local `svc-filex` (1008:100, only `everyone`) with the
+prepared network/application restrictions and no share grants. The NAS SFTP
+runtime now uses that identity. Paths, SFTP login `filex-staging`, host/client
+keys, image and cloud configuration are unchanged. The cloud queue and SFTP
+connections were zero immediately before the stop. Current NAS keys, `.env` and
+Compose matched an independently decrypted retained offsite checkpoint, with
+all 469 manifest hashes verified, before the identity change.
+
+Exactly 24 entries changed owner: staging root plus 20 descendants, and key root
+plus two keys. Device/inode, group, mode, size, mtime, xattrs and key hashes were
+verified unchanged. Deployment root remains 1004:100 mode 0700. The new runtime
+is healthy, has zero effective capabilities and NoNewPrivs, a read-only root,
+read-only key bind and the same staging-only writable bind. Pinned-host SFTP
+synthetic create, write, byte-matching reads, rename and cleanup passed. This is
+bounded client acceptance, not a whole-staging content scan or authenticated SMB
+privacy test. No newer SATA event appeared; the complete historical burst ends
+with `EH complete` at uptime 282681.567948. The initial guard stopped before any
+mutation because it had selected the slightly earlier link-up message.
+
+Private inventory now sets `qnap_filex_runtime_account: svc-filex`; preserve it.
+`just usenet configure-filex-nas` reconciles only the NAS endpoint. Named-account
+mode requires preprovisioned access and preserves key permissions. Root
+`just test` passed; infrastructure checks passed except documented historical
+secret-scan findings, while current-source scanning passed. Evidence and scripts
+are under ignored `build/filex-identity-20261029/`; the NAS rollback preimage is
+`/share/Container/usenet/filex-sftp/identity-checkpoint-20261029`.
+
+For rollback, stop only SFTP after an idle check, reconcile later writes, restore
+only the enumerated owners and saved `.env`, remove only the private runtime
+account override, then restart and test the old identity. The strict metadata
+helper refuses later differences; synthetic acceptance itself changes staging
+root mtime, so reconcile that known change rather than blindly replaying it.
+Keep every checkpoint and the new account until rollback is accepted. This
+checkpoint does not move a share, alter HBS or activate the Forgejo backup worker.
 
 For each bounded service checkpoint, use the inventory to identify consumers.
 Preserve Forgejo as a complete recovery unit: database, repositories, LFS,

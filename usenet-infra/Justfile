@@ -210,6 +210,12 @@ cloud-health:
 configure-filex: ansible-setup
 	cd ansible && ../../wiki/run with-deployment --scope media-filex -- {{ansible}} ansible-playbook filex.yml
 
+# Reconcile only NAS SFTP; no cloud portal, storage rows, or firewall changes.
+# Optional qnap_filex_runtime_account in private inventory requires preprovisioned access.
+[group: 'setup']
+configure-filex-nas: ansible-setup
+	cd ansible && ../../wiki/run with-deployment --scope media-filex -- {{ansible}} ansible-playbook filex.yml --limit qnap
+
 # Read service state without exposing storage credentials or media names.
 [group: 'health']
 filex-status:

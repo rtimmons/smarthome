@@ -132,13 +132,33 @@ and a 64 MiB temporary filesystem. One operation worker limits concurrency.
 SFTP writes use at most 16 packets in flight; independent verification still
 precedes completion or source quarantine.
 
-The NAS container uses the existing unprivileged deployment UID/GID because
-QNAP maps unknown UIDs to a denied guest ACL. This does not expose that user's
-host SSH identity: SFTP uses a new dedicated key and host key, and the container
-mounts only new staging and its own read-only key configuration. It has no
-Docker socket, host root or broader share mount. It is limited to 0.5 CPU,
-256 MiB RAM, 64 processes and a 20 MiB/s ceiling. Actual throughput depends on
-the private network and storage. The TLS proxy has separate 0.25 CPU/128 MiB limits.
+The NAS container defaults to the existing unprivileged deployment UID/GID.
+Private inventory can instead set `qnap_filex_runtime_account: svc-filex` after
+that QTS-local account and its staging/key access have been provisioned as a
+separate identity checkpoint. Unknown numeric UIDs can hit QNAP's denied guest
+ACL; deployment resolves the real named account and refuses root or a missing
+identity. It does not create accounts or migrate existing payload ownership.
+
+Named-account deployment verifies staging-root ownership and read access to the
+existing keys, including exact matches to the configured key material. It
+preserves those keys and their permissions; key rotation needs its own scoped
+procedure. Keep the setting in private inventory after cutover: removing it
+restores the legacy deployment-identity behavior. The SFTP application login
+remains `filex-staging`, independent of its OS runtime identity.
+
+The October 29 NAS identity checkpoint now uses QTS-local `svc-filex` (1008:100),
+with zero effective capabilities and the original two mounts. Exactly 24
+staging/key entries changed owner with other checked metadata and key hashes
+preserved. Pinned-host synthetic SFTP create/read/rename/delete passed. Paths,
+application login, keys and cloud configuration are unchanged. The
+[migration ledger](../../docs/plan-nas-storage-and-access.md#service-data-and-archive-migration)
+owns retained rollback inputs and the limits of this acceptance.
+
+SFTP has its own client/host keys and only staging plus read-only key mounts;
+it has no Docker socket, host root, broader share mount or NAS SSH credential.
+Limits remain 0.5 CPU, 256 MiB RAM, 64 processes and 20 MiB/s. Actual throughput
+depends on the private network and storage. The TLS proxy retains its separate
+0.25 CPU/128 MiB limits.
 
 Metadata polling runs every 15 minutes. Large copy verification adds a second
 read of the destination; account for this when scheduling bulk transfers.
@@ -160,17 +180,23 @@ private configuration; never regenerate credentials as a status check.
 just --justfile usenet-infra/Justfile --working-directory usenet-infra \
   filex-validate /absolute/path/to/private/inputs.json
 just usenet configure-filex
+# Reconcile only the NAS SFTP endpoint after its identity/access checkpoint:
+just usenet configure-filex-nas
 just usenet filex-status
 just usenet filex-disable
 ```
 
-The isolated playbook prepares the dedicated NAS endpoint, then the cloud
-portal. It requires the reviewed image already installed, checks mount and
-configuration boundaries, enables only the narrow VPN firewall extension,
-reconciles exactly three storage rows and the operator account, and checks
-anonymous/admin denial plus HTTPS. Bootstrap is repeatable and refuses drift
-before rewriting an existing storage. Failure stops the portal and preserves
-its state. No acquisition, Plex or NAS-host restart is part of deployment.
+The full `configure-filex` playbook prepares the dedicated NAS endpoint, then the
+cloud portal. It requires the reviewed image already installed and checks mount
+and configuration boundaries. Its cloud phase enables the narrow VPN firewall
+extension, reconciles exactly three storage rows and the operator account, and
+checks anonymous/admin denial plus HTTPS. Bootstrap is repeatable and refuses
+drift before rewriting an existing storage. Failure in that phase stops the
+portal and preserves its state.
+
+`configure-filex-nas` limits the playbook to the NAS SFTP endpoint. It preserves
+cloud portal configuration, storage rows and firewall rules. Neither deployment
+restarts acquisition, Plex or the NAS host.
 
 Disable stops only `usenet-filex.service`, including its private TLS proxy. It
 preserves state, staging and receipts. The NAS staging endpoint remains isolated

@@ -6,6 +6,53 @@
       - qnap_data_root == '/share/FromDrobo'
       - qnap_container_root == '/share/Container/usenet'
 
+# Empty keeps the existing deployment identity. A named runtime must already be
+# provisioned, including bounded key/staging access, as a separate checkpoint.
+- name: Validate optional NAS runtime account name
+  ansible.builtin.assert:
+    that:
+      - qnap_filex_runtime_account | default('') is match('^$|^svc-[a-z][a-z0-9-]*$')
+
+- name: Resolve the selected NAS runtime identity without creating accounts
+  ansible.builtin.raw: |
+    set -eu
+    account={{ qnap_filex_runtime_account | default('') | quote }}
+    if test -n "$account"; then
+      uid=$(id -u "$account")
+      gid=$(id -g "$account")
+    else
+      uid=$(id -u)
+      gid=$(id -g)
+    fi
+    test "$uid" -gt 0
+    test "$gid" -gt 0
+    printf '%s:%s\n' "$uid" "$gid"
+  register: qnap_filex_runtime_identity
+  changed_when: false
+
+- name: Validate preprovisioned named runtime access without rewriting keys or payload ownership
+  ansible.builtin.raw: |
+    set -eu
+    for path in /share/FromDrobo/FilexStaging /share/Container/usenet/filex-sftp /share/Container/usenet/filex-sftp/keys; do
+      test ! -L "$path" && test -d "$path"
+    done
+    {{ qnap_docker_command }} run --rm --network none --read-only \
+      --user {{ qnap_filex_runtime_identity.stdout | trim | quote }} --cap-drop ALL \
+      --security-opt no-new-privileges \
+      --mount type=bind,source=/share/FromDrobo/FilexStaging,target=/staging \
+      --mount type=bind,source=/share/Container/usenet/filex-sftp/keys,target=/keys,readonly \
+      --entrypoint /bin/sh sha256:5d685f8256bf3166fbaf9a6fa5391e804f7ab904140d72bb6bd6896fabaedb87 -c '
+        test ! -L /keys/host_key && test ! -L /keys/authorized_keys &&
+        test -r /keys/host_key && test -r /keys/authorized_keys &&
+        test -w /staging && test -x /staging &&
+        test "$(stat -c %u /staging)" = "$(id -u)" &&
+        test "$(sha256sum /keys/host_key | cut -d " " -f1)" = "$1" &&
+        test "$(sha256sum /keys/authorized_keys | cut -d " " -f1)" = "$2"
+      ' filex-runtime-check {{ lookup('file', filex_secrets_dir ~ '/nas-host', rstrip=false) | hash('sha256') | quote }} {{ lookup('file', filex_secrets_dir ~ '/nas-client.pub', rstrip=false) | hash('sha256') | quote }}
+  when: qnap_filex_runtime_account | default('') | length > 0
+  changed_when: false
+  no_log: true
+
 - name: Prepare only the dedicated staging and SFTP configuration
   ansible.builtin.raw: |
     set -eu
@@ -18,19 +65,26 @@
       exit 1
     fi
     mkdir -p /share/FromDrobo/FilexStaging /share/Container/usenet/filex-sftp/keys
-    chmod 0700 /share/Container/usenet/filex-sftp /share/Container/usenet/filex-sftp/keys
+    chmod 0700 /share/Container/usenet/filex-sftp
     touch /share/Container/usenet/filex-sftp/managed
+    {% if qnap_filex_runtime_account | default('') | length == 0 %}
     chmod 0700 /share/Container/usenet/filex-sftp/keys
-    printf 'FILEX_NAS_UID=%s\nFILEX_NAS_GID=%s\n' "$(id -u)" "$(id -g)" > /share/Container/usenet/filex-sftp/.env
+    {% endif %}
+    printf 'FILEX_NAS_UID=%s\nFILEX_NAS_GID=%s\n' {{ (qnap_filex_runtime_identity.stdout | trim).split(':')[0] | quote }} {{ (qnap_filex_runtime_identity.stdout | trim).split(':')[1] | quote }} > /share/Container/usenet/filex-sftp/.env
+    {% if qnap_filex_runtime_account | default('') | length == 0 %}
     {{ qnap_docker_command }} run --rm --network none --user 0:0 --cap-drop ALL --cap-add CHOWN --cap-add FOWNER \
       --mount type=bind,source=/share/FromDrobo/FilexStaging,target=/staging \
       --entrypoint /bin/sh sha256:5d685f8256bf3166fbaf9a6fa5391e804f7ab904140d72bb6bd6896fabaedb87 -c 'chown "$1:$2" /staging; chmod 0700 /staging' filex-permissions "$(id -u)" "$(id -g)"
+    {% endif %}
 
 - name: Install dedicated keys and isolated Compose definition
   ansible.builtin.raw: |
     set -eu
     umask 077
     destination={{ item.destination | quote }}
+    {% if qnap_filex_runtime_account | default('') | length > 0 %}
+    case "$destination" in */keys/*) exit 0 ;; esac
+    {% endif %}
     test ! -L "$destination"
     printf '%s' {{ lookup('file', item.source, rstrip=false) | b64encode | quote }} | base64 -d > "$destination.next"
     chmod 0600 "$destination.next"
