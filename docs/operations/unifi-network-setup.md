@@ -317,3 +317,9 @@ Do not raise AP transmit power solely to hide poor client RSSI; asymmetric links
 - **October 22:** Max cutover, address-conflict repair and the accepted
   [post-migration improvements](unifi-post-migration.md). Detailed prior plans,
   measurements and session history remain in Git and ignored private evidence.
+- **November 8:** Reserved the Living Room Sonos Playbar's existing
+  `192.168.1.83` address on `Default` after an address change left Home Assistant
+  contacting its old IP. Immediately after the change, UniFi reported the saved
+  reservation, the Playbar answered at that address, and Grid Dashboard showed
+  live playback. If the reservation disrupts connectivity, remove only its fixed
+  IP setting and verify the Playbar's address and dashboard state again.

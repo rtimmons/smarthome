@@ -35,9 +35,9 @@
     "reviewed_at": "2026-10-29"
   },
   "network": {
-    "fingerprint": "544ec801dc6993b4217a745838b0bb86009f2761c917c43157a4af29e47e7f72",
-    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation. Reviewed the SOPS-backed wiki access check, explicit local realm and measured denials. Verified laptop Wi-Fi/Ethernet reservations, both manual DNS aliases, all 70 names in the paired transaction, independent UDP/TCP and macOS lookups, and retained discovery ownership; documented the bounded timeout retry.",
-    "reviewed_at": "2026-10-28"
+    "fingerprint": "957e2f67a4d5c88d93daa14ee322d0f7906b284ee2f7b1c4d5b24976633551db",
+    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation. Reviewed the SOPS-backed wiki access check, explicit local realm and measured denials. Verified laptop Wi-Fi/Ethernet reservations, both manual DNS aliases, all 70 names in the paired transaction, independent UDP/TCP and macOS lookups, and retained discovery ownership; documented the bounded timeout retry. Verified the Newark Default LAN reservation for the Living Room Playbar, its direct reachability and live Grid Dashboard playback. Recorded verification and rollback in the network runbook.",
+    "reviewed_at": "2026-11-08"
   },
   "printing": {
     "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",
