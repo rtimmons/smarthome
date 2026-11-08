@@ -245,10 +245,28 @@ comes from the provisioning account; it is not a DNS-only Home Assistant token.
 The NAS password is the existing loopback-only resolver administration credential.
 No SSH access key is copied to the scanner.
 
+The scanner can use a separately provisioned QTS-local runtime account through
+paired positive `DNS_DISCOVERY_UID=<id>` and `DNS_DISCOVERY_GID=<id>` entries in
+`dns/runtime/.env`. With neither entry it retains the existing `DNS_UID` and
+`DNS_GID` default; a partial or invalid override is refused. The resolver keeps
+its existing identity. Deploy the updated scanner Compose file with the defaults
+first. Provision and verify the account's access to the two scanner bind roots
+in a separate, backed-up identity checkpoint before setting the override.
+Deployment does not create accounts or change payload ownership.
+With an override, it preserves the existing credential file, checks its hash
+against the private controller input, and checks state access before replacing
+the scanner. Status and policy reads use the selected scanner identity. Static
+resolver deployment refuses to run with a selected scanner identity.
+
 Updates change only AdGuard custom rules through authenticated APIs, secondary
 then primary, without restarting either resolver. Manual aliases stay pinned.
 Every changed generation is validated through both resolvers and the gateway
-over UDP/TCP, including A, empty AAAA, local negatives and public resolution.
+over UDP/TCP, including exact A, empty AAAA, local negatives and public
+resolution.
+Unknown-descendant NXDOMAIN checks apply only inside the owned `home.arpa`
+zone outside delegated zones. Public certificate aliases override exact names.
+Upstream DNS answers queries for their descendants.
+Delegated AD records and negative responses retain their separate checks.
 A failed update attempts to restore the prior rules on both. A durable pending
 journal recovers interruption between writes. Unexpected custom rules, extra
 rewrites or disabled filtering pause updates instead of overwriting drift.

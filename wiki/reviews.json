@@ -35,8 +35,8 @@
     "reviewed_at": "2026-10-29"
   },
   "network": {
-    "fingerprint": "957e2f67a4d5c88d93daa14ee322d0f7906b284ee2f7b1c4d5b24976633551db",
-    "reason": "Require explicit user approval for UniFi writes; review tool allowlist, controller/site restrictions, preview defaults, audit failure handling, tests and operator documentation. Reviewed the SOPS-backed wiki access check, explicit local realm and measured denials. Verified laptop Wi-Fi/Ethernet reservations, both manual DNS aliases, all 70 names in the paired transaction, independent UDP/TCP and macOS lookups, and retained discovery ownership; documented the bounded timeout retry. Verified the Newark Default LAN reservation for the Living Room Playbar, its direct reachability and live Grid Dashboard playback. Recorded verification and rollback in the network runbook.",
+    "fingerprint": "d9cdf1e041c513bc30f64a591b11011e7a90692bbb3e494719bb59826aeb6d9d",
+    "reason": "Reviewed DNS negative-query scope and the scanner identity override, including credential and state checks and refusal of static deployment before resolver rollback.",
     "reviewed_at": "2026-11-08"
   },
   "printing": {

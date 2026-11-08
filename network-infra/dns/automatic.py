@@ -14,7 +14,7 @@ import threading
 import time
 from urllib.request import Request, build_opener, ProxyHandler
 
-from discovery import HOST, LAN, reconcile
+from discovery import HOST, LAN, owns_negative_name, reconcile
 from reconciler import atomic_json, converge
 
 STATE = Path(os.environ.get('DNS_AUTO_STATE', '/state'))
@@ -107,17 +107,15 @@ def discover_lan():
         zc.close()
 
 
-def verify_once(policy, previous):
-    import dns.message
-    import dns.query
-    import dns.rcode
-    import dns.rdatatype
+def verification_cases(policy, previous):
     cases = []
     for name, address in policy['records'].items():
-        cases.extend([(name, 'A', 'NOERROR', [address]), (name, 'AAAA', 'NOERROR', []),
-                      ('unknown.' + name, 'A', 'NXDOMAIN', [])])
+        cases.extend([(name, 'A', 'NOERROR', [address]), (name, 'AAAA', 'NOERROR', [])])
+        if owns_negative_name(policy, name):
+            cases.append(('unknown.' + name, 'A', 'NXDOMAIN', []))
     for removed in previous['records'].keys() - policy['records'].keys():
-        cases.append((removed, 'A', 'NXDOMAIN', []))
+        if owns_negative_name(policy, removed):
+            cases.append((removed, 'A', 'NXDOMAIN', []))
     cases.extend([('home.arpa', 'SOA', 'NXDOMAIN', []),
                   ('unknown-autodns-check.home.arpa', 'A', 'NXDOMAIN', []),
                   ('example.com', 'A', 'NOERROR', None)])
@@ -128,6 +126,15 @@ def verify_once(policy, previous):
             ('_kerberos._tcp.ad.home.arpa', 'SRV', 'NOERROR', ['0 100 88 dc1.ad.home.arpa.']),
             ('unknown-autodns-check.ad.home.arpa', 'A', 'NXDOMAIN', []),
         ])
+    return cases
+
+
+def verify_once(policy, previous):
+    import dns.message
+    import dns.query
+    import dns.rcode
+    import dns.rdatatype
+    cases = verification_cases(policy, previous)
     for address in [*policy['resolvers'], policy['client_resolver']]:
         for send in (dns.query.udp, dns.query.tcp):
             for name, kind, status, expected in cases:

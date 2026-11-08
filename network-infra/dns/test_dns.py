@@ -34,6 +34,82 @@ class DNSTests(unittest.TestCase):
             with self.assertRaises(ValueError): m.sync_mdns(True)
             with self.assertRaises(ValueError): m.deploy()
 
+    def test_scanner_identity_requires_positive_pair_and_preserves_default(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'runtime').mkdir()
+            cases = [('', 0, 'false'), ('DNS_DISCOVERY_UID=1008\nDNS_DISCOVERY_GID=100\n', 0, 'true'),
+                     ('DNS_DISCOVERY_UID=1008\n', 1, ''), ('DNS_DISCOVERY_GID=100\n', 1, ''),
+                     ('DNS_DISCOVERY_UID=0\nDNS_DISCOVERY_GID=100\n', 1, ''),
+                     ('DNS_DISCOVERY_UID=1008\nDNS_DISCOVERY_GID=0\n', 1, ''),
+                     ('DNS_DISCOVERY_UID=\nDNS_DISCOVERY_GID=\n', 1, ''),
+                     ('DNS_DISCOVERY_UID=1008\nDNS_DISCOVERY_UID=1009\nDNS_DISCOVERY_GID=100\n', 1, ''),
+                     ('  DNS_DISCOVERY_UID=1008\n', 1, ''),
+                     ('export DNS_DISCOVERY_GID=100\n', 1, ''),
+                     ('DNS_DISCOVERY_UID=$(false)\nDNS_DISCOVERY_GID=100\n', 1, '')]
+            for values, expected, selected in cases:
+                with self.subTest(values=values):
+                    (root / 'runtime/.env').write_text('DNS_UID=1004\nDNS_GID=100\n' + values)
+                    result = subprocess.run(['sh', '-c', 'set -eu; root="$1"; ' + m.DISCOVERY_IDENTITY +
+                                             '\ndiscovery_identity; printf "%s" "$discovery_selected"', 'sh', str(root)],
+                                            capture_output=True, text=True)
+                    self.assertEqual(result.returncode, expected)
+                    if expected == 0: self.assertEqual(result.stdout, selected)
+
+    def test_selected_identity_deploy_preserves_credentials_and_learned_state(self):
+        with tempfile.TemporaryDirectory() as directory:
+            base = Path(directory)
+            source, private, root = base / 'source', base / 'private', base / 'nas'
+            source.mkdir(); private.mkdir()
+            for name in ('automatic.py', 'discovery.py', 'reconciler.py', 'Dockerfile.automatic', 'automatic-compose.yaml'):
+                (source / name).write_bytes((m.HERE / name).read_bytes())
+            (source / 'policy.json').write_text(json.dumps(m.POLICY))
+            (private / 'dns-automatic-credentials.json').write_text('{"synthetic": "incoming"}')
+            for name in ('runtime/automatic', 'config/automatic', 'backups/automatic-state'):
+                (root / name).mkdir(parents=True)
+            (root / 'runtime/.env').write_text('DNS_UID=1004\nDNS_GID=100\nDNS_DISCOVERY_UID=1008\nDNS_DISCOVERY_GID=100\n')
+            credentials = root / 'config/automatic/credentials.json'
+            policy = root / 'backups/automatic-state/policy.json'
+            credentials.write_text('existing synthetic credential bytes')
+            policy.write_text('existing learned policy')
+            original = [(p.read_bytes(), p.stat().st_ino, p.stat().st_mode) for p in (credentials, policy)]
+            docker = base / 'docker'
+            docker.write_text('#!/bin/sh\nexit 0\n'); docker.chmod(0o700)
+            def remote(script, payload=None, transcript=None):
+                result = subprocess.run(['sh', '-c', 'set -eu; root="$1"; docker="$2"; ' + m.DISCOVERY_IDENTITY + script,
+                                         'sh', str(root), str(docker)], input=payload, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr.decode())
+            with mock.patch.object(m, 'HERE', source), mock.patch.object(m, 'ROOT', base), mock.patch.object(m, 'PRIVATE', private), \
+                 mock.patch.object(m, 'Primary'), mock.patch.object(m, 'remote', side_effect=remote), \
+                 mock.patch.object(m, 'auto_status'), mock.patch('builtins.print'):
+                m.auto_deploy()
+            self.assertEqual(original, [(p.read_bytes(), p.stat().st_ino, p.stat().st_mode) for p in (credentials, policy)])
+            self.assertEqual((root / 'runtime/.env').read_text(),
+                             'DNS_UID=1004\nDNS_GID=100\nDNS_DISCOVERY_UID=1008\nDNS_DISCOVERY_GID=100\n')
+
+    def test_static_deploy_refuses_scanner_identity_without_rolling_back(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / 'runtime').mkdir()
+            (root / 'runtime/.env').write_text('DNS_DISCOVERY_UID=1008\nDNS_DISCOVERY_GID=100\n')
+            private = root / 'private'
+            private.mkdir()
+            (private / 'dns-secondary-credentials.json').write_text('{"hash": "synthetic"}')
+            static_policy = {key: value for key, value in m.POLICY.items() if key != 'automatic_discovery'}
+
+            def remote(script, payload=None):
+                return subprocess.run(['sh', '-c', 'set -eu; root="$1"; ' + m.DISCOVERY_IDENTITY + script,
+                                       'sh', str(root)], input=payload, capture_output=True, check=True).stdout
+
+            with mock.patch.object(m, 'POLICY', static_policy), mock.patch.object(m, 'PRIVATE', private), \
+                 mock.patch.object(m, 'Primary') as primary, mock.patch.object(m, 'validate_primary'), \
+                 mock.patch.object(m, 'remote', side_effect=remote) as run:
+                primary.return_value.snapshot.return_value = {}
+                with self.assertRaisesRegex(ValueError, 'static resolver deployment refused'):
+                    m.deploy()
+            run.assert_called_once()
+            primary.return_value.api.assert_not_called()
+
     def answer(self, status, records=''):
         return ';; ->>HEADER<<- opcode: QUERY, status: ' + status + ', id: 1\n' + records
 
@@ -70,7 +146,15 @@ class DNSTests(unittest.TestCase):
         with mock.patch.object(m.subprocess, 'run', side_effect=dig) as run, mock.patch('builtins.print'), \
              mock.patch.object(m.time, 'sleep'):
             m.check(['192.168.1.1'])
-        self.assertEqual(run.call_count, 2 * (3 * len(m.POLICY['records']) + 3))
+        local_negatives = sum((name == 'home.arpa' or name.endswith('.home.arpa')) and not any(
+            name == zone or name.endswith('.' + zone) for zone in m.POLICY.get('delegated_zones', {}))
+            for name in m.POLICY['records'])
+        self.assertEqual(run.call_count, 2 * (2 * len(m.POLICY['records']) + local_negatives + 3))
+        queried = {(call.args[0][2], call.args[0][3]) for call in run.call_args_list}
+        self.assertIn(('wiki.home.rytim.com', 'A'), queried)
+        self.assertIn(('wiki.home.rytim.com', 'AAAA'), queried)
+        self.assertNotIn(('unknown.wiki.home.rytim.com', 'A'), queried)
+        self.assertIn(('unknown.wiki.home.arpa', 'A'), queried)
         self.assertEqual({call.args[0][1] for call in run.call_args_list}, {'@192.168.1.1'})
         self.assertEqual({call.args[0][4] for call in run.call_args_list}, {'+tcp', '+notcp'})
 

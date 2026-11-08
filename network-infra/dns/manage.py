@@ -21,6 +21,8 @@ import time
 from urllib.request import Request, urlopen
 import yaml
 
+from discovery import owns_negative_name
+
 ROOT = Path(__file__).resolve().parents[2]
 HERE = Path(__file__).resolve().parent
 PRIVATE = ROOT / 'build/wiki-private'
@@ -28,6 +30,37 @@ NAS_ROOT = '/share/Container/usenet/dns'
 POLICY = json.loads((HERE / 'policy.json').read_text())
 ENDPOINTS = ['status', 'dns_info', 'filtering/status', 'rewrite/list',
              'safebrowsing/status', 'parental/status', 'safesearch/status', 'blocked_services/get']
+DISCOVERY_IDENTITY = r'''
+discovery_identity_configured() {
+  grep -Eq '^[[:space:]]*(export[[:space:]]+)?DNS_DISCOVERY_' "$root/runtime/.env"
+}
+discovery_identity() {
+  test -r "$root/runtime/.env" || return 1
+  discovery_selected=false
+  discovery_uid=$(sed -n 's/^DNS_DISCOVERY_UID=//p' "$root/runtime/.env")
+  discovery_gid=$(sed -n 's/^DNS_DISCOVERY_GID=//p' "$root/runtime/.env")
+  if discovery_identity_configured; then
+    case "$discovery_uid:$discovery_gid" in *[!0-9:]*|:*|*:) echo 'Discovery identity requires two positive numeric IDs' >&2; return 1;; esac
+    test "$discovery_uid" -gt 0 && test "$discovery_gid" -gt 0 || return 1
+    discovery_selected=true
+  fi
+}
+auto_compose() {
+  discovery_identity || return 1
+  DNS_DISCOVERY_UID="$discovery_uid" DNS_DISCOVERY_GID="$discovery_gid" \
+    "$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" "$@"
+}
+discovery_read_state() {
+  case "$1" in health.json|policy.json) ;; *) return 1;; esac
+  discovery_identity || return 1
+  if test "$discovery_selected" = true; then
+    auto_compose run --rm -T --no-deps --entrypoint python scanner -c 'import pathlib, sys; print(pathlib.Path("/state", sys.argv[1]).read_text())' "$1"
+  else
+    cat "$root/backups/automatic-state/$1"
+  fi
+}
+'''
+STATIC_IDENTITY_REFUSAL = 'Preserve the selected discovery identity; static resolver deployment refused'
 PREAMBLE = r'''
 set -eu
 export DOCKER_CONFIG=/share/Container/usenet/state/docker-client
@@ -38,7 +71,7 @@ test -x "$docker"
 test "$(id -u)" -gt 0
 root=/share/Container/usenet/dns
 compose() { "$docker" compose --ansi never --file "$root/runtime/compose.yaml" --env-file "$root/runtime/.env" "$@"; }
-'''
+''' + DISCOVERY_IDENTITY
 
 
 def remote(script, payload=None, transcript=None):
@@ -153,8 +186,9 @@ def check(addresses=None):
     cases = []
     for name, ip in POLICY['records'].items():
         cases.extend([(name, 'A', {'status': 'NOERROR', 'address': ip}),
-                      (name, 'AAAA', {'status': 'NOERROR', 'empty': True}),
-                      ('unknown.' + name, 'A', {'status': 'NXDOMAIN', 'empty': True})])
+                      (name, 'AAAA', {'status': 'NOERROR', 'empty': True})])
+        if owns_negative_name(POLICY, name):
+            cases.append(('unknown.' + name, 'A', {'status': 'NXDOMAIN', 'empty': True}))
     cases.extend([('unknown-wiki-check.home.arpa', 'A', {'status': 'NXDOMAIN', 'empty': True}),
                   ('home.arpa', 'SOA', {'status': 'NXDOMAIN', 'empty': True}),
                   ('example.com', 'A', {'status': 'NOERROR'})])
@@ -202,6 +236,10 @@ def deploy(previous_policy=None):
     # Only the secondary is replaced. Capture its previous config/runtime before
     # stopping it. Never alter other NAS DNS listeners or any DHCP settings here.
     script = '''
+if test -f "$root/runtime/.env" && discovery_identity_configured; then
+ echo STATIC_IDENTITY_REFUSAL >&2
+ exit 78
+fi
 mkdir -p "$root/config" "$root/data" "$root/runtime" "$root/backups"
 chmod 700 "$root" "$root/config" "$root/data" "$root/runtime" "$root/backups"
 mkdir "$root/.deploy-lock" || exit 1
@@ -225,7 +263,7 @@ if ! compose up -d --force-recreate --wait --wait-timeout 120 resolver; then
  "$docker" inspect --format '{{json .State.Health}}' "$(compose ps -aq resolver)" >&2
  exit 1
 fi
-'''.replace('STAMP', stamp)
+'''.replace('STAMP', stamp).replace('STATIC_IDENTITY_REFUSAL', shlex.quote(STATIC_IDENTITY_REFUSAL))
     try:
         remote(script, payload.getvalue())
         check(['192.168.1.66'])
@@ -247,6 +285,9 @@ fi
         if not matching:
             raise ValueError('Primary query log did not confirm local handling of the synthetic check name')
     except Exception as original_error:
+        if (isinstance(original_error, subprocess.CalledProcessError) and original_error.returncode == 78
+                and STATIC_IDENTITY_REFUSAL.encode() in (original_error.stderr or b'').splitlines()):
+            raise ValueError(STATIC_IDENTITY_REFUSAL) from None
         save_private(PRIVATE / 'dns-failure.json', {'stage': 'deployment_or_validation', 'error_type': type(original_error).__name__})
         # Restore only the changed primary rule list. Retain snapshots even if
         # restoration fails; never hide that outcome behind a success message.
@@ -288,7 +329,7 @@ def sync_mdns(apply=False):
         original = policy_path.read_text()
         previous = json.loads(original)
         if previous.get('automatic_discovery'):
-            previous = json.loads(remote('cat "$root/backups/automatic-state/policy.json"'))
+            previous = json.loads(remote('discovery_read_state policy.json'))
         found = discover()
         candidate, skipped = reconcile(previous, found)
         changes = {name: {'before': previous['records'].get(name), 'after': candidate['records'].get(name)}
@@ -343,25 +384,38 @@ def auto_deploy():
     print('NAS scanner build/start log: ' + str(transcript.relative_to(ROOT)), flush=True)
     remote('''
 umask 077
+discovery_identity
+if test "$discovery_selected" = true; then
+ test -d "$root/config/automatic"
+ test -d "$root/backups/automatic-state"
+fi
 mkdir "$root/.automatic-deploy-lock"
 stage=$(mktemp -d "$root/.automatic-XXXXXXXX")
 trap 'rm -rf "$stage"; rmdir "$root/.automatic-deploy-lock"' EXIT HUP INT TERM
 tar -xf - -C "$stage"
 mkdir -p "$root/runtime/automatic" "$root/config/automatic" "$root/backups/automatic-state"
 if test -f "$root/runtime/automatic/automatic-compose.yaml"; then
- tar -czf "$root/backups/automatic-before-$(date -u +%Y%m%dT%H%M%SZ).tgz" -C "$root" runtime/automatic config/automatic
+ backup_stamp=$(date -u +%Y%m%dT%H%M%SZ)
+ if test "$discovery_selected" = true; then
+  tar -czf "$root/backups/automatic-before-$backup_stamp.tgz" -C "$root" runtime/automatic
+  auto_compose run --rm -T --no-deps --entrypoint python scanner -c 'import sys, tarfile; t=tarfile.open(fileobj=sys.stdout.buffer, mode="w|gz"); t.add("/config", arcname="config/automatic"); t.close()' > "$root/backups/automatic-config-before-$backup_stamp.tgz"
+ else
+  tar -czf "$root/backups/automatic-before-$backup_stamp.tgz" -C "$root" runtime/automatic config/automatic
+ fi
 fi
-cp "$stage/credentials.json" "$root/config/automatic/credentials.json"
-if ! test -f "$root/backups/automatic-state/policy.json"; then
- cp "$stage/seed.json" "$root/backups/automatic-state/policy.json"
+if test "$discovery_selected" = false; then
+ cp "$stage/credentials.json" "$root/config/automatic/credentials.json"
+ if ! test -f "$root/backups/automatic-state/policy.json"; then
+  cp "$stage/seed.json" "$root/backups/automatic-state/policy.json"
+ fi
 fi
 for name in automatic.py discovery.py reconciler.py Dockerfile.automatic automatic-compose.yaml; do
  cp "$stage/$name" "$root/runtime/automatic/$name"
 done
-auto_compose() { "$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" "$@"; }
 auto_compose config --quiet
 auto_compose build scanner
-auto_compose run --rm --no-deps scanner python -c 'import automatic, zeroconf, websocket, dns.query'
+expected_credentials=$(sha256sum "$stage/credentials.json" | cut -d ' ' -f1)
+auto_compose run --rm --no-deps scanner python -c 'import automatic, zeroconf, websocket, dns.query; import hashlib, json, os, pathlib, sys; assert hashlib.sha256(pathlib.Path("/config/credentials.json").read_bytes()).hexdigest() == sys.argv[1], "Existing discovery credentials differ; reconcile explicitly"; json.loads(pathlib.Path("/state/policy.json").read_text()); assert os.access("/state", os.R_OK | os.W_OK | os.X_OK), "Discovery state is not writable"' "$expected_credentials"
 auto_compose up -d --wait --wait-timeout 420 scanner
 ''', payload.getvalue(), transcript=transcript)
     policy = json.loads((HERE / 'policy.json').read_text())
@@ -383,7 +437,6 @@ def set_record(name, address):
     # a durable recovery journal if a paired write cannot be rolled back.
     script = '''
 mkdir "$root/.automatic-deploy-lock"
-auto_compose() { "$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" "$@"; }
 test "$(auto_compose ps --format '{{.State}}' scanner)" = running || { rmdir "$root/.automatic-deploy-lock"; exit 1; }
 cleanup() { auto_compose start scanner; rmdir "$root/.automatic-deploy-lock"; }
 trap cleanup EXIT
@@ -401,9 +454,9 @@ auto_compose run --rm -T --no-deps scanner python - NAME ADDRESS
 
 
 def auto_status():
-    value = remote('cat "$root/backups/automatic-state/health.json"')
+    value = remote('discovery_read_state health.json')
     health = json.loads(value)
-    state = remote('"$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" ps --format "{{.State}} {{.Health}}" scanner').decode().strip()
+    state = remote('auto_compose ps --format "{{.State}} {{.Health}}" scanner').decode().strip()
     health['container'] = state or 'stopped'
     health['age_seconds'] = round(time.time() - health.get('last_success', health.get('failed_at', 0)))
     print(json.dumps(health, indent=2))
@@ -419,7 +472,6 @@ def delegate_ad():
     transcript = PRIVATE / ('dns-ad-delegation-' + str(time.time_ns()) + '.log')
     script = '''
 mkdir "$root/.automatic-deploy-lock"
-auto_compose() { "$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" "$@"; }
 test "$(auto_compose ps --format '{{.State}}' scanner)" = running || { rmdir "$root/.automatic-deploy-lock"; exit 1; }
 cleanup() { auto_compose start scanner; rmdir "$root/.automatic-deploy-lock"; }
 trap cleanup EXIT
@@ -453,13 +505,13 @@ def main():
     elif args.action == 'auto-status': auto_status()
     elif args.action == 'delegate-ad': delegate_ad()
     elif args.action == 'auto-stop':
-        remote('"$docker" compose --ansi never --file "$root/runtime/automatic/automatic-compose.yaml" --env-file "$root/runtime/.env" stop scanner')
+        remote('auto_compose stop scanner')
         print('Automatic discovery stopped. Both resolvers and their accepted records remain running.')
     elif args.action == 'discover': sync_mdns(args.apply)
     elif args.action == 'deploy': deploy(json.loads(args.previous_policy.read_text()) if args.previous_policy else None)
     elif args.action == 'check':
         if POLICY.get('automatic_discovery'):
-            POLICY = json.loads(remote('cat "$root/backups/automatic-state/policy.json"'))
+            POLICY = json.loads(remote('discovery_read_state policy.json'))
         check(args.resolver)
     elif args.snapshot:
         if POLICY.get('automatic_discovery'):

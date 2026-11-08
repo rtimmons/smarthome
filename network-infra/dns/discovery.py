@@ -79,6 +79,13 @@ def rules(records, delegated_zones=None):
     return result
 
 
+def owns_negative_name(policy, name):
+    """The local catch-all owns negatives outside delegated zones."""
+    return (name == 'home.arpa' or name.endswith('.home.arpa')) and not any(
+        name == zone or name.endswith('.' + zone)
+        for zone in policy.get('delegated_zones', {}))
+
+
 def reconcile(policy, found, now=None):
     if policy['user_rules'] != rules(policy['records'], policy.get('delegated_zones')):
         raise ValueError('Policy has custom rules beyond exact records; review before importing Bonjour names')
