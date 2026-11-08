@@ -12,6 +12,60 @@ Forgejo now uses its named share and dedicated runtime identity; see the
 
 ## Cold-agent continuation
 
+**October 29, next account checkpoint prepared:** Filex and the restricted
+backup-account checkpoint are committed as `e9f2703`. The next candidate is
+`svc-discovery`, limited to the DNS scanner's existing configuration and state
+binds; the resolver retains its current identity. No discovery account or live
+identity change has been made.
+
+The scanner's `Timeout` was traced to validation of an unknown descendant under
+an exact public certificate alias. Upstream DNS owns those public descendants.
+A later bounded probe passed after the upstream result was cached. The repair
+limited negative tests to the owned namespace while retaining exact A/AAAA,
+local and public control queries, and delegated AD checks.
+The deployed repair also included optional scanner-only UID/GID support. No
+override was selected at the October 29 checkpoint.
+
+The user approved the scanner-only stop, private credential-bearing checkpoint
+and repair. The quiesced checkpoint independently verified all 35 files (38
+entries, 401,711 bytes), and the original scanner resumed. At 16:20:58 Eastern,
+the scanner reported successful full verification, 74 records and a healthy
+container after repair deployment at the existing UID. Independent settled-state
+acceptance also passed:
+pending journals absent, recent full verification, unchanged credentials and
+manual/AD policy, exact original mounts, UID 1004:GID 100, group 100 only,
+zero effective capabilities and the original security restrictions. The NAS
+resolver remained healthy with the same container ID and start time.
+The QTS account form was prepared for review. Account creation and permission
+changes remained pending at this checkpoint.
+Preserve learned state and any pending journal; qualify scanner health before
+changing its identity. Never stop either resolver for this checkpoint.
+Evidence is retained privately in `build/dns-discovery-20261029/`, including
+`pre-repair-checkpoint/` and the post-repair verification receipt. Root tests,
+all 37 DNS tests and wiki checks passed. The 592 infrastructure unit tests passed
+(12 skipped), and the current-source secret scan passed. The full infrastructure
+recipe still reports the documented historical secret-scan findings.
+
+The captured scanner bind roots contain 31 objects: two mode-0777 directories,
+28 mode-0600 files and one mode-0666 worker lock, all 1004:100. Both directories
+also carry broad default ACLs. Ownership alone would leave directory replacement
+access exposed. Before runtime cutover, prepare a separate approved permission
+checkpoint for these two roots: access mode 0700 and default-ACL mask/other zero,
+preserving named ACL entries. Keep the scanner stopped between owner change and
+permission hardening. Refresh the manifest after stopping; reject unexpected
+entries, symlinks and multiply linked files. Preserve exact rollback metadata,
+content and non-ACL xattrs; access/default ACL changes must be recorded as
+intentional changes, not claimed as unchanged metadata. Resolver and runtime
+deployment-parent ownership stay unchanged. No such hardening has run yet.
+
+**October 29, 16:12 Eastern hardware refresh:** new `ata2` interface-fatal/reset
+bursts map approximately to 14:16 and 15:33; the former includes three explicit
+`sdb` read I/O errors. Links recovered, and RAID remains 4/4, degraded zero,
+sync idle. The fault remains unresolved. Replacement HBS is still Running
+(approximately 796.85 GB processed); legacy backup finished at 16:03:17.
+Both complete job configurations are unchanged from the 12:29 baseline.
+No storage move or stress test is authorized by these observations.
+
 **October 29, 12:29 Eastern read-only refresh:** the replacement seed remains
 Running, with approximately 690 GB processed of 4.68 TB (decimal). Legacy
 `Backup 1` restarted on its enabled 02:00 schedule and is also Running. Both
