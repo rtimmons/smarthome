@@ -77,6 +77,19 @@ describe("Z-Wave inventory audit", () => {
     ).toBe(false);
   });
 
+  it("accepts the ZHA Kelvin round trip without masking a different temperature", () => {
+    const target = generateSceneTargets(scenes.bathroom_high)
+      .find(({ entityId }) => entityId === "light.light_bathroom_vanity_left")!;
+    const observed = (kelvin: number) => ({
+      state: "on",
+      attributes: { brightness: 254, color_temp_kelvin: kelvin },
+    });
+
+    expect(entityMatchesTarget(target, observed(2700))).toBe(true);
+    expect(entityMatchesTarget(target, observed(2702))).toBe(true);
+    expect(entityMatchesTarget(target, observed(2703))).toBe(false);
+  });
+
   it("keeps the desired identity for temporarily removed node 16", () => {
     const configured = flattenConfiguredDevices();
 

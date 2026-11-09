@@ -11,6 +11,7 @@ import {
   DEFAULT_MAX_ZWAVE_CALLS_PER_STEP,
   DEFAULT_ZWAVE_BATCH_DELAY_MS,
   FAST_SCENE_DISPATCHER_ID,
+  expectedColorTemperatureReports,
   generateFastSceneCalls,
   generateSceneEntities,
   generateSceneTargets,
@@ -936,6 +937,12 @@ export function entityMatchesTarget(
     ) {
       // Switch Multilevel uses 0..99 while Home Assistant exposes 0..255;
       // round-tripping an exact scene brightness can differ by one.
+      continue;
+    }
+    if (key === "color_temp_kelvin" && typeof value === "number") {
+      if (!expectedColorTemperatureReports(value, target.device?.protocol).includes(state.attributes?.[key])) {
+        return false;
+      }
       continue;
     }
     if (JSON.stringify(state.attributes?.[key]) !== JSON.stringify(value)) {

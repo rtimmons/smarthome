@@ -42,6 +42,8 @@ After parking on October 16, all eight Zigbee device identities, all 117 entity 
 
 The combined service passed a restart check on October 16: Thread retained its network and channel, and ZHA retained every identity and answered another uncached bulb read. Allow roughly a minute for ZHA to reconnect after restarting the app. An early request returned `No gateway object exists` during that interval; it recovered without manual intervention. This check does not establish long-term reliability of the vendor beta firmware.
 
+On November 9, Supervisor reported the multiprotocol app as started while Zigbeed was restarting repeatedly with `CPC endpoint open failed`. ZHA was in `setup_retry` and all five bathroom bulbs were unavailable. Restarting only the multiprotocol app reconnected the co-processor. Reloading the existing ZHA entry brought it back to `loaded`, and the bulbs returned as they reported in. If this recurs, check the app log for a successful co-processor connection and use an uncached bulb read to verify recovery.
+
 Keep the Zigbee and Thread channels aligned at 20. A Thread channel change through Home Assistant takes five minutes. The vendor app is not recognized as the official multiprotocol app by all Home Assistant channel checks, so do not assume automatic channel coordination.
 
 After a channel change, compare the border router's active dataset with Home Assistant's preferred Thread dataset. The first transition left the stored preferred dataset at channel 15 while the router had moved to 20. Importing the router's current active dataset through `thread/add_dataset_tlv` updated the existing preferred record to channel 20 without changing its identity or keys. Verify this before sending credentials to a phone.

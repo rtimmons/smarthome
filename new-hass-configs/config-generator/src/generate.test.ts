@@ -403,6 +403,11 @@ describe("Scene Generation", () => {
         } });
       expect(calls.find((call: any) => call.target.entity_id.includes("light.light_bathroom_edison_bottom"))!.data)
         .not.toHaveProperty("color_temp_kelvin");
+
+      const scripts = generateFastScripts({ bathroom_high: scenes.bathroom_high });
+      const sequence = getSceneWorkerSequence(scripts, "bathroom", "bathroom_high");
+      expect(sequence[1].variables.fast_scene_mismatched_entities)
+        .toContain('"light.light_bathroom_vanity_left":[2700,2702]');
     });
 
     it("should generate the current bathroom medium, low, and off behavior", () => {

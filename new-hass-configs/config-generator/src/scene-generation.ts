@@ -530,6 +530,20 @@ function buildSkippedEntitiesTemplate(targets: SceneEntityTarget[]): string {
   ].join("\n");
 }
 
+export function expectedColorTemperatureReports(
+  kelvin: number,
+  protocol: Device["protocol"]
+): number[] {
+  if (protocol !== "zigbee" || kelvin <= 0 || kelvin > 1_000_000) {
+    return [kelvin];
+  }
+
+  // ZHA sends whole mireds and floors the conversion back to Kelvin.
+  const mired = Math.floor(1_000_000 / kelvin);
+  const reportedKelvin = Math.floor(1_000_000 / mired);
+  return reportedKelvin === kelvin ? [kelvin] : [kelvin, reportedKelvin];
+}
+
 function buildSceneMismatchedEntitiesTemplate(
   targets: SceneEntityTarget[]
 ): string {
@@ -569,7 +583,10 @@ function buildSceneMismatchedEntitiesTemplate(
       .filter(
         (target) => typeof target.entityState.color_temp_kelvin === "number"
       )
-      .map((target) => [target.entityId, target.entityState.color_temp_kelvin])
+      .map((target) => [
+        target.entityId,
+        expectedColorTemperatureReports(target.entityState.color_temp_kelvin, target.device.protocol),
+      ])
   );
   const expectedWhiteValue = Object.fromEntries(
     targets
@@ -617,7 +634,7 @@ function buildSceneMismatchedEntitiesTemplate(
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
     "{%- elif entity_id in expected_rgbw and (state_attr(entity_id, 'rgbw_color') is none or state_attr(entity_id, 'rgbw_color') | list != expected_rgbw[entity_id]) -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
-    "{%- elif entity_id in expected_color_temp_kelvin and state_attr(entity_id, 'color_temp_kelvin') | int(0) != expected_color_temp_kelvin[entity_id] -%}",
+    "{%- elif entity_id in expected_color_temp_kelvin and state_attr(entity_id, 'color_temp_kelvin') | int(0) not in expected_color_temp_kelvin[entity_id] -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",
     "{%- elif entity_id in expected_white_value and state_attr(entity_id, 'white_value') | int(-1) != expected_white_value[entity_id] -%}",
     "{%- set mismatched.entities = mismatched.entities + [entity_id] -%}",

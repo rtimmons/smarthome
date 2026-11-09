@@ -20,9 +20,9 @@
     "reviewed_at": "2026-10-23"
   },
   "lighting": {
-    "fingerprint": "6ddd64b110712536c6fbfa7c2a334907aca016aad73113959b060633ebcdba1d",
-    "reason": "Raise Living Room Medium above-TV and behind-TV white strips to 20 percent and explicitly turn off dining-table light",
-    "reviewed_at": "2026-10-23"
+    "fingerprint": "bb1af890a306e213428edfca1540aab01ee30486c8b91dd131ff50b40e5f03ef",
+    "reason": "Account for the observed Zigbee color-temperature round trip in scenes and record the November 9 ZHA recovery.",
+    "reviewed_at": "2026-11-09"
   },
   "maintenance": {
     "fingerprint": "960fa20d1b45d200c62f0ad88550db351d16537121cd213319416db201c439a4",
