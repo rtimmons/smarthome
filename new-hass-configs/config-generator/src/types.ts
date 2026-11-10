@@ -12,6 +12,7 @@
 export type DeviceType =
   | "rgbw_light"
   | "dimmer_light"
+  | "on_off_light"
   | "color_light"
   | "white_light"
   | "outlet"

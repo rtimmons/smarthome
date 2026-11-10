@@ -26,6 +26,8 @@ The shared definition in `home-model/rooms.json` connects each selection to its 
 
 Choose the intended room before changing a scene or music group. If the whole dashboard is unavailable, check Home Assistant access and the add-on first. If only music fails, inspect Sonos API health. If only the wall fails, check that device’s reserved address and power.
 
+In the Closet, the bright and dim buttons both turn on the relay at its fixed output. Off and the whole-home All Off shortcut turn it off.
+
 Avoid repeated scene presses as a generic repair: the scene engine already paces Z-Wave traffic and reconciles overlapping intent. If a control works in Home Assistant but fails in the dashboard, preserve that comparison for the maintainer.
 
 ## Configuration and recovery

@@ -385,6 +385,8 @@ export const scenes: SceneRegistry = {
 
   // ============================================================================
   // Closet Scenes
+  // Keep the existing preset IDs for dashboard, webhook, and voice callers.
+  // The closet relay has one on level.
   // ============================================================================
 
   closet_high: {
@@ -392,8 +394,7 @@ export const scenes: SceneRegistry = {
     lights: [
       {
         device: "closet_main",
-        state: "on",
-        brightness: 255
+        state: "on"
       }
     ]
   },
@@ -403,8 +404,7 @@ export const scenes: SceneRegistry = {
     lights: [
       {
         device: "closet_main",
-        state: "on",
-        brightness: 89
+        state: "on"
       }
     ]
   },
@@ -414,8 +414,7 @@ export const scenes: SceneRegistry = {
     lights: [
       {
         device: "closet_main",
-        state: "on",
-        brightness: 20
+        state: "on"
       }
     ]
   },

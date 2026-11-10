@@ -317,8 +317,9 @@ export const devices: DeviceRegistry = {
     closet_main: {
       entity: "light.light_closet_main",
       areaId: "closet",
-      type: "zwave_dimmer_46203",
-      capabilities: ["brightness"]
+      type: "on_off_light",
+      protocol: "zigbee",
+      capabilities: ["on_off"]
     },
 
     // Bedroom lights - Hue

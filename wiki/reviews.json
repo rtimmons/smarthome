@@ -5,9 +5,9 @@
     "reviewed_at": "2026-10-26"
   },
   "dashboard": {
-    "fingerprint": "39e7b20baec122e3d3efbd3fc69811da41e6d412aa4f9ab5218e18c34b219f80",
-    "reason": "Reviewed HTTPS printer navigation and loopback self calls; preserved kiosk and lighting contracts",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "b34ed464c80883b4b97d29ee6fbd3932f3f223141e0805d5d71f5b6c52cbcec6",
+    "reason": "Reviewed the existing Closet dashboard route mapping to the fixed-output relay and updated the closet light and presence sensor area catalog.",
+    "reviewed_at": "2026-11-10"
   },
   "home": {
     "fingerprint": "830c859e0c5d592a5cacdef0ffd16b61e66751469cf1043319b06136a731d89b",
@@ -15,14 +15,14 @@
     "reviewed_at": "2026-10-26"
   },
   "integrations": {
-    "fingerprint": "a25558e8168ae88596069b2f8bd7345a1d35893660d05755eb63db21a5a8a730",
-    "reason": "Reviewed the committed manual-automation rename from human_sensor_presence to closet_presence; it changes the closet lighting trigger only, with no change to the documented HVAC or fan behavior.",
-    "reviewed_at": "2026-10-23"
+    "fingerprint": "07a2f3c6b920aabf3833d85b4ad57a68bc3c2b17a4721d59b87bc083581ef2a0",
+    "reason": "Reviewed the Closet presence automation change to the on/off scene; the Nest and fan controller behavior is unchanged.",
+    "reviewed_at": "2026-11-10"
   },
   "lighting": {
-    "fingerprint": "bb1af890a306e213428edfca1540aab01ee30486c8b91dd131ff50b40e5f03ef",
-    "reason": "Account for the observed Zigbee color-temperature round trip in scenes and record the November 9 ZHA recovery.",
-    "reviewed_at": "2026-11-09"
+    "fingerprint": "dacf0d0f81e8e14add7d2d2dba59df1022cf1222684b0e8e63acf8f1ddfd756d",
+    "reason": "Reviewed the Closet relay cutover and retired node 22, current Bathroom presets and dispatch behavior, and measured Zigbee route failures without introducing pacing.",
+    "reviewed_at": "2026-11-10"
   },
   "maintenance": {
     "fingerprint": "960fa20d1b45d200c62f0ad88550db351d16537121cd213319416db201c439a4",
@@ -40,9 +40,9 @@
     "reviewed_at": "2026-11-08"
   },
   "printing": {
-    "fingerprint": "1e02c522ab035d7807e1e89f7d3aadd89c68c2a98009b0805de4c8c148c228a2",
-    "reason": "Reviewed private printer checkout and manifest URL, unchanged service commands, and source references without GitHub links.",
-    "reviewed_at": "2026-10-26"
+    "fingerprint": "1f2b16a8402cd40010673b334c81a1824169e8045f03820d7e9ce031afeb4313",
+    "reason": "Verified that one physical Made Today button press reached Home Assistant and completed one print; added the trace-based troubleshooting step.",
+    "reviewed_at": "2026-11-10"
   },
   "utilities": {
     "fingerprint": "2c7a75f14e4f0a0b4b27e6b579ee149bd331d60e1fcdb1b4e9a6207e7d463c0c",

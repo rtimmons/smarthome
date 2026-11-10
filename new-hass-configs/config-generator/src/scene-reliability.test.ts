@@ -74,7 +74,7 @@ function intentHelpersForWrapper(script: Record<string, any>): string[] {
 }
 
 describe("Fast scene reliability contract", () => {
-  it("makes every Low preset complete and limits it to dim navigation lights", () => {
+  it("makes every Low preset complete and caps dimmable navigation lights", () => {
     for (const [id, high] of Object.entries(scenes)) {
       if (!id.endsWith("_high")) continue;
       const lowId = id.replace(/_high$/, "_low");
@@ -86,6 +86,10 @@ describe("Fast scene reliability contract", () => {
         expect(lowLights.has(target.entityId), `${lowId}: ${target.entityId} must not retain High`).toBe(true);
       }
       for (const target of lowTargets.filter(t => t.entityState.state === "on")) {
+        if (target.device.type === "on_off_light") {
+          expect(target.entityState, target.entityId).toEqual({ state: "on" });
+          continue;
+        }
         expect(target.device.capabilities, target.entityId).toContain("brightness");
         expect(target.entityState.brightness, target.entityId).toBeGreaterThan(0);
         expect(target.entityState.brightness, target.entityId).toBeLessThanOrEqual(26);
@@ -112,14 +116,22 @@ describe("Fast scene reliability contract", () => {
 
   it("requests zero-duration on and off transitions for every dimmable light platform", () => {
     for (const scene of Object.values(scenes)) {
+      const onOffLights = new Set<string>();
       for (const target of generateSceneTargets(scene)) {
+        if (target.device.type === "on_off_light") onOffLights.add(target.entityId);
         if (target.device.capabilities?.includes("brightness") && !target.device.sceneControl) {
           expect(target.entityState.transition, target.entityId).toBe(0);
         }
       }
       for (const call of generateFastSceneCalls(scene)) {
         if (call.action === "light.turn_on" || call.action === "light.turn_off") {
-          expect(call.data?.transition, call.target.entity_id.join(",")).toBe(0);
+          for (const entityId of call.target.entity_id) {
+            if (onOffLights.has(entityId)) {
+              expect(call.data, entityId).toBeUndefined();
+            } else {
+              expect(call.data?.transition, entityId).toBe(0);
+            }
+          }
         }
       }
     }

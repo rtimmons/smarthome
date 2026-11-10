@@ -93,6 +93,8 @@ Before removing a failed node, save a Z-Wave JS NVM backup. Submit one failed-no
 
 Former nodes 2 (`living_palm`, Minoston MP22ZD) and 16 (`outdoor_cafe`, Minoston MP22ZD) were intentionally removed on 2026-08-21. That day's post-removal controller baseline was 31 nodes, all Alive and ready, with zero unhealthy Z-Wave nodes.
 
+On 2026-11-09, the former Closet GE/Enbrighten 46203 dimmer (node 22) failed a targeted ping and the controller marked it failed. After saving the Z-Wave NVM backup, one removal request completed. The controller and active Home Assistant registries no longer list the dimmer. The ZHA replacement owns `light.light_closet_main`; keep node 22 out of the Z-Wave route plan.
+
 On 2026-10-16, Ryan permanently retired the dead living palm light. Its device entry, scene targets, and product-catalog reference have been removed; do not reserve or restore `light.light_living_palm`. Only `outdoor_cafe` retains its desired entity ID in `devices.ts` with `inventoryStatus: "temporarily_removed"`; inventory reports that expected absence separately from registry drift.
 
 To re-add the outdoor cafe plug later:
@@ -168,18 +170,20 @@ The high background reading and slow RF acknowledgements remain separate observa
 
 ## Current Bathroom Lighting Baseline
 
-As of 2026-08-10, the five main bathroom bulbs are Zigbee devices on ZHA:
+The five main bathroom bulbs are Zigbee devices on ZHA. These are the current
+scene values on Home Assistant's 0–255 scale:
 
 | Device key | Active entity ID | High | Medium | Low | Off / All Off |
 | --- | --- | ---: | ---: | --- | --- |
-| `bathroom_vanity_left` | `light.light_bathroom_vanity_left` | 254 | 155 | 50 | off |
-| `bathroom_vanity_right` | `light.light_bathroom_vanity_right` | 254 | 155 | 50 | off |
-| `bathroom_abovesauna` | `light.light_bathroom_abovesauna` | 254 | 155 | off | off |
-| `bathroom_edison_top` | `light.light_bathroom_edison_top` | 254 | 155 | 50 | off |
-| `bathroom_edison_bottom` | `light.light_bathroom_edison_bottom` | 254 | 155 | 50 | off |
+| `bathroom_vanity_left` | `light.light_bathroom_vanity_left` | 254 | 89 | off | off |
+| `bathroom_vanity_right` | `light.light_bathroom_vanity_right` | 254 | 89 | off | off |
+| `bathroom_abovesauna` | `light.light_bathroom_abovesauna` | 254 | off | off | off |
+| `bathroom_edison_top` | `light.light_bathroom_edison_top` | 254 | 89 | off | off |
+| `bathroom_edison_bottom` | `light.light_bathroom_edison_bottom` | 254 | 89 | 20 | off |
 
 - The vanity and above-sauna bulbs are Third Reality `3RCB01057Z` color bulbs supporting `color_temp` and `xy`. Edison-top and Edison-bottom are brightness-only Sengled `E11-N1G` bulbs. All five report 254 as maximum brightness.
 - Compatible on/off calls should be grouped as non-Z-Wave targets. The above-sauna bulb must not be isolated or paced as a Z-Wave load.
+- Use Bathroom Low to leave only Edison-bottom lit while keeping the vanity bulbs powered as Zigbee routers. See the [ZHA runbook](sonoff-zigbee-thread.md#verification-and-recovery) for the observed parent and delivery timing.
 - Former Z-Wave nodes 38 (vanity-left), 39 (vanity-right), and 40 (above-sauna) are retired and absent from the active device registry and Z-Wave value inventory.
 - The retired entity IDs `light.light_bathroom_vanityleft` and `light.light_bathroom_vanityright` must not appear in source or generated configuration.
 - Home Assistant retains records for removed entities under `core.entity_registry.data.deleted_entities`. These are deletion tombstones, not active entities or callable service targets; active-remnant audits must inspect `data.entities`, the device registry, and the live state machine.

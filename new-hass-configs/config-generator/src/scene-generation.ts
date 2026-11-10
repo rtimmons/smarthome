@@ -997,6 +997,10 @@ function getFastSceneVoiceMetadata(sceneId: string, scene: Scene) {
     },
   };
   const voice = preset ? presets[preset] : undefined;
+  if (voice && room === "Closet" && preset !== "off") {
+    voice.action = "Turn on the closet light at its fixed output";
+    if (preset === "high") voice.phrases.push("turn on the closet light");
+  }
   return voice ? {
     alias: `${room} ${voice.label}`,
     description: `${voice.action}. Phrases: ${voice.phrases.map(phrase => JSON.stringify(phrase)).join(", ")}. ${dispatchGuidance}`,

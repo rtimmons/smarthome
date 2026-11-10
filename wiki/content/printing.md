@@ -12,6 +12,8 @@ Open **Printer Service** from Home Assistant’s sidebar and choose **PNG Upload
 
 Check power, loaded media, and printer reachability first. Distinguish an image-rendering error from a network or hardware error. Do not repeatedly resubmit an uncertain job: it may already be queued.
 
+For the living-room **Made Today** Zigbee button, check the **Button 3RSB22BZ 1 - Print Made Today** automation trace after one press. The button LED confirms a local press, while a fresh trace confirms Home Assistant received it. On November 9, one press produced several ZHA events; the automation completed one print through `rest_command.printer_made_today`. If the trace is missing, check the button's ZHA link before changing the printer settings.
+
 The printer service listens on port 8099. The restricted VLAN is allowed to reach that service only; hosting the wiki must not broaden those rules.
 
 ## Configuration and recovery

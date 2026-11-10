@@ -96,12 +96,6 @@
       "routeSpeed": 2
     },
     {
-      "nodeId": 22,
-      "name": "light_closet_main",
-      "repeaters": [],
-      "routeSpeed": 2
-    },
-    {
       "nodeId": 24,
       "name": "light_guestbathroom_sconce",
       "repeaters": [],

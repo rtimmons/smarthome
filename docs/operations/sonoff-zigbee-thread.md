@@ -4,7 +4,7 @@ The installed Sonoff ZBDongle-E currently serves **Zigbee only**. Thread and Mat
 
 The successful migration retained all eight paired Zigbee devices and all 117 entities. An uncached read from the existing Sengled top bathroom bulb confirmed communication after restoration. Six devices were already unavailable before migration; their retained registrations do not establish that they are online.
 
-## Installed configuration
+## October 16 migration baseline
 
 | Component | Configuration |
 | --- | --- |
@@ -19,6 +19,9 @@ The successful migration retained all eight paired Zigbee devices and all 117 en
 | Thread network | Saved `ha-thread-4548`, channel 20; radio service off (`otbr_enable: false`) |
 | Thread integrations | Thread and OpenThread Border Router disabled, configuration retained |
 | Matter | Official Matter Server app 9.2.0 stopped, manual startup; Matter integration disabled |
+
+The November 9 lighting checks ran on Home Assistant Core 2026.10.4 and
+confirmed that the Zigbee network was still on channel 20.
 
 The multiprotocol app owns the USB device and must keep running for Zigbee. ZHA connects to that app, so it must not also open the physical serial port. The app starts automatically, with its watchdog enabled, while its Thread service stays off. The SONOFF flasher stays stopped with manual startup; stop ZHA and the multiprotocol app before using it.
 
@@ -35,6 +38,46 @@ The live retry used `tcp://`, completed the normal ZHA restore, and produced a f
 This workaround is verified for the versions above. Recheck reset and reconnect behavior when updating bellows or the vendor app. SONOFF's published guide still describes ZHA as limited to EZSP 14; the installed bellows supports EZSP 16 through 19, so that explanation does not describe this installation.
 
 ## Verification and recovery
+
+The Closet MOES TS0003 (`_TZ3000_gykhrpiv`) is a mains-powered Zigbee router on
+channel 20. The bottom touch button controls endpoint 1, which drives the
+fixture as `light.light_closet_main`. The other channels are disabled in Home
+Assistant and stay outside scenes and All Off. Verify switching with an
+uncached read of the On/Off cluster (`0x0006`) on endpoint 1. A blank map for a
+new device can mean the neighbor scan has yet to run.
+
+On November 9, all five Bathroom bulbs answered fresh On/Off reads after
+their wall switches were turned on. The coordinator's refreshed routing table
+showed the Closet MOES as the next hop for both vanity bulbs and the
+above-sauna bulb. Edison-top was a child of the coordinator. Edison-bottom
+still used vanity-right as its parent, even in route records that also used
+the MOES. Keep vanity-right powered and use a lighting preset to turn its
+output off.
+
+The two Edison bulbs share a wall switch. Defer a factory reset until the
+lower bulb can be isolated. To test the move, admit the lower bulb's fresh
+join via the MOES, verify its actual parent, and check fresh reads with the
+vanity switch off and the Edison fixture powered. Zigbee chooses routes
+automatically. The targeted re-pair and physical vanity-off test are deferred.
+
+The Closet High request at 21:29 reached `light.turn_on` in about 9 ms and the
+relay reported on about 3.5 seconds after the request. The two-second
+convergence wait followed the first radio command. With the Bathroom routers
+online, a later logged cycle reported on after 413 ms and off after 163 ms,
+with one successful Zigbee unicast per command. Compare the worker trace,
+radio send result, and relay state timestamp before changing scene timing.
+
+The November 9 parallel light exercise queued the first six Zigbee requests
+within 14 ms of one another. During Off, the coordinator returned `FAIL` for
+left vanity and Edison-bottom, and separately reported
+`ZIGBEE_SOURCE_ROUTE_FAILURE` for Edison-bottom. Both sends succeeded on retry.
+A four-cycle comparison delayed left vanity by 90 ms and Edison-bottom by
+180 ms in two Off trials. The last state report took 1.21–1.64 s with the
+stagger and 1.33–6.28 s in the two parallel trials. The same exercise saw
+repeated source-route and many-to-one route failures, with one On cycle taking
+39 s for the last bulb to report. The small sample and intermittent failures
+did not establish a scheduling improvement. Keep parallel dispatch and check
+radio send results and routes when delays recur.
 
 Use `just ha-state light.light_bathroom_edison_top` for a basic state check. A cached state alone is not a radio test: use ZHA's cluster attribute read with caching disabled to confirm a fresh response. While parked, ZHA should be loaded and Thread, OpenThread Border Router, and Matter should be disabled. After enabling them, check all four integration states separately.
 

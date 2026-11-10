@@ -97,17 +97,23 @@ Script: script.fast_scene_living_room_high
    - Uses the webhook only for standalone development without a Supervisor token
 
 4. **Fast Scene Wrapper** (generated in `scripts.yaml`)
-   - `script.fast_scene_living_room_high` runs in `single` mode
+   - `script.fast_scene_living_room_high` runs in `restart` mode and records the latest intent for its targets
    - Calls `script.fast_scene_dispatch` directly and remains active until it finishes
    - Generated webhook and switch automations also call this wrapper directly; they do not use non-blocking `script.turn_on`
 
 5. **Shared Dispatcher**
-   - Serializes scene work in `queued` mode
+   - Runs disjoint room requests concurrently and restarts the per-room dispatcher when a newer request arrives for that room
    - Skips unavailable/unknown entities and dead Z-Wave nodes
-   - Groups compatible non-Z-Wave calls and sends isolated Z-Wave calls in paced batches of at most two
+   - Starts the non-Z-Wave and Z-Wave branches together, grouping compatible non-Z-Wave calls and spacing individual Z-Wave submissions 500 ms apart through a global gate
+   - Rechecks mismatches after two seconds and resends only eligible targets that still differ
    - Continues after individual action errors and reports skipped targets
 
 Native `scene.<scene_id>` entities are still generated for UI/compatibility, but controls, tests, and diagnostics must use `script.fast_scene_<scene_id>`; `scene.turn_on` bypasses the reliability path.
+
+For an on/off relay exposed by Home Assistant as a light, declare
+`type: "on_off_light"` and `capabilities: ["on_off"]`. Set the actual protocol,
+as the Closet MOES does with `protocol: "zigbee"`, and use only `state` in its
+presets. Keep brightness and transition values for lights that support them.
 
 ### Workflow
 

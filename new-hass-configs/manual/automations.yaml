@@ -65,12 +65,8 @@
       entity_id: light.light_closet_main
       state: "off"
   actions:
-    - alias: "Turn on closet light at 10% brightness when entering"
-      action: light.turn_on
-      target:
-        entity_id: light.light_closet_main
-      data:
-        brightness_pct: 10
+    - alias: "Turn on closet light when entering"
+      action: script.fast_scene_closet_high
     - alias: "Wait until no presence detected for 37.5 seconds"
       wait_for_trigger:
         - trigger: state

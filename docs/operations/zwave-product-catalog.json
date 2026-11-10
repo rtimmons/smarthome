@@ -103,12 +103,31 @@
       "knownRepoReferences": [
         {
           "deviceKey": "human_sensor",
-          "entityId": "binary_sensor.human_sensor_presence",
-          "haDeviceName": "human-sensor",
-          "area": "living_room",
+          "entityId": "binary_sensor.closet_presence",
+          "haDeviceName": "closet_presence",
+          "area": "closet",
           "host": "192.168.1.81",
           "mac": "94:a9:90:79:fd:40",
-          "note": "Presence sensor endpoint was unreachable during the 2026-07-07 product audit; identity comes from HA registries."
+          "note": "The ESPHome hostname remains human-sensor. Home Assistant uses the closet device and presence entity names."
+        }
+      ]
+    },
+    {
+      "id": "moes-ts0003-closet-relay",
+      "manufacturer": "MOES",
+      "label": "TS0003",
+      "description": "Three-channel wall relay. The bottom button controls the closet fixture through endpoint 1.",
+      "zigbee": {
+        "platform": "zha",
+        "manufacturer": "_TZ3000_gykhrpiv",
+        "model": "TS0003",
+        "supportedColorModes": ["onoff"]
+      },
+      "knownRepoReferences": [
+        {
+          "deviceKey": "closet_main",
+          "entityId": "light.light_closet_main",
+          "area": "closet"
         }
       ]
     },
