@@ -1,16 +1,24 @@
 # NAS storage migration — start here
 
 This is the single entry point and execution queue for NAS storage migration.
-Updated October 29, 2026. **The private-library path cutover is complete:**
+Updated November 9, 2026. **The private-library path cutover is complete:**
 `PrivatePlexLibrary` is registered on the NAS and existing Plex library ID 1
 uses its new physical root. Discovery, bounded streaming and AD Ryan synthetic
 SMB read/write checks passed. The replacement HBS job now selects the new root;
-legacy `Backup 1` still excludes it. The replacement seed started at 15:27 Eastern; retain the old B2 copy.
-Next: complete the seed and verify recovery. Wiki's named-share migration is complete.
+legacy `Backup 1` still excludes it. HBS reports the replacement seed finished
+November 3; retain the old B2 copy pending independent recovery verification.
+Wiki's named-share migration is complete.
 Forgejo now uses its named share and dedicated runtime identity; see the
 [service checkpoint](#service-data-and-archive-migration) for verification and remaining backup work.
 
 ## Cold-agent continuation
+
+**November 9, QTS share batch complete:** All 14 approved empty shares were
+saved and verified against the [prestage checklist](nas-qts-prestage.md). The
+11 restricted local account forms are ready for the operator's password entry
+and submission. Follow with account disablement, UID and privilege readback,
+and a fresh native QTS settings export. No service cutover accompanied the
+share creation. HBS seed completion is observed; production recovery is open.
 
 **October 29, next account checkpoint prepared:** Filex and the restricted
 backup-account checkpoint are committed as `e9f2703`. The next candidate is
@@ -169,17 +177,18 @@ execution history and rollback context, not the next task.
 2. Refresh read-only NAS health, HBS activity/selections and Time Machine recovery
    status. The stopped-job observations below are dated: legacy `Backup 1` still
    has an enabled daily 02:00 Eastern schedule and can restart automatically.
-   Replacement `B2 QuDedup 20261027` is manually scheduled, running since 15:27
-   Eastern, capped at 10 MiB/s; the follow-up monitor is paused. Preserve the run
-   and do not restart the automation implicitly.
+   Replacement `B2 QuDedup 20261027` was manually started October 28, capped at
+   10 MiB/s; HBS reports it finished November 3. Do not restart the backup or
+   the paused follow-up monitor implicitly.
 3. Coordinate with **Fix TimeMachine backup failures** and **Diagnose slow b2
    backups** before HBS edits or resumption. This migration chat was explicitly
    authorized to message both. Verify the current recovery decision rather than
    treating a passed Time Machine Verify Backups result as a completed restore.
    The user subsequently accepted the known SATA risk for the new-root seed.
-4. Verify completion of the running new-root backup for `/share/PrivatePlexLibrary`, resolving
-   to `/share/CACHEDEV2_DATA/PrivatePlexLibrary`. Confirm the exact HBS destination,
-   source selection, retention and scheduling against the saved checkpoint.
+4. Reconcile the completed run with the exact destination, source selection,
+   retention and scheduling in the saved checkpoint. The intended new root is
+   `/share/PrivatePlexLibrary`, resolving to
+   `/share/CACHEDEV2_DATA/PrivatePlexLibrary`.
    Keep the four other selected roots and existing 10 MiB/s limits unless the
    user authorizes a change. The new-root seed started at 15:27 Eastern.
 5. After complete coverage, restore a bounded private data/metadata sample to
@@ -534,7 +543,8 @@ permission to recreate the volume. Preserve all stable bindings and snapshots.
 | --- | --- |
 | Wiki identity and named share | Complete; `f8c7fd4`, followed by SOPS access-check simplification `738901e`; see its completion ledger |
 | PrivatePlexLibrary | Path/share/Plex cutover complete; bounded stream and general-profile denial pass; discovery and AD Ryan synthetic SMB read/write passed; existing descendant access remains unqualified |
-| Private-library B2 replacement | New root saved in replacement job; legacy still excludes it. Replacement seed running since 15:27 Eastern with user acceptance of known SATA risk. Retain old history until complete coverage and independent recovery verification |
+| Private-library B2 replacement | New root saved in replacement job; legacy still excludes it. HBS reports seed finished November 3, zero skipped files. Retain old history until independent recovery verification and the retirement conditions are met |
+| QTS batch preparation | [14 empty shares saved and verified](nas-qts-prestage.md); 11 restricted account forms ready for the operator's password entry and submission |
 | Multimedia legacy share | Retired through QTS with data deletion unchecked; backing directory retained; see the 102-byte inventory discrepancy above |
 | Unattended app backups | Verify the next eligible NAS/cloud/Forgejo captures and offsite restores, including wiki mapping and a current native QTS export |
 | Disk/power/snapshot work | Still unresolved; separate diagnosis before stress tests or broader storage redesign |
