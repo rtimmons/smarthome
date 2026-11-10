@@ -161,15 +161,33 @@
   max: 5
 
 - id: button_3rsb22bz_1_print_made_today
-  alias: Button 3RSB22BZ 1 - Print Made Today
-  description: Print the "Made Today" label preset when the button is pressed.
+  alias: Button 3RSB22BZ 1 - Print Date Label
+  description: Print a Made Today label on a single click or a Best By label dated two weeks out on a double-click.
   triggers:
-    - trigger: event
-      event_type: zha_event
-      event_data:
-        device_ieee: "ff:ff:b4:0e:06:06:53:bf"
+    - trigger: device
+      domain: zha
+      device_id: "491adf9902628ec1137141c4203cc4d8"
+      type: remote_button_short_press
+      subtype: remote_button_short_press
+      id: made_today
+    - trigger: device
+      domain: zha
+      device_id: "491adf9902628ec1137141c4203cc4d8"
+      type: remote_button_double_press
+      subtype: remote_button_double_press
+      id: best_by_two_weeks
   actions:
-    - action: rest_command.printer_made_today
+    - choose:
+        - conditions:
+            - condition: trigger
+              id: made_today
+          sequence:
+            - action: rest_command.printer_made_today
+        - conditions:
+            - condition: trigger
+              id: best_by_two_weeks
+          sequence:
+            - action: rest_command.printer_best_by_two_weeks
   mode: single
 
 - id: living_room_heat_pump_fans_follow_nest

@@ -15,13 +15,13 @@
     "reviewed_at": "2026-10-26"
   },
   "integrations": {
-    "fingerprint": "07a2f3c6b920aabf3833d85b4ad57a68bc3c2b17a4721d59b87bc083581ef2a0",
-    "reason": "Reviewed the Closet presence automation change to the on/off scene; the Nest and fan controller behavior is unchanged.",
+    "fingerprint": "f8cbed3eb8df96646c8c0cb25dd0884fff0ec689cf222fc65f1f7f72a86e6164",
+    "reason": "The shared manual automation file changes only the printer button; climate and fan actions are unchanged.",
     "reviewed_at": "2026-11-10"
   },
   "lighting": {
-    "fingerprint": "dacf0d0f81e8e14add7d2d2dba59df1022cf1222684b0e8e63acf8f1ddfd756d",
-    "reason": "Reviewed the Closet relay cutover and retired node 22, current Bathroom presets and dispatch behavior, and measured Zigbee route failures without introducing pacing.",
+    "fingerprint": "3ee27bc6c149ae59709af09b98dfcc34496f3d819133251f369c77a69b99e102",
+    "reason": "Use the live ZHA single and double press triggers for the printer button and route them to separate date-label commands; document both gestures in Printing.",
     "reviewed_at": "2026-11-10"
   },
   "maintenance": {
@@ -40,8 +40,8 @@
     "reviewed_at": "2026-11-08"
   },
   "printing": {
-    "fingerprint": "1f2b16a8402cd40010673b334c81a1824169e8045f03820d7e9ce031afeb4313",
-    "reason": "Verified that one physical Made Today button press reached Home Assistant and completed one print; added the trace-based troubleshooting step.",
+    "fingerprint": "432f7768d6ddeadb95c88c240c789fac266897052c7e86014a80325f2419c8a2",
+    "reason": "Document the Made Today single click, the two-week Best By double-click, and how to verify the button trace.",
     "reviewed_at": "2026-11-10"
   },
   "utilities": {

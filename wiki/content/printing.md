@@ -8,11 +8,13 @@ The printer service renders and sends labels to the Brother QL-810W. Its reserve
 
 Open **Printer Service** from Home Assistant’s sidebar and choose **PNG Upload** to preview, print, or inspect saved labels. From the repository, `just print-check <file.png>` performs a preflight without printing; `just print <file.png>` prints. Select the intended label dimensions before sending a job.
 
+Click the living-room **Made Today** Zigbee button once to print a **Made Today** label. Double-click to print a **Best By** label with the date two weeks from today.
+
 ## If a label does not print
 
 Check power, loaded media, and printer reachability first. Distinguish an image-rendering error from a network or hardware error. Do not repeatedly resubmit an uncertain job: it may already be queued.
 
-For the living-room **Made Today** Zigbee button, check the **Button 3RSB22BZ 1 - Print Made Today** automation trace after one press. The button LED confirms a local press, while a fresh trace confirms Home Assistant received it. On November 9, one press produced several ZHA events; the automation completed one print through `rest_command.printer_made_today`. If the trace is missing, check the button's ZHA link before changing the printer settings.
+For the living-room **Made Today** button, check the **Button 3RSB22BZ 1 - Print Date Label** automation trace after the gesture. The button LED confirms a local press, while a fresh trace confirms Home Assistant received a single or double-click. The automation ignores other Zigbee events from the button. If only the double-click fails to produce a trace, check that the device's **Disable double click** switch is off. If neither gesture produces a trace, check the button's ZHA link before changing the printer settings.
 
 The printer service listens on port 8099. The restricted VLAN is allowed to reach that service only; hosting the wiki must not broaden those rules.
 

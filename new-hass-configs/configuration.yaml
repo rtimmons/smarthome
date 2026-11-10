@@ -23,3 +23,6 @@ rest_command:
   printer_made_today:
     url: "http://localhost:8099/bb/execute-print?tpl=best_by&Offset=0&Prefix=Made%3A"
     method: post
+  printer_best_by_two_weeks:
+    url: "http://localhost:8099/bb/execute-print?tpl=best_by&Offset=2%20weeks"
+    method: post
