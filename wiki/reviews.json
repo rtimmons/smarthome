@@ -15,14 +15,14 @@
     "reviewed_at": "2026-10-26"
   },
   "integrations": {
-    "fingerprint": "f8cbed3eb8df96646c8c0cb25dd0884fff0ec689cf222fc65f1f7f72a86e6164",
-    "reason": "The shared manual automation file changes only the printer button; climate and fan actions are unchanged.",
-    "reviewed_at": "2026-11-10"
+    "fingerprint": "4193e567f0e394924c89ca9e158e2d37f8cb4d128b1f87bbdddc04ccf9217fbb",
+    "reason": "Verified the Living Room fan automation checks the Nest when any output on either ESPHome controller comes back online, including outputs restored to off.",
+    "reviewed_at": "2026-11-11"
   },
   "lighting": {
-    "fingerprint": "3ee27bc6c149ae59709af09b98dfcc34496f3d819133251f369c77a69b99e102",
-    "reason": "Use the live ZHA single and double press triggers for the printer button and route them to separate date-label commands; document both gestures in Printing.",
-    "reviewed_at": "2026-11-10"
+    "fingerprint": "366b49c033c660762bc8751d2e1def7cacc57275a3eeeb6a541eb071ca98265c",
+    "reason": "Reviewed the shared manual automation file and generator test changes. The change handles ESPHome fan reconnections and does not alter lighting triggers or actions.",
+    "reviewed_at": "2026-11-11"
   },
   "maintenance": {
     "fingerprint": "960fa20d1b45d200c62f0ad88550db351d16537121cd213319416db201c439a4",

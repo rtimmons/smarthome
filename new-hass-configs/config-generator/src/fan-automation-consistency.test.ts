@@ -45,7 +45,7 @@ describe("living-room heat-pump fan inventory", () => {
     expect(automation).toBeDefined();
 
     const fanGuard = automation.triggers.find(
-      (trigger: Record<string, unknown>) => Array.isArray(trigger.entity_id)
+      (trigger: Record<string, unknown>) => trigger.to === "on"
     );
     const activeTarget = automation.actions[0].choose[0].sequence[0].target;
     const inactiveTarget = automation.actions[0].default[0].target;
@@ -58,6 +58,19 @@ describe("living-room heat-pump fan inventory", () => {
     expect(serializedAutomation).toContain(CLIMATE_ENTITY_ID);
     expect(serializedAutomation).toContain("heating");
     expect(serializedAutomation).toContain("cooling");
+  });
+
+  it("checks the Nest when any fan output returns online, including when it restores to off", () => {
+    const automation = automations.find(
+      (candidate: Record<string, unknown>) => candidate.id === AUTOMATION_ID
+    );
+    const reconnect = automation.triggers.find(
+      (trigger: Record<string, unknown>) => trigger.id === "fan_reconnected_off"
+    );
+
+    expect(reconnect).toMatchObject({ trigger: "state", to: "off" });
+    expect(sorted(reconnect.from)).toEqual(["unavailable", "unknown"]);
+    expect(sorted(reconnect.entity_id)).toEqual(sorted(FAN_ENTITIES));
   });
 
   it("keeps the stable hardware catalog and operations guide in sync", () => {

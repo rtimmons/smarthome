@@ -79,7 +79,7 @@ Controllers 2 and 3 use the same pattern with `fancontroller_2` and `fancontroll
 | `fancontroller 1` | `fan.fancontroller_1_fan_1`, `fan.fancontroller_1_fan_2`, `fan.fancontroller_1_fan_3`, `fan.fancontroller_1_fan_4` |
 | `fancontroller 2` | `fan.fancontroller_2_fan_1`, `fan.fancontroller_2_fan_2`, `fan.fancontroller_2_fan_3`, `fan.fancontroller_2_fan_4` |
 
-The automation also reconciles on Home Assistant startup and turns the fans back off if ESPHome restores an output to on while the Nest is inactive. `fan.turn_on` deliberately omits a percentage so each output keeps its configured/restored speed.
+The automation checks the Nest on Home Assistant startup and again as fan outputs become available on either board. An output that reconnects in the off state can start during a heating or cooling cycle already in progress. An output that reconnects in the on state is turned off if the Nest is inactive. `fan.turn_on` omits a percentage so each output keeps its configured or restored speed.
 
 ## Hardware Mapping
 

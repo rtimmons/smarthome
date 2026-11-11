@@ -212,6 +212,20 @@
         - fan.fancontroller_2_fan_3
         - fan.fancontroller_2_fan_4
       to: "on"
+    # Reconnects that restore an output to on already match the trigger above.
+    - trigger: state
+      id: fan_reconnected_off
+      entity_id:
+        - fan.fancontroller_1_fan_1
+        - fan.fancontroller_1_fan_2
+        - fan.fancontroller_1_fan_3
+        - fan.fancontroller_1_fan_4
+        - fan.fancontroller_2_fan_1
+        - fan.fancontroller_2_fan_2
+        - fan.fancontroller_2_fan_3
+        - fan.fancontroller_2_fan_4
+      from: ["unavailable", "unknown"]
+      to: "off"
   actions:
     - choose:
         - conditions:
