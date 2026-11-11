@@ -1,13 +1,13 @@
 {
   "audio": {
-    "fingerprint": "cd5c138443811264b4127ef5f96c3163c88729883c129e27f611d14e7b4710a4",
-    "reason": "Reviewed Sonos index links against the household guide and canonical architecture; disabled legacy rollback status is retained.",
-    "reviewed_at": "2026-10-26"
+    "fingerprint": "e4202c5b42d9b997738848158a0cbc4cb0489be37036bc6525faec5c6fbea24c",
+    "reason": "Reviewed body-parser for the active Sonos API and music-metadata for the retained Node rollback. The documented routing and disabled legacy status still apply.",
+    "reviewed_at": "2026-11-11"
   },
   "dashboard": {
-    "fingerprint": "b34ed464c80883b4b97d29ee6fbd3932f3f223141e0805d5d71f5b6c52cbcec6",
-    "reason": "Reviewed the existing Closet dashboard route mapping to the fixed-output relay and updated the closet light and presence sensor area catalog.",
-    "reviewed_at": "2026-11-10"
+    "fingerprint": "8259bf4481ea462ac65b892799d268959710c64c5815a2c2f0b44fa3bc4d6008",
+    "reason": "Reviewed the patched Express body-parser dependency and Vitest and Vite updates. Dashboard routes, controls, and configuration need no guide changes.",
+    "reviewed_at": "2026-11-11"
   },
   "home": {
     "fingerprint": "830c859e0c5d592a5cacdef0ffd16b61e66751469cf1043319b06136a731d89b",
@@ -20,8 +20,8 @@
     "reviewed_at": "2026-11-11"
   },
   "lighting": {
-    "fingerprint": "366b49c033c660762bc8751d2e1def7cacc57275a3eeeb6a541eb071ca98265c",
-    "reason": "Reviewed the shared manual automation file and generator test changes. The change handles ESPHome fan reconnections and does not alter lighting triggers or actions.",
+    "fingerprint": "50cb08b3e1a2d10b2115ceccd016cad3091fb46b2e7b2dae44d8fdf478241c12",
+    "reason": "Reviewed the generator Vitest and Vite security updates. The changes are confined to test tooling, so the lighting guide still describes the generated configuration.",
     "reviewed_at": "2026-11-11"
   },
   "maintenance": {
@@ -40,13 +40,13 @@
     "reviewed_at": "2026-11-08"
   },
   "printing": {
-    "fingerprint": "432f7768d6ddeadb95c88c240c789fac266897052c7e86014a80325f2419c8a2",
-    "reason": "Document the Made Today single click, the two-week Best By double-click, and how to verify the button trace.",
-    "reviewed_at": "2026-11-10"
+    "fingerprint": "292699e6fd0437f9318a7d0de1936c7bea953f31e21873871ec61e1e3daf0b02",
+    "reason": "Reviewed Snapshot Service dependency fixes for Fastify, Zod, URI parsing, and tests. The documented receipt and fixture endpoints still match the implementation.",
+    "reviewed_at": "2026-11-11"
   },
   "utilities": {
-    "fingerprint": "2c7a75f14e4f0a0b4b27e6b579ee149bd331d60e1fcdb1b4e9a6207e7d463c0c",
-    "reason": "Reviewed protected TinyURL management and preserved generated LAN links and explicit base override",
-    "reviewed_at": "2026-10-25"
+    "fingerprint": "2d8c2ce5a85a1afb3ddacf024fa0de3efc0e250ed8f7b9a09c9c8ebcdefc5cca",
+    "reason": "Reviewed TinyURL dependency fixes for Fastify, static assets, Zod, URI parsing, and tests. The documented routing, access, and MongoDB configuration still apply.",
+    "reviewed_at": "2026-11-11"
   }
 }

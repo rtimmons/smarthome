@@ -20,9 +20,7 @@ updates:
       include: scope
 
   - package-ecosystem: uv
-    directories:
-      - /printer
-      - /talos
+    directory: /talos
     schedule:
       interval: weekly
       day: monday
