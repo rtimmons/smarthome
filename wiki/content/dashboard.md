@@ -14,7 +14,7 @@ for recovery. See [network access](network.md#named-web-services).
 
 ## What happens when you press a control
 
-The browser talks to the Grid Dashboard server. Lighting requests go through Home Assistant and the generated fast-scene scripts. Sonos requests go through the separate Sonos API. The wall uses its dedicated LEDGrid endpoint at the reserved address `192.168.1.98:5000`.
+The browser talks to the Grid Dashboard server. Lighting requests go through Home Assistant and the generated fast-scene scripts. Sonos requests go through the separate Sonos API. The Rainbow, Sparkle, and Tetris buttons in Living Room and Kitchen use the wall's guarded automation API at `http://ledgridwall5.home.arpa:5000`. Each press selects the animation at the current master brightness and waits for controller acknowledgement.
 
 The dashboard, Sonos API, and Home Assistant use the same names for fixed rooms: Bathroom, Closet, Bedroom, Patio, Kitchen, Living Room, Guest Bathroom, and Office. Home Assistant calls physical rooms **areas**; its geographic zones and Sonos playback groups have separate purposes. The old Main Bathroom and Main Closet names remain voice aliases.
 
@@ -24,7 +24,7 @@ The shared definition in `home-model/rooms.json` connects each selection to its 
 
 ## Daily use and troubleshooting
 
-Choose the intended room before changing a scene or music group. If the whole dashboard is unavailable, check Home Assistant access and the add-on first. If only music fails, inspect Sonos API health. If only the wall fails, check that device’s reserved address and power.
+Choose the intended room before changing a scene or music group. If the whole dashboard is unavailable, check Home Assistant access and the add-on first. If only music fails, inspect Sonos API health. If only the wall fails, check its power and confirm that the add-on can reach `/api/v1/automation/status` on the wall origin configured by `ledgrid_base_url`.
 
 In the Closet, the bright and dim buttons both turn on the relay at its fixed output. Off and the whole-home All Off shortcut turn it off.
 
@@ -32,7 +32,7 @@ Avoid repeated scene presses as a generic repair: the scene engine already paces
 
 ## Configuration and recovery
 
-UI and server sources live under `grid-dashboard/ExpressServer`; add-on network and dependency declarations live in its manifest. The LED Grid Wall uses its installed native Home Assistant integration; the repository package supplies the compatibility and fast-scene scripts. Keep that native package when deploying: the former template/REST package would duplicate its entities. Living room scene behavior is described in the [lighting guide](lighting.md). Deploy through the root recipes, and use the [maintenance guide](maintenance.md) for validation and recovery. Restore application configuration from the appropriate Home Assistant backup rather than changing device addresses to match a stale bookmark.
+UI and server sources live under `grid-dashboard/ExpressServer`; add-on network and dependency declarations live in its manifest. Home Assistant room scenes use the native wall integration and the repository package's compatibility and fast-scene scripts. Keep that package when deploying. The dashboard animation pickers have their own wall connection. Living room scene behavior is described in the [lighting guide](lighting.md). Deploy through the root recipes, and use the [maintenance guide](maintenance.md) for validation and recovery.
 
 After editing the shared room definition, run `just rooms-generate`, test both Grid Dashboard and Sonos API, and deploy both services. `just rooms-check` detects stale generated definitions. `just rooms-audit` compares live area names and fixed-speaker assignments and checks known legacy areas for members and references. `just rooms-apply` aligns known names and preserves existing IDs and aliases. Its optional `--remove-empty-legacy` flag removes only explicitly listed legacy areas that have no devices, no entities (including disabled ones), and no detected stored configuration references. It saves private area recovery metadata before changes. These are explicit maintenance operations; there is no automatic name synchronization from Sonos.
 

@@ -5,8 +5,8 @@
     "reviewed_at": "2026-11-11"
   },
   "dashboard": {
-    "fingerprint": "961736654a81e21827d9a000a8e5be03af13f4466daa170e5dcc505ccaacd313",
-    "reason": "Updated the LED Grid Wall catalog entry to describe its separate outlet and All Off behavior.",
+    "fingerprint": "c6de807a2b773d92184c1cdd60aa0070699255a73b6cd5ea2a5ff5f9b437c4e4",
+    "reason": "Reviewed the Pi 5 wall hostname, guarded animation commands, and lossless controller receipt IDs used by the dashboard pickers.",
     "reviewed_at": "2026-11-13"
   },
   "home": {
@@ -35,9 +35,9 @@
     "reviewed_at": "2026-11-13"
   },
   "network": {
-    "fingerprint": "d9cdf1e041c513bc30f64a591b11011e7a90692bbb3e494719bb59826aeb6d9d",
-    "reason": "Reviewed DNS negative-query scope and the scanner identity override, including credential and state checks and refusal of static deployment before resolver rollback.",
-    "reviewed_at": "2026-11-08"
+    "fingerprint": "ce2eb3fcad4f51e0a303b40545024e98a8587d2e6ad7e8388d9fc257a7ff35ea",
+    "reason": "Updated the former wall reservation entry to point to the Pi 5 hostname now used by the dashboard. Verified the new name resolves and serves the wall API from Home Assistant.",
+    "reviewed_at": "2026-11-13"
   },
   "printing": {
     "fingerprint": "292699e6fd0437f9318a7d0de1936c7bea953f31e21873871ec61e1e3daf0b02",

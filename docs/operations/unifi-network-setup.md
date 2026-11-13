@@ -71,7 +71,7 @@ The following service endpoints use UniFi fixed-IP reservations on `Default`. Tr
 | QNAP NAS | `24:5e:be:5f:d6:ae` | `192.168.1.66` | Stable storage and administration endpoint |
 | Canon printer | `34:9f:7b:a4:69:e0` | `192.168.1.150` | Stable printer/scanner endpoint |
 | Brother QL-810W | `BRWACF23C3213C4` / `ac:f2:3c:32:13:c4` | `192.168.1.192` | `printer` add-on raw TCP/9100 target |
-| LED Grid Wall | `ledgridwall` / `88:a2:9e:36:1b:dc` | `192.168.1.98` | `grid-dashboard` LEDGrid API target on TCP/5000 |
+| Former LED Grid Wall host | `ledgridwall` / `88:a2:9e:36:1b:dc` | `192.168.1.98` | The Pi 5 wall now serves the dashboard at `ledgridwall5.home.arpa:5000` |
 | Prusa Alpha | `10:9c:70:0a:ec:70` | `192.168.1.118` | Preserve the printer's address after the gateway migration collision |
 | Nest I think | `64:16:66:97:50:0a` | `192.168.1.19` | Separate the thermostat from the printer's address; below the dynamic `.20`–`.254` pool |
 
