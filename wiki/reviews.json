@@ -5,9 +5,9 @@
     "reviewed_at": "2026-11-11"
   },
   "dashboard": {
-    "fingerprint": "8259bf4481ea462ac65b892799d268959710c64c5815a2c2f0b44fa3bc4d6008",
-    "reason": "Reviewed the patched Express body-parser dependency and Vitest and Vite updates. Dashboard routes, controls, and configuration need no guide changes.",
-    "reviewed_at": "2026-11-11"
+    "fingerprint": "961736654a81e21827d9a000a8e5be03af13f4466daa170e5dcc505ccaacd313",
+    "reason": "Updated the LED Grid Wall catalog entry to describe its separate outlet and All Off behavior.",
+    "reviewed_at": "2026-11-13"
   },
   "home": {
     "fingerprint": "830c859e0c5d592a5cacdef0ffd16b61e66751469cf1043319b06136a731d89b",
@@ -20,9 +20,9 @@
     "reviewed_at": "2026-11-11"
   },
   "lighting": {
-    "fingerprint": "50cb08b3e1a2d10b2115ceccd016cad3091fb46b2e7b2dae44d8fdf478241c12",
-    "reason": "Reviewed the generator Vitest and Vite security updates. The changes are confined to test tooling, so the lighting guide still describes the generated configuration.",
-    "reviewed_at": "2026-11-11"
+    "fingerprint": "018979e8ed8ac0cb79c8c229e94b95ef7563bde804cbccb91344a7895ad14efa",
+    "reason": "All Off now switches off the LED Grid Wall outlet through the paced Z-Wave queue. Reviewed the generated scene and retained the smart-bulb outlet protection.",
+    "reviewed_at": "2026-11-13"
   },
   "maintenance": {
     "fingerprint": "960fa20d1b45d200c62f0ad88550db351d16537121cd213319416db201c439a4",

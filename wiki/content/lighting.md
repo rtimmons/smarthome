@@ -18,7 +18,7 @@ Every Low preset explicitly sets all of its room's scene-controlled lights, so s
 
 The Closet uses a MOES Zigbee relay. Its bottom button controls the fixture. High, Medium, and Low all turn on the same fixed output. The presence sensor turns it on when you enter and the light is off, then turns it off after 37.5 seconds of continuous absence. Closet Off and All Off also turn off the fixture. The other two channels are outside the lighting presets.
 
-The LED wall is dark in Living Room High, Medium, Low, Off and All Off to keep the lighting presets free of color and animation. Those requests set master brightness to exactly zero, preserving playback and the selected animation for separate wall controls. Its protected power outlet stays on. Wall commands run once per request; the other lights retain their normal mismatch correction. A newer wall or room request cancels unsent work for the same wall.
+Living Room High, Medium, Low, and Off request zero LED wall master brightness, preserving playback and the selected animation while the wall is powered. All Off also switches off the wall's power outlet. Living Room High switches the outlet back on. Wall brightness commands run once per request, and a newer wall or room request cancels unsent work for the same wall.
 
 ## Pebble Index 01 voice control
 

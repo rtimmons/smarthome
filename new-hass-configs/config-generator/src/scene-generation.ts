@@ -961,7 +961,7 @@ function getFastSceneVoiceMetadata(sceneId: string, scene: Scene) {
   if (sceneId === "all_off") {
     return {
       alias: "All lights off",
-      description: `Turn off all scene-controlled lighting throughout the house while keeping smart-light power outlets on. Phrases: \"all lights off\", \"turn all the lights off\", \"whole house off\". ${dispatchGuidance}`,
+      description: `Turn off scene-controlled lighting throughout the house, including the LED Grid Wall power outlet. Phrases: \"all lights off\", \"turn all the lights off\", \"whole house off\". ${dispatchGuidance}`,
     };
   }
   if (sceneId === "led_grid_wall_ten_percent") {

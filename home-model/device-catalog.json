@@ -139,7 +139,7 @@
     {"entityId": "update.silicon_labs_multiprotocol_update", "name": "Silicon Labs Multiprotocol", "platform": "hassio", "model": "Home Assistant App", "areaId": null, "status": "whole_home", "note": "Shared service or infrastructure; intentionally has no room assignment."},
     {"entityId": "update.matter_server_update", "name": "Matter Server", "platform": "hassio", "model": "Home Assistant App", "areaId": null, "status": "whole_home", "note": "Shared service or infrastructure; intentionally has no room assignment."},
     {"entityId": "light.light_living_desklamps", "name": "light_living_desklamps", "platform": "zwave_js", "model": "MP22ZD", "areaId": "living_room", "status": "assigned", "note": "Existing physical area retained; all device entities inherit this area."},
-    {"entityId": "light.led_grid_wall", "name": "LED Grid Wall", "platform": "led_grid_wall", "model": "33×138 wall (five receivers)", "areaId": "living_room", "status": "assigned", "note": "Living Room LED wall; all native wall controls and sensors inherit Living Room. Protected power outlet remains separate."},
+    {"entityId": "light.led_grid_wall", "name": "LED Grid Wall", "platform": "led_grid_wall", "model": "33×138 wall (five receivers)", "areaId": "living_room", "status": "assigned", "note": "Living Room LED wall. Native controls and sensors inherit Living Room. All Off switches off the wall's separate power outlet."},
     {"entityId": "light.light_outdoor_cafe", "name": "Outdoor cafe lights", "platform": "zwave_js", "model": "MP22ZD", "areaId": "outdoor", "status": "temporarily_removed", "note": "Intentionally absent since 2026-08-21. Preserve desired entity ID and inventory marker until re-inclusion."}
   ],
   "entities": [

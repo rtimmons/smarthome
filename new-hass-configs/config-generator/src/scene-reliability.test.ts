@@ -146,9 +146,6 @@ describe("Fast scene reliability contract", () => {
       });
       expect(wallCall(sceneId)!.data).not.toHaveProperty("power");
       expect(wallCall(sceneId)!.data).not.toHaveProperty("animation");
-      expect(generateFastSceneCalls(scenes[sceneId]).some(call =>
-        call.action === "switch.turn_off" &&
-        call.target.entity_id.includes("switch.light_living_ledwall"))).toBe(false);
     }
     expect(wallCall("living_room_medium")!.data).toEqual({ brightness: 0 });
     const scripts = generateFastScriptsFromRegistry(scenes);

@@ -489,7 +489,6 @@ describe("Scene Generation", () => {
 
       expect(allTargets).not.toContain("switch.office_wall_switch");
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
-      expect(allTargets).not.toContain("switch.light_living_ledwall");
       expect(allTargets).toContain("light.light_bathroom_abovesauna");
       expect(allTargets).toContain("light.light_bathroom_edison_bottom");
       expect(allTargets).toContain("light.light_bathroom_edison_top");
@@ -513,25 +512,26 @@ describe("Scene Generation", () => {
       expect(allTargets).not.toContain("switch.light_bedroom_flamingopower");
     });
 
-    it("should never turn off the protected living LED wall outlet", () => {
+    it("should switch off the LED wall outlet in All Off and restore power in Living Room High", () => {
+      const outlet = "switch.light_living_ledwall";
+      expect(generateFastCalls(scenes.all_off)).toContainEqual({
+        action: "switch.turn_off",
+        target: { entity_id: [outlet] },
+      });
       for (const scene of [
         scenes.living_room_medium,
         scenes.living_room_low,
         scenes.living_room_off,
-        scenes.all_off,
       ]) {
         const calls = generateFastCalls(scene);
         const allTargets = calls.flatMap((call: any) => call.target.entity_id);
-        expect(allTargets).not.toContain("switch.light_living_ledwall");
+        expect(allTargets).not.toContain(outlet);
       }
 
-      expect(
-        generateFastCalls(scenes.living_room_high).some(
-          (call: any) =>
-            call.action === "switch.turn_on" &&
-            call.target.entity_id.includes("switch.light_living_ledwall")
-        )
-      ).toBe(true);
+      expect(generateFastCalls(scenes.living_room_high)).toContainEqual({
+        action: "switch.turn_on",
+        target: { entity_id: [outlet] },
+      });
     });
 
     it("should batch Z-Wave submissions behind one paced RF gate", () => {

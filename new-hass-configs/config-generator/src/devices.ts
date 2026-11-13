@@ -24,7 +24,7 @@ export const devices: DeviceRegistry = {
   // Lights
   // ============================================================================
   lights: {
-    // Software output control; scene off means zero brightness, never mains off.
+    // Native wall control. The physical power outlet is a separate scene target.
     led_grid_wall: {
       entity: "light.led_grid_wall",
       areaId: "living_room",
@@ -555,9 +555,7 @@ export const devices: DeviceRegistry = {
     living_ledwall: {
       entity: "switch.light_living_ledwall",
       areaId: "living_room",
-      type: "outlet",
-      includeInAllOff: false,
-      allowSceneTurnOff: false,
+      type: "zwave_outlet",
       capabilities: ["on_off"]
     },
 
