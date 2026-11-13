@@ -171,18 +171,13 @@ configuration as of October 17. Its first archive passed off-host readback,
 decryption, payload checksums and database integrity checks. Replacement-NAS boot
 and HBS credential recovery on another device remain untested.
 
-The separate Backblaze B2 job was corrected on October 17 to include selected
-private originals, two Public folders, both Time Machine shares and the encrypted
-settings archives, while excluding replaceable media and caches. The expanded
-selection was narrowed on October 19 to keep only `SpaceBlackTimeMachine` for
-the current laptop; the retired SpaceGray share was removed from future backups
-and its local share/data deletion verified. Existing B2 versions were not manually
-purged. The expanded
-upload completed on October 18; the October 19 run succeeded and its quick
-integrity check reported Good. B2 restore verification remains pending. On
-October 19, the upload rate was capped at 10 MB/s, always on, all seven days,
-to reduce contention with Plex. Playback during a capped backup remains untested.
-See [NAS backup coverage and verification limits](../../../usenet-infra/docs/scheduled-backups.md).
+`B2 QuDedup 20261027` backs up `PrivatePlexLibrary`, two selected Public
+folders, the encrypted settings archives and the current laptop's
+`SpaceBlackTimeMachine` share. As of November 11, this job is scheduled
+daily at 02:00 Eastern with a 10 MiB/s upload cap. A bounded
+private-library restore passed November 10. Time Machine recovery is unverified.
+Backblaze confirmed deletion of the legacy B2 folder on November 13.
+[NAS backup coverage and restore evidence](../../../usenet-infra/docs/scheduled-backups.md#november-13-retirement-verification).
 
 The approved September 20 expansion retained the CX43 server and added $32.01/month at the confirmed account rates: $9 for the Storage Box upgrade and $23.01 for the repair volume. These are dated rates, not a live invoice. The original incomplete spool remains retained for recovery.
 

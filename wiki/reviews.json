@@ -25,14 +25,14 @@
     "reviewed_at": "2026-11-13"
   },
   "maintenance": {
-    "fingerprint": "960fa20d1b45d200c62f0ad88550db351d16537121cd213319416db201c439a4",
-    "reason": "Reviewed configure-filex-nas recipe limiting the existing Filex playbook to QNAP; full deployment remains available and recovery paths, keys, and cloud configuration are unchanged.",
-    "reviewed_at": "2026-10-29"
+    "fingerprint": "d1eb3b644008e92e2405fe96721672d9ff32eb915704b63f91cdaf9de2a93ac0",
+    "reason": "Record the restored native QTS schedule, verified encrypted settings recovery from Hetzner, and the completed legacy B2 retirement.",
+    "reviewed_at": "2026-11-13"
   },
   "media": {
-    "fingerprint": "5348ddf6bfdaa5b751c8e9f2e00aa2ddd22f51583a18292b0759f40ff2f104ed",
-    "reason": "Verified Filex NAS cutover to svc-filex 1008:100, preserved metadata and keys, capability-free runtime, pinned-host synthetic SFTP acceptance, and NAS-only deployment scope.",
-    "reviewed_at": "2026-10-29"
+    "fingerprint": "ed87833bb22f377ed28d3a8824dc3fa671cb7a3b8c7ade84ae773ce5feac6365",
+    "reason": "Document production QuDedup coverage, the bounded private-library restore, and the legacy B2 retirement.",
+    "reviewed_at": "2026-11-13"
   },
   "network": {
     "fingerprint": "d9cdf1e041c513bc30f64a591b11011e7a90692bbb3e494719bb59826aeb6d9d",

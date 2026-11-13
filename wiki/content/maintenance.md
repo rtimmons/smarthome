@@ -84,30 +84,32 @@ only the initial layout upgrade or a runtime/identity change needs recreation.
 
 Use `just wiki-rollback` to restore the retained previous release. Inspect deployment receipts for scope and revision; these record successful deployment commands, not continuous health monitoring.
 
-The [wiki operations guide](../../docs/operations/wiki.md) owns publication details. Read [add-on state backups](../../docs/operations/addon-state-backups.md) and [NAS backup coverage](../../usenet-infra/docs/scheduled-backups.md) for the state each system protects. NAS media is excluded from the repository-owned settings archives. The separate HBS/B2 job selects irreplaceable files, the current laptop's `SpaceBlackTimeMachine` share and those settings archives. The retired SpaceGray share was removed from future backups on October 19. Its expanded uploads succeeded on October 18–19. An October 25 B2 restore of seven small configuration-backup files matched the originals byte-for-byte; recovery of private originals, Time Machine and a replacement NAS remains unverified. QNAP notification email delivery was independently confirmed after reauthorizing the existing Gmail account. Its upload rate is capped at 10 MB/s every day to reduce contention with Plex.
+The repository-owned NAS archives capture settings. HBS separately backs up
+selected originals, the current laptop's `SpaceBlackTimeMachine` share and
+the settings archives to B2. An October 25 B2 restore of seven settings-backup
+files matched the originals byte-for-byte. QNAP notification email delivery
+was independently confirmed after reauthorizing the existing Gmail account.
+[Wiki operations](../../docs/operations/wiki.md), [add-on state backups](../../docs/operations/addon-state-backups.md),
+[NAS backup coverage](../../usenet-infra/docs/scheduled-backups.md).
 
-Long B2 runs can reflect Time Machine band rewrites: the existing HBS job uploads
-whole changed files with QuDedup disabled. Integrity checks now start at 16:00
-on Mondays and 17:00 on the first of each month to reduce overlap with uploads.
-The [October 27 investigation and trial](../../usenet-infra/docs/scheduled-backups.md#october-27-backup-duration-and-deduplication-trial)
-showed block reuse and a matching synthetic restore. The separate production job
-`B2 QuDedup 20261027` has its own destination, but its initial seed was stopped
-for Time Machine recovery and its cap returned to 10 MiB/s on October 27.
-The temporary 200 Mbps plan is superseded; no completed production seed or
-production sample restore has been verified.
+The October 27 trial showed that QuDedup can reuse blocks inside rewritten
+Time Machine bands. The production seed finished November 3, and a bounded
+`PrivatePlexLibrary` restore passed data and metadata checks November 10.
+As of November 11, `B2 QuDedup 20261027` runs daily at 02:00 Eastern
+with a 10 MiB/s upload cap. The November 12 and 13 runs finished with zero
+skipped files. Quick Check and a settings restore from the November 13
+backup passed.
+[October 27 trial](../../usenet-infra/docs/scheduled-backups.md#october-27-backup-duration-and-deduplication-trial),
+[November 13 verification](../../usenet-infra/docs/scheduled-backups.md#november-13-retirement-verification).
 
-After the October 28 private-library move, the replacement job now selects
-`PrivatePlexLibrary` alongside the four other sources; the legacy job still
-excludes it. The replacement seed started at 15:27 Eastern with user acceptance
-of the known SATA risk; legacy remains stopped. The
-old job's daily 02:00 schedule remains enabled, the replacement stays manual,
-and the Codex monitor is paused. Coordinate resumption with recovery owners.
-Preserve the old mixed backup until the new private-library root is protected,
-a bounded data/metadata restore passes, and Time Machine and every other
-required recovery source are accounted for. A settings-only restore cannot
-release the retained private-library copy. Follow the
-[seed and verification checkpoint](../../usenet-infra/docs/scheduled-backups.md#october-28-migration-handoff-and-remaining-verification)
-before cutting over or removing history.
+Backblaze confirmed deletion of the legacy `Backup 1.qdff` folder on November 13.
+The old HBS job remains configured and should be treated as retired.
+Time Machine recovery from QuDedup remains unverified. The independent NAS
+settings job verified all three encrypted offsite copies on November 13
+after the weekly QTS export was repaired. A separate download verified the
+fresh export and both HBS databases.
+[Retirement verification](../../usenet-infra/docs/scheduled-backups.md#november-13-retirement-verification),
+[QTS export repair](../../usenet-infra/docs/scheduled-backups.md#november-13-native-qts-export-repair).
 
 The reporting deployment installs read-only checks and Home Assistant notifications.
 The separately enabled `just usenet configure-seerr-recovery-execute` deployment

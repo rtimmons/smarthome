@@ -1,50 +1,39 @@
 # Scheduled configuration and NAS backups
 
-> **Private-library migration coordination:** the [current NAS plan](../../docs/plan-nas-storage-and-access.md#fromdrobo-data-migration)
-> permits temporarily excluding the private-library dataset from affected jobs,
-> moving it on the NAS, and re-seeding from `PrivatePlexLibrary` afterward.
-> Preserve the existing B2 recovery copy. If the replacement seed excludes this
-> dataset, its completion plus a settings sample restore does **not** authorize
-> deleting the old mixed backup repository. Apply the [complete retirement condition](../../docs/plan-nas-data-protection.md#private-library-migration-exception)
-> before any earlier seed-completion follow-up retires that history.
-
 ## Backblaze B2 coverage
 
-On October 17, 2026, the user confirmed that B2 should protect irreplaceable
-files and configuration, initially including both Mac Time Machine shares, while
-excluding replaceable media. On October 19, the user retired the SpaceGray backup.
-After the October 28 private-library exclusion, both `Backup 1` and
-`B2 QuDedup 20261027` select exactly:
+`B2 QuDedup 20261027` is the production job. It runs daily at 02:00
+America/New_York and writes to `RynapQNAP/B2 QuDedup 20261027.qdff`.
+It selects five sources:
 
+- `PrivatePlexLibrary`
 - `Public/RyMongo Backups`
 - `Public/Saved Downloads`
 - `Usenet/Backups`
 - `SpaceBlackTimeMachine`
 
-The private dataset now lives at `/share/PrivatePlexLibrary` and is temporarily
-excluded from both jobs. Retain its existing B2 history until new-root coverage
-and the protection plan's recovery gates pass. At migration handoff both jobs
-were stopped; legacy daily 02:00 scheduling remains enabled and the replacement
-remains manual at 10 MiB/s. Coordinate resumption with Time Machine recovery.
-Source-removal edits preserved retention, destinations and all other job settings.
+The production job retains the latest 30 HBS versions, uses snapshots,
+preserves ACLs and extended attributes, and caps uploads at 10 MiB/s.
+Quick Check and Content Check are manual. The latest Quick Check passed
+November 13. [QNAP integrity checks](https://www.qnap.com/en/how-to/tutorial/article/data-integrity-check-in-hbs-3).
+
+The legacy HBS `Backup 1` job remains configured with manual backups,
+Monday 16:00 Quick Checks and first-of-month 17:00 Content Checks. Treat
+that job as retired. A manual run could recreate its B2 folder, and the old
+integrity schedules should be disabled separately. [Retirement verification](#november-13-retirement-verification).
 
 On October 19, `SpaceGrayTimeMachineShare` was removed from the job's future
 source selection and its QNAP share/data were deleted through Control Panel.
 Read-only verification confirmed both the share and underlying directory absent
 after background deletion completed (about 411 GiB removed). The current laptop
 (`SpaceBlack M4 Max`) uses `SpaceBlackTimeMachine`,
-which remains selected and intact. Existing B2 versions were not manually purged.
+which remains selected and intact. The October 19 change preserved the then
+existing B2 versions.
 
 The former whole-`FromDrobo` selection included replaceable movies/TV, remote
 mounts and caches. Those paths are no longer selected. Source files are never
-deleted by the job, and no existing B2 versions were manually purged. Retention
-remains the latest 30 versions, with backups daily at 02:00 NAS local time
-(America/New_York). Snapshots remain enabled; preservation of ACLs and extended
-attributes is enabled for recovery of the newly included data. As of October 27,
-quick integrity checks run Mondays at 16:00; full content checks run on the first
-of each month at 17:00. These replace the former 06:00 schedules, which overlapped
-the daily upload. Full content checks download data and consume bandwidth; account
-egress allowances must be considered separately from storage charges.
+deleted by the production job. Full content checks download data and consume
+bandwidth.
 
 On October 19, the user-requested upload cap was saved through HBS as **10 MB/s**,
 with **Always on** and all seven days selected. Read-only configuration verification
@@ -74,12 +63,10 @@ bucket. The bucket keeps all file versions; HBS separately retains 30 backup
 versions. Object Lock is disabled. Do not change lifecycle or Object Lock rules
 without checking compatibility with HBS version management.
 
-The account audit reported 5,688.4 GB in the bucket, more than the selected current-copy
-size. The roughly $34/month estimate for 4.83 TB excludes retained versions and
-existing backup data. At the audit's published $6.95/TB/month rate, the bucket
-alone was roughly $40/month before the expanded upload and future version growth.
-No old cloud data was purged to reduce that figure. B2 storage and download
-caps are unset, so no configured cap currently blocks the expanded upload.
+The October account audit reported 5,688.4 GB before the QuDedup seed and
+November retirement. Backblaze bills retained B2 object versions separately
+from HBS's logical recovery-point count. Use Backblaze usage reporting after
+retirement to assess the actual reduction. [Backblaze file versions](https://www.backblaze.com/docs/cloud-storage-file-versions).
 
 The job's failure trigger is enabled. The Notification Center HBS email rule is
 now enabled for Warning and Error across all six HBS categories, including
@@ -230,6 +217,9 @@ just the bandwidth limit. Sending all 4.19 TiB at this cap would take about
 
 ### October 28 migration handoff and remaining verification
 
+The [November 11 checkpoint](#november-11-daily-schedule-cutover) gives the
+current daily schedule and private-library restore result.
+
 **Later continuation, 15:26 Eastern:** `PrivatePlexLibrary` is now saved as the
 replacement job's fifth source. Full before/after configuration comparison found
 only `backup.source` changed; legacy `Backup 1` remains unchanged with four
@@ -289,9 +279,9 @@ independently restore a bounded sample of usable data and applicable metadata.
 Account for every other still-required source, including the repair task's
 accepted Time Machine recovery strategy and useful retained history. Apply the
 [complete retirement condition](../../docs/plan-nas-data-protection.md#private-library-migration-exception).
-Only after all relevant gates and ownership handoffs pass, transfer daily 02:00
-protection and the Monday 16:00 / first-of-month 17:00 integrity schedules to the
-new job, verify them, and disable the old recurring schedule.
+The October handoff proposed transferring the daily backup and integrity
+schedules together after recovery verification. The November decision below
+supersedes the daily schedule portion.
 
 The user authorized conditional retirement only of `Backup 1` and its precisely
 superseded `/Backup 1.qdff` history. Permanent deletion through computer use still
@@ -300,6 +290,54 @@ ready. Preserve unrelated jobs, prefixes, sources and test evidence. Verify whet
 B2 retained object versions remain before claiming storage was reclaimed. On
 failure retain all existing backups and coordinate diagnosis. Later production
 incremental runs must establish actual Time Machine transfer savings.
+
+### November 11 daily schedule cutover
+
+On November 10, a manual HBS restore retrieved one 60,227,174-byte file from
+production QuDedup version 1 into a restricted test directory. HBS reported
+success with zero skipped files. Independent comparison matched SHA-256,
+file timestamp to the second, ownership, permissions, ACLs and all original
+extended attributes. The restored file and its containing folder each had
+one additional extended attribute.
+
+The user allowed skipping Time Machine recovery testing for this schedule
+change and initially retained the old B2 history. The laptop bundle needs a
+larger isolated restore destination. The November 13 checkpoint records the
+later retirement decision.
+
+After the final scheduled `Backup 1` run finished at 11:30 Eastern on
+November 11, QuDedup's daily 02:00 schedule was saved and verified in HBS.
+HBS showed the first scheduled run at 02:00 Eastern on November 12.
+`Backup 1` was then set to manual. Independent readback confirmed both
+schedules and the existing B2 destinations, source selections, 10 MiB/s upload
+limits, 30-version retention and integrity-check settings.
+
+### November 13 retirement verification
+
+The first two scheduled QuDedup runs finished November 12 and 13 with zero
+skipped files. The November 13 run uploaded 31.2 GB after processing 344.4 GB.
+HBS Quick Check reported Good on November 13. A restore from the November 13
+version to a restricted test directory finished with 45 files and zero skips.
+Both files in the October 27 settings reference matched their recorded size
+and SHA-256 checksum.
+
+Backblaze listed 304,283 files totaling 13,711.8 GB under `Backup 1.qdff`
+in `RynapQNAP`. The user deleted that folder in the Backblaze console
+after the QuDedup checks passed. Backblaze reported completion, and the
+rebuilt bucket tree showed the production and test QuDedup folders with
+`Backup 1.qdff` absent. Backblaze says bucket usage can take up to 24 hours
+to reflect deletion. The final billed reduction and an independent
+all-versions listing are pending. The deletion removed the legacy restore
+points shown in the console. Time Machine recovery from QuDedup remains
+unverified.
+
+For production recovery, use HBS **Jobs** to create a restore job from
+`B2 QuDedup 20261027`. Select the required version and source, choose
+a restricted empty NAS directory outside the backup sources, and set
+conflicts to **Skip files**. Compare the restored file with a known
+checksum or independently verify the restored application's data.
+For Time Machine, verify that a restored bundle can be mounted and a
+file recovered from it. [QNAP restore procedure](https://docs.qnap.com/application/hybrid-backup-sync/3v21.x/en-us/creating-a-restore-job-from-a-backup-job-23764430.html).
 
 ## Repository-owned encrypted settings archives
 
@@ -345,6 +383,39 @@ memory or the backup container's temporary filesystem. QTS settings reflect the
 native weekly snapshot's timestamp, while HBS configuration is captured daily.
 This does not establish replacement-NAS boot or cross-device HBS credential
 recovery. Keep the existing administrator decryption identity recoverable.
+
+### November 13 native QTS export repair
+
+The last firmware export was October 25. Once it exceeded the 14-day limit,
+the NAS job stopped before offsite replication and cloud-mirror refresh.
+November 8 was the last verified offsite capture before the repair. Cloud
+and Forgejo still independently verified their Hetzner copies on November 12.
+
+The saved QTS crontab at `/etc/config/crontab` contained the weekly
+`/etc/init.d/backup_conf.sh` entry for Wednesdays at 03:04 NAS local time,
+but the running scheduler's `/tmp/cron/crontabs/admin` did not. The reason
+it disappeared is unknown. The repair restored that single entry to the
+active table and signaled the existing scheduler to reload it. A temporary
+entry ran the same firmware exporter at 13:23 Eastern and was removed after
+the new, encrypted 12,110,365-byte export appeared. The export has mode
+`0600` inside the firmware's root-owned `0700` directory. The backup
+container reads it through the existing read-only mount.
+
+At 13:26 Eastern, the NAS job completed and verified Hetzner readback for
+QNAP Usenet settings, Plex settings and native QTS/HBS settings. A separate
+download and decryption of the native-settings archive matched all three
+payload hashes, matched the QTS export byte-for-byte and passed SQLite
+integrity checks on both HBS databases. See the
+[verification receipt](../recovery/drills/nas-system-config-20261113.json).
+The next regular weekly firmware run and a replacement-NAS restore remain
+unverified.
+
+If it goes stale again, check the newest export's timestamp and compare the
+saved and active entries for this exact job. Preserve unrelated entries in
+each table. The schedule in the QTS Backup/Restore Settings page writes to a
+user-selected shared folder and is separate from this firmware job. After a
+repair, verify a new source export and fresh offsite receipts for all three
+scopes. Recheck the weekly entry after firmware or package maintenance.
 
 The first three-scope capture completed at 14:50:19 UTC on October 17. All three
 encrypted settings archives passed off-host upload/readback, and the new native

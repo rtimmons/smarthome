@@ -36,7 +36,7 @@ full-library download or new whole-tree checksum scan before the NAS-side move.
    delete shared chunks or an entire prefix that still protects other datasets.
    Identify the exact target and account for object versions before deletion.
 
-**Coordination with the ongoing backup migration:** the October 27 runbook records
+**October 27 migration coordination:** the backup runbook records
 legacy `Backup 1` and a replacement `B2 QuDedup 20261027` seed. Re-read their live
 status before editing; creation/startup is not completed recovery. Its earlier
 retirement condition (seed plus a settings sample restore) is insufficient to
@@ -46,6 +46,11 @@ its handoff with this changed scope so it cannot retire that only retained copy.
 The private-library replacement and other still-required sources must all be
 accounted for before whole-repository retirement. Keep the backup task's current
 bandwidth and scheduling decisions; do not reinstate an older cap from a plan.
+
+On November 13, the user deleted the legacy B2 folder after
+the new private-library sample, production settings restore and QuDedup
+Quick Check passed. Time Machine recovery from QuDedup remains unverified.
+See the [retirement verification](../usenet-infra/docs/scheduled-backups.md#november-13-retirement-verification).
 
 ## Per-share policy
 
@@ -58,7 +63,7 @@ Shares and bind aliases do not create independent failure domains.
 
 | Share | Target storage tier | B2 policy | Scope / current coverage |
 | --- | --- | --- | --- |
-| `PrivatePlexLibrary` | Protected | Local originals | Static private originals; October 28 move accepted and new root selected in replacement HBS job; legacy job still excludes it; seed completion and restore verification pending |
+| `PrivatePlexLibrary` | Protected | Local originals | Static private originals. QuDedup seed finished November 3, a bounded restore passed November 10, and daily protection moved to QuDedup November 11. |
 | `Documents` | Protected | Local originals | Explicitly classified shared originals; no current Public payload assigned here; new roots need explicit inclusion |
 | `home` (Ryan) | Protected | Local originals | Canonical AD home, including both Ryan-owned Public folders after cutover; personal root unqualified and homes absent from current HBS selection |
 | `home` (Michael) | Protected | Local originals | Canonical AD home; personal root unqualified and homes absent from current HBS selection |
