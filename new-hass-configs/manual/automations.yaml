@@ -193,8 +193,8 @@
 - id: living_room_heat_pump_fans_follow_nest
   alias: Living Room Heat Pump Fans - Follow Nest
   description: >-
-    Run both living-room fan controllers only while the Living Room Nest is
-    actively heating or cooling.
+    Run both living-room fan controllers during active HVAC, then keep each
+    warm cabinet circulating after a heating cycle.
   triggers:
     - trigger: homeassistant
       event: start
@@ -202,7 +202,15 @@
       entity_id: climate.living_room
       attribute: hvac_action
     - trigger: state
+      entity_id: climate.living_room
+      to: null
+    - trigger: state
       entity_id:
+        - binary_sensor.living_room_fancontroller_1_heat
+        - binary_sensor.living_room_fancontroller_2_heat
+      to: null
+    - trigger: state
+      entity_id: &living_room_fan_outputs
         - fan.fancontroller_1_fan_1
         - fan.fancontroller_1_fan_2
         - fan.fancontroller_1_fan_3
@@ -215,51 +223,35 @@
     # Reconnects that restore an output to on already match the trigger above.
     - trigger: state
       id: fan_reconnected_off
-      entity_id:
-        - fan.fancontroller_1_fan_1
-        - fan.fancontroller_1_fan_2
-        - fan.fancontroller_1_fan_3
-        - fan.fancontroller_1_fan_4
-        - fan.fancontroller_2_fan_1
-        - fan.fancontroller_2_fan_2
-        - fan.fancontroller_2_fan_3
-        - fan.fancontroller_2_fan_4
+      entity_id: *living_room_fan_outputs
       from: ["unavailable", "unknown"]
       to: "off"
+  variables:
+    fan_entities: *living_room_fan_outputs
   actions:
-    - choose:
-        - conditions:
-            - condition: template
-              value_template: >-
-                {{ state_attr('climate.living_room', 'hvac_action') in
-                   ['heating', 'cooling'] }}
-          sequence:
-            - action: fan.turn_on
-              continue_on_error: true
-              target:
-                entity_id:
-                  - fan.fancontroller_1_fan_1
-                  - fan.fancontroller_1_fan_2
-                  - fan.fancontroller_1_fan_3
-                  - fan.fancontroller_1_fan_4
-                  - fan.fancontroller_2_fan_1
-                  - fan.fancontroller_2_fan_2
-                  - fan.fancontroller_2_fan_3
-                  - fan.fancontroller_2_fan_4
-      default:
-        - action: fan.turn_off
-          continue_on_error: true
-          target:
-            entity_id:
-              - fan.fancontroller_1_fan_1
-              - fan.fancontroller_1_fan_2
-              - fan.fancontroller_1_fan_3
-              - fan.fancontroller_1_fan_4
-              - fan.fancontroller_2_fan_1
-              - fan.fancontroller_2_fan_2
-              - fan.fancontroller_2_fan_3
-              - fan.fancontroller_2_fan_4
-  mode: restart
+    - repeat:
+        for_each: [1, 2]
+        sequence:
+          - variables:
+              hvac_action: "{{ state_attr('climate.living_room', 'hvac_action') }}"
+              should_run: >-
+                {{ hvac_action in ['heating', 'cooling'] or (
+                     hvac_action == 'idle' and states('climate.living_room') in ['heat', 'heat_cool', 'auto']
+                     and is_state('binary_sensor.living_room_fancontroller_' ~ repeat.item ~ '_heat', 'on')
+                   ) }}
+              targets: >-
+                {{ expand(fan_entities)
+                   | selectattr('entity_id', 'match', '^fan[.]fancontroller_' ~ repeat.item ~ '_fan_')
+                   | selectattr('state', 'eq', 'off' if should_run else 'on')
+                   | map(attribute='entity_id') | list }}
+          - if: "{{ targets | count > 0 }}"
+            then:
+              - action: "{{ 'fan.turn_on' if should_run else 'fan.turn_off' }}"
+                continue_on_error: true
+                target:
+                  entity_id: "{{ targets }}"
+  mode: queued
+  max: 20
 
 - id: led_grid_wall_pace_demo
   alias: LED Grid Wall - Pace Demo

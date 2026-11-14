@@ -15,19 +15,19 @@
     "reviewed_at": "2026-10-26"
   },
   "integrations": {
-    "fingerprint": "4193e567f0e394924c89ca9e158e2d37f8cb4d128b1f87bbdddc04ccf9217fbb",
-    "reason": "Verified the Living Room fan automation checks the Nest when any output on either ESPHome controller comes back online, including outputs restored to off.",
-    "reviewed_at": "2026-11-11"
+    "fingerprint": "753bd549ae5d73a980de4a58f5bed127beff2ce438778ea610b0ae0d167a599b",
+    "reason": "Document independent living-room cabinet fan overrun after heating, using the seating-area temperature with Nest fallback.",
+    "reviewed_at": "2026-11-14"
   },
   "lighting": {
-    "fingerprint": "018979e8ed8ac0cb79c8c229e94b95ef7563bde804cbccb91344a7895ad14efa",
-    "reason": "All Off now switches off the LED Grid Wall outlet through the paced Z-Wave queue. Reviewed the generated scene and retained the smart-bulb outlet protection.",
-    "reviewed_at": "2026-11-13"
+    "fingerprint": "11498aa83db0e4d62a25f61487361d9609220d25d5bb1ccae5f5a66c10551a35",
+    "reason": "The shared manual automation file changes only the living-room ESPHome HVAC fans and their inventory test. Lighting scene and dispatch behavior are unaffected.",
+    "reviewed_at": "2026-11-14"
   },
   "maintenance": {
-    "fingerprint": "d1eb3b644008e92e2405fe96721672d9ff32eb915704b63f91cdaf9de2a93ac0",
-    "reason": "Record the restored native QTS schedule, verified encrypted settings recovery from Hetzner, and the completed legacy B2 retirement.",
-    "reviewed_at": "2026-11-13"
+    "fingerprint": "70c9d22af3134d7f2bb76e7b22133cf3c6d90d2c44e2c624824ef35ff5abe252",
+    "reason": "Watch the new living-room fan package under Climate and fans so its temperature logic is included in documentation reviews.",
+    "reviewed_at": "2026-11-14"
   },
   "media": {
     "fingerprint": "ed87833bb22f377ed28d3a8824dc3fa671cb7a3b8c7ade84ae773ce5feac6365",

@@ -99,7 +99,8 @@
       ],
       "addons": [],
       "watch": [
-        "new-hass-configs/manual/automations.yaml"
+        "new-hass-configs/manual/automations.yaml",
+        "new-hass-configs/packages/living_room_heat_pump_fans.yaml"
       ],
       "runbooks": [
         "docs/operations/nest-integration.md",

@@ -4,7 +4,7 @@ Operational notes for the ESPHome-based multi-fan controller boards installed in
 
 ## Current Deployment
 
-The fan controllers are ESPHome devices connected directly to Home Assistant through the ESPHome native API on port `6053`. They are not MQTT devices and are not referenced by generated scene config. A checked-in manual automation controls the two living-room boards from the Living Room Nest's active HVAC state.
+The fan controllers are ESPHome devices connected directly to Home Assistant through the ESPHome native API on port `6053`. A checked-in manual automation controls the two living-room boards using the Living Room Nest's HVAC action and the temperature difference between each cabinet and the room.
 
 | HA device name | Area | Web UI | ESPHome device name | MAC |
 | --- | --- | --- | --- | --- |
@@ -72,14 +72,14 @@ Controllers 2 and 3 use the same pattern with `fancontroller_2` and `fancontroll
 
 ## Living Room Heat Pump Automation
 
-`Living Room Heat Pump Fans - Follow Nest` (`living_room_heat_pump_fans_follow_nest`) in `new-hass-configs/manual/automations.yaml` controls all four outputs on both living-room boards. It turns them on only while `climate.living_room` reports `hvac_action` as `heating` or `cooling`, and turns them off for idle, off, or unavailable states.
+`Living Room Heat Pump Fans - Follow Nest` (`living_room_heat_pump_fans_follow_nest`) in `new-hass-configs/manual/automations.yaml` controls all four outputs on both living-room boards. Both boards run while `climate.living_room` actively heats or cools. When a heating cycle goes idle, each board keeps circulating while its cabinet is more than 3 °F warmer than the seating area. The rule in `new-hass-configs/packages/living_room_heat_pump_fans.yaml` uses `sensor.living_room_temphumidity_temperature` and falls back to `sensor.living_room_temperature` at the Nest by the exterior door if the room sensor is unavailable. A missing room reference or a cabinet reading that goes five minutes without reporting ends that board's overrun. A new heat call re-arms both boards. Cooling, thermostat off, and unavailable HVAC states end any heating overrun.
 
 | Controller | Automation targets |
 | --- | --- |
 | `fancontroller 1` | `fan.fancontroller_1_fan_1`, `fan.fancontroller_1_fan_2`, `fan.fancontroller_1_fan_3`, `fan.fancontroller_1_fan_4` |
 | `fancontroller 2` | `fan.fancontroller_2_fan_1`, `fan.fancontroller_2_fan_2`, `fan.fancontroller_2_fan_3`, `fan.fancontroller_2_fan_4` |
 
-The automation checks the Nest on Home Assistant startup and again as fan outputs become available on either board. An output that reconnects in the off state can start during a heating or cooling cycle already in progress. An output that reconnects in the on state is turned off if the Nest is inactive. `fan.turn_on` omits a percentage so each output keeps its configured or restored speed.
+The automation reconciles the outputs at Home Assistant startup, on HVAC and overrun state changes, and when fan outputs reconnect. It sends commands only to online outputs that need to change. `fan.turn_on` omits a percentage so each output keeps its configured or restored speed. The two `binary_sensor.living_room_fancontroller_*_heat` states show which cabinets are heating or still have residual heat after the Nest goes idle.
 
 ## Hardware Mapping
 

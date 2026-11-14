@@ -6,7 +6,7 @@ Home Assistant connects integrations to stable household entities. Not every int
 
 The documented Nest integration provides four thermostats through Google Device Access and Pub/Sub updates. Home Assistant owns the OAuth credentials. No repository automation automatically changes HVAC settings.
 
-The Living Room thermostat’s `hvac_action` drives the external ESPHome heat-pump fans. That dependency is different from the Nest thermostat’s own fan timer. Before changing a fan automation, identify which fan and signal it controls.
+The Living Room Nest starts the external ESPHome fans during heating or cooling. After heating, each cabinet's fans keep running until the cabinet is within 3 °F of the seating-area sensor. Home Assistant uses the Nest's room temperature when the seating-area sensor is unavailable. The Nest thermostat's own fan timer is a separate control.
 
 Start with the thermostat state and then the ESPHome device connection. Preserve entity names when replacing a device; changing them silently can detach an automation.
 

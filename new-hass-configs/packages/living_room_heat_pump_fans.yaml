@@ -1,0 +1,52 @@
+template:
+  - triggers:
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: climate.living_room
+        attribute: hvac_action
+      - trigger: state
+        entity_id:
+          - climate.living_room
+          - sensor.living_room_temphumidity_temperature
+          - sensor.living_room_temperature
+          - sensor.fancontroller_1_temperature
+          - sensor.fancontroller_2_temperature
+        to: null
+      - trigger: time_pattern
+        minutes: "/1"
+    actions:
+      - variables:
+          hvac_action: "{{ state_attr('climate.living_room', 'hvac_action') }}"
+          heating_idle: >-
+            {{ hvac_action == 'idle' and states('climate.living_room') in ['heat', 'heat_cool', 'auto'] }}
+          room_temperature: >-
+            {{ states('sensor.living_room_temphumidity_temperature')
+               | float(states('sensor.living_room_temperature') | float(none)) }}
+          warm_cabinets: >-
+            {% set warm = namespace(controllers=[]) %}
+            {% if heating_idle and room_temperature is number %}
+              {% for sensor in expand('sensor.fancontroller_1_temperature', 'sensor.fancontroller_2_temperature') %}
+                {% set cabinet = sensor.state | float(none) %}
+                {% if cabinet is number and cabinet - room_temperature > 3
+                      and (now() - sensor.last_reported).total_seconds() < 300 %}
+                  {% set warm.controllers = warm.controllers + [sensor.entity_id] %}
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+            {{ warm.controllers }}
+    binary_sensor:
+      # Heating arms the overrun. Once it stops, a warmer reading during the
+      # same idle period cannot restart the fans.
+      - name: Living Room Fancontroller 1 Heat
+        unique_id: living_room_fancontroller_1_heat
+        default_entity_id: binary_sensor.living_room_fancontroller_1_heat
+        state: >-
+          {{ hvac_action == 'heating' or (this.state == 'on' and
+             'sensor.fancontroller_1_temperature' in warm_cabinets) }}
+      - name: Living Room Fancontroller 2 Heat
+        unique_id: living_room_fancontroller_2_heat
+        default_entity_id: binary_sensor.living_room_fancontroller_2_heat
+        state: >-
+          {{ hvac_action == 'heating' or (this.state == 'on' and
+             'sensor.fancontroller_2_temperature' in warm_cabinets) }}

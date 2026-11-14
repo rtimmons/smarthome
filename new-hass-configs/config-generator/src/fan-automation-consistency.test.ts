@@ -37,8 +37,11 @@ describe("living-room heat-pump fan inventory", () => {
     resolve(configGeneratorDir, "../../docs/operations/esphome-fancontrollers.md"),
     "utf8"
   );
+  const fanPackage = yaml.parse(
+    readFileSync(resolve(configGeneratorDir, "../packages/living_room_heat_pump_fans.yaml"), "utf8")
+  );
 
-  it("keeps the Nest automation target lists complete and symmetric", () => {
+  it("keeps the Nest automation target list complete across both cabinets", () => {
     const automation = automations.find(
       (candidate: Record<string, unknown>) => candidate.id === AUTOMATION_ID
     );
@@ -47,17 +50,32 @@ describe("living-room heat-pump fan inventory", () => {
     const fanGuard = automation.triggers.find(
       (trigger: Record<string, unknown>) => trigger.to === "on"
     );
-    const activeTarget = automation.actions[0].choose[0].sequence[0].target;
-    const inactiveTarget = automation.actions[0].default[0].target;
-
     expect(sorted(fanGuard.entity_id)).toEqual(sorted(FAN_ENTITIES));
-    expect(sorted(activeTarget.entity_id)).toEqual(sorted(FAN_ENTITIES));
-    expect(sorted(inactiveTarget.entity_id)).toEqual(sorted(FAN_ENTITIES));
+    expect(sorted(automation.variables.fan_entities)).toEqual(sorted(FAN_ENTITIES));
+    expect(automation.actions[0].repeat.for_each).toEqual([1, 2]);
 
     const serializedAutomation = JSON.stringify(automation);
     expect(serializedAutomation).toContain(CLIMATE_ENTITY_ID);
     expect(serializedAutomation).toContain("heating");
     expect(serializedAutomation).toContain("cooling");
+  });
+
+  it("reconciles fan outputs when either cabinet's residual heat changes", () => {
+    const automation = automations.find(
+      (candidate: Record<string, unknown>) => candidate.id === AUTOMATION_ID
+    );
+    const sensors = fanPackage.template[0].binary_sensor.map(
+      (sensor: { default_entity_id: string }) => sensor.default_entity_id
+    );
+    expect(sensors).toEqual([
+      "binary_sensor.living_room_fancontroller_1_heat",
+      "binary_sensor.living_room_fancontroller_2_heat",
+    ]);
+    expect(automation.triggers).toContainEqual({
+      trigger: "state",
+      entity_id: sensors,
+      to: null,
+    });
   });
 
   it("checks the Nest when any fan output returns online, including when it restores to off", () => {
