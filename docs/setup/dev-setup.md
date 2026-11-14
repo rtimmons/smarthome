@@ -2,33 +2,37 @@
 
 This guide helps you set up the local development environment for the first time.
 
-## Private printer checkout
+## Private workspace modules
 
-From a fresh smarthome clone or worktree, clone the private printer repository at
-the exact nested path before running setup, tests, development or deployment:
+From a fresh smarthome clone or worktree, clone the private Forgejo repositories
+at the paths listed in `workspace-modules` before preparing the controller:
 
 ```bash
-git clone ssh://git@git-ssh.home.arpa:2222/ryan/printer.git printer
+while read -r module origin; do
+    git clone "$origin" "$module" || break
+done < workspace-modules
+just modules-check
 just checkout-prepare
 just setup
 ```
 
-An existing `printer/.git` means the clone is already present; inspect it instead
-of cloning over it. `printer/` is ignored by smarthome and is not a submodule.
-Its origin is private; the directory, add-on key and commands remain `printer`.
-The repositories deliberately share the parent's Talos, runtime pins and build
-layout. No package release, version pin or compatibility layer separates them.
+Use `git -C <module> status` for an existing checkout. `just modules-check`
+reports missing checkouts. The modules share Smarthome's pinned runtimes, tools,
+and deployment hooks. `just module <name> --list` shows a module's commands.
+`just usenet <recipe>` and `just identity <action>` expose the two infrastructure
+workflows. `just usenet identity <action>` also works for existing runbooks.
+Talos discovers the `directory` add-on through the workspace symlink to
+`identity-infra/directory`. The add-on's build inputs all live in that directory.
 
-Run `just test`, `just test printer`, `just printer-image`, `just ha-addon printer`
-and `just deploy [printer]` from smarthome as usual. Within `printer`, `just setup`,
-`just test` and `just build` still use the enclosing workspace. `just deploy`
-also deploys Home Assistant configuration and publishes the wiki after success.
+For an existing checkout that predates the split, preserve local changes and
+runtime inputs before updating the parent. The old source paths are now ignored
+module locations. Keep already-converted nested repositories in place. On another
+controller, use a fresh workspace or move the old component directories aside
+before cloning the modules and relinking external state. See
+[disposable checkout recovery](disposable-checkout.md).
 
-Review both repositories with `git status` and `git -C printer status`; parent
-status does not report private source edits. Follow the parent
-[paired repository rules](../../AGENTS.md#paired-printer-repository) for changes
-that span the two working trees. Clone both repositories when restoring source;
-checkout-state recovery restores runtime state, not the private source clone.
+Follow the [contributor guide](../../AGENTS.md#paired-printer-repository-and-private-infrastructure-modules)
+for coordinated validation and publication.
 
 ## Home Assistant Development Standards
 

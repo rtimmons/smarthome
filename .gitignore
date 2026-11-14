@@ -2,8 +2,10 @@
 build/
 backups/
 tools/addons.yaml
-# Independent private repository; clone it here before setup/test/deploy.
-/printer/
+# Independent private checkouts declared in workspace-modules.
+/printer
+/usenet-infra
+/identity-infra
 node-sonos-http-api/node-sonos-http-api/
 
 # JetBrains IDEs (IntelliJ IDEA, WebStorm, PyCharm, etc.)
@@ -44,9 +46,3 @@ node-sonos-http-api/node-sonos-http-api/
 /new-hass-configs/build
 /new-hass-configs/inventory_snapshots
 /node-sonos-http-api/node-sonos-http-api
-/printer/label-output
-/usenet-infra/ansible/files
-/usenet-infra/backups
-/usenet-infra/build
-/usenet-infra/config/runtime
-/usenet-infra/secrets

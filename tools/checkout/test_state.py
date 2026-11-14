@@ -75,19 +75,33 @@ class StateTests(unittest.TestCase):
         with self.assertRaises(s.StateError):s.restore(archive,other,destination,self.age)
         self.assertFalse(destination.exists())
 
+    def test_state_plan_uses_the_private_modules_git_index(self):
+        module = self.repo/'usenet-infra'
+        subprocess.run(['git','init','-q',str(module)],check=True)
+        (module/'.gitignore').write_text('.env\n')
+        (module/'app.py').write_text('# synthetic source\n')
+        subprocess.run(['git','-C',str(module),'add','.gitignore','app.py'],check=True)
+        with (self.repo/'.gitignore').open('a') as ignore:
+            ignore.write('/usenet-infra\n')
+        self.assertIn('usenet-infra/.env', s.plan())
+        self.assertNotIn('usenet-infra', s.plan())
+        self.assertNotIn('usenet-infra/app.py', s.plan())
+
     def test_terraform_atomic_state_writes_are_external(self):
         import shutil
         tool=self.repo/'tools/checkout/terraform.py';tool.parent.mkdir(parents=True)
         shutil.copyfile(Path(__file__).with_name('terraform.py'),tool)
         config=self.repo/'usenet-infra/terraform/cloud';config.mkdir(parents=True)
         (config/'main.tf').write_text('# synthetic configuration\n')
-        subprocess.run(['git','-C',str(self.repo),'add','tools','usenet-infra/terraform/cloud/main.tf'],check=True)
+        module = self.repo/'usenet-infra'
+        subprocess.run(['git','init','-q',str(module)],check=True)
+        subprocess.run(['git','-C',str(module),'add','terraform/cloud/main.tf'],check=True)
         external=self.state/'tree/usenet-infra/terraform/cloud';external.mkdir(parents=True)
         (self.state/'manifest.json').write_text('{}')
         fake=self.base/'terraform'
         fake.write_text('#!/usr/bin/env python3\nimport pathlib,sys\np=pathlib.Path(sys.argv[1].split("=",1)[1])\n(p/"next").write_text("synthetic state")\n(p/"next").replace(p/"terraform.tfstate")\n')
         fake.chmod(0o700)
-        subprocess.run(['python3',str(tool),'-chdir=terraform/cloud','apply'],check=True,
+        subprocess.run(['python3',str(tool),'-chdir=terraform/cloud','apply'],check=True,cwd=module,
                        env={**os.environ,'SMARTHOME_STATE_DIR':str(self.state),'TERRAFORM_BIN':str(fake)})
         self.assertEqual((external/'terraform.tfstate').read_text(),'synthetic state')
         self.assertFalse((config/'terraform.tfstate').exists())

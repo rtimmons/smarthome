@@ -8,6 +8,8 @@ from pathlib import Path
 import subprocess
 import sys
 
+from qnap_ssh import connection_command
+
 ROOT = Path(__file__).resolve().parents[1]
 PRELUDE = '''set -eu
 pkg=$(/sbin/getcfg container-station Install_Path -f /etc/config/qpkg.conf)
@@ -102,10 +104,7 @@ def main():
         verifier = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(verifier)
         return verifier.main()
-    spec = importlib.util.spec_from_file_location('qnap_recon', ROOT / 'usenet-infra/scripts/qnap-recon.py')
-    recon = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(recon)
-    result = subprocess.run(recon.connection_command(os.environ), input=payload(action).encode(),
+    result = subprocess.run(connection_command(os.environ), input=payload(action).encode(),
                             stdout=subprocess.PIPE if action == 'credentials' else None,
                             stderr=subprocess.PIPE if action == 'credentials' else None, timeout=7200)
     if action == 'credentials':

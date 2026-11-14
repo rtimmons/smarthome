@@ -1,3 +1,0 @@
-#!/bin/sh
-set -eu
-exec /usr/bin/sudo -n -u usenet -- /usr/local/sbin/usenet-catalog-run {{ item | quote }} "$@"

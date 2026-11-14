@@ -52,6 +52,52 @@ passed, including the forced password-change redirect; the SSH listener answered
 No existing repositories were imported. Git push/clone with the user's SSH key
 remains to be checked after adding that key in account settings.
 
+## Repository administration from the terminal
+
+Use Forgejo's HTTPS API for repository creation and settings. Continue to use
+Git over SSH for clone, fetch, and push. The API routes and request bodies are
+in the [instance OpenAPI schema](https://git.home.rytim.com/api/swagger).
+
+Provision a Forgejo access token for the repository owner. On Forgejo 15,
+creating a personal repository with `POST /api/v1/user/repos` needs
+`write:user` and `write:repository` and access to private repositories. Because
+creation has no existing repository to select, use a token with **All** repository
+access for that operation. Treat it as a short-lived administration credential.
+For ordinary operations on existing repositories, prefer a token scoped to the
+specific repositories and API operations you need. Some settings and access
+changes require repository-admin privileges unavailable to repository-scoped
+tokens. [Forgejo 15 token scopes](https://forgejo.org/docs/v15.0/user/authentication/token-scope/)
+
+An operator can provision the token in **Settings → Applications** and store it in
+1Password, or use `POST /api/v1/users/ryan/tokens` with the existing Forgejo local
+password and the Forgejo OTP header if local MFA is enabled. This bootstrap
+endpoint requires Basic authentication. The existing SSH key and Authelia
+browser login do not authenticate API requests. [Forgejo API authentication](https://forgejo.org/docs/v15.0/user/api/usage/)
+
+Run this in Bash with an authorized token. It passes the header to `curl` on
+standard input and verifies the returned owner and privacy flag before pushing.
+
+```bash
+(
+    set -euo pipefail
+    set +x
+    repo=example-infra
+    read -rsp 'Forgejo API token: ' forgejo_token
+    printf '\n' >&2
+    printf 'Authorization: token %s\n' "$forgejo_token" |
+        curl --silent --show-error --fail-with-body --max-time 30 \
+          --header @- --json "{\"name\":\"$repo\",\"private\":true,\"auto_init\":false,\"default_branch\":\"main\"}" \
+          https://git.home.rytim.com/api/v1/user/repos |
+        jq -e --arg name "$repo" 'select(.full_name == ("ryan/" + $name) and .private == true) | .full_name'
+)
+```
+
+For an existing repository, use `GET /api/v1/repos/ryan/<repo>` to inspect it
+and `PATCH` on that route with the requested fields to edit settings. Read it
+back after a change. After a failed or timed-out create, check the repository
+with `GET` before retrying. Git push-to-create is disabled by default and is
+unnecessary for this workflow. [Forgejo repository settings](https://forgejo.org/docs/v15.0/admin/config-cheat-sheet/#repository-repository)
+
 ## Encrypted off-host backups
 
 The backup workflow uses the existing confined Hetzner Storage Box NAS-backup

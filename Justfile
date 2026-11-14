@@ -17,6 +17,8 @@ set dotenv-load
 
 # Home Assistant configs directory
 hass_configs_dir := "new-hass-configs"
+module_run := quote(repo_root / "tools/workspace/modules.sh") + " run"
+controller_python := "uv run --project " + quote(repo_root / "wiki") + " --python " + quote(trim(read(repo_root / ".python-version"))) + " --frozen python"
 
 # Repository-local Home Assistant SSH identity (ignored by Git)
 ha_ssh_key := ".ssh/id_ed25519_codex_smarthome"
@@ -66,8 +68,16 @@ ha-ssh-key-copy: ha-ssh-key-create
 
 # Recreate compatibility links from owner-only state outside the checkout.
 [group: 'setup']
-checkout-prepare:
+checkout-prepare: modules-check
 	@python3 tools/checkout/state.py prepare
+
+[group: 'setup']
+modules-check:
+	@./tools/workspace/modules.sh check
+
+[group: 'infra']
+module name *args:
+	@{{module_run}} "$@"
 
 [group: 'backup']
 [positional-arguments]
@@ -78,7 +88,7 @@ checkout-state action="status" *args:
 [group: 'backup']
 [positional-arguments]
 credentials action="verify" *args:
-	@python3 identity-infra/credentials.py "$1" "${@:2}"
+	@{{module_run}} identity-infra credentials "$@"
 
 [group: 'test']
 checkout-test:
@@ -148,17 +158,14 @@ talos-build:
 printer-image:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-	just --justfile "${REPO_ROOT}/printer/Justfile" --working-directory "${REPO_ROOT}/printer" build
+	exec {{module_run}} printer build
 
 # Show the resolved, non-secret endpoint and auth configuration for PNG printing
 [group: 'print']
 printer-config:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-	exec just --justfile "${REPO_ROOT}/printer/Justfile" \
-		--working-directory "${REPO_ROOT}/printer" print-client-config
+	exec {{module_run}} printer print-client-config
 
 # Validate a PNG locally and against the printer service without printing
 [group: 'print']
@@ -168,8 +175,7 @@ print-check file:
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 	FILE="$1"
 	if [[ "${FILE}" != /* ]]; then FILE="${REPO_ROOT}/${FILE}"; fi
-	exec just --justfile "${REPO_ROOT}/printer/Justfile" \
-		--working-directory "${REPO_ROOT}/printer" print-file-check "${FILE}"
+	exec {{module_run}} printer print-file-check "${FILE}"
 
 # Validate, preflight, and print one PNG (print requests are never retried)
 [group: 'print']
@@ -179,8 +185,7 @@ print file:
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 	FILE="$1"
 	if [[ "${FILE}" != /* ]]; then FILE="${REPO_ROOT}/${FILE}"; fi
-	exec just --justfile "${REPO_ROOT}/printer/Justfile" \
-		--working-directory "${REPO_ROOT}/printer" print-file "${FILE}"
+	exec {{module_run}} printer print-file "${FILE}"
 
 # ============================================================================
 # ADDON MANAGEMENT
@@ -196,7 +201,7 @@ addon-state-backup *args="": talos-build
 
 # Build Home Assistant addons
 [group: 'build']
-ha-addon addon="all": talos-build
+ha-addon addon="all": modules-check talos-build
 	args=(); \
 	if [ "{{addon}}" != "all" ]; then args+=("{{addon}}"); fi; \
 	if [ ${#args[@]} -eq 0 ]; then \
@@ -263,13 +268,10 @@ deploy-dry-run-verbose addon="all": checkout-prepare
 # Run fast tests for addons (excludes slow integration tests)
 [group: 'test']
 identity-test:
-	#!/usr/bin/env bash
-	set -euo pipefail
-	export UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv"
-	exec uv run --project wiki --python "$(cat .python-version)" --frozen python -m unittest discover -s identity-infra -p 'test_*.py'
+	@{{module_run}} identity-infra test
 
 [group: 'test']
-test addon="all":
+test addon="all": modules-check
 		@just wiki-check
 		@just checkout-test
 		@just identity-test
@@ -293,7 +295,7 @@ test addon="all":
 
 # Run all tests including slow integration tests
 [group: 'test']
-test-all addon="all":
+test-all addon="all": modules-check
 		@just identity-test
 		@set -e; \
 		if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi; \
@@ -421,7 +423,7 @@ addons:
 
 # Set up development environment
 [group: 'setup']
-setup:
+setup: modules-check
 	@set -euo pipefail; \
 	REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"; \
 	cd "$REPO_ROOT"; \
@@ -438,7 +440,7 @@ kill:
 
 # Start development environment
 [group: 'dev']
-dev:
+dev: modules-check
 	@if [ ! -x "{{talos_bin}}" ]; then ./talos/build.sh; fi
 	@"{{talos_bin}}" dev
 
@@ -475,9 +477,20 @@ deploy-force *args="":
 git-host action='status':
 	@if [ {{quote(action)}} = deploy ]; then ./wiki/run with-deployment --scope git-host -- just _git-host {{quote(action)}}; else just _git-host {{quote(action)}}; fi
 
+# Run a controller command with the existing NAS connection configuration.
+[group: 'infra']
+nas-run command *args:
+	#!/usr/bin/env bash
+	set -euo pipefail
+	state="${SMARTHOME_STATE_DIR:-$HOME/.local/share/smarthome}"
+	export SMARTHOME_MEDIA_STATE="$state/tree/usenet-infra"
+	export UV_CACHE_DIR="{{repo_root}}/build/wiki/uv-cache"
+	export UV_PROJECT_ENVIRONMENT="{{repo_root}}/build/wiki/venv"
+	exec just --dotenv-path "$SMARTHOME_MEDIA_STATE/.env" --command "$@"
+
 [private]
 _git-host action:
-	@UV_CACHE_DIR="$PWD/build/wiki/uv-cache" UV_PROJECT_ENVIRONMENT="$PWD/build/wiki/venv" just --justfile usenet-infra/Justfile --working-directory usenet-infra --command uv run --project ../wiki --python "$(cat .python-version)" --frozen python ../git-host/manage.py {{quote(action)}}
+	@just nas-run {{controller_python}} git-host/manage.py "$@"
 
 [group: 'git-host']
 git-host-test:
@@ -488,7 +501,7 @@ git-host-test:
 # Use `just usenet --list`; offline recovery also requires root --no-dotenv.
 [group: 'usenet']
 usenet *args:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra "$@"
+	@{{module_run}} usenet-infra "$@"
 
 # Check repository-wide recovery inventory metadata without reading secrets.
 [group: 'backup']
@@ -496,12 +509,12 @@ usenet *args:
 secrets-check *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec python3 usenet-infra/scripts/secrets-check.py "$@"
+	exec {{module_run}} usenet-infra --no-dotenv secrets-check "$@"
 
 # Cache reviewed recovery tools without loading infrastructure dotenv inputs.
 [group: 'backup']
 usenet-crypto-bootstrap:
-	@just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra crypto-bootstrap
+	@{{module_run}} usenet-infra --no-dotenv crypto-bootstrap
 
 # Record the public SOPS recipient from the one-process SOPS_AGE_KEY environment value.
 [group: 'backup']
@@ -509,7 +522,7 @@ usenet-crypto-bootstrap:
 usenet-recovery-master-init confirmation:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra recovery-master-init "$1"
+	exec {{module_run}} usenet-infra --no-dotenv recovery-master-init "$1"
 
 # Restore ignored local secrets from the committed SOPS vault and a one-process identity.
 [group: 'backup']
@@ -517,7 +530,7 @@ usenet-recovery-master-init confirmation:
 setup-secrets *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra setup-secrets "$@"
+	exec {{module_run}} usenet-infra --no-dotenv setup-secrets "$@"
 
 # Encrypt the current allowlisted local inputs into the committed SOPS vault.
 [group: 'backup']
@@ -525,7 +538,7 @@ setup-secrets *args:
 secrets-encrypt *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --no-dotenv --justfile usenet-infra/Justfile --working-directory usenet-infra secrets-encrypt "$@"
+	exec {{module_run}} usenet-infra --no-dotenv secrets-encrypt "$@"
 
 # Capture allowlisted states/archives into a new encrypted recovery package.
 [group: 'backup']
@@ -533,7 +546,7 @@ secrets-encrypt *args:
 recovery-capture *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec ./usenet-infra/scripts/recovery-run bundle capture "$@"
+	exec {{module_run}} usenet-infra --no-dotenv recovery-capture "$@"
 
 # Authenticate all recovery content offline using the master and restored vault.
 [group: 'backup']
@@ -541,7 +554,7 @@ recovery-capture *args:
 recovery-verify *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec ./usenet-infra/scripts/recovery-run bundle verify "$@"
+	exec {{module_run}} usenet-infra --no-dotenv recovery-verify "$@"
 
 # Restore authenticated state/archive files; existing different files are refused.
 [group: 'backup']
@@ -549,7 +562,7 @@ recovery-verify *args:
 recovery-restore *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec ./usenet-infra/scripts/recovery-run bundle restore "$@"
+	exec {{module_run}} usenet-infra --no-dotenv recovery-restore "$@"
 
 # Store or retrieve ciphertext through the dedicated, pinned NAS connection.
 [group: 'backup']
@@ -557,7 +570,7 @@ recovery-restore *args:
 recovery-store *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec ./usenet-infra/scripts/recovery-run store "$@"
+	exec {{module_run}} usenet-infra --no-dotenv recovery-store "$@"
 
 # Clone published source, restore the vault, retrieve NAS ciphertext and verify recovery.
 [group: 'backup']
@@ -565,63 +578,63 @@ recovery-store *args:
 recovery-drill *args:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec ./usenet-infra/scripts/recovery-run drill "$@"
+	exec {{module_run}} usenet-infra --no-dotenv recovery-drill "$@"
 
 # List canonical items and whether each is cached on the QNAP
 [group: 'usenet']
 catalog-list:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-list
+	@{{module_run}} usenet-infra catalog-list
 
 # Summarize canonical and QNAP cache state
 [group: 'usenet']
 catalog-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-status
+	@{{module_run}} usenet-infra catalog-status
 
 # Pull and verify one canonical item into the QNAP cache
 [group: 'usenet']
 catalog-pull item:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-pull "$1"
+	exec {{module_run}} usenet-infra catalog-pull "$1"
 
 # Delete only one QNAP cached copy
 [group: 'usenet']
 catalog-evict item:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra catalog-evict "$1"
+	exec {{module_run}} usenet-infra catalog-evict "$1"
 
 # List or inspect native Movies/TV titles available for selective NAS copying
 [group: 'usenet']
 native-list:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-list
+	@{{module_run}} usenet-infra native-list
 
 [group: 'usenet']
 native-status:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra native-status
+	@{{module_run}} usenet-infra native-status
 
 [group: 'usenet']
 [positional-arguments]
 native-pull item:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra native-pull "$1"
+	exec {{module_run}} usenet-infra native-pull "$1"
 
 [group: 'usenet']
 [positional-arguments]
 native-evict item:
 	#!/usr/bin/env bash
 	set -euo pipefail
-	exec just --justfile usenet-infra/Justfile --working-directory usenet-infra native-evict "$1"
+	exec {{module_run}} usenet-infra native-evict "$1"
 
 # Run local validation for the Usenet infrastructure project
 [group: 'usenet']
 usenet-test:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra test
+	@{{module_run}} usenet-infra test
 
 [group: 'usenet']
 usenet-discovery-health:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra discovery-health
+	@{{module_run}} usenet-infra discovery-health
 
 # Deploy only the private, static NAS Usenet wiki.
 [group: 'usenet']
@@ -630,28 +643,28 @@ usenet-wiki-deploy:
 
 # Build and validate the private smarthome field guide.
 [group: 'wiki']
-wiki-build:
+wiki-build: modules-check
 	@./wiki/run build
 
 [group: 'wiki']
-wiki-check:
+wiki-check: modules-check
 	@./wiki/run check
 
 # Use the SOPS-backed wiki credential, prompting to add it only when missing.
 [group: 'wiki']
 wiki-check-runtime-access:
-	@just usenet --command python3 ../identity-infra/check_wiki_access.py
+	@{{module_run}} identity-infra wiki-check-runtime-access
 
 [group: 'wiki']
-wiki-preview:
+wiki-preview: modules-check
 	@./wiki/run preview
 
 [group: 'wiki']
-wiki-deploy:
+wiki-deploy: modules-check
 	@./wiki/run deploy
 
 [group: 'wiki']
-wiki-rollback:
+wiki-rollback: modules-check
 	@./wiki/run rollback
 
 [group: 'wiki']
@@ -674,12 +687,12 @@ wiki-model-export:
 # Check cloud applications, Storage Box access, failures, and scratch space
 [group: 'usenet']
 usenet-cloud-health:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra cloud-health
+	@{{module_run}} usenet-infra cloud-health
 
 # Check Storage Box access, transfer failures, and QNAP cache capacity
 [group: 'usenet']
 usenet-qnap-health:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra qnap-health
+	@{{module_run}} usenet-infra qnap-health
 
 # Open the configured Storage Box SMB share URLs as Finder volumes on macOS.
 # Copy mounts.local.env.example to mounts.local.env and set STORAGEBOX_SMB_VOLUMES.
@@ -776,30 +789,30 @@ alias ls := addons
 # Open Filex through a loopback-only encrypted SSH tunnel.
 [group: 'usenet']
 usenet-filex-ui:
-	just --justfile usenet-infra/Justfile --working-directory usenet-infra filex-ui
+	{{module_run}} usenet-infra filex-ui
 
 [group: 'network']
 [positional-arguments]
 dns-check *args:
-    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns check "$@"
+    @just nas-run {{controller_python}} network-infra/dns/manage.py check "$@"
 
 # Discover Bonjour hostnames; preview by default, --apply deploys to both resolvers.
 [group: 'network']
 [positional-arguments]
 dns-discover *args:
-    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns discover "$@"
+    @just nas-run {{controller_python}} network-infra/dns/manage.py discover "$@"
 
 [group: 'network']
 dns-auto-deploy:
-    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns auto-deploy
+    @just nas-run {{controller_python}} network-infra/dns/manage.py auto-deploy
 
 [group: 'network']
 dns-auto-status:
-    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns auto-status
+    @just nas-run {{controller_python}} network-infra/dns/manage.py auto-status
 
 [group: 'network']
 dns-auto-stop:
-    @just --justfile usenet-infra/Justfile --working-directory usenet-infra dns auto-stop
+    @just nas-run {{controller_python}} network-infra/dns/manage.py auto-stop
 
 [group: 'network']
 dns-test:
@@ -816,12 +829,12 @@ unifi-mcp-check:
 
 [group: 'network']
 dns-deploy:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns deploy
+	@just nas-run {{controller_python}} network-infra/dns/manage.py deploy
 
 [group: 'network']
 [positional-arguments]
 dns-rollback-primary snapshot:
-	@just --justfile usenet-infra/Justfile --working-directory usenet-infra dns rollback-primary --snapshot "$1"
+	@just nas-run {{controller_python}} network-infra/dns/manage.py rollback-primary --snapshot "$1"
 
 # Device-free Core API/script scheduler measurements for the isolated Plex trial.
 [group: 'diagnostics']
@@ -838,3 +851,21 @@ plex-secondary action token_file:
 [group: 'diagnostics']
 plex-secondary-test:
     @{{nvm_use}} && node --test tools/plex-secondary.test.cjs
+
+# Controller-side Home Assistant integration for the media recovery notification.
+[group: 'infra']
+usenet-notification-install config:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export NVM_DIR="{{repo_root}}/build/nvm"
+    {{nvm_use}}
+    just --justfile new-hass-configs/Justfile --working-directory new-hass-configs home-assistant-build
+    exec python3 tools/workspace/seerr-recovery-ha.py "$1"
+
+[group: 'infra']
+identity *args:
+    @{{module_run}} identity-infra manage "$@"
+
+[group: 'infra']
+dns action *args:
+    @just nas-run {{controller_python}} network-infra/dns/manage.py "$@"

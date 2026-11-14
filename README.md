@@ -9,10 +9,10 @@ Read [AGENTS.md](AGENTS.md) for contributor rules, then use
 Git; [disposable checkout recovery](docs/setup/disposable-checkout.md) explains how
 to prepare a fresh checkout.
 
-The printer application is a separate private repository cloned at `printer/`.
-Clone it before setup or testing using the [development setup](docs/setup/dev-setup.md#private-printer-checkout).
-The parent commands operate on both working trees; coordinated changes follow
-the [paired repository rules](AGENTS.md#paired-printer-repository).
+Clone the private `printer`, `usenet-infra`, and `identity-infra` repositories
+using the [development setup](docs/setup/dev-setup.md#private-workspace-modules).
+Check each affected working tree for coordinated changes. See the
+[contributor guide](AGENTS.md#paired-printer-repository-and-private-infrastructure-modules).
 
 - `just setup` installs the pinned toolchain.
 - `just dev` runs local services; see [local development](docs/development/local-development.md).

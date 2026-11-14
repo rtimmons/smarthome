@@ -4,14 +4,15 @@
 
 Use `just setup` for the pinned runtimes and `just dev` for local development. Validate the affected component with `just test <addon>` and use the documented deployment recipes. A backup of source does not replace backups of application state.
 
-The private printer repository must be cloned at `printer/` inside each smarthome
-checkout. Inspect both Git working trees when changing shared behavior and record
-both commit IDs for coordinated changes; the parent status does not show private
-printer edits. The [contributor guide](../../AGENTS.md#paired-printer-repository)
-defines commit ordering and validation. Single-force checkout cleaning preserves
-the nested repository; never use double-force cleaning to remove it.
+Clone `printer`, `usenet-infra`, and `identity-infra` inside each Smarthome
+workspace. Check status in every affected Git repository and record each commit ID
+for coordinated changes. Follow the [contributor guide](../../AGENTS.md#paired-printer-repository-and-private-infrastructure-modules).
+Single-force checkout cleaning preserves the nested repositories.
 
-Infrastructure commands use `just usenet <recipe> [args...]`; list them with `just usenet --list`. Common health/test and offline recovery shortcuts remain. See [operations](../../usenet-infra/docs/operations.md) for the command migration and recovery environment handling.
+Use `just usenet <recipe>` for media and NAS operations and `just identity <action>`
+for household identity. Use `just module <name> --list` to see a module's recipes.
+See [operations](../../usenet-infra/docs/operations.md) for recovery commands and
+private state handling.
 
 Before changing a system, read its current runbook, inspect health, preserve unrelated local edits, and retain rollback information. Scene operations, printing, media requests, and speaker writes can affect the household; do not use them as generic smoke tests.
 

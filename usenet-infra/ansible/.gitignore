@@ -1,9 +1,0 @@
-inventory.yml
-.vault-password
-.collections/
-group_vars/secrets.yml
-group_vars/*/secrets.yml
-host_vars/*/secrets.yml
-files/*.env
-files/rclone.conf
-files/secrets/

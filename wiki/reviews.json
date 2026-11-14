@@ -10,9 +10,9 @@
     "reviewed_at": "2026-11-13"
   },
   "home": {
-    "fingerprint": "830c859e0c5d592a5cacdef0ffd16b61e66751469cf1043319b06136a731d89b",
-    "reason": "Reviewed the README private checkout prerequisite; household navigation and service entry points are unchanged.",
-    "reviewed_at": "2026-10-26"
+    "fingerprint": "849087d74f029f602ea4196fd1c39de75b6f3c27b64ca71e002caf70e9959e02",
+    "reason": "Documented the three private checkout requirements and the workspace setup entry point",
+    "reviewed_at": "2026-11-14"
   },
   "integrations": {
     "fingerprint": "4a524a4fa5f5454dc7627b068f47d471b2e57d2ca38818c6e0e24d6e5e2ba39c",
@@ -25,19 +25,19 @@
     "reviewed_at": "2026-11-14"
   },
   "maintenance": {
-    "fingerprint": "70c9d22af3134d7f2bb76e7b22133cf3c6d90d2c44e2c624824ef35ff5abe252",
-    "reason": "Watch the new living-room fan package under Climate and fans so its temperature logic is included in documentation reviews.",
+    "fingerprint": "bf73fe7493492dcd734a94dc12536ac6d3c454f4f7cf8c3d00b73b0ab4a5833b",
+    "reason": "Reviewed nested Git inventory for state migration, private wiki source revisions, and the Forgejo 15 API workflow",
     "reviewed_at": "2026-11-14"
   },
   "media": {
-    "fingerprint": "ed87833bb22f377ed28d3a8824dc3fa671cb7a3b8c7ade84ae773ce5feac6365",
-    "reason": "Document production QuDedup coverage, the bounded private-library restore, and the legacy B2 retirement.",
-    "reviewed_at": "2026-11-13"
+    "fingerprint": "08b8c79511dd10430001cb07ddf82f3993f52e32bcada154a877ac2e8e4317ba",
+    "reason": "Checked media module dispatch, recovery source cloning, and preserved runtime paths",
+    "reviewed_at": "2026-11-14"
   },
   "network": {
-    "fingerprint": "ce2eb3fcad4f51e0a303b40545024e98a8587d2e6ad7e8388d9fc257a7ff35ea",
-    "reason": "Updated the former wall reservation entry to point to the Pi 5 hostname now used by the dashboard. Verified the new name resolves and serves the wall API from Home Assistant.",
-    "reviewed_at": "2026-11-13"
+    "fingerprint": "b87b0326f917802f613e84ca956541eae6015b6fe08e4e67fa0d24ea26276a54",
+    "reason": "Reviewed the self-contained directory app and shared NAS command context while preserving runtime topology",
+    "reviewed_at": "2026-11-14"
   },
   "printing": {
     "fingerprint": "292699e6fd0437f9318a7d0de1936c7bea953f31e21873871ec61e1e3daf0b02",

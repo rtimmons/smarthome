@@ -27,7 +27,11 @@ BUILD = ROOT / "build/wiki"
 CATALOG = PROJECT / "components.json"
 REVIEWS = PROJECT / "reviews.json"
 REPO_URL = "https://github.com/rtimmons/smarthome/blob/"
-PRIVATE_REPOSITORIES = ("printer",)
+MODULES = "workspace-modules"
+
+
+def private_repositories(root=ROOT):
+    return tuple(line.split()[0] for line in (root / MODULES).read_text().splitlines())
 
 
 def run(argv, **kwargs):
@@ -54,20 +58,25 @@ def safe_file(relative: str, root=ROOT):
     return path
 
 
-def private_repository(path):
-    return next((name for name in PRIVATE_REPOSITORIES if path.startswith(name + "/")), None)
+def private_repository(path, root=ROOT):
+    name, slash, _ = path.partition("/")
+    return name if slash and name in private_repositories(root) else None
 
 
 def known_source_files(root=ROOT):
     # Git's tracked-file list prevents ignored secrets and local runtime artifacts
     # from becoming review inputs. Only explicitly named nested repos participate.
-    known = set(subprocess.check_output(["git", "-C", str(root), "ls-files", "--cached", "--others", "--exclude-standard"], text=True).splitlines())
-    known = {p for p in known if not private_repository(p)}
-    for name in PRIVATE_REPOSITORIES:
+    def git_sources(path):
+        return subprocess.check_output(["git", "-C", str(path), "ls-files", "--cached", "--others",
+                                        "--exclude-standard"], text=True).splitlines()
+
+    names = private_repositories(root) if (root / MODULES).is_file() else ()
+    known = {p for p in git_sources(root) if p.split("/", 1)[0] not in names}
+    for name in names:
         nested = root / name
-        if (nested / ".git").exists():
-            paths = subprocess.check_output(["git", "-C", str(nested), "ls-files", "--cached", "--others", "--exclude-standard"], text=True).splitlines()
-            known.update(f"{name}/{p}" for p in paths)
+        if not (nested / ".git").exists():
+            raise ValueError(f"Missing private checkout {name}; run just modules-check")
+        known.update(f"{name}/{p}" for p in git_sources(nested))
     return known
 
 
@@ -76,7 +85,8 @@ def source_files(component, root=ROOT):
     import fnmatch
     matched = set(component.get("pages", []) + component.get("runbooks", []))
     for pattern in component["watch"]:
-        matches = {p for p in known if fnmatch.fnmatchcase(p, pattern) and (root / p).is_file()}
+        matches = {p for p in known if fnmatch.fnmatchcase(p, pattern)
+                   and (root / p).is_file() and not (root / p).is_symlink()}
         if not matches:
             raise ValueError(f"{component['id']}: watched source matches no files: {pattern}")
         matched.update(matches)
@@ -159,8 +169,10 @@ def source_reference(path, revision, label=None):
 
 def private_repository_states():
     states = {}
-    for name in PRIVATE_REPOSITORIES:
+    for name in private_repositories():
         path = ROOT / name
+        if not (path / ".git").exists():
+            raise ValueError(f"Missing private checkout {name}; run just modules-check")
         revision = subprocess.run(["git", "-C", str(path), "rev-parse", "--verify", "HEAD"],
                                   capture_output=True, text=True)
         states[name] = {
@@ -218,7 +230,8 @@ def export_reference(stage, data, revision):
                           "This is repository configuration, not live state or deployment evidence.\n\n" + body)
 
     services = []
-    for path in sorted(ROOT.glob("*/addon.yaml")):
+    manifests = sorted(ROOT.glob("*/addon.yaml"))
+    for path in manifests:
         addon = yaml.safe_load(path.read_text())
         services.append([addon["name"], path.parent.name,
                          "disabled / retained" if addon.get("disabled") else "enabled",
@@ -226,7 +239,7 @@ def export_reference(stage, data, revision):
                          "host" if addon.get("host_network") else "container",
                          ", ".join(f"{p} → {host if host is not None else 'unmapped'}" for p, host in addon.get("ports", {}).items()) or "—",
                          ", ".join(addon.get("depends_on", [])) or "—"])
-    generated("services.md", "Services", [str(p.relative_to(ROOT)) for p in sorted(ROOT.glob("*/addon.yaml"))],
+    generated("services.md", "Services", [str(p.resolve().relative_to(ROOT)) for p in manifests],
               "Ports show container → configured host mappings. Supervisor options and firewall rules can change actual access. "
               "A declared host mapping is not add-on-only isolation. Dependencies list manifest build/deploy ordering; "
               "external devices and Home Assistant integrations are described in the guides.\n\n" +
@@ -317,11 +330,11 @@ def export_reference(stage, data, revision):
 
 def publication_inputs():
     data = catalog()
-    paths = ["wiki/components.json", "wiki/reviews.json", "wiki/tool.py", "wiki/pyproject.toml", "wiki/uv.lock",
+    paths = [MODULES, "wiki/components.json", "wiki/reviews.json", "wiki/tool.py", "wiki/pyproject.toml", "wiki/uv.lock",
              "wiki/apply.sh", "wiki/transfer.py", "wiki/run"]
     paths += [p for c in data["components"] for p in c["pages"] + source_files(c)]
     paths += list(data["imports"])
-    paths += [str(p.relative_to(ROOT)) for folder in (PROJECT / "assets", PROJECT / "theme", ROOT / "usenet-infra/wiki")
+    paths += [str(p.relative_to(ROOT)) for folder in (PROJECT / "assets", PROJECT / "theme", PROJECT / "runtime")
               for p in folder.rglob("*") if p.is_file()]
     return fingerprint(paths)
 
@@ -573,11 +586,11 @@ def deploy(output):
         for name in manifest["files"]:
             bundle.add(output / "site" / name, arcname="site/" + name, recursive=False)
         for name in ("compose.yaml", "Caddyfile", "Dockerfile", ".dockerignore"):
-            bundle.add(ROOT / "usenet-infra/wiki" / name, arcname="runtime/" + name, recursive=False)
+            bundle.add(PROJECT / "runtime" / name, arcname="runtime/" + name, recursive=False)
         bundle.add(PROJECT / "apply.sh", arcname="runtime/apply.sh", recursive=False)
         checksums = "".join(f"{sha}  site/{name}\n" for name, sha in manifest["files"].items())
         for name in ("compose.yaml", "Caddyfile", "Dockerfile", ".dockerignore"):
-            checksums += f"{digest((ROOT / 'usenet-infra/wiki' / name).read_bytes())}  runtime/{name}\n"
+            checksums += f"{digest((PROJECT / 'runtime' / name).read_bytes())}  runtime/{name}\n"
         checksums += f"{digest((PROJECT / 'apply.sh').read_bytes())}  runtime/apply.sh\n"
         checksum_file = output / "SHA256SUMS"
         checksum_file.write_text(checksums)
@@ -586,7 +599,7 @@ def deploy(output):
     write_json(extra, {"qnap_wiki_source_dir": str(output / "site"),
                        "qnap_wiki_manifest": manifest, "qnap_wiki_archive": str(archive),
                        "qnap_wiki_archive_sha256": digest(archive.read_bytes())})
-    run(["just", "--justfile", "usenet-infra/Justfile", "--working-directory", "usenet-infra",
+    run(["just", "module", "usenet-infra",
          "wiki-publish", str(extra)], cwd=ROOT)
 
 
@@ -658,7 +671,7 @@ def main():
     elif args.action == "with-deployment":
         return with_deployment(args.scope, args.command)
     elif args.action == "rollback":
-        run(["just", "--justfile", "usenet-infra/Justfile", "--working-directory", "usenet-infra", "wiki-rollback"], cwd=ROOT)
+        run(["just", "module", "usenet-infra", "wiki-rollback"], cwd=ROOT)
     elif args.action == "deploy":
         receipts = existing_receipts()
         pending = BUILD / "pending-receipts.json"

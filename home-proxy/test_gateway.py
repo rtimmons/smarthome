@@ -1,5 +1,4 @@
 """Exercise the real Caddy gate against synthetic authorization and app servers."""
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -10,14 +9,18 @@ import unittest
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
-spec = importlib.util.spec_from_file_location('cloud_proxy_tests', ROOT/'usenet-infra/tests/test_cloud_ui_proxy.py')
-cloud = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(cloud)
+IMAGE = (ROOT / 'home-proxy/Dockerfile').read_text().splitlines()[0].split()[1]
 
 
 @unittest.skipUnless(os.environ.get('HOME_PROXY_RUNTIME_TEST') == '1', 'opt-in isolated proxy runtime')
 class GatewayTests(unittest.TestCase):
-    run_container = classmethod(cloud.ProxyRuntimeTests.run_container.__func__)
+    @classmethod
+    def run_container(cls, args, *, data=None):
+        result = subprocess.run(['podman', *args], input=data, text=True,
+                                capture_output=True, timeout=45)
+        if result.returncode:
+            raise AssertionError('Isolated proxy test failed: ' + result.stderr[:300])
+        return result.stdout
 
     @classmethod
     def setUpClass(cls):
@@ -38,13 +41,13 @@ class GatewayTests(unittest.TestCase):
         path = Path(cls.temporary.name)/'Caddyfile'
         path.write_text(config)
         path.chmod(0o644)
-        cls.run_container(['run','--rm','-i','--network','none',cloud.IMAGE,'caddy','adapt',
+        cls.run_container(['run','--rm','-i','--network','none',IMAGE,'caddy','adapt',
                            '--config','-','--adapter','caddyfile'],data=config)
         cls.run_container(['run', '-d', '--name', cls.proxy, '--read-only', '--cap-drop', 'ALL',
             '--security-opt', 'no-new-privileges', '-e', 'SMARTHOME_ARR_AUTH=Basic synthetic-gateway',
             '--mount', f'type=bind,src={path},dst=/etc/caddy/Caddyfile,ro',
             '--tmpfs', '/data:rw,noexec,nosuid,nodev', '--tmpfs', '/config:rw,noexec,nosuid,nodev',
-            cloud.IMAGE, 'caddy', 'run', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'])
+            IMAGE, 'caddy', 'run', '--config', '/etc/caddy/Caddyfile', '--adapter', 'caddyfile'])
         script = '''
 import http.server,json,threading,time
 class Handler(http.server.BaseHTTPRequestHandler):

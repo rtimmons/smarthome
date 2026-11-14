@@ -24,6 +24,7 @@ class ContentTests(unittest.TestCase):
             subprocess.run(["git", "init", "-q", str(root)], check=True)
             subprocess.run(["git", "init", "-q", str(printer)], check=True)
             (root / ".gitignore").write_text("/printer/\n")
+            (root / "workspace-modules").write_text("printer ssh://git@example.invalid/printer.git\n")
             (printer / ".gitignore").write_text("src/runtime.txt\n")
             (printer / "src/app.py").write_text("fixture = 1\n")
             (printer / "src/runtime.txt").write_text("private runtime evidence")

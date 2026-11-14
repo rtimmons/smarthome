@@ -371,10 +371,9 @@ PY
 if [ $ADDON_NAMES_STATUS -ne 0 ] || [ -z "$ADDON_NAMES" ]; then
     # Fallback: find */addon.yaml without relying on talos CLI
     FALLBACK_NAMES=$(
-        find "$REPO_ROOT" -maxdepth 2 -name addon.yaml -print0 2>/dev/null \
-            | while IFS= read -r -d '' file; do
-                basename "$(dirname "$file")"
-            done \
+        for file in "$REPO_ROOT"/*/addon.yaml; do
+            if [[ -f "$file" ]]; then basename "$(dirname "$file")"; fi
+        done \
             | sort -u \
             | tr '\n' ' ' \
             | sed 's/[[:space:]]*$//'

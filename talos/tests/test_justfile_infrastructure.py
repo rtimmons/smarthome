@@ -318,5 +318,5 @@ def test_infrastructure_dispatch_preserves_arguments_and_recovery_environment(tm
     assert result.returncode == 0, result.stderr
     forwarded = json.loads(result.stdout)
     assert forwarded[-len(expected):] == expected
-    assert forwarded[forwarded.index("--working-directory") + 1] == "usenet-infra"
+    assert Path(forwarded[forwarded.index("--working-directory") + 1]) == root / "usenet-infra"
     assert ("--no-dotenv" in forwarded) == (recipe != "usenet" or "--no-dotenv" in args)

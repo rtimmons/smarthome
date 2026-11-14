@@ -66,8 +66,17 @@ def write_json(path, data):
     finally:
         Path(name).unlink(missing_ok=True)
 
-def git_paths(*args):
-    return {os.fsdecode(p) for p in subprocess.check_output(['git', '-C', str(REPO), 'ls-files', '-z', *args]).split(b'\0') if p}
+def git_paths(*args, repo=None):
+    repo = REPO if repo is None else repo
+    def paths(checkout, *options):
+        raw = subprocess.check_output(['git', '-C', str(checkout), 'ls-files', '-z', *options])
+        return {os.fsdecode(p) for p in raw.split(b'\0') if p}
+
+    modules = {path.name: path for path in repo.iterdir() if (path / '.git').exists()}
+    result = {name for name in paths(repo, *args) if name.split('/', 1)[0] not in modules}
+    for name, module in modules.items():
+        result.update(f'{name}/{path}' for path in paths(module, *args))
+    return result
 
 def disposable(name):
     return bool(set(Path(name).parts) & CACHE_PARTS or name.startswith(CACHE_PREFIXES)
@@ -107,7 +116,7 @@ def records(tree, exclude_caches=False):
     return result
 
 def age_tools():
-    spec = importlib.util.spec_from_file_location('bootstrap_age', REPO / 'usenet-infra/scripts/bootstrap-age.py')
+    spec = importlib.util.spec_from_file_location('bootstrap_age', REPO / 'tools/workspace/bootstrap-age.py')
     module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
     # A fresh-clone restore must not create build/ before prepare links it.
     # Reuse the reviewed bootstrap library in an independent external tool cache.
@@ -161,7 +170,7 @@ def load_manifest(state):
 def prepare(state, repo=REPO):
     outside(state, repo)
     manifest = load_manifest(state)
-    tracked = set(os.fsdecode(p) for p in subprocess.check_output(['git','-C',str(repo),'ls-files','-z']).split(b'\0') if p)
+    tracked = git_paths('--cached', repo=repo)
     for name in manifest['roots']:
         if any(p == name or p.startswith(name + '/') for p in tracked):
             raise StateError('A durable path conflicts with tracked source.')

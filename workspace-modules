@@ -1,0 +1,3 @@
+printer ssh://git@git-ssh.home.arpa:2222/ryan/printer.git
+usenet-infra ssh://git@git-ssh.home.arpa:2222/ryan/usenet-infra.git
+identity-infra ssh://git@git-ssh.home.arpa:2222/ryan/identity-infra.git

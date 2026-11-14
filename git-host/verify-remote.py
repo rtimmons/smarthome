@@ -22,8 +22,7 @@ def module(path, name):
 def main():
     os.umask(0o077)
     manager = module(ROOT / 'git-host/manage.py', 'git_manager')
-    recon = module(ROOT / 'usenet-infra/scripts/qnap-recon.py', 'qnap_recon')
-    connection = recon.connection_command(os.environ)
+    connection = manager.connection_command(os.environ)
     command = manager.PRELUDE + '"$docker" exec usenet-backups-backups-1 cat /backups/forgejo/status.json\n'
     result = subprocess.run(connection, input=command.encode(), capture_output=True, check=True)
     status = json.loads(result.stdout)
