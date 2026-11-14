@@ -15,8 +15,8 @@
     "reviewed_at": "2026-10-26"
   },
   "integrations": {
-    "fingerprint": "753bd549ae5d73a980de4a58f5bed127beff2ce438778ea610b0ae0d167a599b",
-    "reason": "Document independent living-room cabinet fan overrun after heating, using the seating-area temperature with Nest fallback.",
+    "fingerprint": "4a524a4fa5f5454dc7627b068f47d471b2e57d2ca38818c6e0e24d6e5e2ba39c",
+    "reason": "Document the 1 \u00b0F residual-heat trial, sensor placement assumptions, and how to compare comfort, fan shutoff, and energy use across heat calls.",
     "reviewed_at": "2026-11-14"
   },
   "lighting": {

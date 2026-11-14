@@ -28,7 +28,7 @@ template:
             {% if heating_idle and room_temperature is number %}
               {% for sensor in expand('sensor.fancontroller_1_temperature', 'sensor.fancontroller_2_temperature') %}
                 {% set cabinet = sensor.state | float(none) %}
-                {% if cabinet is number and cabinet - room_temperature > 3
+                {% if cabinet is number and cabinet - room_temperature > 1
                       and (now() - sensor.last_reported).total_seconds() < 300 %}
                   {% set warm.controllers = warm.controllers + [sensor.entity_id] %}
                 {% endif %}
