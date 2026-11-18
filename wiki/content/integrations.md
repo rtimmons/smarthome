@@ -4,15 +4,30 @@ Home Assistant connects integrations to stable household entities. Not every int
 
 ## Climate and ESPHome fans
 
-The documented Nest integration provides four thermostats through Google Device Access and Pub/Sub updates. Home Assistant owns the OAuth credentials. No repository automation automatically changes HVAC settings.
+The documented Nest integration provides four thermostats through Google Device Access and Pub/Sub updates. Home Assistant owns the OAuth credentials. The living-room heating schedule sets that Nest's target at the daily comfort and overnight boundaries.
 
 The Living Room Nest starts the external ESPHome fans during heating or cooling. When a heat call ends and the Nest goes idle, each cabinet’s fans keep running while that cabinet is more than **1 °F warmer** than the seating area. Each cabinet shuts off independently. Home Assistant uses the Nest’s measured temperature if the seating-area sensor is unavailable. The thermostat’s own fan timer is a separate control.
 
 Start with the thermostat state and then the ESPHome device connection. Preserve entity names when replacing a device; changing them silently can detach an automation.
 
+### Living-room heating schedule
+
+Every day, in Eastern time, Home Assistant applies these Nest setpoints.
+
+| Time | Nest target | Purpose |
+| --- | --- | --- |
+| 8 a.m.–10 p.m. | 73 °F | Start warming one hour before the 9 a.m. comfort window |
+| 10 p.m.–8 a.m. | 72 °F | Overnight setback |
+
+The one-hour warm-up and one-degree setback are the initial trial. Evaluate the knee-height sensor at 9 a.m. and through the 9 a.m.–10 p.m. comfort window, alongside panel energy and outdoor temperature. The Nest's target and the sensor's measured temperature describe different locations. On November 17–18, after 11 p.m., the knee-height sensor held 72.0–72.5 °F with the Nest set to 73 °F. The preceding ventilation period and sensor move affect comparisons across that evening.
+
+Open **Living Room Climate → Heating** in Home Assistant to see the schedule and pause or resume **Automatic setpoints**. Resuming immediately applies the target for the current time while the Nest is in Heat mode. Manual temperature changes last until the next scheduled boundary, Home Assistant restart, or return to Heat mode. The same recovery behavior catches a missed boundary after the Nest reconnects. Turning the Nest off pauses heating until Heat mode is selected again. The cabinet fans continue to follow HVAC activity and the 1 °F residual-heat rule.
+
+The schedule is owned by `new-hass-configs/packages/living_room_heating_schedule.yaml`. The native dashboard's schedule card is owned by `new-hass-configs/dashboards/living-room-heating-schedule.yaml`. Deploy the schedule and card together from the repository root with `./wiki/run with-deployment --scope home-assistant-config -- just --justfile new-hass-configs/Justfile deploy living-room-dashboard`. The dashboard publisher saves a private backup under ignored `new-hass-configs/inventory_snapshots/dashboard-backups/` before updating its card.
+
 ### What the temperature readings represent
 
-- The standalone sensor near the seats is the comfort reference. The Nest measures near an exterior door and supplies the HVAC cycle timing and setpoint as well as its own room temperature. Compare both measured temperatures to see whether those two locations track each other.
+- The standalone sensor near the seats is the comfort reference. It moved from waist height to knee height by November 18, 2026. Treat its new position as a new comfort baseline and keep it fixed while evaluating the schedule. The Nest measures near an exterior door and supplies the HVAC cycle timing and setpoint as well as its own room temperature. Compare both measured temperatures to see whether those two locations track each other.
 - Each controller measures inside its HVAC cabinet. The cabinet-to-room difference indicates whether there may be residual heat to circulate. To estimate heat delivered by the fans, measure discharge-air temperature relative to room air and the airflow. The 1 °F margin is a trial cutoff that leaves room for sensor and placement differences near equal temperatures.
 
 ### How to evaluate a heating cycle

@@ -130,6 +130,10 @@ ha-state entity_id *args="": home-assistant-preflight home-assistant-build
 ha-call service entity_id *args="": home-assistant-preflight home-assistant-build
 	cd config-generator && node dist/cli/home-assistant.js call "{{service}}" --entity-id "{{entity_id}}" {{args}}
 
+# Publish the heating schedule card in the existing native climate dashboard
+living-room-dashboard: home-assistant-preflight home-assistant-build
+	node sync-tools/living-room-dashboard.cjs
+
 # Fetch the Home Assistant YAML configs into current directory
 fetch: preflight
 	rsync -av \

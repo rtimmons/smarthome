@@ -30,7 +30,13 @@ The devices are assigned to matching Home Assistant areas. Entity IDs were norma
 | Office | `climate.office` | `sensor.office_temperature` | `sensor.office_humidity` | `sensor.office_fan_timer_timeout` |
 | Kitchen | `climate.kitchen` | `sensor.kitchen_temperature` | `sensor.kitchen_humidity` | `sensor.kitchen_fan_timer_timeout` |
 
-The climate entities support heat, cool, heat/cool, off, fan on/off, and Eco preset control. No repository automation changes HVAC settings automatically. The Living Room Nest's read-only `hvac_action` attribute starts the external ESPHome heat-pump fans. After a heat call, each cabinet's temperature determines how long its fans keep running. See [`esphome-fancontrollers.md`](esphome-fancontrollers.md).
+The climate entities support heat, cool, heat/cool, off, fan on/off, and Eco preset control. The Living Room Nest's `hvac_action` attribute starts the external ESPHome heat-pump fans. After a heat call, each cabinet's temperature determines how long its fans keep running. See [`esphome-fancontrollers.md`](esphome-fancontrollers.md).
+
+## Living-room heating schedule
+
+`automation.living_room_heating_schedule`, defined in `new-hass-configs/packages/living_room_heating_schedule.yaml`, sets `climate.living_room` to 73 °F at 08:00 and 72 °F at 22:00 every day in Home Assistant's `America/New_York` timezone. It applies the current period's target on startup, return to Heat mode, reconnection in Heat mode, and re-enabling the automation. Setpoint changes run while the thermostat is in Heat mode. A matching target skips the API write.
+
+The **Automatic setpoints** switch on **Living Room Climate → Heating** pauses or resumes the schedule. A manual target lasts until a boundary or recovery trigger applies the scheduled value. The dashboard card is versioned in `new-hass-configs/dashboards/living-room-heating-schedule.yaml` and published to the existing storage dashboard by `just --justfile new-hass-configs/Justfile living-room-dashboard`. The [wiki climate guide](../../wiki/content/integrations.md#living-room-heating-schedule) records the comfort assumptions and the combined deployment command.
 
 ## Verification
 

@@ -1,0 +1,26 @@
+type: vertical-stack
+title: Heating schedule
+cards:
+  - type: markdown
+    content: >-
+      **Every day · Eastern time**
+
+      8 a.m.–10 p.m. **73 °F** · Overnight **72 °F**
+
+      {% set target = 73 if 8 <= now().hour < 22 else 72 %}
+      {% if is_state('automation.living_room_heating_schedule', 'on') %}
+      Scheduled target now **{{ target }} °F**.
+      {% elif is_state('automation.living_room_heating_schedule', 'off') %}
+      Schedule paused. Use the Nest thermostat below for manual control.
+      {% else %}
+      Schedule unavailable.
+      {% endif %}
+  - type: tile
+    entity: automation.living_room_heating_schedule
+    name: Automatic setpoints
+    icon: mdi:calendar-clock
+    state_content: state
+    tap_action:
+      action: more-info
+    icon_tap_action:
+      action: toggle
