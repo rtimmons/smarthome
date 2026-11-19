@@ -105,6 +105,13 @@ backup passed.
 
 Backblaze confirmed deletion of the legacy `Backup 1.qdff` folder on November 13.
 The old HBS job remains configured and should be treated as retired.
+Its leftover integrity schedules caused the November 16 missing-destination
+error. On November 19, those schedules were removed and production received
+Monday 16:00 Quick Checks and first-of-month 17:00 Content Checks, Eastern.
+The saved schedules were verified, and an approved fresh production Quick Check
+completed with **Good** at 17:22 Eastern that day. Scheduled execution remains
+to be observed; Quick Check does not establish a full restore.
+[Integrity schedule repair](../../usenet-infra/docs/scheduled-backups.md#november-19-integrity-schedule-repair).
 Time Machine recovery from QuDedup remains unverified. The independent NAS
 settings job verified all three encrypted offsite copies on November 13
 after the weekly QTS export was repaired. A separate download verified the
