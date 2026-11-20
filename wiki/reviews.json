@@ -15,9 +15,9 @@
     "reviewed_at": "2026-11-14"
   },
   "integrations": {
-    "fingerprint": "e31da69ad93f09c99b96a4ed8335b1d255e649e4ba3fa1c4fddf6a0a3157d0ac",
-    "reason": "Review four independent Nest heating schedules, per-room pause controls, Eco and Off precedence, and verified living-room Max savings with the auxiliary-heat evidence.",
-    "reviewed_at": "2026-11-19"
+    "fingerprint": "f1a0478fdb69436b476c8de9836b41d15b86d7496f562d131c0d92a8b36cd502",
+    "reason": "Lower the four-room overnight target to 60 F, keep 73 F daytime and the existing boundaries, and document the overnight-plus-recovery evaluation for the November 19 trial.",
+    "reviewed_at": "2026-11-20"
   },
   "lighting": {
     "fingerprint": "11498aa83db0e4d62a25f61487361d9609220d25d5bb1ccae5f5a66c10551a35",

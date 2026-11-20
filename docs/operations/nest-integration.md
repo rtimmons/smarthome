@@ -34,7 +34,7 @@ The climate entities support heat, cool, heat/cool, off, fan on/off, and Eco pre
 
 ## Heating schedules and auxiliary heat
 
-`new-hass-configs/packages/nest_heating_schedules.yaml` defines four independent automations: `automation.living_room_heating_schedule`, `automation.bedroom_heating_schedule`, `automation.kitchen_heating_schedule`, and `automation.office_heating_schedule`. Each maintains its corresponding thermostat at 73 °F from 08:00 to 22:00 and 72 °F overnight in Home Assistant's `America/New_York` timezone, every day.
+`new-hass-configs/packages/nest_heating_schedules.yaml` defines four independent automations: `automation.living_room_heating_schedule`, `automation.bedroom_heating_schedule`, `automation.kitchen_heating_schedule`, and `automation.office_heating_schedule`. Each maintains its corresponding thermostat at 73 °F from 08:00 to 22:00 and 60 °F overnight in Home Assistant's `America/New_York` timezone, every day. The 60 °F overnight trial begins November 19, 2026; the initial overnight target was 72 °F.
 
 Each automation reconciles on a boundary, startup, return to Heat mode or connectivity, temperature or preset changes, and re-enabling. Heat mode and a non-Eco preset are required. Matching targets skip the API call. While enabled, the schedule restores its target after native Nest program or manual setpoint changes. Pause **Automatic setpoints** for that room before a manual hold; Off, cooling, and Eco take precedence. Room failures and pause controls are independent.
 

@@ -5,9 +5,9 @@ cards:
     content: >-
       **Every day · Eastern time**
 
-      8 a.m.–10 p.m. **73 °F** · Overnight **72 °F**
+      8 a.m.–10 p.m. **73 °F** · Overnight **60 °F**
 
-      {% set target = 73 if 8 <= now().hour < 22 else 72 %}
+      {% set target = 73 if 8 <= now().hour < 22 else 60 %}
       {% if is_state('automation.living_room_heating_schedule', 'on') %}
       Scheduled target now **{{ target }} °F**. Pause Automatic setpoints for a manual hold.
       {% elif is_state('automation.living_room_heating_schedule', 'off') %}

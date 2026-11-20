@@ -2,7 +2,7 @@ automation:
   - id: living_room_heating_schedule
     alias: Living Room Heating Schedule
     description: >-
-      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Maintain 73 °F from 08:00 to 22:00 and 60 °F overnight in Heat mode.
       Pause this room's schedule before holding a manual temperature.
     triggers:
       - trigger: time
@@ -26,7 +26,7 @@ automation:
         to: "on"
     actions:
       - variables:
-          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 60 }}"
       - condition: state
         entity_id: climate.living_room
         state: "heat"
@@ -46,7 +46,7 @@ automation:
   - id: bedroom_heating_schedule
     alias: Bedroom Heating Schedule
     description: >-
-      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Maintain 73 °F from 08:00 to 22:00 and 60 °F overnight in Heat mode.
       Pause this room's schedule before holding a manual temperature.
     triggers:
       - trigger: time
@@ -70,7 +70,7 @@ automation:
         to: "on"
     actions:
       - variables:
-          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 60 }}"
       - condition: state
         entity_id: climate.bedroom
         state: "heat"
@@ -90,7 +90,7 @@ automation:
   - id: kitchen_heating_schedule
     alias: Kitchen Heating Schedule
     description: >-
-      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Maintain 73 °F from 08:00 to 22:00 and 60 °F overnight in Heat mode.
       Pause this room's schedule before holding a manual temperature.
     triggers:
       - trigger: time
@@ -114,7 +114,7 @@ automation:
         to: "on"
     actions:
       - variables:
-          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 60 }}"
       - condition: state
         entity_id: climate.kitchen
         state: "heat"
@@ -134,7 +134,7 @@ automation:
   - id: office_heating_schedule
     alias: Office Heating Schedule
     description: >-
-      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Maintain 73 °F from 08:00 to 22:00 and 60 °F overnight in Heat mode.
       Pause this room's schedule before holding a manual temperature.
     triggers:
       - trigger: time
@@ -158,7 +158,7 @@ automation:
         to: "on"
     actions:
       - variables:
-          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 60 }}"
       - condition: state
         entity_id: climate.office
         state: "heat"
