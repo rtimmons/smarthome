@@ -15,9 +15,9 @@
     "reviewed_at": "2026-11-14"
   },
   "integrations": {
-    "fingerprint": "fadc3aaa83ba23c23ee81a72d97665ad3c4a7a49ee3aa4e25a5864fbc8648c8d",
-    "reason": "Add daily living-room Nest setpoints, native dashboard pause/resume controls, and the knee-height sensor baseline for the 9 a.m.\u201310 p.m. comfort window.",
-    "reviewed_at": "2026-11-18"
+    "fingerprint": "e31da69ad93f09c99b96a4ed8335b1d255e649e4ba3fa1c4fddf6a0a3157d0ac",
+    "reason": "Review four independent Nest heating schedules, per-room pause controls, Eco and Off precedence, and verified living-room Max savings with the auxiliary-heat evidence.",
+    "reviewed_at": "2026-11-19"
   },
   "lighting": {
     "fingerprint": "11498aa83db0e4d62a25f61487361d9609220d25d5bb1ccae5f5a66c10551a35",
@@ -25,9 +25,9 @@
     "reviewed_at": "2026-11-14"
   },
   "maintenance": {
-    "fingerprint": "05eb9c8defa402494b0414f60733278bfe5fe7d9383f6bf320ac16b27cbdb907",
-    "reason": "Verified November 19 HBS integrity schedule transfer and fresh production Quick Check reporting Good; recorded remaining scheduled-execution and restore limits.",
-    "reviewed_at": "2026-11-19"
+    "fingerprint": "1d0b136b0022de0aebf2f85ae6b01190a51f8d54621976e13a0b39b5de7f9bd7",
+    "reason": "Review per-room heating dashboard publication and retain the already-published November 19 NAS integrity runbook paired with the maintenance guide.",
+    "reviewed_at": "2026-11-20"
   },
   "media": {
     "fingerprint": "08b8c79511dd10430001cb07ddf82f3993f52e32bcada154a877ac2e8e4317ba",

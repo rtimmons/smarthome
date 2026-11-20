@@ -9,12 +9,14 @@ cards:
 
       {% set target = 73 if 8 <= now().hour < 22 else 72 %}
       {% if is_state('automation.living_room_heating_schedule', 'on') %}
-      Scheduled target now **{{ target }} °F**.
+      Scheduled target now **{{ target }} °F**. Pause Automatic setpoints for a manual hold.
       {% elif is_state('automation.living_room_heating_schedule', 'off') %}
       Schedule paused. Use the Nest thermostat below for manual control.
       {% else %}
       Schedule unavailable.
       {% endif %}
+
+      All four rooms use this timing. Open **Room schedules** for per-room controls.
   - type: tile
     entity: automation.living_room_heating_schedule
     name: Automatic setpoints

@@ -32,11 +32,15 @@ The devices are assigned to matching Home Assistant areas. Entity IDs were norma
 
 The climate entities support heat, cool, heat/cool, off, fan on/off, and Eco preset control. The Living Room Nest's `hvac_action` attribute starts the external ESPHome heat-pump fans. After a heat call, each cabinet's temperature determines how long its fans keep running. See [`esphome-fancontrollers.md`](esphome-fancontrollers.md).
 
-## Living-room heating schedule
+## Heating schedules and auxiliary heat
 
-`automation.living_room_heating_schedule`, defined in `new-hass-configs/packages/living_room_heating_schedule.yaml`, sets `climate.living_room` to 73 °F at 08:00 and 72 °F at 22:00 every day in Home Assistant's `America/New_York` timezone. It applies the current period's target on startup, return to Heat mode, reconnection in Heat mode, and re-enabling the automation. Setpoint changes run while the thermostat is in Heat mode. A matching target skips the API write.
+`new-hass-configs/packages/nest_heating_schedules.yaml` defines four independent automations: `automation.living_room_heating_schedule`, `automation.bedroom_heating_schedule`, `automation.kitchen_heating_schedule`, and `automation.office_heating_schedule`. Each maintains its corresponding thermostat at 73 °F from 08:00 to 22:00 and 72 °F overnight in Home Assistant's `America/New_York` timezone, every day.
 
-The **Automatic setpoints** switch on **Living Room Climate → Heating** pauses or resumes the schedule. A manual target lasts until a boundary or recovery trigger applies the scheduled value. The dashboard card is versioned in `new-hass-configs/dashboards/living-room-heating-schedule.yaml` and published to the existing storage dashboard by `just --justfile new-hass-configs/Justfile living-room-dashboard`. The [wiki climate guide](../../wiki/content/integrations.md#living-room-heating-schedule) records the comfort assumptions and the combined deployment command.
+Each automation reconciles on a boundary, startup, return to Heat mode or connectivity, temperature or preset changes, and re-enabling. Heat mode and a non-Eco preset are required. Matching targets skip the API call. While enabled, the schedule restores its target after native Nest program or manual setpoint changes. Pause **Automatic setpoints** for that room before a manual hold; Off, cooling, and Eco take precedence. Room failures and pause controls are independent.
+
+**Living Room Climate → Room schedules** contains four thermostats and schedule switches. The Heating view retains the living-room graphs and schedule control. Dashboard sources are in `new-hass-configs/dashboards/`; publish through `just --justfile new-hass-configs/Justfile living-room-dashboard`. The [wiki climate guide](../../wiki/content/integrations.md#nest-heating-schedules) includes the combined configuration/dashboard deployment command and comfort/energy methodology.
+
+Native Nest settings were inspected on November 19, 2026. Living Room, Bedroom, and Kitchen report electric auxiliary heat wired to W1. Living Room Heat Pump Balance was changed from Balanced to **Max savings**; Bedroom and Kitchen report Balanced. Office reports a heat pump without an AUX wire/stage and has no Heat Pump Balance option. These are Nest-owned settings, outside the SDM API and Git deployment. The [wiki auxiliary-heat explanation](../../wiki/content/integrations.md#auxiliary-heat-and-heat-pump-balance) records the dated inventory and evidence connecting Sense's Mystery Heat to living-room recovery. The circuit mapping remains an inference.
 
 ## Verification
 

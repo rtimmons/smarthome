@@ -101,8 +101,9 @@
       "watch": [
         "new-hass-configs/manual/automations.yaml",
         "new-hass-configs/packages/living_room_heat_pump_fans.yaml",
-        "new-hass-configs/packages/living_room_heating_schedule.yaml",
+        "new-hass-configs/packages/nest_heating_schedules.yaml",
         "new-hass-configs/dashboards/living-room-heating-schedule.yaml",
+        "new-hass-configs/dashboards/nest-heating-schedules.yaml",
         "new-hass-configs/sync-tools/living-room-dashboard.cjs"
       ],
       "runbooks": [

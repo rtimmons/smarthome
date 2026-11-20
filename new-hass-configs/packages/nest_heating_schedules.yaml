@@ -1,0 +1,177 @@
+automation:
+  - id: living_room_heating_schedule
+    alias: Living Room Heating Schedule
+    description: >-
+      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Pause this room's schedule before holding a manual temperature.
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+      - trigger: time
+        at: "22:00:00"
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: climate.living_room
+        to: "heat"
+      - trigger: state
+        entity_id: climate.living_room
+        attribute: temperature
+      - trigger: state
+        entity_id: climate.living_room
+        attribute: preset_mode
+      - trigger: state
+        entity_id: automation.living_room_heating_schedule
+        from: "off"
+        to: "on"
+    actions:
+      - variables:
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+      - condition: state
+        entity_id: climate.living_room
+        state: "heat"
+      - condition: template
+        value_template: "{{ state_attr('climate.living_room', 'preset_mode') != 'eco' }}"
+      - condition: template
+        value_template: >-
+          {{ state_attr('climate.living_room', 'temperature') | float(none)
+             != scheduled_temperature }}
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.living_room
+        data:
+          temperature: "{{ scheduled_temperature }}"
+    mode: queued
+    max: 5
+  - id: bedroom_heating_schedule
+    alias: Bedroom Heating Schedule
+    description: >-
+      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Pause this room's schedule before holding a manual temperature.
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+      - trigger: time
+        at: "22:00:00"
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: climate.bedroom
+        to: "heat"
+      - trigger: state
+        entity_id: climate.bedroom
+        attribute: temperature
+      - trigger: state
+        entity_id: climate.bedroom
+        attribute: preset_mode
+      - trigger: state
+        entity_id: automation.bedroom_heating_schedule
+        from: "off"
+        to: "on"
+    actions:
+      - variables:
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+      - condition: state
+        entity_id: climate.bedroom
+        state: "heat"
+      - condition: template
+        value_template: "{{ state_attr('climate.bedroom', 'preset_mode') != 'eco' }}"
+      - condition: template
+        value_template: >-
+          {{ state_attr('climate.bedroom', 'temperature') | float(none)
+             != scheduled_temperature }}
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.bedroom
+        data:
+          temperature: "{{ scheduled_temperature }}"
+    mode: queued
+    max: 5
+  - id: kitchen_heating_schedule
+    alias: Kitchen Heating Schedule
+    description: >-
+      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Pause this room's schedule before holding a manual temperature.
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+      - trigger: time
+        at: "22:00:00"
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: climate.kitchen
+        to: "heat"
+      - trigger: state
+        entity_id: climate.kitchen
+        attribute: temperature
+      - trigger: state
+        entity_id: climate.kitchen
+        attribute: preset_mode
+      - trigger: state
+        entity_id: automation.kitchen_heating_schedule
+        from: "off"
+        to: "on"
+    actions:
+      - variables:
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+      - condition: state
+        entity_id: climate.kitchen
+        state: "heat"
+      - condition: template
+        value_template: "{{ state_attr('climate.kitchen', 'preset_mode') != 'eco' }}"
+      - condition: template
+        value_template: >-
+          {{ state_attr('climate.kitchen', 'temperature') | float(none)
+             != scheduled_temperature }}
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.kitchen
+        data:
+          temperature: "{{ scheduled_temperature }}"
+    mode: queued
+    max: 5
+  - id: office_heating_schedule
+    alias: Office Heating Schedule
+    description: >-
+      Maintain 73 °F from 08:00 to 22:00 and 72 °F overnight in Heat mode.
+      Pause this room's schedule before holding a manual temperature.
+    triggers:
+      - trigger: time
+        at: "08:00:00"
+      - trigger: time
+        at: "22:00:00"
+      - trigger: homeassistant
+        event: start
+      - trigger: state
+        entity_id: climate.office
+        to: "heat"
+      - trigger: state
+        entity_id: climate.office
+        attribute: temperature
+      - trigger: state
+        entity_id: climate.office
+        attribute: preset_mode
+      - trigger: state
+        entity_id: automation.office_heating_schedule
+        from: "off"
+        to: "on"
+    actions:
+      - variables:
+          scheduled_temperature: "{{ 73 if 8 <= now().hour < 22 else 72 }}"
+      - condition: state
+        entity_id: climate.office
+        state: "heat"
+      - condition: template
+        value_template: "{{ state_attr('climate.office', 'preset_mode') != 'eco' }}"
+      - condition: template
+        value_template: >-
+          {{ state_attr('climate.office', 'temperature') | float(none)
+             != scheduled_temperature }}
+      - action: climate.set_temperature
+        target:
+          entity_id: climate.office
+        data:
+          temperature: "{{ scheduled_temperature }}"
+    mode: queued
+    max: 5

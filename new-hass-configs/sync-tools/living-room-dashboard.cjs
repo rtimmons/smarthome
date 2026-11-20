@@ -15,10 +15,11 @@ async function main() {
     type: "lovelace/config", url_path, force: true,
   });
   const config = await readConfig();
-  const card = yaml.parse(fs.readFileSync(
-    path.resolve(__dirname, "../dashboards/living-room-heating-schedule.yaml"),
-    "utf8"
+  const source = (name) => yaml.parse(fs.readFileSync(
+    path.resolve(__dirname, "../dashboards", name), "utf8"
   ));
+  const card = source("living-room-heating-schedule.yaml");
+  const roomView = source("nest-heating-schedules.yaml");
   const view = config.views.find((candidate) => candidate.path === "heating");
   const section = view?.sections?.find((candidate) => candidate.cards?.some(
     (entry) => entry.entity === "climate.living_room"
@@ -26,8 +27,11 @@ async function main() {
   assert(section, "Living Room Climate dashboard has no thermostat section");
 
   const existing = section.cards.findIndex((entry) => entry.title === card.title);
-  if (existing >= 0 && JSON.stringify(section.cards[existing]) === JSON.stringify(card)) {
-    console.log("Living-room dashboard schedule already matches");
+  const existingRoomView = config.views.findIndex((entry) => entry.path === roomView.path);
+  if (existing >= 0 && JSON.stringify(section.cards[existing]) === JSON.stringify(card)
+      && existingRoomView >= 0
+      && JSON.stringify(config.views[existingRoomView]) === JSON.stringify(roomView)) {
+    console.log("Nest dashboard schedules already match");
     return;
   }
 
@@ -43,11 +47,16 @@ async function main() {
   } else {
     section.cards.splice(1, 0, card);
   }
+  if (existingRoomView >= 0) {
+    config.views[existingRoomView] = roomView;
+  } else {
+    config.views.push(roomView);
+  }
   await ha.callHomeAssistantWs(options, token, {
     type: "lovelace/config/save", url_path, config,
   });
   assert.deepEqual(await readConfig(), config, "Dashboard readback differs");
-  console.log("Published living-room dashboard schedule");
+  console.log("Published Nest dashboard schedules");
 }
 
 main().catch((error) => {

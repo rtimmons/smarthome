@@ -1,0 +1,88 @@
+title: Room schedules
+path: rooms
+icon: mdi:home-thermometer
+type: sections
+max_columns: 4
+sections:
+  - type: grid
+    column_span: 4
+    cards:
+      - type: heading
+        heading: Daily heating schedule
+        icon: mdi:calendar-clock
+      - type: markdown
+        content: >-
+          **Every day · Eastern time**
+
+          8 a.m.–10 p.m. **73 °F** · Overnight **72 °F**
+
+          Automatic setpoints maintains this target in Heat mode. Pause a room's
+          schedule before a manual temperature hold. Off and Eco take precedence.
+  - type: grid
+    cards:
+      - type: heading
+        heading: Living Room
+        icon: mdi:thermostat
+      - type: tile
+        entity: automation.living_room_heating_schedule
+        name: Automatic setpoints
+        icon: mdi:calendar-clock
+        state_content: state
+        tap_action:
+          action: more-info
+        icon_tap_action:
+          action: toggle
+      - type: thermostat
+        entity: climate.living_room
+        name: Living Room Nest
+  - type: grid
+    cards:
+      - type: heading
+        heading: Bedroom
+        icon: mdi:thermostat
+      - type: tile
+        entity: automation.bedroom_heating_schedule
+        name: Automatic setpoints
+        icon: mdi:calendar-clock
+        state_content: state
+        tap_action:
+          action: more-info
+        icon_tap_action:
+          action: toggle
+      - type: thermostat
+        entity: climate.bedroom
+        name: Bedroom Nest
+  - type: grid
+    cards:
+      - type: heading
+        heading: Kitchen
+        icon: mdi:thermostat
+      - type: tile
+        entity: automation.kitchen_heating_schedule
+        name: Automatic setpoints
+        icon: mdi:calendar-clock
+        state_content: state
+        tap_action:
+          action: more-info
+        icon_tap_action:
+          action: toggle
+      - type: thermostat
+        entity: climate.kitchen
+        name: Kitchen Nest
+  - type: grid
+    cards:
+      - type: heading
+        heading: Office
+        icon: mdi:thermostat
+      - type: tile
+        entity: automation.office_heating_schedule
+        name: Automatic setpoints
+        icon: mdi:calendar-clock
+        state_content: state
+        tap_action:
+          action: more-info
+        icon_tap_action:
+          action: toggle
+      - type: thermostat
+        entity: climate.office
+        name: Office Nest
