@@ -6,6 +6,14 @@ Start with the [room-by-room catalog](wiki-reference:rooms). It shows each physi
 
 Home Assistant **areas** describe physical rooms. Fixed Sonos rooms and dashboard selections use the same names, including Patio. Home Assistant geographic zones remain location/geofencing concepts; playback groups remain temporary audio groupings.
 
+Apple Home uses these physical room names too. Its room assignments and cached
+accessory names are separate Apple-owned metadata; HA area reconciliation does not
+write them. `home-model/homekit-catalog.json` records the reviewed fixture names and
+explicit export list. Fixture and preset areas come from the device catalog;
+preset labels are shared with the HA script generator. The
+[HomeKit runbook](../../docs/operations/homekit.md) explains the separate Home-app
+verification and native preset scenes.
+
 The [generated name comparison](wiki-reference:rooms#speaker-names) shows what Sonos speakers reported beside their Home Assistant player/device names and physical areas. Refresh it with `just rooms-verify --record-verification`. Offline speakers remain explicitly unverified; a new wiki build alone does not claim a fresh live check.
 
 Set the area on a physical device so all its entities inherit it: lights, fans, sensors, switches, diagnostics and disabled endpoints stay together. Controls without a device, such as room-specific scene scripts, receive an explicit entity area. An area assignment does not add a light to any scene, expose it to voice assistants, change playback, or change its entity ID.

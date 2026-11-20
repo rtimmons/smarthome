@@ -44,6 +44,23 @@ function getSceneWorkerSequence(
 }
 
 describe("Scene Generation", () => {
+  it("preserves existing Assist aliases while sharing preset labels with Apple Home", () => {
+    const aliases = {
+      office_high: "Office bright",
+      office_medium: "Office medium",
+      office_low: "Office dim",
+      office_off: "Office off",
+      outdoor_high: "Outdoor bright",
+      closet_high: "Closet bright",
+      all_off: "All lights off",
+      led_grid_wall_ten_percent: "LED wall ten percent",
+    };
+    const scripts = generateFastScripts(Object.fromEntries(Object.keys(aliases).map(id => [id, scenes[id]])));
+    for (const [id, alias] of Object.entries(aliases)) {
+      expect(scripts[`fast_scene_${id}`].alias).toBe(alias);
+    }
+  });
+
   describe("Outdoor dashboard scenes", () => {
     it("should control both outdoor light entities", () => {
       const high = generateScenes({ outdoor_high: scenes.outdoor_high })[0];

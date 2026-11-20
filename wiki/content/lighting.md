@@ -20,6 +20,34 @@ The Closet uses a MOES Zigbee relay. Its bottom button controls the fixture. Hig
 
 Living Room High, Medium, Low, and Off request zero LED wall master brightness, preserving playback and the selected animation while the wall is powered. All Off also switches off the wall's power outlet. Living Room High switches the outlet back on. Wall brightness commands run once per request, and a newer wall or room request cancels unsent work for the same wall.
 
+## Siri and Apple Home
+
+Apple Home uses the shared physical room names and short fixture names, including
+Patio, Upper Cabinets, Floor Lamp and Curtain Lights. Only reviewed fixtures and
+public preset scripts are exported. RGBW white-channel diagnostics, duplicate Hue
+groups, controller LEDs, protected supplies and intentionally excluded hardware
+stay outside the bridge's explicit allowlist. The piano and dining lamps display
+as lights.
+
+Native Home scenes use **<Room> Bright**, **Medium**, **Dim** and **Off**. The Closet
+has **On** and **Off** only. **House Lights Out** is whole-home all-off, and **LED Wall
+Ten Percent** sets the wall's existing brightness preset. Each scene turns on one
+matching **Apply <preset>** trigger, which calls the reliable scene wrapper. The
+trigger switches stay out of Home View and are not persistent lighting-mode
+indicators. Room scenes appear in their rooms; automatic scene suggestions are
+hidden, and House Lights Out is the main-view shortcut. Existing Kitchen presets
+also reach Dining Room fixtures.
+
+“Set the Office Bright scene” requests the curated preset. Ordinary requests such
+as “turn off the office lights” act directly on exposed fixtures and do not select
+the dispatcher's Office Off preset automatically. Siri/Home metadata and Assist
+aliases are separate. A working Home hub is required for Home to accept metadata
+changes; Bedroom Apple TV became the active hub after Ryan assigned it to this Home
+on November 19, 2026. Unavailable individual fixtures still require their own checks.
+
+The [HomeKit runbook](../../docs/operations/homekit.md) covers the catalog,
+pairing-preserving reconciliation, native scene definitions, hub checks and recovery.
+
 ## Pebble Index 01 voice control
 
 The ring sends a spoken request through the Pebble iPhone app to Home Assistant's

@@ -47,6 +47,13 @@ The configuration deployment also includes the root `light_profiles.csv`, which 
 
 Room organization has separate, explicit maintenance commands: `just rooms-generate` and `just rooms-check` manage the shared dashboard/Sonos definitions; `just rooms-audit` inspects Home Assistant areas; `just rooms-apply` aligns known names while preserving stable IDs and voice aliases. Optional legacy-area cleanup only removes audited empty, unreferenced areas and saves private recovery metadata first. Follow the [dashboard guide](dashboard.md) for scope and deployment.
 
+`just homekit-audit` checks the reviewed Apple Home export catalog. `just
+homekit-apply` updates the existing paired bridge in place, verifies its identity
+and retained accessory IDs, and publishes the reviewed wiki after success. Apple
+Home's cached names, rooms, lamp categories and native scenes need separate
+Home-app verification. Follow the [HomeKit runbook](../../docs/operations/homekit.md);
+never reset or re-pair the bridge to clean up names.
+
 Open Home Assistant database containment, full recovery, deployment rollback, hardware and device-security checks are tracked in the [hardening checklist](../../docs/plan-hardening.md). Verified scoped backups and radio recovery do not establish a full-machine restore.
 
 ## Disposable workstation checkout

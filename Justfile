@@ -367,6 +367,20 @@ areas-audit *args="":
 areas-apply *args="":
 	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-placements.ts --apply {{args}}
 
+# Audit the existing paired HomeKit bridge and public scene wrappers
+[group: 'info']
+homekit-audit *args="":
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-homekit.ts {{args}}
+
+# Reconcile the existing bridge in place; never reset, unpair, or create a bridge
+[group: 'deploy']
+homekit-apply *args="": checkout-prepare
+	@./wiki/run with-deployment --scope homekit-bridge -- just _homekit-apply {{args}}
+
+[private]
+_homekit-apply *args="":
+	@{{nvm_use}} && grid-dashboard/ExpressServer/node_modules/.bin/tsx home-model/reconcile-homekit.ts --apply {{args}}
+
 # Capture the live Home Assistant device and entity registries
 [group: 'info']
 ha-inventory *args="":

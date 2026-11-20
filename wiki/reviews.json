@@ -5,9 +5,9 @@
     "reviewed_at": "2026-11-11"
   },
   "dashboard": {
-    "fingerprint": "c6de807a2b773d92184c1cdd60aa0070699255a73b6cd5ea2a5ff5f9b437c4e4",
-    "reason": "Reviewed the Pi 5 wall hostname, guarded animation commands, and lossless controller receipt IDs used by the dashboard pickers.",
-    "reviewed_at": "2026-11-13"
+    "fingerprint": "3017776b694fd10552d3097534c7e3f3b318f49edb18ecac6a5b6052677b2e3d",
+    "reason": "Derived HomeKit fixture and preset areas from the shared placement catalog, retained the exact 74-entity export contract, and documented the two already-public Dim script placements.",
+    "reviewed_at": "2026-11-20"
   },
   "home": {
     "fingerprint": "849087d74f029f602ea4196fd1c39de75b6f3c27b64ca71e002caf70e9959e02",
@@ -20,13 +20,13 @@
     "reviewed_at": "2026-11-20"
   },
   "lighting": {
-    "fingerprint": "11498aa83db0e4d62a25f61487361d9609220d25d5bb1ccae5f5a66c10551a35",
-    "reason": "The shared manual automation file changes only the living-room ESPHome HVAC fans and their inventory test. Lighting scene and dispatch behavior are unaffected.",
-    "reviewed_at": "2026-11-14"
+    "fingerprint": "a258a02f77e343d10e81eaab92177a313e4db12882721f74768c0f1ccbb1e18d",
+    "reason": "Centralized Bright/Medium/Dim/Off labels, kept existing Assist aliases and all 64 generated scripts identical, and documented preservation of the paired bridge and 36 Apple scenes.",
+    "reviewed_at": "2026-11-20"
   },
   "maintenance": {
-    "fingerprint": "1d0b136b0022de0aebf2f85ae6b01190a51f8d54621976e13a0b39b5de7f9bd7",
-    "reason": "Review per-room heating dashboard publication and retain the already-published November 19 NAS integrity runbook paired with the maintenance guide.",
+    "fingerprint": "cedf24b7d18f093fa53c96c7b36559a0e4c06841ec50619430d4e8ca9c161265",
+    "reason": "Reviewed the existing HomeKit audit/apply recipes, private recovery and pairing checks, HomeKit runbook ownership, and maintenance guidance. Verified all other maintenance sources match the already-reviewed HEAD fingerprint.",
     "reviewed_at": "2026-11-20"
   },
   "media": {

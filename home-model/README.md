@@ -85,6 +85,45 @@ Logical lighting area fields in `devices.ts` and the hardware product catalog's
 Neither area fields nor this maintenance command affect scene targets, entity IDs,
 availability, disable/exposure settings, playback groups or power protections.
 
+## Apple Home and Siri
+
+`homekit-catalog.json` (schema 2) lists exported fixtures with their short Apple
+Home names and optional Display As choice, and an explicit `presetSceneIds`
+allowlist. Both fixture and script areas come from `device-catalog.json`; room
+names come from `rooms.json`. Do not repeat areas or scene-family mappings in the
+HomeKit catalog. Missing or unconfirmed placements fail validation instead of
+falling back to an entity prefix or scene target's location.
+
+Preset names combine the reviewed area name with the shared Bright/Medium/Dim/Off
+labels in `scene-presets.ts`. The same labels generate HA script voice metadata.
+Only three existing Apple Home name exceptions remain in `presetNames`: Closet
+On, House Lights Out and LED Wall Ten Percent. Existing Assist aliases, including
+Outdoor and Closet bright, stay intact. New discoveries and new scene wrappers
+are private until explicitly added to the export allowlist.
+
+The catalog excludes RGBW diagnostic channels, Hue group duplicates, controller
+LEDs, protected supplies, temporarily removed hardware and intentionally excluded
+devices. Temporary unavailability alone does not retire a reviewed fixture.
+
+`just homekit-audit` compares the catalog with the existing paired UI-owned bridge.
+`just homekit-apply` uses its supported options flow and reconciles HA fixture
+display names, preserving previous names as aliases. It never changes entity IDs,
+bridge identity/port, pairing keys or paired clients. It resolves retained accessory
+IDs using the registry's platform/domain/unique ID, including migration fallbacks,
+and verifies those allocations after applying. Private recovery snapshots go to
+ignored, owner-readable `build/homekit-cleanup/`. `--fixtures-only` is an explicit
+staging option that omits the public preset scripts; normal reconciliation includes
+the complete catalog.
+
+Apple Home caches names and owns its room assignments and scenes. Those require
+separate Home-app reconciliation and verification; a successful bridge audit does
+not claim to have changed or verified them. Fixture names are short within a room.
+Switch-powered lamps use Home's **Display As → Light**. Public scripts appear as
+action switches called **Apply <preset>**, hidden from Home View, and native Home
+scenes called **<preset>** turn on exactly one matching trigger. Scene names and
+trigger names are deliberately distinct. Scripts retain their existing Assist
+names and stable IDs. See the [HomeKit runbook](../docs/operations/homekit.md).
+
 The generated wiki room catalog is the human review surface: physical devices,
 dashboard controls, cross-room presets, standalone helpers, unresolved locations,
 retirements and dated verification totals. To roll back metadata, apply the saved

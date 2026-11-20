@@ -1,5 +1,6 @@
 import { getDevice } from "./devices";
 import { Device, LightState, Scene } from "./types";
+import { getScenePresetLevel, SCENE_PRESET_LABELS, ScenePresetLevel } from "./scene-presets";
 
 export interface HAScene {
   id: string;
@@ -971,27 +972,23 @@ function getFastSceneVoiceMetadata(sceneId: string, scene: Scene) {
     };
   }
 
-  const preset = sceneId.match(/_(high|medium|low|off)$/)?.[1];
+  const preset = getScenePresetLevel(sceneId);
   const room = scene.name.replace(/\s+-\s+(High|Medium(?:\s+\([^)]*\))?|Low|Off)$/, "");
   const spokenRoom = room.toLowerCase();
-  const presets: Record<string, { label: string; action: string; phrases: string[] }> = {
+  const presets: Record<ScenePresetLevel, { action: string; phrases: string[] }> = {
     high: {
-      label: "bright",
       action: `Set ${spokenRoom} lighting to the bright (high) preset`,
       phrases: [`${spokenRoom} bright`, `${spokenRoom} high`, `make the ${spokenRoom} bright`],
     },
     medium: {
-      label: "medium",
       action: `Set ${spokenRoom} lighting to the medium preset`,
       phrases: [`${spokenRoom} medium`, `set the ${spokenRoom} to medium`, `${spokenRoom} moderate lighting`],
     },
     low: {
-      label: "dim",
       action: `Set ${spokenRoom} lighting to the dim (low) preset`,
       phrases: [`${spokenRoom} dim`, `${spokenRoom} low`, `dim the ${spokenRoom}`],
     },
     off: {
-      label: "off",
       action: `Turn off the scene-controlled lighting in the ${spokenRoom}`,
       phrases: [`${spokenRoom} off`, `turn off the ${spokenRoom} lights`],
     },
@@ -1001,8 +998,8 @@ function getFastSceneVoiceMetadata(sceneId: string, scene: Scene) {
     voice.action = "Turn on the closet light at its fixed output";
     if (preset === "high") voice.phrases.push("turn on the closet light");
   }
-  return voice ? {
-    alias: `${room} ${voice.label}`,
+  return voice && preset ? {
+    alias: `${room} ${SCENE_PRESET_LABELS[preset].toLowerCase()}`,
     description: `${voice.action}. Phrases: ${voice.phrases.map(phrase => JSON.stringify(phrase)).join(", ")}. ${dispatchGuidance}`,
   } : {
     alias: scene.name.replace(/\s+-\s+/g, " "),
